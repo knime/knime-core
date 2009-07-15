@@ -18,6 +18,9 @@
  */
 package org.knime.workbench.ui.wfvars;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -48,6 +51,9 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public class WorkflowVariablesDialog extends Dialog {
 
+    private static final int SKIP_RESET_IDX = 0;
+    private static final int RESET_IDX = 1;
+    
     private WorkflowVariableTable m_table;
 
     private final WorkflowManager m_workflow;
@@ -109,7 +115,7 @@ public class WorkflowVariablesDialog extends Dialog {
                 int index = table.getSelectionIndex();
                 // we only get a double-click event for existing items
                 ScopeVariable var = m_table.get(index);
-                replaceWorkflowVariable(var, index);
+                editWorkflowVariable(var, index);
             }
         });
 
@@ -154,12 +160,12 @@ public class WorkflowVariablesDialog extends Dialog {
                 int selectionIdx = m_table.getViewer().getTable()
                     .getSelectionIndex();
                 if (selectionIdx < 0) {
-                    MessageDialog.openError(getShell(), "No selection",
-                            "Please select the parameter you want to edit");
+                    MessageDialog.openWarning(getShell(), "Empty selection",
+                    "Please select the parameter you want to edit.");
                     return;
                 }
                 ScopeVariable selectedVar = m_table.get(selectionIdx);
-                replaceWorkflowVariable(selectedVar, selectionIdx);
+                editWorkflowVariable(selectedVar, selectionIdx);
             }
         });
 
@@ -174,23 +180,16 @@ public class WorkflowVariablesDialog extends Dialog {
 
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
+                int idx = m_table.getViewer().getTable().getSelectionIndex();
+                if (idx < 0) {
+                    MessageDialog.openWarning(getShell(), "Empty selection", 
+                            "Please select the parameter you want to remove.");
+                    return;
+                }
                 ScopeVariable selectedParam =
                     (ScopeVariable)((IStructuredSelection)m_table
                         .getViewer().getSelection()).getFirstElement();
-                if (selectedParam.isGlobalConstant()) {
-                    MessageDialog.openError(getParentShell(),
-                            "Global Constant", selectedParam.getName()
-                                    + " is a global constant "
-                                    + "and can not be removed!");
-                    return;
-                }
-                try {
-                    m_workflow.removeWorkflowVariable(selectedParam.getName());
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-                m_table.remove(selectedParam);
-                m_table.getViewer().refresh();
+                removeWorkflowVariable(selectedParam);
             }
         });
         return composite;
@@ -236,23 +235,18 @@ public class WorkflowVariablesDialog extends Dialog {
             return;
         }
         ScopeVariable var = dialog.getScopeVariable();
-        int returnCode = openConfirmationDialog();
-        switch (returnCode) {
-        case 0:
-            m_workflow.addWorkflowVariable(var, true);
-            break;
-        case 1:
-            m_workflow.addWorkflowVariable(var, false);
-            break;
-        default:
-            return;
+        // do not add it do WFM directly -> this is done when closing the dialog
+        if (!m_table.add(var)) {
+            MessageDialog.openWarning(getShell(), "Variable already exists", 
+                    " A variable with the same name and type already exists. "
+                    + "Edit this one if you want to change the value.");
+        } else {
+            m_table.getViewer().refresh();
         }
-        m_table.add(var);
-        m_table.getViewer().refresh();
         getShell().forceFocus();
     }
 
-    private void replaceWorkflowVariable(final ScopeVariable selectedVar,
+    private void editWorkflowVariable(final ScopeVariable selectedVar,
             final int selectionIdx) {
         if (selectedVar.isGlobalConstant()) {
             MessageDialog.openError(getParentShell(), "Global Constant",
@@ -266,12 +260,136 @@ public class WorkflowVariablesDialog extends Dialog {
         if (dialog.open() == Dialog.CANCEL) {
             // if the user has canceled the dialog there is nothing left to do
             return;
-        } // else replace it
+        } // else replace it...
         ScopeVariable var = dialog.getScopeVariable();
-        // WFM anyway has only one variable with the same name
-        m_workflow.addWorkflowVariable(var, false);
-        m_table.replace(selectionIdx, var);
+        m_table.replace(selectionIdx, var);         
         m_table.getViewer().refresh();
     }
+    
+    private void removeWorkflowVariable(final ScopeVariable var) {
+        if (var.isGlobalConstant()) {
+            MessageDialog.openError(getParentShell(),
+                    "Global Constant", var.getName()
+                            + " is a global constant "
+                            + "and can not be removed!");
+            return;
+        }
+        // remember that something has changed 
+        // -> will be deleted in replaceWorkflowVariable
+        // remove it from the table anyway
+        m_table.remove(var);
+        m_table.getViewer().refresh();
+    }
+    
+    private boolean hasValueChanged(final ScopeVariable newVar1, 
+            final ScopeVariable newVar2) {
+        if (newVar1.equals(newVar2)) {
+            // type and name are the same -> ScopeVariable#equals
+            assert newVar1.getType().equals(newVar2.getType());
+            assert newVar1.getName().equals(newVar2.getName());
+            // now check whether the value has changed 
+            // without knowing the type of the WorkflowVariable
+            ScopeVariable.Type type = newVar1.getType();
+            if (ScopeVariable.Type.STRING.equals(type)) {
+                if (newVar1.getStringValue().equals(newVar2.getStringValue())) {
+                    return false;
+                }
+            } else if (ScopeVariable.Type.DOUBLE.equals(type)) {
+                if (Double.compare(
+                        newVar1.getDoubleValue(), 
+                        newVar2.getDoubleValue()) == 0) {
+                    return false;
+                }
+            } else if (ScopeVariable.Type.INTEGER.equals(type)) {
+                if (newVar1.getIntValue() == newVar2.getIntValue()) {
+                    return false;
+                }
+            } else {
+                assert false : type.name() + " not yet supported";
+            }
+        }
+        return true;
+    }
+    
+    private boolean hasChanges() {
+        List<ScopeVariable> wfmList = m_workflow.getWorkflowVariables();
+        List<ScopeVariable> dialogList = m_table.getVariables();
+        // different number of elements -> must contain changes
+        if (wfmList.size() != dialogList.size()) {
+            return true;
+        }
+        boolean hasChanges = false;
+        for (ScopeVariable v : dialogList) {
+            int idx = wfmList.indexOf(v);
+            if (idx >= 0) {
+                hasChanges |= hasValueChanged(v, wfmList.get(idx));
+            } else {
+                // if a variable is in the dialog but not in workflow
+                // we have some changes
+                return true;
+            }
+        }
+        return hasChanges;
+    }
+    
+    
+    private void replaceWorkflowVariables() {
+        List<ScopeVariable> toBeRemoved = new ArrayList<ScopeVariable>();
+        toBeRemoved.addAll(m_workflow.getWorkflowVariables()); 
+        toBeRemoved.removeAll(m_table.getVariables());
+        for (ScopeVariable v : toBeRemoved) {
+            m_workflow.removeWorkflowVariable(v.getName());
+        }
+        // replace
+        for (ScopeVariable v : m_table.getVariables()) {
+            m_workflow.addWorkflowVariable(v, true);
+        }
+    }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected void okPressed() {
+        // if one or more variables were added or edited
+        // first ask flag -> if true do a closer investigation...
+        if (hasChanges()) {
+            // -> ask for reset confirmation
+            int returnCode = openConfirmationDialog();
+            // 1. skip reset -> add table content to WFM and do not reset
+            // 2. reset -> add table content to WFM and do reset
+            // 3. cancel -> do nothing
+            if (returnCode == RESET_IDX || returnCode == SKIP_RESET_IDX) {
+                replaceWorkflowVariables();
+                if (returnCode == RESET_IDX) {
+                    m_workflow.resetAll();
+                }
+                // close dialog
+            } else {
+                // CANCEL -> let dialog open
+                return;
+            }
+        }
+        // no changes -> close dialog
+        super.okPressed();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected void cancelPressed() {
+        // if has changes -> open confirmation dialog "discard changes?"
+        if (hasChanges()) {
+            if (!MessageDialog.openConfirm(getShell(), 
+                    "Discard Changes", 
+                    "Do you really want to discard your changes?")) {
+                // leave it open
+                return;
+            }
+        }
+        super.cancelPressed();
+    }
 }

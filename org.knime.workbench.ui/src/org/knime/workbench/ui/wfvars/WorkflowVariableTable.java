@@ -20,6 +20,7 @@ package org.knime.workbench.ui.wfvars;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -70,9 +71,17 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
     /**
      * 
      * @param param variable to be added to the table
+     * @return true if the variable was added, false if there was already a 
+     *  variable with same name and type
+     * 
      */
-    public void add(final ScopeVariable param) {
+    public boolean add(final ScopeVariable param) {
+        // equals of ScopeVariable checks for name and type
+        if (m_params.contains(param)) {
+            return false;
+        }
         m_params.add(param);
+        return true;
     }
     
     /**
@@ -90,6 +99,15 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      */
     public ScopeVariable get(final int idx) {
         return m_params.get(idx);
+    }
+    
+
+    /**
+     * 
+     * @return an unmodifiable list of the represented {@link ScopeVariable}s.
+     */
+    public List<ScopeVariable> getVariables() {
+        return Collections.unmodifiableList(m_params); 
     }
     
     /**

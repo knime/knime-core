@@ -76,6 +76,8 @@ public class WorkflowVariablesEditDialog extends Dialog {
      */
     public void loadFrom(final ScopeVariable var) {
         m_varNameCtrl.setText(var.getName());
+        m_varNameCtrl.setEditable(false);
+        m_varNameCtrl.setEnabled(false);
         String typeString = var.getType().name();
         if (typeString == null) {
             throw new IllegalArgumentException("Type of variable "
@@ -128,9 +130,9 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
         m_typeSelectionCtrl = new Combo(twoColComp,
                 SWT.DROP_DOWN | SWT.READ_ONLY);
-        m_typeSelectionCtrl.add(ScopeVariable.Type.STRING.name());
-        m_typeSelectionCtrl.add(ScopeVariable.Type.DOUBLE.name());
-        m_typeSelectionCtrl.add(ScopeVariable.Type.INTEGER.name());
+        for (ScopeVariable.Type t : ScopeVariable.Type.values()) {
+            m_typeSelectionCtrl.add(t.name());
+        }
         m_typeSelectionCtrl.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetDefaultSelected(final SelectionEvent arg0) {
