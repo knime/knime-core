@@ -24,13 +24,19 @@
  */
 package org.knime.core.node;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -130,7 +136,17 @@ implements ChangeListener, ActionListener {
     private class ScopeVarEditDialog extends JDialog {
         
         ScopeVarEditDialog(final Frame f) {
+            // set title and make dialog modal
             super(f, "Variable Settings", true);
+            // set icon of dialog frame
+            ClassLoader loader = this.getClass().getClassLoader(); 
+            String packagePath = 
+                this.getClass().getPackage().getName().replace('.', '/');
+            String correctedPath = "/icon/variable_dialog_active.png";
+            ImageIcon icon = new ImageIcon(
+                    loader.getResource(packagePath + correctedPath));
+            this.setIconImage(icon.getImage());
+            // finalize setup
             this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             initComponents();
             pack();
@@ -144,10 +160,15 @@ implements ChangeListener, ActionListener {
         private JButton m_ok;
         
         private void initComponents() {
-            Container cp = this.getContentPane();
-            cp.setLayout(new GridLayout(3, 1));
+            Container cont = this.getContentPane();
+            cont.setLayout(new BorderLayout());
+            JPanel cp = new JPanel();
+            cont.add(cp, BorderLayout.NORTH);
+            cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
+            cp.setAlignmentY(TOP_ALIGNMENT);
             // top part to use variable for specific settings
             JPanel panelTop = new JPanel();
+            panelTop.setAlignmentX(Component.CENTER_ALIGNMENT);
             panelTop.setBorder(new TitledBorder("Use Variable:"));
             panelTop.setLayout(new GridLayout(1, 2));
             m_enableInputVar = new JCheckBox();
@@ -164,6 +185,7 @@ implements ChangeListener, ActionListener {
             cp.add(panelTop);
             // middle part to create new variable based on specific settings
             JPanel panelMiddle = new JPanel();
+            panelMiddle.setAlignmentX(Component.CENTER_ALIGNMENT);
             panelMiddle.setBorder(new TitledBorder("Create Variable:"));
             panelMiddle.setLayout(new GridLayout(1, 2));
             m_enableOutputVar = new JCheckBox();
@@ -180,17 +202,11 @@ implements ChangeListener, ActionListener {
             cp.add(panelMiddle);
             // pane for buttons
             JPanel panelBottom = new JPanel();
-            panelBottom.setLayout(new GridLayout(1, 2));
-            m_cancel = new JButton("Cancel");
-            m_cancel.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent arg0) {
-                    // do nothing here!
-                    setVisible(false);
-                }
-            });
-            panelBottom.add(m_cancel);
+            panelBottom.setAlignmentX(Component.CENTER_ALIGNMENT);
+            panelBottom.setLayout(new BoxLayout(panelBottom, BoxLayout.X_AXIS));
+            panelBottom.add(Box.createHorizontalGlue());
             m_ok = new JButton("OK");
+            m_ok.setAlignmentY(Component.BOTTOM_ALIGNMENT);
             m_ok.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(final ActionEvent arg0) {
@@ -211,7 +227,20 @@ implements ChangeListener, ActionListener {
                 }
             });
             panelBottom.add(m_ok);
+            panelBottom.add(Box.createRigidArea(new Dimension(10, 0)));
+            m_cancel = new JButton("Cancel");
+            m_cancel.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+            m_cancel.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent arg0) {
+                    // do nothing here!
+                    setVisible(false);
+                }
+            });
+            panelBottom.add(m_cancel);
+            cp.add(Box.createRigidArea(new Dimension(0, 5)));
             cp.add(panelBottom);
+            cp.add(Box.createVerticalGlue());
         }
         
         void setInputVariableName(final String s) {
