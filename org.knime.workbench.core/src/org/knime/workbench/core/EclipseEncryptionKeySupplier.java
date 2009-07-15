@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   14.04.2009 (gabriel): created
  */
@@ -33,22 +33,18 @@ import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
 /**
- * Encryption key supplier used to en-/decrypt password (using a master key) in 
+ * Encryption key supplier used to en-/decrypt password (using a master key) in
  * an eclipse headless mode.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class EclipseEncryptionKeySupplier implements
-        EncryptionKeySupplier {
- 
+public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
+
     /** Last master entered with the dialog/preference page. */
-    public String m_lastMasterKey;
+    public String m_lastMasterKey = null;
 
     /** If encryption with master key is enabled. */
-    public boolean m_isEnabled;
-
-    /** If a master key has been set already. */
-    public boolean m_isSet;
+    public boolean m_isEnabled = true;
 
     /**
      * Creates a new encryption key supplier.
@@ -56,23 +52,23 @@ public class EclipseEncryptionKeySupplier implements
     public EclipseEncryptionKeySupplier() {
         init();
     }
-    
+
     /**
      * Read preference store.
+     *
      * @return current master key or null, if not set
      */
     private synchronized String init() {
-        IPreferenceStore coreStore = 
+        IPreferenceStore coreStore =
             KNIMECorePlugin.getDefault().getPreferenceStore();
-        m_isSet = coreStore.getBoolean(
-                HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED);
-        if (m_isSet) {
+        coreStore.setDefault(
+                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, true);
+
+        if (m_isEnabled && m_lastMasterKey == null) {
+        // the masterkey preference page was opened at least once.
             m_isEnabled = coreStore.getBoolean(
                     HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED);
-            if (!m_isEnabled) {
-                m_lastMasterKey = null;
-                return null;
-            } else {
+            if (m_isEnabled) {
                 if (coreStore.getBoolean(
                         HeadlessPreferencesConstants.P_MASTER_KEY_SAVED)) {
                     try {
@@ -80,26 +76,20 @@ public class EclipseEncryptionKeySupplier implements
                                      HeadlessPreferencesConstants.P_MASTER_KEY);
                         // preference store returns empty string if not set
                         if (mk.isEmpty()) {
-                            m_lastMasterKey = null;
-                            return null;
+                            return m_lastMasterKey;
                         }
                         SecretKey sk = KnimeEncryption.createSecretKey(
                                 HeadlessPreferencesConstants.P_MASTER_KEY);
                         m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
                     } catch (Exception e) {
                         NodeLogger.getLogger(EclipseEncryptionKeySupplier.class)
-                            .warn("Unable to decrypt master key: " 
+                            .warn("Unable to decrypt master key: "
                                     + e.getMessage(), e);
-                        m_lastMasterKey = null;
                     }
-                    return m_lastMasterKey;
                 }
-                return null;
             }
-        } else {
-            m_lastMasterKey = null;
-            return null;
         }
+        return m_lastMasterKey;
     }
 
     /**
@@ -108,5 +98,5 @@ public class EclipseEncryptionKeySupplier implements
     public synchronized String getEncryptionKey() {
         return init();
     }
-    
+
 }
