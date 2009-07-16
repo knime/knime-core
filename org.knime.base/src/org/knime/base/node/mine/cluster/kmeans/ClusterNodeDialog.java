@@ -58,15 +58,13 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     ClusterNodeDialog() {
         super();
-        m_nrOfClusters = new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                        ClusterNodeModel.CFG_NR_OF_CLUSTERS, 
-                        ClusterNodeModel.INITIAL_NR_CLUSTERS, 
-                        1, Integer.MAX_VALUE), "number of clusters: ", 1,
-                        createWorkflowVariableModel(
-                                ClusterNodeModel.CFG_NR_OF_CLUSTERS,
-                                ScopeVariable.Type.INTEGER,
-                                false));
+        SettingsModelIntegerBounded smib = new SettingsModelIntegerBounded(
+                ClusterNodeModel.CFG_NR_OF_CLUSTERS, 
+                ClusterNodeModel.INITIAL_NR_CLUSTERS, 
+                1, Integer.MAX_VALUE);
+        m_nrOfClusters = new DialogComponentNumber(smib,
+                "number of clusters: ", 1,
+                createWorkflowVariableModel(smib));
         m_maxNrOfIterations = new DialogComponentNumber(
                 new SettingsModelIntegerBounded(
                         ClusterNodeModel.CFG_MAX_ITERATIONS,

@@ -161,8 +161,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         // option controllable via a variable
         ScopeVariableModel wvm = createWorkflowVariableModel(
                 FuzzyClusterNodeModel.NRCLUSTERS_KEY,
-                ScopeVariable.Type.INTEGER,
-                false);
+                ScopeVariable.Type.INTEGER);
         wvm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
