@@ -904,16 +904,8 @@ public abstract class NodeDialogPane {
      */
     protected ScopeVariableModel createWorkflowVariableModel(
             SettingsModelScopeVariableCompatible dc) {
-        ScopeVariableModel wvm = new ScopeVariableModel(this,
-                dc.getKey(), dc.getScopeVariableType());
-        m_scopeVariablesModelList.add(wvm);
-        wvm.addChangeListener(new ChangeListener() {
-            /** {@inheritDoc} */
-            public void stateChanged(final ChangeEvent e) {
-                m_scopeVariablesModelChanged = true;
-            }
-        });
-        return wvm;
+        return createWorkflowVariableModel(dc.getKey(),
+                dc.getScopeVariableType());
     }
 
     private void onVariablesTabSelected() {
