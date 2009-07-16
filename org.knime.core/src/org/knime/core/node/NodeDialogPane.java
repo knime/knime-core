@@ -62,6 +62,7 @@ import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeEvent;
 import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.defaultnodesettings.SettingsModelScopeVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
@@ -879,15 +880,32 @@ public abstract class NodeDialogPane {
      *
      * @param key of corresponding settings object
      * @param type of variable/settings object
-     * @param exposeToParent indicate if variable is visible in parent dialog
      * @return new WorkflowVariableModel which is already registered
      */
     protected ScopeVariableModel createWorkflowVariableModel(
             final String key,
-            final ScopeVariable.Type type,
-            final boolean exposeToParent) {
-        ScopeVariableModel wvm = new ScopeVariableModel(
-                this, key, type, exposeToParent);
+            final ScopeVariable.Type type) {
+        ScopeVariableModel wvm = new ScopeVariableModel(this, key, type);
+        m_scopeVariablesModelList.add(wvm);
+        wvm.addChangeListener(new ChangeListener() {
+            /** {@inheritDoc} */
+            public void stateChanged(final ChangeEvent e) {
+                m_scopeVariablesModelChanged = true;
+            }
+        });
+        return wvm;
+    }
+
+    /** Create model and register a new variable for a specific settings
+     * object in the corresponding @link DialogComponentVariableCompatible.
+     *
+     * @param dc DialogComponent of corresponding settings object
+     * @return new WorkflowVariableModel which is already registered
+     */
+    protected ScopeVariableModel createWorkflowVariableModel(
+            SettingsModelScopeVariableCompatible dc) {
+        ScopeVariableModel wvm = new ScopeVariableModel(this,
+                dc.getKey(), dc.getScopeVariableType());
         m_scopeVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */

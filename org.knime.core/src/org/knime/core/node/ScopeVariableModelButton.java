@@ -31,7 +31,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -50,6 +49,9 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.knime.core.node.util.ScopeVariableListCellRenderer;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 
@@ -180,6 +182,7 @@ implements ChangeListener, ActionListener {
             });
             panelTop.add(m_enableInputVar);
             m_inputVar = new JComboBox(m_model.getMatchingVariables());
+            m_inputVar.setRenderer(new ScopeVariableListCellRenderer());
             m_inputVar.setEnabled(false);
             panelTop.add(m_inputVar);
             cp.add(panelTop);
@@ -213,7 +216,7 @@ implements ChangeListener, ActionListener {
                     // write values back to model
                     if (m_enableInputVar.isSelected()) {
                         m_model.setInputVariableName(
-                                m_inputVar.getSelectedItem().toString());
+                       ((ScopeVariable)m_inputVar.getSelectedItem()).getName());
                     } else {
                         m_model.setInputVariableName(null);
                     }
@@ -246,7 +249,21 @@ implements ChangeListener, ActionListener {
         void setInputVariableName(final String s) {
             m_enableInputVar.setSelected(true);
             m_inputVar.setEnabled(true);
-            m_inputVar.setSelectedItem(s);
+            // try to find variable with corresponding name (and type):
+            ScopeVariable var = null;
+            for (ScopeVariable v : m_model.getMatchingVariables()) {
+                if (v.getName().equals(s)) {
+                    var = v;
+                    break;
+                }
+            }
+            if (var != null) {
+                // found it: we can select it. Everything fine.
+                m_inputVar.setSelectedItem(var);
+            } else {
+                // could not find it: disable setting.
+                m_enableInputVar.setSelected(false);
+            }
         }
 
         void setOutputVariableName(final String s) {

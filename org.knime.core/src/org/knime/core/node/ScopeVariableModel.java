@@ -48,7 +48,6 @@ public class ScopeVariableModel {
     private NodeDialogPane m_parent;
     private String m_key;  // the Config Key associated with this object
     private ScopeVariable.Type m_type;   // the class of the variable
-    private boolean m_exposeToParent;
 
     /* variable names that are to be used for the corresponding settings
      * as "input" resp. "output". If one or both are null, the replacement
@@ -64,14 +63,12 @@ public class ScopeVariableModel {
      * @param parent NodeDialogPane (needed to retrieve visible variables)
      * @param key of corresponding settings object
      * @param type of variable/settings object
-     * @param exposeToParent indicate if variable is visible in parent dialog
      */
     ScopeVariableModel(final NodeDialogPane parent, final String key,
-            final ScopeVariable.Type type, final boolean exposeToParent) {
+            final ScopeVariable.Type type) {
         m_parent = parent;
         m_key = key;
         m_type = type;
-        m_exposeToParent = exposeToParent;
         m_listeners = new CopyOnWriteArrayList<ChangeListener>();
     }
 
@@ -94,13 +91,6 @@ public class ScopeVariableModel {
      */
     public ScopeVariable.Type getType() {
         return m_type;
-    }
-
-    /**
-     * @return true if this variable is to be exposed by the parent.
-     */
-    public boolean exposeToParent() {
-        return m_exposeToParent;
     }
 
     /**
@@ -150,15 +140,15 @@ public class ScopeVariableModel {
     /**
      * @return array of variables names that match the type of this model.
      */
-    String[] getMatchingVariables() {
-        HashSet<String> liste = new HashSet<String>();
+    ScopeVariable[] getMatchingVariables() {
+        HashSet<ScopeVariable> liste = new HashSet<ScopeVariable>();
         for (ScopeVariable sv
                       : getParent().getAvailableScopeVariables().values()) {
             if (sv.getType().equals(m_type)) {
-                liste.add(sv.getName());
+                liste.add(sv);
             }
         }
-        String[] result = new String[liste.size()];
+        ScopeVariable[] result = new ScopeVariable[liste.size()];
         liste.toArray(result);
         return result;
     }
