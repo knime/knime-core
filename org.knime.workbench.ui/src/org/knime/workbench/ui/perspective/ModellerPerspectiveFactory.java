@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2005 (Florian Georg): created
  */
@@ -29,10 +29,14 @@ import org.eclipse.ui.IPerspectiveFactory;
 
 /**
  * Factory for creating the Modeller Perspective.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ModellerPerspectiveFactory implements IPerspectiveFactory {
+
+    /** Id as defined in plugin xml. */
+    public static final String ID = "org.knime.workbench.ui.ModellerPerspective";
+
     /**
      * {@inheritDoc}
      */
