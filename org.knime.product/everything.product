@@ -90,6 +90,8 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.ext.chem.shapes" version="2.1.0"/>
       <feature id="org.knime.features.bison" version="1.0.0"/>
       <feature id="org.knime.features.bison.viz" version="1.0.0"/>
+      <feature id="org.knime.features.ext.spotfire" version="2.0.3.0021111"/>
+      <feature id="org.knime.features.ext.perl" version="2.0.3.0021111"/>
    </features>
 
 </product>
