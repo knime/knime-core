@@ -83,6 +83,10 @@
             Performs necessary sorting in the memory. Speeds up the process
             but consumes much more memory.
         </option>
+        <option name="Retain order">
+            Retains the original row order of the input table. 
+            Could result in longer execution time. 
+        </option>
         <option name="Column naming">
             The name of the resulting aggregation column(s) depends on the 
             selected naming schema. 

@@ -24,18 +24,6 @@
  */
 package org.knime.base.node.preproc.groupby;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -57,6 +45,19 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -107,6 +108,9 @@ public class GroupByNodeModel extends NodeModel {
     /**Configuration key for the sort in memory option.*/
     protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
 
+    /**Configuration key for the retain order option.*/
+    protected static final String CFG_RETAIN_ORDER = "retainOrder";
+
     /**Configuration key for the aggregation column name policy.*/
     protected static final String CFG_COLUMN_NAME_POLICY = "columnNamePolicy";
 
@@ -123,6 +127,9 @@ public class GroupByNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
+
+    private final SettingsModelBoolean m_retainOrder =
+        new SettingsModelBoolean(CFG_RETAIN_ORDER, false);
 
     private final SettingsModelString m_columnNamePolicy =
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
@@ -201,6 +208,7 @@ public class GroupByNodeModel extends NodeModel {
                     m_columnAggregators);
         }
         m_columnNamePolicy.saveSettingsTo(settings);
+        m_retainOrder.saveSettingsTo(settings);
     }
 
     /**
@@ -213,9 +221,6 @@ public class GroupByNodeModel extends NodeModel {
         final List<String> groupByCols =
             ((SettingsModelFilterString)m_groupByCols.
                     createCloneWithValidatedValue(settings)).getIncludeList();
-        if (groupByCols == null || groupByCols.size() < 1) {
-            throw new InvalidSettingsException("No grouping column included");
-        }
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
         m_sortInMemory.validateSettings(settings);
@@ -225,6 +230,10 @@ public class GroupByNodeModel extends NodeModel {
         try {
             final List<ColumnAggregator> aggregators =
                 ColumnAggregator.loadColumnAggregators(settings);
+            if (groupByCols.isEmpty() && aggregators.isEmpty()) {
+                throw new IllegalArgumentException(
+                    "Please select at least one group or aggregation column");
+            }
             ColumnNamePolicy namePolicy;
             try {
                 final String policyLabel =
@@ -304,6 +313,12 @@ public class GroupByNodeModel extends NodeModel {
                     GroupByNodeModel.compGetColumnNamePolicy(settings);
             m_columnNamePolicy.setStringValue(colNamePolicy.getLabel());
         }
+        try {
+            //this option was introduced in Knime 2.0.3+
+            m_retainOrder.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_retainOrder.setBooleanValue(false);
+        }
         m_maxUniqueValues.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
         m_sortInMemory.loadSettingsFrom(settings);
@@ -316,12 +331,12 @@ public class GroupByNodeModel extends NodeModel {
     protected void reset() {
         m_hilite.setMapper(null);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_hilite.removeAllToHiliteHandlers();
         m_hilite.addToHiLiteHandler(hiLiteHdl);
@@ -352,6 +367,10 @@ public class GroupByNodeModel extends NodeModel {
         }
 
         final List<String> groupByCols = m_groupByCols.getIncludeList();
+        if (groupByCols.isEmpty()) {
+            setWarningMessage(
+                    "No grouping column included. Aggregate complete table.");
+        }
         //be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
         //remove all invalid column aggregator
@@ -379,8 +398,7 @@ public class GroupByNodeModel extends NodeModel {
         try {
             GroupByTable.checkGroupCols(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
-            throw new InvalidSettingsException(
-                    "Please define the group by column(s)");
+            throw new InvalidSettingsException(e.getMessage());
         }
         if (origSpec.getNumColumns() > 1
                 && groupByCols.size() == origSpec.getNumColumns()) {
@@ -429,6 +447,7 @@ public class GroupByNodeModel extends NodeModel {
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
+        final boolean retainOrder = m_retainOrder.getBooleanValue();
         //be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
@@ -436,7 +455,7 @@ public class GroupByNodeModel extends NodeModel {
         final GroupByTable resultTable = new GroupByTable(exec, table,
                 groupByCols, m_columnAggregators.toArray(
                         new ColumnAggregator[0]), maxUniqueVals, sortInMemory,
-                        enableHilite, colNamePolicy);
+                        enableHilite, colNamePolicy, retainOrder);
         if (m_enableHilite.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(
                     resultTable.getHiliteMapping()));

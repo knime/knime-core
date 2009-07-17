@@ -27,18 +27,24 @@ package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
@@ -67,8 +73,13 @@ import java.util.Set;
  */
 public class GroupByTable {
 
+    private static final AggregationMethod RETAIN_ORDER_COL_AGGR_METHOD =
+            AggregationMethod.FIRST_VALUE;
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(GroupByTable.class);
+
+    private static final String RETAIN_ORDER_COL_NAME = "orig_order_col";
 
     private final List<String> m_groupCols;
 
@@ -87,9 +98,11 @@ public class GroupByTable {
 
     private final ColumnAggregator[] m_colAggregators;
 
+    private final boolean m_retainOrder;
+
     /**Constructor for class GroupByTable.
      * @param exec the <code>ExecutionContext</code>
-     * @param dataTable the table to aggregate
+     * @param inDataTable the table to aggregate
      * @param groupByCols the name of all columns to group by
      * @param colAggregators the aggregation columns with the aggregation method
      * to use in the order the columns should be appear in the result table
@@ -101,20 +114,51 @@ public class GroupByTable {
      * maintained to enable hiliting
      * @param colNamePolicy the {@link ColumnNamePolicy} for the
      * aggregation columns
+     * input table if set to <code>true</code>
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     public GroupByTable(final ExecutionContext exec,
-            final BufferedDataTable dataTable,
+            final BufferedDataTable inDataTable,
             final List<String> groupByCols,
             final ColumnAggregator[] colAggregators, final int maxUniqueValues,
             final boolean sortInMemory, final boolean enableHilite,
             final ColumnNamePolicy colNamePolicy)
     throws CanceledExecutionException {
+        this(exec, inDataTable, groupByCols, colAggregators, maxUniqueValues,
+            sortInMemory, enableHilite, colNamePolicy, false);
+    }
+
+    /**Constructor for class GroupByTable.
+     * @param exec the <code>ExecutionContext</code>
+     * @param inDataTable the table to aggregate
+     * @param groupByCols the name of all columns to group by
+     * @param colAggregators the aggregation columns with the aggregation method
+     * to use in the order the columns should be appear in the result table
+     * numerical columns
+     * @param maxUniqueValues the maximum number of unique values
+     * @param sortInMemory <code>true</code> if the table should be sorted in
+     * the memory
+     * @param enableHilite <code>true</code> if a row key map should be
+     * maintained to enable hiliting
+     * @param colNamePolicy the {@link ColumnNamePolicy} for the
+     * aggregation columns
+     * @param retainOrder returns the row of the table in the same order as the
+     * input table if set to <code>true</code>
+     * @throws CanceledExecutionException if the user has canceled the execution
+     */
+    public GroupByTable(final ExecutionContext exec,
+            final BufferedDataTable inDataTable,
+            final List<String> groupByCols,
+            final ColumnAggregator[] colAggregators, final int maxUniqueValues,
+            final boolean sortInMemory, final boolean enableHilite,
+            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+    throws CanceledExecutionException {
         LOGGER.debug("Entering GroupByTable() of class GroupByTable.");
-        if (dataTable == null) {
+        if (inDataTable == null) {
             throw new NullPointerException("DataTable must not be null");
         }
-        checkGroupCols(dataTable.getDataTableSpec(), groupByCols);
+        final DataTableSpec inTableSpec = inDataTable.getDataTableSpec();
+        checkGroupCols(inTableSpec, groupByCols);
         if (maxUniqueValues < 0) {
             throw new IllegalArgumentException(
                     "Maximum unique values must be a positive integer");
@@ -130,27 +174,109 @@ public class GroupByTable {
         }
 
         m_groupCols = groupByCols;
-        m_colAggregators = colAggregators;
         m_maxUniqueVals = maxUniqueValues;
         m_colNamePolicy = colNamePolicy;
-        exec.setMessage("Sorting input table...");
-        ExecutionContext subExec = exec.createSubExecutionContext(0.6);
-        final SortedTable sortedTable =
-            sortInputTable(subExec, dataTable, m_groupCols, sortInMemory);
-        subExec.setProgress(1.0);
+        m_retainOrder = retainOrder;
+        final BufferedDataTable dataTable;
+        final ExecutionContext subExec;
+        final ColumnAggregator[] aggrs;
+        if (m_retainOrder) {
+            exec.setMessage("Memorize row order...");
+            final String retainOrderCol = DataTableSpec.getUniqueColumnName(
+                    inTableSpec, RETAIN_ORDER_COL_NAME);
+            dataTable = appendOrderColumn(exec.createSubExecutionContext(0.1),
+                    inDataTable, retainOrderCol);
+            final DataColumnSpec retainOrderColSpec =
+                dataTable.getSpec().getColumnSpec(retainOrderCol);
+            aggrs = new ColumnAggregator[colAggregators.length + 1];
+            System.arraycopy(colAggregators, 0, aggrs,
+                    0, colAggregators.length);
+            aggrs[colAggregators.length] = new ColumnAggregator(
+                    retainOrderColSpec, RETAIN_ORDER_COL_AGGR_METHOD);
+            subExec = exec.createSubExecutionContext(0.5);
+        } else {
+            subExec = exec;
+            dataTable = inDataTable;
+            aggrs = colAggregators;
+        }
+        m_colAggregators = aggrs;
+        final BufferedDataTable sortedTable;
+        final ExecutionContext groupExec;
+        if (m_groupCols.isEmpty()) {
+            sortedTable = dataTable;
+            groupExec = subExec;
+        } else {
+            final ExecutionContext sortExec =
+                subExec.createSubExecutionContext(0.6);
+            exec.setMessage("Sorting input table...");
+            sortedTable = sortTable(sortExec, dataTable,
+                    m_groupCols, sortInMemory);
+            sortExec.setProgress(1.0);
+            groupExec = subExec.createSubExecutionContext(0.4);
+        }
         exec.setMessage("Writing group table...");
-        subExec = exec.createSubExecutionContext(0.4);
-        m_resultTable = createGroupByTable(subExec, sortedTable);
+        final BufferedDataTable groupTable =
+            createGroupByTable(groupExec, sortedTable);
+        final BufferedDataTable resultTable;
+        if (m_retainOrder) {
+            final String origName =
+                m_colAggregators[m_colAggregators.length - 1].getColName();
+            final String orderColName = m_colNamePolicy.createColumName(
+                    origName, RETAIN_ORDER_COL_AGGR_METHOD);
+            //sort the table by the order column
+            exec.setMessage("Rebuild original row order...");
+            final BufferedDataTable tempTable =
+                sortTable(exec.createSubExecutionContext(0.4), groupTable,
+                        Arrays.asList(orderColName), sortInMemory);
+            //remove the order column
+            final ColumnRearranger rearranger =
+                new ColumnRearranger(tempTable.getSpec());
+            rearranger.remove(orderColName);
+            resultTable = exec.createColumnRearrangeTable(tempTable,
+                    rearranger, exec);
+        } else {
+            resultTable = groupTable;
+        }
+        m_resultTable = resultTable;
         exec.setProgress(1.0);
         LOGGER.debug("Exiting GroupByTable() of class GroupByTable.");
     }
 
-    private static SortedTable sortInputTable(final ExecutionContext exec,
+    private BufferedDataTable appendOrderColumn(final ExecutionContext exec,
+            final BufferedDataTable dataTable, final String retainOrderCol)
+    throws CanceledExecutionException {
+        final ColumnRearranger rearranger =
+            new ColumnRearranger(dataTable.getSpec());
+        rearranger.append(new CellFactory() {
+
+            private int m_id = 0;
+            @Override
+            public DataCell[] getCells(final DataRow row) {
+                return new DataCell[] {new IntCell(m_id++)};
+            }
+
+            @Override
+            public DataColumnSpec[] getColumnSpecs() {
+                return new DataColumnSpec[] {new DataColumnSpecCreator(
+                        retainOrderCol, IntCell.TYPE).createSpec()};
+            }
+
+            @Override
+            public void setProgress(final int curRowNr, final int rowCount,
+                    final RowKey lastKey, final ExecutionMonitor inExec) {
+                exec.setProgress(curRowNr / (double) rowCount);
+            }
+        });
+        return exec.createColumnRearrangeTable(dataTable, rearranger, exec);
+    }
+
+    private static BufferedDataTable sortTable(final ExecutionContext exec,
             final BufferedDataTable table2sort, final List<String> groupCols,
             final boolean sortInMemory)
     throws CanceledExecutionException {
-        LOGGER.debug("Entering sortInputTable(exec, table2sort, inclList, "
-                + "sortInMemory) of class GroupByTable.");
+        if (groupCols.isEmpty()) {
+            return table2sort;
+        }
         final boolean[] sortOrder = new boolean[groupCols.size()];
         for (int i = 0, length = sortOrder.length; i < length; i++) {
             sortOrder[i] = true;
@@ -158,14 +284,12 @@ public class GroupByTable {
         final SortedTable sortedTabel =
             new SortedTable(table2sort, groupCols, sortOrder,
                 sortInMemory, exec);
-        LOGGER.debug("Exiting sortInputTable(exec, table2sort, inclList, "
-                + "sortInMemory) of class GroupByTable.");
-        return sortedTabel;
+        return sortedTabel.getBufferedDataTable();
 
     }
 
     private BufferedDataTable createGroupByTable(final ExecutionContext exec,
-            final SortedTable table)
+            final BufferedDataTable table)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createGroupByTable(exec, table) "
                 + "of class GroupByTable.");
@@ -396,8 +520,9 @@ public class GroupByTable {
         if (spec == null) {
             throw new NullPointerException("DataTableSpec must not be null");
         }
-        if (groupColNames == null || groupColNames.isEmpty()) {
-            throw new IllegalArgumentException("inclList must not be empty");
+        if (groupColNames == null) {
+            throw new IllegalArgumentException(
+                    "groupColNames must not be null");
         }
         if (columnAggregators == null) {
             throw new NullPointerException("colMethods must not be null");
@@ -430,7 +555,8 @@ public class GroupByTable {
                         + aggrCol.getColName());
             }
             final String colName =
-                colNamePolicy.createColumName(origSpec, aggrCol.getMethod());
+                colNamePolicy.createColumName(origSpec.getName(),
+                        aggrCol.getMethod());
             //since a column could be used several times create a unique name
             final String uniqueName;
             if (colNameCount.containsKey(colName)) {
@@ -457,9 +583,9 @@ public class GroupByTable {
      */
     public static void checkGroupCols(final DataTableSpec spec,
             final List<String> groupCols) throws IllegalArgumentException {
-        if (groupCols == null || groupCols.isEmpty()) {
+        if (groupCols == null) {
             throw new IllegalArgumentException(
-                    "No columns selected to group by");
+                    "Group columns must not be null");
         }
         // check if all group by columns exist in the DataTableSpec
 

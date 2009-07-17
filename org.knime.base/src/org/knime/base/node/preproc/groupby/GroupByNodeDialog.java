@@ -86,6 +86,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
 
+    private final SettingsModelBoolean m_retainOrder =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_RETAIN_ORDER, false);
+
     private final SettingsModelString m_columnNamePolicy =
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
                 ColumnNamePolicy.getDefault().getLabel());
@@ -162,6 +165,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 m_sortInMemory, "Sort in memory");
         box.add(sortInMemory.getComponentPanel());
         box.add(Box.createVerticalGlue());
+        final DialogComponent retainOrder = new DialogComponentBoolean(
+                m_retainOrder, "Retain order");
+        retainOrder.setToolTipText(
+                "Retains the original row order of the input table.");
+        box.add(retainOrder.getComponentPanel());
+        box.add(Box.createVerticalGlue());
         final DialogComponentStringSelection colNamePolicy =
             new DialogComponentStringSelection(m_columnNamePolicy, null,
                     ColumnNamePolicy.getPolicyLabels());
@@ -204,6 +213,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
                         m_groupByCols.getIncludeList(), settings);
             m_aggrColPanel.initialize(spec, columnMethods);
         }
+        try {
+            //this option was introduced in Knime 2.0.3+
+            m_retainOrder.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_retainOrder.setBooleanValue(false);
+        }
         m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         groupByColsChanged();
     }
@@ -220,6 +235,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
+        m_retainOrder.saveSettingsTo(settings);
     }
 
     /**

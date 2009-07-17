@@ -25,7 +25,6 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.data.DataColumnSpec;
 
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 
@@ -58,13 +57,13 @@ public enum ColumnNamePolicy {
     }
 
     /**
-     * @param origSpec the {@link DataColumnSpec} of the original column
+     * @param origName the original name of the column
      * @param aggrMethod the {@link AggregationMethod} to use
      * @return the column name of the aggregation column
      */
-    public String createColumName(final DataColumnSpec origSpec,
+    public String createColumName(final String origName,
             final AggregationMethod aggrMethod) {
-        if (origSpec == null) {
+        if (origName == null) {
             throw new NullPointerException("origSpec must not be null");
         }
         if (aggrMethod == null) {
@@ -74,19 +73,19 @@ public enum ColumnNamePolicy {
         final String colName;
         switch (this) {
         case KEEP_ORIGINAL_NAME:
-            colName = origSpec.getName();
+            colName = origName;
             break;
 
         case AGGREGATION_METHOD_COLUMN_NAME:
-            colName = aggrLabel + "(" + origSpec.getName() + ")";
+            colName = aggrLabel + "(" + origName + ")";
             break;
 
         case COLUMN_NAME_AGGREGATION_METHOD:
-            colName = origSpec.getName() + " (" + aggrLabel + ")";
+            colName = origName + " (" + aggrLabel + ")";
             break;
 
         default:
-            colName = origSpec.getName();
+            colName = origName;
             break;
         }
         return colName;
