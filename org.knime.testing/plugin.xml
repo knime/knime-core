@@ -37,6 +37,12 @@
             factory-class="org.knime.testing.node.failing.FailingNodeFactory"
             id="org.knime.testing.node.failing.FailingNodeFactory">
       </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
+            id="org.knime.testing.node.datagenerator.TestDataNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

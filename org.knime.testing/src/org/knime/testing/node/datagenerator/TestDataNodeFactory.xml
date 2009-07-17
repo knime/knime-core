@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source">
+	<name>Test Data Generator</name>
+	
+	<shortDescription>
+		Creates a data table with all common data types.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			Creates a data table with all common data types. It creates for
+			each data type extreme values for testing of writer/reader or
+			visualization nodes.
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<outPort index="0" name="Generated Table">Test data table.</outPort>
+	</ports>	
+</knimeNode>
