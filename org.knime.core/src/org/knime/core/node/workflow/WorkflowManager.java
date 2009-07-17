@@ -1137,8 +1137,10 @@ public final class WorkflowManager extends NodeContainer {
      * in the right order, that is, only actively reset the "left most"
      * nodes in the workflow or the ones connected to meta node input
      * ports. The will also trigger resets of subsequent nodes.
+     * Also re-configure not executed nodes the same way to make sure that
+     * new workflow variables are spread accordingly.
      */
-    public void resetAll() {
+    void resetAll() {
         synchronized (m_workflowMutex) {
             for (NodeID id : m_workflow.getNodeIDs()) {
                 boolean hasNonParentPredecessors = false;
@@ -1150,7 +1152,16 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 if (!hasNonParentPredecessors) {
-                    resetAndConfigureNode(id);
+                    if (getNodeContainer(id).isResetable()) {
+                        // reset nodes which are green - will configure
+                        // them afterwards anyway.
+                        resetAndConfigureNode(id);
+                    } else {
+                        // but make sure to re-configure yellow nodes so
+                        // that new variables are available in those
+                        // pipeline branches!
+                        configureNodeAndSuccessors(id, true);
+                    }
                 }
             }
         }
@@ -4266,7 +4277,7 @@ public final class WorkflowManager extends NodeContainer {
         if (m_workflowVariables != null) {
             // if we have some vars, put them on stack
             for (ScopeVariable sv : m_workflowVariables) {
-                sos.push(sv);
+                sos.push(sv.clone());
             }
         }
         return;
@@ -4290,25 +4301,29 @@ public final class WorkflowManager extends NodeContainer {
         return sos;
     }
 
-    /** Set a new workflow variable. All nodes within
-     * this workflow will have access to this variable.
+    /** Set new workflow variables. All nodes within
+     * this workflow will have access to these variables.
      *
-     * @param newVar new variable to be set
+     * @param newVars new variables to be set
      * @param skipReset if false the workflow will be re-configured
      */
-    public void addWorkflowVariable(final ScopeVariable newVar,
+    public void addWorkflowVariable(final ScopeVariable[] newVars,
             final boolean skipReset) {
         synchronized (m_workflowMutex) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
                 m_workflowVariables = new Vector<ScopeVariable>();
             }
-            // make sure old variables of the same name are removed first
-            removeWorkflowVariable(newVar.getName());
-            m_workflowVariables.add(newVar);
+            for (ScopeVariable sv : newVars) {
+                // make sure old variables of the same name are removed first
+                removeWorkflowVariable(sv.getName());
+                m_workflowVariables.add(sv);
+            }
             if (!skipReset) {
                 // usually one needs to reset the Workflow to make sure the
                 // new variable settings are used by all nodes!
+                // Note that resetAll also needs to configure non-executed
+                // nodes in order to spread those new variables correctly!
                 resetAll();
             }
             setDirty();
