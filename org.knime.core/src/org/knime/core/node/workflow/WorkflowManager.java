@@ -4333,8 +4333,8 @@ public final class WorkflowManager extends NodeContainer {
      * @param newVars new variables to be set
      * @param skipReset if false the workflow will be re-configured
      */
-    public void addWorkflowVariable(final ScopeVariable[] newVars,
-            final boolean skipReset) {
+    public void addWorkflowVariables(final boolean skipReset,
+            final ScopeVariable... newVars) {
         synchronized (m_workflowMutex) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
