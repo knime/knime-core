@@ -1095,7 +1095,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     public boolean isDirty() {
         // if we are a subworkflow editor we are never dirty
         if (m_parentEditor != null) {
-            return false;
+            return m_parentEditor.isDirty();
         }
         return m_isDirty;
     }
