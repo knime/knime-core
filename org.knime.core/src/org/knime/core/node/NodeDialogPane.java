@@ -58,10 +58,12 @@ import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeEvent;
 import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.defaultnodesettings.SettingsModelScopeVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
@@ -246,24 +248,26 @@ public abstract class NodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Error loading model settings", e);
         }
-        boolean isExpertMode =
-            Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
-        if (isExpertMode) {
+        // add flow variables tab if not yet done
+        if (getTab(TAB_NAME_VARIABLES) == null 
+                && Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
                 /** {@inheritDoc} */
                 public void stateChanged(final ChangeEvent e) {
-                    if (m_pane.getSelectedComponent()
-                            == m_scopeVariableTab) {
-                        onVariablesTabSelected();
+                    if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
+                        updateScopeVariablesTab();
                     }
                 }
             });
         }
         m_scopeVariableTab.setModified(false);
         m_scopeVariablesModelChanged = false;
-        if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
-            onVariablesTabSelected();
+        if (m_pane.getSelectedComponent() == m_scopeVariableTab 
+                || !m_scopeVariablesModelList.isEmpty()) {
+            // this will also update the settings in all elements in
+            // m_scopeVariablesModelList
+            initScopeVariablesTab(modelSettings, m_scopeVariablesSettings);
         }
 
         // output memory policy and job manager (stored in NodeContainer)
@@ -314,7 +318,7 @@ public abstract class NodeDialogPane {
         }
         NodeSettings variables;
         if (m_scopeVariablesModelChanged) {
-            onVariablesTabSelected();
+            updateScopeVariablesTab();
         }
         if (m_scopeVariableTab.isModified()) {
             variables = m_scopeVariableTab.getVariableSettings();
@@ -883,8 +887,7 @@ public abstract class NodeDialogPane {
      * @return new WorkflowVariableModel which is already registered
      */
     protected ScopeVariableModel createWorkflowVariableModel(
-            final String key,
-            final ScopeVariable.Type type) {
+            final String key, final ScopeVariable.Type type) {
         ScopeVariableModel wvm = new ScopeVariableModel(this, key, type);
         m_scopeVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
@@ -897,18 +900,44 @@ public abstract class NodeDialogPane {
     }
 
     /** Create model and register a new variable for a specific settings
-     * object in the corresponding @link DialogComponentVariableCompatible.
+     * object.
      *
-     * @param dc DialogComponent of corresponding settings object
+     * @param dc settings object of corresponding DialogComponent  
      * @return new WorkflowVariableModel which is already registered
      */
     protected ScopeVariableModel createWorkflowVariableModel(
-            SettingsModelScopeVariableCompatible dc) {
+            final SettingsModelScopeVariableCompatible dc) {
         return createWorkflowVariableModel(dc.getKey(),
                 dc.getScopeVariableType());
     }
+    
+    /** Sets the settings from the second argument into the scope variables tab.
+     * The parameter tree is supposed to follow the node settings argument.
+     * @param nodeSettings The (user) settings of the node. 
+     * @param variableSettings The scope variable settings.
+     */
+    @SuppressWarnings("unchecked")
+    private void initScopeVariablesTab(final NodeSettingsRO nodeSettings, 
+            final NodeSettingsRO variableSettings) {
+        m_scopeVariableTab.setErrorLabel("");
+        m_scopeVariableTab.setModified(true);
+        m_scopeVariableTab.setVariableSettings(nodeSettings, variableSettings,
+                m_scopeObjectStack, Collections.EMPTY_SET);
+        for (ScopeVariableModel m : m_scopeVariablesModelList) {
+            ConfigEditTreeNode configNode = m_scopeVariableTab
+                .findTreeNodeForChild(new String[]{m.getKey()});
+            if (configNode != null) {
+                m.setInputVariableName(configNode.getUseVariableName());
+                m.setOutputVariableName(configNode.getExposeVariableName());
+            }
+        }
+        m_scopeVariablesModelChanged = false;
+    }
 
-    private void onVariablesTabSelected() {
+    /** Updates the scope variable tab to reflect the current parameter tree.
+     * It also includes the config of the scope variable models (the little
+     * buttons attached to some control elements). */
+    private void updateScopeVariablesTab() {
         m_scopeVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
         NodeSettings variableSettings;
@@ -956,27 +985,45 @@ public abstract class NodeDialogPane {
             add(new JScrollPane(panel), BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
+        
+        /** Find the tree node that is associated with the given key path.
+         * @param keyPath The path in the tree (single root is omitted).
+         * @return The config node or null if not present.
+         */
+        ConfigEditTreeNode findTreeNodeForChild(final String[] keyPath) {
+            return m_tree.getModel().findChildForKeyPath(keyPath);
+        }
 
         /** Update the panel to reflect new properties.
          * @param nodeSettings Settings of the node (or currently entered in
          *  the remaining tabs of the dialog.
-         * @param variableSettings  The variable mask.
+         * @param varSettings  The variable mask.
          * @param stack the stack to get the variables from.
          * @param variableModels The models that may be used in the main panels
          * of the dialog to overwrite settings in place. */
-        void setVariableSettings(final NodeSettings nodeSettings,
-                final NodeSettings variableSettings,
+        void setVariableSettings(final NodeSettingsRO nodeSettings,
+                final NodeSettingsRO varSettings,
                 final ScopeObjectStack stack,
                 final Collection<ScopeVariableModel> variableModels) {
-            NodeSettings nodeSetsCopy = nodeSettings == null
-                    ? new NodeSettings("variables") : nodeSettings;
+            if (nodeSettings != null && !(nodeSettings instanceof Config)) {
+                m_logger.debug("Node settings object not instance of "
+                        + Config.class + " -- disabling flow variables tab");
+                return;
+            }
+            if (varSettings != null && !(varSettings instanceof Config)) {
+                m_logger.debug("Variable settings object not instance of "
+                        + Config.class + " -- disabling flow variables tab");
+                return;
+            }
+            Config nodeSetsCopy = nodeSettings == null
+            ? new NodeSettings("variables") : (Config)nodeSettings;
             ConfigEditTreeModel model;
             try {
-                if (variableSettings == null) {
+                if (varSettings == null) {
                     model = ConfigEditTreeModel.create(nodeSetsCopy);
                 } else {
                     model = ConfigEditTreeModel.create(
-                        nodeSetsCopy, variableSettings);
+                        nodeSetsCopy, (Config)varSettings);
                 }
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "

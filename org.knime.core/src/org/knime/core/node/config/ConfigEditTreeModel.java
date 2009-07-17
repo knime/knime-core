@@ -135,6 +135,30 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     public ConfigEditTreeNode getRoot() {
         return (ConfigEditTreeNode)super.getRoot();
     }
+    
+    /** Get the child tree node associated with the key path. 
+     * Returns null if there is no child.
+     * @param keyPath The path the child.
+     * @return the child (or a children's child) for the given key path.
+     */
+    public ConfigEditTreeNode findChildForKeyPath(final String[] keyPath) {
+        ConfigEditTreeNode current = getRoot();
+        for (String key : keyPath) {
+            ConfigEditTreeNode newCurrent = null;
+            for (Enumeration<?> e = current.children(); e.hasMoreElements();) {
+                ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
+                if (c.getConfigEntry().getKey().equals(key)) {
+                    newCurrent = c;
+                    break;
+                }
+            }
+            if (newCurrent == null) {
+                return null;
+            }
+            current = newCurrent;
+        }
+        return current;
+    }
 
     /** Updates this tree with the settings available in the argument list. This
      * becomes necessary if a dialog provides its "expert" settings also via
@@ -186,7 +210,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     }
 
     /** Single Tree node implementation. */
-    static final class ConfigEditTreeNode extends DefaultMutableTreeNode {
+    public static final class ConfigEditTreeNode 
+        extends DefaultMutableTreeNode {
 
         /** The tree model, which is null for all nodes accept for the root.
          * It is set after the tree nodes are constructed. Used to propagate
