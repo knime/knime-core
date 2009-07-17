@@ -35,12 +35,15 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
+import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -53,8 +56,9 @@ public class SingleNodeContainerPersistorVersion200 extends
     private static final String NODE_FILE = "node.xml";
 
     public SingleNodeContainerPersistorVersion200(
-            final WorkflowPersistorVersion200 workflowPersistor) {
-        super(workflowPersistor);
+            final WorkflowPersistorVersion200 workflowPersistor,
+            final String versionString) {
+        super(workflowPersistor, versionString);
     }
     
     /** {@inheritDoc} */
@@ -78,6 +82,42 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
+    protected SingleNodeContainerSettings loadSNCSettings(
+            final NodeSettingsRO settings, 
+            final NodePersistorVersion1xx nodePersistor)
+    throws InvalidSettingsException {
+        // TODO : don't use hard-coded strings here (what about "2.0.3"?)
+        if ("2.0.0".equals(getVersionString())) {
+            return super.loadSNCSettings(settings, nodePersistor);
+        } else {
+            // any version after 2.0 saves the snc settings in the settings.xml
+            // (previously these settings were saves as part of the node.xml)
+            SingleNodeContainerSettings sncs = 
+                new SingleNodeContainerSettings();
+            MemoryPolicy p;
+            NodeSettingsRO sub =
+                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            String memoryPolicy =
+                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
+                            MemoryPolicy.CacheSmallInMemory.toString());
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                        "Can't use null memory policy.");
+            }
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+            sncs.setMemoryPolicy(p);
+            return sncs;
+        }
+            
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     protected List<ScopeObject> loadScopeObjects(
             final NodeSettingsRO settings)
         throws InvalidSettingsException {
@@ -87,31 +127,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
             String type = sub.getString("type");
             if ("variable".equals(type)) {
-                String name = sub.getString("name");
-                String typeS = sub.getString("class");
-                if (typeS == null || name == null) {
-                    throw new InvalidSettingsException("name or type is null");
-                }
-                Type varType;
-                try {
-                    varType = Type.valueOf(typeS);
-                } catch (final IllegalArgumentException e) {
-                    throw new InvalidSettingsException("invalid type " + typeS);
-                }
-                ScopeVariable v;
-                switch (varType) {
-                case DOUBLE:
-                    v = new ScopeVariable(name, sub.getDouble("value"));
-                    break;
-                case INTEGER:
-                    v = new ScopeVariable(name, sub.getInt("value"));
-                    break;
-                case STRING:
-                    v = new ScopeVariable(name, sub.getString("value"));
-                    break;
-                default:
-                    throw new InvalidSettingsException("Unknown type " + type);
-                }
+                ScopeVariable v = ScopeVariable.load(sub);
                 result.add(v);
             } else if ("loopcontext".equals(type)) {
                 result.add(new RestoredScopeLoopContext());
@@ -162,8 +178,9 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveScopeObjectStack(settings, snc);
+        saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200 metaPersistor = 
-            createNodeContainerMetaPersistor(null);
+            createNodeContainerMetaPersistor(nodeDirRef);
         metaPersistor.save(snc, settings);
         NodePersistorVersion200 persistor = createNodePersistor();
         persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
@@ -193,6 +210,11 @@ public class SingleNodeContainerPersistorVersion200 extends
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }
     
+    protected void saveSNCSettings(final NodeSettingsWO settings, 
+            final SingleNodeContainer snc) {
+        snc.saveSNCSettings(settings);
+    }
+    
     protected void saveScopeObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");
@@ -206,21 +228,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 ScopeVariable v = (ScopeVariable)s;
                 NodeSettingsWO sub = stackSet.addNodeSettings("Variable_" + c);
                 sub.addString("type", "variable");
-                sub.addString("name", v.getName());
-                sub.addString("class", v.getType().name());
-                switch (v.getType()) {
-                case INTEGER:
-                    sub.addInt("value", v.getIntValue());
-                    break;
-                case DOUBLE:
-                    sub.addDouble("value", v.getDoubleValue());
-                    break;
-                case STRING:
-                    sub.addString("value", v.getStringValue());
-                    break;
-                default:
-                    assert false : "Unknown variable type: " + v.getType();
-                }
+                v.save(sub);
             } else if (s instanceof ScopeLoopContext) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
                 sub.addString("type", "loopcontext");

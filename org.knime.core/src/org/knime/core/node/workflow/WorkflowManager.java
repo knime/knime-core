@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -51,6 +52,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.EmptyNodeDialogPane;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
@@ -66,17 +68,25 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -95,9 +105,11 @@ public final class WorkflowManager extends NodeContainer {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowManager.class);
 
+    private static final String DEFAULT_NAME = "Workflow Manager";
+
     /** Name of this workflow (usually displayed at top of the node figure). */
-    private String m_name = "Workflow Manager";
-    
+    private String m_name = DEFAULT_NAME;
+
     /** Executor for asynchronous event notification. */
     private static final Executor WORKFLOW_NOTIFIER =
         Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -110,7 +122,7 @@ public final class WorkflowManager extends NodeContainer {
                 return t;
             }
         });
-    
+
     // Nodes and edges forming this workflow:
     final Workflow m_workflow;
 
@@ -121,6 +133,9 @@ public final class WorkflowManager extends NodeContainer {
     private UIInformation m_inPortsBarUIInfo;
     private final WorkflowOutPort[] m_outPorts;
     private UIInformation m_outPortsBarUIInfo;
+
+    /** Vector holding workflow specific variables. */
+    private Vector<ScopeVariable> m_workflowVariables;
 
     // Misc members:
 
@@ -203,6 +218,9 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id, persistor.getMetaPersistor());
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
+        m_loadVersion = persistor.getLoadVersion();
+        m_workflowVariables =
+            new Vector<ScopeVariable>(persistor.getWorkflowVariables());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -233,12 +251,12 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Create new project - which is the same as creating a new subworkflow
      * at this level with no in- or outports.
-     *
+     * @param name The name of the workflow (null value is ok)
      * @return newly created workflow
      */
-    public WorkflowManager createAndAddProject() {
+    public WorkflowManager createAndAddProject(final String name) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
-                new PortType[0]);
+                new PortType[0], name);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -321,11 +339,13 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Remove node if possible. Throws an exception if node is "busy" and can
-     * not be removed at this time.
-     *
+     * not be removed at this time. If the node does not exist, this method
+     * returns without exception.
+     * 
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
+
         NodeContainer nc;
         synchronized (m_workflowMutex) {
             // if node does not exist, simply return
@@ -367,10 +387,11 @@ public final class WorkflowManager extends NodeContainer {
      * free index for the new node within this workflow.
      * @param inPorts types of external inputs (going into this workflow)
      * @param outPorts types of external outputs (exiting this workflow)
+     * @param name Name of the workflow (null values will be handled)
      * @return newly created WorflowManager
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
-            final PortType[] outPorts) {
+            final PortType[] outPorts, final String name) {
         if (this == ROOT && (inPorts.length != 0 || outPorts.length != 0)) {
             throw new IllegalStateException("Can't create sub workflow on "
                 + "root workflow manager, use createProject() instead");
@@ -380,6 +401,9 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             newID = createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
+            if (name != null) {
+                wfm.m_name = name;
+            }
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
@@ -429,7 +453,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param propagateChanges Whether to also check workflow state
      * (this is always true unless called from the load routines)
      */
-    private void addNodeContainer(final NodeContainer nodeContainer, 
+    private void addNodeContainer(final NodeContainer nodeContainer,
             final boolean propagateChanges) {
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
             throw new IllegalStateException("Can't add ordinary node to root "
@@ -654,16 +678,16 @@ public final class WorkflowManager extends NodeContainer {
         PortType destType = (destNode != null
             ? destNode.getInPort(destPort).getPortType()
             : this.getOutPort(destPort).getPortType());
-        /* ports can be connected in two cases: 
-         * - the destination type is a super type or the same type 
-         *   of the source port (usual case) or 
-         * - if the source port is a super type of the destination port, 
+        /* ports can be connected in two cases:
+         * - the destination type is a super type or the same type
+         *   of the source port (usual case) or
+         * - if the source port is a super type of the destination port,
          *   for instance a reader node that reads a general PMML objects,
-         *   validity is checked using the runtime class of the actual 
-         *   port object then */ 
+         *   validity is checked using the runtime class of the actual
+         *   port object then */
         Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
         Class<? extends PortObject> destCl = destType.getPortObjectClass();
-        if (!destCl.isAssignableFrom(sourceCl) 
+        if (!destCl.isAssignableFrom(sourceCl)
             && !sourceCl.isAssignableFrom(destCl)) {
             return false;
         }
@@ -708,7 +732,7 @@ public final class WorkflowManager extends NodeContainer {
             return false;
         }
         if (destID.equals(getID())) { // wfm out connection
-            // note it is ok if the WFM itself is executing... 
+            // note it is ok if the WFM itself is executing...
             if (getParent().hasSuccessorInProgress(getID())) {
                 return false;
             }
@@ -853,6 +877,19 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
+    /** Get all outgoing connections for a node.
+     * @param id The requested node
+     * @return All current outgoing connections in a new set.
+     * @throws IllegalArgumentException If the node is unknown or null.
+     */
+    public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            getNodeContainer(id); // for exception handling
+            return new LinkedHashSet<ConnectionContainer>(
+                    m_workflow.getConnectionsBySource(id));
+        }
+    }
+
     /**
      * Returns the incoming connection of the node with the passed node id at
      * the specified port.
@@ -863,7 +900,8 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
         synchronized (m_workflowMutex) {
-            Set<ConnectionContainer>inConns = m_workflow.getConnectionsByDest(id);
+            Set<ConnectionContainer>inConns =
+                m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
                     if (cont.getDestPort() == portIdx) {
@@ -874,6 +912,20 @@ public final class WorkflowManager extends NodeContainer {
         }
         return null;
     }
+
+    /** Get all incoming connections for a node.
+     * @param id The requested node
+     * @return All current incoming connections in a new set.
+     * @throws IllegalArgumentException If the node is unknown or null.
+     */
+    public Set<ConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            getNodeContainer(id); // for exception handling
+            return new LinkedHashSet<ConnectionContainer>(
+                    m_workflow.getConnectionsByDest(id));
+        }
+    }
+
 
     /////////////////////
     // Node Settings
@@ -888,7 +940,6 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings)
     throws InvalidSettingsException {
-        // TODO load setting for MetaNodeContainer/WorkflowManager-nodes
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             if (!nc.getState().executionInProgress()
@@ -898,8 +949,7 @@ public final class WorkflowManager extends NodeContainer {
                     if (nc instanceof SingleNodeContainer) {
                         ((SingleNodeContainer)nc).reset();
                     } else {
-                        assert nc instanceof WorkflowManager;
-                        assert false;
+                        ((WorkflowManager)nc).resetAllNodesInWFM();
                     }
                 }
                 nc.loadSettings(settings);
@@ -932,22 +982,40 @@ public final class WorkflowManager extends NodeContainer {
     /** (un)mark all nodes in the workflow (and all subworkflows!)
      * for execution (if they are not executed already). Once they are
      * configured (if not already) and all inputs are available they
-     * will be queued "automatically" (usually triggered by doAfterExecution
+     * will be queued automatically (usually triggered by doAfterExecution
      * of the predecessors).
      * This does NOT affect any predecessors of this workflow!
-     * 
+     *
      * @param flag mark nodes if true, otherwise try to erase marks
      */
     private void markForExecutionAllNodesInWorkflow(final boolean flag) {
         synchronized (m_workflowMutex) {
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                NodeContainer nc = m_workflow.getNode(id);
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).markForExecution(flag);
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
+                    if (flag) {
+                        switch (nc.getState()) {
+                        case CONFIGURED:
+                        case IDLE:
+                            snc.markForExecution(true);
+                            break;
+                        default:
+                            // either executed or to-be-executed
+                        }
+
+                    } else {
+                        switch (nc.getState()) {
+                        case MARKEDFOREXEC:
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            snc.markForExecution(false);
+                            break;
+                        default:
+                            // ignore all other
+                        }
+                    }
                 } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).
-                            markForExecutionAllNodesInWorkflow(flag);
+                    WorkflowManager wfm = ((WorkflowManager)nc);
+                    wfm.markForExecutionAllNodesInWorkflow(flag);
                 }
             }
         }
@@ -976,33 +1044,33 @@ public final class WorkflowManager extends NodeContainer {
             LinkedHashMap<NodeID, Set<Integer>> sortedNodes =
                 m_workflow.createBackwardsBreadthFirstSortedList(p);
             for (NodeID thisID : sortedNodes.keySet()) {
-                if (!thisID.equals(getID())) { // skip WFM
-                    NodeContainer thisNode = m_workflow.getNode(thisID);
-                    if (thisNode instanceof SingleNodeContainer) {
-                        SingleNodeContainer snc = (SingleNodeContainer)thisNode;
-                        switch (snc.getState()) {
-                        case IDLE:
-                        case CONFIGURED:
-                            if (!markAndQueueNodeAndPredecessors(
-                                    snc.getID(), -1)) {
-                                return false;
-                            }
-                            break;
-                        case MARKEDFOREXEC:
-                        case UNCONFIGURED_MARKEDFOREXEC:
-                            // tolerate those states - nodes are already marked.
-                            break;
-                        default: // already running
-                            // TODO other states. Any reason to bomb?
+                if (thisID.equals(getID())) {
+                    continue; // skip WFM
+                }
+                NodeContainer thisNode = m_workflow.getNode(thisID);
+                if (thisNode instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)thisNode;
+                    switch (snc.getState()) {
+                    case IDLE:
+                    case CONFIGURED:
+                        if (!markAndQueueNodeAndPredecessors(snc.getID(), -1)) {
+                            return false;
                         }
-                    } else {
-                        assert thisNode instanceof WorkflowManager;
-                        Set<Integer> outPortIndicces = sortedNodes.get(thisID);
-                        for (Integer i : outPortIndicces) {
-                            if (!((WorkflowManager)thisNode).
-                                    markForExecutionAllAffectedNodes(i)) {
-                                return false;
-                            }
+                        break;
+                    case MARKEDFOREXEC:
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                        // tolerate those states - nodes are already marked.
+                        break;
+                    default: // already running
+                        // TODO other states. Any reason to bomb?
+                    }
+                } else {
+                    assert thisNode instanceof WorkflowManager;
+                    Set<Integer> outPortIndicces = sortedNodes.get(thisID);
+                    for (Integer i : outPortIndicces) {
+                        if (!((WorkflowManager)thisNode).
+                                markForExecutionAllAffectedNodes(i)) {
+                            return false;
                         }
                     }
                 }
@@ -1038,8 +1106,8 @@ public final class WorkflowManager extends NodeContainer {
                 if (nc instanceof SingleNodeContainer) {
                     ((SingleNodeContainer)nc).markForExecution(false);
                 } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).disableNodeForExecution(id);
+                    ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(
+                            false);
                 }
             default:
                 // ignore all other states (but touch successors)
@@ -1056,6 +1124,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         } else { // WFM
+            assert getID().equals(id);
             this.markForExecutionAllNodesInWorkflow(false);
             // unmark successors of this metanode
             getParent().disableNodeForExecution(this.getID());
@@ -1068,9 +1137,11 @@ public final class WorkflowManager extends NodeContainer {
      * in the right order, that is, only actively reset the "left most"
      * nodes in the workflow or the ones connected to meta node input
      * ports. The will also trigger resets of subsequent nodes.
+     * Also re-configure not executed nodes the same way to make sure that
+     * new workflow variables are spread accordingly.
      */
-    public void resetAll() {
-        synchronized (m_workflowMutex) {            
+    void resetAll() {
+        synchronized (m_workflowMutex) {
             for (NodeID id : m_workflow.getNodeIDs()) {
                 boolean hasNonParentPredecessors = false;
                 for (ConnectionContainer cc
@@ -1081,7 +1152,42 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 if (!hasNonParentPredecessors) {
-                    resetAndConfigureNode(id);
+                    if (getNodeContainer(id).isResetable()) {
+                        // reset nodes which are green - will configure
+                        // them afterwards anyway.
+                        resetAndConfigureNode(id);
+                    } else {
+                        // but make sure to re-configure yellow nodes so
+                        // that new variables are available in those
+                        // pipeline branches!
+                        configureNodeAndSuccessors(id, true);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Re-configure all configured nodes in this workflow to make sure that
+     * new workflow variables are spread accordingly.
+     */
+    void reconfigureAll() {
+        synchronized (m_workflowMutex) {
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                boolean hasNonParentPredecessors = false;
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsByDest(id)) {
+                    if (!cc.getSource().equals(this.getID())) {
+                        hasNonParentPredecessors = true;
+                        break;
+                    }
+                }
+                if (!hasNonParentPredecessors) {
+                    if (getNodeContainer(id).getState()
+                            .equals(State.CONFIGURED)) {
+                        // re-configure yellow nodes only
+                        configureNodeAndSuccessors(id, true);
+                    }
                 }
             }
         }
@@ -1094,7 +1200,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     void resetAllNodesInWFM() {
         synchronized (m_workflowMutex) {
-            if (!this.isResetable()) {
+            if (!isResetable()) {
                 // only attempt to do this if possible.
                 return;
             }
@@ -1111,13 +1217,15 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             }
+            // TODO Michael: this can be replaced by checkForNodeState...
+            //
             // don't let the WFM decide on the state himself - for example,
             // if there is only one WFMTHROUGH connection contained, it will
             // produce wrong states! Force it to be idle.
             setState(State.IDLE);
         }
     }
-    
+
     /** mark these nodes and all not-yet-executed predecessors for execution.
      * They will be marked first, queued when all inputs are available and
      * finally executed.
@@ -1127,7 +1235,18 @@ public final class WorkflowManager extends NodeContainer {
     public void executeUpToHere(final NodeID... ids) {
         synchronized (m_workflowMutex) {
             for (NodeID id : ids) {
-                markAndQueueNodeAndPredecessors(id, -1);
+                NodeContainer nc = getNodeContainer(id);
+                if (nc instanceof SingleNodeContainer) {
+                    markAndQueueNodeAndPredecessors(id, -1);
+                } else if (nc.isLocalWFM()) {
+                    // if the execute option on a meta node is selected, run
+                    // all nodes in it, not just the ones that are connected
+                    // to the outports
+                    // this will also trigger an execute on predecessors
+                    ((WorkflowManager)nc).executeAll();
+                } else {
+                    markAndQueueNodeAndPredecessors(id, -1);
+                }
             }
             checkForNodeStateChanges(true);
         }
@@ -1135,7 +1254,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Find all nodes which are connected to a specific inport of a node
      * and try to mark/queue them.
-     * 
+     *
      * @param id of node
      * @param inPortIndex index of inport
      * @return true of the marking was successful.
@@ -1168,55 +1287,60 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     /** Recursively iterates the predecessors and marks them for execution
      * before marking (and possibly queuing) this node itself.
-     * 
+     *
      * @param id The node whose predecessors are to marked for execution.
      * @param outPortIndex index of output port this request arrived from
      *   (or -1 if all ports are to be considered)
-     *   
+     *
      * @return true if we found executable predecessor
      */
     private boolean markAndQueueNodeAndPredecessors(final NodeID id,
             final int outPortIndex) {
         assert !id.equals(this.getID());
         synchronized (m_workflowMutex) {
-            NodeContainer thisNode = getNodeContainer(id);
+            NodeContainer nc = getNodeContainer(id);
             // first check some basic facts about this node:
-            // 1) executed or executing? - done (and happy)
-            if (thisNode.getState().equals(State.EXECUTED)
-                    || thisNode.getState().executionInProgress()) {
-                // everything fine: found "source" of chain in execution
+            // 1) executed? - done (and happy)
+            if (nc.getState().equals(State.EXECUTED)) {
+                // everything fine: found "source" of chain executed
+                // Note that we can not assume that an executing metanode
+                // is also a good thing: the port this one is connected
+                // to may still be idle! So we test for "executing" later
+                // for SNC's only (step 3)
                 return true;
             }
-            // 2) its a WFM:
-            if (thisNode instanceof WorkflowManager) {
+            // 2) its a to-be-locally-executed WFM:
+            if (nc.isLocalWFM()) {
                 // hand over control to the sub workflow (who will hand
                 // back up to this level if there are (implicit or explicit)
                 // through connections to follow:
-                WorkflowManager wfm = (WorkflowManager)thisNode;
+                WorkflowManager wfm = (WorkflowManager)nc;
                 return wfm.markForExecutionAllAffectedNodes(outPortIndex);
             }
-            assert thisNode instanceof SingleNodeContainer;
-            SingleNodeContainer snc = (SingleNodeContainer)thisNode;
-            // 3) now we check if we are dealing with a source (there is no
+            // 3) executing SingleNodeContainer? - done (and happy)
+            if (nc.getState().executionInProgress()) {
+                // everything fine: found "source" of chain in execution
+                return true;
+            }
+            // 4) now we check if we are dealing with a source (there is no
             //   need to traverse further up then and we can cancel the
             //   operation if the source is in a non-executable condition.
-            Set<ConnectionContainer> predConn
-                            = m_workflow.getConnectionsByDest(id);
-            if (thisNode.getNrInPorts() == 0) {
+            Set<ConnectionContainer> predConn =
+                m_workflow.getConnectionsByDest(id);
+            if (nc.getNrInPorts() == 0) {
                 assert predConn.size() == 0;
-                State thisState = thisNode.getState();
-                if (thisState.equals(State.CONFIGURED)) {
-                    snc.markForExecution(true);
-                    assert snc.getState().equals(State.MARKEDFOREXEC)
-                        : "SingleNodeContainer " + snc
-                        + " in unexpected state:" + snc.getState();
-                    snc.queue(new PortObject[0]);
+                if (canExecuteNode(nc.getID())) {
+                    nc.markForExecution(true);
+                    assert nc.getState().equals(State.MARKEDFOREXEC)
+                        : "NodeContainer " + nc + " in unexpected state:"
+                        + nc.getState();
+                    nc.queue(new PortObject[0]);
                     // we are now executing one of the sources of the chain
                     return true;
                 } else {
@@ -1224,16 +1348,13 @@ public final class WorkflowManager extends NodeContainer {
                     return false;
                 }
             }
-            assert thisNode.getNrInPorts() > 0;
-            // 4) we fail on nodes which are not fully connected:
-            if (predConn.size() < thisNode.getNrInPorts()) {
+            // 5) we fail on nodes which are not fully connected:
+            if (predConn.size() < nc.getNrInPorts()) {
                 // do not deal with incompletely connected nodes!
                 return false;
             }
-            // 5) now let's see if we can mark the predecessors of this node
+            // 6) now let's see if we can mark the predecessors of this node
             //  (and this way trigger the backwards traversal)
-            assert predConn.size() > 0;
-            assert predConn.size() == thisNode.getNrInPorts();
             // handle nodes which are in the middle of a pipeline
             // (A) recurse up to all predecessors of this node (mark/queue them)
             for (ConnectionContainer cc : predConn) {
@@ -1271,9 +1392,8 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
             if (canBeMarked) {
-                assert thisNode instanceof SingleNodeContainer;
-                ((SingleNodeContainer)thisNode).markForExecution(true);
-                queueIfQueuable(thisNode);
+                nc.markForExecution(true);
+                queueIfQueuable(nc);
                 return true;
             }
         }
@@ -1289,21 +1409,29 @@ public final class WorkflowManager extends NodeContainer {
      * @return whether successfully queued.
      */
     private boolean queueIfQueuable(final NodeContainer nc) {
-        if (nc instanceof WorkflowManager) {
+        if (nc.isLocalWFM()) {
             return false;
         }
-        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!isLocalWFM()) {
+            switch (getState()) {
+            case MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                return getParent().queueIfQueuable(this);
+            default:
+                return false;
+            }
+        }
         assert Thread.holdsLock(m_workflowMutex);
-        switch (snc.getState()) {
+        switch (nc.getState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
             case MARKEDFOREXEC:
                 break;
             default:
-                assert false : "Queuing of " + snc.getNameWithID()
-                    + "not possible, node is " + snc.getState();
+                assert false : "Queuing of " + nc.getNameWithID()
+                    + " not possible, node is " + nc.getState();
                 return false;
         }
-        NodeOutPort[] ports = assemblePredecessorOutPorts(snc.getID());
+        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
         PortObject[] inData = new PortObject[ports.length];
         boolean allDataAvailable = true;
         for (int i = 0; i < ports.length; i++) {
@@ -1313,14 +1441,17 @@ public final class WorkflowManager extends NodeContainer {
             allDataAvailable &= inData[i] != null;
         }
         if (allDataAvailable) {
-            if (snc.getState().equals(State.MARKEDFOREXEC)) {
-                snc.queue(inData);
+            switch (nc.getState()) {
+            case MARKEDFOREXEC:
+                nc.queue(inData);
                 return true;
-            } else {
-                assert State.UNCONFIGURED_MARKEDFOREXEC.equals(snc.getState());
-                disableNodeForExecution(snc.getID());
+            case UNCONFIGURED_MARKEDFOREXEC:
+                disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
                 return false;
+            default:
+                assert false : "Invalid state " + nc.getState()
+                    + ", case should have handeled above";
             }
         }
         return false;
@@ -1328,19 +1459,57 @@ public final class WorkflowManager extends NodeContainer {
 
     /* -------------- State changing actions and testers ----------- */
 
-    /** call-back from SingleNodeContainer called before node is actually
-     * executed.
+    /**
+     * Callback from NodeContainer to request a safe transition into the
+     * {@link NodeContainer.State#PREEXECUTE} state. This method is mostly
+     * only called with {@link SingleNodeContainer} as argument but may also be
+     * called with a remotely executed meta node.
+     * @param nc node whose execution is about to start
+     */
+    void doBeforePreExecution(final NodeContainer nc) {
+        assert !nc.isLocalWFM() : "No execution of local meta nodes";
+        synchronized (m_workflowMutex) {
+            LOGGER.debug(nc.getNameWithID() + " doBeforePreExecution");
+            nc.performStateTransitionPREEXECUTE();
+            checkForNodeStateChanges(true);
+        }
+    }
+
+    /**
+     * Callback from NodeContainer to request a safe transition into the
+     * {@link NodeContainer.State#POSTEXECUTE} state. This method is mostly
+     * only called with {@link SingleNodeContainer} as argument but may also be
+     * called with a remotely executed meta node.
+     * @param nc node whose execution is ending (and is now copying
+     *   result data, e.g.)
+     */
+    void doBeforePostExecution(final NodeContainer nc) {
+        assert !nc.isLocalWFM() : "No execution of local meta nodes";
+        synchronized (m_workflowMutex) {
+            LOGGER.debug(nc.getNameWithID() + " doBeforePostExecution");
+            nc.performStateTransitionPOSTEXECUTE();
+            checkForNodeStateChanges(true);
+        }
+    }
+
+    /** Call-back from NodeContainer called before node is actually executed.
+     * The argument node is in usually a {@link SingleNodeContainer}, although
+     * it can also be a meta node (i.e. a <code>WorkflowManager</code>), which
+     * is executed remotely (execution takes place as a single operation).
      *
-     * @param snc SingleNodeContainer which finished execution in a JobExecutor
-     * @throws IllegalContextStackObjectException If loop end nodes have 
+     * @param nc node whose execution is about to start
+     * @throws IllegalContextStackObjectException If loop end nodes have
      * problems identifying their start node
      */
-    void doBeforeExecution(final SingleNodeContainer snc) {
-        assert !snc.getID().equals(this.getID());
+    void doBeforeExecution(final NodeContainer nc) {
+        assert !nc.getID().equals(this.getID());
+        assert !nc.isLocalWFM() : "No execution of local meta nodes";
         synchronized (m_workflowMutex) {
-            LOGGER.debug(snc.getNameWithID() + " doBeforeExecute");
+            LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
             // allow SNC to update states etc
-                if (snc.getLoopRole().equals(LoopRole.END)) {
+            if (nc instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                if (LoopRole.END.equals(snc.getLoopRole())) {
                     // if this is an END to a loop, make sure it knows its head
                     ScopeLoopContext slc = snc.getNode().
                                getScopeContextStackContainer().peek(
@@ -1350,19 +1519,19 @@ public final class WorkflowManager extends NodeContainer {
                                 + snc.getNameWithID() + ":\n"
                                 + snc.getScopeObjectStack().toDeepString());
                         throw new IllegalContextStackObjectException(
-                                "Encountered loop-end without " +
-                                "corresponding head!");
+                                "Encountered loop-end without "
+                                + "corresponding head!");
                     } else if (slc instanceof RestoredScopeLoopContext) {
                         throw new IllegalContextStackObjectException(
                                 "Can't continue loop as the workflow was "
-                                + "restored with the loop being partially " 
+                                + "restored with the loop being partially "
                                 + "executed. Reset loop start and execute "
                                 + "entire loop again.");
                     }
                     NodeContainer headNode = m_workflow.getNode(slc.getOwner());
                     if (headNode == null) {
                         throw new IllegalContextStackObjectException(
-                                "Loop start and end node must be in the same " 
+                                "Loop start and end node must be in the same "
                                 + "workflow");
                     }
                     snc.getNode().setLoopStartNode(
@@ -1371,81 +1540,96 @@ public final class WorkflowManager extends NodeContainer {
                     // or not if it's any other type of node
                     snc.getNode().setLoopStartNode(null);
                 }
-                snc.preExecuteNode();
+            }
+            nc.performStateTransitionEXECUTING();
             checkForNodeStateChanges(true);
         }
     }
 
-    /** cleanup a node after execution.
+    /** Cleanup a node after execution. This will also permit the argument node
+     * to change its state in
+     * {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
+     * This method also takes care of restarting loops, if there are any to be
+     * continued.
      *
-     * @param snc SingleNodeContainer which just finished execution
-     * @param success indicates if node execution was finished successfully
+     * <p>As in {@link #doBeforeExecution(NodeContainer)} the argument node is
+     * usually a {@link SingleNodeContainer} but can also be a remotely executed
+     * <code>WorkflowManager</code>.
+     *
+     * @param nc node which just finished execution
+     * @param status indicates if node execution was finished successfully
      *    (note that this does not imply State=EXECUTED e.g. for loop ends)
      */
-    void doAfterExecution(final SingleNodeContainer snc,
-            final boolean success) {
-        assert !snc.getID().equals(this.getID());
+    void doAfterExecution(final NodeContainer nc,
+            final NodeContainerExecutionStatus status) {
+        assert isLocalWFM() : "doAfterExecute not allowed for "
+            + "remotely executing workflows";
+        assert !nc.getID().equals(this.getID());
+        boolean success = status.isSuccess();
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
-            LOGGER.debug(snc.getNameWithID() + " doAfterExecute" + st);
+            LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
             if (!success) {
                 // execution failed - clean up successors' execution-marks
-                disableNodeForExecution(snc.getID());
+                disableNodeForExecution(nc.getID());
                 // and also any nodes which were waiting for this one to
                 // be executed.
-                for (ScopeObject so : snc.getWaitingLoops()) {
+                for (ScopeObject so : nc.getWaitingLoops()) {
                     disableNodeForExecution(so.getOwner());
                 }
-                snc.clearWaitingLoopList();
+                nc.clearWaitingLoopList();
             }
             // allow SNC to update states etc
-            snc.postExecuteNode(success);
+            nc.performStateTransitionEXECUTED(status);
             boolean canConfigureSuccessors = true;
-            // process loop context - only for "real" nodes:
-            if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
-                // if this was BEGIN, it's not anymore (until we do not
-                // restart it explicitly!)
-                snc.getNode().setLoopEndNode(null);
-            }
-            Node node = snc.getNode();
-            if (node.getLoopStatus() != null) {
-                // we are supposed to execute this loop again!
-                // first retrieve ScopeContext
-                ScopeLoopContext slc = node.getLoopStatus();
-                // first check if the loop is properly configured:
-                if (m_workflow.getNode(slc.getOwner()) == null) {
-                    // obviously not: origin of the loop is not in this WFM!
-                    // nothing else to do: NC stays configured
-                    assert snc.getState() == NodeContainer.State.CONFIGURED;
-                    // and choke
-                    throw new IllegalContextStackObjectException(
-                            "Loop nodes are not in the same workflow!");
-                } else {
-                    // make sure the end of the loop is properly
-                    // configured:
-                    slc.setTailNode(snc.getID());
-                    // and try to restart loop
-                    restartLoop(slc);
-                    // clear stack (= loop context)
-                    node.clearLoopStatus();
-                    // and make sure we do not accidentally configure the
-                    // remainder of this node since we are not yet done
-                    // with the loop
-                    canConfigureSuccessors = false;
+            if (nc instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                // process loop context - only for "real" nodes:
+                if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                    // if this was BEGIN, it's not anymore (until we do not
+                    // restart it explicitly!)
+                    snc.getNode().setLoopEndNode(null);
+                }
+                Node node = snc.getNode();
+                if (node.getLoopStatus() != null) {
+                    // we are supposed to execute this loop again!
+                    // first retrieve ScopeContext
+                    ScopeLoopContext slc = node.getLoopStatus();
+                    // first check if the loop is properly configured:
+                    if (m_workflow.getNode(slc.getOwner()) == null) {
+                        // obviously not: origin of the loop is not in this WFM!
+                        // nothing else to do: NC stays configured
+                        assert nc.getState() == NodeContainer.State.CONFIGURED;
+                        // and choke
+                        throw new IllegalContextStackObjectException(
+                                "Loop nodes are not in the same workflow!");
+                    } else {
+                        // make sure the end of the loop is properly
+                        // configured:
+                        slc.setTailNode(nc.getID());
+                        // and try to restart loop
+                        restartLoop(slc);
+                        // clear stack (= loop context)
+                        node.clearLoopStatus();
+                        // and make sure we do not accidentally configure the
+                        // remainder of this node since we are not yet done
+                        // with the loop
+                        canConfigureSuccessors = false;
+                    }
                 }
             }
-            if (snc.getWaitingLoops().size() >= 1) {
+            if (nc.getWaitingLoops().size() >= 1) {
                 // looks as if some loops were waiting for this node to
                 // finish! Let's try to restart them:
-                for (ScopeLoopContext slc : snc.getWaitingLoops()) {
+                for (ScopeLoopContext slc : nc.getWaitingLoops()) {
                     restartLoop(slc);
                 }
-                snc.clearWaitingLoopList();
+                nc.clearWaitingLoopList();
             }
             if (canConfigureSuccessors) {
                 // may be SingleNodeContainer or WFM contained within this
                 // one but then it can be treated like a SNC
-                configureNodeAndSuccessors(snc.getID(), false);
+                configureNodeAndSuccessors(nc.getID(), false);
             }
             checkForNodeStateChanges(true);
         }
@@ -1506,7 +1690,7 @@ public final class WorkflowManager extends NodeContainer {
                 LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
                         + "during loop run, it is " + nc.getState());
                 continue;
-            } 
+            }
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).reset();
             } else {
@@ -1589,7 +1773,7 @@ public final class WorkflowManager extends NodeContainer {
     /** check if node can be safely reset. In case of a WFM we will check
      * if one of the internal nodes can be reset and none of the nodes
      * are "in progress".
-     * 
+     *
      * @return if all internal nodes can be reset.
      */
     @Override
@@ -1616,6 +1800,141 @@ public final class WorkflowManager extends NodeContainer {
         }
         // nothing of the above: false.
         return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void markForExecution(final boolean flag) {
+        assert !isLocalWFM() : "Setting execution mark on meta node not allowed"
+            + " for locally executing (sub-)flows";
+        if (getState().executionInProgress()) {
+            throw new IllegalStateException("Execution of (sub-)flow already "
+                    + "in progress, current state is " + getState());
+        }
+        markForExecutionAllNodesInWorkflow(flag);
+        setState(State.MARKEDFOREXEC);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemoteExecuting() {
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemoteExecuting();
+            }
+            // do not propagate -- this method is called from parent
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemotePreExecute() {
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemotePreExecute();
+            }
+            // do not propagate -- this method is called from parent
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemotePostExecute() {
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemotePostExecute();
+            }
+            // do not propagate -- this method is called from parent
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                int i = nc.getID().getIndex();
+                NodeContainerExecutionStatus sub = status.getChildStatus(i);
+                if (sub == null) {
+                    assert false : "Execution status is null for child " + i;
+                    sub = NodeContainerExecutionStatus.FAILURE;
+                }
+                // will be ignored on already executed nodes
+                // (think of an executed file reader in a meta node that is
+                // submitted onto a cluster in the executed state already)
+                nc.mimicRemoteExecuted(sub);
+            }
+            // do not propagate -- method is (indirectly) called from parent
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionPREEXECUTE() {
+        assert !isLocalWFM() : "Execution of meta node not allowed"
+            + " for locally executing (sub-)flows";
+        synchronized (m_nodeMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemotePreExecute();
+            }
+            // method is called from parent, don't propagate state changes
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionEXECUTING() {
+        assert !isLocalWFM() : "Execution of meta node not allowed"
+            + " for locally executing (sub-)flows";
+        synchronized (m_nodeMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemoteExecuting();
+            }
+            // method is called from parent, don't propagate state changes
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionPOSTEXECUTE() {
+        assert !isLocalWFM() : "Execution of meta node not allowed"
+            + " for locally executing (sub-)flows";
+        synchronized (m_nodeMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.mimicRemotePostExecute();
+            }
+            // method is called from parent, don't propagate state changes
+            checkForNodeStateChanges(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionEXECUTED(
+            final NodeContainerExecutionStatus status) {
+        assert !isLocalWFM() : "Execution of meta node not allowed"
+            + " for locally executing (sub-)flows";
+        synchronized (m_workflowMutex) {
+            mimicRemoteExecuted(status);
+            String stateList = printNodeSummary(getID(), 0);
+            // this method is called from the parent's doAfterExecute
+            // we don't propagate state changes (i.e. argument flag is false)
+            // since the check for state changes in the parent will happen next
+            if (!sweep(false)) {
+                LOGGER.debug("Some states were invalid, old states are:");
+                LOGGER.debug(stateList);
+                LOGGER.debug("The new (corrected) states are: ");
+                LOGGER.debug(printNodeSummary(getID(), 0));
+            }
+            // allow failed nodes (IDLE) to be configured
+            configureAllNodesInWFM(/*keepNodeMessage=*/true);
+        }
     }
 
     /* ------------- node commands -------------- */
@@ -1664,7 +1983,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Reset those nodes which are connected to a specific workflow
      * incoming port.
-     * 
+     *
      * @param inportIndex index of port.
      */
     void invokeResetOnPortSuccessors(final int inportIndex) {
@@ -1776,6 +2095,7 @@ public final class WorkflowManager extends NodeContainer {
                         // called throughout subsequent calls...)
                         ((WorkflowManager)nc).resetAll();
                     }
+                    nc.resetJobManagerViews();
                     // and launch configure starting with this node
                     configureNodeAndSuccessors(id, true);
                 }
@@ -1865,59 +2185,138 @@ public final class WorkflowManager extends NodeContainer {
             if (nc == null) {
                 return false;
             }
+            // don't allow individual execution of nodes in a remote exec flow
+            if (!isLocalWFM()) {
+                return false;
+            }
             // check for WorkflowManager - which we handle differently
             if (nc instanceof WorkflowManager) {
-                // simply check if there is ANY excutable node in this
-                // WFM. If yes: return true.
-                WorkflowManager wfm = (WorkflowManager)nc;
-                for (NodeID id : wfm.m_workflow.getNodeIDs()) {
-                    if (wfm.canExecuteNode(id)) {
-                        return true;
-                    }
+                return ((WorkflowManager)nc).hasExecutableNode();
+            } else {
+                return nc.getState().equals(State.CONFIGURED);
+            }
+        }
+    }
+
+    /** @return true if any node contained in this workflow is executable,
+     * that is configured.
+     */
+    private boolean hasExecutableNode() {
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc instanceof SingleNodeContainer) {
+                if (nc.getState().equals(State.CONFIGURED)) {
+                    return true;
                 }
             } else {
-                assert nc instanceof SingleNodeContainer;
-                // node itself needs to be configured.
-                if (nc.getState().equals(NodeContainer.State.CONFIGURED)) {
+                if (((WorkflowManager)nc).hasExecutableNode()) {
                     return true;
                 }
             }
         }
-        // all other cases: not executable!
         return false;
     }
 
-    /**
-     * Cancel execution of all children.
-     */
-    void cancelExecutionOfAllChildren() {
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            // TODO may need to be sorted last-first.
-            if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).cancelExecution();
+    /** {@inheritDoc} */
+    @Override
+    void cancelExecution() {
+        synchronized (m_workflowMutex) {
+            NodeExecutionJob job = getExecutionJob();
+            if (job != null) {
+                // this is a remotely executed workflow, cancel its execution
+                // and let the execution job take care of a state updates of
+                // the contained nodes.
+                assert !isLocalWFM();
+                job.cancel();
             } else {
-                assert nc instanceof WorkflowManager;
-                ((WorkflowManager)nc).cancelExecutionOfAllChildren();
+                for (NodeContainer nc : m_workflow.getNodeValues()) {
+                    nc.cancelExecution();
+                }
+                checkForNodeStateChanges(true);
             }
         }
     }
-    
+
     /**
      * Cancel execution of the given NodeContainer.
      *
      * @param nc node to be canceled
      */
     public void cancelExecution(final NodeContainer nc) {
-        assert nc != null;
         disableNodeForExecution(nc.getID());
         synchronized (m_workflowMutex) {
             if (nc.getState().executionInProgress()) {
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).cancelExecution();
+                nc.cancelExecution();
+            }
+            checkForNodeStateChanges(true);
+        }
+    }
+
+    /** Is the node with the given ID ready to take a new job manager. This
+     * is generally true if the node is currently not executing.
+     * @param nodeID The node in question.
+     * @return Whether it's save to invoke the
+     * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
+     */
+    public boolean canSetJobManager(final NodeID nodeID) {
+        synchronized (m_workflowMutex) {
+            if (!m_workflow.containsNodeKey(nodeID)) {
+                return false;
+            }
+            NodeContainer nc = getNodeContainer(nodeID);
+            switch (nc.getState()) {
+            case QUEUED:
+            case PREEXECUTE:
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+            case POSTEXECUTE:
+                return false;
+            default:
+                return true;
+            }
+        }
+    }
+
+    /** Sets a new job manager on the node with the given ID.
+     * @param nodeID The node in question.
+     * @param jobMgr The new job manager (may be null to use parent's one).
+     * @throws IllegalStateException If the node is not ready
+     * @throws IllegalArgumentException If the node is unknown
+     * @see #canSetJobManager(NodeID)
+     */
+    public void setJobManager(
+            final NodeID nodeID, final NodeExecutionJobManager jobMgr) {
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = getNodeContainer(nodeID);
+            nc.setJobManager(jobMgr);
+        }
+    }
+
+    /** Attempts to cancel or running nodes in preparation for a removal of
+     * this node (or its parent) from the root. Executing nodes, which can be
+     * disconnected from the execution (e.g. remote cluster execution) are
+     * disconnected if their status has been saved before.
+     */
+    public void shutdown() {
+        performShutdown();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performShutdown() {
+        synchronized (m_workflowMutex) {
+            NodeExecutionJob job = getExecutionJob();
+            if (job != null) {
+                if (job.isSavedForDisconnect()) {
+                    findJobManager().disconnect(job);
                 } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).cancelExecutionOfAllChildren();
+                    cancelExecution();
                 }
+            } else {
+                for (NodeContainer nc : m_workflow.getNodeValues()) {
+                    disableNodeForExecution(nc.getID());
+                    nc.performShutdown();
+                }
+                checkForNodeStateChanges(false);
             }
         }
     }
@@ -1946,7 +2345,7 @@ public final class WorkflowManager extends NodeContainer {
                 try {
                     mySemaphore.wait();
                 } catch (InterruptedException ie) {
-                    cancelExecutionOfAllChildren();
+                    cancelExecution();
                     return false;
                 }
             }
@@ -1990,51 +2389,94 @@ public final class WorkflowManager extends NodeContainer {
             }
             // try to execute the current node
             NodeContainer nc = m_workflow.getNode(thisID);
-            if (nc instanceof SingleNodeContainer) {
-                executeUpToHere(thisID);
-            } else {
+            if (nc.isLocalWFM()) {
                 assert nc instanceof WorkflowManager;
                 ((WorkflowManager)nc).executeAll();
+            } else {
+                executeUpToHere(thisID);
             }
             // and finally move the current node to the other list
             executedNodes.add(thisID);
         }
     }
 
+    boolean continueExecutionOnLoad(final NodeContainer nc,
+            final NodeContainerPersistor persistor)
+        throws InvalidSettingsException,  NodeExecutionJobReconnectException {
+        NodeContainerMetaPersistor metaPers = persistor.getMetaPersistor();
+        NodeSettingsRO execJobSettings = metaPers.getExecutionJobSettings();
+        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
+        PortObject[] inData = new PortObject[ports.length];
+        boolean allDataAvailable = true;
+        for (int i = 0; i < ports.length; i++) {
+            if (ports[i] != null) {
+                inData[i] = ports[i].getPortObject();
+            }
+            allDataAvailable &= inData[i] != null;
+        }
+        if (allDataAvailable && nc.getState().equals(State.EXECUTINGREMOTELY)) {
+            nc.continueExecutionOnLoad(inData, execJobSettings);
+            return true;
+        }
+        return false;
+    }
+
     /////////////////////////////////////////////////////////
     // WFM as NodeContainer: Dialog related implementations
     /////////////////////////////////////////////////////////
 
+    private NodeDialogPane m_nodeDialogPane;
+
     /** {@inheritDoc} */
     @Override
     public boolean hasDialog() {
-        return false;
+        int c = NodeExecutionJobManagerPool.getNumberOfJobManagersFactories();
+        return c > 1;
     }
 
     /** {@inheritDoc} */
     @Override
     NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs) throws NotConfigurableException {
-        throw new IllegalStateException("Workflow has no dialog (yet)");
+        NodeDialogPane dialogPane = getDialogPane();
+        NodeSettings settings = new NodeSettings("wfm_settings");
+        saveSettings(settings);
+        dialogPane.internalLoadSettingsFrom(
+                settings, inSpecs, new ScopeObjectStack(getID()));
+        return dialogPane;
     }
 
     /** {@inheritDoc} */
     @Override
     NodeDialogPane getDialogPane() {
-        throw new IllegalStateException("Workflow has no dialog (yet)");
+        if (m_nodeDialogPane == null) {
+            if (hasDialog()) {
+                m_nodeDialogPane = new EmptyNodeDialogPane();
+                // workflow manager jobs can't be split
+                m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
+            } else {
+                throw new IllegalStateException("Workflow has no dialog");
+            }
+        }
+        return m_nodeDialogPane;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
-        assert false : "No dialog available for workflow";
-        return true; // be positive
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void loadSettingsFromDialog() throws InvalidSettingsException {
-        assert false : "No dialog available for workflow";
+        if (!hasDialog()) {
+            return true;
+        }
+        String defName = "wfm_settings";
+        NodeSettings origSettings = new NodeSettings(defName);
+        saveSettings(origSettings);
+        NodeSettings dialogSettings = new NodeSettings(defName);
+        try {
+            getDialogPane().finishEditingAndSaveSettingsTo(dialogSettings);
+        } catch (InvalidSettingsException e) {
+            return false;
+        }
+        return dialogSettings.equals(origSettings);
     }
 
     /////////////////////////////////
@@ -2082,12 +2524,12 @@ public final class WorkflowManager extends NodeContainer {
         // check if all outports are connected
         boolean allOutPortsConnected =
             getNrOutPorts() == m_workflow.getConnectionsByDest(
-                                                    this.getID()).size();
+                    this.getID()).size();
         // check if we have complete Objects on outports
         boolean allPopulated = false;
         // ...and at the same time find the "smallest" common state of
         // all inports (useful when all internal nodes are green but we
-        // have through connections!
+        // have through connections)!
         State inportState = State.EXECUTED;
         if (allOutPortsConnected) {
             allPopulated = true;
@@ -2098,11 +2540,13 @@ public final class WorkflowManager extends NodeContainer {
                     inportState = State.IDLE;
                 } else if (nop.getPortObject() == null) {
                     allPopulated = false;
-                    inportState = State.CONFIGURED;
-                    if (nop.getNodeState().equals(State.IDLE)
-                            || nop.getNodeState().equals(
-                                    State.UNCONFIGURED_MARKEDFOREXEC)) {
+                    switch (nop.getNodeState()) {
+                    case IDLE:
+                    case UNCONFIGURED_MARKEDFOREXEC:
                         inportState = State.IDLE;
+                        break;
+                    default:
+                        inportState = State.CONFIGURED;
                     }
                 }
             }
@@ -2122,7 +2566,7 @@ public final class WorkflowManager extends NodeContainer {
                 // all nodes in WFM done and all ports populated!
                 newState = State.EXECUTED;
             } else {
-                // all executed but some though connections!
+                // all executed but some through connections!
                 newState = inportState;
             }
         } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
@@ -2132,14 +2576,19 @@ public final class WorkflowManager extends NodeContainer {
             } else {
                 newState = State.IDLE;
             }
+        } else if (nrNodesInState[State.EXECUTED.ordinal()]
+                                  + nrNodesInState[State.CONFIGURED.ordinal()]
+                                                   == nrNodes) {
+            newState = State.CONFIGURED;
         } else if (nrNodesInState[State.EXECUTING.ordinal()] >= 1) {
             newState = State.EXECUTING;
-        } else if (nrNodesInState[State.EXECUTED.ordinal()]
-                   + nrNodesInState[State.CONFIGURED.ordinal()]
-                   == nrNodes) {
-            newState = State.CONFIGURED;
-        } else if ((nrNodesInState[State.QUEUED.ordinal()] >= 1)
-                || (nrNodesInState[State.EXECUTING.ordinal()] >= 1)) {
+        } else if (nrNodesInState[State.EXECUTINGREMOTELY.ordinal()] >= 1) {
+            newState = State.EXECUTINGREMOTELY;
+        } else if (nrNodesInState[State.PREEXECUTE.ordinal()] >= 1) {
+            newState = State.EXECUTING;
+        } else if (nrNodesInState[State.POSTEXECUTE.ordinal()] >= 1) {
+            newState = State.EXECUTING;
+        } else if (nrNodesInState[State.QUEUED.ordinal()] >= 1) {
             newState = State.EXECUTING;
         } else if (nrNodesInState[State.UNCONFIGURED_MARKEDFOREXEC.ordinal()]
                                   >= 1) {
@@ -2149,7 +2598,11 @@ public final class WorkflowManager extends NodeContainer {
         }
         State oldState = this.getState();
         this.setState(newState, propagateChanges);
-        if (oldState.equals(State.EXECUTING)) {
+        boolean wasExecuting = oldState.equals(State.EXECUTINGREMOTELY)
+            || oldState.equals(State.EXECUTING);
+        if (wasExecuting) {
+            boolean isExecuting = newState.equals(State.EXECUTINGREMOTELY)
+                || newState.equals(State.EXECUTING);
             if (newState.equals(State.EXECUTED)) {
                 // we just successfully executed this WFM: check if any
                 // loops were waiting for this one in the parent workflow!
@@ -2161,7 +2614,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     clearWaitingLoopList();
                 }
-            } else if (!newState.equals(State.EXECUTING)) {
+            } else if (!isExecuting) {
                 // something went wrong - if other any loops were waiting
                 // for this node: clean them up!
                 for (ScopeObject so : getWaitingLoops()) {
@@ -2233,6 +2686,33 @@ public final class WorkflowManager extends NodeContainer {
         return m_workflow.getConnectionsByDest(id).size() == nc.getNrInPorts();
     }
 
+    /** Attempts to configure all nodes in the workflow. It will also try to
+     * configure nodes whose predecessors did not change their output specs.
+     * This method checks the new state of the meta node but
+     * does not propagate it (since called recursively).
+     * @param keepNodeMessage Whether to retain the previously set node message.
+     */
+    private void configureAllNodesInWFM(final boolean keepNodeMessage) {
+        assert Thread.holdsLock(m_workflowMutex);
+        Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
+                m_workflow.getNodeIDs(), true).keySet();
+        for (NodeID id : bfsSortedSet) {
+            NodeContainer nc = getNodeContainer(id);
+            if (nc instanceof SingleNodeContainer) {
+                switch (nc.getState()) {
+                case EXECUTED:
+                    break;
+                default:
+                    configureSingleNodeContainer(
+                            (SingleNodeContainer)nc, keepNodeMessage);
+                }
+            } else {
+                ((WorkflowManager)nc).configureAllNodesInWFM(keepNodeMessage);
+            }
+        }
+        checkForNodeStateChanges(false);
+    }
+
     /*
      * Configure successors of this workflow connected to a specific port
      * (avoids duplicate configure calls)
@@ -2264,31 +2744,36 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Configure a SingleNodeContainer.
-     * 
+     *
      * @param snc node to be configured
+     * @param keepNodeMessage Whether to keep previously set node messages
+     *        (important during load sometimes)
      * @return true if the configuration did change something.
      */
     private boolean configureSingleNodeContainer(
-            final SingleNodeContainer snc) {
+            final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         synchronized (m_workflowMutex) {
+            NodeMessage oldMessage = snc.getNodeMessage();
             final int inCount = snc.getNrInPorts();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(snc.getID());
             final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
-            final ScopeObjectStack[] scscs = new ScopeObjectStack[inCount];
+            final ScopeObjectStack[] sos = new ScopeObjectStack[inCount];
             final HiLiteHandler[] hiliteHdls = new HiLiteHandler[inCount];
-            // check for presence of input specs
+            // check for presence of input specs and collects inport
+            // TableSpecs, ScopeObjectStacks and HiLiteHandlers
             boolean allSpecsExists = true;
             for (int i = 0; i < predPorts.length; i++) {
                 if (predPorts[i] != null) {
                     inSpecs[i] = predPorts[i].getPortObjectSpec();
-                    scscs[i] = predPorts[i].getScopeContextStackContainer();
+                    sos[i] = predPorts[i].getScopeObjectStack();
                     hiliteHdls[i] = predPorts[i].getHiLiteHandler();
                 }
                 allSpecsExists &= inSpecs[i] != null;
             }
             if (!allSpecsExists) {
                 // only configure nodes with all Input Specs present
+                // (NodeMessage did not change -- can exit here) 
                 return false;
             }
             // configure node only if it's not yet running, queued or done.
@@ -2301,18 +2786,29 @@ public final class WorkflowManager extends NodeContainer {
             case CONFIGURED:
             case UNCONFIGURED_MARKEDFOREXEC:
             case MARKEDFOREXEC:
+                // nodes can be EXECUTINGREMOTELY when loaded (reconnect to a
+                // grid/server) -- also these nodes will be configured() on load
+            case EXECUTINGREMOTELY:
                 // create new ScopeContextStack
                 ScopeObjectStack oldSOS = null;
                 oldSOS = snc.getScopeObjectStack();
                 ScopeObjectStack scsc;
                 boolean scopeStackConflict = false;
-                try {
-                    scsc = new ScopeObjectStack(snc.getID(), scscs);
-                } catch (IllegalContextStackObjectException e) {
-                    LOGGER.warn("Unable to merge scope object stacks: " 
-                            + e.getMessage(), e);
-                    scsc = new ScopeObjectStack(snc.getID());
-                    scopeStackConflict = true;
+                if (inCount == 0) {
+                    // no input ports - create new stack, prefilled with
+                    // Workflow variables:
+                    scsc = new ScopeObjectStack(snc.getID(),
+                            getWorkflowVariableStack());
+                } else {
+                    assert inCount >= 1;
+                    try {
+                        scsc = new ScopeObjectStack(snc.getID(), sos);
+                    } catch (IllegalContextStackObjectException e) {
+                        LOGGER.warn("Unable to merge scope object stacks: "
+                                + e.getMessage(), e);
+                        scsc = new ScopeObjectStack(snc.getID());
+                        scopeStackConflict = true;
+                    }
                 }
                 if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                     // the stack will automatically add the ID of the
@@ -2350,7 +2846,7 @@ public final class WorkflowManager extends NodeContainer {
                 // no need to clean stacks of LoopEnd nodes - done automagically
                 // inside the getScopeContextStack of the ports of LoopEnd
                 // Nodes.
-                
+
                 // check if ScopeContextStacks have changed
                 boolean stackChanged = false;
                 // TODO: once SOS.equals() actually works...
@@ -2375,24 +2871,33 @@ public final class WorkflowManager extends NodeContainer {
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
 // FIXME: report errors again, once configure follows only ports, not nodes.
-                LOGGER.debug("configure found EXECUTED node: " 
+                LOGGER.debug("configure found EXECUTED node: "
                         + snc.getNameWithID());
                 break;
+            case PREEXECUTE:
+            case POSTEXECUTE:
             case EXECUTING:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.debug("configure found EXECUTING node: " 
+                LOGGER.debug("configure found " + snc.getState() + " node: "
                         + snc.getNameWithID());
                 break;
             case QUEUED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.debug("configure found QUEUED node: " 
+                LOGGER.debug("configure found QUEUED node: "
                         + snc.getNameWithID());
                 break;
             default:
                 LOGGER.error("configure found weird state (" + snc.getState()
                         + "): " + snc.getNameWithID());
+            }
+            if (keepNodeMessage) {
+                NodeMessage newMessage = snc.getNodeMessage();
+                if (!oldMessage.equals(newMessage))  {
+                    newMessage = NodeMessage.merge(oldMessage, newMessage);
+                    snc.setNodeMessage(newMessage);
+                }
             }
         }
 //        return configurationChanged;
@@ -2404,7 +2909,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Configure the nodes in WorkflowManager, connected to a specific port.
      * If not are given, configure all.
-     * 
+     *
      * @param wfm the WorkflowManager
      * @param inportIndex index of incoming port (or -1 if not known)
      */
@@ -2417,16 +2922,16 @@ public final class WorkflowManager extends NodeContainer {
             }
             // TODO: we can put our own
             // objects onto the stack here (to clean up later)?
-            wfm.configureWorkFlowPortSuccessors(inportIndex);            
+            wfm.configureWorkFlowPortSuccessors(inportIndex);
             // and finalize stuff
             checkForNodeStateChanges(true);
             // TODO: clean up scope object stack after we leave WFM?
         }
     }
-    
+
     /**
      * Configure node and, if this node's output specs have changed
-     * also configure it's successors.
+     * also configure its successors.
      *
      * @param id of node to configure
      * @param configureMyself true if the node itself is to be configured
@@ -2468,11 +2973,11 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc)) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                            /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                 } else {
-                    assert nc instanceof WorkflowManager;
                     configureNodesConnectedToPortInWFM((WorkflowManager)nc, -1);
                     freshlyConfiguredNodes.add(nc.getID());
                 }
@@ -2500,7 +3005,7 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
     }
-    
+
     /**
      * Configure successors of a specific port of a node.
      *
@@ -2511,7 +3016,7 @@ public final class WorkflowManager extends NodeContainer {
     private void configureNodeSuccessors(final NodeID nodeId,
             final int portIndex) {
         // FIXME: actually consider port index!!
-        
+
         // create list of properly ordered nodes (each one appears only once!)
         LinkedHashMap<NodeID, Set<Integer>> nodes
              = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
@@ -2545,7 +3050,8 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc)) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                            /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                 } else {
@@ -2638,7 +3144,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         return build.toString();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -2720,7 +3226,7 @@ public final class WorkflowManager extends NodeContainer {
         // by using this method - the event got delivered at a point where
         // the workflow editor was registered and marked the flow as being dirty
         // although it was freshly loaded)
-        final Iterator<WorkflowListener> it = m_wfmListeners.iterator(); 
+        final Iterator<WorkflowListener> it = m_wfmListeners.iterator();
         WORKFLOW_NOTIFIER.execute(new Runnable() {
             /** {@inheritDoc} */
             @Override
@@ -2732,12 +3238,51 @@ public final class WorkflowManager extends NodeContainer {
         });
     }
 
+    // bug fix 1810, nofify children about possible job manager changes
+    /** {@inheritDoc} */
+    @Override
+    protected void notifyJobManagerChangedListener() {
+        super.notifyJobManagerChangedListener();
+        // TODO protect for intermediate changes to the node list
+        // TODO only notify affected children
+        for (NodeContainer nc : getNodeContainers()) {
+            nc.notifyJobManagerChangedListener();
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeContainerPersistor getCopyPersistor(
+            final HashMap<Integer, ContainerTable> tableRep,
+            final boolean preserveDeletableFlags) {
+        return new CopyWorkflowPersistor(
+                this, tableRep, preserveDeletableFlags);
+    }
+
     //////////////////////////////////////
-    // copy & paste & collapse & expand
+    // copy & paste
     //////////////////////////////////////
-    
-    public NodeID[] copy(final WorkflowManager sourceManager, 
-            final NodeID[] nodeIDs) {
+
+    /** Copies the nodes with the given ids from the argument workflow manager
+     * into this wfm instance. All nodes wil be reset (and configured id 
+     * possible). Connections among the nodes are kept.
+     * @param sourceManager The wfm to copy from
+     * @param nodeIDs The node ids to copy (must exist in sourceManager)
+     * @return The new ids of the nodes in this wfm.
+     */
+    public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
+            final NodeID... nodeIDs) {
+        WorkflowPersistor copyPersistor = 
+            sourceManager.copy(nodeIDs);
+        return paste(copyPersistor);
+    }
+
+    /** Copy the nodes with the given ids. 
+     * @param nodeIDs The nodes to copy (must exist).
+     * @return A workflow persistor hosting the node templates, ready to be
+     * used in the {@link #paste(WorkflowPersistor)} method.
+     */
+    public WorkflowPersistor copy(final NodeID... nodeIDs) {
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
         if (idsHashed.size() != nodeIDs.length) {
             throw new IllegalArgumentException(
@@ -2747,80 +3292,161 @@ public final class WorkflowManager extends NodeContainer {
             new TreeMap<Integer, NodeContainerPersistor>();
         Set<ConnectionContainerTemplate> connTemplates =
             new HashSet<ConnectionContainerTemplate>();
-        synchronized (sourceManager.m_workflowMutex) {
+        synchronized (m_workflowMutex) {
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
-                NodeContainer cont = sourceManager.getNodeContainer(nodeIDs[i]);
-                loaderMap.put(cont.getID().getIndex(), 
+                NodeContainer cont = getNodeContainer(nodeIDs[i]);
+                loaderMap.put(cont.getID().getIndex(),
                         cont.getCopyPersistor(m_globalTableRepository, false));
                 for (ConnectionContainer out 
-                        : sourceManager.m_workflow.getConnectionsBySource(
-                                nodeIDs[i])) {
+                        : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
                         connTemplates.add(
                                 new ConnectionContainerTemplate(out, false));
                     }
                 }
             }
+            return new PasteWorkflowContentPersistor(loaderMap, connTemplates);
         }
+    }
+    
+    /** Pastes the contents of the argument persistor into this wfm.
+     * @param persistor The persistor created with {@link #copy(NodeID...)}.
+     * @return The new node ids of the inserted nodes.
+     */
+    public NodeID[] paste(final WorkflowPersistor persistor) {
         synchronized (m_workflowMutex) {
-            Map<Integer, NodeID> resultIDs = loadNodesAndConnections(
-                    loaderMap, connTemplates, new LoadResult());
-            Map<NodeID, NodeContainerPersistor> newLoaderMap =
-                new TreeMap<NodeID, NodeContainerPersistor>();
-            NodeID[] result = new NodeID[nodeIDs.length];
-            for (int i = 0; i < nodeIDs.length; i++) {
-                int oldSuffix = nodeIDs[i].getIndex();
-                result[i] = resultIDs.get(oldSuffix);
-                newLoaderMap.put(result[i], loaderMap.get(oldSuffix));
-                assert result[i] != null 
-                    : "Deficient map, no entry for suffix " + oldSuffix;
-            }
             try {
-                postLoad(newLoaderMap, 
-                        new HashMap<Integer, BufferedDataTable>(), 
-                        true, new ExecutionMonitor());
+                return loadContent(persistor,
+                        new HashMap<Integer, BufferedDataTable>(),
+                        new ScopeObjectStack(getID()), new ExecutionMonitor(),
+                        new LoadResult("Paste into Workflow"), false);
             } catch (CanceledExecutionException e) {
-                LOGGER.fatal("Unexpected exception", e);
+                throw new IllegalStateException("Cancelation although no access"
+                        + " on execution monitor");
             }
-            return result;
         }
     }
-    
-    /** {@inheritDoc} */
-    @Override
-    protected NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep, 
-            final boolean preserveDeletableFlags) {
-        return new CopyWorkflowPersistor(
-                this, tableRep, preserveDeletableFlags);
-    }
-    
+
     ///////////////////////////////
     ///////// LOAD & SAVE /////////
     ///////////////////////////////
 
-    /** Workflow version, indicates the "oldest" 
+    /** Workflow version, indicates the "oldest"
       * version that is compatible to the current workflow format. */
     static final String CFG_VERSION = "version";
     /** Version of KNIME that has written the workflow. */
     static final String CFG_CREATED_BY = "created_by";
 
-    public static WorkflowLoadResult loadProject(File directory,
+    public static WorkflowLoadResult loadProject(final File directory,
             final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
-        return ROOT.load(directory, exec);
+        return ROOT.load(directory, exec, false);
     }
 
-    public WorkflowLoadResult load(File directory, final ExecutionMonitor exec) 
-        throws IOException, InvalidSettingsException, 
-        CanceledExecutionException {
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowExecutionResult createExecutionResult(
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        synchronized (m_nodeMutex) {
+            WorkflowExecutionResult result =
+                new WorkflowExecutionResult(getID());
+            super.saveExecutionResult(result);
+            Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
+                    m_workflow.getNodeIDs(), true).keySet();
+            boolean success = false;
+            for (NodeID id : bfsSortedSet) {
+                NodeContainer nc = getNodeContainer(id);
+                exec.setMessage(nc.getNameWithID());
+                ExecutionMonitor subExec = exec.createSubProgress(
+                        1.0 / bfsSortedSet.size());
+                NodeContainerExecutionResult subResult =
+                    getNodeContainer(id).createExecutionResult(subExec);
+                if (subResult.isSuccess()) {
+                    success = true;
+                }
+                result.addNodeExecutionResult(id, subResult);
+            }
+            // if at least one child was an success, this is also a success for
+            // this node; force it -- otherwise take old success flag
+            // (important for no-child workflows)
+            if (success) {
+                result.setSuccess(true);
+            }
+            return result;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void loadExecutionResult(
+            final NodeContainerExecutionResult result,
+            final ExecutionMonitor exec, final LoadResult loadResult) {
+        if (result == null) {
+            throw new IllegalArgumentException(
+                    "Workflow result must not be null");
+        } else if (!(result instanceof WorkflowExecutionResult)) {
+            throw new IllegalArgumentException("Argument must be instance "
+                    + "of \"" + WorkflowExecutionResult.class.getSimpleName()
+                    + "\": " + result.getClass().getSimpleName());
+        }
+        WorkflowExecutionResult r = (WorkflowExecutionResult)result;
+        synchronized (m_workflowMutex) {
+            super.loadExecutionResult(result, exec, loadResult);
+            Map<NodeID, NodeContainerExecutionResult> map =
+                r.getExecutionResultMap();
+            final int count = map.size();
+            // contains the corrected NodeID in this workflow (the node ids in
+            // the execution result refer to the base id of the remote workflow)
+            Map<NodeID, NodeID> transMap = new HashMap<NodeID, NodeID>();
+            NodeID otherIDPrefix = r.getBaseID();
+            for (NodeID otherID : map.keySet()) {
+                assert otherID.hasSamePrefix(otherIDPrefix);
+                transMap.put(new NodeID(getID(), otherID.getIndex()), otherID);
+            }
+            for (NodeID id : m_workflow.createBreadthFirstSortedList(
+                    transMap.keySet(), true).keySet()) {
+                NodeID otherID = transMap.get(id);
+                NodeContainer nc = m_workflow.getNode(id);
+                NodeContainerExecutionResult exResult = map.get(otherID);
+                if (exResult == null) {
+                    loadResult.addError("No execution result for node "
+                            + nc.getNameWithID());
+                    continue;
+                }
+                exec.setMessage(nc.getNameWithID());
+                ExecutionMonitor subExec = exec.createSubProgress(1.0 / count);
+                nc.loadExecutionResult(exResult, subExec, loadResult);
+                subExec.setProgress(1.0);
+            }
+        }
+    }
+
+    /** Loads the workflow contained in the directory as node into this
+     * workflow instance. Loading a whole new project is usually done using
+     * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>.
+     * @param directory to load from
+     * @param exec For progress/cancellation (currently not supported)
+     * @param keepNodeMessages Whether to keep the messages that are associated
+     * with the nodes in the loaded workflow (mostly false but true when 
+     * remotely computed results are loaded).
+     * @return A workflow load result, which also contains the loaded workflow.
+     * @throws IOException If errors reading the "important" files fails due to
+     *         I/O problems (file not present, e.g.)
+     * @throws InvalidSettingsException If parsing the "important" files fails.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public WorkflowLoadResult load(final File directory,
+            final ExecutionMonitor exec, 
+            final boolean keepNodeMessages) throws IOException,
+            InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
+
         exec.setMessage("Loading workflow structure from \""
                 + directory.getAbsolutePath() + "\"");
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
@@ -2849,7 +3475,7 @@ public final class WorkflowManager extends NodeContainer {
         if (WorkflowPersistorVersion200.canReadVersion(version)) {
             // TODO only create new hash map if this is a project?
             persistor = new WorkflowPersistorVersion200(
-                    new HashMap<Integer, ContainerTable>());
+                    new HashMap<Integer, ContainerTable>(), version);
         } else if (WorkflowPersistorVersion1xx.canReadVersion(version)) {
             LOGGER.warn(
                     "The current KNIME version (" + KNIMEConstants.VERSION
@@ -2861,7 +3487,7 @@ public final class WorkflowManager extends NodeContainer {
                     + " Please re-configure and/or re-execute these"
                     + " nodes.");
             persistor = new WorkflowPersistorVersion1xx(
-                    new HashMap<Integer, ContainerTable>());
+                    new HashMap<Integer, ContainerTable>(), version);
         } else {
             throw new InvalidSettingsException("Unable to load workflow, "
                     + "version string \"" + version + "\" is unknown");
@@ -2872,73 +3498,82 @@ public final class WorkflowManager extends NodeContainer {
         // data files are loaded using a repository of reference tables;
         Map<Integer, BufferedDataTable> tblRep =
             new HashMap<Integer, BufferedDataTable>();
-        WorkflowLoadResult result = new WorkflowLoadResult();
-        result.addError(persistor.preLoadNodeContainer(
-                workflowknimeRef, settings));
-        ExecutionMonitor contentExec = exec.createSubProgress(0.1);
-        ExecutionMonitor loadExec = exec.createSubProgress(0.9);
-        exec.setMessage("Loading content");
-        result.addError(persistor.loadNodeContainer(tblRep, contentExec));
-        contentExec.setProgress(1.0);
-        WorkflowManager manager;
-        exec.setMessage("Creating workflow instance");
+        WorkflowLoadResult result = new WorkflowLoadResult(
+                workflowDirRef.getFile().getName());
+        persistor.preLoadNodeContainer(workflowknimeRef, settings, result);
+        WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
+        InsertWorkflowPersistor insertPersistor =
+            new InsertWorkflowPersistor(persistor);
         synchronized (m_workflowMutex) {
-            NodeID newID = createUniqueID();
-            manager = createSubWorkflow(persistor, newID);
-            addNodeContainer(manager, false);
-            synchronized (manager.m_workflowMutex) {
-                result.addError(manager.loadContent(
-                        persistor, tblRep, null, loadExec));
+            m_loadVersion = persistor.getLoadVersion();
+            NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, 
+                    exec, result, keepNodeMessages);
+            if (newIDs.length != 1) {
+                throw new InvalidSettingsException("Loading workflow failed, "
+                        + "couldn't identify child sub flow (typically "
+                        + "a project)");
             }
+            manager = (WorkflowManager)getNodeContainer(newIDs[0]);
             // if all errors during the load process are related to data loading
             // it might be that the flow is ex/imported without data;
             // check for it and silently overwrite the workflow
-            if (result.hasEntries() && (!result.hasErrorDuringNonDataLoad()
-                    && !persistor.mustWarnOnDataLoadError())) {
-                LOGGER.debug("Workflow was apparently ex/imported without "
+            switch (result.getType()) {
+            case DataLoadError:
+                if (!persistor.mustWarnOnDataLoadError()) {
+                    LOGGER.debug("Workflow was apparently ex/imported without "
                         + "data, silently fixing states and writing changes");
-                try {
-                    manager.save(directory, new ExecutionMonitor(), true);
-                    fixDataLoadProblems = true;
-                } catch (Throwable t) {
-                    LOGGER.warn("Failed in an attempt to write workflow to "
+                    try {
+                        manager.save(directory, new ExecutionMonitor(), true);
+                        fixDataLoadProblems = true;
+                    } catch (Throwable t) {
+                        LOGGER.warn("Failed in an attempt to write workflow to "
                             + "file (workflow was ex/imported without data; "
                             + "could not write the \"corrected\" flow.)", t);
+                    }
                 }
+                break;
+            default:
+                // errors are handled elsewhere
             }
         }
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
-        String message;
         result.setGUIMustReportDataLoadErrors(
                 persistor.mustWarnOnDataLoadError());
-        if (result.hasEntries() && (result.hasErrorDuringNonDataLoad()
-                || persistor.mustWarnOnDataLoadError())) {
-            message = "Loaded workflow from \"" + directory.getAbsolutePath()
-                + "\" with errors";
-            LOGGER.debug(result.getErrors());
-        } else if (result.hasEntries() && !result.hasErrorDuringNonDataLoad()) {
-            message = "Loaded workflow from \"" + directory.getAbsolutePath()
-                + "\" with errors during data load. ";
+        StringBuilder message = new StringBuilder("Loaded workflow from \"");
+        message.append(directory.getAbsolutePath()).append("\" ");
+        switch (result.getType()) {
+        case Ok:
+            message.append(" with no errors");
+            break;
+        case Warning:
+            message.append(" with warnings");
+            break;
+        case DataLoadError:
+            message.append(" with errors during data load. ");
             if (fixDataLoadProblems) {
-                message += "Problems were fixed and (silently) saved.";
+                message.append("Problems were fixed and (silently) saved.");
             } else {
-                message += "Problems were fixed but could not be saved.";
+                message.append("Problems were fixed but not saved!");
             }
-        } else {
-            message = "Successfully loaded workflow from \""
-                + directory.getAbsolutePath() + "\"";
+            break;
+        case Error:
+            message.append(" with errors");
+            break;
+        default:
+            message.append("with ").append(result.getType());
         }
-        LOGGER.debug(message);
+        LOGGER.debug(message.toString());
         return result;
     }
 
     /** {@inheritDoc} */
     @Override
-    LoadResult loadContent(final NodeContainerPersistor nodePersistor,
+    NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec)
+            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec,
+            final LoadResult loadResult, final boolean preserveNodeMessage)
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected "
@@ -2947,14 +3582,14 @@ public final class WorkflowManager extends NodeContainer {
                     + nodePersistor.getClass().getSimpleName());
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
-        LoadResult loadResult = new LoadResult();
-        Map<NodeID, NodeContainerPersistor> persistorMap =
-            new HashMap<NodeID, NodeContainerPersistor>();
+        assert this != ROOT || persistor.getConnectionSet().isEmpty()
+        : "ROOT workflow has no connections: " + persistor.getConnectionSet();
+        LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap =
+            new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, NodeContainerPersistor> nodeLoaderMap =
             persistor.getNodeLoaderMap();
-        m_loadVersion = persistor.getLoadVersion();
         exec.setMessage("node & connection information");
-        Map<Integer, NodeID> translationMap = 
+        Map<Integer, NodeID> translationMap =
             loadNodesAndConnections(nodeLoaderMap,
                     persistor.getConnectionSet(), loadResult);
         for (Map.Entry<Integer, NodeID> e : translationMap.entrySet()) {
@@ -2966,30 +3601,30 @@ public final class WorkflowManager extends NodeContainer {
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        LoadResult postLoadResult = postLoad(persistorMap, 
-                tblRep, persistor.mustWarnOnDataLoadError(), exec);
-        if (postLoadResult.hasEntries()) {
-            loadResult.addError(postLoadResult);
-        }
+        postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), 
+                exec, loadResult, preserveNodeMessage);
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
-        return loadResult;
+        Collection<NodeID> resultColl = persistorMap.keySet();
+        return resultColl.toArray(new NodeID[resultColl.size()]);
     }
-    
-    private LoadResult postLoad(
-            final Map<NodeID, NodeContainerPersistor> persistorMap, 
-            final Map<Integer, BufferedDataTable> tblRep, 
-            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec) 
-        throws CanceledExecutionException {
-        LoadResult loadResult = new LoadResult();
+
+    private void postLoad(
+            final Map<NodeID, NodeContainerPersistor> persistorMap,
+            final Map<Integer, BufferedDataTable> tblRep,
+            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec,
+            final LoadResult loadResult, final boolean keepNodeMessage)
+    throws CanceledExecutionException {
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
+        boolean isStateChangePredictable = false;
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
                         persistorMap.keySet(), true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
+            LoadResult subResult = new LoadResult(cont.getNameWithID());
             boolean isFullyConnected = isFullyConnected(bfsID);
             boolean needsReset;
             switch (cont.getState()) {
@@ -3005,6 +3640,7 @@ public final class WorkflowManager extends NodeContainer {
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
             final int predCount = predPorts.length;
             PortObject[] portObjects = new PortObject[predCount];
+            boolean inPortsContainNull = false;
             ScopeObjectStack[] predStacks = new ScopeObjectStack[predCount];
             for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
@@ -3013,32 +3649,31 @@ public final class WorkflowManager extends NodeContainer {
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
                 if (p != null) {
-                    predStacks[i] = p.getScopeContextStackContainer();
+                    predStacks[i] = p.getScopeObjectStack();
                     portObjects[i] = p.getPortObject();
+                    inPortsContainNull &= portObjects[i] == null;
                 }
             }
             ScopeObjectStack inStack;
             try {
                 inStack = new ScopeObjectStack(cont.getID(), predStacks);
             } catch (IllegalContextStackObjectException ex) {
-                loadResult.addError("Errors creating scope object stack for " 
+                subResult.addError("Errors creating scope object stack for "
                         + "node \"" + cont.getNameWithID() + "\", (resetting "
                         + "scope variables): " + ex.getMessage());
                 needsReset = true;
                 inStack = new ScopeObjectStack(cont.getID());
             }
-            NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
-            State loadState = containerPersistor.getMetaPersistor().getState();
+            NodeContainerPersistor persistor = persistorMap.get(bfsID);
+            State loadState = persistor.getMetaPersistor().getState();
             exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 =
                 exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
             ExecutionMonitor sub2 =
                 exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
-            LoadResult subResult = new LoadResult();
             try {
-                subResult.addError(
-                        containerPersistor.loadNodeContainer(tblRep, sub1));
+                persistor.loadNodeContainer(tblRep, sub1, subResult);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
@@ -3048,20 +3683,26 @@ public final class WorkflowManager extends NodeContainer {
                             + e.getClass().getSimpleName()
                             + "\" during node loading", e);
                 }
-                loadResult.addError("Errors loading node \""
-                        + cont.getNameWithID() + "\", skipping it: "
+                subResult.addError("Errors loading, skipping it: "
                         + e.getMessage());
                 needsReset = true;
             }
             sub1.setProgress(1.0);
-            subResult.addError(cont.loadContent(
-                    containerPersistor, tblRep, inStack, sub2));
+            // if cont == isolated meta nodes, then we need to block that meta
+            // node as well (that is being asserted in methods which get called
+            // indirectly)
+            Object mutex = cont instanceof WorkflowManager
+                ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
+            synchronized (mutex) {
+                cont.loadContent(persistor, tblRep, inStack, 
+                        sub2, subResult, keepNodeMessage);
+            }
             sub2.setProgress(1.0);
-            if (containerPersistor.isDirtyAfterLoad()) {
+            if (persistor.isDirtyAfterLoad()) {
                 cont.setDirty();
             }
             boolean hasPredecessorFailed = false;
-            for (ConnectionContainer cc 
+            for (ConnectionContainer cc
                     : m_workflow.getConnectionsByDest(bfsID)) {
                 NodeID s = cc.getSource();
                 if (s.equals(getID())) {
@@ -3071,14 +3712,16 @@ public final class WorkflowManager extends NodeContainer {
                     hasPredecessorFailed = true;
                 }
             }
-            needsReset |= containerPersistor.needsResetAfterLoad();
+            needsReset |= persistor.needsResetAfterLoad();
             needsReset |= hasPredecessorFailed;
             boolean isExecuted = cont.getState().equals(State.EXECUTED);
+            boolean remoteExec = persistor.getMetaPersistor()
+                .getExecutionJobSettings() != null;
+
             // if node is executed and some input data is missing we need
             // to reset that node as there is obviously a conflict (e.g.
             // predecessors has been loaded as IDLE
-            if (!needsReset && isExecuted 
-                    && Arrays.asList(portObjects).contains(null)) {
+            if (!needsReset && isExecuted && inPortsContainNull) {
                 needsReset = true;
                 subResult.addError("Predecessor ports have no data", true);
             }
@@ -3092,32 +3735,78 @@ public final class WorkflowManager extends NodeContainer {
                 failedNodes.add(bfsID);
             }
             if (!isExecuted && cont instanceof SingleNodeContainer) {
-                configureSingleNodeContainer((SingleNodeContainer)cont);
+                configureSingleNodeContainer((SingleNodeContainer)cont, 
+                        keepNodeMessage);
             }
-            if (!cont.getState().equals(loadState) && !hasPredecessorFailed) {
-                String warning = "State of node " + cont.getNameWithID() 
-                + " has changed from " + loadState + " to " + cont.getState();
-                if (subResult.hasEntries() 
-                        && !subResult.hasErrorDuringNonDataLoad()) {
-                    // node was loaded with data load errors only ... then
-                    // this state change is a predictable error (caused
-                    // by the data loss)
+            if (persistor.mustComplainIfStateDoesNotMatch()
+                    && !cont.getState().equals(loadState)
+                    && !hasPredecessorFailed) {
+                isStateChangePredictable = true;
+                String warning = "State has changed from "
+                    + loadState + " to " + cont.getState();
+                switch (subResult.getType()) {
+                case DataLoadError:
+                    // data load errors cause state changes
                     subResult.addError(warning, true);
-                } else {
+                    break;
+                default:
                     subResult.addWarning(warning);
                 }
+                cont.setDirty();
             }
-            if (subResult.hasEntries()) {
-                loadResult.addError("Errors loading node \""
-                        + cont.getNameWithID() + "\":", subResult);
+            // saved in executing state (e.g. grid job), request to reconnect
+            if (remoteExec) {
+                if (needsReset) {
+                    subResult.addError("Can't continue execution "
+                            + "due to load errors");
+                }
+                if (inPortsContainNull) {
+                    subResult.addError(
+                            "Can't continue execution; no data in inport");
+                }
+                if (!cont.getState().equals(State.EXECUTINGREMOTELY)) {
+                    subResult.addError("Can't continue execution; node is not "
+                            + "configured but " + cont.getState());
+                }
+                try {
+                    if (!continueExecutionOnLoad(cont, persistor)) {
+                        cont.cancelExecution();
+                        cont.setDirty();
+                        subResult.addError(
+                                "Can't continue execution; unknown reason");
+                    }
+                } catch (Exception exc) {
+                    StringBuilder error = new StringBuilder(
+                            "Can't continue execution");
+                    if (exc instanceof NodeExecutionJobReconnectException
+                            || exc instanceof InvalidSettingsException) {
+                        error.append(": ").append(exc.getMessage());
+                    } else {
+                        error.append(" due to ");
+                        error.append(exc.getClass().getSimpleName());
+                        error.append(": ").append(exc.getMessage());
+                    }
+                    LOGGER.error(error, exc);
+                    cont.cancelExecution();
+                    cont.setDirty();
+                    subResult.addError(error.toString());
+                }
             }
+            loadResult.addChildError(subResult);
             // set warning message on node if we have loading errors
             // do this only if these are critical errors or data-load errors,
             // which must be reported.
-            if (subResult.hasEntries() && (subResult.hasErrorDuringNonDataLoad()
-                    || mustWarnOnDataLoadError)) {
+            switch (subResult.getType()) {
+            case Ok:
+            case Warning:
+                break;
+            case DataLoadError:
+                if (!mustWarnOnDataLoadError) {
+                    break;
+                }
+            default:
                 NodeMessage oldMessage = cont.getNodeMessage();
-                StringBuilder messageBuilder = 
+                StringBuilder messageBuilder =
                     new StringBuilder(oldMessage.getMessage());
                 if (messageBuilder.length() != 0) {
                     messageBuilder.append("\n");
@@ -3131,25 +3820,25 @@ public final class WorkflowManager extends NodeContainer {
                 default:
                     type = NodeMessage.Type.ERROR;
                 }
-                messageBuilder.append(subResult.peekErrors());
+                messageBuilder.append(subResult.getFilteredError(
+                        "", LoadResultEntryType.Warning));
                 cont.setNodeMessage(
                         new NodeMessage(type, messageBuilder.toString()));
             }
         }
-        if (!sweep(false)) {
+        if (!sweep(false) && !isStateChangePredictable) {
             loadResult.addError("Some node states were invalid");
         }
-        return loadResult;
     }
-    
+
     private Map<Integer, NodeID> loadNodesAndConnections(
-            final Map<Integer, NodeContainerPersistor> loaderMap, 
+            final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connections,
             final LoadResult loadResult) {
         // id suffix are made unique by using the entries in this map
         Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
 
-        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry 
+        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
                 : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
@@ -3221,20 +3910,20 @@ public final class WorkflowManager extends NodeContainer {
             }
             workflowDirRef.lock();
             try {
-                final boolean isWorkingDirectory = 
+                final boolean isWorkingDirectory =
                     workflowDirRef.equals(getNodeContainerDirectory());
-                WorkflowPersistorVersion200 persistor =
-                    new WorkflowPersistorVersion200(null);
+                final String saveVersion =
+                    WorkflowPersistorVersion200.VERSION_LATEST;
                 if (m_loadVersion != null
-                        && !m_loadVersion.equals(persistor.getSaveVersion())) {
+                        && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with a previous version "
                             + "of KNIME (" + m_loadVersion + "), converting to "
-                            + "current version " + persistor.getSaveVersion()
+                            + "current version " + saveVersion
                             + ". This may take some time.");
                     setDirtyAll();
                     if (isWorkingDirectory) {
                         for (NodeContainer nc : m_workflow.getNodeValues()) {
-                            ReferencedFile ncDir = 
+                            ReferencedFile ncDir =
                                 nc.getNodeContainerDirectory();
                             if (ncDir != null && ncDir.getFile().exists()) {
                                 FileUtil.deleteRecursively(ncDir.getFile());
@@ -3260,9 +3949,9 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     // bug fix 1857: this list must be cleared upon save
                     m_deletedNodesFileLocations.clear();
-                    m_loadVersion = persistor.getSaveVersion();
+                    m_loadVersion = saveVersion;
                 }
-                new WorkflowPersistorVersion200(null).save(
+                new WorkflowPersistorVersion200().save(
                         this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.unlock();
@@ -3305,10 +3994,22 @@ public final class WorkflowManager extends NodeContainer {
                         break;
                     case MARKEDFOREXEC:
                     case QUEUED:
+                    case PREEXECUTE:
                     case EXECUTING:
+                    case POSTEXECUTE:
                         allowedStates.retainAll(Arrays.asList(State.IDLE,
                                 State.UNCONFIGURED_MARKEDFOREXEC,
                                 State.CONFIGURED, State.MARKEDFOREXEC));
+                        break;
+                    case EXECUTINGREMOTELY:
+                        // be more flexible than in the EXECUTING case
+                        // EXECUTINGREMOTELY is used in meta nodes,
+                        // which are executed elsewhere -- they set all nodes
+                        // of their internal flow to EXECUTINGREMOTELY
+                        allowedStates.retainAll(Arrays.asList(State.IDLE,
+                                State.UNCONFIGURED_MARKEDFOREXEC,
+                                State.CONFIGURED, State.MARKEDFOREXEC,
+                                State.EXECUTINGREMOTELY));
                         break;
                     case EXECUTED:
                     }
@@ -3321,6 +4022,7 @@ public final class WorkflowManager extends NodeContainer {
                         invokeResetOnNode(nc.getID());
                         break;
                     case EXECUTING:
+                    case EXECUTINGREMOTELY:
                     case QUEUED:
                     case MARKEDFOREXEC:
                     case UNCONFIGURED_MARKEDFOREXEC:
@@ -3354,6 +4056,12 @@ public final class WorkflowManager extends NodeContainer {
         return wasClean;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected boolean isLocalWFM() {
+        return findJobManager() instanceof ThreadNodeExecutionJobManager;
+    }
+
     private void setDirtyAll() {
         setDirty();
         for (NodeContainer nc : m_workflow.getNodeValues()) {
@@ -3367,7 +4075,7 @@ public final class WorkflowManager extends NodeContainer {
             t.ensureOpen();
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void setDirty() {
@@ -3378,7 +4086,7 @@ public final class WorkflowManager extends NodeContainer {
                     WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
         }
     }
-    
+
     //////////////////////////////////////
     // NodeContainer implementations
     // (WorkflowManager acts as meta node)
@@ -3421,12 +4129,12 @@ public final class WorkflowManager extends NodeContainer {
             m_name = name;
         }
     }
-    
+
     /** Renames the underlying workflow directory to the new name.
      * @param newName The name of the directory.
      * @return Whether that was successful.
-     * @throws IllegalStateException If the worklow has not been saved yet 
-     * (has no corresponding node directory). 
+     * @throws IllegalStateException If the worklow has not been saved yet
+     * (has no corresponding node directory).
      */
     public boolean renameWorkflowDirectory(final String newName) {
         ReferencedFile file = getNodeContainerDirectory();
@@ -3444,19 +4152,19 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public int getNrViews() {
+    public int getNrNodeViews() {
         return 0;  // workflow managers don't have views (yet?)!
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<NodeModel> getView(final int i) {
+    public NodeView<NodeModel> getNodeView(final int i) {
         throw new IndexOutOfBoundsException("WFM don't have views.");
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getViewName(final int i) {
+    public String getNodeViewName(final int i) {
         throw new IndexOutOfBoundsException("WFM don't have views.");
     }
 
@@ -3464,18 +4172,35 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
+        super.loadSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
+    void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
+
+        // TODO: as we don't have a node model associated with the wfm, we must
+        // do the same thing a dialog does when saving settings (it assumes
+        // existance of a node).
+//        Node.SettingsLoaderAndWriter l = new Node.SettingsLoaderAndWriter();
+//        NodeSettings model = new NodeSettings("field_ignored");
+//        NodeSettings variables;
+//        l.setModelSettings(model);
+//        l.setVariablesSettings(variables);
+//        l.save(settings);
+        settings.addNodeSettings("model");
+        SingleNodeContainerSettings s = new SingleNodeContainerSettings();
+        NodeContainerSettings ncSet = new NodeContainerSettings();
+        ncSet.save(settings);
+        s.save(settings);
+
     }
 
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
-        return true;
+        return super.areSettingsValid(settings);
     }
 
     /** {@inheritDoc} */
@@ -3494,6 +4219,7 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void cleanup() {
         synchronized (m_workflowMutex) {
+            super.cleanup();
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.cleanup();
             }
@@ -3558,4 +4284,94 @@ public final class WorkflowManager extends NodeContainer {
     public UIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
+
+    /////////////////////////////
+    // Workflow Variable handling
+    /////////////////////////////
+
+    /* Private routine which assembles a stack of workflow variables all
+     * the way to the top of the workflow hierarchy.
+     */
+    private void pushWorkflowVariablesOnStack(final ScopeObjectStack sos) {
+        if (getID().equals(ROOT.getID())) {
+            // reach top of tree, return
+            return;
+        }
+        // otherwise push variables of parent...
+        getParent().pushWorkflowVariablesOnStack(sos);
+        // ... and then our own
+        if (m_workflowVariables != null) {
+            // if we have some vars, put them on stack
+            for (ScopeVariable sv : m_workflowVariables) {
+                sos.push(sv.clone());
+            }
+        }
+        return;
+    }
+
+    /** Get read-only access on the current workflow variables.
+     * @return the current workflow variables, never null.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ScopeVariable> getWorkflowVariables() {
+        return m_workflowVariables == null ? Collections.EMPTY_LIST
+                : Collections.unmodifiableList(m_workflowVariables);
+    }
+
+    /* @return stack of workflow variables. */
+    private ScopeObjectStack getWorkflowVariableStack() {
+        // assemble new stack
+        ScopeObjectStack sos = new ScopeObjectStack(getID());
+        // push own variables and the ones of the parent(s):
+        pushWorkflowVariablesOnStack(sos);
+        return sos;
+    }
+
+    /** Set new workflow variables. All nodes within
+     * this workflow will have access to these variables.
+     *
+     * @param newVars new variables to be set
+     * @param skipReset if false the workflow will be re-configured
+     */
+    public void addWorkflowVariables(final boolean skipReset,
+            final ScopeVariable... newVars) {
+        synchronized (m_workflowMutex) {
+            if (m_workflowVariables == null) {
+                // create new set of vars if none exists
+                m_workflowVariables = new Vector<ScopeVariable>();
+            }
+            for (ScopeVariable sv : newVars) {
+                // make sure old variables of the same name are removed first
+                removeWorkflowVariable(sv.getName());
+                m_workflowVariables.add(sv);
+            }
+            if (!skipReset) {
+                // usually one needs to reset the Workflow to make sure the
+                // new variable settings are used by all nodes!
+                // Note that resetAll also needs to configure non-executed
+                // nodes in order to spread those new variables correctly!
+                resetAll();
+            } else {
+                // otherwise only configure already configured nodes. This
+                // is required to make sure they rebuild their
+                // ScopeObjectStack!
+                reconfigureAll();
+            }
+            setDirty();
+        }
+    }
+
+    /** Remove workflow variable of given name.
+     *
+     * @param name of variable to be removed.
+     */
+    public void removeWorkflowVariable(final String name) {
+        for (int i = 0; i < m_workflowVariables.size(); i++) {
+            ScopeVariable sv = m_workflowVariables.elementAt(i);
+            if (sv.getName().equals(name)) {
+                m_workflowVariables.remove(i);
+            }
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 15, 2006 (wiswedel): created
  */
@@ -33,30 +33,59 @@ import org.knime.core.data.def.DefaultCellIterator;
 
 /**
  * Special row implementation that supports to access the wrapper cells of
- * {@link BlobDataCell}. Dealing with the wrapper cells 
- * ({@link BlobWrapperDataCell}) gives the benefit that blobs are not read
- * from the file when passed from one place to another (they will be read
- * on access).
+ * {@link BlobDataCell}. Dealing with the wrapper cells ({@link BlobWrapperDataCell})
+ * gives the benefit that blobs are not read from the file when passed from one
+ * place to another (they will be read on access).
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlobSupportDataRow implements DataRow {
-    
+
     private final RowKey m_key;
+
     private final DataCell[] m_cells;
 
     /**
      * @param key Row key
      * @param cells cell array.
      */
-    BlobSupportDataRow(final RowKey key, final DataCell[] cells) {
+    public BlobSupportDataRow(final RowKey key, final DataCell[] cells) {
         m_key = key;
         m_cells = cells;
     }
 
     /**
+     * Creates a new data row with a new row ID.
+     *
+     * @param key the key with the new row ID
+     * @param oldRow container of the cells for the new row
+     */
+    public BlobSupportDataRow(final RowKey key, final DataRow oldRow) {
+        m_key = key;
+        if (oldRow instanceof BlobSupportDataRow) {
+            m_cells = ((BlobSupportDataRow)oldRow).m_cells;
+        } else {
+            m_cells = new DataCell[oldRow.getNumCells()];
+            for (int i = 0; i < m_cells.length; i++) {
+                m_cells[i] = oldRow.getCell(i);
+            }
+        }
+
+    }
+
+    /**
+     * Creates a new data row with a new row ID.
+     *
+     * @param id the new row ID
+     * @param oldRow container of the cells for the new row
+     */
+    public BlobSupportDataRow(final String id, final DataRow oldRow) {
+        this(new RowKey(id), oldRow);
+    }
+
+    /**
      * If the cell at index is a blob wrapper cell, it will fetch the content
-     * and return it.
-     * {@inheritDoc}
+     * and return it. {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         DataCell c = m_cells[index];
@@ -65,8 +94,10 @@ public final class BlobSupportDataRow implements DataRow {
         }
         return c;
     }
-    
-    /** Returns the cell at given index. Returns the wrapper cell (if any).
+
+    /**
+     * Returns the cell at given index. Returns the wrapper cell (if any).
+     *
      * @param index Cell index.
      * @return Raw cell.
      */
@@ -94,10 +125,10 @@ public final class BlobSupportDataRow implements DataRow {
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }
-    
+
     /**
      * Get a string representing this row, i.e. "rowkey: (cell1, ..., celln)"
-     * 
+     *
      * @return key + values of this row in a string
      */
     @Override

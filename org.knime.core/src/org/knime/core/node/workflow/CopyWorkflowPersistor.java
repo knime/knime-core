@@ -24,19 +24,19 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
@@ -53,7 +53,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final String m_name;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
+    private final List<ScopeVariable> m_workflowVariables;
     
+    @SuppressWarnings("unchecked")
     CopyWorkflowPersistor(final WorkflowManager original, 
             final HashMap<Integer, ContainerTable> tableRep,
             final boolean preserveDeletableFlags) {
@@ -91,6 +93,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (ConnectionContainer cc : original.getConnectionContainers()) {
             m_cons.add(new ConnectionContainerTemplate(cc, true));
         }
+        List<ScopeVariable> vars = original.getWorkflowVariables();
+        m_workflowVariables = vars == null ? Collections.EMPTY_LIST
+                : new ArrayList<ScopeVariable>(vars);
     }
     
     /** {@inheritDoc} */
@@ -123,6 +128,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         return m_name;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public List<ScopeVariable> getWorkflowVariables() {
+        return m_workflowVariables;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public UIInformation getOutPortsBarUIInfo() {
@@ -162,11 +173,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        return new LoadResult();
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
+            final ExecutionMonitor exec, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */
@@ -178,14 +186,19 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
-        return false;
+        return true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
     }
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) {
-        return new LoadResult();
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
     }
     
     /** {@inheritDoc} */
@@ -193,5 +206,5 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public boolean mustWarnOnDataLoadError() {
         return true;
     }
-    
+
 }

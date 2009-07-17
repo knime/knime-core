@@ -6,7 +6,7 @@ Quickstart guide:
 - Extract the archive (if you read this here, you likely already did so).
 - Launch eclipse to start the Eclipse IDE, select a workspace directory
   in the workspace prompt and continue from there.
-  
+
 Potential problem:
   Eclipse 3.3.2 (i.e. this version) has a known problem detecting 
   the system's xulrunner library (used to renderer html pages such as, 

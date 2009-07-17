@@ -153,9 +153,11 @@ public class OutPortView extends JFrame {
      * Sets the content of the view.
      * @param portObject a data table, model content or other
      * @param portObjectSpec data table spec or model content spec or other spec
+     * @param stack The scope object stack of the node.
      */
     void update(final PortObject portObject, 
-            final PortObjectSpec portObjectSpec) {
+            final PortObjectSpec portObjectSpec,
+            final ScopeObjectStack stack) {
         // TODO: maybe store the objects, compare them 
         // and only remove and add them if they are different...
         // add all port object tabs
@@ -189,6 +191,11 @@ public class OutPortView extends JFrame {
                     for (JComponent comp : posViews) {
                         views.put(comp.getName(), comp);
                     }
+                }
+                if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+                    ScopeObjectStackView stackView = new ScopeObjectStackView();
+                    stackView.update(stack);
+                    views.put("Flow Variables", stackView);
                 }
                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
                     @Override

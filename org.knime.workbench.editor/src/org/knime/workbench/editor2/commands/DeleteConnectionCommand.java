@@ -47,6 +47,8 @@ public class DeleteConnectionCommand extends Command {
     private final ConnectionContainerEditPart m_connection;
 
     private final WorkflowManager m_manager;
+    
+    private ConnectionContainer m_deletedConnection;
 
     /**
      * @param connection The edit part of the connection to delete
@@ -79,8 +81,10 @@ public class DeleteConnectionCommand extends Command {
     @Override
     public void execute() {
         try {
-            m_manager.removeConnection((ConnectionContainer)m_connection
-                    .getModel());
+            ConnectionContainer deleted =
+                (ConnectionContainer)m_connection.getModel(); 
+            m_manager.removeConnection(deleted);
+            m_deletedConnection = deleted;
         } catch (Exception ex) {
             LOGGER.warn("Operation not allowed.", ex);
             MessageBox mb =
@@ -91,5 +95,24 @@ public class DeleteConnectionCommand extends Command {
                     + " is in execution.");
             mb.open();
         }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean canUndo() {
+        ConnectionContainer d = m_deletedConnection;
+        if (d == null) {
+            return false;
+        }
+        return m_manager.canAddConnection(d.getSource(), d.getSourcePort(),
+                d.getDest(), d.getDestPort());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void undo() {
+        ConnectionContainer d = m_deletedConnection;
+        m_manager.addConnection(d.getSource(), 
+                d.getSourcePort(), d.getDest(), d.getDestPort());
     }
 }

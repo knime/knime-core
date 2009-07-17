@@ -33,6 +33,8 @@
     			 <li>Concatenate: Concatenates the values per group.</li>
     			 <li>Unique concatenate: Concatenates each value only once 
     			 per group.</li>
+    			 <li>Unique concatenate with count: Concatenates each value 
+    			 only once with the number of its occurrences per group.</li>
     			 <li>Unique count: Counts each value only once per group.</li>
     			<li>Count: Counts members per group.</li>
     			<li>List: Creates a ListCell that contains all elements

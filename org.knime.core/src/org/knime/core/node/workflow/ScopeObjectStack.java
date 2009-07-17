@@ -45,7 +45,7 @@ import org.knime.core.util.Pair;
  * information.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class ScopeObjectStack {
+public final class ScopeObjectStack implements Iterable<ScopeObject> {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(ScopeObjectStack.class);
@@ -305,7 +305,24 @@ public final class ScopeObjectStack {
     boolean isEmpty() {
         return m_stack.isEmpty();
     }
-
+    
+    /** Get number of elements in the stack. 
+     * @return size of stack. */
+    int size() {
+        return m_stack.size();
+    }
+    
+    /** Get iterator on elements, top of stack first. The iterator is
+     * read only and not affected by potential modifications of the stack
+     * after this method returns (iterator on copy).
+     * {@inheritDoc} */
+    @Override
+    public Iterator<ScopeObject> iterator() {
+        Vector<ScopeObject> copy = new Vector<ScopeObject>(m_stack);
+        Collections.reverse(copy);
+        return Collections.unmodifiableList(copy).iterator();
+    }
+    
     @Override
     public String toString() {
         return toDeepString();

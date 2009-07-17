@@ -27,9 +27,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -52,21 +55,53 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** Key for UI info's class name. */
     private static final String CFG_UIINFO_CLASS = "ui_classname";
     
+    /** Key for workflow variables. */
+    private static final String CFG_WKF_VARIABLES = "workflow_variables";
+    
+    static final String VERSION_LATEST = "2.0.1";
+    
     static boolean canReadVersion(final String versionString) {
-        return versionString.equals("2.0.0");
+        return versionString.equals("2.0.0") 
+            || versionString.equals(VERSION_LATEST);
     }
     
-    WorkflowPersistorVersion200(
-            final HashMap<Integer, ContainerTable> tableRep) {
-        super(tableRep);
+    WorkflowPersistorVersion200() {
+        super(null, VERSION_LATEST);
+    }
+    
+    WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
+            final String versionString) {
+        super(tableRep, versionString);
     }
     
     protected String getSaveVersion() {
-        return "2.0.0";
+        return VERSION_LATEST;
     }
     
+    /** {@inheritDoc} */
     @Override
-    protected String loadWorkflowName(NodeSettingsRO set)
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public List<ScopeVariable> loadWorkflowVariables(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_WKF_VARIABLES)) {
+            return Collections.emptyList();
+        }
+        NodeSettingsRO wfmVarSub = settings.getNodeSettings(CFG_WKF_VARIABLES);
+        List<ScopeVariable> result = new ArrayList<ScopeVariable>();
+        for (String key : wfmVarSub.keySet()) {
+            result.add(ScopeVariable.load(wfmVarSub.getNodeSettings(key)));
+        }
+        return result;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return set.getString("name");
     }
@@ -78,7 +113,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     }
     
     @Override
-    protected boolean loadIsMetaNode(NodeSettingsRO settings) 
+    protected boolean loadIsMetaNode(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
         return settings.getBoolean("node_is_meta");
     }
@@ -107,18 +142,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected int loadConnectionDestID(NodeSettingsRO settings)
+    protected int loadConnectionDestID(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destID");
     }
     
     /** {@inheritDoc} */
     @Override
-    protected int loadConnectionDestPort(NodeSettingsRO settings)
+    protected int loadConnectionDestPort(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destPort");
     }
     
+    @Override
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         if (settings.containsKey("meta_in_ports")) {
@@ -129,7 +165,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadInPortsSettingsEnum(NodeSettingsRO settings) 
+    protected NodeSettingsRO loadInPortsSettingsEnum(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
@@ -175,6 +211,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         loadUIInfoSettings(uiInfo, settings);
     }
     
+    @Override
     protected NodeSettingsRO loadOutPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         if (settings.containsKey("meta_out_ports")) {
@@ -185,7 +222,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadOutPortsSettingsEnum(NodeSettingsRO settings) 
+    protected NodeSettingsRO loadOutPortsSettingsEnum(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
@@ -237,14 +274,16 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** {@inheritDoc} */
     @Override
     protected WorkflowPersistorVersion200 createWorkflowPersistor() {
-        return new WorkflowPersistorVersion200(getGlobalTableRepository());
+        return new WorkflowPersistorVersion200(
+                getGlobalTableRepository(), getVersionString());
     }
     
     /** {@inheritDoc} */
     @Override
     protected SingleNodeContainerPersistorVersion200 
         createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion200(this);
+        return new SingleNodeContainerPersistorVersion200(
+                this, getVersionString());
     }
     
     public String save(final WorkflowManager wm,
@@ -268,8 +307,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getName());
         NodeContainerMetaPersistorVersion200 metaPersistor = 
-            createNodeContainerMetaPersistor(null);
+            createNodeContainerMetaPersistor(workflowDirRef);
         metaPersistor.save(wm, settings);
+        saveWorkflowVariables(wm, settings); 
         
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
@@ -352,6 +392,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected void saveWorkflowName(
             final NodeSettingsWO settings, final String name) {
         settings.addString("name", name);
+    }
+    
+    protected void saveWorkflowVariables(final WorkflowManager wfm,
+            final NodeSettingsWO settings) {
+        List<ScopeVariable> vars = wfm.getWorkflowVariables();
+        if (!vars.isEmpty()) {
+            NodeSettingsWO wfmVarSub = 
+                settings.addNodeSettings(CFG_WKF_VARIABLES);
+            int i = 0;
+            for (ScopeVariable v : vars) {
+                v.save(wfmVarSub.addNodeSettings("Var_" + (i++)));
+            }
+        }
     }
 
     /**
@@ -444,8 +497,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         saveUIInfoSettings(settings, uiInfo);
     }
     
-    protected void saveInPort(NodeSettingsWO settings, 
-            WorkflowManager wm, final int portIndex) {
+    protected void saveInPort(final NodeSettingsWO settings, 
+            final WorkflowManager wm, final int portIndex) {
         WorkflowInPort inport = wm.getInPort(portIndex);
         settings.addInt("index", portIndex);
         settings.addString("name", inport.getPortName());
@@ -478,8 +531,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return settings.addNodeSettings("outport_" + portIndex);
     }
     
-    protected void saveOutPort(NodeSettingsWO settings, 
-            WorkflowManager wm, final int portIndex) {
+    protected void saveOutPort(final NodeSettingsWO settings, 
+            final WorkflowManager wm, final int portIndex) {
         WorkflowOutPort outport = wm.getOutPort(portIndex);
         settings.addInt("index", portIndex);
         settings.addString("name", outport.getPortName());

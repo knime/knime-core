@@ -29,13 +29,15 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * A settingsmodel for double default components.
  * 
  * @author ohl, University of Konstanz
  */
-public class SettingsModelDouble extends SettingsModelNumber {
+public class SettingsModelDouble extends SettingsModelNumber
+implements SettingsModelScopeVariableCompatible {
 
     private double m_value;
 
@@ -208,5 +210,21 @@ public class SettingsModelDouble extends SettingsModelNumber {
     @Override
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getKey() {
+        return m_configName;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ScopeVariable.Type getScopeVariableType() {
+        return ScopeVariable.Type.DOUBLE;
     }
 }

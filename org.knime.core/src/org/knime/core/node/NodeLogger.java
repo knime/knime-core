@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -291,6 +292,9 @@ public final class NodeLogger {
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
                 ? "on" : "off"));
+        l.info("# host=" + getHostname());
+        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024) 
+                + "MB");
         l.info("#############################################################");
     }
 
@@ -414,7 +418,9 @@ public final class NodeLogger {
      */
     public void warn(final Object o, final Throwable t) {
         this.warn(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -435,7 +441,9 @@ public final class NodeLogger {
      */
     public void info(final Object o, final Throwable t) {
         this.info(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -446,7 +454,9 @@ public final class NodeLogger {
      */
     public void error(final Object o, final Throwable t) {
         this.error(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -497,7 +507,9 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -508,7 +520,9 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -670,6 +684,15 @@ public final class NodeLogger {
             return LEVEL.FATAL;
         } else {
             return LEVEL.ALL;
+        }
+    }
+    
+    private static String getHostname() {
+        try {
+            InetAddress localMachine = InetAddress.getLocalHost();    
+            return localMachine.getHostName();
+        } catch (Exception uhe) {
+            return "<unknown host>";
         }
     }
 

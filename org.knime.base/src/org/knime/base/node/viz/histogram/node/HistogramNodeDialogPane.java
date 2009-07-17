@@ -24,14 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import java.awt.Dimension;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
-import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -40,6 +32,15 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
+import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
+
+import java.awt.Dimension;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * The dialog of the {@link HistogramNodeModel} where the user can
@@ -101,15 +102,12 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(m_xColumnSelectBox);
 
         //the aggregation column select box
-//        addDialogComponent(new DialogComponentColumnNameSelection(
-//                ,
-//                AGGR_COL_SEL_LABEL, 0, false,
-//                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER));
+        final SettingsModelColorNameColumns colorNameCols =
+                new SettingsModelColorNameColumns(
+                        AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, null);
         final AggregationColumnDialogComponent aggrCols =
             new AggregationColumnDialogComponent(AGGR_COL_SEL_LABEL,
-                    new SettingsModelColorNameColumns(
-                        AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, null),
-                        new Dimension(150, 155),
+                    colorNameCols, new Dimension(150, 155),
                 AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
         addDialogComponent(aggrCols);
     }

@@ -62,7 +62,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -530,8 +529,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             ContainerTable table = DataContainer.readFromZip(dataFile);
             m_dataArray = new DefaultDataArray(table, 1, 2, exec);
         } catch (Exception e) {
-            NodeLogger.getLogger(ConditionalBoxPlotNodeModel.class).warn(e);
-            throw new IOException(e.getMessage());
+            throw new IOException(
+                    "Unable to load internals: " + e.getMessage(), e);
         }
     }
 
@@ -625,8 +624,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     new File(nodeInternDir, "conditionalBoxPlotDataFile");
             DataContainer.writeToZip(m_dataArray, dataFile, exec);
         } catch (Exception e) {
-            NodeLogger.getLogger(ConditionalBoxPlotNodeModel.class).warn(e);
-            e.printStackTrace();
+            throw new IOException(
+                    "Unable to save internals: " + e.getMessage(), e);
         }
     }
 

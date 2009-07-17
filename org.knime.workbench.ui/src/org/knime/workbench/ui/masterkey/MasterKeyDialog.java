@@ -18,9 +18,6 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
- * History
- *   03.04.2008 (Fabian Dill): created
  */
 package org.knime.workbench.ui.masterkey;
 
@@ -29,14 +26,13 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class MasterKeyDialog extends Dialog {
-    
+
     private MasterKeyPreferencePage m_prefPage;
 
     /**
@@ -45,9 +41,9 @@ public class MasterKeyDialog extends Dialog {
     public MasterKeyDialog(final Shell parentShell) {
         super(parentShell);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -56,9 +52,9 @@ public class MasterKeyDialog extends Dialog {
         createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
                 true);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -66,16 +62,15 @@ public class MasterKeyDialog extends Dialog {
         Composite composite = (Composite)super.createDialogArea(parent);
         composite.setSize(400, 600);
         m_prefPage = new MasterKeyPreferencePage();
-        m_prefPage.setPreferenceStore(KNIMEUIPlugin.getDefault()
-                .getPreferenceStore());
+        m_prefPage.initPrefStore();
         m_prefPage.createControl(composite);
         m_prefPage.initialize();
         composite.getShell().setText("Master Key");
         return composite;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

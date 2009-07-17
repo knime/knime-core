@@ -361,7 +361,7 @@ public abstract class NodeView<T extends NodeModel>
      *
      * @return menu bar.
      */
-    protected final JMenuBar getJMenuBar() {
+    public final JMenuBar getJMenuBar() {
         return m_frame.getJMenuBar();
     }
 
@@ -606,12 +606,21 @@ public abstract class NodeView<T extends NodeModel>
             @Override
             public void run() {
                 if (doPack) {
-                    m_frame.pack();
-                } else {
+                    /*
+                     * This is necessary when the view was opened before the
+                     * node was executed. When the node gets executed the view
+                     * has to be resized and adapted to its content.
+                     * We had to remove the call to pack() in order to make it
+                     * run on a Mac Now we manually resize the frame
+                     */
                     m_frame.invalidate();
                     m_frame.validate();
-                    m_frame.repaint();
-                }
+                    Dimension size = m_frame.getRootPane().getPreferredSize();
+                    m_frame.setSize(size);
+                } 
+                m_frame.invalidate();
+                m_frame.validate();
+                m_frame.repaint();
             }
         };
         ViewUtils.invokeAndWaitInEDT(run);

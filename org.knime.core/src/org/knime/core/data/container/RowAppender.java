@@ -42,6 +42,12 @@ public interface RowAppender {
      * @throws IllegalStateException If the state forbids to add rows.
      * @throws IllegalArgumentException if the structure of the row forbids to
      *         add it to the table 
+     * @throws DataContainerException An IllegalArgumentException may also be
+     *         wrapped in a DataContainerException if the writing takes place 
+     *         asynchronously. This exception may be caused by the writing of
+     *         a row that was added previously (not necessarily the current 
+     *         argument). This exception may also indicate the interruption
+     *         of a write process. 
      * @throws org.knime.core.util.DuplicateKeyException 
      *         If the row's key has already been added.
      */

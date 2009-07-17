@@ -29,12 +29,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * 
  * @author ohl, University of Konstanz
  */
-public class SettingsModelInteger extends SettingsModelNumber {
+public class SettingsModelInteger extends SettingsModelNumber
+implements SettingsModelScopeVariableCompatible {
 
     private int m_value;
 
@@ -211,6 +213,22 @@ public class SettingsModelInteger extends SettingsModelNumber {
     @Override
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getKey() {
+        return m_configName;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ScopeVariable.Type getScopeVariableType() {
+        return ScopeVariable.Type.INTEGER;
     }
 
 }

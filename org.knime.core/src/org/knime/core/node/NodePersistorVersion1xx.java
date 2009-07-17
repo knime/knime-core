@@ -71,6 +71,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private boolean m_needsResetAfterLoad;
     
+    private boolean m_isDirtyAfterLoad;
+    
     private String m_warningMessage;
     
     /** List of factories (only the simple class name), which were 
@@ -331,18 +333,30 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     /** {@inheritDoc} */
     @Override
+    public void setDirtyAfterLoad() {
+        m_isDirtyAfterLoad = true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDirtyAfterLoad() {
+        return m_isDirtyAfterLoad;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     public boolean mustWarnOnDataLoadError() {
         return getSingleNodeContainerPersistor().mustWarnOnDataLoadError();
     }
     
     /** {@inheritDoc} */
     @Override
-    public LoadResult load(final Node node, final ReferencedFile configFileRef,
+    public void load(final Node node, final ReferencedFile configFileRef,
             final ExecutionMonitor exec, 
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep) 
+            final HashMap<Integer, ContainerTable> tblRep,
+            final LoadResult loadResult) 
             throws IOException, CanceledExecutionException {
-        LoadResult result = new LoadResult();
         ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);
         ExecutionMonitor loadExec = exec.createSilentSubProgress(0.7);
         ExecutionMonitor loadIntTblsExec = exec.createSilentSubProgress(0.1);
@@ -362,9 +376,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
         if (!configFile.isFile() || !configFile.canRead()) {
             String error = "Unable to load \"" + node.getName() + "\": "
                     + "Can't read config file \"" + configFile + "\"";
-            result.addError(error);
+            loadResult.addError(error);
             settings = new NodeSettings("empty");
-            setNeedsResetAfterLoad();
+            setNeedsResetAfterLoad(); // also implies dirty
         } else {
             settings = 
                 NodeSettings.loadFromXML(new FileInputStream(configFile));
@@ -376,9 +390,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
             m_hasContent = loadHasContent(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load hasContent flag: " + ise.getMessage();
-            result.addError(e);
+            loadResult.addError(e);
             getLogger().warn(e, ise);
-            setNeedsResetAfterLoad();
+            setNeedsResetAfterLoad(); // also implies dirty
         }
         
         try {
@@ -386,8 +400,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load (old) warning message: " 
                 + ise.getMessage();
-            result.addError(e);
+            loadResult.addError(e);
             getLogger().warn(e, ise);
+            setDirtyAfterLoad();
         }
         
         try {
@@ -398,10 +413,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
                         + node.getFactory().getClass().getSimpleName()
                         + "\" to false due to version bump (loaded as true)");
                 m_isExecuted = false;
+                setNeedsResetAfterLoad();
             }
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load execution flag: " + ise.getMessage();
-            result.addError(e);
+            loadResult.addError(e);
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
@@ -410,7 +426,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             m_isConfigured = loadIsConfigured(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load configuration flag: " + ise.getMessage();
-            result.addError(e);
+            loadResult.addError(e);
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
@@ -422,8 +438,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     loadNodeInternDirectory(settings, m_nodeDirectory);
             } catch (InvalidSettingsException ise) {
                 String e = "Unable to load internals directory";
-                result.addError(e);
+                loadResult.addError(e);
                 getLogger().warn(e, ise);
+                setDirtyAfterLoad();
             }
         }
         settingsExec.setProgress(1.0);
@@ -438,7 +455,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             String err = "Unable to load port content for node \"" 
                 + node.getName() + "\": " + e.getMessage();
-            result.addError(err, true);
+            loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
                 getLogger().warn(err, e);
             } else {
@@ -458,7 +475,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             String err = "Unable to load internally held tables for node \"" 
                 + node.getName() + "\": " + e.getMessage();
-            result.addError(err, true);
+            loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
                 getLogger().warn(err, e);
             } else {
@@ -470,11 +487,26 @@ public class NodePersistorVersion1xx implements NodePersistor {
         exec.setMessage("creating instance");
 
         exec.setMessage("Loading settings into node instance");
-        result.addError(node.load(this, createExec));
-        String message = "Loaded node " + node 
-            + (result.hasEntries() ? " with errors" : " without errors");
+        node.load(this, createExec, loadResult);
+        String status;
+        switch (loadResult.getType()) {
+        case Ok:
+            status = " without errors";
+            break;
+        case DataLoadError:
+            status = " with data errors";
+            break;
+        case Error:
+            status = " with errors";
+            break;
+        case Warning:
+            status = " with warnings";
+            break;
+        default:
+            status = " with " + loadResult.getType();
+        }
+        String message = "Loaded node " + node + status;
         exec.setProgress(1.0, message);
-        return result;
     }
     
     /** {@inheritDoc} */

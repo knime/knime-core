@@ -37,10 +37,11 @@ public class CompilationFailedException extends Exception {
     }
 
     /**
+     * @param msg detailed (more or less) error message
      * @param cause the cause for this exception
      * @see Exception#Exception(java.lang.Throwable)
      */
-    public CompilationFailedException(final Throwable cause) {
-        super(cause);
+    public CompilationFailedException(final String msg, final Throwable cause) {
+        super(msg, cause);
     }
 }

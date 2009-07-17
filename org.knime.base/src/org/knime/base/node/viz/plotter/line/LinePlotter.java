@@ -59,93 +59,94 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
- * Plots the values of all selected numeric columns as lines in a plot, where 
+ * Plots the values of all selected numeric columns as lines in a plot, where
  * the x axis are the rows and the y axis are the values from the minimum of the
  * values in all columns to the maximum of the values of all selected columns.
- * The <code>LinePlotter</code> extends the 
- * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter} to inherit 
- * the dot functionality and the hiliting behavior.
- * It determines the overall minimum and maximum of the selected columns, 
- * creates the referring coordinates and calculates the mapped values. The so 
- * mapped data points are passed to the drawing pane in one large
- * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}. The 
+ * The <code>LinePlotter</code> extends the
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter} to inherit the
+ * dot functionality and the hiliting behavior. It determines the overall
+ * minimum and maximum of the selected columns, creates the referring
+ * coordinates and calculates the mapped values. The so mapped data points are
+ * passed to the drawing pane in one large
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}. The
  * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane} connects
- * the points by lines. Due to performance issues it initially plots the first 
+ * the points by lines. Due to performance issues it initially plots the first
  * five numeric columns.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class LinePlotter extends ScatterPlotter {
 
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            LinePlotter.class);
-    
+    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
+    // LinePlotter.class);
+
     /** Initial dot size. */
     public static final int SIZE = 4;
 
     private static final int DEFAULT_NR_COLS = 5;
-    
-    private Map<String, Color>m_colorMapping;
-    
+
+    private Map<String, Color> m_colorMapping;
+
     private List<Integer> m_columns2Draw;
-    
+
     private Set<String> m_columnNames;
 
     private boolean m_interpolate;
-    
-    
-    
+
     /**
      * The construction kit constructor. Registers all necessary listeners.
      * 
-     * @param panel the drawing panel
-     * @param properties the properties
+     * @param panel
+     *            the drawing panel
+     * @param properties
+     *            the properties
      */
-    public LinePlotter(final AbstractDrawingPane panel, 
+    public LinePlotter(final AbstractDrawingPane panel,
             final AbstractPlotterProperties properties) {
         super(panel, properties);
         setDotSize(SIZE);
         m_columns2Draw = new ArrayList<Integer>();
         if (getProperties() instanceof LinePlotterProperties) {
-            final ColumnFilterPanel columnFilter = ((LinePlotterProperties)
-                    getProperties()).getColumnFilter(); 
-            columnFilter.addChangeListener(
-                    new ChangeListener() {
-                        /**
-                         * {@inheritDoc}
-                         */
-                        public void stateChanged(final ChangeEvent e) {
-                            if (getDataProvider() != null 
-                                && getDataProvider().getDataArray(
-                                        getDataArrayIdx()) != null) {
-                                DataTableSpec spec = getDataProvider()
-                                    .getDataArray(getDataArrayIdx())
-                                    .getDataTableSpec();
-                                m_columnNames = columnFilter
-                                    .getIncludedColumnSet();
-                                m_columns2Draw.clear();
-                                for (String name : m_columnNames) {
-                                    m_columns2Draw.add(spec.findColumnIndex(
-                                            name));
-                                }
-                                updatePaintModel();
-                            }
+            final ColumnFilterPanel columnFilter 
+                = ((LinePlotterProperties) getProperties()).getColumnFilter();
+            columnFilter.addChangeListener(new ChangeListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                public void stateChanged(final ChangeEvent e) {
+                    if (getDataProvider() != null
+                            && getDataProvider()
+                                    .getDataArray(getDataArrayIdx()) != null) {
+                        DataTableSpec spec = getDataProvider().getDataArray(
+                                getDataArrayIdx()).getDataTableSpec();
+                        m_columnNames = columnFilter.getIncludedColumnSet();
+                        m_columns2Draw.clear();
+                        for (String name : m_columnNames) {
+                            m_columns2Draw.add(spec.findColumnIndex(name));
                         }
-                    });
+                        updatePaintModel();
+                    }
+                }
+            });
             final ColorLegendTab legend 
-                = ((LinePlotterProperties)getProperties()).getColorLegend();
+                = ((LinePlotterProperties) getProperties()).getColorLegend();
             legend.addChangeListener(new ChangeListener() {
                 /**
                  * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                     // get the mapping and update model
-                    m_colorMapping = legend.getColorMapping();
+                    // TODO: replace existing entries
+                    Map<String, Color> mappingUpdate = legend.getColorMapping();
+                    for (Map.Entry<String, Color> entry : mappingUpdate
+                            .entrySet()) {
+                        m_colorMapping.put(entry.getKey(), entry.getValue());
+                    }
                     updatePaintModel();
-                }        
+                }
             });
-            final JCheckBox box = ((LinePlotterProperties)getProperties())
-                .getInterpolationCheckBox();
+            final JCheckBox box = ((LinePlotterProperties) getProperties())
+                    .getInterpolationCheckBox();
             box.addItemListener(new ItemListener() {
                 /**
                  * {@inheritDoc}
@@ -156,53 +157,53 @@ public class LinePlotter extends ScatterPlotter {
                 }
             });
             final JCheckBox showDotsBox 
-                = ((LinePlotterProperties)getProperties()).getShowDotsBox();
+                = ((LinePlotterProperties) getProperties()).getShowDotsBox();
             showDotsBox.addItemListener(new ItemListener() {
                 /**
                  * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
-                    ((LinePlotterDrawingPane)getDrawingPane()).setShowDots(
-                            showDotsBox.isSelected());
+                    ((LinePlotterDrawingPane) getDrawingPane())
+                            .setShowDots(showDotsBox.isSelected());
                     getDrawingPane().repaint();
                 }
             });
-            final JSpinner dotSize = ((LinePlotterProperties)getProperties())
-                .getDotSizeSpinner();
+            final JSpinner dotSize = ((LinePlotterProperties) getProperties())
+                    .getDotSizeSpinner();
             dotSize.addChangeListener(new ChangeListener() {
                 /**
                  * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
-                    setDotSize((Integer)dotSize.getValue());
+                    setDotSize((Integer) dotSize.getValue());
                     updatePaintModel();
                     getDrawingPane().repaint();
                 }
             });
-            final JSpinner thickness = ((LinePlotterProperties)getProperties())
-                .getThicknessSpinner();
+            final JSpinner thickness = ((LinePlotterProperties) getProperties())
+                    .getThicknessSpinner();
             thickness.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
-            public void stateChanged(final ChangeEvent e) {
-                ((LinePlotterDrawingPane)getDrawingPane()).setLineThickness(
-                        (Integer)thickness.getValue());
-                getDrawingPane().repaint();
-            }
-            
-        });
+                /**
+                 * {@inheritDoc}
+                 */
+                public void stateChanged(final ChangeEvent e) {
+                    ((LinePlotterDrawingPane) getDrawingPane())
+                            .setLineThickness((Integer) thickness.getValue());
+                    getDrawingPane().repaint();
+                }
+
+            });
         }
     }
-    
+
     /**
      * Default constructor.
-     *
+     * 
      */
     public LinePlotter() {
         this(new LinePlotterDrawingPane(), new LinePlotterProperties());
     }
-    
+
     /**
      * Sets color mapping and column selection to <code>null</code>.
      * 
@@ -214,24 +215,24 @@ public class LinePlotter extends ScatterPlotter {
         m_columnNames = null;
         m_columns2Draw.clear();
     }
-    
+
     /**
-     * Missing values may be linearly interpolated, if true they will be 
-     * interpolated, if false missing values will be left out and the line
-     * will be interrupted.
+     * Missing values may be linearly interpolated, if true they will be
+     * interpolated, if false missing values will be left out and the line will
+     * be interrupted.
      * 
-     * @param enable true if missing values should be interpolated(linear), 
-     * false otherwise
+     * @param enable
+     *            true if missing values should be interpolated(linear), false
+     *            otherwise
      */
     public void setInterpolation(final boolean enable) {
         m_interpolate = enable;
     }
-    
-    
+
     /**
-     * Creates the color mapping by dividing the hue circle of the HSB color 
-     * model by the number of selected columns, calculates the coordinates by 
-     * determining the overall minimum and maximum values of the selected 
+     * Creates the color mapping by dividing the hue circle of the HSB color
+     * model by the number of selected columns, calculates the coordinates by
+     * determining the overall minimum and maximum values of the selected
      * columns and maps the data points to the resulting screen coordinates.
      * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
@@ -242,44 +243,41 @@ public class LinePlotter extends ScatterPlotter {
                 && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
             // draw the points and add the lines
             DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
+            DataTableSpec spec = array.getDataTableSpec();
             if (m_columnNames == null) {
                 initColumnNames(array);
+                initializeColors(spec);
             }
-            // create the color mapping
-            if (m_colorMapping == null) {
-                m_colorMapping = new LinkedHashMap<String, Color>();
-            } 
-            m_colorMapping.clear();
-            float segment = 360f / (float)m_columns2Draw.size();
-            int colNr = 0;
-            for (DataColumnSpec colSpec : getDataProvider().getDataArray(
-                    getDataArrayIdx())
-                    .getDataTableSpec()) {
-                if (m_columns2Draw.contains(colNr)) {
-                    float h = (colNr * segment) / 360f;
-                    m_colorMapping.put(colSpec.getName(), 
-                            Color.getHSBColor(h, 1, 1));
-                }
-                colNr++;
+            // set only displayed columns for the color mapping in the
+            // color legend and drawing pane....
+            Map<String, Color> displayedColors 
+                = new LinkedHashMap<String, Color>();
+            // color mapping is initially defined for all columns
+            for (String colName : m_columnNames) {
+                Color c = m_colorMapping.get(colName);
+                    displayedColors.put(colName, c);
             }
+            displayedColors.keySet().retainAll(m_columnNames);
             calculateCoordinates(array);
             calculateDots();
             // if we have line plotter properties update them
             if (getProperties() instanceof LinePlotterProperties) {
-                ((LinePlotterProperties)getProperties()).updateColumnSelection(
-                        array.getDataTableSpec(), m_columnNames);
-                ((LinePlotterProperties)getProperties()).updateColorLegend(
-                        m_colorMapping);
+                ((LinePlotterProperties) getProperties())
+                        .updateColumnSelection(array.getDataTableSpec(),
+                                m_columnNames);
+                ((LinePlotterProperties) getProperties())
+                        .updateColorLegend(displayedColors);
             }
             getDrawingPane().repaint();
         }
     }
-    
+
     /**
      * Selects the first five numeric columns. If there are some columns left,
      * the column filter tab is set to be on top.
      * 
-     * @param array the data to visualize
+     * @param array
+     *            the data to visualize
      */
     private void initColumnNames(final DataArray array) {
         m_columnNames = new LinkedHashSet<String>();
@@ -294,15 +292,30 @@ public class LinePlotter extends ScatterPlotter {
                     break;
                 }
             }
-        } 
+        }
     }
-    
+
+    private void initializeColors(final DataTableSpec spec) {
+        m_colorMapping = new LinkedHashMap<String, Color>();
+        int nrOfCols = spec.getNumColumns();
+        float segment = 360f / (float) (nrOfCols);
+        int colNr = 0;
+        for (DataColumnSpec colSpec : spec) {
+            // if new columns are added...
+            String colName = colSpec.getName();
+            float h = (colNr * segment) / 360f;
+            Color c = Color.getHSBColor(h, 1, 1);
+            m_colorMapping.put(colName, c);
+            colNr++;
+        }
+    }
+
     /**
-     * Calculates the screen coordinates (dots) for the lines and puts them in 
-     * a large {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}, 
-     * which is passed to the 
+     * Calculates the screen coordinates (dots) for the lines and puts them in a
+     * large {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}, which
+     * is passed to the
      * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}.
-     *
+     * 
      */
     protected void calculateDots() {
         if (!(getDrawingPane() instanceof ScatterPlotterDrawingPane)) {
@@ -315,12 +328,12 @@ public class LinePlotter extends ScatterPlotter {
                 && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
             DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             int nrOfRows = array.size();
-            
-            // set the empty dots to delete the old ones 
+
+            // set the empty dots to delete the old ones
             // if we have no columns to display
-            ((ScatterPlotterDrawingPane)getDrawingPane()).setDotInfoArray(
-                    new DotInfoArray(new DotInfo[0]));
-            
+            ((ScatterPlotterDrawingPane) getDrawingPane())
+                    .setDotInfoArray(new DotInfoArray(new DotInfo[0]));
+
             // first store them in a list to avoid keep tracking of indices
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int colNr = 0;
@@ -340,15 +353,15 @@ public class LinePlotter extends ScatterPlotter {
                     DataCell cell = array.getRow(row).getCell(colIdx);
                     int y = -1;
                     DotInfo dot;
-                    int x = getMappedXValue(new StringCell(
-                            array.getRow(row).getKey().getString()));
+                    int x = getMappedXValue(new StringCell(array.getRow(row)
+                            .getKey().getString()));
                     if (!cell.isMissing()) {
                         y = getMappedYValue(cell);
                         if (missingValues.size() > 0) {
-                            // we have some missing values in between, 
+                            // we have some missing values in between,
                             // thus we have to interpolate
                             p2 = new Point(x, y);
-                            DotInfo[] interpolated = interpolate(p1, p2, 
+                            DotInfo[] interpolated = interpolate(p1, p2,
                                     missingValues);
                             // and add them
                             for (DotInfo p : interpolated) {
@@ -359,30 +372,30 @@ public class LinePlotter extends ScatterPlotter {
                         }
                         p1 = new Point(x, y);
                         dot = new DotInfo(x, y, array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                delegateIsHiLit(array.getRow(row).getKey()),
                                 color, 1, row);
-                        dot.setXDomainValue(new StringCell(
-                                array.getRow(row).getKey().getString()));
+                        dot.setXDomainValue(new StringCell(array.getRow(row)
+                                .getKey().getString()));
                         dot.setYDomainValue(cell);
                         dotList.add(dot);
                     } else if (!m_interpolate) {
-//                        LOGGER.debug("missing value");
+                        // LOGGER.debug("missing value");
                         dot = new DotInfo(x, -1, array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                delegateIsHiLit(array.getRow(row).getKey()),
                                 color, 1, row);
                         dotList.add(dot);
                     } else {
                         // interpolate
                         dot = new DotInfo(x, -1, array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                delegateIsHiLit(array.getRow(row).getKey()),
                                 color, 1, row);
                         missingValues.add(dot);
                     }
                 }
-                // if we have missing values left, there are some 
+                // if we have missing values left, there are some
                 // un-interpolated at the end, we add them anyway
                 if (!missingValues.isEmpty()) {
-                    DotInfo[] interpolated = interpolate(p1, null, 
+                    DotInfo[] interpolated = interpolate(p1, null,
                             missingValues);
                     // and add them
                     for (DotInfo p : interpolated) {
@@ -390,23 +403,24 @@ public class LinePlotter extends ScatterPlotter {
                     }
                     // and clear the list again
                     missingValues.clear();
-                } 
+                }
                 p1 = new Point(-1, -1);
                 colNr++;
             }
             DotInfo[] dots = new DotInfo[dotList.size()];
             dotList.toArray(dots);
-            ((LinePlotterDrawingPane)getDrawingPane()).setNumberOfLines(
-                    nrOfRows);
-            ((ScatterPlotterDrawingPane)getDrawingPane()).setDotInfoArray(
-                    new DotInfoArray(dots));
+            ((LinePlotterDrawingPane) getDrawingPane())
+                    .setNumberOfLines(nrOfRows);
+            ((ScatterPlotterDrawingPane) getDrawingPane())
+                    .setDotInfoArray(new DotInfoArray(dots));
         }
     }
-    
+
     /**
      * Determines the overall minimum and maximum value of all selected columns.
      * 
-     * @param array the data to visualize
+     * @param array
+     *            the data to visualize
      */
     private void calculateCoordinates(final DataArray array) {
         Set<DataCell> rowKeys = new LinkedHashSet<DataCell>(array.size());
@@ -425,7 +439,7 @@ public class LinePlotter extends ScatterPlotter {
                 if (cell.isMissing()) {
                     continue;
                 }
-                double value = ((DoubleValue)cell).getDoubleValue();
+                double value = ((DoubleValue) cell).getDoubleValue();
                 minY = Math.min(minY, value);
                 maxY = Math.max(maxY, value);
             }
@@ -433,7 +447,7 @@ public class LinePlotter extends ScatterPlotter {
         createNominalXCoordinate(rowKeys);
         setPreserve(false);
         createYCoordinate(minY, maxY);
-//        setPreserve(true);
+        // setPreserve(true);
     }
 
     /**
@@ -443,27 +457,31 @@ public class LinePlotter extends ScatterPlotter {
     public void updateSize() {
         calculateDots();
     }
-    
+
     /**
-     * The nr of intermediate points and the last row index is used to 
-     * determine the x value (only the y value is interpolated).
-     * @param p1 the domain value 1
-     * @param p2 the domain value 2
-     * @param xValues an array containing opoints with the right x value but 
-     * missing y value.
+     * The nr of intermediate points and the last row index is used to determine
+     * the x value (only the y value is interpolated).
+     * 
+     * @param p1
+     *            the domain value 1
+     * @param p2
+     *            the domain value 2
+     * @param xValues
+     *            an array containing opoints with the right x value but missing
+     *            y value.
      * @return the interpolated domain values.
      */
-    public DotInfo[] interpolate(final Point p1, 
-            final Point p2, final List<DotInfo> xValues) {
+    public DotInfo[] interpolate(final Point p1, final Point p2,
+            final List<DotInfo> xValues) {
         DotInfo[] interpolated = new DotInfo[xValues.size()];
         if (p1 == null || p2 == null || p1.getY() < 0 || p2.getY() < 0) {
             // invalid points (either beginning or end)
             // -> don't interpolate but replace with not visible points
             for (int i = 0; i < xValues.size(); i++) {
                 // don't interpolate if one of the points is invalid
-                    DotInfo newDot = xValues.get(i);
-                    newDot.setYCoord(-1);
-                    interpolated[i] = newDot;
+                DotInfo newDot = xValues.get(i);
+                newDot.setYCoord(-1);
+                interpolated[i] = newDot;
             }
             return interpolated;
         }
@@ -472,18 +490,15 @@ public class LinePlotter extends ScatterPlotter {
             int x = xValues.get(i).getXCoord();
             double m = 0;
             if (!p1.equals(p2)) {
-                m = ((p2.getY() - p1.getY()) 
-                    / (p2.getX() - p1.getX()));
+                m = ((p2.getY() - p1.getY()) / (p2.getX() - p1.getX()));
             }
             double y = (m * x) - (m * p1.getX()) + p1.getY();
             DotInfo newDot = xValues.get(i);
-            newDot.setYCoord((int)getScreenYCoordinate(y));
+            newDot.setYCoord((int) getScreenYCoordinate(y));
             interpolated[i] = newDot;
             x++;
         }
         return interpolated;
     }
-    
-    
-    
+
 }

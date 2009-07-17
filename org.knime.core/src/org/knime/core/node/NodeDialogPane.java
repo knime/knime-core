@@ -28,21 +28,19 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.AbstractButton;
-import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -50,7 +48,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
@@ -60,15 +57,23 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigEditJTree;
+import org.knime.core.node.config.ConfigEditTreeEvent;
+import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
+import org.knime.core.node.defaultnodesettings.SettingsModelScopeVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -94,9 +99,6 @@ public abstract class NodeDialogPane {
     /** Logger "personalized" for this dialog instance. */
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private static final String TAB_NAME_MISCELLANEOUS =
-        "General Node Settings";
-
     private static final String TAB_NAME_VARIABLES = "Flow Variables";
 
     /**
@@ -114,10 +116,28 @@ public abstract class NodeDialogPane {
     /** The additional tab in which the user can set the memory options.
      * This field is null when m_node has no data outports.
      */
-    private MiscSettingsTab m_miscTab;
+    private MiscSettingsTab m_memPolicyTab;
+
+    /**
+     * the additional tab in which the user can select the job manager and set
+     * its options. This field is null, if there is only one job manager with
+     * no options.
+     */
+    private NodeExecutorJobManagerDialogTab m_jobMgrTab;
+
+    /** List of registered models. (Model for little buttons attached to a
+     * selected set of components -- used to customize variables in place.)
+     */
+    private final List<ScopeVariableModel> m_scopeVariablesModelList;
+    
+    /** Flag whether the settings in any of the scope variable models have 
+     * changed. If so, we need to update the scope variable tab before saving
+     * the settings. We can't directly modify the tab during the event because
+     * it might not show the current settings tree. */
+    private boolean m_scopeVariablesModelChanged;
 
     /** The tab containing the flow variables. */
-    private ScopeVariablesTab m_scopeVariableTab;
+    private final ScopeVariablesTab m_scopeVariableTab;
 
     /** The variables tab settings as loaded from the model. We'll use them as
      * soon as the tab gets activated to update the tree. */
@@ -150,6 +170,9 @@ public abstract class NodeDialogPane {
         // init tabbed pane and at it to the underlying panel
         m_pane = new JTabbedPane();
         m_panel.add(m_pane, BorderLayout.CENTER);
+        m_scopeVariablesModelList =
+            new CopyOnWriteArrayList<ScopeVariableModel>();
+        m_scopeVariableTab = new ScopeVariablesTab();
     }
 
     /**
@@ -157,8 +180,17 @@ public abstract class NodeDialogPane {
      * of nodes with output ports.
      */
     void addMiscTab() {
-        m_miscTab = new MiscSettingsTab();
-        addTab(TAB_NAME_MISCELLANEOUS, m_miscTab);
+        m_memPolicyTab = new MiscSettingsTab();
+        addTab(m_memPolicyTab.getTabName(), m_memPolicyTab);
+    }
+
+    /**
+     * Creates and adds the job manager selection tab.
+     * @param splitType indicates how table splitting is supported in this node
+     */
+    public void addJobMgrTab(final SplitType splitType) {
+        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType);
+        addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
     /**
@@ -192,17 +224,15 @@ public abstract class NodeDialogPane {
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
-    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+    public void internalLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
-        MemoryPolicy memoryPolicy = null;
         m_scopeObjectStack = scopeStack;
         m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
-            memoryPolicy = l.getMemoryPolicy();
             m_scopeVariablesSettings = l.getVariablesSettings();
         } catch (InvalidSettingsException e) {
             // silently ignored here, variables get assigned default values
@@ -211,9 +241,6 @@ public abstract class NodeDialogPane {
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
-        if (memoryPolicy == null) {
-            memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-        }
         try {
             loadSettingsFrom(modelSettings, specs);
         } catch (NotConfigurableException nce) {
@@ -221,29 +248,53 @@ public abstract class NodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Error loading model settings", e);
         }
-        if (m_miscTab != null) {
-            m_miscTab.setStatus(memoryPolicy);
-        }
-        if (m_scopeVariableTab == null) {
-            m_scopeVariableTab = new ScopeVariablesTab();
-            boolean isExpertMode =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
-            if (isExpertMode) {
-                addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
-                m_pane.addChangeListener(new ChangeListener() {
-                    /** {@inheritDoc} */
-                    public void stateChanged(final ChangeEvent e) {
-                        if (m_pane.getSelectedComponent()
-                                == m_scopeVariableTab) {
-                            onVariablesTabSelected();
-                        }
+        // add flow variables tab if not yet done
+        if (getTab(TAB_NAME_VARIABLES) == null 
+                && Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+            addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
+            m_pane.addChangeListener(new ChangeListener() {
+                /** {@inheritDoc} */
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
+                        updateScopeVariablesTab();
                     }
-                });
-            }
+                }
+            });
         }
-        m_scopeVariableTab.setWasAtLeastOnceVisible(false);
-        if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
-            onVariablesTabSelected();
+        m_scopeVariableTab.setModified(false);
+        m_scopeVariablesModelChanged = false;
+        if (m_pane.getSelectedComponent() == m_scopeVariableTab 
+                || !m_scopeVariablesModelList.isEmpty()) {
+            // this will also update the settings in all elements in
+            // m_scopeVariablesModelList
+            initScopeVariablesTab(modelSettings, m_scopeVariablesSettings);
+        }
+
+        // output memory policy and job manager (stored in NodeContainer)
+        if (m_memPolicyTab != null || m_jobMgrTab != null) {
+            NodeContainerSettings ncSettings;
+            SingleNodeContainerSettings sncSettings;
+            try {
+                ncSettings = new NodeContainerSettings();
+                ncSettings.load(settings);
+            } catch (InvalidSettingsException ise) {
+                ncSettings = new NodeContainerSettings();
+            }
+            try {
+                sncSettings = new SingleNodeContainerSettings(settings);
+            } catch (InvalidSettingsException ise) {
+                sncSettings = new SingleNodeContainerSettings();
+            }
+            if (m_memPolicyTab != null) {
+                MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
+                if (memoryPolicy == null) {
+                    memoryPolicy = MemoryPolicy.CacheSmallInMemory;
+                }
+                m_memPolicyTab.setStatus(memoryPolicy);
+            }
+            if (m_jobMgrTab != null) {
+                m_jobMgrTab.loadSettings(ncSettings, specs);
+            }
         }
     }
 
@@ -266,19 +317,28 @@ public abstract class NodeDialogPane {
             m_logger.error("Failed to save dialog settings", e);
         }
         NodeSettings variables;
-        if (m_scopeVariableTab.wasAtLeastOnceVisible()) {
+        if (m_scopeVariablesModelChanged) {
+            updateScopeVariablesTab();
+        }
+        if (m_scopeVariableTab.isModified()) {
             variables = m_scopeVariableTab.getVariableSettings();
         } else {
             variables = m_scopeVariablesSettings;
         }
-        MemoryPolicy memPolicy = MemoryPolicy.CacheSmallInMemory;
-        if (m_miscTab != null) {
-            memPolicy = m_miscTab.getStatus();
-        }
         l.setModelSettings(model);
-        l.setMemoryPolicy(memPolicy);
         l.setVariablesSettings(variables);
         l.save(settings);
+        SingleNodeContainerSettings s = new SingleNodeContainerSettings();
+        NodeContainerSettings ncSet = new NodeContainerSettings();
+
+        if (m_memPolicyTab != null) {
+            s.setMemoryPolicy(m_memPolicyTab.getStatus());
+        }
+        if (m_jobMgrTab != null) {
+            m_jobMgrTab.saveSettings(ncSet);
+        }
+        ncSet.save(settings);
+        s.save(settings);
     }
 
     /**
@@ -353,7 +413,7 @@ public abstract class NodeDialogPane {
      * button from the surrounding dialog.
      */
     public void onCancel() {
-
+        // default implementation does nothing.
     }
 
     /**
@@ -644,18 +704,26 @@ public abstract class NodeDialogPane {
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             public void run() {
                 int varTabIdx = m_pane.indexOfComponent(m_scopeVariableTab);
-                int miscIndex = m_pane.indexOfComponent(m_miscTab);
+                int memIndex = m_pane.indexOfComponent(m_memPolicyTab);
+                int jobMgrIdx = m_pane.indexOfComponent(m_jobMgrTab);
 
-                if (miscIndex >= 0) {
+                if (memIndex >= 0) {
                     // make sure the miscellaneous tab is the last tab
-                    if (insertIdx.intValue() > miscIndex) {
-                        insertIdx.setValue(miscIndex);
+                    if (insertIdx.intValue() > memIndex) {
+                        insertIdx.setValue(memIndex);
                     }
                 }
                 if (varTabIdx >= 0) {
                     // make sure the variables tab is the second last tab
                     if (insertIdx.intValue() > varTabIdx) {
                         insertIdx.setValue(varTabIdx);
+                    }
+
+                }
+                if (jobMgrIdx >= 0) {
+                    // make sure the job manager tab is the third last tab
+                    if (insertIdx.intValue() > jobMgrIdx) {
+                        insertIdx.setValue(jobMgrIdx);
                     }
 
                 }
@@ -807,14 +875,76 @@ public abstract class NodeDialogPane {
         return m_pane.indexOfTab(title);
     }
 
-    private void onVariablesTabSelected() {
+    /** Create model and register a new variable for a specific settings entry.
+     * This can serve two purposes:
+     * 1) replace the actual value in the settings object by the value of
+     *    the variable
+     * 2) and/or put the current value of the settings object into the
+     *    specified variable.
+     *
+     * @param key of corresponding settings object
+     * @param type of variable/settings object
+     * @return new WorkflowVariableModel which is already registered
+     */
+    protected ScopeVariableModel createWorkflowVariableModel(
+            final String key, final ScopeVariable.Type type) {
+        ScopeVariableModel wvm = new ScopeVariableModel(this, key, type);
+        m_scopeVariablesModelList.add(wvm);
+        wvm.addChangeListener(new ChangeListener() {
+            /** {@inheritDoc} */
+            public void stateChanged(final ChangeEvent e) {
+                m_scopeVariablesModelChanged = true;
+            }
+        });
+        return wvm;
+    }
+
+    /** Create model and register a new variable for a specific settings
+     * object.
+     *
+     * @param dc settings object of corresponding DialogComponent  
+     * @return new WorkflowVariableModel which is already registered
+     */
+    protected ScopeVariableModel createWorkflowVariableModel(
+            final SettingsModelScopeVariableCompatible dc) {
+        return createWorkflowVariableModel(dc.getKey(),
+                dc.getScopeVariableType());
+    }
+    
+    /** Sets the settings from the second argument into the scope variables tab.
+     * The parameter tree is supposed to follow the node settings argument.
+     * @param nodeSettings The (user) settings of the node. 
+     * @param variableSettings The scope variable settings.
+     */
+    @SuppressWarnings("unchecked")
+    private void initScopeVariablesTab(final NodeSettingsRO nodeSettings, 
+            final NodeSettingsRO variableSettings) {
+        m_scopeVariableTab.setErrorLabel("");
+        m_scopeVariableTab.setModified(true);
+        m_scopeVariableTab.setVariableSettings(nodeSettings, variableSettings,
+                m_scopeObjectStack, Collections.EMPTY_SET);
+        for (ScopeVariableModel m : m_scopeVariablesModelList) {
+            ConfigEditTreeNode configNode = m_scopeVariableTab
+                .findTreeNodeForChild(new String[]{m.getKey()});
+            if (configNode != null) {
+                m.setInputVariableName(configNode.getUseVariableName());
+                m.setOutputVariableName(configNode.getExposeVariableName());
+            }
+        }
+        m_scopeVariablesModelChanged = false;
+    }
+
+    /** Updates the scope variable tab to reflect the current parameter tree.
+     * It also includes the config of the scope variable models (the little
+     * buttons attached to some control elements). */
+    private void updateScopeVariablesTab() {
         m_scopeVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
         NodeSettings variableSettings;
         commitComponentsRecursively(getPanel());
         try {
             saveSettingsTo(settings);
-            variableSettings = m_scopeVariableTab.wasAtLeastOnceVisible()
+            variableSettings = m_scopeVariableTab.isModified()
                 ? m_scopeVariableTab.getVariableSettings()
                 : m_scopeVariablesSettings;
         } catch (Throwable e) {
@@ -827,18 +957,20 @@ public abstract class NodeDialogPane {
             m_scopeVariableTab.setErrorLabel(error);
             return;
         }
-        m_scopeVariableTab.setWasAtLeastOnceVisible(true);
-        m_scopeVariableTab.setVariableSettings(
-                settings, variableSettings, m_scopeObjectStack);
+        m_scopeVariableTab.setModified(true);
+        m_scopeVariableTab.setVariableSettings(settings, variableSettings,
+                m_scopeObjectStack, m_scopeVariablesModelList);
     }
 
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
-     * of hard-coded values. */
-    private static class ScopeVariablesTab extends JPanel {
+     * of hard-coded values.) */
+    private class ScopeVariablesTab extends JPanel 
+        implements ConfigEditTreeEventListener {
+
         private final ConfigEditJTree m_tree;
         private final JLabel m_errorLabel;
-        private boolean m_wasAtLeastOnceVisible;
+        private boolean m_isModified;
 
         /** Creates new tab. */
         public ScopeVariablesTab() {
@@ -853,24 +985,45 @@ public abstract class NodeDialogPane {
             add(new JScrollPane(panel), BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
+        
+        /** Find the tree node that is associated with the given key path.
+         * @param keyPath The path in the tree (single root is omitted).
+         * @return The config node or null if not present.
+         */
+        ConfigEditTreeNode findTreeNodeForChild(final String[] keyPath) {
+            return m_tree.getModel().findChildForKeyPath(keyPath);
+        }
 
         /** Update the panel to reflect new properties.
          * @param nodeSettings Settings of the node (or currently entered in
          *  the remaining tabs of the dialog.
-         * @param variableSettings  The variable mask.
-         * @param stack the stack to get the variables from. */
-        public void setVariableSettings(final NodeSettings nodeSettings,
-                final NodeSettings variableSettings,
-                final ScopeObjectStack stack) {
-            NodeSettings nodeSetsCopy = nodeSettings == null
-                    ? new NodeSettings("variables") : nodeSettings;
+         * @param varSettings  The variable mask.
+         * @param stack the stack to get the variables from.
+         * @param variableModels The models that may be used in the main panels
+         * of the dialog to overwrite settings in place. */
+        void setVariableSettings(final NodeSettingsRO nodeSettings,
+                final NodeSettingsRO varSettings,
+                final ScopeObjectStack stack,
+                final Collection<ScopeVariableModel> variableModels) {
+            if (nodeSettings != null && !(nodeSettings instanceof Config)) {
+                m_logger.debug("Node settings object not instance of "
+                        + Config.class + " -- disabling flow variables tab");
+                return;
+            }
+            if (varSettings != null && !(varSettings instanceof Config)) {
+                m_logger.debug("Variable settings object not instance of "
+                        + Config.class + " -- disabling flow variables tab");
+                return;
+            }
+            Config nodeSetsCopy = nodeSettings == null
+            ? new NodeSettings("variables") : (Config)nodeSettings;
             ConfigEditTreeModel model;
             try {
-                if (variableSettings == null) {
+                if (varSettings == null) {
                     model = ConfigEditTreeModel.create(nodeSetsCopy);
                 } else {
                     model = ConfigEditTreeModel.create(
-                        nodeSetsCopy, variableSettings);
+                        nodeSetsCopy, (Config)varSettings);
                 }
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "
@@ -878,8 +1031,11 @@ public abstract class NodeDialogPane {
                         JOptionPane.ERROR_MESSAGE);
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
             }
+            model.update(variableModels);
             m_tree.setScopeStack(stack);
+            m_tree.getModel().removeConfigEditTreeEventListener(this);
             m_tree.setModel(model);
+            model.addConfigEditTreeEventListener(this);
         }
 
         /**
@@ -901,10 +1057,10 @@ public abstract class NodeDialogPane {
             return null;
         }
 
-        /** @param wasVisible the wasVisible property.
-         * @see #wasAtLeastOnceVisible() */
-        public void setWasAtLeastOnceVisible(final boolean wasVisible) {
-            m_wasAtLeastOnceVisible = wasVisible;
+        /** @param isModified the isModified property.
+         * @see #isModified() */
+        public void setModified(final boolean isModified) {
+            m_isModified = isModified;
         }
 
         /** If true, the tab was at least once loaded after a load settings.
@@ -912,104 +1068,21 @@ public abstract class NodeDialogPane {
          * settings mask or the mask from this tab.
          * @return the above described property.
          */
-        public boolean wasAtLeastOnceVisible() {
-            return m_wasAtLeastOnceVisible;
+        public boolean isModified() {
+            return m_isModified;
         }
 
-    }
-
-    private static class MiscSettingsTab extends JPanel {
-        private final ButtonGroup m_group;
-
-        /** Inits GUI. */
-        public MiscSettingsTab() {
-            super(new BorderLayout());
-            m_group = new ButtonGroup();
-            JRadioButton cacheAll = new JRadioButton("Keep all in memory.");
-            cacheAll.setActionCommand(MemoryPolicy.CacheInMemory.toString());
-            m_group.add(cacheAll);
-            cacheAll.setToolTipText(
-                    "All generated output data is kept in main memory, "
-                    + "resulting in faster execution of successor nodes but "
-                    + "also in more memory usage.");
-            JRadioButton cacheSmall = new JRadioButton(
-                    "Keep only small tables in memory.", true);
-            cacheSmall.setActionCommand(
-                    MemoryPolicy.CacheSmallInMemory.toString());
-            m_group.add(cacheSmall);
-            cacheSmall.setToolTipText("Tables with less than "
-                    + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
-                    + "main memory, otherwise swapped to disc.");
-            JRadioButton cacheOnDisc = new JRadioButton(
-                    "Write tables to disc.");
-            cacheOnDisc.setActionCommand(MemoryPolicy.CacheOnDisc.toString());
-            m_group.add(cacheOnDisc);
-            cacheOnDisc.setToolTipText("All output is immediately "
-                    + "written to disc to save main memory usage.");
-            final int s = 15;
-            JPanel north = new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-            north.add(new JLabel("Select memory policy for data outport(s)"));
-            add(north, BorderLayout.NORTH);
-            JPanel bigCenter =
-                new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-            JPanel center = new JPanel(new GridLayout(0, 1));
-            center.add(cacheAll);
-            center.add(cacheSmall);
-            center.add(cacheOnDisc);
-            bigCenter.add(center);
-            add(bigCenter, BorderLayout.CENTER);
-        }
-
-        /** Get the memory policy for the currently selected radio button.
-         * @return The corresponding policy.
-         */
-        MemoryPolicy getStatus() {
-            String memoryPolicy = m_group.getSelection().getActionCommand();
-            return MemoryPolicy.valueOf(memoryPolicy);
-        }
-
-        /** Select the radio button for the given policy.
-         * @param policy The one to use.
-         */
-        void setStatus(final MemoryPolicy policy) {
-            for (Enumeration<AbstractButton> e = m_group.getElements();
-                e.hasMoreElements();) {
-                AbstractButton m = e.nextElement();
-                if (m.getActionCommand().equals(policy.toString())) {
-                    m.setSelected(true);
-                    return;
+        /** {@inheritDoc} */
+        @Override
+        public void configEditTreeChanged(final ConfigEditTreeEvent event) {
+            String[] keyPath = event.getKeyPath();
+            for (ScopeVariableModel m : m_scopeVariablesModelList) {
+                if (m.getKey().equals(keyPath[0])) {
+                    m.setInputVariableName(event.getUseVariable());
+                    m.setOutputVariableName(event.getExposeVariableName());
                 }
             }
-            assert false;
         }
-    } // class MiscSettingsTab
-
-    /**
-     * <code>NodeDialogPane</code> that only keeps a
-     * <i>General Node Settings</i> tab. Load and save methods are left blank.
-     *
-     * @author Thomas Gabriel, University of Konstanz
-     */
-    static class MiscNodeDialogPane extends NodeDialogPane {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void loadSettingsFrom(final NodeSettingsRO settings,
-                final PortObjectSpec[] specs) throws NotConfigurableException {
-
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void saveSettingsTo(final NodeSettingsWO settings)
-                throws InvalidSettingsException {
-
-        }
-
     }
 
 }

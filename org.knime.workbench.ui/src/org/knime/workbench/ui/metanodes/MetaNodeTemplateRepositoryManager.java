@@ -87,10 +87,9 @@ public final class MetaNodeTemplateRepositoryManager {
     
     private static MetaNodeTemplateRepositoryManager instance;
     
-    private static WorkflowManager workflowmanager;
+    private WorkflowManager m_workflowmanager;
     
     private MetaNodeTemplateRepositoryManager() {
-        workflowmanager = WorkflowManager.ROOT.createAndAddProject();
         load();
         instance = this;
     }
@@ -128,7 +127,7 @@ public final class MetaNodeTemplateRepositoryManager {
      * @return the workflow manager to which all meta nodes are added
      */
     public WorkflowManager getWorkflowManager() {
-        return workflowmanager;
+        return m_workflowmanager;
     }
 
     /**
@@ -148,7 +147,8 @@ public final class MetaNodeTemplateRepositoryManager {
      */
     public void createMetaNodeTemplate(final String name, 
             final WorkflowManager source, final NodeID nodeID) {
-        NodeID newNode = workflowmanager.copy(source, new NodeID[] {nodeID})[0];
+        NodeID newNode = m_workflowmanager.copyFromAndPasteHere(
+                source, new NodeID[] {nodeID})[0];
         MetaNodeTemplateRepositoryItem item 
             = new MetaNodeTemplateRepositoryItem(
                 name, newNode);
@@ -163,7 +163,7 @@ public final class MetaNodeTemplateRepositoryManager {
      */
     public WorkflowManager getSubworkflow(
             final MetaNodeTemplateRepositoryItem item) {
-        return (WorkflowManager)workflowmanager.getNodeContainer(
+        return (WorkflowManager)m_workflowmanager.getNodeContainer(
                 item.getNodeID());
         
     }
@@ -175,10 +175,11 @@ public final class MetaNodeTemplateRepositoryManager {
         try {
             FileReader fileReader = new FileReader(getMetaNodeTemplateStore());
             XMLMemento memento = XMLMemento.createReadRoot(fileReader);
-            workflowmanager = loadWorkflowManager();
+            m_workflowmanager = loadWorkflowManager();
             // if file is not there create new one
-            if (workflowmanager == null) {
-                workflowmanager = WorkflowManager.ROOT.createAndAddProject();
+            if (m_workflowmanager == null) {
+                m_workflowmanager = WorkflowManager.ROOT.createAndAddProject(
+                        "Meta Node Template Root");
                 return;
             }
             // load WorkflowManager from file
@@ -187,7 +188,7 @@ public final class MetaNodeTemplateRepositoryManager {
                 MetaNodeTemplateRepositoryItem item 
                     = new MetaNodeTemplateRepositoryItem();
                 item.loadFrom((XMLMemento)template);
-                item.updateNodeID(workflowmanager.getID());
+                item.updateNodeID(m_workflowmanager.getID());
                 m_items.add(item);
             }
         } catch (FileNotFoundException fnfe) {
@@ -220,8 +221,9 @@ public final class MetaNodeTemplateRepositoryManager {
                         LOGGER.debug("found pre-installed template " 
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
-                        WorkflowManager metaNode = workflowmanager.load(f, 
-                                new ExecutionMonitor()).getWorkflowManager();
+                        WorkflowManager metaNode = m_workflowmanager.load(f, 
+                                new ExecutionMonitor(), false)
+                                .getWorkflowManager();
                         MetaNodeTemplateRepositoryItem preItem 
                             = new MetaNodeTemplateRepositoryItem(f.getName(), 
                                     metaNode.getID());
@@ -248,7 +250,7 @@ public final class MetaNodeTemplateRepositoryManager {
     public void save() {
         // save workflow manager to dedicated dir
         try {
-            workflowmanager.save(new File(METANODE_TEMPLATE_REPOSITORY), 
+            m_workflowmanager.save(new File(METANODE_TEMPLATE_REPOSITORY), 
                     new ExecutionMonitor(), false);
             XMLMemento memento = XMLMemento.createWriteRoot(CFG_TYPE);
             for (MetaNodeTemplateRepositoryItem item : m_items) {

@@ -120,13 +120,17 @@ public class ConnectionUIInformation implements UIInformation {
      * moving distance.
      * 
      * @param moveDist the distance to change the bend points
+     * @return A new copy of this object with all its bend points shifted
+     *         by the argument offset.
      */
-    public void changePosition(final int[] moveDist) {
-
+    public ConnectionUIInformation createNewWithOffsetPosition(
+            final int[] moveDist) {
+        ConnectionUIInformation copy = new ConnectionUIInformation();
         for (int[] point : m_bendpoints) {
-            point[0] += moveDist[0];
-            point[1] += moveDist[1];
+            copy.m_bendpoints.add(new int[] {
+                    point[0] +  moveDist[0], point[1] +  moveDist[1]});
         }
+        return copy;
     }
     
     /**

@@ -18,22 +18,16 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * History
- *   20.11.2006 (thiel): created
  */
 package org.knime.base.node.preproc.filter.hilite;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.node.preproc.filter.row.RowFilterTable;
-import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
-import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -43,12 +37,14 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
+import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
  * 
  * @author thiel, University of Konstanz
  */
-public class HiliteFilterNodeModel extends NodeModel {
+public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
 
     /**
      * Creates an instance of HiliteFilterNodeModel.
@@ -73,17 +69,27 @@ public class HiliteFilterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTable[] filteredTables = new DataTable[2];
-        
-        HiLiteHandler hdl = this.getInHiLiteHandler(0);
-               
-        synchronized (hdl) {
-            filteredTables[0] = new RowFilterTable(inData[0], 
-                    new HilightOnlyRowFilter(hdl));
-            filteredTables[1] = new RowFilterTable(inData[0], 
-                    new NotHilightedRowFilter(hdl));
+        DataTableSpec inSpec = inData[0].getDataTableSpec();
+        BufferedDataContainer bufIn = exec.createDataContainer(inSpec);
+        BufferedDataContainer bufOut = exec.createDataContainer(inSpec);
+        synchronized (m_inHdl) {
+            double rowCnt = inData[0].getRowCount();
+            CloseableRowIterator it = inData[0].iterator();
+            for (int i = 0; i < rowCnt; i++) {
+                DataRow row = it.next();
+                if (m_inHdl.isHiLit(row.getKey())) {
+                    bufIn.addRowToTable(row);
+                } else {
+                    bufOut.addRowToTable(row);
+                }
+                exec.checkCanceled();
+                exec.setProgress((i + 1) / rowCnt);
+            }
         }
-        return exec.createBufferedDataTables(filteredTables, exec);
+        bufIn.close();
+        bufOut.close();
+        m_inHdl.addHiLiteListener(this);
+        return new BufferedDataTable[]{bufIn.getTable(), bufOut.getTable()};
     }
     
     /**
@@ -99,6 +105,9 @@ public class HiliteFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        if (m_inHdl != null) {
+            m_inHdl.removeHiLiteListener(this);
+        }
     }
 
     /**
@@ -124,8 +133,10 @@ public class HiliteFilterNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+        hiliteWarning();
+        m_inHdl.addHiLiteListener(this);
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -135,90 +146,57 @@ public class HiliteFilterNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
     }
     
+    /** Holds the current input HiLiteHandler. */
+    private HiLiteHandler m_inHdl;
     
     /**
-     * Row filter that filters non-hilited rows - it's the most convenient way
-     * to write only the hilited rows.
-     * 
-     * @author Bernd Wiswedel, University of Konstanz
+     * {@inheritDoc}
      */
-    private static final class HilightOnlyRowFilter extends RowFilter {
-
-        private final HiLiteHandler m_handler;
-
-        /**
-         * Creates new instance given a hilight handler.
-         * 
-         * @param handler the handler to get the hilite info from
-         */
-        public HilightOnlyRowFilter(final HiLiteHandler handler) {
-            m_handler = handler;
-        }
-
-        @Override
-        public DataTableSpec configure(final DataTableSpec inSpec)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        public void loadSettingsFrom(final NodeSettingsRO cfg)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        protected void saveSettings(final NodeSettingsWO cfg) {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        public boolean matches(final DataRow row, final int rowIndex)
-                throws EndOfTableException, IncludeFromNowOn {
-            return m_handler.isHiLit(row.getKey());
-        }
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_inHdl = hiLiteHdl;
     }
     
     /**
-     * Row filter that filters hilited rows - it's the most convenient way
-     * to write only the not hilited rows.
-     * 
-     * @author Kilian Thiel, University of Konstanz
+     * {@inheritDoc}
      */
-    private static final class NotHilightedRowFilter extends RowFilter {
-
-        private final HiLiteHandler m_handler;
-
-        /**
-         * Creates new instance given a hilight handler.
-         * 
-         * @param handler the handler to get the hilite info from
-         */
-        public NotHilightedRowFilter(final HiLiteHandler handler) {
-            m_handler = handler;
-        }
-
-        @Override
-        public DataTableSpec configure(final DataTableSpec inSpec)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        public void loadSettingsFrom(final NodeSettingsRO cfg)
-                throws InvalidSettingsException {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        protected void saveSettings(final NodeSettingsWO cfg) {
-            throw new IllegalStateException("Not intended for permanent usage");
-        }
-
-        @Override
-        public boolean matches(final DataRow row, final int rowIndex)
-                throws EndOfTableException, IncludeFromNowOn {
-            return !m_handler.isHiLit(row.getKey());
-        }
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_inHdl;
     }
+    
+    /** Hilite warning, when hilite state as changed. */
+    private void hiliteWarning() {
+        if (m_inHdl != null) {
+            m_inHdl.removeHiLiteListener(this);
+        }
+        super.setWarningMessage(
+                "HiLite status has changed, re-execute node to apply changes.");
+    }   
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void hiLite(final KeyEvent event) {
+        hiliteWarning();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unHiLite(final KeyEvent event) {
+        hiliteWarning();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unHiLiteAll(final KeyEvent event) {
+        hiliteWarning();
+    }
+
 }

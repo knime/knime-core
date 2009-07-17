@@ -36,6 +36,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -620,6 +621,104 @@ public final class Operators {
         @Override
         protected DataCell getResultInternal() {
             return new IntCell(m_vals.size());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void resetInternal() {
+            m_vals.clear();
+        }
+    }
+
+    /**
+     * Returns the concatenation of all different values per group and the
+     * number of cells per distinct value.
+     *
+     * @author Tobias Koetter, University of Konstanz
+     */
+    final class UniqueConcatenateWithCountOperator extends AggregationOperator {
+
+        private final DataType m_type = StringCell.TYPE;
+
+        private final Map<String, MutableInteger> m_vals;
+
+        /**Constructor for class Concatenate.
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public UniqueConcatenateWithCountOperator(final int maxUniqueValues) {
+            super("Unique concatenate with count", false, true, false,
+                    maxUniqueValues);
+            try {
+                m_vals = new HashMap<String, MutableInteger>(maxUniqueValues);
+            } catch (final OutOfMemoryError e) {
+                throw new IllegalArgumentException(
+                        "Maximum unique values number to big");
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
+            return new UniqueConcatenateWithCountOperator(maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
+            final String val = cell.toString();
+            final MutableInteger counter = m_vals.get(val);
+            if (counter != null) {
+                counter.inc();
+                return false;
+            }
+            //check if the map contains more values than allowed
+            //before adding a new value
+            if (m_vals.size() >= getMaxUniqueValues()) {
+                return true;
+            }
+            m_vals.put(val, new MutableInteger(1));
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataCell getResultInternal() {
+            final StringBuilder buf = new StringBuilder();
+            final Set<Entry<String, MutableInteger>> entrySet =
+                m_vals.entrySet();
+            boolean first = true;
+            for (final Entry<String, MutableInteger> entry : entrySet) {
+                if (first) {
+                    first = false;
+                } else {
+                    buf.append(AggregationOperator.CONCATENATOR);
+                }
+                buf.append(entry.getKey());
+                buf.append('(');
+                buf.append(Integer.toString(entry.getValue().intValue()));
+                buf.append(')');
+            }
+            return new StringCell(buf.toString());
         }
 
         /**

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.0.3.0021111">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.0.0018128">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
@@ -53,8 +53,9 @@ pay for the privilege of doing so.
 
 This License applies to the computer program known as "KNIME". The
 "Program", below, refers to such program. The Program is a copyrighted
-work whose copyright is held by KNIME GmbH, Konstanz, Germany (the 
-"Licensor").
+work whose copyright is held by The Chair for Bioinformatics and
+Information Mining (Prof. Dr. Michael Berthold) at the University of
+Konstanz, Germany (the "Licensor").
 
 A "work based on the Program" means either the Program or any
 derivative work of the Program, as defined in the United States
@@ -289,7 +290,7 @@ terms of this License.
       <import plugin="org.eclipse.update.ui"/>
    </requires>
 
-   <plugin download-size="0" id="org.knime.features.base.source" install-size="0" version="0.0.0"/>
+   <includes id="org.knime.features.base.source" version="0.0.0"/>
 
    <plugin download-size="0" id="org.knime.base" install-size="0" version="0.0.0"/>
 
@@ -316,5 +317,9 @@ terms of this License.
    <plugin download-size="0" fragment="true" id="org.knime.deprecated" install-size="0" version="0.0.0"/>
 
    <plugin download-size="0" id="org.apache.log4j" install-size="0" unpack="false" version="0.0.0"/>
+   
+   <plugin download-size="0" id="org.eclipse.jdt.compiler.tool" install-size="0" version="0.0.0" fragment="true" unpack="false"/>
+
+   <plugin download-size="0" id="org.eclipse.jdt.core" install-size="0" version="0.0.0" unpack="false"/>
 
 </feature>

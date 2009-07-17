@@ -38,12 +38,9 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 public class ChangeWorkflowPortBarCommand extends Command {
     
     private final Rectangle m_oldBounds;
-
     private final Rectangle m_newBounds;
 
     private final AbstractWorkflowPortBarEditPart m_bar;
-
-    private  NodeUIInformation m_extraInfo;
 
     /**
      *
@@ -53,12 +50,20 @@ public class ChangeWorkflowPortBarCommand extends Command {
     public ChangeWorkflowPortBarCommand(
             final AbstractWorkflowPortBarEditPart portBar,
             final Rectangle newBounds) {
-        // right info type
-        m_oldBounds = new Rectangle(portBar.getFigure().getBounds());
+        WorkflowPortBar barModel = (WorkflowPortBar)portBar.getModel();
+        NodeUIInformation uiInfo = barModel.getUIInfo();
+        if (uiInfo != null) {
+            int[] bounds = uiInfo.getBounds();
+            m_oldBounds = new Rectangle(
+                    bounds[0], bounds[1], bounds[2], bounds[3]);
+        } else {
+            // right info type
+            m_oldBounds = new Rectangle(portBar.getFigure().getBounds());
+        }
         m_newBounds = newBounds;
         m_bar = portBar;
-
     }
+        
     
     /**
      * 
@@ -82,17 +87,11 @@ public class ChangeWorkflowPortBarCommand extends Command {
     @Override
     public void execute() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        m_extraInfo = (NodeUIInformation) barModel.getUIInfo();
-        if (m_extraInfo == null) {
-            m_extraInfo = new NodeUIInformation();
-        }
-        m_extraInfo.setBounds(new int[] {
-                m_newBounds.x,
-                m_newBounds.y,
-                m_newBounds.width,
-                m_newBounds.height});
+        NodeUIInformation uiInfo = new NodeUIInformation(
+                m_newBounds.x, m_newBounds.y,
+                m_newBounds.width, m_newBounds.height, true);
         // must set explicitly so that event is fired by container
-        barModel.setUIInfo(m_extraInfo);
+        barModel.setUIInfo(uiInfo);
         m_bar.getFigure().setBounds(m_newBounds);
         m_bar.getFigure().getLayoutManager().layout(m_bar.getFigure());
     }
@@ -104,16 +103,14 @@ public class ChangeWorkflowPortBarCommand extends Command {
      */
     @Override
     public void undo() {
-        m_extraInfo.setBounds(new int[] {
-                m_oldBounds.x,
-                m_oldBounds.y,
-                m_oldBounds.width,
-                m_oldBounds.height
-        });
-        // must set explicitly so that event is fired by container
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        barModel.setUIInfo(m_extraInfo);
-        m_bar.refresh();
+        NodeUIInformation uiInfo = new NodeUIInformation(
+                m_oldBounds.x, m_oldBounds.y,
+                m_oldBounds.width, m_oldBounds.height, true);
+        // must set explicitly so that event is fired by container
+        barModel.setUIInfo(uiInfo);
+        m_bar.getFigure().setBounds(m_oldBounds);
+        m_bar.getFigure().getLayoutManager().layout(m_bar.getFigure());
     }
 
 }

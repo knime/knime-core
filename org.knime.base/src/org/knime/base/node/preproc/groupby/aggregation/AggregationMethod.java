@@ -67,11 +67,14 @@ public enum AggregationMethod {
     LAST_VALUE(Operators.getInstance().new LastValueOperator(0)),
     /**Takes the value which occurs most.*/
     MODE(Operators.getInstance().new ModeOperator(0)),
-    /**Takes the value which occurs most.*/
+    /**Concatenates all cell values.*/
     CONCATENATE(Operators.getInstance().new ConcatenateOperator(0)),
-    /**Takes the value which occurs most.*/
+    /**Concatenates all distinct cell values.*/
     UNIQUE_CONCATENATE(
             Operators.getInstance().new UniqueConcatenateOperator(0)),
+    /**Concatenates all distinct cell values and counts the members.*/
+    UNIQUE_CONCATENATE_WITH_COUNT(
+            Operators.getInstance().new UniqueConcatenateWithCountOperator(0)),
     /**Counts the number of unique group members.*/
     UNIQUE_COUNT(Operators.getInstance().new UniqueCountOperator(0)),
     /**Counts the number of group members.*/

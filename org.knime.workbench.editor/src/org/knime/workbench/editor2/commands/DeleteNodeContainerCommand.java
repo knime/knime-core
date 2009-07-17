@@ -24,14 +24,21 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Set;
+
 import org.eclipse.gef.commands.Command;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -49,6 +56,11 @@ public class DeleteNodeContainerCommand extends Command {
     private final NodeContainerEditPart m_part;
 
     private final WorkflowManager m_manager;
+    
+    private WorkflowPersistor m_undoPersitor;
+    
+    private Set<ConnectionContainer> m_inConnections;
+    private Set<ConnectionContainer> m_outConnections;
 
     /**
      * Creates a new delete command for a <code>NodeContainer</code>.
@@ -62,40 +74,28 @@ public class DeleteNodeContainerCommand extends Command {
         m_manager = manager;
     }
 
-    /**
-     * If the edit part is locked (= busy), we can't delete the underlying node.
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-
-        // is the node locked
-        boolean isNotLocked = !m_part.isLocked();
-
-        // is the node a deletable node
-        // does the workflow status allow deletion of the selected node
-        // only if the workflow is not executing
-        boolean workflowAllowsDeletion =
-                m_manager.canRemoveNode(m_part.getNodeContainer().getID());
-        return isNotLocked && workflowAllowsDeletion;
+        return m_manager.canRemoveNode(m_part.getNodeContainer().getID());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void execute() {
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");
-
         // The WFM removes all connections for us, before the node is
         // removed.
         try {
-            m_manager.removeNode(m_part.getNodeContainer().getID());            
-            if (m_part.getNodeContainer() instanceof WorkflowManager) {
-                WorkflowManagerInput in = new WorkflowManagerInput(
-                        (WorkflowManager)m_part.getNodeContainer(),
+            NodeContainer nc = m_part.getNodeContainer();
+            m_undoPersitor = m_manager.copy(nc.getID());
+            m_outConnections = m_manager.getOutgoingConnectionsFor(nc.getID());
+            m_inConnections = m_manager.getIncomingConnectionsFor(nc.getID());
+            m_manager.removeNode(nc.getID());
+            if (nc instanceof WorkflowManager) {
+                WorkflowManagerInput in = 
+                    new WorkflowManagerInput((WorkflowManager)nc,
                         // since the equals method of the WorkflowManagerInput
                         // only looks for the WorkflowManager, we can pass null
                         // as the editor argument 
@@ -122,19 +122,45 @@ public class DeleteNodeContainerCommand extends Command {
                         ((NodeContainerFigure)m_part.getFigure()).unmark();
                     }
                 }
-                
             });
         }
     }
-
-    /**
-     * TODO FIXME: no undo by now, as the connections can't be restored and the
-     * node gets a new ID.
-     *
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
-    public boolean canUndo() {
-        return false;
+    public void undo() {
+        NodeID newNode = m_manager.paste(m_undoPersitor)[0];
+        boolean hasFailure = false;
+        for (ConnectionContainer in : m_inConnections) {
+            if (m_manager.canAddConnection(in.getSource(), in.getSourcePort(),
+                    newNode, in.getDestPort())) {
+                ConnectionContainer c = m_manager.addConnection(in.getSource(),
+                        in.getSourcePort(), newNode, in.getDestPort());
+                c.setUIInfo(in.getUIInfo());
+            } else {
+                hasFailure = true;
+            }
+        }
+        for (ConnectionContainer out : m_outConnections) {
+            if (m_manager.canAddConnection(newNode, out.getSourcePort(),
+                    out.getDest(), out.getDestPort())) {
+                ConnectionContainer c = m_manager.addConnection(newNode, 
+                        out.getSourcePort(), out.getDest(), out.getDestPort());
+                c.setUIInfo(out.getUIInfo());
+            } else {
+                hasFailure = true;
+            }
+        }
+        if (hasFailure) {
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    MessageDialog.openInformation(
+                            Display.getDefault().getActiveShell(),
+                            "Operation not allowed",
+                            "Not all connections could be restored");
+                }
+            });
+        }
     }
+    
 }

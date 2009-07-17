@@ -25,19 +25,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import java.awt.Color;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -47,6 +34,19 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
+import java.awt.Color;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -127,13 +127,13 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * @param rows the {@link DataRow}
      * @param xColSpec the {@link DataColumnSpec} of the selected x column
      * @param aggrColumns the selected aggregation columns
+     * @param aggrMethod the {@link AggregationMethod} to use
      */
-    public InteractiveHistogramVizModel(final SortedSet<Color> rowColors,
+    public InteractiveHistogramVizModel(final List<Color> rowColors,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final DataTableSpec spec,  final List<DataRow> rows,
             final DataColumnSpec xColSpec,
-            final Collection<ColorColumn> aggrColumns,
-            final int noOfBins) {
+            final Collection<ColorColumn> aggrColumns, final int noOfBins) {
         super(rowColors, aggrMethod, layout, noOfBins);
         if (spec == null) {
             throw new IllegalArgumentException(

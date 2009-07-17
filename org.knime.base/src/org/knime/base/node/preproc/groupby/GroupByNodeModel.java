@@ -377,7 +377,10 @@ public class GroupByNodeModel extends NodeModel {
         final List<ColumnAggregator> invalidColAggrs =
             new LinkedList<ColumnAggregator>();
         for (final ColumnAggregator colAggr : m_columnAggregators) {
-            if (!origSpec.containsName(colAggr.getColName())) {
+            final DataColumnSpec colSpec =
+                origSpec.getColumnSpec(colAggr.getColName());
+            if (colSpec == null
+                    || !colSpec.getType().equals(colAggr.getDataType())) {
                 invalidColAggrs.add(colAggr);
             }
         }

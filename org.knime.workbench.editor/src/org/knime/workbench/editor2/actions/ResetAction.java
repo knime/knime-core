@@ -106,9 +106,7 @@ public class ResetAction extends AbstractNodeAction {
      * Resets all nodes, this is lightweight and does not need to be executed
      * inside an async job.
      *
-     * @see org.knime.workbench.editor2.actions. AbstractNodeAction#
-     *      runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -137,19 +135,13 @@ public class ResetAction extends AbstractNodeAction {
         try {
             for (int i = 0; i < nodeParts.length; i++) {
                 // skip locked nodes
-                if (nodeParts[i].isLocked()) {
-                    LOGGER.debug("Node #"
-                            + nodeParts[i].getNodeContainer().getID()
-                            + " is locked and can't be reset now");
-                    continue;
-                }
-
                 getManager().resetAndConfigureNode(
                         nodeParts[i].getNodeContainer().getID());
             }
 
         } catch (Exception ex) {
-            MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
                     SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Reset not allowed");
             mb.setMessage("You cannot reset a node while the workflow is in"
@@ -166,11 +158,11 @@ public class ResetAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
-
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];
-            if (part.getNodeContainer().getState().equals(
-                    NodeContainer.State.EXECUTED)) {
+            NodeContainer nc = part.getNodeContainer();
+            if (nc.getState().equals(NodeContainer.State.EXECUTED)
+                    && getManager().canResetNode(nc.getID())) {
                 return true;
             }
         }

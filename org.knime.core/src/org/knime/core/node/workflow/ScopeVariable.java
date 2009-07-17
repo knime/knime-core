@@ -24,6 +24,10 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 
 
 
@@ -34,6 +38,8 @@ package org.knime.core.node.workflow;
  * @author M. Berthold, University of Konstanz
  */
 public final class ScopeVariable extends ScopeObject {
+    
+    public static final String GLOBAL_CONST_ID = "knime";
 
     public static enum Type {DOUBLE, INTEGER, STRING};
     
@@ -42,21 +48,22 @@ public final class ScopeVariable extends ScopeObject {
     private String m_valueS = null;
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
+    
 
     private ScopeVariable(final String name, final Type type,
             final boolean isGlobalConstant) {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
         }
-        if (!isGlobalConstant && name.startsWith("knime.")) {
+        if (!isGlobalConstant && name.startsWith(GLOBAL_CONST_ID)) {
             throw new IllegalContextStackObjectException(
-                    "Name of scope variables must not start with \"knime.\": "
-                    + name);
+                    "Name of scope variables must not start with \""
+                    + GLOBAL_CONST_ID + "\": " + name);
         }
-        if (isGlobalConstant && !name.startsWith("knime.")) {
+        if (isGlobalConstant && !name.startsWith(GLOBAL_CONST_ID)) {
             throw new IllegalContextStackObjectException(
-                    "Name of global scope constant must start with \"knime.\": "
-                    + name);
+                    "Name of global scope constant must start with \"" 
+                    + GLOBAL_CONST_ID + "\": " + name);
         }
         m_name = name;
         m_type = type;
@@ -96,6 +103,10 @@ public final class ScopeVariable extends ScopeObject {
         return m_name;
     }
     
+    public boolean isGlobalConstant() {
+        return m_name.startsWith(GLOBAL_CONST_ID);
+    }
+    
     /** @return the type */
     public Type getType() {
         return m_type;
@@ -120,6 +131,65 @@ public final class ScopeVariable extends ScopeObject {
             return 0;
         }
         return m_valueI;
+    }
+    
+    /** Saves this flow variable to a settings object. This method writes
+     * directly into the argument object (no creating of intermediate child).
+     * @param settings To save to.
+     */
+    void save(final NodeSettingsWO settings) {
+        settings.addString("name", getName());
+        settings.addString("class", getType().name());
+        switch (getType()) {
+        case INTEGER:
+            settings.addInt("value", getIntValue());
+            break;
+        case DOUBLE:
+            settings.addDouble("value", getDoubleValue());
+            break;
+        case STRING:
+            settings.addString("value", getStringValue());
+            break;
+        default:
+            assert false : "Unknown variable type: " + getType();
+        }
+    }
+    
+    /**
+     * Read a scope variable from a settings object. This is the counterpart
+     * to {@link #save(NodeSettingsWO)}.
+     * @param sub To load from.
+     * @return A new scope variable read from the settings object.
+     * @throws InvalidSettingsException If that fails for any reason.
+     */
+    static ScopeVariable load(final NodeSettingsRO sub)
+        throws InvalidSettingsException {
+        String name = sub.getString("name");
+        String typeS = sub.getString("class");
+        if (typeS == null || name == null) {
+            throw new InvalidSettingsException("name or type is null");
+        }
+        Type varType;
+        try {
+            varType = Type.valueOf(typeS);
+        } catch (final IllegalArgumentException e) {
+            throw new InvalidSettingsException("invalid type " + typeS);
+        }
+        ScopeVariable v;
+        switch (varType) {
+        case DOUBLE:
+            v = new ScopeVariable(name, sub.getDouble("value"));
+            break;
+        case INTEGER:
+            v = new ScopeVariable(name, sub.getInt("value"));
+            break;
+        case STRING:
+            v = new ScopeVariable(name, sub.getString("value"));
+            break;
+        default:
+            throw new InvalidSettingsException("Unknown type " + varType);
+        }
+        return v;
     }
     
     /** {@inheritDoc} */

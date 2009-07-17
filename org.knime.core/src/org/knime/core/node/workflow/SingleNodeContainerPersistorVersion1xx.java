@@ -1,4 +1,4 @@
-/*
+/* 
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- *
+ * 
  * History
  *   Sep 18, 2007 (wiswedel): created
  */
@@ -49,44 +49,58 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- *
+ * 
  * @author wiswedel, University of Konstanz
  */
-public class SingleNodeContainerPersistorVersion1xx
+public class SingleNodeContainerPersistorVersion1xx 
     implements SingleNodeContainerPersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
+    
+    private final String m_versionString;
 
     private Node m_node;
-
+    
     private NodeContainerMetaPersistorVersion1xx m_metaPersistor;
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
-
+    
     private NodeSettingsRO m_nodeSettings;
+    private SingleNodeContainerSettings m_sncSettings; 
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
     private List<ScopeObject> m_scopeObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
-
+    
     SingleNodeContainerPersistorVersion1xx(
-            final WorkflowPersistorVersion1xx workflowPersistor) {
+            final WorkflowPersistorVersion1xx workflowPersistor, 
+            final String versionString) {
+        if (workflowPersistor == null || versionString == null) {
+            throw new NullPointerException();
+        }
         m_wfmPersistor = workflowPersistor;
+        m_versionString = versionString;
     }
-
+    
+    protected final String getVersionString() {
+        return m_versionString;
+    }
+    
     protected NodeLogger getLogger() {
         return m_logger;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
-
+    
     /** Indicate that node should be reset after load (due to load problems). */
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
@@ -97,12 +111,18 @@ public class SingleNodeContainerPersistorVersion1xx
     public boolean isDirtyAfterLoad() {
         return m_isDirtyAfterLoad;
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
     /** Mark as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
-
+    
     public NodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
@@ -111,33 +131,38 @@ public class SingleNodeContainerPersistorVersion1xx
     public Node getNode() {
         return m_node;
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    public SingleNodeContainerSettings getSNCSettings() {
+        return m_sncSettings;
+    }
+    
     /** {@inheritDoc} */
     public List<ScopeObject> getScopeObjects() {
         return m_scopeObjects;
     }
-
+    
     /** {@inheritDoc} */
     public SingleNodeContainer getNodeContainer(
             final WorkflowManager wm, final NodeID id) {
         return new SingleNodeContainer(wm, id, this);
     }
-
+    
     protected NodePersistorVersion1xx createNodePersistor() {
         return new NodePersistorVersion1xx(this);
     }
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile settingsFileRef,
-            final NodeSettingsRO parentSettings)
+    public void preLoadNodeContainer(final ReferencedFile settingsFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult result) 
     throws InvalidSettingsException, IOException {
-        LoadResult result = new LoadResult();
         File settingsFile = settingsFileRef.getFile();
         String error;
         if (!settingsFile.isFile()) {
             setDirtyAfterLoad();
-            throw new IOException("Can't read node file \""
+            throw new IOException("Can't read node file \"" 
                     + settingsFile.getAbsolutePath() + "\"");
         }
         NodeSettingsRO settings;
@@ -163,11 +188,11 @@ public class SingleNodeContainerPersistorVersion1xx
             throw new InvalidSettingsException(error, e);
         }
         NodeFactory<NodeModel> nodeFactory;
-
+        
         try {
             nodeFactory = loadNodeFactory(nodeFactoryClassName);
         } catch (Throwable e) {
-            error =  "Unable to load factory class \""
+            error =  "Unable to load factory class \"" 
                 + nodeFactoryClassName + "\"";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
@@ -175,46 +200,46 @@ public class SingleNodeContainerPersistorVersion1xx
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor(
                 settingsFileRef.getParent());
-        LoadResult metaResult = m_metaPersistor.load(settings, parentSettings);
-        result.addError(metaResult);
+        boolean resetRequired = m_metaPersistor.load(
+                settings, parentSettings, result);
         m_nodeSettings = settings;
         m_nodeDir = settingsFileRef.getParent();
-        if (result.hasEntries() || m_metaPersistor.isDirtyAfterLoad()) {
+        if (resetRequired) {
+            setNeedsResetAfterLoad();
             setDirtyAfterLoad();
         }
-        return result;
+        if (m_metaPersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
     }
-
+    
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        LoadResult result = new LoadResult();
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
+            final ExecutionMonitor exec, final LoadResult result) 
+    throws InvalidSettingsException, CanceledExecutionException, IOException {
         String nodeFileName;
         try {
             nodeFileName = loadNodeFile(m_nodeSettings);
         } catch (InvalidSettingsException e) {
-            String error =
+            String error = 
                 "Unable to load node settings file for node with ID suffix "
                     + m_metaPersistor.getNodeIDSuffix() + " (node \""
                     + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
-            return result;
+            return;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
-        m_settingsFailPolicy =
+        m_settingsFailPolicy = 
             translateToFailPolicy(m_metaPersistor.getState());
         NodePersistorVersion1xx nodePersistor = createNodePersistor();
         try {
             HashMap<Integer, ContainerTable> globalTableRepository =
                 getWorkflowManagerPersistor().getGlobalTableRepository();
-            LoadResult nodeLoadResult = nodePersistor.load(
-                    m_node, nodeFile, exec, tblRep, globalTableRepository);
-            result.addError(nodeLoadResult);
+            nodePersistor.load(m_node, nodeFile, 
+                    exec, tblRep, globalTableRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -231,21 +256,30 @@ public class SingleNodeContainerPersistorVersion1xx
             result.addError(error);
             needsResetAfterLoad();
         }
+        try {
+            m_sncSettings = loadSNCSettings(m_nodeSettings, nodePersistor);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load SNC settings: " + e.getMessage();
+            result.addError(error);
+            getLogger().debug(error, e);
+            m_sncSettings = new SingleNodeContainerSettings();
+            setDirtyAfterLoad();
+            return;
+        }
+        if (nodePersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
         if (nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
-        if (result.hasEntries()) {
-            setDirtyAfterLoad();
-        }
-        return result;
     }
-
-    protected NodeContainerMetaPersistorVersion1xx
+    
+    protected NodeContainerMetaPersistorVersion1xx 
         createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
-
+    
     protected String loadNodeFactoryClassName(
             final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -287,38 +321,73 @@ public class SingleNodeContainerPersistorVersion1xx
             throw ex;
         }
     }
-
+    
     protected String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return SETTINGS_FILE_NAME;
     }
-
+    
+    protected SingleNodeContainerSettings loadSNCSettings(
+            final NodeSettingsRO settings, 
+            final NodePersistorVersion1xx nodePersistor)
+        throws InvalidSettingsException {
+        NodeSettingsRO s = nodePersistor.getSettings();
+        SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
+        // in versions before KNIME 1.2.0, there were no misc settings
+        // in the dialog, we must use caution here: if they are not present
+        // we use the default, i.e. small data are kept in memory
+        MemoryPolicy p;
+        if (s.containsKey(Node.CFG_MISC_SETTINGS)
+                && s.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(
+                        SingleNodeContainer.CFG_MEMORY_POLICY)) {
+            NodeSettingsRO sub =
+                    s.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            String memoryPolicy =
+                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
+                            MemoryPolicy.CacheSmallInMemory.toString());
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                        "Can't use null memory policy.");
+            }
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+        } else {
+            p = MemoryPolicy.CacheSmallInMemory;
+        }
+        sncs.setMemoryPolicy(p);
+        return sncs;
+    }
+    
     protected List<ScopeObject> loadScopeObjects(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();
     }
-
+    
     protected boolean shouldFixModelPortOrder() {
         return true;
     }
-
+    
     WorkflowPersistorVersion1xx getWorkflowManagerPersistor() {
         return m_wfmPersistor;
     }
-
+    
     public boolean mustWarnOnDataLoadError() {
         return getWorkflowManagerPersistor().mustWarnOnDataLoadError();
     }
-
+    
     /**
      * @return the settingsFailPolicy
      */
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         return m_settingsFailPolicy;
     }
-
+    
     static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(
-            final State nodeState) {
+            final State nodeState) { 
         switch (nodeState) {
         case IDLE:
             return LoadNodeModelSettingsFailPolicy.IGNORE;

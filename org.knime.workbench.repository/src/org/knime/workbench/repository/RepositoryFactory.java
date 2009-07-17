@@ -37,8 +37,8 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
@@ -66,6 +66,8 @@ public final class RepositoryFactory {
     private static final String META_NODE_ICON 
         = "icons/meta_nodes/metanode_template.png";
     
+    private static ImageDescriptor defaultIcon;
+    
     /** 
      * Workflow manager instance loading and administering 
      * the predefined meta nodes. 
@@ -73,8 +75,8 @@ public final class RepositoryFactory {
     public static final WorkflowManager META_NODE_ROOT;
     
     static {        
-        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject();
-        META_NODE_ROOT.setName("KNIME MetaNode Repository");
+        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject(
+                "KNIME MetaNode Repository");
     }
     
 
@@ -213,7 +215,7 @@ public final class RepositoryFactory {
                 File f = new File(FileLocator.toFileURL(url).getFile());
                 LOGGER.debug("meta node template name: " + f.getName());
                 WorkflowManager metaNode = META_NODE_ROOT.load(f, 
-                        new ExecutionMonitor()).getWorkflowManager();
+                        new ExecutionMonitor(), false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
                 LOGGER.error("Unexpected canceled execution exception", 
@@ -252,11 +254,10 @@ public final class RepositoryFactory {
         cat.setAfterID(str(element.getAttribute("after"), ""));
         if (!Boolean.valueOf(System.getProperty(
                 "java.awt.headless", "false"))) {
-            cat.setIcon(KNIMERepositoryPlugin.getDefault().getImage(pluginID,
-                    str(element.getAttribute("icon"), "")));
-            cat.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
-                    .getImageDescriptor(pluginID,
-                            str(element.getAttribute("icon"), "")));
+            ImageDescriptor descriptor = getIcon(pluginID, 
+                    element.getAttribute("icon"));
+            cat.setIcon(descriptor.createImage(true));
+            cat.setIconDescriptor(descriptor);
         }
         String path = str(element.getAttribute("path"), "/");
         cat.setPath(path);
@@ -333,6 +334,24 @@ public final class RepositoryFactory {
     // little helper, returns a default if s==null
     private static String str(final String s, final String defaultString) {
         return s == null ? defaultString : s;
+    }
+    
+    private static ImageDescriptor getIcon(final String pluginID, 
+            final String path) {
+        if (path != null && pluginID != null) {
+            ImageDescriptor desc = AbstractUIPlugin.imageDescriptorFromPlugin(
+                    pluginID, path);
+            if (desc != null) {
+                return desc;
+            }
+        } 
+        // if we have not returned an image yet we have to return the default
+        // icon. lazy initialization
+        if (defaultIcon == null) {
+            defaultIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
+                    KNIMERepositoryPlugin.PLUGIN_ID, "icons/knime_default.png");
+        }
+        return defaultIcon;
     }
     
 }

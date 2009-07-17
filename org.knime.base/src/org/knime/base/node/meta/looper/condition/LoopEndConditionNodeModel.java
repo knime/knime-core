@@ -45,6 +45,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -61,7 +62,13 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode {
+public class LoopEndConditionNodeModel extends NodeModel implements
+        LoopEndNode {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(LoopEndConditionNodeModel.class);
+
+    private long m_startTime;
+
     private final LoopEndConditionSettings m_settings =
             new LoopEndConditionSettings();
 
@@ -72,11 +79,10 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
     private DataTableSpec createSpec1(final DataTableSpec inSpec) {
         if (m_settings.addIterationColumn()) {
             DataColumnSpecCreator crea =
-                    new DataColumnSpecCreator(DataTableSpec
-                            .getUniqueColumnName(inSpec, "Iteration"),
-                            IntCell.TYPE);
+                        new DataColumnSpecCreator(DataTableSpec
+                                .getUniqueColumnName(inSpec, "Iteration"),
+                                IntCell.TYPE);
             DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-
             return new DataTableSpec(inSpec, newSpec);
         } else {
             return inSpec;
@@ -160,6 +166,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
         DataTableSpec spec1 = createSpec1(inData[0].getDataTableSpec());
         if (m_collectContainer == null) {
             assert m_variableContainer == null;
+            m_startTime = System.currentTimeMillis();
             // first time we are getting to this: open container
             m_collectContainer = exec.createDataContainer(spec1);
             m_variableContainer = exec.createDataContainer(createSpec2());
@@ -167,8 +174,8 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
             DataTableSpec predSpec = m_collectContainer.getTableSpec();
             StringBuilder error =
                     new StringBuilder(
-                            "Input table's structure differs from reference "
-                                    + "(first iteration) table: ");
+                    "Input table's structure differs from reference "
+                    + "(first iteration) table: ");
             if (spec1.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
                 error.append(spec1.getNumColumns());
@@ -178,9 +185,9 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
                     DataColumnSpec inCol = spec1.getColumnSpec(i);
                     DataColumnSpec predCol = predSpec.getColumnSpec(i);
                     if (!inCol.equalStructure(predCol)) {
-                        error.append("Column ").append(i).append(" [");
-                        error.append(inCol).append("] vs. [");
-                        error.append(predCol).append("]");
+                      error.append("Column ").append(i).append(" [");
+                      error.append(inCol).append("] vs. [");
+                      error.append(predCol).append("]");
                     }
                 }
             }
@@ -233,8 +240,14 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
         if (stop) {
             m_collectContainer.close();
             m_variableContainer.close();
-            return new BufferedDataTable[]{m_collectContainer.getTable(),
-                    m_variableContainer.getTable()};
+
+            BufferedDataTable out1 = m_collectContainer.getTable();
+            BufferedDataTable out2 = m_variableContainer.getTable();
+
+            LOGGER.debug("Total loop execution time: "
+                    + (System.currentTimeMillis() - m_startTime) + "ms");
+            m_startTime = 0;
+            return new BufferedDataTable[]{out1, out2};
         } else {
             continueLoop();
             return new BufferedDataTable[2];
@@ -308,6 +321,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode 
     protected void reset() {
         m_variableContainer = null;
         m_collectContainer = null;
+        m_startTime = 0;
     }
 
     /**

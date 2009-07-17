@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.workbench.editor2.ImageRepository;
 
@@ -73,17 +72,21 @@ public class SubworkflowFigure extends NodeContainerFigure {
      */
     @Override
     public void setState(final State state) {
-        if (state.equals(NodeContainer.State.IDLE)
-                || state.equals(NodeContainer.State.CONFIGURED)) {
+        switch (state) {
+        case IDLE:
+        case CONFIGURED:
             ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
                     IDLE_STATE);
-        } else if (state.equals(NodeContainer.State.EXECUTING)
-                || state.equals(NodeContainer.State.MARKEDFOREXEC)
-                || state.equals(NodeContainer.State.QUEUED)) {
+            break;
+        case MARKEDFOREXEC:
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case QUEUED:
+        case EXECUTING:
+        case EXECUTINGREMOTELY:
             ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
                     EXECUTING_STATE);
-            
-        } else if (state.equals(NodeContainer.State.EXECUTED)) {
+            break;
+        case EXECUTED:
             ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
                     EXECUTED_STATE);
         }

@@ -21,13 +21,21 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -89,6 +97,7 @@ public final class BatchExecutor {
             + " -reset => reset workflow prior to execution\n"
             + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
             + "                 if provided with argument, use argument instead of prompting\n"
+            + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
             + "                  of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
@@ -147,6 +156,7 @@ public final class BatchExecutor {
         boolean noSave = false;
         boolean reset = false;
         boolean isPromptForPassword = false;
+        File preferenceFile = null;
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
 
@@ -165,6 +175,18 @@ public final class BatchExecutor {
                     masterKey = parts[1];
                 } else {
                     isPromptForPassword = true;
+                }
+            } else if ("-preferences".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -preferences argument: " + s);
+                    return 1;
+                }
+                preferenceFile = new File(parts[1]);
+                if (!preferenceFile.isFile()) {
+                    System.err.println("Preference File '" 
+                            + parts[1] + "' is not a file.");
+                    return 1;
                 }
             } else if ("-workflowFile".equals(parts[0])) {
                 if (parts.length != 2) {
@@ -227,6 +249,13 @@ public final class BatchExecutor {
                 return 1;
             }
         }
+        if (preferenceFile != null) {
+            try {
+                setPreferences(preferenceFile);
+            } catch (CoreException e) {
+                throw new IOException("Unable to import preferences", e);
+            }
+        }
         setupEncryptionKey(isPromptForPassword, masterKey);
 
         File workflowDir;
@@ -258,7 +287,9 @@ public final class BatchExecutor {
 
         setNodeOptions(options, wfm);
 
-        System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
+        LOGGER.debug("Status of workflow before execution:");
+        LOGGER.debug("------------------------------------");
+        dumpWorkflowToDebugLog(wfm);
         boolean successful = wfm.executeAllAndWaitUntilDone();
         if (!noSave) {
             wfm.save(workflowDir, new ExecutionMonitor(), true);
@@ -273,6 +304,10 @@ public final class BatchExecutor {
         String timeString = ("Finished in " + niceTime
                 + " (" + elapsedTimeMillis + "ms)");
         System.out.println(timeString);
+        LOGGER.debug("Workflow execution done " + timeString);
+        LOGGER.debug("Status of workflow after execution:");
+        LOGGER.debug("------------------------------------");
+        dumpWorkflowToDebugLog(wfm);
         return successful ? 0 : 1;
     }
 
@@ -298,7 +333,6 @@ public final class BatchExecutor {
                 WorkflowManager parent = cont.getParent();
                 NodeSettings settings = new NodeSettings("something");
                 parent.saveNodeSettings(cont.getID(), settings);
-                cont.saveSettings(settings);
                 NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
                 String[] splitName = o.m_name.split("/");
                 String name = splitName[splitName.length - 1];
@@ -341,6 +375,29 @@ public final class BatchExecutor {
         }
     }
 
+    private static void setPreferences(final File preferenceFile) 
+        throws IOException, CoreException {
+        InputStream in = new BufferedInputStream(
+                new FileInputStream(preferenceFile));
+        IStatus status = Platform.getPreferencesService().importPreferences(in);
+        switch (status.getSeverity()) {
+        case IStatus.CANCEL:
+            LOGGER.error("Importing preferences was canceled");
+            break;
+        case IStatus.WARNING:
+            LOGGER.warn("Importing preferences raised warning: " 
+                    + status.getMessage(), status.getException());
+            break;
+        case IStatus.INFO:
+            LOGGER.info("Importing preferences raised an info message: "
+                    + status.getMessage(), status.getException());
+        case IStatus.OK:
+            break;
+        default:
+            LOGGER.warn("Unknown return status from preference import: " 
+                    + status.getSeverity());
+        }
+    }
 
     private static void setupEncryptionKey(final boolean isPromptForPassword,
             String masterKey) {
@@ -388,5 +445,19 @@ public final class BatchExecutor {
         res[3] = option.substring(index + 1);
 
         return res;
+    }
+    
+    private static void dumpWorkflowToDebugLog(final WorkflowManager wfm) {
+        String str = wfm.printNodeSummary(wfm.getID(), 0);
+        BufferedReader reader = new BufferedReader(new StringReader(str));
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                LOGGER.debug(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            LOGGER.fatal("IOException while reading string", e);
+        }
     }
 }

@@ -35,7 +35,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
  * @author Christoph Sieb, University of Konstanz
  */
 public class OpenKnimeProjectAction extends Action {
-    private KnimeResourceNavigator m_knimeResourceNavigator;
+    private final KnimeResourceNavigator m_knimeResourceNavigator;
 
     /**
      * Creates a new action that will open editors on the then-selected knime
@@ -46,19 +46,14 @@ public class OpenKnimeProjectAction extends Action {
      */
     public OpenKnimeProjectAction(final KnimeResourceNavigator knimeNavigator) {
         m_knimeResourceNavigator = knimeNavigator;
-        IStructuredSelection selection = (StructuredSelection)m_knimeResourceNavigator
-                .getViewer().getSelection();
-        int numberSelections = selection.size();
-        String actionText;
-        if (numberSelections <= 1) {
-            actionText = "Open KNIME workflow";
-            if (numberSelections < 1) {
-                setEnabled(false);
-            }
-        } else {
-            actionText = "Open " + numberSelections + " KNIME workflows";
-        }
-        setText(actionText);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return "Open";
     }
 
     /**
@@ -66,9 +61,9 @@ public class OpenKnimeProjectAction extends Action {
      */
     @Override
     public void run() {
-        IStructuredSelection selection = (StructuredSelection)m_knimeResourceNavigator
-                .getViewer().getSelection();
-
+        IStructuredSelection selection 
+            = (StructuredSelection)m_knimeResourceNavigator.getViewer()
+            .getSelection();
         m_knimeResourceNavigator.handleOpen(new OpenEvent(
                 m_knimeResourceNavigator.getViewer(), selection));
     }

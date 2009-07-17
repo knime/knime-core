@@ -41,6 +41,18 @@
             factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
             id="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory">
       </node>
+      <node
+            category-path="/timeseries"
+            expert-flag="false"
+            factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory"
+            id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
+      </node>
+      <node
+            category-path="/timeseries"
+            expert-flag="false"
+            factory-class="org.knime.timeseries.node.aggregate.TimeAggregatorNodeFactory"
+            id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
+      </node>
    </extension>
 
    <extension

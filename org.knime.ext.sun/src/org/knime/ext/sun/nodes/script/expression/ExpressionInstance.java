@@ -114,7 +114,7 @@ public class ExpressionInstance {
                                 + value.getClass().getName() + " but expected "
                                 + expressionField.getFieldClass().getName());
             }
-            setField(expressionField.getExpressionFieldName(), value);
+            setField(expressionField.getFieldNameInJava(), value);
         }
     }
 

@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.port.PortType;
@@ -68,6 +67,13 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     HashMap<Integer, ContainerTable> getGlobalTableRepository();
     
     String getName();
+    
+    /** Get the workflow variables associated with this meta node/workflow.
+     * This method must not return null (but possibly an empty list). The result
+     * may be unmodifiable.
+     * @return The workflow variables. 
+     */
+    List<ScopeVariable> getWorkflowVariables();
     
     WorkflowPortTemplate[] getInPortTemplates();
     
@@ -219,162 +225,162 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
     }
     
-    public static class LoadResult {
+    public static class LoadResultEntry {
         
-        private final List<LoadResultEntry> m_errors = 
-            new ArrayList<LoadResultEntry>();
-        
-        public void addError(final String error) {
-            addError(error, false);
+        public enum LoadResultEntryType {
+            // sorted according to severity
+            Ok,
+            Warning,
+            Error,
+            DataLoadError
         }
         
-        public void addError(final String error, 
-                final boolean isErrorDuringDataLoad) {
-            LoadResultEntryType t = isErrorDuringDataLoad
-            ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
-            m_errors.add(new LoadResultEntry(t, error));
+        private final LoadResultEntryType m_type;
+        private final String m_message;
+        
+        public LoadResultEntry(
+                final LoadResultEntryType type, final String message) {
+            m_type = type;
+            m_message = message;
         }
         
-        public void addWarning(final String warning) {
-            LoadResultEntryType t = LoadResultEntryType.Warning;
-            m_errors.add(new LoadResultEntry(t, warning));
+        /**
+         * @return the type
+         */
+        public LoadResultEntryType getType() {
+            return m_type;
         }
-        
-        public void addError(
-                final String parentName, final LoadResult loadResult) {
-            m_errors.add(new LoadResultEntry(parentName, loadResult));
-        }
-        
-        public void addError(final LoadResult loadResult) {
-            m_errors.addAll(loadResult.m_errors);
-        }
-        
-        public boolean hasEntries() {
-            return !m_errors.isEmpty();
-        }
-        
-        public String getErrors() {
-            StringBuilder b = new StringBuilder();
-            appendErrors(b, "");
-            return b.toString();
-        }
-        
-        private void appendErrors(final StringBuilder b, final String indent) {
-            boolean isFirst = true;
-            for (LoadResultEntry e : m_errors) {
-                if (isFirst) {
-                    isFirst = false;
-                } else {
-                    b.append("\n");
-                }
-                b.append(indent).append(e.getMessage());
-                if (e.getSubLoadResult() != null) {
-                    b.append("\n");
-                    e.getSubLoadResult().appendErrors(b, indent + "  ");
-                }
-            }
-        }
-        
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return getErrors();
-        }
-        
-        public String peekErrors() {
-            StringTokenizer t = new StringTokenizer(getErrors(), "\n");
-            StringBuilder result = new StringBuilder();
-            int i = 0;
-            while (t.hasMoreTokens() && i < 4) {
-                if (i > 0) {
-                    result.append("\n");
-                }
-                result.append(t.nextToken());
-                i++;
-            }
-            if (t.hasMoreTokens()) {
-                result.append("\n...");
-            }
-            return result.toString();
+    
+        /**
+         * @return the message
+         */
+        public String getMessage() {
+            return m_message;
         }
         
         /**
          * @return the hasErrorDuringNonDataLoad
          */
         public boolean hasWarningEntries() {
-            for (LoadResultEntry e : m_errors) {
-                boolean isWarning;
-                switch (e.getType()) {
-                case Aggregation:
-                    isWarning = e.getSubLoadResult().hasWarningEntries();
-                    break;
-                case Warning:
-                    isWarning = true;
-                    break;
-                default:
-                    isWarning = false;
-                }
-                if (isWarning) {
+            switch (getType()) {
+            case Warning:
+                return true;
+            default:
+            }
+            for (LoadResultEntry e : getChildren()) {
+                if (e.hasWarningEntries()) {
                     return true;
                 }
             }
             return false;
         }
-
+    
         /**
          * @return the hasErrorDuringNonDataLoad
          */
         public boolean hasErrors() {
-            for (LoadResultEntry e : m_errors) {
-                boolean isError;
-                switch (e.getType()) {
-                case Aggregation:
-                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
-                    break;
-                case Warning:
-                    isError = false;
-                    break;
-                default:
-                    isError = true;
-                }
-                if (isError) {
-                    return true;
-                }
+            switch (getType()) {
+            case Error:
+            case DataLoadError:
+                return true;
+            default:
+                return false;
             }
-            return false;
         }
         
-        /**
-         * @return the hasErrorDuringNonDataLoad
+        private static final LoadResultEntry[] EMPTY = new LoadResultEntry[0];
+        
+        public LoadResultEntry[] getChildren() {
+            return EMPTY;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return getFilteredError("", LoadResultEntryType.Ok);
+        }
+        
+        /** Returns error message of this element and all of its children.
+         * @param indent The indentation of the string (increased for children)
+         * @param filter A filter for the least severity level  
+         * @return The string.
          */
-        public boolean hasErrorDuringNonDataLoad() {
-            for (LoadResultEntry e : m_errors) {
-                boolean isError;
-                switch (e.getType()) {
-                case Aggregation:
-                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
-                    break;
-                case DataLoadError:
-                case Warning:
-                    isError = false;
-                    break;
-                default:
-                    isError = true;
-                }
-                if (isError) {
-                    return true;
+        public String getFilteredError(final String indent, 
+                final LoadResultEntryType filter) {
+            StringBuilder b = new StringBuilder(indent);
+            b.append("Status: ");
+            b.append(getType()).append(": ").append(getMessage());
+            for (LoadResultEntry c : getChildren()) {
+                if (c.getType().ordinal() >= filter.ordinal()) {
+                    b.append("\n");
+                    b.append(c.getFilteredError(indent + "  ", filter));
                 }
             }
-            return false;
+            return b.toString();
+        }
+    
+    }
+
+    public static class LoadResult extends LoadResultEntry {
+        
+        private final List<LoadResultEntry> m_errors = 
+            new ArrayList<LoadResultEntry>();
+        
+        /** */
+        public LoadResult(final String name) {
+            super(LoadResultEntryType.Ok, name);
         }
         
+        public void addError(final String error) {
+            addError(error, false);
+        }
+
+        public void addError(final String error, 
+                final boolean isErrorDuringDataLoad) {
+            LoadResultEntryType t = isErrorDuringDataLoad
+            ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
+            m_errors.add(new LoadResultEntry(t, error));
+        }
+
+        public void addWarning(final String warning) {
+            LoadResultEntryType t = LoadResultEntryType.Warning;
+            m_errors.add(new LoadResultEntry(t, warning));
+        }
+
+        public void addChildError(final LoadResult loadResult) {
+            m_errors.add(loadResult);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public LoadResultEntryType getType() {
+            int max = super.getType().ordinal();
+            for (LoadResultEntry e : m_errors) {
+                max = Math.max(e.getType().ordinal(), max);
+            }
+            return LoadResultEntryType.values()[max];
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public LoadResultEntry[] getChildren() {
+            return m_errors.toArray(new LoadResultEntry[m_errors.size()]);
+        }
+
     }
-    
+
     public static final class WorkflowLoadResult extends LoadResult {
-        
+
         private WorkflowManager m_workflowManager;
         private boolean m_guiMustReportDataLoadErrors = false;
         
+        /**
+         * @param name
+         */
+        public WorkflowLoadResult(final String name) {
+            super(name);
+        }
+
         /**
          * @param workflowManager the workflowManager to set
          */
@@ -403,59 +409,34 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public boolean getGUIMustReportDataLoadErrors() {
             return m_guiMustReportDataLoadErrors;
         }
-    }
-
-    public enum LoadResultEntryType {
-        Warning,
-        Error,
-        DataLoadError,
-        Aggregation
-    }
-    
-    public static final class LoadResultEntry {
         
-        private final LoadResultEntryType m_type;
-        private final String m_message;
-        private final LoadResult m_subLoadResult;
-        
-        public LoadResultEntry(
-                final String message, final LoadResult subResult) {
-            m_type = LoadResultEntryType.Aggregation;
-            m_message = message;
-            m_subLoadResult = subResult;
-        }
-
-        public LoadResultEntry(
-                final LoadResultEntryType type, final String message) {
-            switch (type) {
-            case Aggregation: assert false;
+        /** Generate a user friendly message about the load procedure.
+         * @return This message.
+         */
+        @Override
+        public String getMessage() {
+            String name = getWorkflowManager() == null ? "<none>"
+                    : getWorkflowManager().getNameWithID();
+            StringBuilder b = new StringBuilder(name);
+            b.append(" loaded");
+            switch (getType()) {
+            case Ok:
+                b.append(" with no errors");
+                break;
+            case DataLoadError:
+                b.append(" with error during data load");
+                break;
+            case Error:
+                b.append(" with errors");
+                break;
+            case Warning:
+                b.append(" with warnings");
+                break;
             default:
+                b.append(" with ").append(getType());
             }
-            m_type = type;
-            m_message = message;
-            m_subLoadResult = null;
-        }
-        
-        /**
-         * @return the type
-         */
-        LoadResultEntryType getType() {
-            return m_type;
-        }
-
-        /**
-         * @return the message
-         */
-        String getMessage() {
-            return m_message;
-        }
-
-        /**
-         * @return the subLoadResult
-         */
-        LoadResult getSubLoadResult() {
-            return m_subLoadResult;
+            return b.toString();
         }
     }
-    
+
 }

@@ -38,7 +38,7 @@ import org.knime.core.node.NodeSettingsWO;
 public class FileWriterSettings {
 
     /** mode specifying how to quote the data. */
-    enum quoteMode {
+    public enum quoteMode {
         /** use quotes only if needed. */
         IF_NEEDED,
         /** use quotes always on non-numerical data. */

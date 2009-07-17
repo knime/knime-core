@@ -28,11 +28,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 
-import org.eclipse.core.internal.events.BuildCommand;
-import org.eclipse.core.internal.resources.ProjectDescription;
-import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -44,48 +42,25 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
-import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 
 /**
  * Wizard for the creation of a new modeller project. TODO FIXME not yet
  * implemented
  *
  * @author Florian Georg, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
-    /**
-     * Build command invoking KNIME project builder.
-     */
-    public static final ICommand KNIME_BUILDER;
-
-    /** List of natures that should be given to the new project. */
-    public static final String[] KNIME_NATURES;
-
-    /** List of build commands that should be given to the new project. * */
-    public static final ICommand[] KNIME_BUILDSPECS;
-
-    static {
-        KNIME_BUILDER = new BuildCommand();
-        KNIME_BUILDER.setBuilderName(KNIMEProjectBuilder.BUILDER_ID);
-        KNIME_NATURES = new String[]{KNIMEProjectNature.class.getName()};
-        KNIME_BUILDSPECS = new ICommand[]{KNIME_BUILDER};
-    }
 
     private NewProjectWizardPage m_page;
 
@@ -117,7 +92,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     /**
      * Perform finish - queries the page and creates the project / file.
      *
-     * @see org.eclipse.jface.wizard.IWizard#performFinish()
+     * {@inheritDoc}
      */
     @Override
     public boolean performFinish() {
@@ -151,36 +126,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             return false;
         }
 
-        // workaround to redraw the knime navigation tree
-        // TODO: try to find a better solution
-        // update knime resource navigator
-        updateResourceNavigator();
+        // found a better solution to update knime resource navigator
+        // @see KnimeResourceChangeListener 
+        // Delta.CHANGED is now also processed for every resource
 
         return true;
-    }
-
-    private void updateResourceNavigator() {
-
-        // workaround to redraw the knime navigation tree
-        // TODO: try to find a better solution
-        // update knime resource navigator
-
-        // find all resource navigators and refresh them
-        // aditionally exampd all items to remove the + signs
-        for (IWorkbenchWindow window : Workbench.getInstance()
-                .getWorkbenchWindows()) {
-            for (IWorkbenchPage page : window.getPages()) {
-                for (IViewReference reference : page.getViewReferences()) {
-                    IViewPart viewPart = reference.getView(true);
-                    if (viewPart instanceof KnimeResourceNavigator) {
-                        TreeViewer viewer =
-                                ((KnimeResourceNavigator)viewPart).getViewer();
-                        viewer.refresh();
-//                        viewer.expandToLevel(2);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -201,18 +151,25 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         IResource resource = root.findMember(new Path(projectName.trim()));
         if (resource != null) {
             throwCoreException("Project \"" + projectName.trim()
-                    + "\" does already exist.");
+                    + "\" does already exist.", null);
         }
         // Create project description, set the nature IDs and build-commands
         IProject project = root.getProject(projectName.trim());
-        ProjectDescription description = new ProjectDescription();
-        description.setName(projectName.trim());
-        description.setNatureIds(KNIME_NATURES);
-        description.setBuildSpec(KNIME_BUILDSPECS);
+        
         // actually create the project in workspace
-        project.create(description, monitor);
+        project.create(monitor);
         // open the project
         project.open(monitor);
+
+        try {
+            IProjectDescription description = project.getDescription();
+            description.setName(projectName.trim());
+            description.setNatureIds(new String[]{KNIMEProjectNature.ID});
+            project.setDescription(description, monitor);
+        } catch (CoreException ce) {
+            throwCoreException("Error while creating project description for " 
+                    + project.getName(), ce);
+        }
 
         //
         // 2. Create the optional files, if wanted
@@ -244,10 +201,12 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 //        project.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
     }
 
-    private static void throwCoreException(final String message) throws CoreException {
+    private static void throwCoreException(final String message, 
+            final Throwable t) 
+        throws CoreException {
         IStatus status =
                 new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,
-                        message, null);
+                        message, t);
         throw new CoreException(status);
     }
 }

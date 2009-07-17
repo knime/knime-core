@@ -25,6 +25,7 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -53,12 +54,36 @@ public class NodeUIInformation implements UIInformation {
     private static final String KEY_BOUNDS = "extrainfo.node.bounds";
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
-
-    /**
-     * Constructs a <code>ConnectionUIInformation</code>.
-     *
+    
+    /** Set to true if the bounds are absolute (correct in the context of the
+     * editor). It's false if the coordinates refer to relative coordinates and
+     * need to be adjusted by the NodeContainerFigure#initFigure... method.
+     * This field is transient and not stored as part of the 
+     * {@link #save(NodeSettingsWO)} method. A loaded object has always absolute
+     * coordinates.
      */
+    private final boolean m_hasAbsoluteCoordinates; 
+
+    /** Creates new object, the bounds to be set are assumed to be absolute
+     * (m_isInitialized is true). */
     public NodeUIInformation() {
+        m_hasAbsoluteCoordinates = true;
+    }
+    
+    /** Inits new node figure with given coordinates.
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param width width of figure
+     * @param height height of figure
+     * @param absoluteCoords If the coordinates are absolute.
+     */
+    public NodeUIInformation(final int x, final int y, 
+            final int width, final int height, final boolean absoluteCoords) {
+        m_bounds[0] = x;
+        m_bounds[1] = y;
+        m_bounds[2] = width;
+        m_bounds[3] = height;
+        m_hasAbsoluteCoordinates = absoluteCoords;
     }
 
     /**
@@ -88,7 +113,14 @@ public class NodeUIInformation implements UIInformation {
         }
         return true;
     }
-
+    
+    /**
+     * @return the hasAbsoluteCoordinates (transient) field
+     */
+    public boolean hasAbsoluteCoordinates() {
+        return m_hasAbsoluteCoordinates;
+    }
+    
     /**
      * Sets the location. *
      *
@@ -107,17 +139,10 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /**
-     * @return Returns the bounds.
+     * @return Returns a clone of the bounds.
      */
     public int[] getBounds() {
-        return m_bounds;
-    }
-
-    /**
-     * @param bounds The bounds to set.
-     */
-    public void setBounds(final int[] bounds) {
-        m_bounds = bounds;
+        return m_bounds.clone();
     }
 
     /**
@@ -125,12 +150,13 @@ public class NodeUIInformation implements UIInformation {
      * the given moving distance.
      *
      * @param moveDist the distance to change the left top corner
+     * @return A clone of this ui information, whereby its x,y coordinates
+     *         are shifted by the argument values.
      */
-    public void changePosition(final int[] moveDist) {
-
-        // first change the x value
-        m_bounds[0] = m_bounds[0] + moveDist[0];
-        m_bounds[1] = m_bounds[1] + moveDist[1];
+    public NodeUIInformation createNewWithOffsetPosition(final int[] moveDist) {
+        return new NodeUIInformation(
+                m_bounds[0] + moveDist[0], m_bounds[1] + moveDist[1],
+                m_bounds[2], m_bounds[3], m_hasAbsoluteCoordinates);
     }
 
     /**
@@ -138,7 +164,13 @@ public class NodeUIInformation implements UIInformation {
      */
     @Override
     public NodeUIInformation clone() {
-        NodeUIInformation newObject = new NodeUIInformation();
+        NodeUIInformation newObject;
+        try {
+            newObject = (NodeUIInformation)super.clone();
+        } catch (CloneNotSupportedException e) {
+            NodeLogger.getLogger(getClass()).fatal("Clone exception", e);
+            newObject = new NodeUIInformation();
+        }
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;
     }
@@ -152,6 +184,7 @@ public class NodeUIInformation implements UIInformation {
             return "not set";
         }
         return "x " + m_bounds[0] + " y " + m_bounds[1]
-                    + " width " + m_bounds[2] + " height "  + m_bounds[3];
+               + " width " + m_bounds[2] + " height "  + m_bounds[3]
+               + (m_hasAbsoluteCoordinates ? "(absolute)" : "(relative)");
     }
 }

@@ -29,7 +29,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -103,16 +103,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getAllNodeParts();
-        // enable if we have at least one cancel-able node in our selection
-        for (int i = 0; i < parts.length; i++) {
-            NodeContainer nc = parts[i].getNodeContainer();
-            if (nc.getState().executionInProgress()) {
-                return true;
-            }
-
-        }
-        return false;
+        return getManager().getState().executionInProgress();
     }
 
     /**
@@ -123,18 +114,15 @@ public class CancelAllAction extends AbstractNodeAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
+                SWT.ICON_QUESTION | SWT.YES | SWT.NO);
         mb.setText("Confirm cancel all...");
         mb.setMessage("Do you really want to cancel all running node(s) ?");
         if (mb.open() != SWT.YES) {
             return;
         }
-
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        // bugfix 1386 -> get all parts (not only selected ones)
-        for (NodeContainerEditPart part : getAllNodeParts()) {
-            getManager().cancelExecution(part.getNodeContainer());
-        }
+        WorkflowManager manager = getManager();
+        manager.getParent().cancelExecution(manager);
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

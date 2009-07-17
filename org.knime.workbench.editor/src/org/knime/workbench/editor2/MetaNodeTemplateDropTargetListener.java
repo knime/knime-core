@@ -118,24 +118,23 @@ public class MetaNodeTemplateDropTargetListener
         if (id == null || sourceManager == null) {
             return;
         }
-        NodeID[] copied = m_editor.getWorkflowManager().copy(
-                sourceManager, 
-                new NodeID[] {id});
+        NodeID[] copied = m_editor.getWorkflowManager().copyFromAndPasteHere(
+                sourceManager, new NodeID[] {id});
         // create UI info
         NodeContainer newNode = m_editor.getWorkflowManager().getNodeContainer(
                 copied[0]);
-        NodeUIInformation uiInfo = (NodeUIInformation)newNode
-            .getUIInformation();
-        if (uiInfo == null) {
-            uiInfo = new NodeUIInformation();
-        }
+        NodeUIInformation uiInfo = 
+            (NodeUIInformation)newNode.getUIInformation();
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;
-        Point p = new Point(m_viewer.getControl()
-                    .toControl(event.x, event.y).x,
-                    m_viewer.getControl()
-                    .toControl(event.x, event.y).y);
-        uiInfo.setNodeLocation(p.x, p.y, -1, -1);
+        org.eclipse.swt.graphics.Point toControl = 
+            m_viewer.getControl().toControl(event.x, event.y);
+        Point p = new Point(toControl.x, toControl.y);
+        if (uiInfo == null) {
+            uiInfo = new NodeUIInformation(p.x, p.y, -1, -1, false);
+        } else {
+            uiInfo.setNodeLocation(p.x, p.y, -1, -1);
+        }
         newNode.setUIInformation(uiInfo);
     }
 

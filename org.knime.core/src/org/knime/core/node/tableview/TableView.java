@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.tableview;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -39,12 +40,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.swing.AbstractButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
@@ -99,14 +102,12 @@ public class TableView extends JScrollPane {
     /** Whether or not column header resizing is allowed. Defaults to false. */
     private boolean m_isColumnHeaderResizingAllowed;
     
-    /** Next row to start search from (defaults to 0). */
-    private int m_searchRow;
+    /** Position (row, col) for "Find" menu entry. It either points to the 
+     * location of the last match or (0,0). */
+    private FindPositionRowKey m_searchPosition;
     
     /** Last search string, needed for continued search. */
     private String m_searchString;
-    
-    /** Whether continued search only search row id column or entire data. */
-    private boolean m_searchIDOnly;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -616,56 +617,64 @@ public class TableView extends JScrollPane {
      * @throws NullPointerException If <code>search</code> argument is null.
      */
     protected void find(final String search, final boolean idOnly) {
-        /* assert idOnly = true;
-         * Searching the content is currently disabled for different reasons:
-         * - For continuing at last hit position, we need to store the last
-         *   hit column (not only the row number)
-         * - Need to define a "match" (the implementation below checks whether
-         *   the string, which is rendered, contains the search string
-         */
-        // new search string, reset search position and start on top
-        if (!search.equals(m_searchString) || idOnly != m_searchIDOnly) {
-            m_searchRow = 0;
+        if (search == null) {
+            throw new NullPointerException("Search expression is null");
         }
-        setLastSearchString(search);
-        m_searchIDOnly = idOnly;
         TableContentView cView = getContentTable();
         if (cView == null) {
             return;
         }
-        int rowCount = cView.getRowCount();
-        int lastSearchPosition = m_searchRow;
-        for (int i = 0; i < rowCount; i++) {
-            int pos = (m_searchRow + i) % rowCount;
-            int col = 0;
-            if (pos < lastSearchPosition) {
+        // if new search options, reset search position and start on top
+        if (m_searchPosition == null || idOnly != m_searchPosition.isIDOnly()) {
+            initNewSearchPostion(idOnly);
+        } else if (!ConvenienceMethods.areEqual(m_searchString, search)) {
+            m_searchPosition.reset();
+        }
+        setLastSearchString(search);
+        
+        m_searchPosition.mark();
+        do {
+            if (m_searchPosition.next()) {
                 JOptionPane.showMessageDialog(this, 
-                        "Reached end of table, starting at top");
-                lastSearchPosition = -1;
+                    "Reached end of table, continue from top");
             }
-            boolean matches = cView.getContentModel().getRowKey(pos).
-                toString().contains(search);
-            if (!m_searchIDOnly) {
-                for (int c = 0; c < cView.getColumnCount(); c++) {
-                    TableCellRenderer rend = cView.getCellRenderer(pos, c);
-                    Component comp = rend.getTableCellRendererComponent(cView, 
-                            cView.getValueAt(pos, c), false, false, pos, c);
-                    if (comp instanceof JLabel 
-                            && ((JLabel)comp).getText().contains(search)) {
-                        col = c;
-                        matches = true;
-                        break;
-                    }
+            int pos = m_searchPosition.getSearchRow();
+            if (pos < 0) {
+                // the position object will traverse all rows, then
+                // reset the position (pos = -1) and then start from 0, ...
+                // this can't be changed because of the marking (we also have
+                // to notice if we come from a m_searchPostion.reset() state
+                // into a m_searchPosition.reset() state.
+                continue;
+            }
+            int col = m_searchPosition.getSearchColumn();
+            String str = null;
+            if (col < 0) {
+                str = cView.getContentModel().getRowKey(pos).getString();
+            } else {
+                TableCellRenderer rend = cView.getCellRenderer(pos, col);
+                Component comp = rend.getTableCellRendererComponent(cView, 
+                        cView.getValueAt(pos, col), false, false, pos, col);
+                if (comp instanceof JLabel) {
+                    str = ((JLabel)comp).getText();
                 }
             }
-            if (matches) {
-                m_searchRow = pos + 1;
+            if (str != null && str.contains(m_searchString)) {
                 gotoCell(pos, col);
                 return;
             }
-        }
+        } while (!m_searchPosition.reachedMark());
         JOptionPane.showMessageDialog(this, "Search string not found");
-        m_searchRow = 0;
+        m_searchPosition.reset();
+    }
+    
+    private void initNewSearchPostion(final boolean idOnly) {
+        TableContentView cView = getContentTable();
+        int rowCount = cView.getRowCount();
+        int colCount = cView.getColumnCount();
+        m_searchPosition = idOnly ? new FindPositionRowKey(rowCount)
+                : new FindPositionAll(rowCount, colCount);
+
     }
 
     /** Sets a new search string and sends event if it differs from the
@@ -682,17 +691,17 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Scrolls to the given coordinate cell This method is invoked
+     * Scrolls to the given coordinate cell. This method is invoked
      * from the navigation menu. If there is no such coordinate it will 
      * display an error message.
      * 
      * @param row the row to scroll to 
-     * @param col the col to scroll to
+     * @param col the col to scroll to (negative for row key)
      */
     public void gotoCell(final int row, final int col) {
         TableContentView cView = getContentTable();
         try {
-            cView.getValueAt(row, col);
+            cView.getValueAt(row, Math.max(col, 0));
         } catch (IndexOutOfBoundsException ioe) {
             if (cView.getColumnCount() != 0) {
                 JOptionPane.showMessageDialog(this, "No such row/col: (" 
@@ -712,7 +721,7 @@ public class TableView extends JScrollPane {
         }
         cView.scrollRectToVisible(rec);
     }
-
+    
     /**
      * Opens the popup menu on the row header. It allows to trigger hilite
      * events.
@@ -765,24 +774,29 @@ public class TableView extends JScrollPane {
                 new EnableListener(this, true, false));
         goToRowItem.setEnabled(hasData());
         result.add(goToRowItem);
-        JMenuItem findItem = new JMenuItem("Find Row ID...");
+        JMenuItem findItem = new JMenuItem("Find ...");
         findItem.setAccelerator(KeyStroke.getKeyStroke(
                 KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         findItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-//                JCheckBox rowKeyBox = 
-//                    new JCheckBox("ID only", m_searchIDOnly);
-//                JPanel panel = new JPanel(new BorderLayout());
-//                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
-//                panel.add(rowKeyBox, BorderLayout.EAST);
-                String panel = "Find Row ID:";
-                String in = JOptionPane.showInputDialog(
-                        TableView.this, panel, "Search",
-                        JOptionPane.QUESTION_MESSAGE);
-                if (in == null) { // canceled
+                if (m_searchPosition == null) {
+                    initNewSearchPostion(false);
+                }
+                m_searchPosition.reset();
+                boolean isIDOnly = m_searchPosition.isIDOnly();
+                JCheckBox rowKeyBox = 
+                    new JCheckBox("Row ID only", isIDOnly);
+                JPanel panel = new JPanel(new BorderLayout());
+                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
+                panel.add(rowKeyBox, BorderLayout.EAST);
+                String in = (String)JOptionPane.showInputDialog(
+                        TableView.this, panel, "Search", 
+                        JOptionPane.QUESTION_MESSAGE, null, 
+                        null, m_searchString);
+                if (in == null || in.isEmpty()) { // canceled
                      return;
                 }
-                find(in, true/*rowKeyBox.isSelected()*/);
+                find(in, rowKeyBox.isSelected());
             }
         });
         findItem.addPropertyChangeListener(
@@ -796,7 +810,9 @@ public class TableView extends JScrollPane {
                 if (m_searchString == null) {
                     return;
                 }
-                find(m_searchString, m_searchIDOnly);
+                assert m_searchPosition != null 
+                : "Search position is null but search string is non-null";
+                find(m_searchString, m_searchPosition.isIDOnly());
             }
         });
         findNextItem.addPropertyChangeListener(

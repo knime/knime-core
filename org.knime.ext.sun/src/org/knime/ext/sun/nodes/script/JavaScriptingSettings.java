@@ -24,6 +24,7 @@
 package org.knime.ext.sun.nodes.script;
 
 import java.io.File;
+import java.util.Date;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -39,6 +40,9 @@ public final class JavaScriptingSettings {
     
     /** NodeSettings key for the expression. */
     private static final String CFG_EXPRESSION = "expression";
+    
+    /** NodeSettings key for the expression. */
+    private static final String CFG_HEADER = "header";
 
     /** NodeSettings key for the expression. */
     private static final String CFG_EXPRESSION_VERSION = "expression_version";
@@ -52,6 +56,9 @@ public final class JavaScriptingSettings {
     /** NodeSettings key for the return type of the expression. */
     private static final String CFG_RETURN_TYPE = "return_type";
 
+    /** NodeSettings key for whether the return type is an array (collection).*/
+    private static final String CFG_IS_ARRAY_RETURN = "is_array_return";
+    
     /** NodeSettings key for additional jar/zip files. */
     private static final String CFG_JAR_FILES = "java_libraries";
     
@@ -61,7 +68,9 @@ public final class JavaScriptingSettings {
         "test_compilation_on_dialog_close";
 
     private String m_expression;
+    private String m_header; // added in 2.1
     private Class<?> m_returnType;
+    private boolean m_isArrayReturn; // added in 2.1
     private String m_colName;
     private boolean m_isReplace;
     /** Only important for dialog: Test the syntax of the snippet code
@@ -75,12 +84,14 @@ public final class JavaScriptingSettings {
      */
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(CFG_EXPRESSION, m_expression);
+        settings.addString(CFG_HEADER, m_header);
         settings.addString(CFG_COLUMN_NAME, m_colName);
         settings.addBoolean(CFG_IS_REPLACE, m_isReplace);
         String rType = m_returnType != null ? m_returnType.getName() : null;
         settings.addBoolean(
                 CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
         settings.addString(CFG_RETURN_TYPE, rType);
+        settings.addBoolean(CFG_IS_ARRAY_RETURN, m_isArrayReturn);
         settings.addStringArray(CFG_JAR_FILES, m_jarFiles);
         settings.addInt(CFG_EXPRESSION_VERSION, m_expressionVersion);
     }
@@ -92,13 +103,18 @@ public final class JavaScriptingSettings {
     protected void loadSettingsInModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_expression = settings.getString(CFG_EXPRESSION);
+        m_header = settings.getString(CFG_HEADER, "");
         m_colName = settings.getString(CFG_COLUMN_NAME);
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
+        if (!m_isReplace && (m_colName == null || m_colName.length() == 0)) {
+            throw new InvalidSettingsException("Column name must not be empty");
+        }
         String returnType = settings.getString(CFG_RETURN_TYPE);
         m_returnType = getClassForReturnType(returnType);
         // this setting is not available in 1.2.x
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
+        m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
         for (String s : getJarFiles()) {
             if (!new File(s).isFile()) {
@@ -117,6 +133,7 @@ public final class JavaScriptingSettings {
     protected void loadSettingsInDialog(final NodeSettingsRO settings,
             final DataTableSpec spec) {
         m_expression = settings.getString(CFG_EXPRESSION, "");
+        m_header = settings.getString(CFG_HEADER, "");
         String r = settings.getString(CFG_RETURN_TYPE, Double.class.getName());
         try {
             m_returnType = getClassForReturnType(r);
@@ -129,6 +146,7 @@ public final class JavaScriptingSettings {
         m_isTestCompilationOnDialogClose = 
             settings.getBoolean(CFG_TEST_COMPILATION, true);
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
+        m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_expressionVersion = settings.getInt(CFG_EXPRESSION_VERSION, 1);
     }
 
@@ -147,6 +165,20 @@ public final class JavaScriptingSettings {
     }
 
     /**
+     * @return the header
+     */
+    public String getHeader() {
+        return m_header;
+    }
+
+    /**
+     * @param header the header to set
+     */
+    void setHeader(final String header) {
+        m_header = header;
+    }
+
+    /**
      * @return the returnType
      */
     public Class<?> getReturnType() {
@@ -160,6 +192,20 @@ public final class JavaScriptingSettings {
     void setReturnType(final String className) 
         throws InvalidSettingsException {
         m_returnType = getClassForReturnType(className);
+    }
+
+    /**
+     * @return the isArrayReturn
+     */
+    public boolean isArrayReturn() {
+        return m_isArrayReturn;
+    }
+
+    /** 
+     * @param isArrayReturn the isArrayReturn to set
+     */
+    void setArrayReturn(final boolean isArrayReturn) {
+        m_isArrayReturn = isArrayReturn;
     }
 
     /**
@@ -246,6 +292,8 @@ public final class JavaScriptingSettings {
             return Integer.class;
         } else if (Double.class.getName().equals(returnType)) {
             return Double.class;
+        } else if (Date.class.getName().equals(returnType)) {
+            return Date.class;
         } else if (String.class.getName().equals(returnType)) {
             return String.class;
         } else {

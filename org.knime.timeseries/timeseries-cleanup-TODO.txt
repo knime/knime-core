@@ -1,0 +1,148 @@
+*************************************
+*******         Fragen      *********
+*************************************
+
+Date, Time and DateTime
+- get rid of 00:00:00 and 1970-01-01
+- sometimes only time of interest?
+- sometimes only date of interest
+- sometimes date and time
+
+Problems:
+- StringToTimestamp node must be sophisticated -> whether to generate date, time or date time...
+- what about evaluating the format? 
+	+ Contains HH, mm, ss -> time
+	+ contains y, M or d -> date
+	+ select box
+
+
+
+Rename:
+-----------------------------
+MA -> rename to lowercase ma
+FilterWindows -> rename to fw
+fuzzyCPmeans -> fuzzycp
+
+
+Refactor Nodes:
+
+Time Aggregation:
+
+currently only aggregation into units possible: week, day, etc.
+
+better number and units: 3 days, 2 weeks, etc.
+
+Output as Date (use Time2String if a String is wanted)
+
+
+SetOfRendererFamilies
+lines 136 - 147
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean accepts(final String desc, final DataColumnSpec spec) {
+        for (DataValueRendererFamily e : m_list) {
+            if (Arrays.asList(e.getRendererDescriptions()).contains(desc)) {
+                return e.accepts(desc, spec);
+            }
+        }
+        throw new IllegalArgumentException(
+                "Invalid renderer description: " + desc);
+    }
+
+
+An ID in addition to the description would probably be better???
+
+abstract definition returns description
+may be overridden by subclasses 
+
+
+String2Time:
+- combo box with examples of most common date/time formats and text field to enter custom pattern...
+- "suppress further warnings" if incorrect format -> 25 am Stück falsch? 
+- guess most common date formats based on the first 10 rows...
+- insert behind date column or append at the end or replace
+- allow for several columns
+- optionally enter pattern for column name creation
+
+Time2String
+
+
+Moving Average
+- do not replace column without asking!!!
+- time/date selectable
+- name of new column
+
+
+Extract Sample per Day -> more generic into Extract One Sample per Period
+
+
+Extract From To (Date)
+	- Calendar Widget in order to select the date
+
+
+New Features
+================
+- Date Generator
+	+ generate from - to
+	+ number of equidistant time points
+- Seasonal decomposition -> seasonalize<->re-seasonalize
+- Log
+- N Difference (First Difference the default)
+- Random Walk (with drift)
+
+- ARIMA
+
+
+Remove:
+===============
+- Financial Bar Chart (too specific?)
+- Fuzzy-c-Pearson-Means -> under construction
+
+
+**************************************************************
+***********     Core/Base Anpassungen        *****************
+**************************************************************
+
+Date Coordinate
+===================
+- display years, then months, then weeks, then days, etc...
+- if number of ticks/available length is below a certain threshold -> take next lower aggregation level
+- if number of ticks/available length is above a certain threshold -> take next higher aggregation level...
+- ...until fit
+
+Renderer:
+- yyyy-mm-dd hh:mm:ss.ms
+- yyyy-mm-dd
+- hh:mm:ss.ms
+- yyyy/dd/mm hh:mm:ss.ms(am/pm)
+
+
+FileReader guess date column
+Domain Calculator
+R 
+Java Snippet
+
+
+
+***************************************************************
+**********             Testen:               ******************
+***************************************************************
+
+
+1. generieren vs. Excel:
+======================= 
+- gleicher Zeitraum, gleich Anzahl Reihen
+- String2Time
+- vergleichen
+
+2. Extract From-To:
+====================
+- Missing values (disturber node)
+- Empty table
+- check cancel
+- Filter on Excel 
+- range out of available range in data -> throw exception? show warning? 
+- Extract from Excel data and from generated data -> equal?
+- Time2String vs Excel -> equal?

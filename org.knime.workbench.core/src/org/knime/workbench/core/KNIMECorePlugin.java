@@ -37,6 +37,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
 
@@ -192,6 +193,10 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                 }
                 setLogLevel(logLevelConsole);
             }
+            // encryption key supplier registered with the eclipse framework
+            // and serves as a master key provider
+            KnimeEncryption.setEncryptionKeySupplier(
+                    new EclipseEncryptionKeySupplier());
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
@@ -343,5 +348,5 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         }
         return m_resourceBundle;
     }
-
+    
 }

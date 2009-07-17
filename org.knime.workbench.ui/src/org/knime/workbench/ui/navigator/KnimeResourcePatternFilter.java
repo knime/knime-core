@@ -24,13 +24,10 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowPersistor;
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
  * the project has to be shown.
@@ -44,30 +41,18 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
     @Override
     public boolean select(final Viewer viewer, final Object parentElement,
             final Object element) {
-        if (element instanceof NodeContainer) {
-            return true;
+        if (element instanceof IFile) {
+            return false;
         }
-        if (element instanceof IResource) {
-            IResource resource = (IResource)element;
-            if (resource.getType() == IResource.PROJECT) {
-
-                IProject project = (IProject)resource;
-                /*
-                try {
-                    project.refreshLocal(IResource.DEPTH_ZERO, null);
-                } catch (Exception e) {
-                    // if crashes for some reason do not display it
-                    return false;
-                }
-               */
-                return project.exists(new Path("/" 
-                        + WorkflowPersistor.WORKFLOW_FILE));
-
-            } else if (resource.getType() == IResource.FOLDER) {
-                return true; 
-            }
+        if (element instanceof IProject) {
+            IProject project = (IProject)element;
+            boolean isKnimeProject = false;
+            isKnimeProject = project.exists(
+                    KnimeResourceLabelProvider.WORKFLOW_FILE);
+            isKnimeProject |= project.exists(
+                    KnimeResourceLabelProvider.METAINFO_FILE);
+            return isKnimeProject;
         }
-
-        return false;
+        return true;
     }
 }

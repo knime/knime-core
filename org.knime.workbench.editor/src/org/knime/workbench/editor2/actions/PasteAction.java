@@ -35,9 +35,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -118,30 +118,29 @@ public class PasteAction extends AbstractClipboardAction {
         for (NodeContainer container : containers) {
             ids[index++] = container.getID();
         }
-        NodeID[] copiedNodes = getManager().copy(
+        NodeID[] copiedNodes = getManager().copyFromAndPasteHere(
                 ClipboardWorkflowManager.getSourceWorkflowManager(), ids);
         Set<NodeID>newIDs = new HashSet<NodeID>();
         int[] moveDist = calculateShift(copiedNodes);
         for (NodeID id : copiedNodes) {
             newIDs.add(id);
-            NodeUIInformation uiInfo;
             NodeContainer nc = getManager().getNodeContainer(id);
-                uiInfo = (NodeUIInformation)nc.getUIInformation();
-            uiInfo.changePosition(moveDist);
-            nc.setUIInformation(uiInfo);
+            NodeUIInformation oldUI = (NodeUIInformation)nc.getUIInformation();
+            NodeUIInformation newUI = 
+                oldUI.createNewWithOffsetPosition(moveDist);
+            nc.setUIInformation(newUI);
         }
         for (ConnectionContainer conn 
                     : getManager().getConnectionContainers()) {
             if (newIDs.contains(conn.getDest()) 
                     && newIDs.contains(conn.getSource())) {
                 // get bend points and move them
-                if (conn.getUIInfo() != null) {
-                    ConnectionUIInformation uiInfo 
-                        = (ConnectionUIInformation)conn.getUIInfo()
-                        .clone();
-                        uiInfo.changePosition(new int[] {moveDist[0], 
-                                moveDist[1]});
-                        conn.setUIInfo(uiInfo);
+                ConnectionUIInformation oldUI = 
+                    (ConnectionUIInformation)conn.getUIInfo();
+                if (oldUI != null) {
+                    ConnectionUIInformation newUI = 
+                        oldUI.createNewWithOffsetPosition(moveDist);
+                    conn.setUIInfo(newUI);
                 }
             }
         }
@@ -186,7 +185,7 @@ public class PasteAction extends AbstractClipboardAction {
      *  to the mouse position
      *  
      * @return the offset to add to the current node position, which is done by 
-     *  the {@link NodeUIInformation#changePosition(int[])}
+     *  the {@link NodeUIInformation#createNewWithOffsetPosition(int[])}
      */
     protected int[] calculateShift(final NodeID[] ids) {
         // simply return the offset 

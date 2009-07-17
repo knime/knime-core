@@ -31,7 +31,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 
 /**
  * A {@link WorkflowManager} instance that acts as a clipboard for copy, cut, 
- * and paste actions. The copied or cutted nodes are inserted into the workflow 
+ * and paste actions. The copied or cut nodes are inserted into the workflow 
  * manager clipboard and retrieved by the paste action. Only one set of nodes 
  * can be in the clipboard at the time. In addition a retrieval counter is 
  * provided, which allows counting how often the nodes were accessed. This 
@@ -59,19 +59,18 @@ public final class ClipboardWorkflowManager {
     
     
     static {
-        CLIP_BOARD = WorkflowManager.ROOT.createAndAddProject();
-        CLIP_BOARD.setName(NAME);
+        CLIP_BOARD = WorkflowManager.ROOT.createAndAddProject(NAME);
     }
     
     /**
      * 
      * @param source the {@link WorkflowManager} from which the nodes are 
      * copied
-     * @param ids the ids of the nodes that should be copied to the clippboard
+     * @param ids the ids of the nodes that should be copied to the clipboard
      */
     public static void put(final WorkflowManager source, final NodeID... ids) {
         clear();
-        CLIP_BOARD.copy(source, ids);
+        CLIP_BOARD.copyFromAndPasteHere(source, ids);
     }
     
     /**

@@ -25,9 +25,11 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Arrays;
+
 import org.eclipse.gef.commands.Command;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeUIInformation;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the
@@ -37,13 +39,11 @@ import org.knime.core.node.workflow.NodeContainer;
  * @author Florian Georg, University of Konstanz
  */
 public class ChangeNodeBoundsCommand extends Command {
-    private final int[] m_oldBounds;
 
+    private final int[] m_oldBounds;
     private final int[] m_newBounds;
 
     private final NodeContainer m_container;
-
-    private final NodeUIInformation m_extraInfo;
 
     /**
      *
@@ -54,11 +54,11 @@ public class ChangeNodeBoundsCommand extends Command {
             final int[] newBounds) {
         // right info type
 
-        m_extraInfo = (NodeUIInformation) container.getUIInformation();
-        m_oldBounds = m_extraInfo.getBounds();
+        NodeUIInformation uiInfo = 
+            (NodeUIInformation) container.getUIInformation();
+        m_oldBounds = uiInfo.getBounds();
         m_newBounds = newBounds;
         m_container = container;
-
     }
 
     /**
@@ -68,14 +68,13 @@ public class ChangeNodeBoundsCommand extends Command {
      */
     @Override
     public void execute() {
-        m_extraInfo.setBounds(m_newBounds);
-        // check if the node was placed under an existing connection
-        
-        
-        // if yes ask user if the node should be inserted into this connection
-        
-        // must set explicitly so that event is fired by container
-        m_container.setUIInformation(m_extraInfo);
+        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+            NodeUIInformation information = new NodeUIInformation(
+                    m_newBounds[0], m_newBounds[1],
+                    m_newBounds[2], m_newBounds[3], true);
+            // must set explicitly so that event is fired by container
+            m_container.setUIInformation(information);
+        }
     }
 
     /**
@@ -85,9 +84,12 @@ public class ChangeNodeBoundsCommand extends Command {
      */
     @Override
     public void undo() {
-        m_extraInfo.setBounds(m_oldBounds);
-        // must set explicitly so that event is fired by container
-        m_container.setUIInformation(m_extraInfo);
+        if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+            NodeUIInformation information = new NodeUIInformation(
+                    m_oldBounds[0], m_oldBounds[1],
+                    m_oldBounds[2], m_oldBounds[3], true);
+            m_container.setUIInformation(information);
+        }
     }
 }
 

@@ -154,6 +154,12 @@
             id="org.knime.workbench.ui.preferences"
             name="KNIME">
       </page>
+      <page
+            category="org.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.preferences.MetaInfoPreferencePage"
+            id="org.knime.workbench.ui.metainfo"
+            name="Meta Info Preferences">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
@@ -172,12 +178,22 @@
       </builder>
    </extension>
    <extension
-         id="org.knime.workbench.ui.KNIMEProjectNature"
+         id="KNIMEProjectNature"
          name="KNIME project nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
                class="org.knime.workbench.ui.nature.KNIMEProjectNature">
+         </run>
+      </runtime>
+   </extension>
+      <extension
+         id="KNIMEWorkflowsetProject"
+         name="KNIME Workflow Set Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature">
          </run>
       </runtime>
    </extension>
@@ -269,5 +285,17 @@
           </action>
        </viewContribution>
     </extension>
+    
+       <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="Workflow Set Meta Information Editor"
+            extensions="meta"
+            icon="icons/meta_info_edit.png"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            class="org.knime.workbench.ui.metainfo.editor.WorkflowSetMetaInfoEditor"
+            id="org.knime.workbench.meta.editor.editor.WorkflowSetMetaInfoEditor">
+      </editor>
+   </extension>
    
 </plugin>

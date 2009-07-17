@@ -65,18 +65,22 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -84,6 +88,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.progress.IProgressService;
@@ -100,6 +105,8 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.util.Pointer;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
@@ -117,8 +124,10 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * This is the implementation of the Eclipse Editor used for editing a
@@ -130,7 +139,10 @@ import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
  */
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
-        IResourceChangeListener, NodeStateChangeListener {
+        IResourceChangeListener, NodeStateChangeListener, ISaveablePart2 {
+
+    /** Id as defined in plugin.xml. */
+    public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WorkflowEditor.class);
@@ -188,7 +200,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_closed;
 
     private String m_manuallySetToolTip;
- 
+
     /**
      * No arg constructor, creates the edit domain for this editor.
      */
@@ -306,15 +318,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         if (m_fileResource != null) {
-            ProjectWorkflowMap.remove(m_fileResource.getProject().getName());
+            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath()
+                    .toString());
         }
-        
+
         // remember that this editor has been closed
         m_closed = true;
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
-        
+
 
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
@@ -323,7 +336,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
-        
+
         m_manager.removeNodeStateChangeListener(this);
 
         // remove resource listener..
@@ -333,6 +346,17 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // TODO: we only have to do it on the parent
         if (m_parentEditor == null) {
+            // bugfix 799: not possible to stop closing earlier if user
+            // decides to NOT save it. Thus we have at least to try to
+            // cancel all running nodes
+            try {
+                m_manager.shutdown();
+            } catch (Throwable t) {
+                // at least we have tried it
+                LOGGER.error(
+                        "Could not cancel workflow manager for project "
+                        + m_fileResource.getProject().getName(), t);
+            }
             WorkflowManager.ROOT.removeProject(m_manager.getID());
         }
 
@@ -513,33 +537,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
-        
-        parent.addDisposeListener(new DisposeListener() {
 
-            @Override
-            public void widgetDisposed(final DisposeEvent e) {
-                if (m_parentEditor != null) {
-                    return; // we are subflow editor.
-                }
-                // bugfix 799: not possible to stop closing earlier if user 
-                // decides to NOT save it. Thus we have at least to try to 
-                // cancel all running nodes
-                try {
-                    if (m_manager.getState().executionInProgress()) {
-                        for (NodeContainer container 
-                                    : m_manager.getNodeContainers()) {
-                            m_manager.cancelExecution(container);
-                        }
-                    }
-                } catch (Throwable t) {
-                    // at least we have tried it
-                    LOGGER.error(
-                            "Could not cancel workflow manager for project "
-                            + m_fileResource.getProject().getName(), t);
-                }
-            }
-            
-        });
     }
 
     /**
@@ -591,7 +589,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else {
 
-        // register listener to check wether the underlying knime file (input)
+        // register listener to check whether the underlying knime file (input)
         // has been deleted or renamed
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
                 IResourceChangeEvent.POST_CHANGE);
@@ -608,7 +606,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // LOGGER.debug("Created new WFM object as input");
 
         LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
-        
+
         final File file = m_fileResource.getLocation().toFile();
         try {
             // FIXME:
@@ -651,7 +649,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
             ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getProject().getName(), 
+                    m_fileResource.getParent().getFullPath().toString(),
+//                    m_fileResource.getParent().getName(),
                     m_manager);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
@@ -671,23 +670,23 @@ public class WorkflowEditor extends GraphicalEditor implements
         updateActions();
         }
     }
-    
+
     private void updatePartName() {
         // Editor name (title)
         setPartName(getTitleToolTip());
         setTitleToolTip(getTitleToolTip());
     }
-    
+
 
     @Override
-    protected void setTitleToolTip(String toolTip) {
+    protected void setTitleToolTip(final String toolTip) {
         m_manuallySetToolTip = toolTip;
         super.setTitleToolTip(toolTip);
     }
-    
-    
+
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -711,14 +710,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (m_manager.getCustomName() != null) {
                 name += " (" + m_manager.getCustomName() + ")";
             }
-            return name; 
+            return name;
         }
     }
 
     private void setWorkflowManagerInput(final WorkflowManagerInput input) {
         m_parentEditor = input.getParentEditor();
         WorkflowManager wfm =
-                ((WorkflowManagerInput)input).getWorkflowManager();
+                (input).getWorkflowManager();
         setWorkflowManager(wfm);
         setPartName(input.getName());
         wfm.addListener(this);
@@ -738,7 +737,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     final NodeUIInformationEvent evt) {
                 updatePartName();
             }
-            
+
         });
         return;
     }
@@ -759,8 +758,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void updateActions() {
         // TODO: update here the actions in the action bar
-        // based on current selection 
-        // -> maybe solves the execute all enabled/disabled problem 
+        // based on current selection
+        // -> maybe solves the execute all enabled/disabled problem
         updateActions(m_editorActions);
     }
 
@@ -881,9 +880,46 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    /**
-     * {@inheritDoc}
+    /** Whether the dialog has passed the {@link #promptToSaveOnClose()} method.
+     * This helps us to distinguish whether we have to offer an exit dialog when
+     * executing nodes are not saveable.
+     * This flag is only true if the user closes the editor.
      */
+    private boolean m_isClosing;
+
+    /** Brings up the Save-Dialog and sets the m_isClosing flag.
+     * {@inheritDoc} */
+    @Override
+    public int promptToSaveOnClose() {
+        /* Ideally we would just set the m_isClosing flag and
+         *   return ISaveablePart2.DEFAULT
+         * which will bring up a separate dialog. This does not work as we
+         * have to set the m_isClosing only if the user presses YES (no means
+         * to figure out what button was pressed when eclipse opens the dialog).
+         */
+        String message = NLS.bind(WorkbenchMessages.
+                EditorManager_saveChangesQuestion, getTitle());
+        // Show a dialog.
+        Shell sh = Display.getDefault().getActiveShell();
+        String[] buttons = new String[] {
+                IDialogConstants.YES_LABEL,
+                IDialogConstants.NO_LABEL,
+                IDialogConstants.CANCEL_LABEL };
+            MessageDialog d = new MessageDialog(
+                sh, WorkbenchMessages.Save_Resource,
+                null, message, MessageDialog.QUESTION, buttons, 0);
+        switch (d.open()) { // returns index in buttons[] array
+        case 0: // YES
+            m_isClosing = true;
+            return ISaveablePart2.YES;
+        case 1: // NO
+            return ISaveablePart2.NO;
+        default: // CANCEL button or window 'x'
+            return ISaveablePart2.CANCEL;
+        }
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
@@ -929,9 +965,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             SaveWorkflowRunnable saveWorflowRunnable =
                     new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
-            
-            wasInProgress = m_manager.getState().executionInProgress();
-            
+
+            State state = m_manager.getState();
+            wasInProgress = state.executionInProgress()
+                && !state.equals(State.EXECUTINGREMOTELY);
+
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
             // and delete it
@@ -956,17 +994,19 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             public void run() {
                 try {
-                m_fileResource.getProject().refreshLocal(
+                    String projectName = m_fileResource.getProject().getName();
+                    monitor.setTaskName("Refreshing " + projectName + "...");
+                    m_fileResource.getProject().refreshLocal(
                         IResource.DEPTH_INFINITE,
                         monitor);
                 } catch (CoreException ce) {
-                    OperationCanceledException oce 
+                    OperationCanceledException oce
                         = new OperationCanceledException(
                                 "Workflow was not saved: " + ce.toString());
                     oce.initCause(ce);
                     throw oce;
                 }
-            }                
+            }
         });
 
 
@@ -989,18 +1029,39 @@ public class WorkflowEditor extends GraphicalEditor implements
         // or simply saves (Ctrl+S)
         if (wasInProgress) {
             markDirty();
+            final Pointer<Boolean> abortPointer = new Pointer<Boolean>();
+            abortPointer.set(Boolean.FALSE);
             Display.getDefault().syncExec(new Runnable() {
                 @Override
                 public void run() {
-                    MessageDialog.openInformation(
-                            Display.getDefault().getActiveShell(),
-                            "Workflow in execution",
-                            "Executing nodes are not saved!");
+                    boolean abort = false;
+                    Shell sh = Display.getDefault().getActiveShell();
+                    String title = "Workflow in execution";
+                    String message = "Executing nodes are not saved!";
+                    if (m_isClosing) {
+                        abort = !MessageDialog.openQuestion(sh, title,
+                                message + " Exit anyway?");
+                        m_isClosing = !abort; // user canceled close
+                    } else {
+                        IPreferenceStore prefStore =
+                            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                        String toogleMessage = "Don't warn me again";
+                        if (prefStore.getBoolean(PreferenceConstants.
+                                P_CONFIRM_EXEC_NODES_NOT_SAVED)) {
+                            MessageDialogWithToggle.openInformation(sh, title,
+                                    message, toogleMessage, false,
+                                    prefStore, PreferenceConstants.
+                                    P_CONFIRM_EXEC_NODES_NOT_SAVED);
+                        }
+                    }
+                    abortPointer.set(Boolean.valueOf(abort));
                 }
             });
-//            throw new OperationCanceledException(
-//                    "Workflow cannot be closed, while executing!");
-        } 
+            if (abortPointer.get()) {
+                throw new OperationCanceledException(
+                "Closing workflow canceled on user request.");
+            }
+        }
     }
 
     /**
@@ -1034,7 +1095,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     public boolean isDirty() {
         // if we are a subworkflow editor we are never dirty
         if (m_parentEditor != null) {
-            return false;
+            return m_parentEditor.isDirty();
         }
         return m_isDirty;
     }
@@ -1238,10 +1299,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Simple visitor, checks wheter the currently opened file has been renamed
+     * Simple visitor, checks whether the currently opened file has been renamed
      * and sets the new name in the editors' tab.
-     *
-     * @author Florian Georg, University of Konstanz
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
 
@@ -1258,10 +1317,11 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     final String newName = delta.getMovedToPath().segment(0);
-                    String oldName = m_fileResource.getName();
+                    String oldName = m_fileResource.getParent().getFullPath()
+                        .toString();
                     WorkflowEditor.this.m_manager.renameWorkflowDirectory(
                             newName);
-                    ProjectWorkflowMap.replace(newName, 
+                    ProjectWorkflowMap.replace(newName,
                             WorkflowEditor.this.m_manager, oldName);
                     Display.getDefault().syncExec(new Runnable() {
                         public void run() {
@@ -1272,7 +1332,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         }
                     });
 
-                } 
+                }
             }
 
             // we're only interested in deltas that are about "our" resource
@@ -1457,10 +1517,10 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
-    public void stateChanged(NodeStateEvent state) {
+    public void stateChanged(final NodeStateEvent state) {
         markDirty();
     }
 }

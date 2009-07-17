@@ -22,32 +22,47 @@
  */
 package org.knime.ext.sun.nodes.script.expression;
 
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardLocation;
+import javax.tools.JavaCompiler.CompilationTask;
+import javax.tools.JavaFileObject.Kind;
+
+import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.TimestampValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.ext.sun.nodes.script.JavaScriptingSettings;
-
-import com.sun.tools.javac.Main;
 
 
 /**
@@ -90,17 +105,13 @@ public final class Expression {
     /** Identifier for row count. */
     public static final String ROWCOUNT = "ROWCOUNT";
     
+    /** An unique id to ensure uniqueness of class names (per vm). */
+    private static final AtomicInteger COUNTER = new AtomicInteger();
 
     /** These imports are put in the import section of the source file. */
     private static final Collection<String> IMPORTS = Arrays
             .asList(new String[]{"java.text.*", "java.util.*", "java.io.*",
                     "java.net.*", "java.util.regex.*"});
-
-    /** Temp file to use. Must end with .java, passed in constructor. */
-    private final File m_javaFile;
-
-    /** Created class file, will be created and deleted in this class. */
-    private File m_classFile;
 
     /**
      * Properties, i.e. fields in the source file with their corresponding
@@ -117,7 +128,6 @@ public final class Expression {
      * @param body the expression body (Java)
      * @param fieldMap the property-names mapped to types, i.e. class name of
      *             the field that is available to the evaluated expression
-     * @param tempFile the temp file to write the java source to
      * @param settings To get information from, e.g. desired return type
      * @throws CompilationFailedException when the expression couldn't be
      *             compiled
@@ -126,13 +136,8 @@ public final class Expression {
      */
     private Expression(final String body, 
             final Map<InputField, ExpressionField> fieldMap,
-            final File tempFile, final JavaScriptingSettings settings)
+            final JavaScriptingSettings settings)
             throws CompilationFailedException {
-        if (!tempFile.getName().endsWith(".java")) {
-            throw new IllegalArgumentException("No java file: "
-                    + tempFile.getName());
-        }
-        m_javaFile = tempFile;
         m_fieldMap = fieldMap;
         m_compiled = createClass(body, settings);
     }
@@ -143,37 +148,23 @@ public final class Expression {
             throws CompilationFailedException {
         Class<?> rType = settings.getReturnType();
         int version = settings.getExpressionVersion();
-        String javaAbsoluteName;
-        String javaClassName;
-        String classAbsoluteName;
-        try {
-            String name = m_javaFile.getName();
-            javaClassName = name.substring(0, name.length() - ".java".length());
-            javaAbsoluteName = m_javaFile.getAbsolutePath();
-            // Generate the well known source of the Expression
-            String source;
-            switch (version) {
-            case VERSION_1X:
-                source = generateSourceVersion1(javaClassName, body, rType);
-                break;
-            case VERSION_2X:
-                source = generateSourceVersion2(javaClassName, body, rType);
-                break;
-            default:
-                throw new CompilationFailedException(
-                        "Unknown snippet version number: " + version);
-            }
-            BufferedWriter w = new BufferedWriter(new FileWriter(m_javaFile));
-            w.write(source);
-            w.close();
-        } catch (IOException ioe) {
-            CompilationFailedException c = new CompilationFailedException(
-                    "Unable to write java temp file.");
-            c.initCause(ioe);
-            throw c;
+        boolean isArrayReturn = settings.isArrayReturn();
+        String header = settings.getHeader();
+        String source;
+        String name = "Expression" + COUNTER.getAndIncrement();
+        // Generate the well known source of the Expression
+        switch (version) {
+        case VERSION_1X:
+            source = generateSourceVersion1(name, body, rType);
+            break;
+        case VERSION_2X:
+            source = generateSourceVersion2(
+                    name, body, header, rType, isArrayReturn);
+            break;
+        default:
+            throw new CompilationFailedException(
+                    "Unknown snippet version number: " + version);
         }
-        final StringWriter logString = new StringWriter();
-        final PrintWriter log = new PrintWriter(logString);
         ArrayList<String> compileArgs = new ArrayList<String>();
         String[] additionalJars = settings.getJarFiles();
         // first url is reserved for resulting class file
@@ -203,47 +194,52 @@ public final class Expression {
             }
             compileArgs.add(b.toString());
         }
-        compileArgs.add(javaAbsoluteName);
-        String[] compArgsArrays = compileArgs.toArray(new String[0]);
-        // compile the classes
-        if (Main.compile(compArgsArrays, log) != 0) {
-            throw new CompilationFailedException("Unable to compile \"" + body
-                    + "\":\n" + logString.toString());
-        }
-        classAbsoluteName = javaAbsoluteName.substring(
-                0, javaAbsoluteName.length() - ".java".length()) + ".class";
-        m_classFile = new File(classAbsoluteName);
-        assert (m_classFile.exists());
-        m_classFile.deleteOnExit();
-        Class<?> compiled;
-        try {
-            URL url = m_classFile.getParentFile().toURI().toURL();
-            classPath[0] = url;
-            ClassLoader load = URLClassLoader.newInstance(classPath);
-            compiled = load.loadClass(javaClassName);
-        } catch (MalformedURLException mue) {
-            CompilationFailedException c = new CompilationFailedException(
-                    "Can't determine URL of class file " + classAbsoluteName);
-            c.initCause(mue);
-            throw c;
-        } catch (ClassNotFoundException cfe) {
-            StringBuilder addInfo = new StringBuilder("(Class file ");
-            addInfo.append(m_classFile.getAbsolutePath());
-            if (m_classFile.exists()) {
-                addInfo.append(" does exist - ");
-                addInfo.append(m_classFile.length());
-                addInfo.append(" bytes");
-            } else {
-                addInfo.append(" does not exist");
+        compileArgs.add("-nowarn");
+        final StringWriter logString = new StringWriter();
+        JavaCompiler compiler = new EclipseCompiler();
+        DiagnosticCollector<JavaFileObject> digsCollector = 
+            new DiagnosticCollector<JavaFileObject>();
+        JavaFileObject jfo = new InMemoryJavaSourceFileObject(name, source);
+        InMemoryJavaFileManager fileMgr = new InMemoryJavaFileManager(
+                compiler.getStandardFileManager(digsCollector, null, null));
+        CompilationTask compileTask = compiler.getTask(logString, fileMgr, 
+                digsCollector, compileArgs, null, Collections.singleton(jfo));
+        if (compileTask.call()) {
+            try {
+                return fileMgr.loadGeneratedClass(name);
+            } catch (ClassNotFoundException e) {
+                throw new CompilationFailedException(
+                        "Could not load generated class", e);
             }
-            addInfo.append(")");
-            CompilationFailedException c = new CompilationFailedException(
-                    "Can't load class file " + classAbsoluteName
-                    + addInfo.toString());
-            c.initCause(cfe);
-            throw c;
+        } else {
+            boolean hasDiagnostic = false;
+            LOGGER.debug("<<<< Expression Start >>>>");
+            logDebugPreserveLineBreaks(source);
+            LOGGER.debug("<<<< Expression End >>>>");
+            StringBuilder b = new StringBuilder("Unable to compile expression");
+            for (Diagnostic<? extends JavaFileObject> d 
+                    : digsCollector.getDiagnostics()) {
+                switch (d.getKind()) {
+                case ERROR:
+                    hasDiagnostic = true;
+                    b.append("\nERROR at line ").append(d.getLineNumber());
+                    b.append("\n").append(d.getMessage(null));
+                    break;
+                default:
+                    break;
+                }
+            }
+            String errorOut = logString.toString();
+            if (!hasDiagnostic) {
+                b.append("\n").append(errorOut);
+            } else {
+                if (!errorOut.isEmpty()) {
+                    LOGGER.debug("Error output of compilation: ");
+                    LOGGER.debug(errorOut);
+                }
+            }
+            throw new CompilationFailedException(b.toString());
         }
-        return compiled;
     }
 
     /**
@@ -273,7 +269,7 @@ public final class Expression {
     /*
      * Creates the source for given expression classname, body & properties.
      */
-    private String generateSourceVersion1(final String filename, 
+    private String generateSourceVersion1(final String name, 
             final String body, final Class<?> rType) {
         String copy = body;
         StringBuilder buffer = new StringBuilder(4096);
@@ -287,7 +283,7 @@ public final class Expression {
             buffer.append("\n");
         }
     
-        buffer.append("public class " + filename + " {");
+        buffer.append("public class " + name + " {");
         buffer.append("\n");
         buffer.append("\n");
     
@@ -295,7 +291,7 @@ public final class Expression {
         for (ExpressionField type : m_fieldMap.values()) {
             buffer.append("  public ");
             buffer.append(type.getFieldClass().getSimpleName());
-            buffer.append(" " + type.getExpressionFieldName() + ";");
+            buffer.append(" " + type.getFieldNameInJava() + ";");
             buffer.append("\n");
         }
         buffer.append("\n");
@@ -336,8 +332,9 @@ public final class Expression {
     /*
      * Creates the source for given expression classname, body & properties.
      */
-    private String generateSourceVersion2(final String filename, 
-            final String body, final Class<?> rType) {
+    private String generateSourceVersion2(final String name, final String body,
+            final String header, final Class<?> rType, 
+            final boolean isArrayReturn) {
         StringBuilder buffer = new StringBuilder(4096);
 
         /* Generate header */
@@ -349,7 +346,7 @@ public final class Expression {
             buffer.append("\n");
         }
 
-        buffer.append("public class " + filename + " {");
+        buffer.append("public class " + name + " {");
         buffer.append("\n");
         buffer.append("\n");
 
@@ -357,15 +354,20 @@ public final class Expression {
         for (ExpressionField type : m_fieldMap.values()) {
             buffer.append("  public ");
             buffer.append(type.getFieldClass().getSimpleName());
-            buffer.append(" " + type.getExpressionFieldName() + ";");
+            buffer.append(" " + type.getFieldNameInJava() + ";");
             buffer.append("\n");
         }
         buffer.append("\n");
+        
+        if (header != null && header.length() > 0) {
+            buffer.append(header).append("\n");
+        }
 
         /* Add body */
         // And the evaluation method
         buffer.append("  public ");
         buffer.append(rType.getName());
+        buffer.append(isArrayReturn ? "[]" : "");
         buffer.append(" internalEvaluate() {");
         buffer.append("\n");
 
@@ -389,20 +391,28 @@ public final class Expression {
     public static String createColField(final int col) {
         return "col" + col;
     }
-
+    
+    /** 
+     * Get the field name, i.e. the name of the global variable. 
+     * @param name The name of field (plain)
+     * @return "__" + name;
+     */
+    public static String getJavaFieldName(final String name) {
+        return "__" + name;
+    }
+    
     /**
      * Tries to compile the given expression as entered in the dialog with the
      * current spec.
      *
      * @param settings Contains node model settings, e.g. expression
      * @param spec the spec
-     * @param tempFile the file to use
      * @return the java expression
      * @throws CompilationFailedException if that fails
      * @throws InvalidSettingsException if settings are missing
      */
     public static Expression compile(final JavaScriptingSettings settings,
-            final DataTableSpec spec, final File tempFile)
+            final DataTableSpec spec)
             throws CompilationFailedException, InvalidSettingsException {
         String expression = settings.getExpression();
         int ver = settings.getExpressionVersion();
@@ -485,7 +495,7 @@ public final class Expression {
                         ExpressionField expField =
                             new ExpressionField(expFieldName, expFieldClass);
                         nameValueMap.put(inputField, expField);
-                        correctedExp.append(expFieldName);
+                        correctedExp.append(getJavaFieldName(expFieldName));
                     } else {
                         correctedExp.append(s);
                     }
@@ -526,24 +536,30 @@ public final class Expression {
                         expFieldName = createColField(colIndex);
                         DataType colType =
                             spec.getColumnSpec(colIndex).getType();
-                        correctedExp.append(expFieldName);
+                        correctedExp.append(getJavaFieldName(expFieldName));
                         boolean isArray = colType.isCollectionType();
                         if (isArray) {
                             colType = colType.getCollectionElementType();
                         }
                         if (colType.isCompatible(IntValue.class)) {
                             if (isArray) {
-                                expFieldClass = int[].class;
+                                expFieldClass = Integer[].class;
                             } else {
                                 expFieldClass = Integer.class;
                                 correctedExp.append(".intValue()");
                             }
                         } else if (colType.isCompatible(DoubleValue.class)) {
                             if (isArray) {
-                                expFieldClass = double[].class;
+                                expFieldClass = Double[].class;
                             } else {
                                 expFieldClass = Double.class;
                                 correctedExp.append(".doubleValue()");
+                            }
+                        } else if (colType.isCompatible(TimestampValue.class)) {
+                            if (isArray) {
+                                expFieldClass = Date[].class;
+                            } else {
+                                expFieldClass = Date.class;
                             }
                         } else {
                             if (isArray) {
@@ -571,7 +587,116 @@ public final class Expression {
 
         }
         String body = correctedExp.toString();
-        return new Expression(body, nameValueMap, tempFile, settings);
+        return new Expression(body, nameValueMap, settings);
+    }
+
+    private static final class InMemoryJavaFileManager 
+        extends ForwardingJavaFileManager<JavaFileManager> {
+        
+        private final Map<String, InMemoryJavaClassFileObject> m_classMap;
+
+        /**
+         * @param delegate
+         */
+        protected InMemoryJavaFileManager(final JavaFileManager delegate) {
+            super(delegate);
+            m_classMap = new HashMap<String, InMemoryJavaClassFileObject>();
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public JavaFileObject getJavaFileForOutput(final Location location, 
+                final String className, final Kind kind,
+                final FileObject sibling) throws IOException {
+            if (StandardLocation.CLASS_OUTPUT.equals(location) 
+                    && JavaFileObject.Kind.CLASS.equals(kind)) {
+                InMemoryJavaClassFileObject clazz = 
+                    new InMemoryJavaClassFileObject(className);
+                m_classMap.put(className, clazz);
+                return clazz;
+            } else {
+                return super.getJavaFileForOutput(
+                        location, className, kind, sibling);
+            }
+        }
+        
+        public Class<?> loadGeneratedClass(final String name) 
+            throws ClassNotFoundException {
+            InMemoryJavaClassFileObject classObject = m_classMap.get(name);
+            if (classObject == null) {
+                throw new RuntimeException("Couldn't locate generated class");
+            }
+            return classObject.loadGeneratedClass();
+        }
+    }
+    
+    /** {@link JavaFileObject} that keeps the source in memory (a string). */
+    private static final class InMemoryJavaSourceFileObject 
+    extends SimpleJavaFileObject {
+        
+        private final String m_source;
+        
+        /** Constructs new java file object.
+         * @param name The name of the source file (no file is created though).
+         * @param source The source content.
+         */
+        InMemoryJavaSourceFileObject(final String name, final String source) {
+            super(URI.create("file:/" + name.replace('.', '/') 
+                    + Kind.SOURCE.extension), Kind.SOURCE);
+            m_source = source;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public CharSequence getCharContent(final boolean ignoreEncodingErrors)
+                throws IOException {
+            return m_source; 
+        }
+    }
+    
+    /** {@link JavaFileObject} that keeps the generated class in memory. */
+    private static final class InMemoryJavaClassFileObject 
+    extends SimpleJavaFileObject {
+        
+        private ByteArrayOutputStream m_classStream;
+        private final String m_name;
+        
+        /** Constructs new java class file object.
+         * @param name The name of the class file.
+         */
+        InMemoryJavaClassFileObject(final String name) {
+            super(URI.create("file:/" + name.replace('.', '/') 
+                    + Kind.CLASS.extension), Kind.CLASS);
+            m_name = name;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public OutputStream openOutputStream() throws IOException {
+            m_classStream = new ByteArrayOutputStream();
+            return m_classStream;
+        }
+        
+        /**
+         * @return The class generated by this file object 
+         *         (the expression instance)
+         * @throws ClassNotFoundException If that's not possible for any reason.
+         */
+        public Class<?> loadGeneratedClass() throws ClassNotFoundException {
+            return new ClassLoader(
+                    Thread.currentThread().getContextClassLoader()) {
+                /** {@inheritDoc} */
+                @Override
+                protected Class<?> findClass(final String name)
+                        throws ClassNotFoundException {
+                    if (name.equals(m_name)) {
+                        byte[] bytes = m_classStream.toByteArray();
+                        return defineClass(name, bytes, 0, bytes.length);
+                    }
+                    return super.findClass(name);
+                }
+            } .loadClass(m_name);
+        }
     }
     
     /** Object that pairs the name of the field used in the temporarily created
@@ -593,8 +718,8 @@ public final class Expression {
         }
         
         /** @return the expressionFieldName */
-        public String getExpressionFieldName() {
-            return m_expressionFieldName;
+        public String getFieldNameInJava() {
+            return getJavaFieldName(m_expressionFieldName);
         }
         
         /** @return the field class. */
@@ -661,6 +786,23 @@ public final class Expression {
             InputField f = (InputField)obj;
             return f.m_fieldType.equals(m_fieldType) 
                 && f.m_colOrVarName.equals(m_colOrVarName);
+        }
+    }
+    
+    private static void logDebugPreserveLineBreaks(final String log) {
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
+        BufferedReader reader = new BufferedReader(new StringReader(log));
+        String token;
+        int i = 1;
+        try {
+            while ((token = reader.readLine()) != null) {
+                LOGGER.debug(i++ + ": " + token);
+            }
+            reader.close();
+        } catch (IOException e) {
+            LOGGER.fatal("Unexpected IOException while reading String", e);
         }
     }
 

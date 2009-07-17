@@ -116,7 +116,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
     /**
      * {@inheritDoc}
      */
-    public ScopeObjectStack getScopeContextStackContainer() {
+    @Override
+    public ScopeObjectStack getScopeObjectStack() {
         ScopeObjectStack st = m_snc.getNode().getScopeContextStackContainer();
         if (m_snc.getLoopRole().equals(LoopRole.END)) {
             // FIXME: this also pops variables, which were added from the loop
@@ -168,7 +169,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
                     + m_snc.getDisplayLabel());
         }
         m_portView.openView();
-        m_portView.update(getPortObject(), getPortObjectSpec());
+        m_portView.update(getPortObject(), getPortObjectSpec(), 
+                getScopeObjectStack());
     }
 
     /** {@inheritDoc} */
@@ -243,7 +245,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
             notifyNodeStateChangeListener(state);
             if (m_portView != null) {
                 try {
-                    m_portView.update(getPortObject(), getPortObjectSpec());
+                    m_portView.update(getPortObject(), getPortObjectSpec(), 
+                            getScopeObjectStack());
                 } catch (Exception e) {
                     NodeLogger.getLogger(getClass()).error(
                             "Failed to update port view.", e);

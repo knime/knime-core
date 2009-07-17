@@ -29,8 +29,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -65,6 +67,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private static final NodeSettingsRO EMPTY_SETTINGS = 
         new NodeSettings("<<empty>>");
 
+    private String m_versionString;
     private final TreeMap<Integer, NodeContainerPersistor> 
         m_nodeContainerLoaderMap;
 
@@ -79,8 +82,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_inPortsBarUIInfo;
     private UIInformation m_outPortsBarUIInfo;
     
-    private String m_loadVersion;
     private String m_name;
+    private List<ScopeVariable> m_workflowVariables;
     
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -96,12 +99,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return result;
     }
     
-    WorkflowPersistorVersion1xx(
-            final HashMap<Integer, ContainerTable> tableRep) {
+    WorkflowPersistorVersion1xx(final HashMap<Integer, ContainerTable> tableRep,
+            final String versionString) {
         m_globalTableRepository = tableRep;
+        m_versionString = versionString;
         m_nodeContainerLoaderMap = 
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
+    }
+    
+    protected final String getVersionString() {
+        return m_versionString;
     }
     
     protected NodeLogger getLogger() {
@@ -110,7 +118,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     /** {@inheritDoc} */
     public String getLoadVersion() {
-        return m_loadVersion;
+        return getVersionString();
     }
     
     /**
@@ -158,6 +166,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
+    @Override
+    public List<ScopeVariable> getWorkflowVariables() {
+        return m_workflowVariables;
+    }
+    
+    /** {@inheritDoc} */
     public WorkflowPortTemplate[] getInPortTemplates() {
         return m_inPortTemplates;
     }
@@ -196,6 +210,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_isDirtyAfterLoad;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return false;
+    }
+    
     /** Mark node as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
@@ -203,10 +223,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef, 
-            final NodeSettingsRO parentSettings) 
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef, 
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) 
     throws InvalidSettingsException, IOException {
-        LoadResult loadResult = new LoadResult();
         if (nodeFileRef == null || !nodeFileRef.getFile().isFile()) {
             setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + nodeFileRef + "\"";
@@ -236,13 +255,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowDir = parentRef;
 
         try {
-            m_loadVersion = loadVersion(m_workflowSett);
+            m_versionString = loadVersion(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load version string: " + e.getMessage();
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
             // this will enforce the WFM to save everything from scratch
-            m_loadVersion = "1.3.0";
+            // (this is tough problem; pretty much everything can go wrong
+            // in the following... can't guess load version)
+            m_versionString = "1.3.0";
         }
         
         try {
@@ -250,9 +272,23 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow name: " + e.getMessage();
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
             m_name = "Workflow";
         }
+        
+        try {
+            m_workflowVariables = loadWorkflowVariables(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = 
+                "Unable to load workflow variables: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_workflowVariables = Collections.emptyList();
+        }
+        
+        
         NodeSettingsRO metaFlowParentSettings = 
             new NodeSettings("fake_parent_settings");
         try {
@@ -260,12 +296,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (IOException e1) {
             String error = "Errors reading settings file: " + e1.getMessage();
             getLogger().warn(error, e1);
+            setDirtyAfterLoad();
             loadResult.addError(error);
         }
-        LoadResult metaLoadResult = m_metaPersistor.load(
-                subWFSettings, metaFlowParentSettings);
-        if (metaLoadResult.hasEntries()) {
-            loadResult.addError(metaLoadResult);
+        boolean isResetRequired = m_metaPersistor.load(
+                subWFSettings, metaFlowParentSettings, loadResult);
+        if (isResetRequired) {
             setNeedsResetAfterLoad();
         }
         if (m_metaPersistor.isDirtyAfterLoad()) {
@@ -282,6 +318,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow ports, config not found";
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
             setNeedsResetAfterLoad();
         }
@@ -296,17 +333,20 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Can't load workflow inport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 setNeedsResetAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= inPortCount) {
+                setDirtyAfterLoad();
                 loadResult.addError("Invalid inport index " + index);
                 setNeedsResetAfterLoad();
                 continue;
             }
             if (m_inPortTemplates[index] != null) {
+                setDirtyAfterLoad();
                 loadResult.addError(
                         "Duplicate inport definition for index: " + index);
             }
@@ -314,6 +354,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         for (int i = 0; i < m_inPortTemplates.length; i++) {
             if (m_inPortTemplates[i] == null) {
+                setDirtyAfterLoad();
                 loadResult.addError("Assigning fallback port type for "
                         + "missing input port " + i);
                 m_inPortTemplates[i] = 
@@ -331,6 +372,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             String error = "Can't load workflow out ports, config not found: "
                 + e.getMessage();
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
         }
         int outPortCount = outPortsEnum.keySet().size();
@@ -344,17 +386,20 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Can't load workflow outport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 setNeedsResetAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= outPortCount) {
+                setDirtyAfterLoad();
                 loadResult.addError("Invalid inport index " + index);
                 setNeedsResetAfterLoad();
                 continue;
             }
             if (m_outPortTemplates[index] != null) {
+                setDirtyAfterLoad();
                 loadResult.addError(
                         "Duplicate outport definition for index: " + index);
             }
@@ -362,30 +407,26 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         for (int i = 0; i < m_outPortTemplates.length; i++) {
             if (m_outPortTemplates[i] == null) {
+                setDirtyAfterLoad();
                 loadResult.addError("Assigning fallback port type for "
                         + "missing output port " + i);
                 m_outPortTemplates[i] = 
                     new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
         }
-        if (loadResult.hasEntries()) {
-            setDirtyAfterLoad();
-        }
-        return loadResult;
     }
     
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
+    public void loadNodeContainer(
             final Map<Integer, BufferedDataTable> tblRep, 
-            final ExecutionMonitor exec) 
+            final ExecutionMonitor exec, final LoadResult loadResult) 
             throws CanceledExecutionException, IOException {
         if (m_workflowDir == null || m_workflowSett == null) {
             setDirtyAfterLoad();
             throw new IllegalStateException("The method preLoadNodeContainer "
                     + "has either not been called or failed");
         }
-        LoadResult loadResult = new LoadResult();
         /* read nodes */
         NodeSettingsRO nodes;
         try {
@@ -398,7 +439,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             setDirtyAfterLoad();
             setNeedsResetAfterLoad();
             // stop loading here
-            return loadResult;
+            return;
         }
         exec.setMessage("node information");
         /* Load nodes */
@@ -410,6 +451,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Unable to load settings for node with internal "
                     + "id \"" + nodeKey + "\": " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
@@ -425,6 +467,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + nodeKey + "\"), trying random number " + nodeIDSuffix
                     + "instead: " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
             }
             boolean isMeta;
@@ -435,6 +478,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "with id suffix " + nodeIDSuffix + ", attempting to read"
                     + "ordinary (not-meta) node: " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 isMeta = false;
             }
@@ -453,6 +497,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "to node with ID suffix " + nodeIDSuffix
                     + ", no UI information available: " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 uiInfoClassName = null;
             }
@@ -467,6 +512,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                             + ", no UI information available: " 
                             + e.getMessage();
                         getLogger().debug(error, e);
+                        setDirtyAfterLoad();
                         loadResult.addError(error);
                         uiInfo = null;
                     }
@@ -479,17 +525,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Unable to load settings for node " 
                     + "with ID suffix " + nodeIDSuffix + ": " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
             try {
-                LoadResult childResult =
-                    persistor.preLoadNodeContainer(nodeFile, nodeSetting);
-                if (childResult.hasEntries()) {
-                    loadResult.addError("Errors during loading "
-                            + (isMeta ? "meta " : "") + "node "
-                            + "with ID suffix " + nodeIDSuffix, childResult);
-                }
+                LoadResult childResult = new LoadResult((isMeta ? "meta " : "")
+                        + "node with ID suffix " + nodeIDSuffix);
+                persistor.preLoadNodeContainer(
+                        nodeFile, nodeSetting, childResult);
+                loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error = "Unable to load node with ID suffix " 
                         + nodeIDSuffix + " into workflow, skipping it: "
@@ -500,12 +545,14 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 } else {
                     getLogger().error(error, e);
                 }
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
             NodeContainerMetaPersistor meta = persistor.getMetaPersistor();
             if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
                 int randomID = getRandomNodeID();
+                setDirtyAfterLoad();
                 loadResult.addError("Duplicate id encountered in workflow: " 
                         + nodeIDSuffix + ", uniquifying to random id " 
                         + randomID + ", this possibly screws the connections");
@@ -531,6 +578,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             String error = "Can't load workflow connections, config not found: "
                 + e.getMessage();
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
             connections = EMPTY_SETTINGS;
         }
@@ -542,12 +590,14 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Can't load connection with internal ID \""
                     + connectionKey + "\": " + e.getMessage();
                 getLogger().debug(error, e);
+                setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
             int sourceIDSuffix = c.getSourceSuffix();
             if (!m_nodeContainerLoaderMap.containsKey(sourceIDSuffix)
                     && sourceIDSuffix != -1) {
+                setDirtyAfterLoad();
                 loadResult.addError("Unable to load node connection " + c
                         + ", source node does not exist");
             }
@@ -555,10 +605,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             NodeContainerPersistor targetNodePersistor = 
                 m_nodeContainerLoaderMap.get(targetIDSuffix);
             if (targetNodePersistor == null && targetIDSuffix != -1) {
+                setDirtyAfterLoad();
                 loadResult.addError("Unable to load node connection " + c
                         + ", destination node does not exist");
-            } else if (targetNodePersistor instanceof 
-                    SingleNodeContainerPersistorVersion1xx) {
+            } else if (targetNodePersistor 
+                    instanceof SingleNodeContainerPersistorVersion1xx) {
                 /* workflows saved with 1.x.x have misleading port indices for
                  * incoming ports. Data ports precede the model ports (in
                  * their index), although the GUI and the true ordering is
@@ -572,6 +623,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
                 
             if (!m_connectionSet.add(c)) {
+                setDirtyAfterLoad();
                 loadResult.addError(
                         "Duplicate connection information: " + c);
             }
@@ -589,6 +641,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 "Unable to load class name for inport bar's "
                     + "UI information: " + e.getMessage();
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             loadResult.addError(error);
         }
         if (uiInfoClassName != null) {
@@ -601,6 +654,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         "Unable to load inport bar's UI information: "
                         + e.getMessage();
                     getLogger().debug(error, e);
+                    setDirtyAfterLoad();
                     loadResult.addError(error);
                     inPortsBarUIInfo = null;
                 }
@@ -620,6 +674,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     "Unable to load class name for outport bar's UI information"
                             + ", no UI information available: "
                             + e.getMessage();
+            setDirtyAfterLoad();
             getLogger().debug(error, e);
             loadResult.addError(error);
         }
@@ -633,6 +688,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         "Unable to load outport bar's UI information: "
                         + e.getMessage();
                     getLogger().debug(error, e);
+                    setDirtyAfterLoad();
                     loadResult.addError(error);
                     outPortsBarUIInfo = null;
                 }
@@ -640,10 +696,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         m_outPortsBarUIInfo = outPortsBarUIInfo;
         exec.setProgress(1.0);
-        if (loadResult.hasEntries()) {
-            setDirtyAfterLoad();
-        }
-        return loadResult;
     }
     
     protected NodeSettingsRO readParentSettings() throws IOException {
@@ -839,6 +891,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return "Workflow Manager";
     }
 
+    /**
+     * Load workflow variables (not available in 1.3.x flows).
+     * @param settings To load from.
+     * @return The variables in a list.
+     * @throws InvalidSettingsException If any settings-related error occurs.
+     */
+    protected List<ScopeVariable> loadWorkflowVariables(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return Collections.emptyList();
+    }
+
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return null;
@@ -882,12 +945,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     protected SingleNodeContainerPersistorVersion1xx 
             createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion1xx(this);
+        return new SingleNodeContainerPersistorVersion1xx(
+                this, getVersionString());
     }
 
     protected WorkflowPersistorVersion1xx createWorkflowPersistor() {
         return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(
-                getGlobalTableRepository());
+                getGlobalTableRepository(), getVersionString());
     }
     
     private int getRandomNodeID() {

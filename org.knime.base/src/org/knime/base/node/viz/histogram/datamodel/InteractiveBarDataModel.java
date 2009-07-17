@@ -25,10 +25,10 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import java.awt.Color;
-import java.util.SortedSet;
-
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+
+import java.awt.Color;
+import java.util.List;
 
 /**
  * This class extends the {@link BarDataModel} to support hiliting.
@@ -60,7 +60,7 @@ public class InteractiveBarDataModel extends BarDataModel {
      */
     @Override
     public void updateBarWidth(final int startX, final int barWidth,
-            final SortedSet<Color> barElementColors, final int baseLine,
+            final List<Color> barElementColors, final int baseLine,
             final HistogramHiliteCalculator calculator) {
         super.updateBarWidth(startX, barWidth, barElementColors,
                 baseLine, calculator);

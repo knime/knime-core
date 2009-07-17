@@ -31,6 +31,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -106,19 +107,15 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
-
-        // TODO: we have to check if at least one node of the selection
-        // has nrOfViews > 0 && if at least one node is configured
-
-        // only if just one node part is selected
-        if (parts.length != 1) {
-            return false;
+        // enable if we have at least one executable node in our selection
+        WorkflowManager wm = getEditor().getWorkflowManager();
+        for (int i = 0; i < parts.length; i++) {
+            NodeContainer nc = parts[i].getNodeContainer();
+            if (wm.canExecuteNode(nc.getID()) && nc.getNrViews() > 0) {
+                return true;
+            }
         }
-
-        // check if there is at least one view
-        return parts[0].getNodeContainer().getState().equals(
-                NodeContainer.State.CONFIGURED)
-                && parts[0].getNodeContainer().getNrViews() > 0;
+        return false;
     }
 
     /**
