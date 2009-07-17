@@ -1168,6 +1168,32 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
+     * Re-configure all configured nodes in this workflow to make sure that
+     * new workflow variables are spread accordingly.
+     */
+    void reconfigureAll() {
+        synchronized (m_workflowMutex) {
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                boolean hasNonParentPredecessors = false;
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsByDest(id)) {
+                    if (!cc.getSource().equals(this.getID())) {
+                        hasNonParentPredecessors = true;
+                        break;
+                    }
+                }
+                if (!hasNonParentPredecessors) {
+                    if (getNodeContainer(id).getState()
+                            .equals(State.CONFIGURED)) {
+                        // re-configure yellow nodes only
+                        configureNodeAndSuccessors(id, true);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Reset all nodes in this workflow.
      * Note that this routine will NOT trigger any resets connected to
      * possible outports of this WFM.
@@ -4325,6 +4351,11 @@ public final class WorkflowManager extends NodeContainer {
                 // Note that resetAll also needs to configure non-executed
                 // nodes in order to spread those new variables correctly!
                 resetAll();
+            } else {
+                // otherwise only configure already configured nodes. This
+                // is required to make sure they rebuild their
+                // ScopeObjectStack!
+                reconfigureAll();
             }
             setDirty();
         }
