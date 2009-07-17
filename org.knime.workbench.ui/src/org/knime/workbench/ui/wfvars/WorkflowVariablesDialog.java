@@ -333,7 +333,7 @@ public class WorkflowVariablesDialog extends Dialog {
     }
     
     
-    private void replaceWorkflowVariables() {
+    private void replaceWorkflowVariables(final boolean skipReset) {
         List<ScopeVariable> toBeRemoved = new ArrayList<ScopeVariable>();
         toBeRemoved.addAll(m_workflow.getWorkflowVariables()); 
         toBeRemoved.removeAll(m_table.getVariables());
@@ -341,9 +341,9 @@ public class WorkflowVariablesDialog extends Dialog {
             m_workflow.removeWorkflowVariable(v.getName());
         }
         // replace
-        for (ScopeVariable v : m_table.getVariables()) {
-            m_workflow.addWorkflowVariable(v, true);
-        }
+        ScopeVariable[] vars = new ScopeVariable[m_table.getVariables().size()];
+        m_workflow.addWorkflowVariables(skipReset, 
+                m_table.getVariables().toArray(vars));
     }
 
     /**
@@ -361,11 +361,7 @@ public class WorkflowVariablesDialog extends Dialog {
             // 2. reset -> add table content to WFM and do reset
             // 3. cancel -> do nothing
             if (returnCode == RESET_IDX || returnCode == SKIP_RESET_IDX) {
-                replaceWorkflowVariables();
-                if (returnCode == RESET_IDX) {
-                    m_workflow.resetAll();
-                }
-                // close dialog
+                replaceWorkflowVariables(returnCode == SKIP_RESET_IDX);
             } else {
                 // CANCEL -> let dialog open
                 return;
