@@ -1140,7 +1140,7 @@ public final class WorkflowManager extends NodeContainer {
      * Also re-configure not executed nodes the same way to make sure that
      * new workflow variables are spread accordingly.
      */
-    void resetAll() {
+    public void resetAll() {
         synchronized (m_workflowMutex) {
             for (NodeID id : m_workflow.getNodeIDs()) {
                 boolean hasNonParentPredecessors = false;
