@@ -190,14 +190,56 @@
             icon="icons/missing.gif"
             level-id="misc"
             name="Misc"
-            path="/"/>      
+            path="/"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="column-split+combine"
+            name="Split &amp; Combine"
+            path="/manipulation/column">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="column-filter"
+            name="Filter"
+            path="/manipulation/column">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="column-transform"
+            name="Transform"
+            path="/manipulation/column">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="binning"
+            name="Binning"
+            path="/manipulation/column">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="column-convert+replace"
+            name="Convert &amp; Replace"
+            path="/manipulation/column">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="row-filter"
+            name="Filter"
+            path="/manipulation/row">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="row-transform"
+            name="Transform"
+            path="/manipulation/row">
+      </category>      
    </extension>
             
      <extension
          point="org.knime.workbench.repository.nodes">
       <node
             factory-class="org.knime.base.node.mine.smote.SmoteNodeFactory"
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             id="org.knime.base.node.mine.smote.SmoteNodeFactory"/>
       <node
             category-path="/io/read"
@@ -249,12 +291,12 @@
             id="org.knime.base.node.mine.scorer.scorer.AccuracyScorerNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory"
             id="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/binning"
             factory-class="org.knime.base.node.preproc.binner.BinnerNodeFactory"
             id="org.knime.base.node.preproc.binner.BinnerNodeFactory"/>
       <node
@@ -290,11 +332,11 @@
             factory-class="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
             id="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"
             id="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.split.SplitNodeFactory"
             id="org.knime.base.node.preproc.split.SplitNodeFactory"/>
       <node
@@ -303,7 +345,7 @@
             category-path="/io/write"
             id="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"/>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.sorter.SorterNodeFactory"
             id="org.knime.base.node.preproc.sorter.SorterNodeFactory"/>
       <node
@@ -316,32 +358,32 @@
             factory-class="org.knime.base.node.viz.statistics.StatisticsNodeFactory"
             id="org.knime.base.node.viz.statistics.StatisticsNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
             id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>
      <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"
             id="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"/>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.sample.SamplingNodeFactory"
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.partition.PartitionNodeFactory"
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
       <node
             category-path="/mining/clustering"
@@ -349,7 +391,7 @@
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.missingval.MissingValueHandlingNodeFactory"
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             id="org.knime.base.node.preproc.missingval.MissingValueHandlingNodeFactory"/>
       <node
             category-path="/mining/nn/mlp"
@@ -382,7 +424,7 @@
             factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
@@ -416,7 +458,7 @@
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
      <node
-           category-path="/manipulation/row"
+           category-path="/manipulation/row/row-transform"
            factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
            id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
      <node
@@ -428,7 +470,7 @@
            factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
      <node
-           category-path="/manipulation/column"
+           category-path="/manipulation/column/column-transform"
            factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"
            id="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"/>
      <node
@@ -452,16 +494,17 @@
            factory-class="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"
            id="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
      <node
-           category-path="/manipulation/row"
+           category-path="/manipulation/row/row-filter"
            factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
            id="org.knime.base.node.preproc.hilite"/>
     <node
-		 category-path="/manipulation/column"
+         after="org.knime.base.node.preproc.binner.BinnerNodeFactory"
+		 category-path="/manipulation/column/binning"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
          after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeFactory"
-   		 category-path="/manipulation/column"
+   		 category-path="/manipulation/column/binning"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
     <node
@@ -500,11 +543,11 @@
             id="org.knime.base.node.mine.decisiontree2.learner.DecisionTreeLearnerNodeFactory">
       </node>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
             id="org.knime.base.node.preproc.groupby.GroupByNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.pivot.PivotNodeFactory"
             id="org.knime.base.node.preproc.pivot.PivotNodeFactory"/>
       <node
@@ -525,7 +568,7 @@
             factory-class="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"
             id="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory "/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"
             id="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"/>
       <node
@@ -555,49 +598,51 @@
             id="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"
             id="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"/>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"
             id="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
             id="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"
             id="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"
             id="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"
             id="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
             id="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>
-      <node
-            category-path="/manipulation/column"
+      <node  
+            after="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
             id="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory"
             id="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            after="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory"
             id="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
             id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
       </node>
@@ -659,7 +704,7 @@
             factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
             id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
             id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">
       </node>
@@ -668,22 +713,24 @@
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
-            category-path="/manipulation/column"
+            after="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory"
+            category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
       </node>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
        <node
-             category-path="/manipulation/column"
+             category-path="/manipulation/column/column-split+combine"
              factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
              id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
        </node>
        <node
-             category-path="/manipulation/column"
+             after="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
+             category-path="/manipulation/column/column-split+combine"
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
@@ -694,7 +741,7 @@
             id="org.knime.base.node.io.PMMLReaderNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
             id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
       </node>
@@ -705,7 +752,7 @@
             id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
       </node>
       <node
-            category-path="manipulation/column"
+            category-path="manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
             id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
       </node>
@@ -715,7 +762,7 @@
             id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
             id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
@@ -850,7 +897,7 @@
             id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
-            category-path="manipulation/row"
+            category-path="manipulation/row/row-filter"
             expert-flag="false"
             factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
