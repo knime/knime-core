@@ -3189,6 +3189,27 @@ public final class WorkflowManager extends NodeContainer {
         }
         return nc;
     }
+    
+    /**
+     * @return list of errors messages (list empty if none exist)
+     */
+    public List<NodeMessage> getNodeErrorMessages() {
+        ArrayList<NodeMessage> result = new ArrayList<NodeMessage>();
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc instanceof SingleNodeContainer) {
+                if (nc.getNodeMessage().getMessageType()
+                        .equals(NodeMessage.Type.ERROR)) {
+                    result.add(nc.getNodeMessage());
+                }
+            } else {
+                assert nc instanceof WorkflowManager;
+                List<NodeMessage> subResult
+                        = ((WorkflowManager)nc).getNodeErrorMessages();
+                result.addAll(subResult);
+            }
+        }
+        return result;
+    }
 
     ///////////////////////////////////
     // Listener for Workflow Events
