@@ -3191,7 +3191,7 @@ public final class WorkflowManager extends NodeContainer {
     }
     
     /**
-     * @return list of errors messages (list empty if none exist)
+     * @return list of errors messages (list empty if none exist).
      */
     public List<NodeMessage> getNodeErrorMessages() {
         ArrayList<NodeMessage> result = new ArrayList<NodeMessage>();
