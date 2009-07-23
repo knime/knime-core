@@ -884,9 +884,9 @@ public abstract class NodeDialogPane {
      *
      * @param key of corresponding settings object
      * @param type of variable/settings object
-     * @return new WorkflowVariableModel which is already registered
+     * @return new ScopeVariableModel which is already registered
      */
-    protected ScopeVariableModel createWorkflowVariableModel(
+    protected ScopeVariableModel createScopeVariableModel(
             final String key, final ScopeVariable.Type type) {
         ScopeVariableModel wvm = new ScopeVariableModel(this, key, type);
         m_scopeVariablesModelList.add(wvm);
@@ -903,11 +903,11 @@ public abstract class NodeDialogPane {
      * object.
      *
      * @param dc settings object of corresponding DialogComponent  
-     * @return new WorkflowVariableModel which is already registered
+     * @return new ScopeVariableModel which is already registered
      */
-    protected ScopeVariableModel createWorkflowVariableModel(
+    protected ScopeVariableModel createScopeVariableModel(
             final SettingsModelScopeVariableCompatible dc) {
-        return createWorkflowVariableModel(dc.getKey(),
+        return createScopeVariableModel(dc.getKey(),
                 dc.getScopeVariableType());
     }
     
