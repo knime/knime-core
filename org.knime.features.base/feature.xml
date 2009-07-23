@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.0.0018128">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.0.0021700">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
@@ -318,8 +318,8 @@ terms of this License.
 
    <plugin download-size="0" id="org.apache.log4j" install-size="0" unpack="false" version="0.0.0"/>
    
-   <plugin download-size="0" id="org.eclipse.jdt.compiler.tool" install-size="0" version="0.0.0" fragment="true" unpack="false"/>
+   <plugin download-size="0" fragment="true" id="org.eclipse.jdt.compiler.tool" install-size="0" unpack="false" version="0.0.0"/>
 
-   <plugin download-size="0" id="org.eclipse.jdt.core" install-size="0" version="0.0.0" unpack="false"/>
+   <plugin download-size="0" id="org.eclipse.jdt.core" install-size="0" unpack="false" version="0.0.0"/>
 
 </feature>
