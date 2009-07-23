@@ -48,11 +48,15 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.knime.core.node.ScopeVariableModel;
+import org.knime.core.node.ScopeVariableModelButton;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
@@ -78,6 +82,16 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * accordingly.
      */
     public CSVFilesHistoryPanel() {
+        this(null);
+    }
+
+    /**
+     * Creates new instance, sets properties, for instance renderer,
+     * accordingly.
+     * 
+     * @param svm model to allow to use a variable instead of the textfield.
+     */
+    CSVFilesHistoryPanel(final ScopeVariableModel svm) {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -133,6 +147,22 @@ public final class CSVFilesHistoryPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         Box fileBox = Box.createHorizontalBox();
         fileBox.add(m_textBox);
+        if (svm != null) {
+            fileBox.add(Box.createHorizontalStrut(5));
+            fileBox.add(new ScopeVariableModelButton(svm));
+            svm.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent evt) {
+                    ScopeVariableModel wvm =
+                        (ScopeVariableModel)(evt.getSource());
+                    m_textBox.setEnabled(
+                            !wvm.isVariableReplacementEnabled());
+                    m_chooseButton.setEnabled(
+                            !wvm.isVariableReplacementEnabled());
+                }
+            });
+
+        }
         fileBox.add(Box.createHorizontalStrut(5));
         fileBox.add(m_chooseButton);
         Box warnBox = Box.createHorizontalBox();

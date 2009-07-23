@@ -159,10 +159,10 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         clusterPropPane.add(m_nrClustersSpinner);
         // also add a variable Model + corresponding icon to make this
         // option controllable via a variable
-        ScopeVariableModel wvm = createWorkflowVariableModel(
+        ScopeVariableModel svm = createScopeVariableModel(
                 FuzzyClusterNodeModel.NRCLUSTERS_KEY,
                 ScopeVariable.Type.INTEGER);
-        wvm.addChangeListener(new ChangeListener() {
+        svm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
                 ScopeVariableModel wvm =
@@ -171,7 +171,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                         !wvm.isVariableReplacementEnabled());
             }
         });
-        clusterPropPane.add(new ScopeVariableModelButton(wvm));
+        clusterPropPane.add(new ScopeVariableModelButton(svm));
         // Option: Upper limit for number of iterations
         JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
         c.gridx = 0;                      

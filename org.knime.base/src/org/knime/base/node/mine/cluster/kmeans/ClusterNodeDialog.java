@@ -63,7 +63,7 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
                 1, Integer.MAX_VALUE);
         m_nrOfClusters = new DialogComponentNumber(smib,
                 "number of clusters: ", 1,
-                createWorkflowVariableModel(smib));
+                createScopeVariableModel(smib));
         m_maxNrOfIterations = new DialogComponentNumber(
                 new SettingsModelIntegerBounded(
                         ClusterNodeModel.CFG_MAX_ITERATIONS,

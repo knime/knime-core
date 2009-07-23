@@ -34,7 +34,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class FileWriterNodeSettings extends FileWriterSettings {
 
-    private static final String CFGKEY_FILE = "filename";
+    public static final String CFGKEY_FILE = "filename";
 
     private static final String CFGKEY_COMMENT_BEGIN = "commentBegin";
 

@@ -38,6 +38,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.ScopeVariableModelButton;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * Dialog to choose a file for csv output.
@@ -80,7 +82,10 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
         filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Output file location:"));
-        m_textBox = new CSVFilesHistoryPanel();
+        m_textBox = new CSVFilesHistoryPanel(createScopeVariableModel(
+              FileWriterNodeSettings.CFGKEY_FILE,
+              ScopeVariable.Type.STRING));
+//        m_textBox = new CSVFilesHistoryPanel();
         filePanel.add(m_textBox);
         filePanel.add(Box.createHorizontalGlue());
 
