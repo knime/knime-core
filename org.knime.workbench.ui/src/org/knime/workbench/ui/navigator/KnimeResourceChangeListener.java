@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   09.06.2008 (Fabian Dill): created
  */
@@ -36,22 +36,21 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class KnimeResourceChangeListener implements IResourceChangeListener {
-    
+
     private final IResourceDeltaVisitor m_visitor;
-    
+
     /**
-     * 
+     *
      * @param navigator usually the KNIME resource navigator
      */
     public KnimeResourceChangeListener(final ResourceNavigator navigator) {
         m_visitor = new IResourceDeltaVisitor() {
-            
+
              private void doRefresh(final Object node) {
-                 
                  Display.getDefault().asyncExec(new Runnable() {
 
                     public void run() {
@@ -60,36 +59,36 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                         }
                         if (node == null) {
                             navigator.getViewer().refresh();
-                        } 
+                        }
                         if (node instanceof IWorkspaceRoot) {
                             navigator.getViewer().refresh();
                         } else {
                             navigator.getViewer().refresh(node);
                         }
                     }
-                     
+
                  });
              }
              private void doRemove(final IResource node) {
-                
+
                 Display.getDefault().asyncExec(new Runnable() {
 
                     public void run() {
                         if (navigator != null && navigator.getViewSite() != null
-                                && navigator.getViewSite().getShell() != null 
+                                && navigator.getViewSite().getShell() != null
                                 && !navigator.getViewSite().getShell()
                                 .isDisposed()) {
                             navigator.getViewer().remove(node);
                         }
                     }
-                     
+
                  });
              }
-             
+
               public boolean visit(final IResourceDelta delta) {
                  IResource res = delta.getResource();
                  IResource parent = res.getParent();
-               
+
                  switch (delta.getKind()) {
                     case IResourceDelta.ADDED:
                         doRefresh(parent);
@@ -98,12 +97,14 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                         doRemove(res);
                         break;
                     case IResourceDelta.CHANGED:
-                        // might be the workspace root that has changed
-                        // new projects added!
-                        doRefresh(parent);
+                        // do not refresh the KnimeResourceNavigator if a file
+                        // has changed
                         if (res instanceof IFile) {
                             return false;
                         }
+                        // might be the workspace root that has changed
+                        // new projects added!
+                        doRefresh(parent);
                         break;
                     }
                  return true; // visit the children
@@ -123,16 +124,16 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
 
             break;
         case IResourceChangeEvent.POST_CHANGE:
-            
+
                 try {
                         event.getDelta().accept(m_visitor);
-                        
+
                     } catch (CoreException e) {
                         // do nothing
-                        // Only used to keep the tree in sync with the 
+                        // Only used to keep the tree in sync with the
                         // resources.
                     }
-            
+
             break;
         }
     }
