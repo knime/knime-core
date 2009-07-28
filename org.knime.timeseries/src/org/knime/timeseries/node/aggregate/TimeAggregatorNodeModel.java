@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -105,9 +106,17 @@ public class TimeAggregatorNodeModel extends NodeModel {
                     return new StringCell(getHour(c));
                 } else if (level.equals(TimeLevelNames.MINUTE)) {
                     return new StringCell(getMinute(c));
+                } else if (level.equals(TimeLevelNames.DAY_OF_WEEK)) {
+                    return new StringCell(getDayOfWeek(c));
                 } else {
                     return DataType.getMissingCell();
                 }
+            }
+
+            // extract the day of the week as a a string only
+            private String getDayOfWeek(Calendar c) {
+                return c.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG,
+                        Locale.ENGLISH);                        
             }
 
             // extract the year only (yyyy)

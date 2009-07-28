@@ -94,8 +94,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
             public DataCell getCell(DataRow row) {
                 Date first = ((TimestampValue)row.getCell(m_col1Idx)).getDate();
                 Date last = ((TimestampValue)row.getCell(m_col2Idx)).getDate();
-                Date diff = new Date(last.getTime() - first.getTime());
-                double diffTime = diff.getTime() / g.getFactor();
+                double diffTime = (last.getTime() - first.getTime()) / g.getFactor();
                 BigDecimal bd = new BigDecimal(diffTime);
                 bd = bd.setScale(m_rounding.getIntValue(),
                         BigDecimal.ROUND_CEILING);

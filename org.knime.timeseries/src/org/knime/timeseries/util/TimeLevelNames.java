@@ -52,6 +52,9 @@ public abstract class TimeLevelNames {
     public static final String HOUR = "Hour";
     /** Key for aggregation level minute. */
     public static final String MINUTE = "Minute";
+    
+    /** Key for aggregation level day of week. */
+    public static final String DAY_OF_WEEK = "Day of Week";
 
     /**
      * 
@@ -64,6 +67,7 @@ public abstract class TimeLevelNames {
         levelNames.add(TimeLevelNames.MONTH);
         levelNames.add(TimeLevelNames.WEEK);
         levelNames.add(TimeLevelNames.DAY);
+        levelNames.add(DAY_OF_WEEK);
         levelNames.add(TimeLevelNames.HOUR);
         levelNames.add(TimeLevelNames.MINUTE);
         return levelNames;
