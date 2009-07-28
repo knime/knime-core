@@ -21,6 +21,10 @@
  */
 package org.knime.timeseries.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
@@ -46,4 +50,20 @@ public final class TimeLevelNames {
     /** Key for aggregation level minute. */
     public static final String MINUTE = "Minute";
 
+    /**
+     * 
+     * @return a list of aggregation level names. May be subclassed.
+     */
+    public static Collection<String>getAggregationLevels() {
+        List<String>levelNames = new ArrayList<String>(); 
+        levelNames.add(TimeLevelNames.YEAR);
+        levelNames.add(TimeLevelNames.QUARTER);
+        levelNames.add(TimeLevelNames.MONTH);
+        levelNames.add(TimeLevelNames.WEEK);
+        levelNames.add(TimeLevelNames.DAY);
+        levelNames.add(TimeLevelNames.HOUR);
+        levelNames.add(TimeLevelNames.MINUTE);
+        return levelNames;
+    }
+    
 }
