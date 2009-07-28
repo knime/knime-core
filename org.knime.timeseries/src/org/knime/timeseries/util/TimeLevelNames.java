@@ -29,9 +29,12 @@ import java.util.List;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public final class TimeLevelNames {
+public abstract class TimeLevelNames {
     
-    private TimeLevelNames() {
+    /**
+     * May be subclassed.
+     */
+    protected TimeLevelNames() {
         // utility class
     }
     
