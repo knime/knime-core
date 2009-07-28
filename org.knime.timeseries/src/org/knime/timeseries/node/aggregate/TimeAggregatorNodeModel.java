@@ -23,7 +23,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.timeseries.node.diff.Granularity;
+import org.knime.timeseries.util.TimeLevelNames;
+import org.knime.timeseries.util.TimeUtil;
 
 /**
  * Appends a time column with the time in another column to a higher aggregation
@@ -32,6 +33,8 @@ import org.knime.timeseries.node.diff.Granularity;
  * @author KNIME GmbH
  */
 public class TimeAggregatorNodeModel extends NodeModel {
+
+    
     // column containing the time values
     private final SettingsModelString m_col = TimeAggregatorNodeDialog
             .createColumnModel();
@@ -46,6 +49,9 @@ public class TimeAggregatorNodeModel extends NodeModel {
     // the aggregation level
     private final SettingsModelString m_level = TimeAggregatorNodeDialog
             .createLevelModel();
+    
+
+
 
     /**
      * Constructor for the node model, one in and one out port.
@@ -69,7 +75,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 createOutputSpec(inData[0].getDataTableSpec())) {
 
             @Override
-            public DataCell getCell(DataRow row) {
+            public DataCell getCell(final DataRow row) {
                 // check if cell with time value is missing
                 if (row.getCell(m_colIdx).isMissing()) {
                     return DataType.getMissingCell();
@@ -81,34 +87,37 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 Calendar c = Calendar.getInstance();
                 c.setTime(d);
                 // get the selected granularity level
-                Granularity level = Granularity.valueOf(m_level
-                        .getStringValue());
+                String level = m_level.getStringValue();
                 // depending on the selected granularity level
                 // return different values = use different methods
-                if (level.equals(Granularity.YEAR)) {
-                    return new StringCell(getYear(row, c));
-                } else if (level.equals(Granularity.QUARTER)) {
-                    String s = getQuarter(row, c);
+                if (level.equals(TimeLevelNames.YEAR)) {
+                    return new StringCell(getYear(c));
+                } else if (level.equals(TimeLevelNames.QUARTER)) {
+                    String s = getQuarter(c);
                     return new StringCell(s);
-                } else if (level.equals(Granularity.MONTH)) {
-                    return new StringCell(getMonth(row, c));
-                } else if (level.equals(Granularity.WEEK)) {
-                    return new StringCell(getWeek(row, c));
-                } else if (level.equals(Granularity.DAY)) {
-                    return new StringCell(getDay(row, c));
+                } else if (level.equals(TimeLevelNames.MONTH)) {
+                    return new StringCell(getMonth(c));
+                } else if (level.equals(TimeLevelNames.WEEK)) {
+                    return new StringCell(getWeek(c));
+                } else if (level.equals(TimeLevelNames.DAY)) {
+                    return new StringCell(getDay(c));
+                } else if (level.equals(TimeLevelNames.HOUR)) {
+                    return new StringCell(getHour(c));
+                } else if (level.equals(TimeLevelNames.MINUTE)) {
+                    return new StringCell(getMinute(c));
                 } else {
                     return DataType.getMissingCell();
                 }
             }
 
             // extract the year only (yyyy)
-            private String getYear(final DataRow row, final Calendar c) {
+            private String getYear(final Calendar c) {
                 int year = c.get(Calendar.YEAR);
                 return "" + year;
             }
 
             // calculate the quarter q and return yyyy_q
-            private String getQuarter(final DataRow row, final Calendar c) {
+            private String getQuarter(final Calendar c) {
                 int year = c.get(Calendar.YEAR);
                 int month = c.get(Calendar.MONTH);
                 // month starts with 0!
@@ -119,52 +128,46 @@ public class TimeAggregatorNodeModel extends NodeModel {
             }
 
             // extract year and month (yyyy_mm)
-            private String getMonth(final DataRow row, final Calendar c) {
+            private String getMonth(final Calendar c) {
                 int year = c.get(Calendar.YEAR);
                 int month = c.get(Calendar.MONTH);
                 // month starts with 0!
                 month++;
                 String s = "" + year;
-                if (month < 10) {
-                    s += "_0" + month;
-                } else {
-                    s += "_" + month;
-                }
+                s += "_" + TimeUtil.getStringForDateField(month);
                 return s;
             }
 
             // extract year and week (yyyy_ww)
-            private String getWeek(final DataRow row, final Calendar c) {
+            private String getWeek(final Calendar c) {
                 int year = c.get(Calendar.YEAR);
                 int week = c.get(Calendar.WEEK_OF_YEAR);
                 String s = "" + year;
-                if (week < 10) {
-                    s += "_0" + week;
-                } else {
-                    s += "_" + week;
-                }
+                s += "_" + TimeUtil.getStringForDateField(week);
                 return s;
             }
 
             // extract year, month, and day (yyyy_mm_dd)
-            private String getDay(final DataRow row, final Calendar c) {
+            private String getDay(final Calendar c) {
                 int year = c.get(Calendar.YEAR);
                 int month = c.get(Calendar.MONTH);
                 // month starts with 0!
                 month++;
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 String s = "" + year;
-                if (month < 10) {
-                    s += "_0" + month;
-                } else {
-                    s += "_" + month;
-                }
-                if (day < 10) {
-                    s += "_0" + day;
-                } else {
-                    s += "_" + day;
-                }
+                s += "_" + TimeUtil.getStringForDateField(month);
+                s += "_" + TimeUtil.getStringForDateField(day);
                 return s;
+            }
+            
+            private String getHour(final Calendar c) {
+                return TimeUtil.getStringForDateField(
+                        c.get(Calendar.HOUR_OF_DAY));
+            }
+            
+            private String getMinute(final Calendar c) {
+                return TimeUtil.getStringForDateField(
+                        c.get(Calendar.MINUTE));
             }
         };
         rearranger.append(factory);

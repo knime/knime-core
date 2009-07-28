@@ -8,7 +8,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.timeseries.node.diff.Granularity;
+import org.knime.timeseries.util.TimeLevelNames;
 
 /**
  * Dialog for the TimeAggregator node, with a column selection for the column
@@ -36,10 +36,7 @@ public class TimeAggregatorNodeDialog extends DefaultNodeSettingsPane {
                 org.knime.core.data.TimestampValue.class));
         // get the aggregation granularity from TimeDifference node!
         List<String> methods = new ArrayList<String>();
-        methods.addAll(Granularity.asStringList());
-        // remove minute and hour (too fine-grained)
-        methods.remove(Granularity.MINUTE.name());
-        methods.remove(Granularity.HOUR.name());
+        methods.addAll(TimeLevelNames.getAggregationLevels());
         // add granularity selection
         addDialogComponent(new DialogComponentStringSelection(
                 createLevelModel(), "Choose aggregation level", methods));
@@ -58,10 +55,11 @@ public class TimeAggregatorNodeDialog extends DefaultNodeSettingsPane {
     }
 
     static SettingsModelString createNewColNameModel() {
-        return new SettingsModelString(CFG_NEW_COL, "AGGREGATED TIME");
+        return new SettingsModelString(CFG_NEW_COL, "Aggregated_Time");
     }
 
     static SettingsModelString createLevelModel() {
-        return new SettingsModelString(CFG_LEVEL, Granularity.QUARTER.name());
+        return new SettingsModelString(CFG_LEVEL, 
+                TimeLevelNames.QUARTER);
     }
 }

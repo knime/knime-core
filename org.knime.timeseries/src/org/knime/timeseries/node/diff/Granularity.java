@@ -4,8 +4,9 @@
 package org.knime.timeseries.node.diff;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import org.knime.timeseries.util.TimeLevelNames;
 
 
 /**
@@ -14,45 +15,107 @@ import java.util.List;
  * @author Fabian Dill, KNIME GmbH
  *
  */
-public enum Granularity {
-    /** Minute. */
-    MINUTE (1000 * 60),
-    /** Hour. */
-    HOUR (1000 * 60 * 60),
-    /** Day. */
-    DAY (1000 * 60 * 60 * 24),
-    /** Week. */
-    WEEK(1000 * 60 * 60 * 24 * 7),
-    /** Month. */
-    MONTH(1000 * 60 * 60 * 24 * 3 * 30),
-    /** Quarter (=three months). */
-    QUARTER (1000 * 60 * 60 * 24 * 3 * 90),
-    /** Year. */
-    YEAR(1000 * 60 * 60 * 24 * 3 * 365);
+public class Granularity {
     
-    Granularity(final double factor) {
-        m_factor = factor;
+    /** Minute. */
+    public static final Granularity MINUTE = new Granularity(
+            TimeLevelNames.MINUTE, 1000 * 60);
+    /** Hour. */
+    public static final Granularity HOUR = new Granularity(
+            TimeLevelNames.HOUR, 1000 * 60 * 60);
+    /** Day. */
+    public static final Granularity DAY = new Granularity(
+            TimeLevelNames.DAY, 1000 * 60 * 60 * 24);
+    /** Week. */
+    public static final Granularity WEEK = new Granularity(
+            TimeLevelNames.WEEK, 1000 * 60 * 60 * 24 * 7);
+    /** Month. */
+    public static final Granularity MONTH = new Granularity(
+            TimeLevelNames.MONTH, 1000 * 60 * 60 * 24 * 3 * 30);
+    /** Quarter (=three months). */
+    public static final Granularity QUARTER = new Granularity(
+            TimeLevelNames.QUARTER, 1000 * 60 * 60 * 24 * 3 * 90);
+    /** Year. */
+    public static final Granularity YEAR = new Granularity(
+            TimeLevelNames.YEAR, 1000 * 60 * 60 * 24 * 3 * 365);
+
+    /**
+     * 
+     * @return the names of the default granularities defined in this class  
+     */
+    public static final List<String>getDefaultGranularityNames() {
+        List<String>names = new ArrayList<String>();
+        names.add(YEAR.getName());
+        names.add(QUARTER.getName());
+        names.add(MONTH.getName());
+        names.add(WEEK.getName());
+        names.add(DAY.getName());
+        names.add(HOUR.getName());
+        names.add(MINUTE.getName());
+        return names;
     }
+    
     
     private final double m_factor;
     
-    private static List<String>m_valuesAsString;
+    private final String m_name;
     
-    public double getFactor() {
-        return m_factor;
+    /**
+     * Creates a granularity with display level and factor. The factor defines 
+     * by what the milliseconds have to be divided in order to achieve the 
+     * granularity  defined by the display name.
+     * 
+     * @param name name of the granularity
+     * @param factor factory by which milliseconds must be divided to achieve 
+     *  the granularity
+     */
+    public Granularity(final String name, final double factor) {
+        m_factor = factor;
+        m_name = name;
     }
     
     /**
      * 
-     * @return the values of the enumeration as a list of strings
+     * @return factory by which milliseconds must be divided to achieve the 
+     * given granularity
      */
-    public static List<String> asStringList(){
-        if (m_valuesAsString == null) {
-            m_valuesAsString = new ArrayList<String>();
-            for (Granularity g : values()) {
-                m_valuesAsString.add(g.name());
-            }               
-        }
-        return Collections.unmodifiableList(m_valuesAsString);
+    public double getFactor() {
+        return m_factor;
     }
+
+    /**
+     * 
+     * @return name of the granularity
+     * @see TimeLevelNames
+     */
+    public String getName() {
+        return m_name;
+    }
+    
+    /**
+     * 
+     * @param name name of the granularity (usually one of 
+     *  {@link TimeLevelNames})
+     * @return the referring granularity or <code>null</code>
+     */
+    public static Granularity valueOf(final String name) {
+        if (TimeLevelNames.YEAR.equals(name)) {
+            return YEAR;
+        } else if (TimeLevelNames.QUARTER.equals(name)) {
+            return QUARTER;
+        } else if (TimeLevelNames.MONTH.equals(name)) {
+            return MONTH;
+        } else if (TimeLevelNames.WEEK.equals(name)) {
+            return WEEK;
+        } else if (TimeLevelNames.DAY.equals(name)) {
+            return DAY;
+        } else if (TimeLevelNames.HOUR.equals(name)) {
+            return HOUR;
+        } else if (TimeLevelNames.MINUTE.equals(name)) {
+            return MINUTE;
+        } else {
+            return null;
+        }
+    }
+
 }
