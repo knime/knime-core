@@ -116,19 +116,25 @@ public final class FileUtil {
         long processed = 0;
         CanceledExecutionException cee = null;
         exec.setMessage("Copying \"" + file.getName() + "\"");
-        while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
-            copyOutStream.write(cache, 0, read);
-            processed += read;
-            exec.setProgress(processed / (double)size);
-            try {
-                exec.checkCanceled();
-            } catch (CanceledExecutionException c) {
-                cee = c;
-                break;
-            }
+        try {
+	        while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
+	            copyOutStream.write(cache, 0, read);
+	            processed += read;
+	            exec.setProgress(processed / (double)size);
+	            try {
+	                exec.checkCanceled();
+	            } catch (CanceledExecutionException c) {
+	                cee = c;
+	                break;
+	            }
+	        }
+        } finally {
+        	try {
+        		copyOutStream.close();
+        	} finally {
+        		copyInStream.close();
+        	}
         }
-        copyOutStream.close();
-        copyInStream.close();
         // delete destination file if canceled.
         if (cee != null) {
             if (!destination.delete()) {
@@ -138,6 +144,42 @@ public final class FileUtil {
             throw cee;
         }
     } // copy(File, File, ExecutionMonitor)
+    
+    /**
+     * Copies the given source (either a file or a directory) into the given 
+     * source. If the source file or directory exist, it will be removed first.
+     * File permissions are not handled explicitly.
+     * @param sourceDir contains all source file and directories to be copied
+     * @param targetDir target file (created or replaced) with the given source
+     *        file structure
+     * @throws IOException if the source does not exist or the source could not
+     *         be copied due to file permissions
+     */
+	public static void copyDir(final File sourceDir, final File targetDir)
+			throws IOException {
+		if (!sourceDir.exists()) {
+			throw new IOException("Source directory \"" + sourceDir 
+					+ "\" does not exist.");
+		}
+		if (sourceDir.isDirectory()) {
+			if (!targetDir.exists()) {
+				targetDir.mkdirs();
+			}
+			if (sourceDir.list() == null) {
+				throw new IOException("Can't copy directory \"" 
+						+ sourceDir + "\", no read permissions.");
+			}	
+			for (String child : sourceDir.list()) {
+				copyDir(
+					new File(sourceDir, child), new File(targetDir, child));
+			}
+		} else {
+			if (targetDir.isDirectory()) {
+				FileUtil.deleteRecursively(targetDir);
+			}
+			copy(sourceDir, targetDir);
+		}
+	}
 
     /**
      * Copies the bytes as read from <code>input</code> to the output stream
