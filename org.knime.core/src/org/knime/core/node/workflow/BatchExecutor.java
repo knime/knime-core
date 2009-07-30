@@ -32,6 +32,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimerTask;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -49,20 +50,22 @@ import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.MutableBoolean;
 
 /**
  * Simple utility class that takes a workflow, either in a directory or zipped
  * into a single file, executes it and saves the results in the end. If the
  * input was a ZIP file the workflow is zipped back into a file.
  *
- *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
+	
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(BatchExecutor.class);
-
+    
     private static class Option {
         private final int[] m_nodeIDs;
 
@@ -102,6 +105,8 @@ public final class BatchExecutor {
             + "                  of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
             + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+            + "                  if omitted the workflow is only saved in place\n"
+            + " -destDir=... => directory where the executed workflow is saved to\n"
             + "                  if omitted the workflow is only saved in place\n"
             + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
             + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
@@ -154,8 +159,10 @@ public final class BatchExecutor {
 
         File input = null, output = null;
         boolean noSave = false;
+        boolean noExecute = false;
         boolean reset = false;
         boolean isPromptForPassword = false;
+        boolean outputZip = false;
         File preferenceFile = null;
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
@@ -166,6 +173,8 @@ public final class BatchExecutor {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
+            } else if ("-noexecute".equals(parts[0])) {
+                noExecute = true;
             } else if ("-masterkey".equals(parts[0])) {
                 if (parts.length > 1) {
                     if (parts[1].length() == 0) {
@@ -219,6 +228,15 @@ public final class BatchExecutor {
                     return 1;
                 }
                 output = new File(parts[1]);
+                outputZip = true;
+            } else if ("-destDir".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -destDir argument: " + s);
+                    return 1;
+                }
+                output = new File(parts[1]);
+                outputZip = false;
             } else if ("-option".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println(
@@ -263,13 +281,13 @@ public final class BatchExecutor {
             System.err.println("No input file or directory given.");
             return 1;
         } else if (input.isFile()) {
-            File dir = FileUtil.createTempDir("BatchExecutor");
+            File dir = FileUtil.createTempDir("BatchExecutorInput");
             FileUtil.unzip(input, dir);
             workflowDir = dir;
         } else {
             workflowDir = input;
         }
-
+        
         // the workflow may be contained in a sub-directory 
         // if run on a archived workflow (typical scenario if workflow is
         // exported to a zip using the wizard)
@@ -279,33 +297,80 @@ public final class BatchExecutor {
         
         WorkflowLoadResult loadResult = WorkflowManager.loadProject(
                 workflowDir, new ExecutionMonitor());
-        WorkflowManager wfm = loadResult.getWorkflowManager();
+        final WorkflowManager wfm = loadResult.getWorkflowManager();
 
         if (reset) {
             wfm.resetAll();
+            LOGGER.debug("Workflow reset done.");
         }
 
         setNodeOptions(options, wfm);
-
+        
         LOGGER.debug("Status of workflow before execution:");
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
-        boolean successful = wfm.executeAllAndWaitUntilDone();
-        if (!noSave) {
-            wfm.save(workflowDir, new ExecutionMonitor(), true);
-
-            if (output != null) {
-                FileUtil.zipDir(output, workflowDir, 9);
-            }
+        boolean successful = true;
+        final MutableBoolean executionCanceled = new MutableBoolean(false);
+        if (!noExecute) {
+        	if (output != null && !outputZip) {
+        		// file to be checked for
+      			final File cancelFile = new File(output, ".cancel");
+      			// create new timer task
+      			KNIMETimer.getInstance().schedule(new TimerTask() {
+      				/** {@inheritDoc} */
+      				public void run() {
+   						if (cancelFile.exists()) {
+   							// CANCEL workflow manager
+  					    	wfm.cancelExecution();
+  					    	executionCanceled.setValue(true);
+  					    	// cancel this timer
+  					    	this.cancel();
+  						}
+      				}
+      			}, 1000, Long.MAX_VALUE);
+        	}
+        	successful = wfm.executeAllAndWaitUntilDone();
+	    }
+        
+        // only save when execution has not been canceled
+        if (!executionCanceled.booleanValue()) {
+	        if (!noSave) { // save workflow
+	        	// save // in place when no output (file or dir) given
+	        	if (output == null) { 
+	        		wfm.save(workflowDir, new ExecutionMonitor(), true);
+	        		if (input.isFile()) {
+	        			// if input is a Zip file, overwrite input flow (Zip)
+	        			// workflow dir contains temp workflow directory 
+	            		FileUtil.zipDir(input, workflowDir, 9);
+	        		}
+	        	} else { 
+	            	if (outputZip) { // save as Zip
+	            		File outputTempDir = 
+	            			FileUtil.createTempDir("BatchExecutorOutput");
+	            		wfm.save(outputTempDir, new ExecutionMonitor(), true);
+	            		// to be saved into new output zip file
+	            		FileUtil.zipDir(output, outputTempDir, 9);
+	            	} else { // save into dir
+	            		FileUtil.deleteRecursively(output);
+	            		// copy current workflow dir
+	            		wfm.save(output, new ExecutionMonitor(), true);
+	            	}
+	            }
+	        }
         }
-        // Get elapsed time in milliseconds
+        // get elapsed time in milliseconds
         long elapsedTimeMillis = System.currentTimeMillis() - t;
         String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
         String timeString = ("Finished in " + niceTime
                 + " (" + elapsedTimeMillis + "ms)");
         System.out.println(timeString);
-        LOGGER.debug("Workflow execution done " + timeString);
-        LOGGER.debug("Status of workflow after execution:");
+        if (executionCanceled.booleanValue()) {
+        	LOGGER.debug("Workflow execution canceled after " + timeString);
+   	        LOGGER.debug("Status of workflow after cancelation:");
+        } else {
+	        LOGGER.debug("Workflow execution done " + timeString);
+	        LOGGER.debug("Status of workflow after execution:");
+        }
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
         return successful ? 0 : 1;
