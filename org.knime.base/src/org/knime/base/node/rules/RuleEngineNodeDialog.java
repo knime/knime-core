@@ -44,9 +44,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -55,7 +58,10 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.ScopeVariableModel;
+import org.knime.core.node.ScopeVariableModelButton;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  *
@@ -214,6 +220,21 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         defaultLabelBox.add(Box.createHorizontalStrut(20));
         defaultLabelBox.add(new JLabel("Default label (if no rule matches):"));
         defaultLabelBox.add(m_defaultLabelEditor);
+        // also add a variable Model + corresponding icon to make this
+        // option controllable via a variable
+        ScopeVariableModel svm = createScopeVariableModel(
+                RuleEngineSettings.CFG_DEFAULT_LABEL,
+                ScopeVariable.Type.STRING);
+        svm.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent evt) {
+                ScopeVariableModel svm =
+                    (ScopeVariableModel)(evt.getSource());
+                m_defaultLabelEditor.setEnabled(
+                        !svm.isVariableReplacementEnabled());
+            }
+        });
+        defaultLabelBox.add(new ScopeVariableModelButton(svm));
         defaultLabelBox.add(Box.createHorizontalGlue());
         defaultLabelBox.add(Box.createHorizontalStrut(10));
         defaultLabelBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));

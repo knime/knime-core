@@ -35,7 +35,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class RuleEngineSettings {
-    private static final String CFG_DEFAULT_LABEL = "default-label";
+    static final String CFG_DEFAULT_LABEL = "default-label";
 
     private static final String CFG_NEW_COL_NAME = "new-column-name";
 
