@@ -29,11 +29,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -312,9 +315,14 @@ public final class BatchExecutor {
         boolean successful = true;
         final MutableBoolean executionCanceled = new MutableBoolean(false);
         if (!noExecute) {
-        	if (output != null && !outputZip) {
+        	// get workspace dir
+        	IWorkspace ws = ResourcesPlugin.getWorkspace();
+        	URI uri = ws.getRoot().getLocationURI();
+        	// if exists check for ".cancel" file
+        	if (uri != null) {
+        		File wsFile = new File(uri);
         		// file to be checked for
-      			final File cancelFile = new File(output, ".cancel");
+      			final File cancelFile = new File(wsFile, ".cancel");
       			// create new timer task
       			KNIMETimer.getInstance().schedule(new TimerTask() {
       				/** {@inheritDoc} */
@@ -322,6 +330,8 @@ public final class BatchExecutor {
    						if (cancelFile.exists()) {
    							// CANCEL workflow manager
   					    	wfm.cancelExecution();
+  					    	// delete cancel file
+  					    	cancelFile.delete();
   					    	executionCanceled.setValue(true);
   					    	// cancel this timer
   					    	this.cancel();
@@ -338,22 +348,31 @@ public final class BatchExecutor {
 	        	// save // in place when no output (file or dir) given
 	        	if (output == null) { 
 	        		wfm.save(workflowDir, new ExecutionMonitor(), true);
+	        		LOGGER.debug("Workflow saved: " 
+	        				+ workflowDir.getAbsolutePath());
 	        		if (input.isFile()) {
 	        			// if input is a Zip file, overwrite input flow (Zip)
 	        			// workflow dir contains temp workflow directory 
 	            		FileUtil.zipDir(input, workflowDir, 9);
+	            		LOGGER.info("Saved workflow availabe at: "
+	            				+ input.getAbsolutePath());
 	        		}
 	        	} else { 
 	            	if (outputZip) { // save as Zip
 	            		File outputTempDir = 
 	            			FileUtil.createTempDir("BatchExecutorOutput");
 	            		wfm.save(outputTempDir, new ExecutionMonitor(), true);
+		        		LOGGER.debug("Workflow saved: " 
+		        				+ outputTempDir.getAbsolutePath());
 	            		// to be saved into new output zip file
 	            		FileUtil.zipDir(output, outputTempDir, 9);
+	            		LOGGER.info("Saved workflow availabe at: "
+	            				+ output.getAbsolutePath());
 	            	} else { // save into dir
-	            		FileUtil.deleteRecursively(output);
 	            		// copy current workflow dir
 	            		wfm.save(output, new ExecutionMonitor(), true);
+	            		LOGGER.info("Saved workflow availabe at: "
+	            				+ output.getAbsolutePath());
 	            	}
 	            }
 	        }

@@ -40,7 +40,8 @@ Provide-Package: log4j,
  org.knime.core.xml
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Require-Bundle: org.eclipse.core.runtime;reprovide=true,
- org.apache.log4j
+ org.apache.log4j,
+ org.eclipse.core.resources
 Eclipse-LazyStart: true
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
