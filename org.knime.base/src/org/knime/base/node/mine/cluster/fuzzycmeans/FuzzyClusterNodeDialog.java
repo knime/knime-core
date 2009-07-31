@@ -165,10 +165,10 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         svm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                ScopeVariableModel wvm =
+                ScopeVariableModel svm =
                     (ScopeVariableModel)(evt.getSource());
                 m_nrClustersSpinner.setEnabled(
-                        !wvm.isVariableReplacementEnabled());
+                        !svm.isVariableReplacementEnabled());
             }
         });
         clusterPropPane.add(new ScopeVariableModelButton(svm));
