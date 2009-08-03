@@ -116,7 +116,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         JSplitPane horizontalSplit =
                 new JSplitPane(JSplitPane.VERTICAL_SPLIT, createTopPart(),
                         createBottomPart());
-        addTab("Biz Rule Editor: ", horizontalSplit);
+        addTab("Rule Editor", horizontalSplit);
     }
 
     /*
