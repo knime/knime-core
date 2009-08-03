@@ -72,19 +72,20 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
     public void setValue(final JTree tree, final Object value) {
+        ConfigEditTreeNode node;
         if (value instanceof ConfigEditTreeNode) {
-            ConfigEditTreeNode node = (ConfigEditTreeNode)value;
+            node = (ConfigEditTreeNode)value;
             m_active = node.isLeaf() ? m_panelFull : m_panelPlain;
-            m_active.setTreeNode(node);
         } else {
+            node = null;
             m_active = m_panelPlain;
-            m_active.setTreeNode(null);
         }
         ScopeObjectStack stack = null;
         if (tree instanceof ConfigEditJTree) {
             stack = ((ConfigEditJTree)tree).getScopeStack();
         }
         m_active.setScopeStack(stack);
+        m_active.setTreeNode(node);
         setLeafIcon(m_active.getIcon());
         setOpenIcon(m_active.getIcon());
         setClosedIcon(m_active.getIcon());
