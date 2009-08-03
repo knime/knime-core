@@ -712,7 +712,7 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
-        if (!cc.isDeletable()) {
+        if (cc == null || !cc.isDeletable()) {
             return false;
         }
         NodeID destID = cc.getDest();
