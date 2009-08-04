@@ -80,6 +80,7 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.bison" version="2.0.3.0021111"/>
       <feature id="org.knime.features.bison.viz" version="2.0.3.0021111"/>
       <feature id="org.knime.features.ext.weka_r.io" version="2.0.3.0021111"/>
+      <feature id="org.knime.features.ext.perl" version="2.0.3.0021111"/>
    </features>
 
 </product>
