@@ -105,12 +105,29 @@ final class RegexSplitNodeModel extends NodeModel {
         final Pattern p = m_settings.compile();
         int count = 0;
         String patternS = p.pattern();
+        boolean isNextSpecial = false;
+        boolean isPreviousAParenthesis = false;
+        // count openening parentheses to get group count, ignore
+        // escaped parentheses "\(" or non-capturing groups "(?"
         for (int i = 0; i < patternS.length(); i++) {
-            boolean isNextSpecial = false;
             switch (patternS.charAt(i)) {
-            case '\\': isNextSpecial = !isNextSpecial; break;
-            case '(' : count += !isNextSpecial ? 1 : 0; // no break
-            default  : isNextSpecial = false;
+            case '\\': 
+                isNextSpecial = !isNextSpecial;
+                isPreviousAParenthesis = false;
+                break;
+            case '(' :
+                count += isNextSpecial ? 0 : 1;
+                isPreviousAParenthesis = !isNextSpecial;
+                isNextSpecial = false;
+                break;
+            case '?':
+                if (isPreviousAParenthesis) {
+                    count -= 1;
+                }
+                // no break;
+            default : 
+                isNextSpecial = false;
+                isPreviousAParenthesis = false;
             }
         }
         final int newColCount = count;
@@ -142,7 +159,10 @@ final class RegexSplitNodeModel extends NodeModel {
                     for (int i = 0; i < max; i++) {
                         // group(0) will return the entire string and is not
                         // included in groupCount, see Matcher API for details
-                        result[i] = new StringCell(m.group(i + 1));
+                        String str = m.group(i + 1);
+                        if (str != null) { // null for optional groups "(...)?"
+                            result[i] = new StringCell(str); 
+                        }
                     }
                     return result;
                 } else {
