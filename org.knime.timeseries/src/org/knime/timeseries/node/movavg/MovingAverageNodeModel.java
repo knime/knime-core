@@ -22,7 +22,7 @@
  * History
  *   Jan 14, 2007 (rs): created
  */
-package org.knime.timeseries.node.MA;
+package org.knime.timeseries.node.movavg;
 
 import java.io.File;
 import java.io.IOException;

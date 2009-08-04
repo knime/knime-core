@@ -22,7 +22,7 @@
  * History
  *   Aug 4, 2006 (rs): created
  */
-package org.knime.timeseries.node.MA;
+package org.knime.timeseries.node.movavg;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

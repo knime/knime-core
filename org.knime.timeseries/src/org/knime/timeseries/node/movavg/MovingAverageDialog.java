@@ -22,7 +22,7 @@
  * History
  *   January 13, 2007 (rosaria): created from String2Smileys
  */
-package org.knime.timeseries.node.MA;
+package org.knime.timeseries.node.movavg;
 
 //import java.util.LinkedList;
 //import java.util.List;
