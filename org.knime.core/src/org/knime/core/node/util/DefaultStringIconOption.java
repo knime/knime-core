@@ -77,6 +77,58 @@ public class DefaultStringIconOption implements StringIconOption {
     public String getText() {
         return m_text;
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return getText();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof StringIconOption)) {
+            return false;
+        }
+        StringIconOption other = (StringIconOption)obj;
+        boolean iconEqal = false;
+        if (getIcon() == other.getIcon()) {
+            iconEqal = true;
+        } else if (getIcon() != null && getIcon().equals(other.getIcon())) {
+            iconEqal = true;
+        } else {
+            return false;
+        }
+        boolean textEqual = false;
+        if (getText() == other.getText()) {
+            textEqual = true;
+        } else if (getText() != null && getText().equals(other.getText())) {
+            textEqual = true;
+        }
+        return iconEqal && textEqual;
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int result = 0;
+        if (getText() != null) {
+            result = getText().hashCode(); 
+        }
+        if (getIcon() != null) {
+            result ^= getIcon().hashCode();
+        } 
+        return result;
+    }
 
     /**
      * Helper method to create a {@link StringIconOption} array from a

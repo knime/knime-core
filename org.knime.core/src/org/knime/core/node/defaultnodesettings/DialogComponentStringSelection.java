@@ -36,13 +36,17 @@ import java.util.Collection;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.DefaultStringIconOption;
+import org.knime.core.node.util.StringIconListCellEditor;
 import org.knime.core.node.util.StringIconListCellRenderer;
 import org.knime.core.node.util.StringIconOption;
 
@@ -95,7 +99,70 @@ public final class DialogComponentStringSelection extends DialogComponent {
         this(stringModel, label,
                 DefaultStringIconOption.createOptionArray(list));
     }
+    
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of combobox
+     * @param list list (not empty) of strings (not null) for the combobox
+     * @param editable true if the user should be able to add a value to the 
+     *  combo box
+     *
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
+     */
+    public DialogComponentStringSelection(
+            final SettingsModelString stringModel, final String label,
+            final Collection<String> list, final boolean editable) {
+        this(stringModel, label,
+                DefaultStringIconOption.createOptionArray(list));
+        m_combobox.setEditable(editable);
+        if (editable) {
+            final StringIconListCellEditor editor 
+                = new StringIconListCellEditor();
+            ((JTextField)editor.getEditorComponent()).getDocument()
+                // in order to get informed about model changes...
+                .addDocumentListener(new DocumentListener() {
 
+                @Override
+                public void changedUpdate(final DocumentEvent e) {
+                    try {
+                        m_combobox.setSelectedItem(editor.getItem());
+                        updateModel();
+                    } catch (final InvalidSettingsException ise) {
+                        // Ignore it here.
+                    }
+                }
+
+                @Override
+                public void insertUpdate(final DocumentEvent e) {
+                    try {
+                        m_combobox.setSelectedItem(editor.getItem());
+                        updateModel();
+                    } catch (final InvalidSettingsException ise) {
+                        // Ignore it here.
+                    }
+                }
+
+                @Override
+                public void removeUpdate(final DocumentEvent e) {
+                    try {
+                        m_combobox.setSelectedItem(editor.getItem());
+                        updateModel();
+                    } catch (final InvalidSettingsException ise) {
+                        // Ignore it here.
+                    }
+                }
+            });
+            m_combobox.setEditor(editor);
+        }
+    }
+
+    
     /**
      * Constructor that puts label and combobox into panel. It expects the user
      * to make a selection, thus, at least one item in the list of selectable
@@ -158,6 +225,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         //call this method to be in sync with the settings model
         updateComponent();
     }
+    
 
     /**
      * {@inheritDoc}
@@ -179,17 +247,19 @@ public final class DialogComponentStringSelection extends DialogComponent {
                     break;
                 }
             }
+            if (val == null) {
+                val = new DefaultStringIconOption(strVal);
+            }
         }
         boolean update;
         if (val == null) {
-            update = (m_combobox.getSelectedItem() != null);
+            update = m_combobox.getSelectedItem() != null;
         } else {
             update = !val.equals(m_combobox.getSelectedItem());
         }
         if (update) {
             m_combobox.setSelectedItem(val);
         }
-
         // also update the enable status
         setEnabledComponents(getModel().isEnabled());
     }
