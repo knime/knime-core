@@ -27,7 +27,7 @@
       <linux icon="/org.knime.product/icons/knime128.xpm"/>
       <solaris/>
       <win useIco="true">
-         <ico path="/com.knime.staticreporting.designer/icons/report_designer.ico"/>
+         <ico path="/com.knime.staticreporting.designer/icons/reporting_logo_all.ico"/>
          <bmp
             winSmallHigh="/com.knime.staticreporting.designer/icons/bmp/report_designer16.bmp"
             winSmallLow="/com.knime.staticreporting.designer/icons/bmp/knime16x8.bmp"
