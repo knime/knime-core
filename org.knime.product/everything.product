@@ -92,7 +92,7 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.bison.viz" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.perl" version="2.1.0.0021700"/>
       <feature id="com.knime.features.server.client" version="1.0.0"/>
-      <feature id="org.knime.feature.ext.libsvm" version="2.1.0.0021700"/>
+      <feature id="org.knime.features.ext.libsvm" version="2.1.0.0021700"/>
    </features>
 
 </product>
