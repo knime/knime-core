@@ -30,6 +30,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
@@ -51,10 +52,12 @@ import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
+import org.eclipse.ui.actions.RefreshAction;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
@@ -80,20 +83,26 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
- * from the tree. Such files include the data files, pmml files and files being
+ * from the tree. Such files include the data files and files being
  * used to save the internals of a node.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        NodeStateChangeListener, NodeMessageListener, 
+        NodeStateChangeListener, NodeMessageListener,
         JobManagerChangedListener {
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(KnimeResourceNavigator.class);
 
     /** ID as defined in plugin.xml. */
-    public static final String ID 
+    public static final String ID
         = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
+
+    /** Id for the group to add menu items to the context menu. */
+    public static final String KNIME_ADDITIONS
+        = "org.knime.workbench.ui.knimeadditions";
 
     /**
      * Creates a new <code>KnimeResourceNavigator</code> with an final
@@ -170,7 +179,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         doRefresh(state.getSource());
     }
 
-    
+
     /**
      *
      * {@inheritDoc}
@@ -226,8 +235,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 // expansion/collaps of the double clicked project
                 // strangly enough it opens anyway and the collopased or
                 // expanded state remains
-                // Update: 2.0.3 call handle open in order to enable 
-                // open on double-click on the Mac. So far no side-effects on 
+                // Update: 2.0.3 call handle open in order to enable
+                // open on double-click on the Mac. So far no side-effects on
                 // Windows
                 KnimeResourceNavigator.this.handleOpen(new OpenEvent(this,
                         getSelection()));
@@ -265,7 +274,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 FileTransfer.getInstance()}, new WorkflowMoveDragListener());
         viewer.addDropSupport(DND.DROP_MOVE, new Transfer[]{
                 LocalSelectionTransfer.getTransfer(),
-                FileTransfer.getInstance()}, 
+                FileTransfer.getInstance()},
                 new WorkflowMoveDropListener());
     }
 
@@ -377,7 +386,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
                     menu.remove(aItem);
-                } else if (aItem.getAction() 
+                } else if (aItem.getAction()
                         instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
@@ -413,10 +422,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                         new EditMetaInfoAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
-        // if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() >
-        // 1) {
-        menu.insertAfter(ExportKnimeWorkflowAction.ID,
-                new WFShowJobMgrViewAction());
+        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
+            menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                    new WFShowJobMgrViewAction());
+        }
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new ResetWorkflowAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
@@ -431,7 +440,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     new OpenWorkflowVariablesDialogAction());
         }
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        // }
+
+
+
+        menu.insertBefore(RefreshAction.ID,
+                new GroupMarker(KNIME_ADDITIONS));
+        menu.insertBefore(RefreshAction.ID, new Separator());
 
         menu.insertBefore(id, new Separator());
 
