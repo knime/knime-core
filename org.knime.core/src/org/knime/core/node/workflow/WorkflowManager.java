@@ -369,13 +369,13 @@ public final class WorkflowManager extends NodeContainer {
             }
             // and finally remove node itself as well.
             nc = m_workflow.removeNode(nodeID);
-            nc.cleanup();
             ReferencedFile ncDir = nc.getNodeContainerDirectory();
             // update list of obsolete node directories for non-root wfm
             if (this != ROOT && ncDir != null) {
                 m_deletedNodesFileLocations.add(ncDir);
             }
         }
+        nc.cleanup();
         setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
@@ -3453,7 +3453,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Loads the workflow contained in the directory as node into this
      * workflow instance. Loading a whole new project is usually done using
-     * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>.
+     * {@link WorkflowManager#loadProject(File, ExecutionMonitor)}.
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
      * @param keepNodeMessages Whether to keep the messages that are associated
@@ -3532,9 +3532,12 @@ public final class WorkflowManager extends NodeContainer {
         persistor.preLoadNodeContainer(workflowknimeRef, settings, result);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
+        boolean isIsolatedProject = persistor.getInPortTemplates().length == 0
+            && persistor.getOutPortTemplates().length == 0;
         InsertWorkflowPersistor insertPersistor =
             new InsertWorkflowPersistor(persistor);
-        synchronized (m_workflowMutex) {
+        Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
+        synchronized (mutex) {
             m_loadVersion = persistor.getLoadVersion();
             NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, 
                     exec, result, keepNodeMessages);
@@ -3871,15 +3874,20 @@ public final class WorkflowManager extends NodeContainer {
                 : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
-            if (m_workflow.containsNodeKey(subId)) {
-                subId = createUniqueID();
-            }
             NodeContainerPersistor pers = nodeEntry.getValue();
             translationMap.put(suffix, subId);
-            NodeContainer container = pers.getNodeContainer(this, subId);
-            addNodeContainer(container, false);
-            if (pers.isDirtyAfterLoad()) {
-                container.setDirty();
+            // the mutex may be already held here. It is not held if we load
+            // a completely new project (for performance reasons when loading
+            // 100+ workflows simultaneously in a cluster ennvironment)
+            synchronized (m_workflowMutex) {
+                if (m_workflow.containsNodeKey(subId)) {
+                    subId = createUniqueID();
+                }
+                NodeContainer container = pers.getNodeContainer(this, subId);
+                addNodeContainer(container, false);
+                if (pers.isDirtyAfterLoad()) {
+                    container.setDirty();
+                }
             }
         }
 
