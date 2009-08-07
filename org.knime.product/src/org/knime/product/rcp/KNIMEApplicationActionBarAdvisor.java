@@ -74,9 +74,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_pasteAction;
 
-//    private IWorkbenchAction m_undoAction;
-//
-//    private IWorkbenchAction m_redoAction;
+    private IWorkbenchAction m_undoAction;
+
+    private IWorkbenchAction m_redoAction;
 
     private IWorkbenchAction m_deleteAction;
 
@@ -166,10 +166,10 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_copyAction);
         m_pasteAction = ActionFactory.PASTE.create(window);
         register(m_pasteAction);
-//        m_undoAction = ActionFactory.UNDO.create(window);
-//        register(m_undoAction);
-//        m_redoAction = ActionFactory.REDO.create(window);
-//        register(m_redoAction);
+        m_undoAction = ActionFactory.UNDO.create(window);
+        register(m_undoAction);
+        m_redoAction = ActionFactory.REDO.create(window);
+        register(m_redoAction);
         m_deleteAction = ActionFactory.DELETE.create(window);
         register(m_deleteAction);
         m_selectAllAction = ActionFactory.SELECT_ALL.create(window);
@@ -273,9 +273,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
-//        editMenu.add(new Separator());
-//        editMenu.add(m_undoAction);
-//        editMenu.add(m_redoAction);
+        editMenu.add(new Separator());
+        editMenu.add(m_undoAction);
+        editMenu.add(m_redoAction);
 
         // View menu (contribution item contributes all views registered via
         // "perspectiveExtension" in ui plugin
