@@ -37,6 +37,8 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
 
 /**
+ * Pasts the current clipboard object (containing workflow persistor) into
+ * the current workflow.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -49,9 +51,10 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     private NodeID[] m_pastedIDs;
 
     /**
-     * @param manager 
-     * @param clipboardObject 
-     * @param shiftCalculator 
+     * @param manager The workflow to paste into
+     * @param clipboardObject  The current clipboard object.
+     * @param shiftCalculator The shift calculation routine, used to include
+     * some offset during paste or to provide target coordinates.
      * 
      */
     public PasteFromWorkflowPersistorCommand(final WorkflowManager  manager,
