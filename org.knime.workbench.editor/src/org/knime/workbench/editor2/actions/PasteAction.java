@@ -24,22 +24,17 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.workbench.editor2.ClipboardWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand;
+import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -99,12 +94,7 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean calculateEnabled() {
-//        ClipboardObject clipboardContent = getEditor().getClipboardContent();
-//        if (clipboardContent == null) {
-//            return false;
-//        }
-//        return clipboardContent.getNodeIDs().size() > 0;
-        return ClipboardWorkflowManager.get().size() > 0;
+        return getEditor().getClipboardContent() != null;
     }
 
     /**
@@ -112,39 +102,12 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        Collection<NodeContainer>containers = ClipboardWorkflowManager.get(); 
-        NodeID[] ids = new NodeID[containers.size()];
-        int index = 0;
-        for (NodeContainer container : containers) {
-            ids[index++] = container.getID();
-        }
-        NodeID[] copiedNodes = getManager().copyFromAndPasteHere(
-                ClipboardWorkflowManager.getSourceWorkflowManager(), ids);
-        Set<NodeID>newIDs = new HashSet<NodeID>();
-        int[] moveDist = calculateShift(copiedNodes);
-        for (NodeID id : copiedNodes) {
-            newIDs.add(id);
-            NodeContainer nc = getManager().getNodeContainer(id);
-            NodeUIInformation oldUI = (NodeUIInformation)nc.getUIInformation();
-            NodeUIInformation newUI = 
-                oldUI.createNewWithOffsetPosition(moveDist);
-            nc.setUIInformation(newUI);
-        }
-        for (ConnectionContainer conn 
-                    : getManager().getConnectionContainers()) {
-            if (newIDs.contains(conn.getDest()) 
-                    && newIDs.contains(conn.getSource())) {
-                // get bend points and move them
-                ConnectionUIInformation oldUI = 
-                    (ConnectionUIInformation)conn.getUIInfo();
-                if (oldUI != null) {
-                    ConnectionUIInformation newUI = 
-                        oldUI.createNewWithOffsetPosition(moveDist);
-                    conn.setUIInfo(newUI);
-                }
-            }
-        }
-        ClipboardWorkflowManager.incrementRetrievalCounter();
+        ClipboardObject clipObject = getEditor().getClipboardContent();
+        ShiftCalculator shiftCalculator = newShiftCalculator();
+        PasteFromWorkflowPersistorCommand pasteCommand =
+            new PasteFromWorkflowPersistorCommand(
+                    getManager(), clipObject, shiftCalculator);
+        getCommandStack().execute(pasteCommand); // enables undo
         
         // change selection (from copied ones to pasted ones)
         EditPartViewer partViewer = getEditor().getViewer();
@@ -165,7 +128,7 @@ public class PasteAction extends AbstractClipboardAction {
                 && partViewer.getRootEditPart().getContents() 
                 instanceof WorkflowRootEditPart) {
             ((WorkflowRootEditPart)partViewer.getRootEditPart().getContents())
-                .setFutureSelection(copiedNodes);
+                .setFutureSelection(pasteCommand.getPastedIDs());
         }
         
         
@@ -176,25 +139,28 @@ public class PasteAction extends AbstractClipboardAction {
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
-    
 
+    
     /**
-     * @param ids the ids of the nodes for which the shift should be 
-     *  calculated (in normal {@link PasteAction} the offset is fixed, but in
-     *  {@link PasteActionContextMenu} the position of the nodes is set relative
-     *  to the mouse position
-     *  
-     * @return the offset to add to the current node position, which is done by 
-     *  the {@link NodeUIInformation#createNewWithOffsetPosition(int[])}
+     * A shift operator that calculates a fixed offset. The sub class
+     * {@link PasteActionContextMenu} overrides this method to return a 
+     * different shift calculator that respects the current mouse 
+     * pointer location.
+     * @return A new shift calculator.
      */
-    protected int[] calculateShift(final NodeID[] ids) {
-        // simply return the offset 
-        // the uiInfo.changePosition(moveDist); adds the distance to the 
-        // current location of the node
-        int counter = ClipboardWorkflowManager.getRetrievalCounter();
-        counter += 1;
-        int newX = (OFFSET * counter);
-        int newY = (OFFSET * counter);
-        return new int[] {newX, newY};
+    protected ShiftCalculator newShiftCalculator() {
+        return new ShiftCalculator() {
+            /** {@inheritDoc} */
+            @Override
+            public int[] calculateShift(final NodeID[] ids, 
+                    final WorkflowManager manager, 
+                    final ClipboardObject clipObject) {
+                final int counter = 
+                    clipObject.incrementAndGetRetrievalCounter();
+                int newX = (OFFSET * counter);
+                int newY = (OFFSET * counter);
+                return new int[] {newX, newY};
+            }
+        };
     }
 }

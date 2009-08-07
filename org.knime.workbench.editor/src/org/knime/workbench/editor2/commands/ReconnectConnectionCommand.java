@@ -96,8 +96,7 @@ public class ReconnectConnectionCommand extends Command {
         // create the delete command
         m_deleteCommand = new DeleteConnectionCommand(connection, m_manager);
         
-        ConnectionContainer oldConnection = (ConnectionContainer)connection
-            .getModel(); 
+        ConnectionContainer oldConnection = connection.getModel(); 
         m_oldTarget = oldConnection.getDest();
         
         m_newTarget = target.getID();
@@ -110,7 +109,7 @@ public class ReconnectConnectionCommand extends Command {
 
         // create the create command
         CreateConnectionCommand cmd = new CreateConnectionCommand();
-
+        cmd.setNewConnectionUIInfo(oldConnection.getUIInfo());
 
         if (host instanceof NodeOutPortEditPart 
                     || host instanceof WorkflowInPortEditPart
@@ -125,11 +124,10 @@ public class ReconnectConnectionCommand extends Command {
         }
         if (target instanceof NodeInPortEditPart 
                 || target instanceof WorkflowOutPortEditPart) {
-            cmd.setTargetPortID(((AbstractPortEditPart)target).getIndex());
+            cmd.setTargetPortID(target.getIndex());
             cmd.setTargetNode((ConnectableEditPart)target.getParent());
         } else {
             return;
-
         }
 
         m_createCommand = cmd;
@@ -143,7 +141,6 @@ public class ReconnectConnectionCommand extends Command {
         return !m_identical 
             && m_deleteCommand.canExecute() 
             && m_createCommand.canExecute();
-
     }
 
     /**
@@ -167,17 +164,17 @@ public class ReconnectConnectionCommand extends Command {
         if (m_confirm && (oldExecuted || newExecuted)) {
             // create comprehensible and correct confirmation message
             StringBuffer message = new StringBuffer(
-                    "Do you want to delete existing connection? \n");
+                    "Do you want to delete the existing connection? \n");
             if (oldExecuted || newExecuted) {
                 message.append("This will reset ");
                 if (oldExecuted) {
-                    message.append("current target node");
+                    message.append("the current destination node");
                 }
                 if (oldExecuted && newExecuted) {
                     message.append(" and");
                 }
                 if (newExecuted) {
-                    message.append(" new target node");
+                    message.append(" the new target node");
                 }
                 message.append("!");
             }
@@ -194,5 +191,18 @@ public class ReconnectConnectionCommand extends Command {
         m_deleteCommand.execute();
         m_createCommand.setConfirm(false);
         m_createCommand.execute();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean canUndo() {
+        return m_createCommand.canExecute() && m_deleteCommand.canUndo();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void undo() {
+        m_createCommand.undo();
+        m_deleteCommand.undo();
     }
 }

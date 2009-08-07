@@ -125,10 +125,4 @@ public class CreateNodeCommand extends Command {
         }
     }
     
-    /** {@inheritDoc} */
-    @Override
-    public void dispose() {
-        super.dispose();
-        m_container = null;
-    }
 }

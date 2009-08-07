@@ -25,7 +25,11 @@
 package org.knime.workbench.editor2.actions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.RequestConstants;
@@ -34,7 +38,6 @@ import org.eclipse.gef.internal.GEFMessages;
 import org.eclipse.gef.requests.GroupRequest;
 import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.ui.IWorkbenchPart;
-
 import org.knime.workbench.editor2.commands.VerifyingCompoundCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -76,14 +79,18 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         }
 
         GroupRequest deleteReq = new GroupRequest(RequestConstants.REQ_DELETE);
-        deleteReq.setEditParts(objects);
 
         VerifyingCompoundCommand compoundCmd = new VerifyingCompoundCommand(
                 GEFMessages.DeleteAction_ActionDeleteCommandName);
 
         // get the selected nodes and connections
         List<NodeContainerEditPart> nodeParts = getNodeContainerEditParts(getSelectedObjects());
-        List<ConnectionContainerEditPart> connParts = getConnectionContainerEditParts(getSelectedObjects());
+        Set<ConnectionContainerEditPart> connParts = getConnectionContainerEditParts(getSelectedObjects());
+        addAffectedConnections(nodeParts, connParts);
+        List<Object> deleteObjects = new ArrayList<Object>(nodeParts);
+        deleteObjects.addAll(connParts);
+        deleteReq.setEditParts(deleteObjects);
+        
         if (nodeParts.size() == 1) {
 
             NodeContainerEditPart nodePart = nodeParts.get(0);
@@ -121,8 +128,8 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         // set the parts into the compound command
         compoundCmd.setNodeParts(nodeParts);
 
-        for (int i = 0; i < objects.size(); i++) {
-            EditPart object = (EditPart)objects.get(i);
+        for (Object o : deleteObjects) {
+            EditPart object = (EditPart)o;
             Command cmd = object.getCommand(deleteReq);
             if (cmd != null) {
                 compoundCmd.add(cmd);
@@ -148,10 +155,11 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         return result;
     }
 
-    private List<ConnectionContainerEditPart> getConnectionContainerEditParts(
+    private Set<ConnectionContainerEditPart> getConnectionContainerEditParts(
             final List objects) {
 
-        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
+        Set<ConnectionContainerEditPart> result = 
+            new LinkedHashSet<ConnectionContainerEditPart>();
 
         for (int i = 0; i < objects.size(); i++) {
             Object obj = objects.get(i);
@@ -162,5 +170,20 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         }
 
         return result;
+    }
+    
+    /** Adds all connections, which do not belong to the current selection
+     * to the connParts argument. This is necessary to keep track on which 
+     * connections were removed (to allow for undo).
+     * @param nodeParts the selected nodes
+     * @param connParts the already selected connections. This list will be 
+     * modified by this method.
+     */
+    void addAffectedConnections(
+            final Collection<NodeContainerEditPart> nodeParts, 
+            final Collection<ConnectionContainerEditPart> connParts) {
+        for (NodeContainerEditPart ncep : nodeParts) {
+            connParts.addAll(Arrays.asList(ncep.getAllConnections()));
+        }
     }
 }

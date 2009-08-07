@@ -28,13 +28,16 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
  * Command for creation of connection bendpoints. The bendpoints are stored in a
- * default implementation of an <code>ExtraInfo</code> object.
+ * default implementation of an <code>UIInformation</code> object.
  *
  * @author Florian Georg, University of Konstanz
  */
@@ -43,35 +46,48 @@ public class NewBendpointCreateCommand extends Command {
 
     private final int m_index;
 
-    private ConnectionUIInformation m_extraInfo;
+    private ConnectionUIInformation m_uiInfo;
 
     private AbsoluteBendpoint m_bendpoint;
 
-    private final ConnectionContainerEditPart m_connection;
-
     private final ZoomManager m_zoomManager;
+
+    private final WorkflowManager m_manager;
+    
+    private final NodeID m_destNodeID;
+    
+    private final int m_destPort;
 
     /**
      * New NewBendpointCreateCommand.
      *
      * @param connection The connection model
+     * @param manager The workflow manager
      * @param index bendpoint index
      * @param location where ?
+     * @param zoomManager The zoom manager
      */
     public NewBendpointCreateCommand(
             final ConnectionContainerEditPart connection,
+            final WorkflowManager manager,
             final int index, final Point location, 
             final ZoomManager zoomManager) {
-        m_connection = connection;
-        m_extraInfo = (ConnectionUIInformation)connection
+        m_uiInfo = (ConnectionUIInformation)connection
             .getUIInformation();
-        if (m_extraInfo == null) {
-            m_extraInfo = new ConnectionUIInformation();
+        if (m_uiInfo == null) {
+            m_uiInfo = new ConnectionUIInformation();
         }
         m_index = index;
         m_location = location;
-
         m_zoomManager = zoomManager;
+        ConnectionContainer cc = connection.getModel();
+        m_destNodeID = cc.getDest();
+        m_destPort = cc.getDestPort();
+        m_manager = manager;
+    }
+    
+    private ConnectionContainer getConnectionContainer() {
+        return m_manager.getIncomingConnectionFor(m_destNodeID, m_destPort);
     }
 
     /**
@@ -84,10 +100,10 @@ public class NewBendpointCreateCommand extends Command {
 
         m_bendpoint = new AbsoluteBendpoint(location);
         m_bendpoint.setLocation(location);
-        m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        m_uiInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setUIInformation(m_extraInfo);
+        getConnectionContainer().setUIInfo(m_uiInfo);
 
     }
 
@@ -99,10 +115,10 @@ public class NewBendpointCreateCommand extends Command {
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
 
-        m_extraInfo.addBendpoint(location.x, location.y, m_index);
+        m_uiInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setUIInformation(m_extraInfo);
+        getConnectionContainer().setUIInfo(m_uiInfo);
     }
 
     /**
@@ -110,9 +126,8 @@ public class NewBendpointCreateCommand extends Command {
      */
     @Override
     public void undo() {
-        m_extraInfo.removeBendpoint(m_index);
-
+        m_uiInfo.removeBendpoint(m_index);
         // we need this to fire some update event up
-        m_connection.setUIInformation(m_extraInfo);
+        getConnectionContainer().setUIInfo(m_uiInfo);
     }
 }

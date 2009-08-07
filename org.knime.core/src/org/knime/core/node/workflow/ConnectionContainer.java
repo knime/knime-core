@@ -24,6 +24,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.concurrent.CopyOnWriteArraySet;
+
 /**
  * Holds all information related to one connection between specific ports
  * of two nodes. It also holds additional information, which can be adjusted
@@ -32,12 +34,17 @@ package org.knime.core.node.workflow;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public class ConnectionContainer {
+
     private final NodeID m_source;
     private final int m_sourcePort;
     private final NodeID m_dest;
     private final int m_destPort;
     private boolean m_isDeletable = true;
     private UIInformation m_uiInfo;
+    private final CopyOnWriteArraySet<ConnectionUIInformationListener> 
+        m_uiListeners = 
+            new CopyOnWriteArraySet<ConnectionUIInformationListener>();
+
     
     enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
         /**
@@ -145,8 +152,44 @@ public class ConnectionContainer {
      */
     public void setUIInfo(final UIInformation uiInfo) {
         m_uiInfo = uiInfo;
+        notifyUIListeners(new ConnectionUIInformationEvent(this, m_uiInfo));
     }
     
+    /** Add a listener to the list of registered listeners.
+     * @param l The listener to add, must not be null.
+     */
+    public void addUIInformationListener(
+            final ConnectionUIInformationListener l) {
+        if (l == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
+        m_uiListeners.add(l);
+    }
+
+    /** Remove a registered listener from the listener list.
+     * @param l The listener to remove.
+     */
+    public void removeUIInformationListener(
+            final ConnectionUIInformationListener l) {
+        m_uiListeners.remove(l);
+    }
+    
+    /** Removes all registered listeners in order to release references on
+     * this object. */
+    public void cleanup() {
+        m_uiListeners.clear();
+    }
+
+    /** Notifies all registered listeners with the argument event.
+     * @param evt The event to fire.
+     */
+    protected void notifyUIListeners(final ConnectionUIInformationEvent evt) {
+        for (ConnectionUIInformationListener l : m_uiListeners) {
+            l.connectionUIInformationChanged(evt);
+        }
+    }
+
+    /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
         if (!(obj instanceof ConnectionContainer)) {
@@ -158,6 +201,7 @@ public class ConnectionContainer {
                 && m_type.equals(cc.m_type);
     }
     
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_dest.hashCode() + m_source.hashCode() + m_destPort

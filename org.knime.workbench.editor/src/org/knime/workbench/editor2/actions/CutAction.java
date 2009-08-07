@@ -110,23 +110,14 @@ public class CutAction extends AbstractClipboardAction {
 
         // delete the nodes
         WorkflowManager manager = getEditor().getWorkflowManager();
-
+        // TODO delete all at once (one command)
         for (NodeContainerEditPart nodePart : nodeParts) {
-            
-            
-            // create a delete command
-            DeleteNodeContainerCommand delete = new DeleteNodeContainerCommand(
-                    nodePart, manager);
-
-            // if not locked
-            if (delete.canExecute()) {
-                
-                delete.execute();
-            }
-            
+            // use dedicated delete command to enable undo/redo
+            DeleteNodeContainerCommand delete = 
+                new DeleteNodeContainerCommand(nodePart, manager);
+            getCommandStack().execute(delete);
         }
 
-        // update the actions
         getEditor().updateActions();
 
         // Give focus to the editor again. Otherwise the actions (selection)

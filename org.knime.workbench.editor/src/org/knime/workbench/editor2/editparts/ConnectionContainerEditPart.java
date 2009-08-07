@@ -31,6 +31,7 @@ import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
@@ -42,9 +43,10 @@ import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.ConnectionUIInformationEvent;
+import org.knime.core.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.node.workflow.UIInformation;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
@@ -61,17 +63,48 @@ import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRout
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements WorkflowListener, ZoomListener {
+        implements ZoomListener, ConnectionUIInformationListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ConnectionContainerEditPart.class);
+    
+    /** {@inheritDoc} */
+    @Override
+    public ConnectionContainer getModel() {
+        return (ConnectionContainer)super.getModel();
+    }
+    
 
-    /**
-     *
+    /** Returns the parent WFM. This method may also return null if the target
+     * edit part has no parent assigned.
+     * @return The hosting WFM
      */
-    public ConnectionContainerEditPart() {
+    public WorkflowManager getWorkflowManager() {
+        EditPart targetEditPart = getTarget();
+        if (targetEditPart instanceof NodeInPortEditPart) {
+            return ((NodeInPortEditPart)targetEditPart).getManager();
+        }
+        if (targetEditPart instanceof WorkflowOutPortEditPart) {
+            return ((WorkflowOutPortEditPart)targetEditPart).getManager();
+        }
+        return null;
     }
 
+    
+    /** {@inheritDoc} */
+    @Override
+    public void activate() {
+        getModel().addUIInformationListener(this);
+        super.activate();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void deactivate() {
+        getModel().removeUIInformationListener(this);
+        super.deactivate();
+    }
+    
     /**
      * Creates a GEF command to shift the connections bendpoints.
      *
@@ -80,7 +113,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @return the command to change the bendpoint locations
      */
     public Command getBendpointAdaptionCommand(final Request request) {
-
         ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest) request;
 
         ZoomManager zoomManager =
@@ -129,14 +161,14 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
                         .getZoom()));
         return conn;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void workflowChanged(final WorkflowEvent event) {
+    
+    /** {@inheritDoc} */
+    @Override
+    public void connectionUIInformationChanged(
+            final ConnectionUIInformationEvent evt) {
         refreshVisuals();
     }
-    
+
     /**
      * Forwards the ui information to the model and refreshes the connection.
      * 
@@ -144,8 +176,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * bendpoints are used)
      */
     public void setUIInformation(final UIInformation uiInfo) {
-        ((ConnectionContainer)getModel()).setUIInfo(uiInfo);
-        refreshVisuals();
+        getModel().setUIInfo(uiInfo);
     }
     
     
@@ -155,7 +186,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      *  bendpoints are involved)
      */
     public UIInformation getUIInformation() {
-        return ((ConnectionContainer)getModel()).getUIInfo();
+        return (getModel()).getUIInfo();
     }
 
     /**
@@ -167,7 +198,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         LOGGER.debug("refreshing visuals for: " + getModel());
         ConnectionUIInformation ei = null;
         ei =
-                (ConnectionUIInformation) ((ConnectionContainer)getModel())
+                (ConnectionUIInformation) (getModel())
                         .getUIInfo();
         LOGGER.debug("modelling info: " + ei);
         if (ei == null) {

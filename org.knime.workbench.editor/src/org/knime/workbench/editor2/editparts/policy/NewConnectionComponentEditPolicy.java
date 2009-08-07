@@ -28,7 +28,6 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.ComponentEditPolicy;
 import org.eclipse.gef.requests.GroupRequest;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.commands.DeleteConnectionCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -47,7 +46,7 @@ public class NewConnectionComponentEditPolicy extends ComponentEditPolicy {
 
         ConnectionContainerEditPart c = (ConnectionContainerEditPart) getHost();
         // we need the workflow manager
-        // This is a bitr tricky here, as the parent of the connection's edit
+        // This is a bit tricky here, as the parent of the connection's edit
         // part is the ScalableFreefromEditPart. We need to get the first (and
         // only) child to get a reference to "our" root (WorkflowRootEditPart)
         WorkflowManager manager = ((WorkflowRootEditPart) getHost().getRoot()

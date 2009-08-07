@@ -29,7 +29,9 @@ import java.util.Arrays;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the
@@ -43,7 +45,10 @@ public class ChangeNodeBoundsCommand extends Command {
     private final int[] m_oldBounds;
     private final int[] m_newBounds;
 
-    private final NodeContainer m_container;
+    /* must not keep NodeContainer here to enable undo/redo (the node container
+     * instance may change if deleted and the delete is undone. */
+    private final NodeID m_nodeID;
+    private final WorkflowManager m_manager;
 
     /**
      *
@@ -58,7 +63,8 @@ public class ChangeNodeBoundsCommand extends Command {
             (NodeUIInformation) container.getUIInformation();
         m_oldBounds = uiInfo.getBounds();
         m_newBounds = newBounds;
-        m_container = container;
+        m_nodeID = container.getID();
+        m_manager = container.getParent();
     }
 
     /**
@@ -72,8 +78,9 @@ public class ChangeNodeBoundsCommand extends Command {
             NodeUIInformation information = new NodeUIInformation(
                     m_newBounds[0], m_newBounds[1],
                     m_newBounds[2], m_newBounds[3], true);
+            NodeContainer container = m_manager.getNodeContainer(m_nodeID);
             // must set explicitly so that event is fired by container
-            m_container.setUIInformation(information);
+            container.setUIInformation(information);
         }
     }
 
@@ -88,7 +95,8 @@ public class ChangeNodeBoundsCommand extends Command {
             NodeUIInformation information = new NodeUIInformation(
                     m_oldBounds[0], m_oldBounds[1],
                     m_oldBounds[2], m_oldBounds[3], true);
-            m_container.setUIInformation(information);
+            NodeContainer container = m_manager.getNodeContainer(m_nodeID);
+            container.setUIInformation(information);
         }
     }
 }

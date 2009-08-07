@@ -42,10 +42,12 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import org.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
 import org.knime.workbench.editor2.commands.NewBendpointMoveCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.editparts.snap.ConnectionBendpointCreationHandel;
 import org.knime.workbench.editor2.editparts.snap.ConnectionBendpointMoveHandel;
 
@@ -87,7 +89,8 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     private List createHandlesForAutomaticBendpoints() {
-        List<ConnectionBendpointCreationHandel> list = new ArrayList<ConnectionBendpointCreationHandel>();
+        List<ConnectionBendpointCreationHandel> list = 
+            new ArrayList<ConnectionBendpointCreationHandel>();
         ConnectionEditPart connEP = (ConnectionEditPart)getHost();
         PointList points = getConnection().getPoints();
         for (int i = 0; i < points.size() - 1; i++) {
@@ -431,6 +434,16 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
             showCreateBendpointFeedback((BendpointRequest)request);
         }
     }
+    
+    /** @return The workflow manager associated with the host. */
+    public WorkflowManager getWorkflowManager() {
+        // we need the workflow manager
+        // This is a bit tricky here, as the parent of the connection's edit
+        // part is the ScalableFreefromEditPart. We need to get the first (and
+        // only) child to get a reference to "our" root (WorkflowRootEditPart)
+        return ((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
+            .getWorkflowManager();
+    }
 
     /**
      * {@inheritDoc}
@@ -444,7 +457,8 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
 
-        return new NewBendpointCreateCommand(editPart, index, loc, zoomManager);
+        return new NewBendpointCreateCommand(editPart, getWorkflowManager(), 
+                index, loc, zoomManager);
     }
 
     /**
@@ -455,8 +469,8 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         int index = req.getIndex();
         ConnectionContainerEditPart editPart 
             = (ConnectionContainerEditPart)getHost();
-
-        return new NewBendpointDeleteCommand(editPart, index);
+        WorkflowManager wfm = getWorkflowManager();
+        return new NewBendpointDeleteCommand(editPart, wfm, index);
     }
 
     /**
@@ -466,12 +480,12 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         // index of the bendpoint to move
         int index = request.getIndex();
         Point loc = request.getLocation();
-        ConnectionContainerEditPart editPart 
+        ConnectionContainerEditPart edit 
             = (ConnectionContainerEditPart)getHost();
 
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
-
-        return new NewBendpointMoveCommand(editPart, index, loc, zoomManager);
+        WorkflowManager m = getWorkflowManager();
+        return new NewBendpointMoveCommand(edit, m, index, loc, zoomManager);
     }
 }

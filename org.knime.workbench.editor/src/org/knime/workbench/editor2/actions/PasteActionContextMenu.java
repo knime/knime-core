@@ -29,8 +29,10 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.workbench.editor2.ClipboardWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -71,49 +73,55 @@ public class PasteActionContextMenu extends PasteAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         super.runOnNodes(nodeParts);
-        ClipboardWorkflowManager.resetRetrievalCounter();
     }
-
-    /**
-     * 
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
-    protected int[] calculateShift(final NodeID[] ids) {
-        int x = getEditor().getSelectionTool().getXLocation();
-        int y = getEditor().getSelectionTool().getYLocation();
-        int smallestX = Integer.MAX_VALUE;
-        int smallestY = Integer.MAX_VALUE;
-        for (int i = 0; i < ids.length; i++) {
-            NodeContainer nc = getManager().getNodeContainer(ids[i]);
-            // finaly change the extra info so that the copies are
-            // located differently (if not null)
-            NodeUIInformation extraInfo =
-                    (NodeUIInformation)nc.getUIInformation();
-            int[] bounds = extraInfo.getBounds();
-            int currentX = bounds[0];
-            int currentY = bounds[1];
-            if (currentX < smallestX) {
-                smallestX = currentX;
+    protected ShiftCalculator newShiftCalculator() {
+        return new ShiftCalculator() {
+            /** {@inheritDoc} */
+            @Override
+            public int[] calculateShift(
+                    final NodeID[] ids, final WorkflowManager manager, 
+                    final ClipboardObject clipObject) {
+                int x = getEditor().getSelectionTool().getXLocation();
+                int y = getEditor().getSelectionTool().getYLocation();
+                int smallestX = Integer.MAX_VALUE;
+                int smallestY = Integer.MAX_VALUE;
+                for (int i = 0; i < ids.length; i++) {
+                    NodeContainer nc = getManager().getNodeContainer(ids[i]);
+                    // finaly change the extra info so that the copies are
+                    // located differently (if not null)
+                    NodeUIInformation extraInfo =
+                            (NodeUIInformation)nc.getUIInformation();
+                    int[] bounds = extraInfo.getBounds();
+                    int currentX = bounds[0];
+                    int currentY = bounds[1];
+                    if (currentX < smallestX) {
+                        smallestX = currentX;
+                    }
+                    if (currentY < smallestY) {
+                        smallestY = currentY;
+                    }
+                }
+                ZoomManager zoomManager =
+                        (ZoomManager)getEditor().getViewer().getProperty(
+                                ZoomManager.class.toString());
+
+                Point viewPortLocation = 
+                    zoomManager.getViewport().getViewLocation();
+                x += viewPortLocation.x;
+                y += viewPortLocation.y;
+                double zoom = zoomManager.getZoom();
+                x /= zoom;
+                y /= zoom;
+
+                int shiftx = x - smallestX;
+                int shifty = y - smallestY;
+
+                return new int[]{shiftx, shifty};
             }
-            if (currentY < smallestY) {
-                smallestY = currentY;
-            }
-        }
-        ZoomManager zoomManager =
-                (ZoomManager)getEditor().getViewer().getProperty(
-                        ZoomManager.class.toString());
-
-        Point viewPortLocation = zoomManager.getViewport().getViewLocation();
-        x += viewPortLocation.x;
-        y += viewPortLocation.y;
-        double zoom = zoomManager.getZoom();
-        x /= zoom;
-        y /= zoom;
-
-        int shiftx = x - smallestX;
-        int shifty = y - smallestY;
-
-        return new int[]{shiftx, shifty};
+        };
     }
+
 }

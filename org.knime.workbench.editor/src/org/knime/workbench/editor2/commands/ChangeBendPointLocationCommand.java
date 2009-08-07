@@ -28,49 +28,71 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
  * GEF Command for changing the location of a <code>ConnectionContainer</code>
- * in the workflow. The bounds are stored into the <code>ExtraInfo</code>
+ * in the workflow. The bounds are stored into the <code>UIInformation</code>
  * object of the <code>ConnectionContainer</code>
  * 
  * @author Christoph Sieb, University of Konstanz
  */
 public class ChangeBendPointLocationCommand extends Command {
-    private Point m_locationShift;
-
-    private ConnectionContainerEditPart m_container;
-
-    private ConnectionUIInformation m_extraInfo;
-
-    private ZoomManager m_zoomManager;
+    
+    private final Point m_locationShift;
+    
+    /* We keep destination node and port instead of the ConnectionContainer
+     * as field. This allows redo/undo to be performed even if the connection 
+     * was (temporarily) removed. 
+     */
+    /** ID of the connection's destination node. */
+    private final NodeID m_destNodeID;
+    /** Port the connection leads to. */
+    private final int m_destPort;
+    /** The associated workflow manager. */
+    private final WorkflowManager m_manager;
+    private final ZoomManager m_zoomManager;
 
     /**
-     * @param container The node container to change
+     * @param container The connection container to change
      * @param locationShift the values (x,y) to change the location of all
      *            bendpoints
+     * @param zoomManager The zoom manager
      */
     public ChangeBendPointLocationCommand(
             final ConnectionContainerEditPart container,
             final Point locationShift, final ZoomManager zoomManager) {
-        if (container == null
-                || container.getUIInformation() == null
-                || !(container.getUIInformation() 
-                        instanceof ConnectionUIInformation)) {
-            return;
-        }
-
-        m_extraInfo = (ConnectionUIInformation)container
-            .getUIInformation();
-        m_locationShift = locationShift;
-        m_container = container;
-
         m_zoomManager = zoomManager;
+        m_locationShift = locationShift;
+        if (container != null) {
+            m_destNodeID = container.getModel().getDest();
+            m_destPort = container.getModel().getDestPort();
+            m_manager = container.getWorkflowManager();
+        } else {
+            m_destNodeID = null;
+            m_destPort = -1;
+            m_manager = null;
+        }
     }
 
+    private ConnectionContainer getConnectionContainer() {
+        if (m_destNodeID == null || m_manager == null) {
+            return null;
+        }
+        return m_manager.getIncomingConnectionFor(m_destNodeID, m_destPort); 
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        return getConnectionContainer() != null;
+    }
+    
     /**
      * Shift all bendpoints in positive shift direction.
      * 
@@ -80,9 +102,15 @@ public class ChangeBendPointLocationCommand extends Command {
     public void execute() {
         NodeLogger.getLogger(ChangeBendPointLocationCommand.class).debug(
                 " execute change bendpoint location command...");
-        changeBendpointsExtraInfo(false);
+        changeBendpointsUIInfo(false);
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean canUndo() {
+        return canExecute();
+    }
+    
     /**
      * Shift all bendpoints in negative shift direction.
      * 
@@ -90,15 +118,18 @@ public class ChangeBendPointLocationCommand extends Command {
      */
     @Override
     public void undo() {
-        changeBendpointsExtraInfo(true);
+        changeBendpointsUIInfo(true);
     }
 
-    private void changeBendpointsExtraInfo(final boolean shiftBack) {
-        if (m_extraInfo == null) {
+    private void changeBendpointsUIInfo(final boolean shiftBack) {
+        
+        ConnectionContainer cc = getConnectionContainer();
+        ConnectionUIInformation ui = (ConnectionUIInformation)cc.getUIInfo();
+        if (ui == null) {
             return;
         }
 
-        int[][] bendpoints = m_extraInfo.getAllBendpoints();
+        int[][] bendpoints = ui.getAllBendpoints();
 
         Point locationShift = m_locationShift.getCopy();
 
@@ -107,21 +138,19 @@ public class ChangeBendPointLocationCommand extends Command {
         int length = bendpoints.length;
         int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
         int shiftY = shiftBack ? locationShift.y * -1 : locationShift.y;
-
+        
+        ConnectionUIInformation newUI = new ConnectionUIInformation();
         for (int i = 0; i < length; i++) {
 
             // get old
-            int x = m_extraInfo.getBendpoint(i)[0];
-            int y = m_extraInfo.getBendpoint(i)[1];
-
-            // remove the old point
-            m_extraInfo.removeBendpoint(i);
+            int x = ui.getBendpoint(i)[0];
+            int y = ui.getBendpoint(i)[1];
 
             // set the new point
-            m_extraInfo.addBendpoint(x + shiftX, y + shiftY, i);
+            newUI.addBendpoint(x + shiftX, y + shiftY, i);
         }
 
         // must set explicitly so that event is fired by container
-        m_container.setUIInformation(m_extraInfo);
+        cc.setUIInfo(newUI);
     }
 }

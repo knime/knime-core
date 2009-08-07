@@ -24,59 +24,44 @@
  */
 package org.knime.workbench.editor2;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 
 /**
- * Holds a clipboard object and additional information.
+ * Holds a workflow persistor that contains nodes and connections that were
+ * copied or cut and a retrieval counter used to determine visual offsets when
+ * inserting the nodes.
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class ClipboardObject {
-    /**
-     * The content to hold in the clipboard.
-     */
-    private final List<NodeID>m_nodeIDs;
-
-    private final WorkflowManager m_sourceWorkflow;
     
-    /**
-     * To remember how often the object was retrieved.
-     */
+    /** The content to hold in the clipboard. */
+    private final WorkflowPersistor m_copyPersistor;
+
+    /** To remember how often the object was retrieved.
+     * Used to adjust the coordinates of a node when inserted multiple times. */
     private int m_retrievalCounter;
 
-    public ClipboardObject(final WorkflowManager sourceWorkflow,
-            List<NodeID>nodeIds) {
-        m_sourceWorkflow = sourceWorkflow;
-        m_nodeIDs = nodeIds;
+    /** Create new object, memorize persistor.
+     * @param copyPersistor The copy persistor.
+     */
+    public ClipboardObject(final WorkflowPersistor copyPersistor) {
+        m_copyPersistor = copyPersistor;
         m_retrievalCounter = 0;
     }
 
     
-    public List<NodeID>getNodeIDs(){
-        return Collections.unmodifiableList(m_nodeIDs);
-    }
-
-    public WorkflowManager getSourceWorkflow() {
-        return m_sourceWorkflow;
-    }
-    
-    /**
-     * @return returns the number of retrievals of this clipboard object
-     */
-    public int getRetrievalCounter() {
-        return m_retrievalCounter;
+    /** @return the persistor. */
+    public WorkflowPersistor getCopyPersistor() {
+        return m_copyPersistor;
     }
 
     /**
-     * Increments the retrieval counter. The correct incrementation is
-     * application dependent.
+     * @return the (incremented) retrieval counter. 
      */
-    public void incrementRetrievalCounter() {
-        m_retrievalCounter++;
+    public int incrementAndGetRetrievalCounter() {
+        return ++m_retrievalCounter;
     }
 }

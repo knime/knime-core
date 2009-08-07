@@ -69,10 +69,7 @@ public class DeleteConnectionCommand extends Command {
         if (m_connection == null || m_connection.getModel() == null) {
             return false;
         }
-        boolean workflowAllowsDeletion =
-                m_manager.canRemoveConnection((ConnectionContainer)
-                        m_connection.getModel());
-        return workflowAllowsDeletion;
+        return m_manager.canRemoveConnection(m_connection.getModel());
     }
 
     /**
@@ -81,8 +78,7 @@ public class DeleteConnectionCommand extends Command {
     @Override
     public void execute() {
         try {
-            ConnectionContainer deleted =
-                (ConnectionContainer)m_connection.getModel(); 
+            ConnectionContainer deleted = m_connection.getModel(); 
             m_manager.removeConnection(deleted);
             m_deletedConnection = deleted;
         } catch (Exception ex) {
@@ -112,7 +108,8 @@ public class DeleteConnectionCommand extends Command {
     @Override
     public void undo() {
         ConnectionContainer d = m_deletedConnection;
-        m_manager.addConnection(d.getSource(), 
+        ConnectionContainer newConn = m_manager.addConnection(d.getSource(), 
                 d.getSourcePort(), d.getDest(), d.getDestPort());
+        newConn.setUIInfo(d.getUIInfo());
     }
 }

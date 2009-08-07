@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -58,6 +59,8 @@ public class CreateConnectionCommand extends Command {
     private WorkflowManager m_manager;
 
     private boolean m_startedOnOutPort;
+    
+    private UIInformation m_newConnectionUIInfo;
 
     private ConnectionContainer m_connection;
     
@@ -72,8 +75,6 @@ public class CreateConnectionCommand extends Command {
      * not.
      */
     public CreateConnectionCommand() {
-//        KNIMEUIPlugin.getDefault().getPreferenceStore().setDefault(
-//                PreferenceConstants.P_CONFIRM_RECONNECT, true);
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
     }
@@ -102,6 +103,14 @@ public class CreateConnectionCommand extends Command {
      */
     public boolean doConfirm() {
         return m_confirm;
+    }
+
+    /**
+     * @param newConnectionUIInfo the newConnectionUIInfo to set
+     */
+    public void setNewConnectionUIInfo(
+            final UIInformation newConnectionUIInfo) {
+        m_newConnectionUIInfo = newConnectionUIInfo;
     }
 
     /**
@@ -229,7 +238,6 @@ public class CreateConnectionCommand extends Command {
         return m_manager.canRemoveConnection(m_connection);
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -249,7 +257,7 @@ public class CreateConnectionCommand extends Command {
             return;
         }
 
-        // let check the workflow manager if the connection can be created
+        // let the workflow manager check if the connection can be created
         // in case it can not an exception is thrown which is caught and
         // displayed to the user
         try {
@@ -275,16 +283,17 @@ public class CreateConnectionCommand extends Command {
                 m_oldConnection = conn;
             }
 
-            LOGGER.info("adding connection from "
-                    + m_sourceNode.getNodeContainer()
-                    .getID() + " " + m_sourcePortID
-                    + " to " + m_targetNode.getNodeContainer().getID()
+            LOGGER.debug("adding connection from " 
+                    + m_sourceNode.getNodeContainer().getID() + " " 
+                    + m_sourcePortID + " to " 
+                    + m_targetNode.getNodeContainer().getID() 
                     + " " + m_targetPortID);
-            m_connection =
-                    m_manager.addConnection(m_sourceNode.getNodeContainer()
-                            .getID(), m_sourcePortID, m_targetNode
-                            .getNodeContainer().getID(), m_targetPortID);
-
+            m_connection = m_manager.addConnection(
+                    m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
+                    m_targetNode.getNodeContainer().getID(), m_targetPortID);
+            if (m_newConnectionUIInfo != null) {
+                m_connection.setUIInfo(m_newConnectionUIInfo);
+            }
         } catch (Throwable e) {
             LOGGER.error("Connection could not be created.", e);
             m_connection = null;
@@ -316,7 +325,6 @@ public class CreateConnectionCommand extends Command {
             PreferenceConstants.P_CONFIRM_RECONNECT);
     }
     
-
     /**
      * {@inheritDoc}
      */
@@ -325,8 +333,10 @@ public class CreateConnectionCommand extends Command {
         m_manager.removeConnection(m_connection);
         ConnectionContainer old = m_oldConnection;
         if (old != null) {
-            m_manager.addConnection(old.getSource(), old.getSourcePort(),
+            ConnectionContainer newConn = m_manager.addConnection(
+                    old.getSource(), old.getSourcePort(),
                     old.getDest(), old.getDestPort());
+            newConn.setUIInfo(old.getUIInfo());
         }
     }
 }
