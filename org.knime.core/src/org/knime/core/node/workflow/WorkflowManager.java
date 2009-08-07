@@ -369,13 +369,13 @@ public final class WorkflowManager extends NodeContainer {
             }
             // and finally remove node itself as well.
             nc = m_workflow.removeNode(nodeID);
+            nc.cleanup();
             ReferencedFile ncDir = nc.getNodeContainerDirectory();
             // update list of obsolete node directories for non-root wfm
             if (this != ROOT && ncDir != null) {
                 m_deletedNodesFileLocations.add(ncDir);
             }
         }
-        nc.cleanup();
         setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
