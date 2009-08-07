@@ -3874,8 +3874,6 @@ public final class WorkflowManager extends NodeContainer {
                 : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
-            NodeContainerPersistor pers = nodeEntry.getValue();
-            translationMap.put(suffix, subId);
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster ennvironment)
@@ -3883,6 +3881,8 @@ public final class WorkflowManager extends NodeContainer {
                 if (m_workflow.containsNodeKey(subId)) {
                     subId = createUniqueID();
                 }
+                NodeContainerPersistor pers = nodeEntry.getValue();
+                translationMap.put(suffix, subId);
                 NodeContainer container = pers.getNodeContainer(this, subId);
                 addNodeContainer(container, false);
                 if (pers.isDirtyAfterLoad()) {
