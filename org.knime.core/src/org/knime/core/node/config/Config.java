@@ -1757,7 +1757,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param oos Write Config to this stream.
      * @throws IOException If the file can not be accessed.
      */
-    public final synchronized void writeToFile(final ObjectOutputStream oos)
+    public final void writeToFile(final ObjectOutputStream oos)
             throws IOException {
         oos.writeObject(this);
         oos.close();
@@ -1771,7 +1771,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return The new Config.
      * @throws IOException Problem opening the file or content is not a Config.
      */
-    protected static synchronized Config readFromFile(
+    protected static Config readFromFile(
             final ObjectInputStream ois) throws IOException {
         try {
             Config config = (Config)ois.readObject();
@@ -1791,7 +1791,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param os The stream to write into.
      * @throws IOException If this Config could be stored to the stream.
      */
-    public final synchronized void saveToXML(final OutputStream os)
+    public final void saveToXML(final OutputStream os)
             throws IOException {
         if (os == null) {
             throw new NullPointerException();
@@ -1808,7 +1808,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return A new Config filled with the content read from XML.
      * @throws IOException If the Config could not be load from stream.
      */
-    protected static synchronized Config loadFromXML(final Config config,
+    protected static Config loadFromXML(final Config config,
             final InputStream in) throws IOException {
         if (in == null) {
             throw new NullPointerException();

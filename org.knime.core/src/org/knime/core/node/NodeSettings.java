@@ -59,7 +59,7 @@ public final class NodeSettings extends Config
     /**
      * @see Config#readFromFile(java.io.ObjectInputStream)
      */
-    public static synchronized NodeSettings readFromFile(
+    public static NodeSettings readFromFile(
             final ObjectInputStream ois) throws IOException {
         return (NodeSettings)Config.readFromFile(ois);
     }
@@ -74,7 +74,7 @@ public final class NodeSettings extends Config
      * @throws NullPointerException If one of the arguments is 
      *         <code>null</code>.
      */
-    public static synchronized NodeSettingsRO loadFromXML(
+    public static NodeSettingsRO loadFromXML(
             final InputStream in) throws IOException {
         NodeSettings tmp = new NodeSettings("ignored");
         return (NodeSettingsRO) Config.loadFromXML(tmp, in);
