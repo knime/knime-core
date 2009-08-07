@@ -25,7 +25,7 @@
 package org.knime.base.node.io.predictor;
 
 import org.knime.base.node.io.portobject.PortObjectReaderNodeFactory;
-import org.knime.core.node.port.AbstractSimplePortObject;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
 /** Node that connects to arbitrary model ports and reads the model as
@@ -39,6 +39,6 @@ public class PredictorReaderNodeFactory extends PortObjectReaderNodeFactory {
      * 
      */
     public PredictorReaderNodeFactory() {
-        super(new PortType(AbstractSimplePortObject.class));
+        super(new PortType(PortObject.class));
     }
 }
