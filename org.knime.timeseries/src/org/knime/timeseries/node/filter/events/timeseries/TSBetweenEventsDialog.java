@@ -20,18 +20,16 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   January 26, 2007 (rosaria): created 
+ *   January 24, 2007 (rosaria): created 
  */
-package org.knime.timeseries.node.Segmentation.events.patterns;
+package org.knime.timeseries.node.filter.events.timeseries;
 
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.data.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -40,17 +38,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Rosaria Silipo
  */
-public class PatternsBetweenEventsDialog extends DefaultNodeSettingsPane {
+public class TSBetweenEventsDialog extends DefaultNodeSettingsPane {
+
+  //  private final JCheckBox m_AppendColumn = new JCheckBox();
 
     /** Constructor adding three components. */
     @SuppressWarnings("unchecked")
     
-    public PatternsBetweenEventsDialog() {
-           
-        // choose column name with events
+    public TSBetweenEventsDialog() {
+                
         SettingsModelString columnName =
-            new SettingsModelString(
-                    PatternsBetweenEventsNodeModel.CFG_COLUMN_NAME_EVENTS,
+            new SettingsModelString(TSBetweenEventsNodeModel.CFG_COLUMN_NAME,
                     null);
 
         DialogComponent columnChooser =
@@ -58,36 +56,41 @@ public class PatternsBetweenEventsDialog extends DefaultNodeSettingsPane {
                     "Columns containing Events: ", 0, StringValue.class);
         addDialogComponent(columnChooser);
 
-        // choose column name to use as output
-        SettingsModelString columnName1 =
-            new SettingsModelString(
-                    PatternsBetweenEventsNodeModel.CFG_COLUMN_NAME_OUTPUT,
-                    null);
-
-        DialogComponent columnChooser1 =
-            new DialogComponentColumnNameSelection(columnName1,
-                    "Select column to generate output: ", 
-                    0, DoubleValue.class);
-        addDialogComponent(columnChooser1);
-
-        // checkbox for "all columns"
-        SettingsModelBoolean allColumns =
-            new SettingsModelBoolean(
-                    PatternsBetweenEventsNodeModel.CFG_ALL_COLUMNS,
-                    false);
-
-        DialogComponent allColumnsCheckBox =
-            new DialogComponentBoolean(allColumns,
-                    "All columns:");
-        addDialogComponent(allColumnsCheckBox);
-
-        // set event name
         SettingsModelString eventName =
             new SettingsModelString(
-                    PatternsBetweenEventsNodeModel.CFG_EVENT_NAME,
+                    TSBetweenEventsNodeModel.CFG_EVENT_NAME,
                     null);
        DialogComponent editEventName = 
             new DialogComponentString(eventName,  "event name");
         addDialogComponent(editEventName);
+        
+        SettingsModelString timestampOutput =
+            new SettingsModelString(
+                    TSBetweenEventsNodeModel.CFG_TIMESTAMP_OUTPUT,
+                    "yyyy-MM-dd;HH:mm:ss.S");
+       DialogComponent editTimestampOutput = 
+            new DialogComponentString(timestampOutput,  
+                    "Insert date for output table: ");
+        addDialogComponent(editTimestampOutput);
+        
+/*        SettingsModelString dateFormat =
+            new SettingsModelString(
+                    TSBetweenEventsNodeModel.CFG_DATE_FORMAT,
+                    "yyyy-MM-dd;HH:mm:ss.S");
+       DialogComponent editDateFormat = 
+            new DialogComponentString(dateFormat,  
+                    "with timestamp format: ");
+        addDialogComponent(editDateFormat);
+        */
+
+        SettingsModelString timeStampColumnName =
+            new SettingsModelString(
+                    TSBetweenEventsNodeModel.CFG_TIMESTAMP_COLUMN_NAME,
+                    null);
+       DialogComponent timeStampColumnChooser = 
+            new DialogComponentColumnNameSelection(timeStampColumnName,  
+                    "from column ", 0, TimestampValue.class);
+        addDialogComponent(timeStampColumnChooser);
+
     }
 }

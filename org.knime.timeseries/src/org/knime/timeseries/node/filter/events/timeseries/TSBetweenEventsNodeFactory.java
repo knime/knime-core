@@ -22,7 +22,7 @@
  * History
  *   Aug 4, 2006 (rs): created
  */
-package org.knime.timeseries.node.Segmentation.events.patterns;
+package org.knime.timeseries.node.filter.events.timeseries;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -35,14 +35,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PatternsBetweenEventsNodeFactory extends NodeFactory {
+public class TSBetweenEventsNodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new PatternsBetweenEventsDialog();
+        return new TSBetweenEventsDialog();
     }
 
     /**
@@ -50,7 +50,7 @@ public class PatternsBetweenEventsNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new PatternsBetweenEventsNodeModel();
+        return new TSBetweenEventsNodeModel();
     }
 
     /**
