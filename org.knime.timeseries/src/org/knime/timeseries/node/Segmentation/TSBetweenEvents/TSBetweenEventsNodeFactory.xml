@@ -3,7 +3,7 @@
 <knimeNode type="Manipulator" icon="time_events.png">
     <name>Time Series between events</name>
     <shortDescription>Extracts time series between events 
-    (represented as strings) in an apposite column.
+    (represented as strings) in an opposite column.
     </shortDescription>
     <fullDescription>
         <intro>
@@ -17,11 +17,11 @@
         <option name="String Event">
         Name of the events where to split the original time series.</option>
         <option name="Date for output table">
-        Output table will be the one conatining data from this date</option>
+        Output table will be the one containing data from this date</option>
         <option name="Date Format">
         Date format for previous parameter</option>
         <option name="timestamp column name">
-        Name of colun containing timestamp data</option>
+        Name of column containing timestamp data</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Input column">
