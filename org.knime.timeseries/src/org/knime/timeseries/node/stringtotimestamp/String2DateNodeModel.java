@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jan 14, 2007 (rs): created
  */
@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -38,6 +40,9 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.date.DateCell;
+import org.knime.core.data.date.DateTimeCell;
+import org.knime.core.data.date.TimeCell;
 import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -48,36 +53,35 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.StringHistory;
 
 /**
  * This is the model for the node that converts
  * {@link org.knime.core.data.def.StringCell}s into {@link TimestampCell}s.
- * 
+ *
  * @author Rosaria Silipo
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class String2DateNodeModel extends NodeModel {
-    /** Config identifier: column name. */
-    static final String CFG_COLUMN_NAME = "column_name";
+    
+    private final SettingsModelString m_selectedColModel
+        = String2DateDialog.createColumnSelectionModel();
+    private final SettingsModelString m_newColNameModel 
+        = String2DateDialog.createColumnNameModel();
+    private final SettingsModelBoolean m_replace 
+        = String2DateDialog.createReplaceModel();
+    private final SettingsModelString m_formatModel 
+        = String2DateDialog.createFormatModel();
+    private final SettingsModelBoolean m_cancelOnFail 
+        = String2DateDialog.createCancelOnFailModel();
+    private final SettingsModelInteger m_failNumberModel 
+        = String2DateDialog.createFailNumberModel();
 
-    /** Config identifier: date format. */
-    // static final String CFG_DATE_FORMAT = "date_format";
-    /** Config identifier: edited date format. */
-    static final String CFG_EDITED_DATE_FORMAT = "edited_date_format";
-
-    // private SettingsModelString m_dateFormat =
-    // new SettingsModelString(CFG_DATE_FORMAT, null);
-
-    private SettingsModelString m_edDateFormat = new SettingsModelString(
-            CFG_EDITED_DATE_FORMAT, "yyyy-MM-dd;HH:mm:ss.S");
-
-    private SettingsModelString m_columnName = new SettingsModelString(
-            CFG_COLUMN_NAME, null);
-
-    private final SettingsModelBoolean m_replace = String2DateDialog
-            .createReplaceModel();
-
-    private SimpleDateFormat m_df;
+    private SimpleDateFormat m_dateFormat;
+    
+    private DataType m_type;
 
     /** Inits node, 1 input, 1 output. */
     public String2DateNodeModel() {
@@ -90,55 +94,46 @@ public class String2DateNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
-        int colIndex = -1;
-
-        if (m_edDateFormat.getStringValue() == null) {
+        if (m_formatModel.getStringValue() == null) {
             throw new InvalidSettingsException("No format selected.");
         } else {
-            m_df = new SimpleDateFormat(m_edDateFormat.getStringValue());
+            m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
+        }
+        if (m_dateFormat == null) {
+            throw new InvalidSettingsException("Invalid format: "
+                    + m_formatModel.getStringValue());
         }
 
-        if (m_df == null) {
-            throw new InvalidSettingsException("Invalid format.");
-        }
-
-        if (m_columnName.getStringValue() == null) {
-            int i = 0;
+        if (m_selectedColModel.getStringValue() == null) {
+            // try to find first String compatible one and auto-guess it
             for (DataColumnSpec cs : inSpecs[0]) {
                 if (cs.getType().isCompatible(StringValue.class)) {
-                    if (colIndex != -1) {
-                        throw new InvalidSettingsException(
-                                "No column selected.");
-                    }
-                    colIndex = i;
+                    m_selectedColModel.setStringValue(cs.getName());
+                    setWarningMessage(
+                            "Auto-guessing first String compatible column: "
+                            + cs.getName());
+                    break;
                 }
-                i++;
             }
-
-            if (colIndex == -1) {
-                throw new InvalidSettingsException("No column selected.");
+            // if still null -> no String compatible column at all
+            if (m_selectedColModel.getStringValue() == null) {
+                throw new InvalidSettingsException(
+                        "No String compatible column found!");
             }
-            m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
-                    .getName());
-            setWarningMessage("Column '" + m_columnName.getStringValue()
-                    + "' auto selected");
-        } else {
-            colIndex = inSpecs[0]
-                    .findColumnIndex(m_columnName.getStringValue());
+            int colIndex = inSpecs[0]
+                    .findColumnIndex(m_selectedColModel.getStringValue());
             if (colIndex < 0) {
                 throw new InvalidSettingsException("No such column: "
-                        + m_columnName.getStringValue());
+                        + m_selectedColModel.getStringValue());
             }
-
             DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
             if (!colSpec.getType().isCompatible(StringValue.class)) {
-                throw new InvalidSettingsException("Column \"" + m_columnName
+                throw new InvalidSettingsException("Column \"" 
+                        + m_selectedColModel 
                         + "\" does not contain string values: "
                         + colSpec.getType().toString());
             }
         }
-
         ColumnRearranger c = createColRearranger(inSpecs[0]);
         return new DataTableSpec[]{c.createSpec()};
     }
@@ -146,13 +141,19 @@ public class String2DateNodeModel extends NodeModel {
     private ColumnRearranger createColRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
         final int colIndex = spec
-                .findColumnIndex(m_columnName.getStringValue());
-        String uniqueColName = DataTableSpec.getUniqueColumnName(spec,
-                m_columnName.getStringValue() + "_date");
-        // m_columnName.setStringValue(uniqueColName);
+                .findColumnIndex(m_selectedColModel.getStringValue());
+        String uniqueColName = m_selectedColModel.getStringValue();
+        if (!m_replace.getBooleanValue()) {
+            // check whether the new column name is unique...
+            uniqueColName = DataTableSpec.getUniqueColumnName(spec,
+                    m_newColNameModel.getStringValue());
+            m_newColNameModel.setStringValue(uniqueColName);
+        }
         DataColumnSpec newColSpec = new DataColumnSpecCreator(uniqueColName,
-                TimestampCell.TYPE).createSpec();
+                m_type).createSpec();
+        m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
         SingleCellFactory c = new SingleCellFactory(newColSpec) {
+            private int m_failCounter = 0;
             @Override
             public DataCell getCell(final DataRow row) {
                 DataCell cell = row.getCell(colIndex);
@@ -160,12 +161,30 @@ public class String2DateNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 try {
-                    DataCell dc = new TimestampCell(((StringValue)cell)
-                            .getStringValue(), m_df);
-                    return dc;
+                    String source = ((StringValue)cell).getStringValue();
+                    Date date = m_dateFormat.parse(source);
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(date);
+                    m_failCounter = 0;
+                    // dependent on the type create the referring cell
+                    if (m_type.equals(TimeCell.TYPE)) {
+                        return new TimeCell(c);
+                    } else if (m_type.equals(DateCell.TYPE)) {
+                        return new DateCell(c);
+                    } else {
+                        return new DateTimeCell(c);
+                    }
                 } catch (ParseException pe) {
                     setWarningMessage("Missing Cell due to Parse Exception.\n"
                             + "Date format incorrect?");
+                    m_failCounter++;
+                    if (m_cancelOnFail.getBooleanValue() 
+                            && m_failCounter >= m_failNumberModel
+                                .getIntValue()) {
+                        throw new RuntimeException(
+                                "Maximum number of fails reached: " 
+                                + m_failNumberModel.getIntValue());
+                    }
                     return DataType.getMissingCell();
                 }
             }
@@ -173,7 +192,7 @@ public class String2DateNodeModel extends NodeModel {
         if (m_replace.getBooleanValue()) {
             result.replace(c, colIndex);
         } else {
-            result.insertAt(colIndex + 1, c);
+            result.append(c);
         }
         return result;
     }
@@ -185,8 +204,9 @@ public class String2DateNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         ColumnRearranger c = createColRearranger(inData[0].getDataTableSpec());
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                inData[0], c, exec)};
+        BufferedDataTable out = exec.createColumnRearrangeTable(
+                inData[0], c, exec);
+        return new BufferedDataTable[]{out};
     }
 
     /**
@@ -195,19 +215,28 @@ public class String2DateNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString temp = new SettingsModelString(CFG_COLUMN_NAME,
-                null);
-        temp.loadSettingsFrom(settings);
-
-        // SettingsModelString temp1 =
-        // new SettingsModelString(CFG_DATE_FORMAT, null);
-        // temp1.loadSettingsFrom(settings);
-
-        SettingsModelString temp2 = new SettingsModelString(
-                CFG_EDITED_DATE_FORMAT, null);
-        temp2.loadSettingsFrom(settings);
-
+        m_selectedColModel.validateSettings(settings);
+        m_newColNameModel.validateSettings(settings);
         m_replace.validateSettings(settings);
+        m_formatModel.validateSettings(settings);
+        SettingsModelString formatClone = m_formatModel
+            .createCloneWithValidatedValue(settings);
+        String format = formatClone.getStringValue();
+        if (format == null || format.length() == 0) {
+            throw new InvalidSettingsException("Format must not be empty!");
+        }
+        try {
+            new SimpleDateFormat(format);
+        } catch (Exception e) {
+            String msg = "Invalid date format: \"" + format + "\".";
+            String errMsg = e.getMessage(); 
+            if (errMsg != null && !errMsg.isEmpty()) {
+                msg += " Reason: " + errMsg; 
+            }
+            throw new InvalidSettingsException(msg);
+        }
+        m_cancelOnFail.validateSettings(settings);
+        m_failNumberModel.validateSettings(settings);
     }
 
     /**
@@ -216,10 +245,40 @@ public class String2DateNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columnName.loadSettingsFrom(settings);
-        // m_dateFormat.loadSettingsFrom(settings);
-        m_edDateFormat.loadSettingsFrom(settings);
+        m_selectedColModel.loadSettingsFrom(settings);
+        m_newColNameModel.loadSettingsFrom(settings);
         m_replace.loadSettingsFrom(settings);
+        m_formatModel.loadSettingsFrom(settings);
+        m_cancelOnFail.loadSettingsFrom(settings);
+        m_failNumberModel.loadSettingsFrom(settings);
+        // define the type
+        // if it contains H, m, s -> time
+        // if it contains y, M or d -> date
+        String dateformat = m_formatModel.getStringValue();
+        boolean time = containsTime(dateformat);
+        boolean date = containsDate(dateformat);
+        if (time && !date) {
+            m_type = TimeCell.TYPE;
+        } else if (date && !time) {
+            m_type = DateCell.TYPE;
+        } else {
+            m_type = DateTimeCell.TYPE;
+        }
+        // if it is not a predefined one -> store it
+        if (!String2DateDialog.PREDEFINED_FORMATS.contains(dateformat)) {
+            StringHistory.getInstance(String2DateDialog.FORMAT_HISTORY_KEY).add(
+                    dateformat);
+        }
+    }
+    
+    private boolean containsTime(final String dateFormat) {
+        return dateFormat.contains("H") || dateFormat.contains("m")
+            || dateFormat.contains("s");
+    }
+    
+    private boolean containsDate(final String dateFormat) {
+        return dateFormat.contains("y") || dateFormat.contains("M")
+            || dateFormat.contains("d");
     }
 
     /**
@@ -227,9 +286,12 @@ public class String2DateNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columnName.saveSettingsTo(settings);
-        m_edDateFormat.saveSettingsTo(settings);
+        m_selectedColModel.saveSettingsTo(settings);
+        m_newColNameModel.saveSettingsTo(settings);
         m_replace.saveSettingsTo(settings);
+        m_formatModel.saveSettingsTo(settings);
+        m_cancelOnFail.saveSettingsTo(settings);
+        m_failNumberModel.saveSettingsTo(settings);
     }
 
     /**

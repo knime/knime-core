@@ -1,4 +1,4 @@
-package org.knime.timeseries.node.fuzzyCPmeans;
+package org.knime.exp.timeseries.node.fuzzycpmeans;
 
 /**
  * 

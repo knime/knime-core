@@ -14,6 +14,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.date.TimeRenderUtil;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -25,7 +26,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.timeseries.util.TimeLevelNames;
-import org.knime.timeseries.util.TimeUtil;
 
 /**
  * Appends a time column with the time in another column to a higher aggregation
@@ -114,7 +114,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
             }
 
             // extract the day of the week as a a string only
-            private String getDayOfWeek(Calendar c) {
+            private String getDayOfWeek(final Calendar c) {
                 return c.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG,
                         Locale.ENGLISH);                        
             }
@@ -143,7 +143,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 // month starts with 0!
                 month++;
                 String s = "" + year;
-                s += "_" + TimeUtil.getStringForDateField(month);
+                s += "_" + TimeRenderUtil.getStringForDateField(month);
                 return s;
             }
 
@@ -152,7 +152,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 int year = c.get(Calendar.YEAR);
                 int week = c.get(Calendar.WEEK_OF_YEAR);
                 String s = "" + year;
-                s += "_" + TimeUtil.getStringForDateField(week);
+                s += "_" + TimeRenderUtil.getStringForDateField(week);
                 return s;
             }
 
@@ -164,18 +164,18 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 month++;
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 String s = "" + year;
-                s += "_" + TimeUtil.getStringForDateField(month);
-                s += "_" + TimeUtil.getStringForDateField(day);
+                s += "_" + TimeRenderUtil.getStringForDateField(month);
+                s += "_" + TimeRenderUtil.getStringForDateField(day);
                 return s;
             }
             
             private String getHour(final Calendar c) {
-                return TimeUtil.getStringForDateField(
+                return TimeRenderUtil.getStringForDateField(
                         c.get(Calendar.HOUR_OF_DAY));
             }
             
             private String getMinute(final Calendar c) {
-                return TimeUtil.getStringForDateField(
+                return TimeRenderUtil.getStringForDateField(
                         c.get(Calendar.MINUTE));
             }
         };

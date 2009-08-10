@@ -22,7 +22,7 @@
  * History
  *   Apr 19, 2007 (cebron): created
  */
-package org.knime.timeseries.node.fuzzyCPmeans;
+package org.knime.exp.timeseries.node.fuzzycpmeans;
 
 import org.knime.base.node.mine.bfn.Distance;
 import org.knime.base.util.math.MathUtils;

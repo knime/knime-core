@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jan 24, 2007 (rs): created
  */
@@ -26,14 +26,14 @@ package org.knime.timeseries.node.Segmentation.ExtractFromTo;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TimestampValue;
-import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -44,39 +44,25 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * This is the model for the node that extracts data from timestampFrom
  * to timestampTo from the input table.
- * 
- * @author Rosaria Silipo 
+ *
+ * @author Rosaria Silipo
  */
 public class ExtractFromToNodeModel extends NodeModel {
-    /** Config identifier: column name. */
-    static final String CFG_COLUMN_NAME = "column_name";
 
-    /** Config identifier: FROM Timestamp. */
-    static final String CFG_TIMESTAMP_FROM = "timestamp_from";
+    private final SettingsModelString m_columnName
+    = ExtractFromToDialog.createColumnNameModel();
 
-    /** Config identifier: TO Timestamp. */
-    static final String CFG_TIMESTAMP_TO = "timestamp_to";
+    private final SettingsModelCalendar m_fromDate
+        = ExtractFromToDialog.createFromModel();
 
-    /** Config identifier: TO Timestamp. */
-    static final String DATE_FORMAT = "1992-10-01;09:00:00";
+    private final SettingsModelCalendar m_toDate
+        = ExtractFromToDialog.createToModel();
 
-    private SettingsModelString m_timestampFrom =
-         new SettingsModelString(CFG_TIMESTAMP_FROM, DATE_FORMAT);
-
-    private SettingsModelString m_timestampTo =
-        new SettingsModelString(CFG_TIMESTAMP_TO, DATE_FORMAT);
-
-    private SettingsModelString m_columnName =
-        new SettingsModelString(CFG_COLUMN_NAME, null);
-
-    private TimestampCell m_tscFrom; 
-    private TimestampCell m_tscTo; 
-    private SimpleDateFormat m_df = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss");
- 
         /** Inits node, 1 input, 1 output. */
     public ExtractFromToNodeModel() {
         super(1, 1);
@@ -88,102 +74,90 @@ public class ExtractFromToNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-                
-        try {
-            int colIndex = -1;
-
-            if (m_timestampFrom.getStringValue() == null) {
-                throw new InvalidSettingsException(
-                    "No \"FROM:\" Timestamp selected."); 
-            } else {
-                m_tscFrom = 
-                    new TimestampCell(m_timestampFrom.getStringValue(), m_df);
-            }
-            if (m_tscFrom == null) {
-                throw new InvalidSettingsException(
-                "FROM: Invalid timestamp value."); 
-            }
-        
-            if (m_timestampTo.getStringValue() == null) {
-                throw new InvalidSettingsException(
-                    "No \"TO:\" Timestamp selected."); 
-            } else {
-                m_tscTo = 
-                    new TimestampCell(m_timestampTo.getStringValue(), m_df);
-            }
-            if (m_tscTo == null) {
-                throw new InvalidSettingsException(
-                "TO: Invalid timestamp value."); 
-            }
-            
-            if (m_columnName.getStringValue() == null) {
-                int i = 0;
-                for (DataColumnSpec cs : inSpecs[0]) {
-                    if (cs.getType().isCompatible(TimestampValue.class)) {
-                        if (colIndex != -1) {
-                            throw new InvalidSettingsException(
-                                    "No column selected.");
-                        }
-                        colIndex = i;
-                    }
-                    i++;
+        validateFromTo(m_fromDate.getCalendar(), m_toDate.getCalendar());
+        int colIndex = -1;
+        if (m_columnName.getStringValue() == null) {
+            // no value yet -> auto-configure
+            int i = 0;
+            for (DataColumnSpec cs : inSpecs[0]) {
+                if (cs.getType().isCompatible(TimestampValue.class)) {
+                    colIndex = i;
+                    // found first date compatible column
+                    // -> auto-select it
+                    m_columnName.setStringValue(cs.getName());
+                    setWarningMessage("Auto-selected date column: "
+                            + cs.getName());
+                    break;
                 }
-
-                if (colIndex == -1) {
-                    throw new InvalidSettingsException("No column selected.");
-                }
-                m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
-                        .getName());
-                setWarningMessage("Column '" + m_columnName.getStringValue()
-                        + "' auto selected");
-            } else {
-                colIndex =
-                   inSpecs[0].findColumnIndex(m_columnName.getStringValue());
-                if (colIndex < 0) {
-                    throw new InvalidSettingsException("No such column: "
-                            + m_columnName.getStringValue());
-                }
-
-                DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-                if (!colSpec.getType().isCompatible(TimestampValue.class)) {
-                  throw new InvalidSettingsException("Column \"" + m_columnName
-                            + "\" does not contain string values: "
-                            + colSpec.getType().toString());
-                }
+                i++;
             }
-
-        } catch (ParseException pe) {
-            throw new InvalidSettingsException(
-                    "Invalid timestamp value. Parse error."); 
+            // if we did not found any time compatible column
+            if (colIndex == -1) {
+                throw new InvalidSettingsException("No column selected.");
+            }
+        } else {
+            // configured once -> we have a name selected
+            colIndex = inSpecs[0]
+                    .findColumnIndex(m_columnName.getStringValue());
+            if (colIndex < 0) {
+                throw new InvalidSettingsException("No such column: "
+                        + m_columnName.getStringValue());
+            }
+            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
+            if (!colSpec.getType().isCompatible(TimestampValue.class)) {
+                throw new InvalidSettingsException("Column \"" + m_columnName
+                        + "\" does not contain string values: "
+                        + colSpec.getType().toString());
+            }
         }
-        
-        DataTableSpec [] outs = inSpecs.clone();
+        // we return input specs since only rows are filtered
+        // (no structural changes)
+        DataTableSpec[] outs = inSpecs.clone();
         return outs;
     }
-            
+
+    private void validateFromTo(final Calendar start, final Calendar end)
+        throws InvalidSettingsException {
+        if (end.before(start)
+                || end.getTimeInMillis() == start.getTimeInMillis()) {
+            throw new InvalidSettingsException("End point "
+                    + end.getTime().toString()
+                    + " must be after starting point "
+                    + start.getTime().toString());
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
- 
         BufferedDataTable in = inData[0];
         DataTableSpec outs = in.getDataTableSpec();
-        
-        final int colIndex =
-            outs.findColumnIndex(m_columnName.getStringValue());
+        final int colIndex = outs
+                .findColumnIndex(m_columnName.getStringValue());
         BufferedDataContainer t = exec.createDataContainer(outs);
-
-//        final int totalRowCount = in.getRowCount();
+        final int totalRowCount = in.getRowCount();
+        int currentIteration = 0;
         try {
-           for (DataRow r : in) {
-              TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
-            
-                java.util.Date d1 = tsc.getDate();
-              if (d1.after(m_tscFrom.getDate())
-                       && d1.before(m_tscTo.getDate())) {
-                   t.addRowToTable(r);
+            for (DataRow r : in) {
+                // increment before printing to achieve a 1-based index
+                currentIteration++;
+                exec.checkCanceled();
+                exec.setProgress(
+                        currentIteration / (double)totalRowCount,
+                        "Processing row " + currentIteration);
+
+                DataCell cell = r.getCell(colIndex);
+                if (cell.isMissing()) {
+                    // do not include missing values -> skip it
+                    continue;
+                }
+                Date time = ((TimestampValue)cell).getDate();
+                if (time.after(m_fromDate.getCalendar().getTime())
+                        && time.before(m_toDate.getCalendar().getTime())) {
+                    t.addRowToTable(r);
                 }
             }
         } finally {
@@ -198,18 +172,21 @@ public class ExtractFromToNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString temp =
-            new SettingsModelString(CFG_TIMESTAMP_FROM, null);        
-        temp.loadSettingsFrom(settings);
- 
-        SettingsModelString temp1 =
-            new SettingsModelString(CFG_COLUMN_NAME, null);        
-        temp1.loadSettingsFrom(settings);
-
-        SettingsModelString temp2 =
-            new SettingsModelString(CFG_TIMESTAMP_TO, null);        
-        temp2.loadSettingsFrom(settings);
-}
+        // first do the basic checking
+        m_columnName.validateSettings(settings);
+        m_fromDate.validateSettings(settings);
+        m_toDate.validateSettings(settings);
+        // check whether the from date is equal or later than the to date
+        Calendar from = ((SettingsModelCalendar)m_fromDate
+                    .createCloneWithValidatedValue(settings)).getCalendar();
+        Calendar to = ((SettingsModelCalendar)m_toDate
+                .createCloneWithValidatedValue(settings)).getCalendar();
+        if (from.getTimeInMillis() == to.getTimeInMillis()
+                || to.before(from)) {
+            throw new InvalidSettingsException(
+                    "The starting point must be before the end point!");
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -218,8 +195,8 @@ public class ExtractFromToNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_columnName.loadSettingsFrom(settings);
-        m_timestampFrom.loadSettingsFrom(settings);
-        m_timestampTo.loadSettingsFrom(settings);
+        m_fromDate.loadSettingsFrom(settings);
+        m_toDate.loadSettingsFrom(settings);
    }
 
     /**
@@ -227,8 +204,8 @@ public class ExtractFromToNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_timestampFrom.saveSettingsTo(settings);
-        m_timestampTo.saveSettingsTo(settings);
+        m_fromDate.saveSettingsTo(settings);
+        m_toDate.saveSettingsTo(settings);
         m_columnName.saveSettingsTo(settings);
    }
 

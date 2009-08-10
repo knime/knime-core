@@ -28,14 +28,16 @@ import org.knime.core.data.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.DialogComponentCalendar;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * This dialog lets the user choose the column that contains the string values
  * that should be converted into Smiles values. 
  * 
  * @author Rosaria Silipo
+ * @author Fabian Dill, KNIME.com GmbH
  */
 public class ExtractFromToDialog extends DefaultNodeSettingsPane {
 
@@ -43,33 +45,31 @@ public class ExtractFromToDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     
     public ExtractFromToDialog() {
-                
-        SettingsModelString columnName =
-            new SettingsModelString(ExtractFromToNodeModel.CFG_COLUMN_NAME,
-                    null);
-
         DialogComponent columnChooser =
-            new DialogComponentColumnNameSelection(columnName,
+            new DialogComponentColumnNameSelection(createColumnNameModel(),
                     "Columns containing Timestamp: ", 0, TimestampValue.class);
         addDialogComponent(columnChooser);
-
-        SettingsModelString timestampFrom =
-            new SettingsModelString(
-                    ExtractFromToNodeModel.CFG_TIMESTAMP_FROM,
-                    null);
-       DialogComponent editTimestampFrom = 
-            new DialogComponentString(timestampFrom,  
-                    "FROM (change default date): ");
-        addDialogComponent(editTimestampFrom);
-        
-        SettingsModelString timestampTo =
-            new SettingsModelString(
-                    ExtractFromToNodeModel.CFG_TIMESTAMP_TO,
-                    null);
-       DialogComponent editTimestampTo = 
-            new DialogComponentString(timestampTo,  
-                    "TO (change default date): ");
-        addDialogComponent(editTimestampTo);
-        
+        addDialogComponent(new DialogComponentCalendar(createFromModel(), 
+                "Select starting point:"));
+        addDialogComponent(new DialogComponentCalendar(
+                createToModel(), "Select end point:"));
     }
+    
+    /**
+     * 
+     * @return settings model to store the selected column
+     */
+    static SettingsModelString createColumnNameModel() {
+        return new SettingsModelString("column_name", null); 
+    }
+    
+    /** @return settings model for the "from" date.*/
+    static SettingsModelCalendar createFromModel() {
+        return new SettingsModelCalendar("timestamp_from", null);
+    }
+    /** @return settings model for the "to" date.*/
+    static SettingsModelCalendar createToModel() {
+        return new SettingsModelCalendar("timestamp_to", null);
+    }
+    
 }

@@ -22,7 +22,7 @@
  * History
  *   17.07.2006 (cebron): created
  */
-package org.knime.timeseries.node.fuzzyCPmeans;
+package org.knime.exp.timeseries.node.fuzzycpmeans;
 
 import java.util.Iterator;
 import java.util.Random;

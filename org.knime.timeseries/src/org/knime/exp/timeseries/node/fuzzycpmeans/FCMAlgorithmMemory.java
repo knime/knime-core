@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.timeseries.node.fuzzyCPmeans;
+package org.knime.exp.timeseries.node.fuzzycpmeans;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;

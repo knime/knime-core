@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,85 +18,185 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   January 13, 2007 (rosaria): created from String2Smileys
  */
 package org.knime.timeseries.node.stringtotimestamp;
 
-//import java.util.LinkedList;
-//import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-//import javax.swing.JCheckBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.StringHistory;
 
 /**
  * This dialog lets the user choose the column that contains the string values
  * that should be converted into Smiles values.
- * 
+ *
  * @author Rosaria Silipo
+ * @author Fabian Dill, KNIME.com GmbH
  */
 public class String2DateDialog extends DefaultNodeSettingsPane {
+    
+    /**
+     * Key for the string history to re-use user entered date formats. 
+     */
+    public static final String FORMAT_HISTORY_KEY = "string2date-formats"; 
 
-    // private final JCheckBox m_AppendColumn = new JCheckBox();
+    private final SettingsModelString m_colSelectionModel 
+        = createColumnSelectionModel();
+    private final SettingsModelString m_colNameModel = createColumnNameModel();
+    private final SettingsModelBoolean m_replaceModel = createReplaceModel();
+    private final SettingsModelString m_formatModel = createFormatModel();
+    private final SettingsModelInteger m_failNoModel = createFailNumberModel();
+    private final SettingsModelBoolean m_cancelOnFailModel 
+        = createCancelOnFailModel();
+    
+    private final DialogComponentStringSelection m_formatSelectionUI;
+    
+    /**
+     * Predefined date formats.
+     */
+    public static final Collection<String> PREDEFINED_FORMATS 
+        = createPredefinedFormats();
 
     /** Constructor adding three components. */
     @SuppressWarnings("unchecked")
     public String2DateDialog() {
+        initializeModels();
+        // column selection combo box
+        DialogComponentColumnNameSelection colSelection
+            = new DialogComponentColumnNameSelection(m_colSelectionModel,
+                    "Select column: ", 0, StringValue.class);
+        addDialogComponent(colSelection);
+        // replace existing column?
+        DialogComponentBoolean replaceBox = new DialogComponentBoolean(
+                m_replaceModel, "Replace selected column");
+        addDialogComponent(replaceBox);
+        // if not what is the name of the new column
+        // text edit field
+        DialogComponentString newColName = new DialogComponentString(
+                m_colNameModel, "New column name");
+        addDialogComponent(newColName);
+        
+        // format combo box
+        m_formatSelectionUI 
+            = new DialogComponentStringSelection(m_formatModel, "Date format",
+                    // TODO: later on move this to the node model which also 
+                    // loads values from StringHistory
+                    PREDEFINED_FORMATS, true);
+        
+        addDialogComponent(m_formatSelectionUI);
+        
+        // configure how often the execute method may fail until 
+        // cancels execution
+        createNewGroup("Cancel execution");
+        setHorizontalPlacement(true);
+        addDialogComponent(new DialogComponentBoolean(m_cancelOnFailModel, 
+                "Cancel execution"));
+        addDialogComponent(new DialogComponentNumber(m_failNoModel, 
+                " on this number of unresolved rows", 10));
+    }
+    
+    private void initializeModels() {
+        // add listener to replace column 
+        m_replaceModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                // -> set new column name model enabled = !m_replace;
+                m_colNameModel.setEnabled(!m_replaceModel.getBooleanValue());
+            }
+        });
+        // add listener to column selection
+        m_colSelectionModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                // -> set text selected_col name + _time
+                m_colNameModel.setStringValue(
+                        m_colSelectionModel.getStringValue() + "_time");
+            }
+        });
+        
+        m_cancelOnFailModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                // if fail on cancel -> define max number of fails
+                m_failNoModel.setEnabled(m_cancelOnFailModel.getBooleanValue());
+            }
+        });
 
-        SettingsModelString columnName = new SettingsModelString(
-                String2DateNodeModel.CFG_COLUMN_NAME, null);
-
-        DialogComponent columnChooser = new DialogComponentColumnNameSelection(
-                columnName, "Column containing strings to be converted: ", 0,
-                StringValue.class);
-        addDialogComponent(columnChooser);
-
-        /*
-         * LinkedList ll = new LinkedList(); List<String> listAllowedDateFormats
-         * = ll; listAllowedDateFormats.add("yyyy-MM-dd;HH:mm:ss.S");
-         * listAllowedDateFormats.add("yyyy-MM-dd;HH:mm:ss");
-         * listAllowedDateFormats.add("yyyy-MM-dd HH:mm:ss.S");
-         * 
-         * SettingsModelString dateFormat = new
-         * SettingsModelString(String2DateNodeModel.CFG_DATE_FORMAT,
-         * "yyyy-MM-dd;HH:mm:ss.S");
-         * 
-         * DialogComponent dateFormatChooser = new
-         * DialogComponentStringSelection(dateFormat, "TimeStamp format: ",
-         * listAllowedDateFormats); addDialogComponent(dateFormatChooser);
-         */
-
-        // org.knime.core.node.defaultnodesettings.SettingsModelStringArray
-        // org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString
-        // org.knime.core.node.defaultnodesettings.SettingsModelString
-        SettingsModelString editedDateFormat = new SettingsModelString(
-                String2DateNodeModel.CFG_EDITED_DATE_FORMAT,
-                "yyyy-MM-dd;HH:mm:ss.S");
-        DialogComponent editString = new DialogComponentString(
-                editedDateFormat, "Edit TimeStamp format: ");
-        addDialogComponent(editString);
-
-        // The code of the String2Smilyes node does not have a checkbox
-        // to replace or add the transformed column.
-        // Either we move to DefaultDialogPane (It looks a bit like
-        // overkilling) or we add the checkbox into the
-        // DialogComponentColumnNameSelection.
-
-        addDialogComponent(new DialogComponentBoolean(createReplaceModel(),
-                "Replace selected column"));
-
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        // retrieve potential new values from the StringHistory and add them
+        // (if not already present) to the combobox...
+        m_formatSelectionUI.replaceListItems(createPredefinedFormats(), 
+                m_formatModel.getStringValue());
     }
 
     static SettingsModelBoolean createReplaceModel() {
-        return new SettingsModelBoolean("replace-time-column", true);
+        return new SettingsModelBoolean("replace-time-column", false);
+    }
+
+    static SettingsModelString createColumnSelectionModel() {
+        return new SettingsModelString("selected-column", "");
+    }
+    
+    static SettingsModelString createColumnNameModel() {
+        return new SettingsModelString("new-column-name", "");
+    }
+    
+    static SettingsModelString createFormatModel() {
+        return new SettingsModelString("date-format", "yyyy-MM-dd;HH:mm:ss.S");
+    }
+    
+    static SettingsModelInteger createFailNumberModel() {
+        return new SettingsModelInteger("max-fail-number", 100);
+    }
+    
+    static SettingsModelBoolean createCancelOnFailModel() {
+        return new SettingsModelBoolean("cancel-on-fail", true);
+    }
+
+    private static Collection<String> createPredefinedFormats() {
+        // unique values
+        Set<String> formats = new LinkedHashSet<String>();
+        formats.add("yyyy-MM-dd;HH:mm:ss.S");
+        formats.add("dd.MM.yyyy;HH:mm:ss.S");
+        formats.add("yyyy/dd/MM");
+        formats.add("dd.MM.yyyy");
+        formats.add("yyyy-MM-dd");
+        formats.add("HH:mm:ss");
+        // check also the StringHistory....
+        String[] userFormats = StringHistory.getInstance(FORMAT_HISTORY_KEY)
+            .getHistory();
+        for (String userFormat : userFormats) {
+            formats.add(userFormat);
+        }
+        return formats;
     }
 }

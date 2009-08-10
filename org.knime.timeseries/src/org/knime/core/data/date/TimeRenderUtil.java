@@ -19,15 +19,15 @@
  * History
  *   28.07.2009 (Fabian Dill): created
  */
-package org.knime.timeseries.util;
+package org.knime.core.data.date;
 
 /**
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public final class TimeUtil {
+public final class TimeRenderUtil {
     
-    private TimeUtil() {
+    private TimeRenderUtil() {
         // utility class
     }
     
