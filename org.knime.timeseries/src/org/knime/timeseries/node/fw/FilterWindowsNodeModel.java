@@ -22,7 +22,7 @@
  * History
  *   Jan 14, 2007 (rs): created
  */
-package org.knime.timeseries.node.FilterWindows;
+package org.knime.timeseries.node.fw;
 
 import java.io.File;
 import java.io.IOException;

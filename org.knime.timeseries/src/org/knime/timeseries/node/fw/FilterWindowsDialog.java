@@ -22,7 +22,7 @@
  * History
  *   January 13, 2007 (rosaria): created from String2Smileys
  */
-package org.knime.timeseries.node.FilterWindows;
+package org.knime.timeseries.node.fw;
 
 //import java.util.LinkedList;
 //import java.util.List;

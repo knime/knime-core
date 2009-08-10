@@ -22,7 +22,7 @@
  * History
  *   Jan 17, 2007 (rs): created
  */
-package org.knime.timeseries.node.FilterWindows;
+package org.knime.timeseries.node.fw;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
