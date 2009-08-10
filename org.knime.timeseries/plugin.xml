@@ -25,7 +25,7 @@
             id="org.knime.dev.nodes.timeseries.Segmentation.ExtractOneSampleperDay.ExtractOneSampleperDayNodeFactory"/>
        <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.Segmentation.extract.ExtractFromToNodeFactory"
+            factory-class="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"/>
       <node
             category-path="/timeseries"
