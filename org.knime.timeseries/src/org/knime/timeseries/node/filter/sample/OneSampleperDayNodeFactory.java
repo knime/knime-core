@@ -22,7 +22,7 @@
  * History
  *   Aug 4, 2006 (rs): created
  */
-package org.knime.timeseries.node.Segmentation.sample;
+package org.knime.timeseries.node.filter.sample;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

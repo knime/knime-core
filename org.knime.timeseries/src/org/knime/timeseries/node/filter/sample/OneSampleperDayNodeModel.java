@@ -22,7 +22,7 @@
  * History
  *   Jan 24, 2007 (rs): created
  */
-package org.knime.timeseries.node.Segmentation.sample;
+package org.knime.timeseries.node.filter.sample;
 
 import java.io.File;
 import java.io.IOException;
