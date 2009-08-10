@@ -22,7 +22,7 @@
  * History
  *   January 24, 2007 (rosaria): created 
  */
-package org.knime.timeseries.node.Segmentation.TSBetweenEvents;
+package org.knime.timeseries.node.Segmentation.events.timeseries;
 
 import org.knime.core.data.StringValue;
 import org.knime.core.data.TimestampValue;

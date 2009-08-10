@@ -22,7 +22,7 @@
  * History
  *   Jan 24, 2007 (rs): created
  */
-package org.knime.timeseries.node.Segmentation.PatternsBetweenEvents;
+package org.knime.timeseries.node.Segmentation.events.patterns;
 
 import java.io.File;
 import java.io.IOException;

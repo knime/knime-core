@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: DummyNode-Node extension for KNIME Workbench
+Bundle-Name: Time Series Plugin
 Bundle-SymbolicName: org.knime.timeseries; singleton:=true
 Bundle-Version: 2.1.0.0021700
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
@@ -15,11 +15,15 @@ Export-Package: org.knime.exp.timeseries.node.fuzzycpmeans,
  org.knime.timeseries,
  org.knime.timeseries.node.Segmentation.ExtractFromTo,
  org.knime.timeseries.node.Segmentation.OneSampleperDay,
- org.knime.timeseries.node.Segmentation.PatternsBetweenEvents,
- org.knime.timeseries.node.Segmentation.TSBetweenEvents,
+ org.knime.timeseries.node.Segmentation.events.patterns,
+ org.knime.timeseries.node.Segmentation.events.timeseries,
+ org.knime.timeseries.node.aggregate,
+ org.knime.timeseries.node.diff,
  org.knime.timeseries.node.display,
  org.knime.timeseries.node.display.barchart,
  org.knime.timeseries.node.display.timeplot,
  org.knime.timeseries.node.fw,
+ org.knime.timeseries.node.generator,
  org.knime.timeseries.node.movavg,
- org.knime.timeseries.node.stringtotimestamp
+ org.knime.timeseries.node.stringtotimestamp,
+ org.knime.timeseries.util

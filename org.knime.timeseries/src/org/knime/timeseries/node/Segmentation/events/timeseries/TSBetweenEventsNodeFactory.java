@@ -22,7 +22,7 @@
  * History
  *   Aug 4, 2006 (rs): created
  */
-package org.knime.timeseries.node.Segmentation.TSBetweenEvents;
+package org.knime.timeseries.node.Segmentation.events.timeseries;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

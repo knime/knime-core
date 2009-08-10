@@ -13,11 +13,11 @@
             id="org.knime.dev.nodes.timeseries.display.timeplot.TimePlotterNodeFactory"/>
         <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.events.patterns.PatternsBetweenEventsNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"/>
         <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.events.timeseries.TSBetweenEventsNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"/>
        <node
             category-path="/timeseries"
