@@ -22,7 +22,7 @@
  * History
  *   January 24, 2007 (rosaria): created 
  */
-package org.knime.timeseries.node.Segmentation.OneSampleperDay;
+package org.knime.timeseries.node.Segmentation.sample;
 
 import org.knime.core.data.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
