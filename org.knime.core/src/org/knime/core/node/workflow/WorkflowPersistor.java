@@ -111,7 +111,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param isDeletable whether connection is deletable
          * @param uiInfo Corresponding UI info, maybe null
          */
-		ConnectionContainerTemplate(final int source, 
+        ConnectionContainerTemplate(final int source, 
                 final int sourcePort, final int dest, final int destPort, 
                 final boolean isDeletable, final UIInformation uiInfo) {
             m_sourceSuffix = source;
