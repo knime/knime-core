@@ -92,6 +92,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** @return the shouldFailOnLoadDataError */
     public boolean mustWarnOnDataLoadError();
     
+    /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
         private final int m_sourcePort;
@@ -101,9 +102,18 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private boolean m_isDeletable;
         private final UIInformation m_uiInfo;
         
-        ConnectionContainerTemplate(final int source, final int sourcePort, 
-                final int dest, final int destPort, final boolean isDeletable,
-                final UIInformation uiInfo) {
+        /**
+         * Creates new template connection.
+         * @param source ID Suffix of source node
+         * @param sourcePort Source port
+         * @param dest ID Suffix of destination node
+         * @param destPort Destination port
+         * @param isDeletable whether connection is deletable
+         * @param uiInfo Corresponding UI info, maybe null
+         */
+		ConnectionContainerTemplate(final int source, 
+                final int sourcePort, final int dest, final int destPort, 
+                final boolean isDeletable, final UIInformation uiInfo) {
             m_sourceSuffix = source;
             m_sourcePort = sourcePort;
             m_destSuffix = dest;
@@ -195,6 +205,29 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return "[" + getSourceSuffix() + "(" 
                 + getSourcePort() + ") -> " + getDestSuffix() 
                 + "( " + getDestPort() + ")]";
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_sourceSuffix + (m_sourcePort << 8) 
+                + (m_destSuffix << 16) + (m_destPort << 24); 
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof ConnectionContainerTemplate)) {
+                return false;
+            }
+            ConnectionContainerTemplate c = (ConnectionContainerTemplate)obj;
+            return c.m_sourceSuffix == m_sourceSuffix
+                && c.m_sourcePort == m_sourcePort
+                && c.m_destSuffix == m_destSuffix
+                && c.m_destPort == m_destPort;
         }
 
     }
