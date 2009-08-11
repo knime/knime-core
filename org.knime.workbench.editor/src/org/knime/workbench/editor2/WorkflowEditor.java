@@ -897,6 +897,10 @@ public class WorkflowEditor extends GraphicalEditor implements
          * have to set the m_isClosing only if the user presses YES (no means
          * to figure out what button was pressed when eclipse opens the dialog).
          */
+        if (m_parentEditor != null) {
+            // ignore closing meta node editors.
+            return ISaveablePart2.NO;
+        }
         String message = NLS.bind(WorkbenchMessages.
                 EditorManager_saveChangesQuestion, getTitle());
         // Show a dialog.
