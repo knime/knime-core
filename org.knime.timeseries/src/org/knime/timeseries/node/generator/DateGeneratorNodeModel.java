@@ -144,20 +144,20 @@ public class DateGeneratorNodeModel extends NodeModel {
         };
     }
 
-    private Calendar resetDateFields(final Calendar calendar) {
-        calendar.clear(Calendar.YEAR);
-        calendar.clear(Calendar.MONTH);
-        calendar.clear(Calendar.DAY_OF_MONTH);
-        return calendar;
-    }
-    
-    private void resetTimeFields(final Calendar calendar) {
-        // reset the time to 12 o clock
-        calendar.clear(Calendar.HOUR_OF_DAY);
-        calendar.clear(Calendar.MINUTE);
-        calendar.clear(Calendar.SECOND);
-        // ignore millisecond
-    }
+//    private Calendar resetDateFields(final Calendar calendar) {
+//        calendar.clear(Calendar.YEAR);
+//        calendar.clear(Calendar.MONTH);
+//        calendar.clear(Calendar.DAY_OF_MONTH);
+//        return calendar;
+//    }
+//    
+//    private void resetTimeFields(final Calendar calendar) {
+//        // reset the time to 12 o clock
+//        calendar.clear(Calendar.HOUR_OF_DAY);
+//        calendar.clear(Calendar.MINUTE);
+//        calendar.clear(Calendar.SECOND);
+//        // ignore millisecond
+//    }
 
     /**
      * {@inheritDoc}
