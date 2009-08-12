@@ -3963,9 +3963,9 @@ public final class WorkflowManager extends NodeContainer {
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with a previous version "
-                            + "of KNIME (" + m_loadVersion + "), converting to "
-                            + "current version " + saveVersion
-                            + ". This may take some time.");
+                            + "of KNIME (workflow version " + m_loadVersion 
+                            + "), converting to current version. This may " 
+                            + "take some time.");
                     setDirtyAll();
                     if (isWorkingDirectory) {
                         for (NodeContainer nc : m_workflow.getNodeValues()) {

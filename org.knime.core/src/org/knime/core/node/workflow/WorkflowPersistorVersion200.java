@@ -58,11 +58,47 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** Key for workflow variables. */
     private static final String CFG_WKF_VARIABLES = "workflow_variables";
     
-    static final String VERSION_LATEST = "2.0.1";
+    /** A Version representing a specific workflow format. This enum covers only
+     * the version that this specific class can read (or write). 
+     * Ordinal numbering is important. */
+    static enum LoadVersion {
+        // Don't modify order, ordinal number are important.
+        /** Version 2.0.0 - 2.0.x. */
+        V200("2.0.0"),
+        /** Trunk version when 2.0.x was out, covers cluster and 
+         * server prototypes. Obsolete since 2009-08-12. */
+        V210_Pre("2.0.1"),
+        /** Version 2.1.x. */
+        V210("2.1.0");
+        
+        private final String m_versionString;
+        
+        private LoadVersion(final String str) {
+            m_versionString = str;
+        }
+        
+        /** @return The String representing the LoadVersion (workflow.knime). */
+        public String getVersionString() {
+            return m_versionString;
+        }
+
+        /** Get the load version for the version string or null if unknown.
+         * @param string Version string (as in workflow.knime).
+         * @return The LoadVersion or null.
+         */
+        static LoadVersion get(final String string) {
+            for (LoadVersion e : values()) {
+                if (e.m_versionString.equals(string)) {
+                    return e;
+                }
+            }
+            return null;
+        }
+    }
+    static final String VERSION_LATEST = LoadVersion.V210.getVersionString();
     
     static boolean canReadVersion(final String versionString) {
-        return versionString.equals("2.0.0") 
-            || versionString.equals(VERSION_LATEST);
+        return LoadVersion.get(versionString) != null;
     }
     
     WorkflowPersistorVersion200() {

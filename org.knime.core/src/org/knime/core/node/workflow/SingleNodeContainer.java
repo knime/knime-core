@@ -1138,7 +1138,7 @@ public final class SingleNodeContainer extends NodeContainer {
             if (sncSettings.containsKey(CFG_MEMORY_POLICY)) {
                 String memPolStr = sncSettings.getString(CFG_MEMORY_POLICY);
                 try {
-                m_memoryPolicy = MemoryPolicy.valueOf(memPolStr);
+                    m_memoryPolicy = MemoryPolicy.valueOf(memPolStr);
                 } catch (IllegalArgumentException iae) {
                     throw new InvalidSettingsException(
                             "Invalid memory policy: " + memPolStr);

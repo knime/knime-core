@@ -44,6 +44,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -69,13 +70,13 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
-    protected String loadNodeFactoryClassName(NodeSettingsRO parentSettings,
-            NodeSettingsRO settings) throws InvalidSettingsException {
+    protected String loadNodeFactoryClassName(final NodeSettingsRO parentSettings,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getString(KEY_FACTORY_NAME);
     }
     
     @Override
-    protected String loadNodeFile(NodeSettingsRO settings) 
+    protected String loadNodeFile(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getString("node_file");
     }
@@ -86,8 +87,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             final NodeSettingsRO settings, 
             final NodePersistorVersion1xx nodePersistor)
     throws InvalidSettingsException {
-        // TODO : don't use hard-coded strings here (what about "2.0.3"?)
-        if ("2.0.0".equals(getVersionString())) {
+        if (LoadVersion.V200.equals(LoadVersion.get(getVersionString()))) {
             return super.loadSNCSettings(settings, nodePersistor);
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
