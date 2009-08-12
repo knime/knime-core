@@ -1222,9 +1222,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Called when the command stack has changed, that is, a GEF command was
      * executed (Add,Remove,....). This keeps track of the dirty state of the
      * editor.
-     *
-     * @see org.eclipse.gef.commands.CommandStackListener
-     *      #commandStackChanged(java.util.EventObject)
+     * {@inheritDoc}
      */
     @Override
     public void commandStackChanged(final EventObject event) {
@@ -1234,16 +1232,12 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // track the dirty state of the edit domain
         boolean b = m_editDomain.getCommandStack().isDirty();
-        if (b != m_isDirty) {
-            // If state has changed, notify listeners
-            if (b) {
-                markDirty();
-            } else {
-                m_isDirty = b;
-            }
+        if (b || getWorkflowManager().isDirty()) {
+            markDirty();
+        } else {
+            m_isDirty = false;
             firePropertyChange(IEditorPart.PROP_DIRTY);
         }
-
     }
 
     /**

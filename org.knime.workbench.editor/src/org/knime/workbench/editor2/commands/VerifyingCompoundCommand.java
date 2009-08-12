@@ -86,36 +86,37 @@ public class VerifyingCompoundCommand extends CompoundCommand {
     public void execute() {
         // before showing the confirmation dialog, mark the node part figures
         for (NodeContainerEditPart nodePart : m_nodeParts) {
-            
             nodePart.mark();
         }
-        
-        // the following code has mainly been copied from
-        // IDEWorkbenchWindowAdvisor#preWindowShellClose
-        IPreferenceStore store = 
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        if (!store.contains(PreferenceConstants.P_CONFIRM_DELETE)
-                || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
-            MessageDialogWithToggle dialog = 
-                MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(), 
-                    "Confirm ...", m_dialogDisplayText, 
-                    "Do not ask again", false, null, null);
-            if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
-                for (NodeContainerEditPart nodePart : m_nodeParts) {
-                    nodePart.unmark();
+        try {
+            // the following code has mainly been copied from
+            // IDEWorkbenchWindowAdvisor#preWindowShellClose
+            IPreferenceStore store = 
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+            if (!store.contains(PreferenceConstants.P_CONFIRM_DELETE)
+                    || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
+                MessageDialogWithToggle dialog = 
+                    MessageDialogWithToggle.openOkCancelConfirm(
+                        Display.getDefault().getActiveShell(), 
+                        "Confirm ...", m_dialogDisplayText, 
+                        "Do not ask again", false, null, null);
+                if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                    return;
                 }
-                return;
+                if (dialog.getToggleState()) {
+                    store.setValue(PreferenceConstants.P_CONFIRM_DELETE, false);
+                    KNIMEUIPlugin.getDefault().savePluginPreferences();
+                }
             }
-            if (dialog.getToggleState()) {
-                store.setValue(PreferenceConstants.P_CONFIRM_DELETE, false);
-                KNIMEUIPlugin.getDefault().savePluginPreferences();
+            
+            // in all other cases execute the commands
+            LOGGER.debug("Executing <" + size() + "> commands.");
+            super.execute();
+        } finally {
+            for (NodeContainerEditPart nodePart : m_nodeParts) {
+                nodePart.unmark();
             }
         }
-        
-        // in all other cases execute the commands
-        LOGGER.debug("Executing <" + size() + "> commands.");
-        super.execute();
     }
 
     /**

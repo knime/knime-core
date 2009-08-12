@@ -36,10 +36,10 @@ import org.knime.workbench.editor2.commands.ReconnectConnectionCommand;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
-import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
@@ -80,7 +80,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
         if (getHost() instanceof NodeOutPortEditPart
                 || getHost() instanceof WorkflowInPortEditPart
-                || getHost() instanceof SubWorkFlowOutPortEditPart) {
+                || getHost() instanceof MetaNodeOutPortEditPart) {
             // request started on out port?
             cmd.setSourceNode(nodePart);
             cmd.setSourcePortID(((AbstractPortEditPart)getHost()).getIndex());

@@ -3198,6 +3198,14 @@ public final class WorkflowManager extends NodeContainer {
         return nc;
     }
     
+    /** Does the workflow contain a node with the argument id?
+     * @param id The id in question.
+     * @return true if there is node with the given id, false otherwise.
+     */
+    public boolean containsNodeContainer(final NodeID id) {
+        return m_workflow.getNode(id) != null;
+    }
+    
     /**
      * @return list of errors messages (list empty if none exist).
      */

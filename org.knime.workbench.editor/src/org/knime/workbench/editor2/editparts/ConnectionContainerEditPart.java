@@ -49,7 +49,6 @@ import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
-import org.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
 
 /**
@@ -135,9 +134,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         // enable bendpoints (must be stored in extra info)
         installEditPolicy(EditPolicy.CONNECTION_BENDPOINTS_ROLE,
                 new ConnectionBendpointEditPolicy());
-
-        installEditPolicy(EditPolicy.CONNECTION_ROLE,
-                new NewConnectionComponentEditPolicy());
 
     }
 

@@ -27,17 +27,16 @@ package org.knime.workbench.editor2.actions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.gef.EditPart;
-import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.internal.GEFMessages;
-import org.eclipse.gef.requests.GroupRequest;
 import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.ui.IWorkbenchPart;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.DeleteCommand;
 import org.knime.workbench.editor2.commands.VerifyingCompoundCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -50,15 +49,15 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeConnectionContainerDeleteAction extends DeleteAction {
-
+    
     /**
      * Constructs a <code>NodeConnectionContainerDeleteAction</code> using the
      * specified part.
      * 
      * @param part The part for this action
      */
-    public NodeConnectionContainerDeleteAction(final IWorkbenchPart part) {
-        super(part);
+    public NodeConnectionContainerDeleteAction(final WorkflowEditor part) {
+        super((IWorkbenchPart)part);
         setLazyEnablementCalculation(false);
     }
 
@@ -73,105 +72,48 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         if (objects.isEmpty()) {
             return null;
         }
-
         if (!(objects.get(0) instanceof EditPart)) {
             return null;
         }
 
-        GroupRequest deleteReq = new GroupRequest(RequestConstants.REQ_DELETE);
-
         VerifyingCompoundCommand compoundCmd = new VerifyingCompoundCommand(
                 GEFMessages.DeleteAction_ActionDeleteCommandName);
 
-        // get the selected nodes and connections
-        List<NodeContainerEditPart> nodeParts = getNodeContainerEditParts(getSelectedObjects());
-        Set<ConnectionContainerEditPart> connParts = getConnectionContainerEditParts(getSelectedObjects());
-        addAffectedConnections(nodeParts, connParts);
-        List<Object> deleteObjects = new ArrayList<Object>(nodeParts);
-        deleteObjects.addAll(connParts);
-        deleteReq.setEditParts(deleteObjects);
+        List<NodeContainerEditPart> nodeParts = 
+            new ArrayList<NodeContainerEditPart>();
+        for (Object o : objects) {
+            if (o instanceof NodeContainerEditPart) {
+                nodeParts.add((NodeContainerEditPart)o);
+            }
+        }
         
-        if (nodeParts.size() == 1) {
-
-            NodeContainerEditPart nodePart = nodeParts.get(0);
-            String name = nodePart.getNodeContainer().getName();
-            String customName = nodePart.getNodeContainer().getCustomName();
-            String text = "";
-            if (customName != null) {
-                text = customName + " - ";
-            }
-            text += name
-                + " (#" + nodePart.getNodeContainer().getID() + ")";
-
-            String dialogText = "Do you really want to delete "
-                    + "the selected node: " + text + "?";
-            compoundCmd.setDialogDisplayText(dialogText);
-        } else {
-
-            String dialogText = "Do you really want to delete ";
-
-            if (nodeParts.size() > 0) {
-                dialogText += nodeParts.size() + " nodes ";
-            }
-            if (nodeParts.size() > 0 && connParts.size() > 0) {
-                dialogText += "and ";
-            }
-            if (connParts.size() > 0) {
-                dialogText += connParts.size() + " connection(s)";
-            }
-
-            dialogText += "?";
-
-            compoundCmd.setDialogDisplayText(dialogText);
+        WorkflowManager manager = 
+            ((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
+        DeleteCommand cmd = new DeleteCommand(objects, manager);
+        int nodeCount = cmd.getNodeCount();
+        int connCount = cmd.getConnectionCount();
+        
+        StringBuilder dialogText = 
+            new StringBuilder("Do you really want to delete ");
+        if (nodeCount > 0) {
+            dialogText.append(nodeCount).append(" node");
+            dialogText.append(nodeCount > 1 ? "s " : " ");
+            dialogText.append(connCount > 0 ? "and " : "");
         }
+        if (connCount > 0) {
+            dialogText.append(connCount).append(" connection");
+            dialogText.append(connCount > 1 ? "s " : " ");
+        }
+        dialogText.append("?");
+        compoundCmd.setDialogDisplayText(dialogText.toString());
 
-        // set the parts into the compound command
+        // set the parts into the compound command (for unmarking after cancel)
         compoundCmd.setNodeParts(nodeParts);
-
-        for (Object o : deleteObjects) {
-            EditPart object = (EditPart)o;
-            Command cmd = object.getCommand(deleteReq);
-            if (cmd != null) {
-                compoundCmd.add(cmd);
-            }
-        }
+        compoundCmd.add(cmd);
 
         return compoundCmd;
     }
 
-    private List<NodeContainerEditPart> getNodeContainerEditParts(
-            final List objects) {
-
-        List<NodeContainerEditPart> result = new ArrayList<NodeContainerEditPart>();
-
-        for (int i = 0; i < objects.size(); i++) {
-            Object obj = objects.get(i);
-
-            if (obj instanceof NodeContainerEditPart) {
-                result.add((NodeContainerEditPart)obj);
-            }
-        }
-
-        return result;
-    }
-
-    private Set<ConnectionContainerEditPart> getConnectionContainerEditParts(
-            final List objects) {
-
-        Set<ConnectionContainerEditPart> result = 
-            new LinkedHashSet<ConnectionContainerEditPart>();
-
-        for (int i = 0; i < objects.size(); i++) {
-            Object obj = objects.get(i);
-
-            if (obj instanceof ConnectionContainerEditPart) {
-                result.add((ConnectionContainerEditPart)obj);
-            }
-        }
-
-        return result;
-    }
-    
     /** Adds all connections, which do not belong to the current selection
      * to the connParts argument. This is necessary to keep track on which 
      * connections were removed (to allow for undo).

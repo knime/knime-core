@@ -24,6 +24,9 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Collections;
+
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -34,13 +37,12 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
-import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -56,7 +58,7 @@ public class ReconnectConnectionCommand extends Command {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            ReconnectConnectionCommand.class); 
     
-    private DeleteConnectionCommand m_deleteCommand;
+    private DeleteCommand m_deleteCommand;
 
     private CreateConnectionCommand m_createCommand;
     
@@ -86,15 +88,20 @@ public class ReconnectConnectionCommand extends Command {
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
 
         // get the source node
-        NodeContainerEditPart sourceNode = (NodeContainerEditPart)host
-            .getParent();
-
+        
+        EditPart hostParent = host.getParent();
+        ConnectableEditPart srcEP = (ConnectableEditPart)hostParent;
         // get the responsible workflow manager
-        m_manager = ((WorkflowRootEditPart)sourceNode.getParent())
-            .getWorkflowManager();
+        if (srcEP instanceof NodeContainerEditPart) {
+            m_manager = srcEP.getNodeContainer().getParent();
+        } else {
+            // srcEP instanceof WorkflowInPortEditPart
+            m_manager = (WorkflowManager)srcEP.getNodeContainer();
+        }
         
         // create the delete command
-        m_deleteCommand = new DeleteConnectionCommand(connection, m_manager);
+        m_deleteCommand = 
+            new DeleteCommand(Collections.singleton(connection), m_manager);
         
         ConnectionContainer oldConnection = connection.getModel(); 
         m_oldTarget = oldConnection.getDest();
@@ -113,8 +120,8 @@ public class ReconnectConnectionCommand extends Command {
 
         if (host instanceof NodeOutPortEditPart 
                     || host instanceof WorkflowInPortEditPart
-                    || host instanceof SubWorkFlowOutPortEditPart) {
-            cmd.setSourceNode(sourceNode);
+                    || host instanceof MetaNodeOutPortEditPart) {
+            cmd.setSourceNode(srcEP);
             cmd.setSourcePortID(host.getIndex());
             cmd.setStartedOnOutPort(true);
             // we need the manager to execute the command

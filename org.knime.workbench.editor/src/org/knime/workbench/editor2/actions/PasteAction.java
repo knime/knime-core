@@ -24,7 +24,6 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -35,9 +34,7 @@ import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
-import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -106,31 +103,8 @@ public class PasteAction extends AbstractClipboardAction {
         ShiftCalculator shiftCalculator = newShiftCalculator();
         PasteFromWorkflowPersistorCommand pasteCommand =
             new PasteFromWorkflowPersistorCommand(
-                    getManager(), clipObject, shiftCalculator);
+                    getEditor(), clipObject, shiftCalculator);
         getCommandStack().execute(pasteCommand); // enables undo
-        
-        // change selection (from copied ones to pasted ones)
-        EditPartViewer partViewer = getEditor().getViewer();
-
-        // deselect the current selection and select the new pasted parts
-        for (NodeContainerEditPart nodePart : nodeParts) {
-            partViewer.deselect(nodePart);
-        }
-        
-
-        for (ConnectionContainerEditPart connectionPart 
-                : getSelectedConnectionParts()) {
-            partViewer.deselect(connectionPart);
-        }
-        
-        // select the new ones....
-        if (partViewer.getRootEditPart().getContents() != null 
-                && partViewer.getRootEditPart().getContents() 
-                instanceof WorkflowRootEditPart) {
-            ((WorkflowRootEditPart)partViewer.getRootEditPart().getContents())
-                .setFutureSelection(pasteCommand.getPastedIDs());
-        }
-        
         
         // update the actions
         getEditor().updateActions();

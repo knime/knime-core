@@ -34,13 +34,13 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
+import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 
 /**
- * 
+ * Figure to a {@link MetaNodeOutPortEditPart}.
  * @author Fabian Dill, University of Konstanz
  */
-public class SubWorkFlowOutPortFigure extends NodeOutPortFigure {
+public class MetaNodeOutPortFigure extends NodeOutPortFigure {
     
     /** Red traffic light. * */
     public static final Image RED =
@@ -63,7 +63,7 @@ public class SubWorkFlowOutPortFigure extends NodeOutPortFigure {
      * @param tooltip the tooltip for this port
      * @param state the loaded state of the underlying node
      */
-    public SubWorkFlowOutPortFigure(final PortType type, 
+    public MetaNodeOutPortFigure(final PortType type, 
             final int id, final int numPorts,
             final String tooltip, final NodeContainer.State state) {
         super(type, id, numPorts, tooltip);
@@ -77,7 +77,7 @@ public class SubWorkFlowOutPortFigure extends NodeOutPortFigure {
     
     /**
      * Called by the 
-     * {@link SubWorkFlowOutPortEditPart#stateChanged(NodeStateEvent)} in order 
+     * {@link MetaNodeOutPortEditPart#stateChanged(NodeStateEvent)} in order 
      * to provide a correct tooltip and icon. 
      * 
      * @param state current state of the port (idle/spec/data)

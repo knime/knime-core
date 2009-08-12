@@ -40,7 +40,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
-import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
+import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -179,7 +179,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
         } else if (model instanceof WorkflowOutPort) {
          // TODO: return SubWorkFlowOutPortEditPart
             WorkflowOutPort outport = (WorkflowOutPort)model;
-            part = new SubWorkFlowOutPortEditPart(
+            part = new MetaNodeOutPortEditPart(
                     outport.getPortType(),
                     outport.getPortIndex());
             

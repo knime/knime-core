@@ -36,24 +36,25 @@ import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowOutPort;
-import org.knime.workbench.editor2.figures.SubWorkFlowOutPortFigure;
+import org.knime.workbench.editor2.figures.MetaNodeOutPortFigure;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
- * 
+ * Represent edit part for meta node outport (attached to a node icon, decorated
+ * with a bubble indicating the node state).
  * @author Fabian Dill, University of Konstanz
  */
-public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart 
+public class MetaNodeOutPortEditPart extends AbstractPortEditPart 
     implements NodeStateChangeListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            SubWorkFlowOutPortEditPart.class);
+            MetaNodeOutPortEditPart.class);
     
     /**
      * @param type type of port (data, db, model)
      * @param portIndex index of the port
      */
-    public SubWorkFlowOutPortEditPart(final PortType type, 
+    public MetaNodeOutPortEditPart(final PortType type, 
             final int portIndex) {
         super(type, portIndex, false);
         LOGGER.debug("created sub workflow out port edit part with type "
@@ -65,7 +66,7 @@ public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart
      */
     @Override
     protected IFigure createFigure() {
-        LOGGER.debug("returning new sub work flow out port figure "
+        LOGGER.debug("returning new sub meta node out port figure "
                 + " with type " + getType() + " index " + getIndex()
                 + " nr outports " + getNodeContainer().getNrOutPorts()
                 + " and tooltip " + getNodeContainer().getOutPort(getIndex())
@@ -77,7 +78,7 @@ public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart
         NodeOutPort port = getNodeContainer().getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
         
-        SubWorkFlowOutPortFigure f = new SubWorkFlowOutPortFigure(
+        MetaNodeOutPortFigure f = new MetaNodeOutPortFigure(
                 getType(), getIndex(), 
                 getNodeContainer().getNrOutPorts(), 
                 tooltip, model.getNodeState());
@@ -140,7 +141,7 @@ public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
-                ((SubWorkFlowOutPortFigure)getFigure()).setState(
+                ((MetaNodeOutPortFigure)getFigure()).setState(
                         state.getState());
                 rebuildTooltip();
                 getFigure().repaint();

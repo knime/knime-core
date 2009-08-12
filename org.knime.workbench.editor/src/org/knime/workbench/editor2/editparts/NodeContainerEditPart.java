@@ -71,7 +71,6 @@ import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
-import org.knime.workbench.editor2.editparts.policy.NodeContainerComponentEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -245,10 +244,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     protected void createEditPolicies() {
 
-        // Handles the creation of DeleteCommands for nodes in a workflow
-        this.installEditPolicy(EditPolicy.COMPONENT_ROLE,
-                new NodeContainerComponentEditPolicy());
-
         // This policy provides create/reconnect commands for connections that
         // are associated with ports of this node
         this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
@@ -306,7 +301,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     if (part instanceof NodeOutPortEditPart
                             || part instanceof WorkflowInPortEditPart
-                            || part instanceof SubWorkFlowOutPortEditPart) {
+                            || part instanceof MetaNodeOutPortEditPart) {
                         AbstractPortEditPart outPortPart =
                                 (AbstractPortEditPart)part;
                         outPortPart.rebuildTooltip();

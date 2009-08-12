@@ -24,14 +24,15 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Arrays;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.DeleteNodeContainerCommand;
+import org.knime.workbench.editor2.commands.DeleteCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -108,15 +109,9 @@ public class CutAction extends AbstractClipboardAction {
         CopyAction copy = new CopyAction(getEditor());
         copy.runOnNodes(nodeParts);
 
-        // delete the nodes
-        WorkflowManager manager = getEditor().getWorkflowManager();
-        // TODO delete all at once (one command)
-        for (NodeContainerEditPart nodePart : nodeParts) {
-            // use dedicated delete command to enable undo/redo
-            DeleteNodeContainerCommand delete = 
-                new DeleteNodeContainerCommand(nodePart, manager);
-            getCommandStack().execute(delete);
-        }
+        DeleteCommand delete = new DeleteCommand(
+                Arrays.asList(nodeParts), getEditor().getWorkflowManager()); 
+        getCommandStack().execute(delete); // enable undo
 
         getEditor().updateActions();
 

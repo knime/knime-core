@@ -27,8 +27,8 @@ package org.knime.workbench.editor2.directnodeedit;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
-
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * The edit policy to edit the user node name of a node directly in the figure.
@@ -43,10 +43,12 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
         String labelText = (String)edit.getCellEditor().getValue();
         NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost();
-
-        UserNodeNameCommand command = new UserNodeNameCommand(
-                nodePart.getNodeContainer(), labelText);
+        WorkflowRootEditPart parent = 
+            (WorkflowRootEditPart)nodePart.getParent();
         
+        UserNodeNameCommand command = new UserNodeNameCommand(
+                nodePart.getNodeContainer().getID(), 
+                parent.getWorkflowManager(), labelText);
         return command;
     }
 

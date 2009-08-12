@@ -26,6 +26,8 @@ package org.knime.workbench.editor2.directnodeedit;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 
 
 /**
@@ -34,28 +36,36 @@ import org.knime.core.node.workflow.NodeContainer;
  * @author Christoph Sieb, University of Konstanz
  */
 public class UserNodeNameCommand extends Command {
+    
     private String m_newName, m_oldName;
 
-    private NodeContainer m_nodeContainer;
+    // must not keep reference to NodeContainer (may be obsolete
+    // as part of undo/redo sequence)
+    private final NodeID m_nodeID;
+    private final WorkflowManager m_manager; 
 
     /**
      * Creates a new command to change the user node name.
      * 
-     * @param nodeContainer the node container of the node to change the name
-     * 
+     * @param nodeID the nodeID of the node to change the name
+     * @param manager The manager containing the node
      * @param newName the new name to set
      */
-    public UserNodeNameCommand(final NodeContainer nodeContainer,
-            final String newName) {
-        m_nodeContainer = nodeContainer;
+    public UserNodeNameCommand(final NodeID nodeID, 
+            final WorkflowManager manager, final String newName) {
+        m_nodeID = nodeID;
+        m_manager = manager;
 
         if (newName != null) {
-
             m_newName = newName;
         } else {
-
             m_newName = "";
         }
+    }
+    
+    /** @return the node container to be edited. */
+    private NodeContainer getNodeContainer() {
+        return m_manager.getNodeContainer(m_nodeID);
     }
 
     /**
@@ -65,8 +75,9 @@ public class UserNodeNameCommand extends Command {
      */
     @Override
     public void execute() {
-        m_oldName = m_nodeContainer.getCustomName();
-        m_nodeContainer.setCustomName(m_newName);
+        NodeContainer nodeContainer = getNodeContainer();
+        m_oldName = nodeContainer.getCustomName();
+        nodeContainer.setCustomName(m_newName);
     }
 
     /**
@@ -76,6 +87,6 @@ public class UserNodeNameCommand extends Command {
      */
     @Override
     public void undo() {
-        m_nodeContainer.setCustomName(m_oldName);
+        getNodeContainer().setCustomName(m_oldName);
     }
 }
