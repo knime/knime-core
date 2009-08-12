@@ -207,6 +207,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
+        checkForNodeStateChanges(false); // get default state right
         // done.
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -457,7 +458,7 @@ public final class WorkflowManager extends NodeContainer {
             final boolean propagateChanges) {
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
             throw new IllegalStateException("Can't add ordinary node to root "
-                    + "workflow, use createProject() first");
+                    + "workflow, use createAndAddProject() first");
         }
         if (this == ROOT && (nodeContainer.getNrInPorts() != 0
                 || nodeContainer.getNrOutPorts() != 0)) {
