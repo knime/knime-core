@@ -32,12 +32,13 @@ import java.util.TimerTask;
 
 import junit.framework.TestCase;
 
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -211,20 +212,20 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
-        final Set<NodeView<? extends NodeModel>> allViews =
-            new HashSet<NodeView<? extends NodeModel>>();
+        final Set<AbstractNodeView<? extends NodeModel>> allViews =
+            new HashSet<AbstractNodeView<? extends NodeModel>>();
 
         // Collection<NodeView> views = new ArrayList<NodeView>();
         for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
             for (int i = 0; i < nodeCont.getNrViews(); i++) {
                 logger.debug("opening view nr. " + i + " for node "
                         + nodeCont.getName());
-                NodeView<? extends NodeModel> view =
+                AbstractNodeView<? extends NodeModel> view =
                     nodeCont.getView(i);
                 // store the view in order to close is after the test finishes
                 allViews.add(view);
                 // open it now.
-                view.createFrame("View #" + i);
+                Node.invokeOpenView(view, "View #" + i);
             }
         }
 
@@ -294,8 +295,8 @@ public class KnimeTestCase extends TestCase {
             timeout.cancel();
 
             // always close these views.
-            for (NodeView<? extends NodeModel> v : allViews) {
-                v.closeView();
+            for (AbstractNodeView<? extends NodeModel> v : allViews) {
+                Node.invokeCloseView(v);
             }
 
             wrapUp();
