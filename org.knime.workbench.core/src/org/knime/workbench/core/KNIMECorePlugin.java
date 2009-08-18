@@ -98,36 +98,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             // with the preferences for nr threads and tempDir
             IPreferenceStore pStore =
                 KNIMECorePlugin.getDefault().getPreferenceStore();
-            int maxThreads = pStore.getInt(
-                    HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
-            String maxTString = System.getProperty("org.knime.core.maxThreads");
-            if (maxTString == null) {
-                if (maxThreads <= 0) {
-                    LOGGER.warn("Can set " + maxThreads
-                            + " as number of threads to use");
-                } else {
-                    KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
-                    LOGGER.debug("Setting KNIME max thread count to "
-                            + maxThreads);
-                }
-            } else {
-                LOGGER.debug("Ignoring thread count from preference page (" 
-                        + maxThreads + "), since it has set by java property " 
-                        + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
-            }
-            String tmpDir = pStore.getString(
-                    HeadlessPreferencesConstants.P_TEMP_DIR);
-            // check for existence and if writable
-            File tmpDirFile = new File(tmpDir);
-            if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
-                LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
-                        + "not a directory or not writable");
-            } else {
-                System.setProperty("java.io.tmpdir", tmpDir);
-                LOGGER.debug("Setting temp dir environment variable "
-                        + "(java.io.tmpdir) to \"" + tmpDir + "\"");
-            }
-
+            initMaxThreadCountProperty();
+            initTmpDirProperty();
             // set log file level to stored
             String logLevelFile =
                 pStore.getString(HeadlessPreferencesConstants
@@ -151,8 +123,14 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         }
                     } else if (event.getProperty().equals(
                             HeadlessPreferencesConstants.P_TEMP_DIR)) {
-                        System.setProperty("java.io.tmpdir", (String)event
-                                .getNewValue());
+                        File f = new File(event.getNewValue().toString());
+                        LOGGER.debug("Setting temp dir to " 
+                                + f.getAbsolutePath());
+                        try {
+                            KNIMEConstants.setKNIMETempDir(f);
+                        } catch (Exception e) {
+                            LOGGER.warn("Setting temp dir failed", e);
+                        }
                     } else if (event.getProperty().equals(
                             HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
                         String newName = event.getNewValue().toString();
@@ -204,6 +182,64 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         
     }
 
+    private void initMaxThreadCountProperty() {
+        IPreferenceStore pStore =
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        int maxThreads = pStore.getInt(
+                HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
+        String maxTString = 
+            System.getProperty(KNIMEConstants.PROPERTY_MAX_THREAD_COUNT);
+        if (maxTString == null) {
+            if (maxThreads <= 0) {
+                LOGGER.warn("Can't set " + maxThreads
+                        + " as number of threads to use");
+            } else {
+                KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+                LOGGER.debug("Setting KNIME max thread count to "
+                        + maxThreads);
+            }
+        } else {
+            LOGGER.debug("Ignoring thread count from preference page (" 
+                    + maxThreads + "), since it has set by java property " 
+                    + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
+        }
+    }
+
+    private void initTmpDirProperty() {
+        IPreferenceStore pStore =
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        String tmpDirPref = pStore.getString(
+                HeadlessPreferencesConstants.P_TEMP_DIR);
+        String tmpDirSystem = System.getProperty(
+                KNIMEConstants.PROPERTY_TEMP_DIR);
+        File tmpDir = null;
+        if (tmpDirSystem == null) {
+            if (tmpDirPref != null) {
+                tmpDir = new File(tmpDirPref);
+                if (!(tmpDir.isDirectory() && tmpDir.canWrite())) {
+                    LOGGER.warn("Can't set " + tmpDirPref + " as temp dir");
+                    tmpDir = null;
+                }
+            }
+        } else {
+            tmpDir = new File(tmpDirSystem);
+            if (!(tmpDir.isDirectory() && tmpDir.canWrite())) {
+                LOGGER.warn("Can't set " + tmpDirSystem + " as temp dir");
+                // try to set path from preference page as fallback
+                tmpDir = new File(tmpDirPref);
+                if (!(tmpDir.isDirectory() && tmpDir.canWrite())) {
+                    LOGGER.warn("Can't set " + tmpDirPref + " as temp dir");
+                    tmpDir = null;
+                }
+            }
+        }
+        if (tmpDir != null) {
+            LOGGER.debug("Setting KNIME temp dir to \"" 
+                    + tmpDir.getAbsolutePath() + "\"");
+            KNIMEConstants.setKNIMETempDir(tmpDir);
+        }
+    }
+    
     /**
      * This method is called when the plug-in is stopped.
      * 
@@ -348,5 +384,5 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         }
         return m_resourceBundle;
     }
-    
+
 }

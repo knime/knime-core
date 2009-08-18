@@ -57,13 +57,22 @@ public final class KNIMEConstants {
     /** The build date, is set automatically by the build scripts. */
     public static final String BUILD_DATE = "June 20, 2008";
 
-    /** Name of the environment variable that is used to identify whether
-     * we are in expert mode or not (e.g. whether to show loop nodes or not).
+    /** Java property name that is used to identify whether KNIME is started 
+     * in expert mode or not (e.g. whether to show loop nodes or not).
      * This field is also used for the preference pages.
      * <p>Values of this field must be either "true" or "false". */
     public static final String PROPERTY_EXPERT_MODE = "knime.expert.mode";
 
+    /** Java property name to specify the default max thread count variable
+     * (can be set via preference page). */
+    public static final String PROPERTY_MAX_THREAD_COUNT = 
+        "org.knime.core.maxThreads";
 
+    /** Java property name to specify the default temp directory for 
+     * KNIME temp files (such as data files). This can be changed in the 
+     * preference pages and is by default the same as the java.io.tmpdir */
+    public static final String PROPERTY_TEMP_DIR = "knime.tmpdir";
+    
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
@@ -72,10 +81,11 @@ public final class KNIMEConstants {
      */
     public static final String KNIME_HOME_PROPERTYNAME = "knime.home";
 
-    /**
-     * KNIME home directory.
-     */
+    /** KNIME home directory. */
     private static File knimeHomeDir;
+    
+    /** KNIME temp directory. */
+    private static File knimeTempDir;
 
     /**
      * <i>Welcome to KNIME Konstanz Information Miner</i>.
@@ -164,6 +174,20 @@ public final class KNIMEConstants {
             flag = true;
         }
         ASSERTIONS_ENABLED = flag;
+        String tempDirPath = System.getProperty(PROPERTY_TEMP_DIR);
+        if (tempDirPath != null) {
+            File f = new File(tempDirPath);
+            if (!(f.isDirectory() && f.canWrite())) {
+                String error = "Unable to set temp path to \"" 
+                        + tempDirPath + "\": no directory or not writable";
+                System.err.println(error);
+                throw new InternalError(error);
+            } else {
+                setKNIMETempDir(f);
+            }
+        } else {
+            knimeTempDir = new File(System.getProperty("java.io.tmpdir"));
+        }
     }
 
     /** The global thread pool from which all threads should be taken. */
@@ -183,7 +207,37 @@ public final class KNIMEConstants {
     public static final String getKNIMEHomeDir() {
         return knimeHomeDir.getAbsolutePath();
     }
-
+    
+    /** Location for KNIME related temp files such as data container files. This
+     * is by default System.getProperty("java.io.tmpdir") but can be overwritten
+     * in the command line or the preference page. The 
+     * @return The path to the temp directory (trailing slashes omitted). 
+     */
+    public static final String getKNIMETempDir() {
+        return knimeTempDir.getAbsolutePath();
+    }
+    
+    /** Set a new location for the KNIME temp directory. Client should not
+     * be required to use this method. It has public scope so that bootstrap
+     * classes can initialize this properly.
+     * @param dir the new location to set
+     * @throws NullPointerException If the argument is null
+     * @throws IllegalArgumentException If the argument is not a directory
+     * or not writable.
+     */
+    public static final void setKNIMETempDir(final File dir) {
+        if (dir == null) {
+            throw new NullPointerException("Directory must not be null");
+        }
+        if (!(dir.isDirectory() && dir.canWrite())) {
+            throw new IllegalArgumentException("Can't set temp directory to \""
+                    + dir.getAbsolutePath() 
+                    + "\": not a directory or not writable");
+        }
+        System.setProperty("java.io.tmpdir", dir.getAbsolutePath());
+        knimeTempDir = dir;
+    }
+    
     /**
      * Hides public constructor.
      */
