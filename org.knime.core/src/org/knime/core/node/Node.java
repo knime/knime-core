@@ -223,24 +223,16 @@ public final class Node implements NodeModelWarningListener {
         }
 
         m_localTempTables = new HashSet<ContainerTable>();
-        // TODO (tg,po)
-        // let the model create its 'default' table specs
-        // configure(null);
     }
 
-    /** Constructor used to copy the node.
-     * @param original To copy from.
+    /** Create a persistor that is used to paste a copy of this node into
+     * the same or a different workflow. (Used by copy&paste actions and 
+     * undo operations)
+     * @return A new copy persistor that clones this node's settings. The copy
+     * has a non-executed state (ports and internals are not copied).
      */
-    public Node(final Node original) {
-        this(original.getFactory());
-        NodeSettings settings = new NodeSettings("copy");
-        try {
-            original.saveSettingsTo(settings);
-            loadSettingsFrom(settings);
-        } catch (InvalidSettingsException e) {
-            m_logger.debug("Unable to copy node settings", e);
-            // silently ignore here
-        }
+    public CopyNodePersistor createCopyPersistor() {
+        return new CopyNodePersistor(this);
     }
 
     /** Load settings and data + internals from a loader instance.
@@ -1098,130 +1090,6 @@ public final class Node implements NodeModelWarningListener {
         closeAllViews();
     }
 
-    // /**
-    // * Notification method, called by an input port to tell the node about a
-    // * disconnected outport from a predecessor. The notification is done, as
-    // the
-    // * node itself should be responsible to cause the required actions. The
-    // node
-    // * is reset and newly configured.
-    // *
-    // * @param inPortID The port id that just got disconnected.
-    // */
-    // void wasDisconnectedXXX(final int inPortID) {
-    // boundInPort(inPortID);
-    // // call reset
-    // reset();
-    //
-    // if (isDataInPort(inPortID)) {
-    // // reset hilite handler in this node.
-    // // This triggers hilite handler propagation through the output ports
-    // setHiLiteHandler(inPortID, null);
-    // // re-create out table specs, as incoming table specs/models are
-    // // gone.
-    // configure(null);
-    // } else { // then this is a ModelContent port
-    // /*
-    // * reset the ModelContent of this inport, previously pushed in and
-    // * stored in this node.
-    // */
-    // int realId = inPortID - getNrDataInPorts();
-    // try {
-    // m_model.loadModelContent(realId, null);
-    // // re-create out table specs, as incoming table specs/models are
-    // // gone.
-    // configure(null);
-    // } catch (NullPointerException e) {
-    // /*
-    // * if the nodemodel implementation of the loadModelContent is
-    // * correct we will not end up here.
-    // */
-    // String message =
-    // "Incorrect implementation of "
-    // + "method NodeModel.loadModelContent(): "
-    // + "It must handle null parameters";
-    //
-    // m_logger.coding(message);
-    //
-    // m_status = new NodeStatus.Error(message);
-    // notifyStateListeners(m_status);
-    // } catch (Throwable t) {
-    // /*
-    // * if the nodemodel implementation of the loadModelContent is
-    // * correct we will not end up here.
-    // */
-    // String message =
-    // "Implementation error: NodeModel.loadModelContent()"
-    // + " must handle null parameters";
-    //
-    // m_logger.coding(message, t);
-    //
-    // m_status = new NodeStatus.Error(message);
-    // notifyStateListeners(m_status);
-    // }
-    // }
-    // }
-
-    // /**
-    // * Notification method, called by an input port to tell the node about a
-    // new
-    // * available predictor model from a predecessor outport. The notification
-    // is
-    // * done, as the node itself should be responsible to cause the required
-    // * actions. The predictor model is loaded into the model and the node is
-    // * configured afterwards.
-    // *
-    // * @param inPortID The port ID that has a new predictor model spec
-    // * available.
-    // * @param predParams the new model content at the port
-    // */
-    // public void newModelContentAtPort(final int inPortID,
-    // final ModelContentRO predParams) {
-    // // Predictor params are propagated through model ports only
-    // boundModelContentInPort(inPortID);
-    // if (isExecuted()) {
-    // reset();
-    // }
-    // try {
-    // int realId = inPortID - getNrDataInPorts();
-    // m_model.loadModelContent(realId, predParams);
-    //
-    // // NOTE: configure was previously invoked at the end of the method
-    // // as this is not necessary and also would reset state messages
-    // // set in the catch blocks the configure is only invoked,
-    // // if the model could be properly set
-    // configure(null);
-    //
-    // } catch (InvalidSettingsException ise) {
-    // // NOTE: this reset was added to ensure that the node is reset
-    // // (not configured - see the above NOTE) after an exception has
-    // // been thrown during model load
-    // reset();
-    // m_logger.warn("Unable to load ModelContent: " + ise.getMessage());
-    // m_status =
-    // new NodeStatus.Error("Could not load ModelContent: "
-    // + ise.getMessage());
-    // notifyStateListeners(m_status);
-    //
-    // } catch (NullPointerException npe) {
-    // reset();
-    //
-    // m_status =
-    // new NodeStatus.Error(
-    // "Could not load ModelContent due to null argument.");
-    // notifyStateListeners(m_status);
-    // } catch (Throwable e) {
-    // reset();
-    // m_logger.coding("Error occurred: ", e);
-    // m_status =
-    // new NodeStatus.Error(
-    // "Could not load ModelContent due to an error: "
-    // + e.getMessage());
-    // notifyStateListeners(m_status);
-    // }
-    //
-    // }
-
     /** Used before configure, to apply the variable mask to the nodesettings,
      * that is to change individual node settings to reflect the current values
      * of the variables (if any).
@@ -1415,7 +1283,8 @@ public final class Node implements NodeModelWarningListener {
      * @return The node view with the specified index.
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
-    public NodeView<?> getView(final int viewIndex, final String title) {
+    public AbstractNodeView<?> getView(
+            final int viewIndex, final String title) {
         try {
             return m_factory.createNodeView(viewIndex, m_model);
         } catch (Throwable e) {
@@ -1429,9 +1298,9 @@ public final class Node implements NodeModelWarningListener {
      * Closes all views.
      */
     public void closeAllViews() {
-        Set<NodeView<?>> views =
-                new HashSet<NodeView<?>>(m_model.getViews());
-        for (NodeView<?> view : views) {
+        Set<AbstractNodeView<?>> views =
+                new HashSet<AbstractNodeView<?>>(m_model.getViews());
+        for (AbstractNodeView<?> view : views) {
             view.closeView();
         }
     }
@@ -1823,7 +1692,27 @@ public final class Node implements NodeModelWarningListener {
     public static void invokeEnsureOpen(final BufferedDataTable table) {
         table.ensureOpen();
     }
+    
+    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it 
+     * can be called from UI framework components. This method is not meant for
+     * public use and may change in future versions.
+     * @param view The view to call the method on.
+     * @param title The title for the view (method argument).
+     */
+    public static void invokeOpenView(final AbstractNodeView<?> view, 
+            final String title) {
+        view.openView(title);
+    }
 
+    /** Widens scope of {@link AbstractNodeView#closeView()} method so it 
+     * can be called from UI framework components. This method is not meant for
+     * public use and may change in future versions.
+     * @param view The view to call the method on.
+     */
+    public static void invokeCloseView(final AbstractNodeView<?> view) {
+        view.closeView();
+    }
+    
     // //////////////////////
     // ScopeContext handling
     // //////////////////////

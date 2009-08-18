@@ -100,7 +100,7 @@ public abstract class NodeModel {
     private static final HiLiteHandler HILITE_ADAPTER = new HiLiteHandler();
 
     /** Keeps a list of registered views. */
-    private final CopyOnWriteArrayList<NodeView<?>> m_views;
+    private final CopyOnWriteArrayList<AbstractNodeView<?>> m_views;
 
     /** Flag for the hasContent state. */
     private boolean m_hasContent;
@@ -187,7 +187,7 @@ public abstract class NodeModel {
         }
 
         // keeps set of registered views in the order they are added
-        m_views = new CopyOnWriteArrayList<NodeView<?>>();
+        m_views = new CopyOnWriteArrayList<AbstractNodeView<?>>();
     }
 
     /**
@@ -232,10 +232,9 @@ public abstract class NodeModel {
      *
      * @param view The view to register.
      */
-    final void registerView(final NodeView<?> view) {
+    final void registerView(final AbstractNodeView<?> view) {
         assert view != null;
         m_views.add(view);
-        m_warningListeners.add(view); 
         m_logger.debug("Registering view at model (total count " 
                 + m_views.size() + ")");
     }
@@ -245,9 +244,8 @@ public abstract class NodeModel {
      *
      * @param view The view to unregister.
      */
-    final void unregisterView(final NodeView<?> view) {
+    final void unregisterView(final AbstractNodeView<?> view) {
         assert view != null;
-        m_warningListeners.remove(view);
         boolean success = m_views.remove(view);
         if (success) {
             m_logger.debug("Unregistering view from model ("
@@ -263,13 +261,16 @@ public abstract class NodeModel {
     final void unregisterAllViews() {
         m_logger.debug("Removing all (" + m_views.size()
                 + ") views from model.");
+        for (AbstractNodeView<?> view : m_views) {
+            view.closeView();
+        }
         m_views.clear();
     }
 
     /**
      * @return All registered views.
      */
-    final Collection<NodeView<?>> getViews() {
+    final Collection<AbstractNodeView<?>> getViews() {
         return Collections.unmodifiableCollection(m_views);
     }
 
@@ -639,13 +640,13 @@ public abstract class NodeModel {
      * <code>#executeModel()</code> and <code>#resetModel()</code> ).
      */
     protected final void stateChanged() {
-        for (NodeView<?> view : m_views) {
+        for (AbstractNodeView<?> view : m_views) {
             try {
                 view.callModelChanged();
             } catch (Exception e) {
-                setWarningMessage("View [" + view.getViewTitle()
+                setWarningMessage("View [" + view.getViewName()
                         + "] could not be open, reason: " + e.getMessage());
-                m_logger.debug("View [" + view.getViewTitle()
+                m_logger.debug("View [" + view.getViewName()
                         + "] could not be open, reason: " + e.getMessage(), e);
             }
         }
@@ -662,7 +663,7 @@ public abstract class NodeModel {
      * @param arg The argument you want to pass.
      */
     protected final void notifyViews(final Object arg) {
-        for (NodeView<?> view : m_views) {
+        for (AbstractNodeView<?> view : m_views) {
             view.updateModel(arg);
         }
     }

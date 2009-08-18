@@ -19,6 +19,7 @@
 package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.node.Node;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -75,7 +76,8 @@ public class WFShowJobMgrViewAction extends AbstractWorkflowAction {
     @Override
     public void run() {
         WorkflowManager workflow = getWorkflow();
-        workflow.getJobManager().getView(workflow).createFrame(workflow.getNameWithID());
+        Node.invokeOpenView(workflow.getJobManager().getView(workflow), 
+                workflow.getNameWithID());
     }
 
 }

@@ -27,7 +27,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -38,6 +37,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -49,80 +49,51 @@ import javax.swing.WindowConstants;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Node view base class which implements the basic and common window properties.
- * The part specific to the special purpose node view must be implemented in the
- * derived class and must take place in a <code>Panel</code>. This panel is
- * registered in this base class (method <code>#setComponent(Component)</code>)
- * and will be displayed in the {@link JFrame} provided and handled by this
- * class.
+ * Node view class that displays the view content in an 
+ * {@linkplain JFrame AWT-frame}. The part specific to the special purpose 
+ * node view must be implemented in the derived class and must be placed in 
+ * a {@linkplain JComponent panel}. This panel is registered in this base 
+ * class (method {@link #setComponent(Component)}and will be displayed in 
+ * the <code>JFrame</code> provided and handled by this class.
  *
  * @author Thomas Gabriel, University of Konstanz
  * @param <T> the implementation of the {@link NodeModel} this node view
  *          is based on
  */
-public abstract class NodeView<T extends NodeModel> 
+public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T> 
         implements NodeModelWarningListener {
     
-    /**
-     * The node logger for this class; do not make static to make sure the right
-     * class name is printed in messages.
-     */
-    private final NodeLogger m_logger;
-
-    /**
-     * Holds the underlying <code>NodeModel</code> of type T.
-     */
-    private final T m_nodeModel;
-
-    /**
-     * Default background color.
-     */
+    /** Default background color. */
     public static final Color COLOR_BACKGROUND = Color.LIGHT_GRAY;
 
-    /**
-     * Initial width of the dummy component during construction.
-     */
+    /** Initial width of the dummy component during construction. */
     private static final int INIT_COMP_WIDTH = 300;
 
-    /**
-     * Initial height of the dummy component during construction.
-     */
+    /** Initial height of the dummy component during construction. */
     private static final int INIT_COMP_HEIGTH = 200;
 
-    /**
-     * Underlying frame, not visible from the outside.
-     */
+    /** Underlying frame, not visible from the outside. */
     private final JFrame m_frame;
 
-    /**
-     * Component in the center of this frame, set by
-     * <code>#setComponent(Component)</code>.
-     */
+    /** Component in the center of this frame, set by
+     * {@link #setComponent(Component)}. */
     private Component m_comp;
 
-    /**
-     * Component that is shown when no data is available (not connected, e.g.)
-     * and the view is open.
-     */
+    /** Component that is shown when no data is available (not connected, e.g.)
+     * and the view is open. */
     private Component m_noDataComp;
 
-    /**
-     * References either to <code>m_comp</code> or <code>m_noDataComp</code>
-     * depending on which is currently shown.
-     */
+    /** References either to <code>m_comp</code> or <code>m_noDataComp</code>
+     * depending on which is currently shown. */
     private Component m_activeComp;
 
-    /**
-     * Remembers the first time the actual component was set. The reason is the
+    /** Remembers the first time the actual component was set. The reason is the
      * resizing, the first time the proper component (not the "no data"
-     * component) is set. This resizing should only occur the first time.
-     */
+     * component) is set. This resizing should only occur the first time. */
     private boolean m_componentSet = false;
 
-    /**
-     * Determines if this view is always on top. Useful if special views should
-     * stay on top all the time
-     */
+    /** Determines if this view is always on top. Useful if special views should
+     * stay on top all the time */
     private boolean m_alwaysOnTop = false;
 
     private final WindowListener m_windowListener = new WindowAdapter() {
@@ -132,10 +103,11 @@ public abstract class NodeView<T extends NodeModel>
         @Override
         public void windowClosing(final WindowEvent e) {
             // triggered when user clicks [x] to close window
-            closeView();
+            NodeView.super.closeView();
         }
     };
     
+    /** Warning label showing the current warning message of the node model. */
     private final JLabel m_warningLabel;
 
     /**
@@ -149,29 +121,19 @@ public abstract class NodeView<T extends NodeModel>
      * will also be a potential listener.
      */
 
-    /**
-     * Creates a new view with the given title (<code>#getViewName()</code>),
-     * a menu bar, and the panel (<code>#getComponent()</code>) in the
-     * center. The default title is <i>View - </i>, and the default close
-     * operation <code>JFrame.DISPOSE_ON_CLOSE</code>.
+    /** Create a new view for a given (non-null) model. Subclasses will 
+     * initialize all view components in the their constructor and set it
+     * by calling {@link #setComponent(Component)}.
+     * 
+     * <p>This constructor creates the frame and the default menu bar. 
      *
      * @param nodeModel The underlying node model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
      * @see #setComponent(Component)
-     * @see #onClose()
      */
     protected NodeView(final T nodeModel) {
-        if (nodeModel == null) {
-            throw new NullPointerException();
-        }
+        super(nodeModel);
 
-        // create logger
-        m_logger = NodeLogger.getLogger(this.getClass());
-
-        // store reference to the node model
-        m_nodeModel = nodeModel;
-
-        // init frame
         m_frame = new JFrame();
         if (KNIMEConstants.KNIME16X16 != null) {
             m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
@@ -208,7 +170,7 @@ public abstract class NodeView<T extends NodeModel>
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
-                closeView();
+                NodeView.super.closeView();
             }
         });
         menu.add(item);
@@ -259,29 +221,10 @@ public abstract class NodeView<T extends NodeModel>
     }  
 
     /**
-     * Get reference to underlying <code>NodeModel</code>. Access this if
-     * access to your model is needs and cast it if necessary. Alternatively,
-     * you can also override this method in your derived node view and do the
-     * cast implicitly, for instance:
-     *
-     * <pre>
-     * protected FooNodeModel getNodeModel() {
-     *     return (FooNodeModel)super.getNodeModel();
-     * }
-     * </pre>
-     *
-     * @return GernericNodeModel reference.
-     */
-    protected T getNodeModel() {
-        assert m_nodeModel != null;
-        return m_nodeModel;
-    }
-
-    /**
      * Sets the property if the "no data" label is shown when the underlying
      * node is not executed but the view is shown (replaces whatever has been
      * set by <code>#setComponent(Component)</code>. Once the node is
-     * executed the user tab is shown again.
+     * executed the user panel is shown again.
      *
      * @param showIt <code>true</code> for replace the current view,
      *            <code>false</code> always show the real view.
@@ -290,56 +233,15 @@ public abstract class NodeView<T extends NodeModel>
         m_noDataComp = (showIt ? createNoDataComp() : null);
     }
 
-    /**
-     * Called from the model that something has changed. It internally sets the
-     * proper component depending on the node's execution state and if the no
-     * data label is set. This method will invoke the abstract
-     * <code>#modelChanged()</code> method.
-     */
+    /** {@inheritDoc} */
+    @Override
     final void callModelChanged() {
-        synchronized (m_nodeModel) {
-            try {
-                // CALL abstract model changed
-                modelChanged();
-                setComponent(m_comp);
-            } catch (NullPointerException npe) {
-                m_logger.coding("NodeView.modelChanged() causes "
-                       + "NullPointerException during notification of a "
-                       + "changed model, reason: " + npe.getMessage(), npe);
-            } catch (Throwable t) {
-                m_logger.error("NodeView.modelChanged() causes an error "
-                       + "during notification of a changed model, reason: "
-                       + t.getMessage(), t);
-            } finally {
-                // repaint and pack if the view has not been opened yet or
-                // the underlying view component was added
-                // ensured to happen in the EDT thread
-                relayoutFrame(false);
-            }
+        synchronized (getNodeModel()) {
+            super.callModelChanged();
+            setComponent(m_comp);
         }
     }
-
-    /**
-     * Method is invoked when the underlying <code>NodeModel</code> has
-     * changed. Also the HiLightHandler have changed. Note, the
-     * <code>NodeModel</code> content may be not available. Be sure to
-     * modify GUI components in the EventDispatchThread only.
-     */
-    protected abstract void modelChanged();
-
-    /**
-     * This method is supposed to be overridden by views that want to receive
-     * events from their assigned models via the
-     * <code>NodeModel#notifyViews(Object)</code> method. Can be used to
-     * iteratively update the view during execute.
-     *
-     * @param arg The argument can be everything.
-     */
-    protected void updateModel(final Object arg) {
-        // dummy statement to get rid of 'parameter not used' warning.
-        assert arg == arg;
-    }
-
+    
     /**
      * Invoked when the window is about to be closed. Unregister
      * <code>HiLiteListeners</code>. Dispose internal members. <br />
@@ -357,7 +259,7 @@ public abstract class NodeView<T extends NodeModel>
     protected abstract void onOpen();
 
     /**
-     * Returns menu bar of this frame.
+     * Returns menu bar of the accompanying frame.
      *
      * @return menu bar.
      */
@@ -365,81 +267,48 @@ public abstract class NodeView<T extends NodeModel>
         return m_frame.getJMenuBar();
     }
 
-    /**
-     * Initializes the view before opening. Packs and sets the location. Call
-     * this only once per view instance.
-     */
-    private void callOpenView() {
+    /** {@inheritDoc} */
+    @Override
+    final void callOpenView(final String title) {
         try {
             onOpen();
         } catch (Throwable t) {
-            m_logger.error("NodeView.onOpen() causes an error "
+            getLogger().error("NodeView.onOpen() causes an error "
                     + "on opening node view, reason: " + t.getMessage(), t);
         }
-        m_nodeModel.registerView(this);
+        getNodeModel().addWarningListener(this);
         callModelChanged();
-
         warningChanged(getNodeModel().getWarningMessage());
-        
+        m_frame.setName(title);
+        setTitle(title);
         if (m_comp != null) {
             m_comp.invalidate();
             m_comp.repaint();
         }
         m_frame.pack();
-        setLocation();
-    }
-
-    /**
-     * Initializes all view components and returns the view's content pane. If
-     * you derive this class, <strong>do not</strong> call this method. It's
-     * being used by the framework (if views are shown within a JFrame) or by
-     * eclipse (if available, i.e. when views are embedded in eclipse)
-     *
-     * @return The view's content pane.
-     */
-    public final Component openViewComponent() {
-        // init
-        callOpenView();
-        // return content pane
-        return m_frame.getContentPane();
-    }
-
-    /**
-     * Creates and opens a new view.
-     * @param viewTitle the tile for this view
-     * @return a {@link JFrame} with an initialized {@link NodeView}
-     */
-    public final JFrame createFrame(final String viewTitle) {
-        final String name;
-        if (viewTitle == null) {
-            name = "View \"no title\"";
-        } else {
-            name = viewTitle;
-        }
-        m_frame.setName(name);
-        setTitle(name);
-        openView();
-        return m_frame;
-    }
-
-    /**
-     * Opens the view.
-     *
-     * @see #onOpen
-     */
-    private void openView() {
-        // init
-        callOpenView();
         // show frame, make sure to do this in EDT (GUI related task)
         Runnable runner = new Runnable() {
             /** {@inheritDoc} */
             @Override
             public void run() {
+                m_frame.setLocationRelativeTo(null); // puts in screen center 
                 m_frame.setVisible(true);
                 m_frame.toFront();
             }
         };
         ViewUtils.runOrInvokeLaterInEDT(runner);
+    }
+    
+    /** Closes the view programmatically. Sub-classes should not call this 
+     * method as view closing is task of the framework. This method is 
+     * public for historical reasons and will be removed in upcoming versions. 
+     * @deprecated Will be removed without replacement in future versions 
+     * of KNIME. Sub-classes should not be required to programmatically close
+     * views. */
+    @Deprecated
+    @Override
+    public final void closeView() {
+        super.closeView();
     }
 
     /**
@@ -451,14 +320,15 @@ public abstract class NodeView<T extends NodeModel>
      * used by the framework (if views are shown within a JFrame) or by eclipse
      * (if available, i.e. when views are embedded in eclipse).
      */
-    public final void closeView() {
-        m_nodeModel.unregisterView(this);
+    @Override
+    public final void callCloseView() {
         try {
             onClose();
         } catch (Throwable t) {
-            m_logger.error("NodeView.onClose() causes an error "
+            getLogger().error("NodeView.onClose() causes an error "
                     + "during closing node view, reason: " + t.getMessage(), t);
         }
+        getNodeModel().removeWarningListener(this);
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
         m_activeComp = null;
         m_comp = null;
@@ -474,25 +344,40 @@ public abstract class NodeView<T extends NodeModel>
     }
 
     /**
-     * Sets this frame in the center of the screen observing the current screen
-     * size.
+     * Initializes all view components and returns the view's content pane. If
+     * you derive this class, <strong>do not</strong> call this method. It's
+     * being used by the framework (if views are shown within a JFrame) or by
+     * eclipse (if available, i.e. when views are embedded in eclipse)
+     *
+     * @return The view's content pane.
+     * @deprecated Will be removed without replacement in future 
+     *             versions of KNIME.
+     * @see #getComponent() 
      */
-    private void setLocation() {
-        Runnable runner = new Runnable() {
-            public void run() {
+    @Deprecated
+    public final Component openViewComponent() {
+        return m_frame.getContentPane();
+    }
 
-                Dimension screenSize =
-                        Toolkit.getDefaultToolkit().getScreenSize();
-                Dimension size = m_frame.getSize();
-                m_frame.setBounds(Math.max(0,
-                        (screenSize.width - size.width) / 2), Math.max(0,
-                        (screenSize.height - size.height) / 2), Math.min(
-                        screenSize.width, size.width), Math.min(
-                        screenSize.height, size.height));
-            }
-        };
-
-        ViewUtils.invokeAndWaitInEDT(runner);
+    /** Opens the new view. Subclasses should not be required to open views 
+     * programmatically. Opening is done via the framework and dedicated user 
+     * actions.
+     * @param viewTitle the tile for this view
+     * @return a {@link JFrame} with an initialized {@link NodeView}
+     * @deprecated This method will be removed without replacement in future
+     *             versions of KNIME as client code should not be required to
+     *             open views.
+     */
+    @Deprecated
+    public final JFrame createFrame(final String viewTitle) {
+        final String name;
+        if (viewTitle == null) {
+            name = "View \"no title\"";
+        } else {
+            name = viewTitle;
+        }
+        openView(name);
+        return m_frame;
     }
 
     /**
@@ -523,8 +408,6 @@ public abstract class NodeView<T extends NodeModel>
         };
         ViewUtils.invokeAndWaitInEDT(runner);
     }
-
-
 
     /**
      * @return The current view's title.
@@ -558,7 +441,7 @@ public abstract class NodeView<T extends NodeModel>
             public void run() {
              // pack frame only when setting the component for the first time
                 boolean pack = false;
-                if (!m_nodeModel.hasContent() && m_noDataComp != null) {
+                if (!getNodeModel().hasContent() && m_noDataComp != null) {
                     setComponentIntern(m_noDataComp);
                 } else {
                     setComponentIntern(comp);
@@ -568,7 +451,23 @@ public abstract class NodeView<T extends NodeModel>
                     m_componentSet = true;
                 }
                 m_comp = comp;
-                relayoutFrame(pack);
+                if (pack) {
+                    /*
+                     * This is necessary when the view was opened before the
+                     * node was executed. When the node gets executed the view
+                     * has to be resized and adapted to its content.
+                     * We had to remove the call to pack() in order to make it
+                     * run on a Mac Now we manually resize the frame
+                     */
+                    m_frame.invalidate();
+                    m_frame.validate();
+                    Dimension size = m_frame.getRootPane().getPreferredSize();
+                    m_frame.setSize(size);
+                } else {
+                    m_frame.invalidate();
+                    m_frame.validate();
+                }
+                m_frame.repaint();
             }
         };
         ViewUtils.invokeAndWaitInEDT(runner);
@@ -592,38 +491,6 @@ public abstract class NodeView<T extends NodeModel>
 
         m_activeComp = cmp;
         cont.add(m_activeComp, BorderLayout.CENTER);
-    }
-
-    /**
-     * Repaints or pack this frame depending on <code>doPack</code> flag.
-     *
-     * @param doPack if <code>true</code> the dialog is packed, otherwise just
-     *            validated and repainted
-     */
-    private void relayoutFrame(final boolean doPack) {
-        final Runnable run = new Runnable() {
-            /** {@inheritDoc} */
-            @Override
-            public void run() {
-                if (doPack) {
-                    /*
-                     * This is necessary when the view was opened before the
-                     * node was executed. When the node gets executed the view
-                     * has to be resized and adapted to its content.
-                     * We had to remove the call to pack() in order to make it
-                     * run on a Mac Now we manually resize the frame
-                     */
-                    m_frame.invalidate();
-                    m_frame.validate();
-                    Dimension size = m_frame.getRootPane().getPreferredSize();
-                    m_frame.setSize(size);
-                } 
-                m_frame.invalidate();
-                m_frame.validate();
-                m_frame.repaint();
-            }
-        };
-        ViewUtils.invokeAndWaitInEDT(run);
     }
 
     /**

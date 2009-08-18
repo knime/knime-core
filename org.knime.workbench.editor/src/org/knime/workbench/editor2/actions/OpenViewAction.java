@@ -29,6 +29,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
@@ -97,8 +98,9 @@ public class OpenViewAction extends Action {
                 + m_nodeContainer.getDisplayLabel();            
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
-                public void run() {                    
-                    m_nodeContainer.getView(m_index).createFrame(title);
+                public void run() {
+                    Node.invokeOpenView(
+                            m_nodeContainer.getView(m_index), title);
                 }
             });
         } catch (Throwable t) {

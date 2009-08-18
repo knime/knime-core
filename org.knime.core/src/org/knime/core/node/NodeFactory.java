@@ -641,7 +641,9 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Creates and returns a new node view for the given index.
+     * Creates and returns a new node view for the given index. Implementations 
+     * will typically inherit from {@link NodeView} instead of 
+     * {@link AbstractNodeView}.
      *
      * @param viewIndex The index for the view to create.
      * @param nodeModel the underlying model
@@ -651,7 +653,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
-    public abstract NodeView<T> createNodeView(final int viewIndex,
+    public abstract AbstractNodeView<T> createNodeView(final int viewIndex,
             final T nodeModel);
 
     /**

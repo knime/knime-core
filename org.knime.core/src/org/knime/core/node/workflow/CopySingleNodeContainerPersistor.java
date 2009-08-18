@@ -31,8 +31,11 @@ import java.util.Map;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -44,32 +47,19 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
     
-    private final SingleNodeContainer m_original;
+    private final NodeFactory<NodeModel> m_nodeFactory;
+    private final CopyNodePersistor m_nodePersistor;
+    private final List<ScopeObject> m_scopeObjectList;
     private final SingleNodeContainerSettings m_sncSettings;
-    private final Node m_node;
-    private final boolean m_preserveDeletableFlag;
+    private final CopyNodeContainerMetaPersistor m_metaPersistor;
     
     /**
      * 
      */
     public CopySingleNodeContainerPersistor(
-            final SingleNodeContainer original, 
+            final SingleNodeContainer m_original, 
             final boolean preserveDeletableFlag) {
-        m_original = original;
-        m_node = new Node(m_original.getNode());
-        m_sncSettings = original.getSingleNodeContainerSettings().clone();
-        m_preserveDeletableFlag = preserveDeletableFlag;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Node getNode() {
-        return m_node;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public List<ScopeObject> getScopeObjects() {
+        Node originalNode = m_original.getNode();
         ScopeObjectStack stack = m_original.getScopeObjectStack();
         List<ScopeObject> objs;
         if (stack != null) {
@@ -77,9 +67,36 @@ final class CopySingleNodeContainerPersistor implements
         } else {
             objs = Collections.emptyList();
         }
-        List<ScopeObject> clones = new ArrayList<ScopeObject>(objs.size());
+        m_scopeObjectList = new ArrayList<ScopeObject>(objs.size());
         for (ScopeObject o : objs) {
-            clones.add(o.cloneAndUnsetOwner());
+            m_scopeObjectList.add(o.cloneAndUnsetOwner());
+        }
+        m_sncSettings = m_original.getSingleNodeContainerSettings().clone();
+        m_nodeFactory = originalNode.getFactory();
+        m_nodePersistor = originalNode.createCopyPersistor();
+        m_metaPersistor = new CopyNodeContainerMetaPersistor(
+                m_original, preserveDeletableFlag);
+
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Node getNode() {
+        Node node = new Node(m_nodeFactory);
+        m_nodePersistor.loadInto(node);
+        return node;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<ScopeObject> getScopeObjects() {
+        if (m_scopeObjectList.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ScopeObject> clones = 
+            new ArrayList<ScopeObject>(m_scopeObjectList.size());
+        for (ScopeObject o : m_scopeObjectList) {
+            clones.add(o.clone());
         }
         return clones;
     }
@@ -87,8 +104,7 @@ final class CopySingleNodeContainerPersistor implements
     /** {@inheritDoc} */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
-        return new CopyNodeContainerMetaPersistor(
-                m_original, m_preserveDeletableFlag);
+        return m_metaPersistor;
     }
 
     /** {@inheritDoc} */

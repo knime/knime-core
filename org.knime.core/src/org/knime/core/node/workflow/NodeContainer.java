@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -976,7 +977,7 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     public abstract String getNodeViewName(final int i);
 
-    public NodeView<NodeModel> getView(final int i) {
+    public AbstractNodeView<NodeModel> getView(final int i) {
         if (i < getNrNodeViews()) {
             return getNodeView(i);
         } else {
@@ -991,7 +992,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param i the view to create
      * @return a new view instance with index i provided by the node
      */
-    public abstract NodeView<NodeModel> getNodeView(final int i);
+    public abstract AbstractNodeView<NodeModel> getNodeView(final int i);
 
     /**
      * Must be called when the node is reset.

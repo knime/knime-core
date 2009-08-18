@@ -24,13 +24,6 @@
  */
 package org.knime.core.node;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 
 public interface NodePersistor extends NodeContentPersistor {
@@ -80,25 +73,6 @@ public interface NodePersistor extends NodeContentPersistor {
         /** ignore (used when node state is idle, e.g. node not connected). */
         IGNORE
     }
-    
-    /** Loads content into node instance. 
-     * @param node The target node, used for meta info (#ports, e.g) and to
-     *  invoke the 
-     *  {@link Node#load(NodePersistor, ExecutionMonitor, LoadResult)} on
-     * @param nodeFile The configuration file for the node.
-     * @param execMon For progress/cancelation
-     * @param loadTblRep The table repository used during load
-     * @param tblRep The table repository for blob handling
-     * @param loadResult where to add errors to
-     * @throws IOException If files can't be read 
-     * @throws CanceledExecutionException If canceled
-     */
-    void load(final Node node, final ReferencedFile nodeFile, 
-            final ExecutionMonitor execMon, 
-            final Map<Integer, BufferedDataTable> loadTblRep, 
-            final HashMap<Integer, ContainerTable> tblRep,
-            final LoadResult loadResult)
-            throws IOException, CanceledExecutionException;
     
     boolean isConfigured();
     boolean isExecuted();

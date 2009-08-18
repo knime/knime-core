@@ -26,6 +26,7 @@ package org.knime.core.node.workflow;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -36,31 +37,63 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  * 
  * @author wiswedel, University of Konstanz
  */
-final class CopyNodeContainerMetaPersistor implements
-        NodeContainerMetaPersistor {
+final class CopyNodeContainerMetaPersistor 
+implements NodeContainerMetaPersistor {
     
-    private final NodeContainer m_original;
-    private final boolean m_preserveDeletableFlag;
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(CopyNodeContainerMetaPersistor.class);
+    
+    private final String m_customName;
+    private final String m_customDescription;
+    private int m_nodeIDSuffix;
+    private final NodeSettingsRO m_jobManagerSettings;
+    private final State m_state;
+    private final NodeMessage m_nodeMessage;
+    private final UIInformation m_uiInformation;
+    private final boolean m_isDeletable;
     
     /**
      * 
      */
     CopyNodeContainerMetaPersistor(final NodeContainer original, 
             final boolean preserveDeletableFlag) {
-        m_original = original;
-        m_preserveDeletableFlag = preserveDeletableFlag;
+        m_customName = original.getCustomName();
+        m_customDescription = original.getCustomDescription();
+        m_nodeIDSuffix = original.getID().getIndex();
+        NodeExecutionJobManager orig = original.getJobManager();
+        NodeSettings jobMgrSettings = null;
+        if (orig != null) {
+            jobMgrSettings = new NodeSettings("job_manager_clone_config");
+            NodeExecutionJobManagerPool.saveJobManager(orig, jobMgrSettings);
+        }
+        m_jobManagerSettings = jobMgrSettings;
+        switch (original.getState()) {
+        case IDLE:
+        case UNCONFIGURED_MARKEDFOREXEC:
+            m_state = State.IDLE;
+            break;
+        default:
+            m_state = State.CONFIGURED;
+        }
+        m_nodeMessage = original.getNodeMessage();
+        if (original.getUIInformation() != null) {
+            m_uiInformation = original.getUIInformation().clone();
+        } else {
+            m_uiInformation = null;
+        }
+        m_isDeletable = !preserveDeletableFlag || original.isDeletable();
     }
 
     /** {@inheritDoc} */
     @Override
     public String getCustomDescription() {
-        return m_original.getCustomDescription();
+        return m_customDescription;
     }
 
     /** {@inheritDoc} */
     @Override
     public String getCustomName() {
-        return m_original.getCustomName();
+        return m_customName;
     }
 
     /** {@inheritDoc} */
@@ -72,24 +105,21 @@ final class CopyNodeContainerMetaPersistor implements
     /** {@inheritDoc} */
     @Override
     public int getNodeIDSuffix() {
-        return m_original.getID().getIndex();
+        return m_nodeIDSuffix;
     }
     
     /** {@inheritDoc} */
     @Override
     public NodeExecutionJobManager getExecutionJobManager() {
-        NodeExecutionJobManager orig = m_original.getJobManager();
-        if (orig == null) {
+        if (m_jobManagerSettings == null) {
             return null;
         }
-        NodeSettings s = new NodeSettings("job_manager_clone_config");
-        NodeExecutionJobManagerPool.saveJobManager(orig, s);
         try {
-            return NodeExecutionJobManagerPool.load(s);
+            return NodeExecutionJobManagerPool.load(m_jobManagerSettings);
         } catch (InvalidSettingsException ise) {
-            throw new IllegalStateException("Cannot clone job manager", ise);
+            LOGGER.error("Cannot clone job manager", ise);
+            return null;
         }
-        
     }
     
     /** {@inheritDoc} */
@@ -103,34 +133,25 @@ final class CopyNodeContainerMetaPersistor implements
     /** {@inheritDoc} */
     @Override
     public State getState() {
-        switch (m_original.getState()) {
-        case IDLE:
-        case UNCONFIGURED_MARKEDFOREXEC:
-            return State.IDLE;
-        default:
-            return State.CONFIGURED;
-        }
+        return m_state;
     }
     
     /** {@inheritDoc} */
     @Override
     public NodeMessage getNodeMessage() {
-        return m_original.getNodeMessage();
+        return m_nodeMessage;
     }
 
     /** {@inheritDoc} */
     @Override
     public UIInformation getUIInfo() {
-        if (m_original.getUIInformation() != null) {
-            return m_original.getUIInformation().clone();
-        }
-        return null;
+        return m_uiInformation;
     }
     
     /** {@inheritDoc} */
     @Override
     public boolean isDeletable() {
-        return !m_preserveDeletableFlag || m_original.isDeletable();
+        return m_isDeletable;
     }
 
     /** {@inheritDoc} */

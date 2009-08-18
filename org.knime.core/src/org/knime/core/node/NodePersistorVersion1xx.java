@@ -349,8 +349,18 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return getSingleNodeContainerPersistor().mustWarnOnDataLoadError();
     }
     
-    /** {@inheritDoc} */
-    @Override
+    /** Loads content into node instance. 
+     * @param node The target node, used for meta info (#ports, e.g) and to
+     *  invoke the 
+     *  {@link Node#load(NodePersistor, ExecutionMonitor, LoadResult)} on
+     * @param configFileRef The configuration file for the node.
+     * @param exec For progress/cancelation
+     * @param loadTblRep The table repository used during load
+     * @param tblRep The table repository for blob handling
+     * @param loadResult where to add errors to
+     * @throws IOException If files can't be read 
+     * @throws CanceledExecutionException If canceled
+     */
     public void load(final Node node, final ReferencedFile configFileRef,
             final ExecutionMonitor exec, 
             final Map<Integer, BufferedDataTable> loadTblRep,

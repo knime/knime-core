@@ -30,6 +30,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
@@ -142,7 +143,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                         try {
                             final String title = cont.getViewName(0) + " - " 
                                 + cont.getDisplayLabel();
-                            cont.getView(0).createFrame(title);
+                            Node.invokeOpenView(cont.getView(0), title);
                         } catch (Throwable t) {
                             MessageBox mb = new MessageBox(
                                     Display.getDefault().getActiveShell(),

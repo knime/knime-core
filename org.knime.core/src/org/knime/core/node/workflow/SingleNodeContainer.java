@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -45,7 +46,6 @@ import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
@@ -225,12 +225,12 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<NodeModel> getNodeView(final int i) {
+    public AbstractNodeView<NodeModel> getNodeView(final int i) {
         String title = getNameWithID() + " (" + getViewName(i) + ")";
         if (getCustomName() != null) {
             title += " - " + getCustomName();
         }
-        return (NodeView<NodeModel>)m_node.getView(i, title);
+        return (AbstractNodeView<NodeModel>)m_node.getView(i, title);
     }
 
     /** {@inheritDoc} */
