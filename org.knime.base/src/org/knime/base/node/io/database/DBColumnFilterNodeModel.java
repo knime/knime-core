@@ -98,7 +98,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery);
+        conn = createDBQueryConnection(spec, newQuery, true);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
         DatabasePortObjectSpec outSpec = new DatabasePortObjectSpec(
@@ -128,7 +128,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery);
+        conn = createDBQueryConnection(spec, newQuery, false);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
         return new PortObjectSpec[]{new DatabasePortObjectSpec(

@@ -30,6 +30,7 @@ import java.io.IOException;
 import org.knime.base.node.io.database.DBConnectionDialogPanel.DBTableOptions;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -54,6 +55,8 @@ class DBNodeModel extends NodeModel {
     private DatabaseQueryConnectionSettings m_conn;
 
     private String m_tableId;
+    
+    NodeLogger LOGGER = NodeLogger.getLogger(DBNodeModel.class);
     
     /**
      * Creates a new database reader.
@@ -104,16 +107,15 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void reset() {
         if (m_conn != null) {
-            if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
-                    m_tableOption.getStringValue())) {
-                try {
-                    m_conn.execute("DROP TABLE " + m_tableId);
-                } catch (Exception e) {
-                    super.setWarningMessage("Can't drop table with id \"" 
-                            + m_tableId + "\", reason: " + e.getMessage());
-                }
+            try {
+                m_conn.execute("DROP TABLE " + m_tableId);
+                LOGGER.info("Table \"" + m_tableId + "\" was dropped.");
+            } catch (Throwable t) {
+                LOGGER.debug("Table \"" + m_tableId + "\" can't be dropped, "
+                		+ "reason: " + t.getMessage());
+            } finally {
+            	m_conn = null;
             }
-            m_conn = null;
         }
     }
 
@@ -143,32 +145,33 @@ class DBNodeModel extends NodeModel {
     /**
      * Creates a new query connection based on the connection settings, that 
      * is, either create a new table or wrap the SQL statement.
-     * @param spec the database spec
+     * @param spec the database connection
      * @param newQuery the new query to execute
+     * @param createTable true, if table should be created (e.g. during execute)
      * @return a database connection object
      * @throws InvalidSettingsException if the query to create the new table 
      *         inside the database could not be executed
      */
     final DatabaseQueryConnectionSettings createDBQueryConnection(
-            final DatabasePortObjectSpec spec, final String newQuery) 
-            throws InvalidSettingsException {
-        DatabaseQueryConnectionSettings conn = 
-            new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel());
-        if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
-                m_tableOption.getStringValue())) {
+            final DatabasePortObjectSpec spec, final String newQuery,
+            final boolean createTable) 
+    		throws InvalidSettingsException {
+    	m_conn = new DatabaseQueryConnectionSettings(
+    			spec.getConnectionModel());
+        if (createTable && DBTableOptions.CREATE_TABLE.getActionCommand().
+        		equals(m_tableOption.getStringValue())) {
             try {
-                conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
+            	m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
+                LOGGER.info("Table \"" + m_tableId + "\" was created.");
             } catch (Throwable t) {
                 throw new InvalidSettingsException("Could not execute query \""
                         + newQuery + "\" to create new table, reason: "
                         + t.getMessage(), t);
             }
             return new DatabaseQueryConnectionSettings(
-                    conn, "SELECT * FROM " + m_tableId);
-        } else {
-            return new DatabaseQueryConnectionSettings(conn, newQuery);
+                    m_conn, "SELECT * FROM " + m_tableId);
         }
+        return new DatabaseQueryConnectionSettings(m_conn, newQuery);
     }
         
 }

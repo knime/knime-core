@@ -93,18 +93,18 @@ final class DBQueryNodeModel extends DBNodeModel {
         m_query.loadSettingsFrom(settings);
     }
     
-    /**
+        /**
      * {@inheritDoc}
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        DatabaseQueryConnectionSettings conn = 
-            new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel());
+    	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+    	DatabaseQueryConnectionSettings conn = 
+    		new DatabaseQueryConnectionSettings(
+    				spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = new DatabaseQueryConnectionSettings(conn, newQuery);
+        conn = createDBQueryConnection(spec, newQuery, false);
         try {
             DatabaseReaderConnection reader = 
                 new DatabaseReaderConnection(conn);
@@ -129,7 +129,7 @@ final class DBQueryNodeModel extends DBNodeModel {
                 new DatabaseQueryConnectionSettings(
                 dbObj.getSpec().getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = new DatabaseQueryConnectionSettings(conn, newQuery);
+        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery, true);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         DataTableSpec outSpec = load.getDataTableSpec();
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
@@ -140,7 +140,7 @@ final class DBQueryNodeModel extends DBNodeModel {
     
     private String createQuery(final String query, final String tableID) {
         return m_query.getStringValue().replaceAll(
-                TABLE_PLACE_HOLDER, "(" + query + ") " + tableID);
+                TABLE_PLACE_HOLDER, "(" + query + ")");
     }
         
 }
