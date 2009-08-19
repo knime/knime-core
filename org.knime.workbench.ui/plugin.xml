@@ -204,17 +204,6 @@
             name="KNIME Views"/>
    </extension>
    <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            id="org.knime.workbench.ui.actionSet1"
-            label="org.knime.workbench.ui.actionSet1"
-            visible="true">
-         <menu
-               id="org.knime.workbench.ui.menu1"
-               label="View2"/>
-      </actionSet>
-   </extension>
-   <extension
          point="org.eclipse.ui.exportWizards">
       <wizard
             class="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
