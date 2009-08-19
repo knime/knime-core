@@ -15,7 +15,8 @@
 
    <launcherArgs>
       <vmArgs>-XX:MaxPermSize=256M
--Xmx512M</vmArgs>
+-Xmx512M
+-Dknime.expert.mode=true</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
