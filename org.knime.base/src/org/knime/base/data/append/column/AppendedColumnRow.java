@@ -41,20 +41,33 @@ public class AppendedColumnRow implements DataRow {
     private final DataRow m_baseRow;
 
     private final DataCell[] m_appendCell;
-
+    
+    private final RowKey m_rowKey;
+    
     /**
      * Creates new Row with <code>baseRow</code> providing the first cells and
      * <code>appendCell</code> as last cells.
-     * 
      * @param baseRow Containing the first cells
      * @param appendCell The last cells (to be appended).
      */
     public AppendedColumnRow(final DataRow baseRow,
             final DataCell... appendCell) {
-        m_baseRow = baseRow;
-        m_appendCell = appendCell;
+        this(baseRow.getKey(), baseRow, appendCell);
     }
 
+    /**
+     * Creates new Row with <code>baseRow</code> providing the first cells and
+     * <code>appendCell</code> as last cells.
+     * @param rowKey new row key for the resulting appended row
+     * @param baseRow Containing the first cells
+     * @param appendCell The last cells (to be appended).
+     */
+    public AppendedColumnRow(final RowKey rowKey, final DataRow baseRow,
+            final DataCell... appendCell) {
+        m_baseRow = baseRow;
+        m_appendCell = appendCell;
+        m_rowKey = rowKey;
+    }
 
     /**
      * Create a new row with the <code>baseRow</code> providing the first cells
@@ -62,14 +75,30 @@ public class AppendedColumnRow implements DataRow {
      * from the second row should be appended is passed in
      * <code>appendColumn</code> (<code>true</code> for adding the cells at
      * the index, <code>false</code> for not adding it).
-     * 
      * @param baseRow row with the first cells
      * @param appendedRow row with the cells to append
      * @param appendColumn array with entries set to <code>true</code>, if the
      * corresponding cells from the second row should be added
      */
-    public AppendedColumnRow(final DataRow baseRow, final DataRow appendedRow,
-            final boolean[] appendColumn) {
+    public AppendedColumnRow(final DataRow baseRow, 
+    		final DataRow appendedRow, final boolean[] appendColumn) {
+    	this(baseRow.getKey(), baseRow, appendedRow, appendColumn);
+    }
+
+    /**
+     * Create a new row with the <code>baseRow</code> providing the first cells
+     * and <code>appendedRow</code> providing the following cells. Which cells
+     * from the second row should be appended is passed in
+     * <code>appendColumn</code> (<code>true</code> for adding the cells at
+     * the index, <code>false</code> for not adding it).
+     * @param rowKey new row key for the resulting appended row
+     * @param baseRow row with the first cells
+     * @param appendedRow row with the cells to append
+     * @param appendColumn array with entries set to <code>true</code>, if the
+     * corresponding cells from the second row should be added
+     */
+    public AppendedColumnRow(final RowKey rowKey, final DataRow baseRow, 
+    		final DataRow appendedRow, final boolean[] appendColumn) {
         if (appendColumn.length != appendedRow.getNumCells()) {
             throw new IllegalArgumentException("Number of columns to append "
                     + "is unequal to the number of cells in the appended row");
@@ -88,6 +117,8 @@ public class AppendedColumnRow implements DataRow {
                 m_appendCell[k++] = appendedRow.getCell(i);
             }
         }
+        
+        m_rowKey = rowKey;
     }
     
     /**
@@ -101,7 +132,7 @@ public class AppendedColumnRow implements DataRow {
      * {@inheritDoc}
      */
     public RowKey getKey() {
-        return m_baseRow.getKey();
+        return m_rowKey;
     }
 
     /**
