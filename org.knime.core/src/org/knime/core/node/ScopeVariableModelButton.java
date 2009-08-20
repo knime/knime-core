@@ -42,6 +42,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -261,8 +262,28 @@ implements ChangeListener, ActionListener {
                 // found it: we can select it. Everything fine.
                 m_inputVar.setSelectedItem(var);
             } else {
-                // could not find it: disable setting.
-                m_enableInputVar.setSelected(false);
+                // could not find it: add a non-selectable entry to
+                // the list so the user knows what's wrong. KNIME will
+                // complain during configure anyway and let her know
+                // that the variable does not exist (anymore).
+                m_inputVar.addItem(s);
+                m_inputVar.setRenderer(new CustomListCellRenderer(s));
+                m_inputVar.setSelectedItem(s);
+                m_inputVar.addActionListener(new ActionListener() {
+                    private Object m_oldSelection = null;
+                    public void actionPerformed(final ActionEvent evt) {
+                        Object o = m_inputVar.getSelectedItem();
+                        if (o.equals(s)) {
+                            if (!o.equals(m_oldSelection)) {
+                                // only try to select the previous (hopefully
+                                // legal) selection if it was different!
+                                m_inputVar.setSelectedItem(m_oldSelection);
+                            }
+                        } else {
+                            m_oldSelection = o;
+                        }
+                    }
+                });
             }
         }
 
@@ -273,5 +294,30 @@ implements ChangeListener, ActionListener {
         }
         
     }
-    
+
+    /** Helper class to allow also the display of disabled list elements. */
+    class CustomListCellRenderer extends ScopeVariableListCellRenderer {
+        private String m_toDisable;
+        
+        /** Create new render which disables given string.
+         * 
+         * @param s string to disable
+         */
+        CustomListCellRenderer(final String s) {
+            m_toDisable = s;
+        }
+
+        /** {@inheritDoc} */
+        public Component getListCellRendererComponent(final JList list,
+                final Object value, final int index, final boolean isSelected,
+                final boolean cellHasFocus) {
+            Component comp = super.getListCellRendererComponent(list,
+                    value, index, isSelected, cellHasFocus);
+            if (value.toString().equals(m_toDisable)) {
+                comp.setFocusable(false);
+                comp.setEnabled(false);
+            }
+            return comp;
+        }
+    }
 }
