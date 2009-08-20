@@ -59,6 +59,7 @@ public class DialogComponentNumber extends DialogComponent {
     private static final int FIELD_MINWIDTH = 2;
 
     private final JSpinner m_spinner;
+    private ScopeVariableModel m_wvm = null;
 
     private final JLabel m_label;
 
@@ -182,6 +183,7 @@ public class DialogComponentNumber extends DialogComponent {
                 }
             });
             getComponentPanel().add(new ScopeVariableModelButton(wvm));
+            m_wvm = wvm;
         }
 
         //call this method to be in sync with the settings model
@@ -267,8 +269,15 @@ public class DialogComponentNumber extends DialogComponent {
             }
         }
 
-        // also update the enable status
+        // also update the enable status of all components...
         setEnabledComponents(getModel().isEnabled());
+        // ...plus enable the spinner according to the variable model
+        if (m_wvm != null) {
+            if (m_wvm.isVariableReplacementEnabled()) {
+                m_spinner.setEnabled(false);
+            }
+        }
+
     }
 
     /**
