@@ -831,7 +831,24 @@ public abstract class NodeModel {
                 // only mimic empty table for real table connections
                 copyInSpecs[i] = new DataTableSpec();
             }
+            // only weak port compatibility check during connect 
+            // (model reader can be connected to any model port)
+            // complain if actual types are incompatible.
+            Class<? extends PortObjectSpec> expected = 
+                m_inPortTypes[i].getPortObjectSpecClass();
+            if (copyInSpecs[i] != null 
+                    && !expected.isAssignableFrom(copyInSpecs[i].getClass())) {
+                StringBuilder b = new StringBuilder("Incompatible port spec");
+                if (copyInSpecs.length > 1) {
+                    b.append(" at port ").append(i);
+                }
+                b.append(", expected: ").append(expected.getSimpleName());
+                b.append(", actual: ").append(
+                        copyInSpecs[i].getClass().getSimpleName());
+                throw new InvalidSettingsException(b.toString());
+            }
         }
+        
         // CALL CONFIGURE
         newOutSpecs = configure(copyInSpecs);
         if (newOutSpecs == null) {
