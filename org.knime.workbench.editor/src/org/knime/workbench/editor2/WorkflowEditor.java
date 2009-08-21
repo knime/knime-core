@@ -1315,11 +1315,12 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     final String newName = delta.getMovedToPath().segment(0);
-                    String oldName = m_fileResource.getParent().getFullPath()
-                        .toString();
+                    String oldName = 
+                        m_fileResource.getParent().getFullPath().toString();
                     WorkflowEditor.this.m_manager.renameWorkflowDirectory(
                             newName);
-                    ProjectWorkflowMap.replace(newName,
+                    ProjectWorkflowMap.replace(
+                            delta.getMovedToPath().toString(),
                             WorkflowEditor.this.m_manager, oldName);
                     Display.getDefault().syncExec(new Runnable() {
                         public void run() {
