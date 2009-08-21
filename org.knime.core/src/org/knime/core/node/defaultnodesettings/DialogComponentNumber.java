@@ -64,7 +64,7 @@ public class DialogComponentNumber extends DialogComponent {
     private final JLabel m_label;
 
     /**
-     * Constructor puts a label and spinner (10 characters wide) into a panel.
+     * Constructor puts a label and spinner (with default width) into a panel.
      *
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
@@ -77,6 +77,15 @@ public class DialogComponentNumber extends DialogComponent {
                 null);
     }
 
+    /** Puts a label and spinner with default width into panel, offers also
+     * the registration of a {@link ScopeVariableModel}.
+     * @param numberModel the SettingsModel determining the number type (double
+     *            or int)
+     * @param label label for dialog in front of the spinner
+     * @param stepSize step size for the spinner
+     * @param wvm The variable model (for displaying a little icon next to the 
+     * component to overwrite the settings with variables). Can be null.
+     */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize,
             final ScopeVariableModel wvm) {
@@ -98,6 +107,16 @@ public class DialogComponentNumber extends DialogComponent {
         this (numberModel, label, stepSize, compWidth, null);
     }
 
+    /**
+     * Constructor put label and spinner into panel.
+     * @param numberModel the SettingsModel determining the number type (double
+     *            or int)
+     * @param label label for dialog in front of the spinner
+     * @param stepSize step size for the spinner
+     * @param compWidth the width (number of columns/characters) of the spinner
+     * @param wvm The variable model (for displaying a little icon next to the 
+     * component to overwrite the settings with variables). Can be null.
+     */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize, final int compWidth,
             final ScopeVariableModel wvm) {
@@ -176,10 +195,10 @@ public class DialogComponentNumber extends DialogComponent {
             wvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    ScopeVariableModel wvm =
+                    ScopeVariableModel wvm1 =
                         (ScopeVariableModel)(evt.getSource());
                     m_spinner.setEnabled(
-                            !wvm.isVariableReplacementEnabled());
+                            !wvm1.isVariableReplacementEnabled());
                 }
             });
             getComponentPanel().add(new ScopeVariableModelButton(wvm));
