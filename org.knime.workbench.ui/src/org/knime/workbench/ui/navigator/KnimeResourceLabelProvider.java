@@ -192,7 +192,6 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                 m_editorRegistryListener);
         // had to remove the disposal of the images in order to make deriving 
         // label provider work otherwise these images were already disposed 
-        ProjectWorkflowMap.clearMap();
         super.dispose();
     }
 

@@ -53,20 +53,45 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Fabian Dill, University of Konstanz
  */
 public final class ProjectWorkflowMap {
-
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            ProjectWorkflowMap.class);
+    
     private ProjectWorkflowMap() {
         // Utility class
     }
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            ProjectWorkflowMap.class);
 
     /*
      * Map with name of IProject to lowercase and referring workflow manager
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
      */
-    private static final Map<String, NodeContainer>PROJECTS
-        = new LinkedHashMap<String, NodeContainer>();
+    private static final Map<String, NodeContainer> PROJECTS
+        = new LinkedHashMap<String, NodeContainer>() {
+        
+        @Override
+        public NodeContainer put(final String key, final NodeContainer value) {
+            NodeContainer old = super.put(key, value);
+            if (old != null) {
+                LOGGER.debug("Removing \"" + key 
+                        + "\" from project map");
+            }
+            if (value != null) {
+                LOGGER.debug("Adding \"" + key 
+                        + "\" to project map (" + size() + " in total)");
+            }
+            return old;
+        };
+        
+        @Override
+        public NodeContainer remove(final Object key) {
+            NodeContainer old = super.remove(key);
+            if (old != null) {
+                LOGGER.debug("Removing \"" + key 
+                        + "\" from project map (" + size() + " remaining)");
+            }
+            return old;
+        };
+    };
 
     /*
      * All registered workflow listeners (KnimeResourceNavigator) which reflect
@@ -215,7 +240,6 @@ public final class ProjectWorkflowMap {
      */
     public static void putWorkflow(final String name,
             final WorkflowManager manager) {
-        LOGGER.debug("putting " + name + " onto map");
         PROJECTS.put(name, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
@@ -258,13 +282,6 @@ public final class ProjectWorkflowMap {
             }
         }
         return null;
-    }
-
-    /**
-     * Clears the mapping.
-     */
-    public static void clearMap() {
-        PROJECTS.clear();
     }
 
     /**
