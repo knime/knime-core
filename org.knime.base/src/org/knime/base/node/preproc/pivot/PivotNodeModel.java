@@ -40,6 +40,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -119,10 +120,16 @@ public class PivotNodeModel extends NodeModel {
         }
         if (m_makeAgg.getStringValue().equals(
                 PivotNodeDialogPane.MAKE_AGGREGATION[1])) {
-        final int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
+        	final int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
             if (agg < 0) {
                 throw new InvalidSettingsException(
                         "Aggregation column not found.");
+            }
+            if (!inSpecs[0].getColumnSpec(agg).getType().isCompatible(
+            		DoubleValue.class)) {
+            	throw new InvalidSettingsException(
+            			"Selected aggregation column '" 
+            			+ m_agg.getStringValue() + "' not of type double.");
             }
         }
         final DataColumnSpec cspec = inSpecs[0].getColumnSpec(pivot);

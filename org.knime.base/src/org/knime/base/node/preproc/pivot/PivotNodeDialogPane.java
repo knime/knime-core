@@ -27,8 +27,11 @@ package org.knime.base.node.preproc.pivot;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -52,6 +55,10 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
     static final String[] MAKE_AGGREGATION = new String[]
             {"Count co-occurrences", "Enable aggregation"};
     
+    private final DialogComponentColumnNameSelection m_aggregation;
+    private final DialogComponentStringSelection m_aggMethod;
+    private final DialogComponentButtonGroup m_aggCheck;
+    
     /**
      * Creates a new pivot dialog pane with two column selection boxes, one
      * for the group column - used as row ID - and one as the pivot column -
@@ -67,29 +74,29 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
                     "Group column: ", 0, DataValue.class);
         
         final SettingsModelString aggModel = createSettingsAggregation();
-        DialogComponentColumnNameSelection aggregation = 
-            new DialogComponentColumnNameSelection(aggModel, 
-                    "Aggregation column: ", 0, DoubleValue.class);
+        m_aggregation = new DialogComponentColumnNameSelection(aggModel, 
+                    "Aggregation column: ", 0, false, DoubleValue.class);
         
         final SettingsModelString aggMethodModel = 
             createSettingsAggregationMethod();
-        DialogComponentStringSelection aggMethod =
-            new DialogComponentStringSelection(
+        m_aggMethod = new DialogComponentStringSelection(
                     aggMethodModel, "Aggregation method: ",
                     PivotAggregationMethod.METHODS.keySet());
         final SettingsModelString aggMakeModel = 
             createSettingsMakeAggregation();
-        DialogComponentButtonGroup aggCheck = new DialogComponentButtonGroup(
+        m_aggCheck = new DialogComponentButtonGroup(
                 aggMakeModel, true, MAKE_AGGREGATION[0], MAKE_AGGREGATION);
         aggMakeModel.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
             public void stateChanged(final ChangeEvent e) {
-                boolean b = 
-                    aggMakeModel.getStringValue().equals(MAKE_AGGREGATION[1]);
-                aggModel.setEnabled(b);
-                aggMethodModel.setEnabled(b);
+            	if (aggMakeModel.isEnabled()) {
+	                boolean b = aggMakeModel.getStringValue().equals(
+	                		MAKE_AGGREGATION[1]);
+	                aggModel.setEnabled(b);
+	                aggMethodModel.setEnabled(b);
+            	} else {
+            		aggMakeModel.setStringValue(MAKE_AGGREGATION[0]);
+            	}
             }
         });
 
@@ -99,9 +106,9 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         super.createNewGroup(" Group (row header) ");
         addDialogComponent(group);
         super.createNewGroup(" Aggregation (table content) ");
-        addDialogComponent(aggCheck);
-        addDialogComponent(aggregation);
-        addDialogComponent(aggMethod);
+        addDialogComponent(m_aggCheck);
+        addDialogComponent(m_aggregation);
+        addDialogComponent(m_aggMethod);
         super.createNewGroup(" Advance ");
         addDialogComponent(new DialogComponentBoolean(
                 createSettingsEnableHiLite(), 
@@ -109,6 +116,19 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentBoolean(
                 createSettingsMissingValues(), 
                 "Ignore missing values"));
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(NodeSettingsRO settings,
+    		DataTableSpec[] specs) throws NotConfigurableException {
+    	super.loadAdditionalSettingsFrom(settings, specs);
+    	boolean enable = (m_aggregation.getSelected() != null);
+    	m_aggregation.getModel().setEnabled(enable);
+    	m_aggMethod.getModel().setEnabled(enable);
+    	m_aggCheck.getModel().setEnabled(enable);
     }
     
     /**
