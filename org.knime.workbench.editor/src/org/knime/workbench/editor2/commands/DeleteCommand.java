@@ -90,7 +90,9 @@ public class DeleteCommand extends Command {
         for (Object p : nodesAndConnectionParts) {
             if (p instanceof NodeContainerEditPart) {
                 NodeContainerEditPart ncep = (NodeContainerEditPart)p;
-                viewer = viewer != null ? viewer : ncep.getViewer();
+                if (viewer == null && ncep.getRoot() != null) {
+                    viewer = ncep.getViewer();
+                }
                 NodeID id = ncep.getNodeContainer().getID();
                 idSet.add(id);
                 // the selection may correspond to the outer workflow, this
@@ -110,7 +112,9 @@ public class DeleteCommand extends Command {
                 ConnectionContainerEditPart ccep = 
                     (ConnectionContainerEditPart)p;
                 conSet.add(ccep.getModel());
-                viewer = viewer != null ? viewer : ccep.getViewer();
+                if (viewer == null && ccep.getRoot() != null) {
+                    viewer = ccep.getViewer();
+                }
             }
         }
         m_viewer = viewer;
