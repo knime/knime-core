@@ -90,7 +90,7 @@ public class DeleteCommand extends Command {
         for (Object p : nodesAndConnectionParts) {
             if (p instanceof NodeContainerEditPart) {
                 NodeContainerEditPart ncep = (NodeContainerEditPart)p;
-                if (viewer == null && ncep.getRoot() != null) {
+                if (viewer == null && ncep.getParent() != null) {
                     viewer = ncep.getViewer();
                 }
                 NodeID id = ncep.getNodeContainer().getID();
@@ -112,7 +112,7 @@ public class DeleteCommand extends Command {
                 ConnectionContainerEditPart ccep = 
                     (ConnectionContainerEditPart)p;
                 conSet.add(ccep.getModel());
-                if (viewer == null && ccep.getRoot() != null) {
+                if (viewer == null && ccep.getParent() != null) {
                     viewer = ccep.getViewer();
                 }
             }
