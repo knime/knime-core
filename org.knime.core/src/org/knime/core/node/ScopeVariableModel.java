@@ -140,6 +140,8 @@ public class ScopeVariableModel {
     /**
      * @return array of variables names that match the type of this model.
      */
+    // TODO synchronize this with the Flow(!) Variables Tab which already
+    // does some compatible type matching!
     ScopeVariable[] getMatchingVariables() {
         HashSet<ScopeVariable> liste = new HashSet<ScopeVariable>();
         for (ScopeVariable sv
