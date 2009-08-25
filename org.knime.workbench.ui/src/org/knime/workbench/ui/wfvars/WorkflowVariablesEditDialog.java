@@ -161,8 +161,18 @@ public class WorkflowVariablesEditDialog extends Dialog {
      */
     @Override
     protected void okPressed() {
-        String varName = m_varNameCtrl.getText();
-        String value = m_varDefaultValueCtrl.getText();
+        String varName = m_varNameCtrl.getText().trim();
+        if (varName.isEmpty()) {
+            String msg = "Variable name must not be empty!";
+            showError(msg);
+            throw new OperationCanceledException(msg);
+        }
+        String value = m_varDefaultValueCtrl.getText().trim();
+        if (value.isEmpty()) {
+            String msg = "A default value must be entered!";
+            showError(msg);
+            throw new OperationCanceledException(msg);
+        }
         int selectionIdx = m_typeSelectionCtrl.getSelectionIndex();
         if (selectionIdx < 0) {
             String msg = "No type selected for variable "

@@ -53,7 +53,7 @@ public class WorkflowVariablesDialog extends Dialog {
 
     private static final int SKIP_RESET_IDX = 0;
     private static final int RESET_IDX = 1;
-    
+
     private WorkflowVariableTable m_table;
 
     private final WorkflowManager m_workflow;
@@ -182,7 +182,7 @@ public class WorkflowVariablesDialog extends Dialog {
             public void widgetSelected(final SelectionEvent arg0) {
                 int idx = m_table.getViewer().getTable().getSelectionIndex();
                 if (idx < 0) {
-                    MessageDialog.openWarning(getShell(), "Empty selection", 
+                    MessageDialog.openWarning(getShell(), "Empty selection",
                             "Please select the parameter you want to remove.");
                     return;
                 }
@@ -235,9 +235,13 @@ public class WorkflowVariablesDialog extends Dialog {
             return;
         }
         ScopeVariable var = dialog.getScopeVariable();
+        if (var == null) {
+            // variables was not created
+            return;
+        }
         // do not add it do WFM directly -> this is done when closing the dialog
         if (!m_table.add(var)) {
-            MessageDialog.openWarning(getShell(), "Variable already exists", 
+            MessageDialog.openWarning(getShell(), "Variable already exists",
                     " A variable with the same name and type already exists. "
                     + "Edit this one if you want to change the value.");
         } else {
@@ -262,10 +266,12 @@ public class WorkflowVariablesDialog extends Dialog {
             return;
         } // else replace it...
         ScopeVariable var = dialog.getScopeVariable();
-        m_table.replace(selectionIdx, var);         
-        m_table.getViewer().refresh();
+        if (var != null) {
+            m_table.replace(selectionIdx, var);
+            m_table.getViewer().refresh();
+        }
     }
-    
+
     private void removeWorkflowVariable(final ScopeVariable var) {
         if (var.isGlobalConstant()) {
             MessageDialog.openError(getParentShell(),
@@ -274,20 +280,20 @@ public class WorkflowVariablesDialog extends Dialog {
                             + "and can not be removed!");
             return;
         }
-        // remember that something has changed 
+        // remember that something has changed
         // -> will be deleted in replaceWorkflowVariable
         // remove it from the table anyway
         m_table.remove(var);
         m_table.getViewer().refresh();
     }
-    
-    private boolean hasValueChanged(final ScopeVariable newVar1, 
+
+    private boolean hasValueChanged(final ScopeVariable newVar1,
             final ScopeVariable newVar2) {
         if (newVar1.equals(newVar2)) {
             // type and name are the same -> ScopeVariable#equals
             assert newVar1.getType().equals(newVar2.getType());
             assert newVar1.getName().equals(newVar2.getName());
-            // now check whether the value has changed 
+            // now check whether the value has changed
             // without knowing the type of the WorkflowVariable
             ScopeVariable.Type type = newVar1.getType();
             if (ScopeVariable.Type.STRING.equals(type)) {
@@ -296,7 +302,7 @@ public class WorkflowVariablesDialog extends Dialog {
                 }
             } else if (ScopeVariable.Type.DOUBLE.equals(type)) {
                 if (Double.compare(
-                        newVar1.getDoubleValue(), 
+                        newVar1.getDoubleValue(),
                         newVar2.getDoubleValue()) == 0) {
                     return false;
                 }
@@ -310,7 +316,7 @@ public class WorkflowVariablesDialog extends Dialog {
         }
         return true;
     }
-    
+
     private boolean hasChanges() {
         List<ScopeVariable> wfmList = m_workflow.getWorkflowVariables();
         List<ScopeVariable> dialogList = m_table.getVariables();
@@ -331,23 +337,23 @@ public class WorkflowVariablesDialog extends Dialog {
         }
         return hasChanges;
     }
-    
-    
+
+
     private void replaceWorkflowVariables(final boolean skipReset) {
         List<ScopeVariable> toBeRemoved = new ArrayList<ScopeVariable>();
-        toBeRemoved.addAll(m_workflow.getWorkflowVariables()); 
+        toBeRemoved.addAll(m_workflow.getWorkflowVariables());
         toBeRemoved.removeAll(m_table.getVariables());
         for (ScopeVariable v : toBeRemoved) {
             m_workflow.removeWorkflowVariable(v.getName());
         }
         // replace
         ScopeVariable[] vars = new ScopeVariable[m_table.getVariables().size()];
-        m_workflow.addWorkflowVariables(skipReset, 
+        m_workflow.addWorkflowVariables(skipReset,
                 m_table.getVariables().toArray(vars));
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -370,17 +376,17 @@ public class WorkflowVariablesDialog extends Dialog {
         // no changes -> close dialog
         super.okPressed();
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected void cancelPressed() {
         // if has changes -> open confirmation dialog "discard changes?"
         if (hasChanges()) {
-            if (!MessageDialog.openConfirm(getShell(), 
-                    "Discard Changes", 
+            if (!MessageDialog.openConfirm(getShell(),
+                    "Discard Changes",
                     "Do you really want to discard your changes?")) {
                 // leave it open
                 return;
