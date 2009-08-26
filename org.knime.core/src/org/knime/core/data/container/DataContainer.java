@@ -40,10 +40,10 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -161,8 +161,10 @@ public class DataContainer implements RowAppender {
 
     /** The executor, which runs the IO tasks. This includes adding rows to
      * the Buffer and reading from a file iterator. */
-    static final ExecutorService ASYNC_EXECUTORS =
-        Executors.newCachedThreadPool(new ThreadFactory() {
+    private static final ThreadPoolExecutor ASYNC_EXECUTORS =
+        // see also Executors.newCachedThreadPool(ThreadFactory)
+        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(), new ThreadFactory() {
             private final AtomicInteger m_threadCount = new AtomicInteger();
            /** {@inheritDoc} */
             @Override
@@ -176,7 +178,11 @@ public class DataContainer implements RowAppender {
      * from an file iterator. This is by default <code>false</code> but can be
      * enabled by setting the appropriate java property at startup.  */
     static final boolean SYNCHRONOUS_IO =
-        Boolean.getBoolean("knime.synchronous.io");
+        Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO);
+    
+    /** the maximum number of asynchronous write threads, each additional 
+     * container will switch to synchronous mode. */
+    private static final int MAX_ASYNC_WRITE_THREADS = 50;
 
     /** Put into write queue to signal end of writing process. */
     private static final Object CONTAINER_CLOSE = new Object();
@@ -198,6 +204,15 @@ public class DataContainer implements RowAppender {
     private Future<Void> m_asyncAddFuture;
 
     private AtomicReference<Throwable> m_writeThrowable;
+    
+    /** Whether this container writes synchronously, i.e. when rows come in
+     * they get written immediately. If true the fields 
+     * {@link #m_asyncAddFuture} and {@link #m_writeThrowable} are null.
+     * This field coincides most of times with the {@link #SYNCHRONOUS_IO}, 
+     * but may be true if there are too many concurrent write threads (more 
+     * than {@value #MAX_ASYNC_WRITE_THREADS}).
+     */
+    private final boolean m_isSynchronousWrite;
 
     /** The asynchronous queue holding the most recently added rows. */
     private Exchanger<List<Object>> m_rowBufferExchanger;
@@ -307,7 +322,16 @@ public class DataContainer implements RowAppender {
         }
         m_spec = spec;
         m_duplicateChecker = new DuplicateChecker();
-        if (SYNCHRONOUS_IO) {
+        boolean isSynchronousWrite = SYNCHRONOUS_IO;
+        if (!isSynchronousWrite 
+                && ASYNC_EXECUTORS.getActiveCount() > MAX_ASYNC_WRITE_THREADS) {
+            LOGGER.debug("Number of Table IO write threads exceeds " 
+                    + MAX_ASYNC_WRITE_THREADS 
+                    + " -- switching to synchronous write mode");
+            isSynchronousWrite = true;
+        }
+        m_isSynchronousWrite = isSynchronousWrite;
+        if (m_isSynchronousWrite) {
             m_fillingRowBuffer = null;
             m_emptyingRowBuffer = null;
             m_asyncAddFuture = null;
@@ -571,7 +595,7 @@ public class DataContainer implements RowAppender {
                     createInternalBufferID(), getGlobalTableRepository(),
                     getLocalTableRepository());
         }
-        if (!SYNCHRONOUS_IO) {
+        if (!m_isSynchronousWrite) {
             try {
                 offerToAsynchronousQueue(CONTAINER_CLOSE);
                 m_asyncAddFuture.get();
@@ -719,7 +743,7 @@ public class DataContainer implements RowAppender {
                         "Implementation error, must not return a null buffer.");
             }
         }
-        if (SYNCHRONOUS_IO) {
+        if (m_isSynchronousWrite) {
             addRowToTableWrite(row);
         } else {
             checkAsyncWriteThrowable();

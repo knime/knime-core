@@ -43,6 +43,7 @@ import javax.swing.UIManager;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainerException;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
@@ -681,10 +682,14 @@ public final class Node implements NodeModelWarningListener {
             // (warnings will now be processed "automatically" - we listen)
             newOutData = m_model.executeModel(inData, exec);
         } catch (Throwable th) {
-            if (th instanceof CanceledExecutionException
-                     || th instanceof InterruptedException) {
-                // execution was canceled
-
+            boolean isCanceled = th instanceof CanceledExecutionException;
+            isCanceled = isCanceled || th instanceof InterruptedException;
+            // writing to a buffer is done asynchronously -- if this thread
+            // is interrupted while waiting for the IO thread to flush we take
+            // it as a graceful exit
+            isCanceled = isCanceled || (th instanceof DataContainerException 
+                    && th.getCause() instanceof InterruptedException);
+            if (isCanceled) {
                 // clear the flag so that the ThreadPool does not kill the
                 // thread
                 Thread.interrupted();
