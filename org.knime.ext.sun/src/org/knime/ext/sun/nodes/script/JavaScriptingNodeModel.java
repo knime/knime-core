@@ -155,7 +155,7 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) 
         throws InvalidSettingsException {
-        if (m_settings == null) {
+        if (m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
         boolean isReplace = m_settings.isReplace();
