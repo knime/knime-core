@@ -464,11 +464,11 @@ public abstract class NodeModel {
         // - only if the execute didn't issue a warning already
         if ((m_warningMessage == null) || (m_warningMessage.length() == 0)) {
             boolean hasData = false;
-            boolean hasDataPorts = false;
+            int bdtPortCount = 0; // number of BDT ports
             for (int i = 0; i < outData.length; i++) {
                 if (outData[i] instanceof BufferedDataTable) {
                     // do some sanity checks on PortObjects holding data tables
-                    hasDataPorts = true;
+                    bdtPortCount += 1;
                     BufferedDataTable outDataTable =
                         (BufferedDataTable)outData[i];
                     if (outDataTable.getRowCount() > 0) {
@@ -479,10 +479,9 @@ public abstract class NodeModel {
                     }
                 }
             }
-            if (hasDataPorts && !hasData) {
-                if (outData.length == 1) {
+            if (!hasData && bdtPortCount > 0) {
+                if (bdtPortCount == 1) {
                     setWarningMessage("Node created an empty data table.");
-
                 } else {
                     setWarningMessage(
                             "Node created empty data tables on all out-ports.");
