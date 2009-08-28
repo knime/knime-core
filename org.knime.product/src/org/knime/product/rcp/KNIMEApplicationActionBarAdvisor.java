@@ -46,6 +46,8 @@ import org.eclipse.ui.ide.IDEActionFactory;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.preferences.ExportPreferencesAction;
+import org.knime.workbench.ui.preferences.ImportPreferencesAction;
 
 /**
  * This advisor is resposible for creating the workbench actions and fills them
@@ -60,8 +62,12 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_preferencesAction;
 
+    private IAction m_exportPrefAction;
+
+    private IAction m_importPrefAction;
+
 //     private IWorkbenchAction m_introAction;
-     
+
     private IWorkbenchAction m_aboutAction;
 
     private IWorkbenchAction m_helpAction;
@@ -87,11 +93,11 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_saveAction;
 
     private IWorkbenchAction m_saveAllAction;
-    
+
     private IWorkbenchAction m_closeAllAction;
 
     private IWorkbenchAction m_changeWorkspaceAction;
-    
+
 
     private IAction m_updateKnimeAction;
 
@@ -106,9 +112,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     // private IAction m_openConsoleViewAction;
     //
     // private IAction m_openProgressViewAction;
-    
+
     private IAction m_exportWorkflowAction;
-    
+
     private IAction m_importWorkflowAction;
 
     private IContributionItem m_showViewShortlistContributionItem;
@@ -151,13 +157,17 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_saveAllAction);
         m_exitAction = ActionFactory.QUIT.create(window);
         register(m_exitAction);
-        m_changeWorkspaceAction = 
+        m_changeWorkspaceAction =
                 IDEActionFactory.OPEN_WORKSPACE.create(window);
         register(m_changeWorkspaceAction);
         m_updateKnimeAction = new InvokeInstallSiteAction();
         register(m_updateKnimeAction);
         m_preferencesAction = ActionFactory.PREFERENCES.create(window);
         register(m_preferencesAction);
+        m_exportPrefAction = new ExportPreferencesAction(window);
+        register(m_exportPrefAction);
+        m_importPrefAction = new ImportPreferencesAction(window);
+        register(m_importPrefAction);
 
         // Edit Actions
         m_cutAction = ActionFactory.CUT.create(window);
@@ -192,7 +202,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_showViewShortlistContributionItem = ContributionItemFactory.VIEWS_SHORTLIST
                 .create(window);
 
-        // temporarily disable due to eclipse bug 
+        // temporarily disable due to eclipse bug
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=211184
         // (Code will be enabled if bug is closed, corresponding task #1453)
         // Help Actions
@@ -215,7 +225,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_newWizardDropdownAction = ActionFactory.NEW_WIZARD_DROP_DOWN
                 .create(window);
         register(m_newWizardDropdownAction);
-        
+
         m_exportWorkflowAction = new ExportKnimeWorkflowAction(window);
         register(m_exportWorkflowAction);
         m_importWorkflowAction = new ImportKnimeWorkflowAction(window);
@@ -228,9 +238,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     @Override
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
-        
-        
-        
+
+
+
         MenuManager fileMenu = new MenuManager("&File");
         MenuManager editMenu = new MenuManager("&Edit",
                 IWorkbenchActionConstants.M_EDIT);
@@ -255,13 +265,16 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_saveAction);
         fileMenu.add(m_saveAllAction);
         fileMenu.add(m_closeAllAction);
-        
+
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_changeWorkspaceAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
+        fileMenu.add(m_exportPrefAction);
+        fileMenu.add(m_importPrefAction);
+        fileMenu.add(new Separator());
         fileMenu.add(m_updateKnimeAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_exitAction);
@@ -295,7 +308,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         helpMenu.add(m_helpSearchAction);
 //        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
-        
+
 
     }
 
@@ -308,7 +321,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
         coolBar.removeAll();
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));
-        
+
         // add tools to the toolbar
         toolbar.add(m_newWizardDropdownAction);
         toolbar.add(m_saveAction);
