@@ -103,8 +103,8 @@ final class DBQueryNodeModel extends DBNodeModel {
     	DatabaseQueryConnectionSettings conn = 
     		new DatabaseQueryConnectionSettings(
     				spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery, false);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(spec, newQuery);
         try {
             DatabaseReaderConnection reader = 
                 new DatabaseReaderConnection(conn);
@@ -128,8 +128,8 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
                 new DatabaseQueryConnectionSettings(
                 dbObj.getSpec().getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery, true);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         DataTableSpec outSpec = load.getDataTableSpec();
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
@@ -138,7 +138,7 @@ final class DBQueryNodeModel extends DBNodeModel {
         return new PortObject[]{outObj};
     }
     
-    private String createQuery(final String query, final String tableID) {
+    private String createQuery(final String query) {
         return m_query.getStringValue().replaceAll(
                 TABLE_PLACE_HOLDER, "(" + query + ")");
     }

@@ -41,17 +41,12 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
 
     private final DialogComponentColumnFilter m_panel;
 
-    private final DBConnectionDialogPanel m_tableOptions =
-        new DBConnectionDialogPanel();
-
     /**
      * Create query dialog with text box to enter table name.
      */
     DBColumnFilterNodeDialogPane() {
         m_panel = new DialogComponentColumnFilter(createColumnFilterModel(), 0);
         super.addTab("Column Filter", m_panel.getComponentPanel());
-        super.addTab("Table Options", m_tableOptions);
-
     }
 
     /**
@@ -68,7 +63,6 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
             specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
         }
         m_panel.loadSettingsFrom(settings, specs);
-        m_tableOptions.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -85,6 +79,5 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_panel.saveSettingsTo(settings);
-        m_tableOptions.saveSettingsTo(settings);
     }
 }

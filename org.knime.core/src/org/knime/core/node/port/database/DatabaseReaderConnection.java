@@ -116,8 +116,9 @@ public final class DatabaseReaderConnection {
     public DataTableSpec getDataTableSpec() throws SQLException {
         if (m_spec == null || m_stmt == null) {
             try {
+            	final int hashAlias = System.identityHashCode(this);
                 String pQuery = "SELECT * FROM (" + m_conn.getQuery() 
-                    + ") WHERE 1 = 0";
+                    + ") table_" + hashAlias + " WHERE 1 = 0";
                 ResultSet result = null;
                 try {
                     // try to see if prepared statements are supported
@@ -207,7 +208,9 @@ public final class DatabaseReaderConnection {
             if (cachedNoRows < 0) {
                 query = m_conn.getQuery();
             } else {
-                query = "SELECT * FROM (" + m_conn.getQuery() + ")"; 
+            	final int hashAlias = System.identityHashCode(this);
+                query = "SELECT * FROM (" + m_conn.getQuery() 
+                	+ ") table_" + hashAlias; 
                 m_stmt.setMaxRows(cachedNoRows);
             }
             m_stmt.execute(query);

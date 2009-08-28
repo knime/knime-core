@@ -183,7 +183,7 @@ public final class DatabaseDriverLoader {
             return;
         }
         if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
-            return;
+        	return;
         }
         final String fileName = file.getAbsolutePath();
         if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
@@ -209,8 +209,9 @@ public final class DatabaseDriverLoader {
                     if (Driver.class.isAssignableFrom(c)) {
                         WrappedDriver d = new WrappedDriver(
                                 (Driver)c.newInstance());
-                        DRIVER_MAP.put(d.toString(), d);
-                        DRIVERFILE_TO_DRIVERCLASS.put(d.toString(), file);
+                        String driverName = d.toString();
+                        DRIVER_MAP.put(driverName, d);
+                        DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
                     }
                 } catch (Throwable t) {
                     // ignored

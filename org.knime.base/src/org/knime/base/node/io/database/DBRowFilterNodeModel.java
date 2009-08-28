@@ -104,8 +104,8 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(dbObj.getSpec(), newQuery, true);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
                 new DatabasePortObjectSpec(dbObj.getSpec().getDataTableSpec(),
                         conn.createConnectionModel()));
@@ -126,18 +126,19 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery, false);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 spec.getDataTableSpec(), conn.createConnectionModel())};
     }
     
-    private String createQuery(final String query, final String tableID) {
+    private String createQuery(final String query) {
         String buf = m_column.getStringValue()
-            + " " + m_operator.getStringValue()
-            + " " + m_value.getStringValue();
-        return "SELECT * FROM (" + query + ") " + tableID + " WHERE " 
-                + buf.toString(); 
+            + " " + m_operator.getStringValue();
+        if (!m_value.getStringValue().trim().isEmpty())
+            buf += " " + m_value.getStringValue().trim();
+        return "SELECT * FROM (" + query + ") " +
+        		"table_" + System.identityHashCode(this) + " WHERE " + buf; 
     }
         
 }

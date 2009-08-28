@@ -48,9 +48,6 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBRowFilterNodeDialogPane extends NodeDialogPane {
-    
-    private final DBConnectionDialogPanel m_tableOptions =
-        new DBConnectionDialogPanel();
 
     @SuppressWarnings("unchecked")
     private final DialogComponentColumnNameSelection m_column
@@ -79,8 +76,7 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
         JPanel value = m_value.getComponentPanel();
         value.setBorder(BorderFactory.createTitledBorder(" Value "));
         optionPanel.add(value);
-        super.addTab("Row Filter", optionPanel);
-        super.addTab("Table Options", m_tableOptions);      
+        super.addTab("Row Filter", optionPanel);  
     }
     
     /**
@@ -120,7 +116,6 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
         m_column.loadSettingsFrom(settings, specs);
         m_operator.loadSettingsFrom(settings, specs);
         m_value.loadSettingsFrom(settings, specs);
-        m_tableOptions.loadSettingsFrom(settings, specs);
     }
     
     /**
@@ -158,6 +153,5 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
 //            }
 //        }
         m_value.saveSettingsTo(settings);
-        m_tableOptions.saveSettingsTo(settings);
     }
 }

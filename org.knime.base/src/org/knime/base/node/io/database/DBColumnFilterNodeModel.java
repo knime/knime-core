@@ -97,8 +97,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         DatabasePortObjectSpec spec = ((DatabasePortObject)inData[0]).getSpec();
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery, true);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
         DatabasePortObjectSpec outSpec = new DatabasePortObjectSpec(
@@ -127,15 +127,15 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = createDBQueryConnection(spec, newQuery, false);
+        String newQuery = createQuery(conn.getQuery());
+        conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 colre.createSpec(), conn.createConnectionModel())};
     }
     
-    private String createQuery(final String query, final String tableID) {
+    private String createQuery(final String query) {
         StringBuilder buf = new StringBuilder();
         if (m_filter.getExcludeList().isEmpty()) {
             super.setWarningMessage("All columns retained.");
@@ -148,7 +148,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 buf.append(s);
             }
         }
-        return "SELECT " + buf.toString() + " FROM (" + query + ") " + tableID;
+        return "SELECT " + buf + " FROM (" + query + ") table_" 
+        		+ System.identityHashCode(this);
     }
         
 }

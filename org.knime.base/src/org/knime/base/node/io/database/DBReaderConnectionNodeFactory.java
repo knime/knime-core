@@ -71,6 +71,6 @@ public final class DBReaderConnectionNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderConnectionDialogPane();
+        return new DBReaderDialogPane();
     }
 }

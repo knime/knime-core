@@ -23,19 +23,14 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.knime.base.node.io.database.DBConnectionDialogPanel.DBTableOptions;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
@@ -46,16 +41,6 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
  */
 class DBNodeModel extends NodeModel {
     
-    /** Config ID for temporary table. */
-    private static final String CFG_TABLE_ID = "tableID.xml";
-    
-    private final SettingsModelString m_tableOption =
-        DBConnectionDialogPanel.createTableModel();
-    
-    private DatabaseQueryConnectionSettings m_conn;
-
-    private String m_tableId;
-    
     NodeLogger LOGGER = NodeLogger.getLogger(DBNodeModel.class);
     
     /**
@@ -65,14 +50,6 @@ class DBNodeModel extends NodeModel {
      */
     DBNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
         super(inPorts, outPorts);
-        m_tableId = "table_" + System.identityHashCode(this);
-    }
-    
-    /**
-     * @return ID for the temp table as <code>table_</code>hashCode()
-     */
-    final String getTableID() {
-        return m_tableId;
     }
 
     /**
@@ -80,7 +57,7 @@ class DBNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_tableOption.saveSettingsTo(settings);
+
     }
 
     /**
@@ -89,7 +66,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_tableOption.validateSettings(settings);
+
     }
 
     /**
@@ -98,7 +75,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_tableOption.loadSettingsFrom(settings);
+
     }
 
     /**
@@ -106,17 +83,7 @@ class DBNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        if (m_conn != null) {
-            try {
-                m_conn.execute("DROP TABLE " + m_tableId);
-                LOGGER.info("Table \"" + m_tableId + "\" was dropped.");
-            } catch (Throwable t) {
-                LOGGER.debug("Table \"" + m_tableId + "\" can't be dropped, "
-                		+ "reason: " + t.getMessage());
-            } finally {
-            	m_conn = null;
-            }
-        }
+
     }
 
     /**
@@ -125,9 +92,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        NodeSettingsRO sett = NodeSettings.loadFromXML(new FileInputStream(
-                new File(nodeInternDir, CFG_TABLE_ID)));
-        m_tableId = sett.getString(CFG_TABLE_ID, m_tableId);
+
     }
 
     /**
@@ -136,10 +101,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        NodeSettings sett = new NodeSettings(CFG_TABLE_ID);
-        sett.addString(CFG_TABLE_ID, m_tableId);
-        sett.saveToXML(new FileOutputStream(
-                new File(nodeInternDir, CFG_TABLE_ID)));
+
     }
     
     /**
@@ -153,25 +115,11 @@ class DBNodeModel extends NodeModel {
      *         inside the database could not be executed
      */
     final DatabaseQueryConnectionSettings createDBQueryConnection(
-            final DatabasePortObjectSpec spec, final String newQuery,
-            final boolean createTable) 
+            final DatabasePortObjectSpec spec, final String newQuery) 
     		throws InvalidSettingsException {
-    	m_conn = new DatabaseQueryConnectionSettings(
-    			spec.getConnectionModel());
-        if (createTable && DBTableOptions.CREATE_TABLE.getActionCommand().
-        		equals(m_tableOption.getStringValue())) {
-            try {
-            	m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
-                LOGGER.info("Table \"" + m_tableId + "\" was created.");
-            } catch (Throwable t) {
-                throw new InvalidSettingsException("Could not execute query \""
-                        + newQuery + "\" to create new table, reason: "
-                        + t.getMessage(), t);
-            }
-            return new DatabaseQueryConnectionSettings(
-                    m_conn, "SELECT * FROM " + m_tableId);
-        }
-        return new DatabaseQueryConnectionSettings(m_conn, newQuery);
+    	DatabaseQueryConnectionSettings conn = 
+    		new DatabaseQueryConnectionSettings(spec.getConnectionModel());
+        return new DatabaseQueryConnectionSettings(conn, newQuery);
     }
         
 }

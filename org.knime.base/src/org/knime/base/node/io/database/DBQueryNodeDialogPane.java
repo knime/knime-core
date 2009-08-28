@@ -39,17 +39,12 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  */
 final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     
-    private final DBConnectionDialogPanel m_panel =
-        new DBConnectionDialogPanel();
-    
     /**
      * Create query dialog with text box to enter table name.
      */
     DBQueryNodeDialogPane() {
         super.addDialogComponent(new DialogComponentMultiLineString(
                 createQueryModel(), "SQL query"));
-        super.addTab("Table Options", m_panel);
-        
     }
     
     /**
@@ -75,7 +70,6 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
             dataSpecs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
         }
         super.loadAdditionalSettingsFrom(settings, dataSpecs);
-        m_panel.loadSettingsFrom(settings, dataSpecs);
     }
     
     /**
@@ -85,6 +79,5 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         super.saveAdditionalSettingsTo(settings);
-        m_panel.saveSettingsTo(settings);
     }
 }
