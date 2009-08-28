@@ -26,8 +26,8 @@ package org.knime.base.node.meta.looper.condition;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * This class holds the settings for the condition loop tail node.
@@ -176,7 +176,7 @@ public class LoopEndConditionSettings {
      *
      * @param var the flow variable
      */
-    public void variable(final ScopeVariable var) {
+    public void variable(final FlowVariable var) {
         if (var == null) {
             m_variableName = null;
             m_variableType = null;

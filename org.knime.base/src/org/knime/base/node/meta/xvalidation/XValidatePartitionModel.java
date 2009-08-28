@@ -148,8 +148,8 @@ implements LoopStartNodeTerminator {
         train.close();
 
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariableInt("currentIteration", m_currIteration);
-        pushScopeVariableInt("maxIterations", m_nrIterations);
+        pushFlowVariableInt("currentIteration", m_currIteration);
+        pushFlowVariableInt("maxIterations", m_nrIterations);
         m_currIteration++;
 
         return new BufferedDataTable[]{train.getTable(), test.getTable()};
@@ -181,8 +181,8 @@ implements LoopStartNodeTerminator {
             throws InvalidSettingsException {
         assert m_currIteration == 0;
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariableInt("currentIteration", m_currIteration);
-        pushScopeVariableInt("maxIterations", m_nrIterations);
+        pushFlowVariableInt("currentIteration", m_currIteration);
+        pushFlowVariableInt("maxIterations", m_nrIterations);
         return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
     }
 

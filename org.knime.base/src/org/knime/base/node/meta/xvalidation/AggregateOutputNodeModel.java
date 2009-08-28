@@ -165,8 +165,8 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
         int count;
         int maxCount;
         try {
-            count = peekScopeVariableInt("currentIteration");
-            maxCount = peekScopeVariableInt("maxIterations");
+            count = peekFlowVariableInt("currentIteration");
+            maxCount = peekFlowVariableInt("maxIterations");
         } catch (NoSuchElementException e) {
             throw new Exception("No matching Loop Start node!", e);
         }

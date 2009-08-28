@@ -85,7 +85,7 @@ import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.MutableBoolean;
 
 /**
@@ -1079,7 +1079,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         m_urlCombo.removeItemListener(this);
 
         m_urlCombo.removeAllItems();
-        Map<String, ScopeVariable> stack = getAvailableScopeVariables();
+        Map<String, FlowVariable> stack = getAvailableFlowVariables();
         for (String str : stack.keySet()) {
             m_urlCombo.addItem(str);
         }
@@ -1221,7 +1221,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         Reader reader = null;
         VariableFileReaderNodeSettings s;
         try {
-            s = settingsToSave.createSettingsFrom(getAvailableScopeVariables());
+            s = settingsToSave.createSettingsFrom(getAvailableFlowVariables());
         } catch (Exception e) {
             throw new InvalidSettingsException("Error while converting value "
                     + " to URL ");
@@ -1258,7 +1258,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         String varName = (String)m_urlCombo.getSelectedItem();
 
-        if (getAvailableScopeVariables().get(varName) == null) {
+        if (getAvailableFlowVariables().get(varName) == null) {
             // oops.
             throw new InvalidSettingsException(
                     "Selected variable not available anymore. "
@@ -1270,7 +1270,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         try {
             m_frSettings =
                     m_frSettings
-                            .createSettingsFrom(getAvailableScopeVariables());
+                            .createSettingsFrom(getAvailableFlowVariables());
         } catch (Exception e) {
             m_frSettings.setDataFileLocationAndUpdateTableName(null);
             throw new InvalidSettingsException(e.getMessage());
@@ -1508,7 +1508,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                     // analyze the file now.
                     VariableFileReaderNodeSettings sWithLoc =
                             userSettings
-                                    .createSettingsFrom(getAvailableScopeVariables());
+                                    .createSettingsFrom(getAvailableFlowVariables());
                     FileReaderNodeSettings newSettings =
                             FileAnalyzer.analyze(sWithLoc,
                                     m_analysisExecMonitor);
@@ -1608,7 +1608,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         try {
             sWithLoc =
                     m_frSettings
-                            .createSettingsFrom(getAvailableScopeVariables());
+                            .createSettingsFrom(getAvailableFlowVariables());
         } catch (Exception e) {
             setPreviewTable(null);
             showPreviewTable();
@@ -1773,7 +1773,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         settings.setVariableName((String)m_urlCombo.getSelectedItem());
         try {
             VariableFileReaderNodeSettings tmp =
-                    settings.createSettingsFrom(getAvailableScopeVariables());
+                    settings.createSettingsFrom(getAvailableFlowVariables());
             settings.setDataFileLocationAndUpdateTableName(tmp
                     .getDataFileLocation());
         } catch (MalformedURLException mfue) {

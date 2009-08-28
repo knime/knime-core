@@ -117,12 +117,12 @@ public class TableToVariableNodeModel extends NodeModel {
                     + " allowed for Variable Values!");
             }
             if (type.isCompatible(IntValue.class)) {
-                pushScopeVariableInt(name, ((IntValue)cell).getIntValue());
+                pushFlowVariableInt(name, ((IntValue)cell).getIntValue());
             } else if (type.isCompatible(DoubleValue.class)) {
-                pushScopeVariableDouble(
+                pushFlowVariableDouble(
                         name, ((DoubleValue)cell).getDoubleValue());
             } else if (type.isCompatible(StringValue.class)) {
-                pushScopeVariableString(
+                pushFlowVariableString(
                         name, ((StringValue)cell).getStringValue());
             }
         }

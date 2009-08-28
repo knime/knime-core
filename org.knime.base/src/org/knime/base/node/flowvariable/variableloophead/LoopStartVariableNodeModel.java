@@ -60,8 +60,8 @@ implements LoopStartNodeTerminator {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         pushVariables((DataTableSpec)inSpecs[0], null);
-        pushScopeVariableInt("maxIterations", 0);
-        pushScopeVariableInt("currentIteration", 0);
+        pushFlowVariableInt("maxIterations", 0);
+        pushFlowVariableInt("currentIteration", 0);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
     
@@ -95,8 +95,8 @@ implements LoopStartNodeTerminator {
         // put values for variables on stack, based on current row
         pushVariables(inData.getDataTableSpec(), row);
         // and add information about loop progress
-        pushScopeVariableInt("maxIterations", m_maxNrIterations);
-        pushScopeVariableInt("currentIteration", m_currentIteration);
+        pushFlowVariableInt("maxIterations", m_maxNrIterations);
+        pushFlowVariableInt("currentIteration", m_currentIteration);
         m_currentIteration++;
         return new PortObject[]{new FlowVariablePortObject()};
     }

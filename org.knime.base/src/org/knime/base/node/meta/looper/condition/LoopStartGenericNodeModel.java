@@ -61,7 +61,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert m_iteration == 0;
-        pushScopeVariableInt("currentIteration", m_iteration);
+        pushFlowVariableInt("currentIteration", m_iteration);
         return inSpecs;
     }
 
@@ -81,7 +81,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
                 throw new IllegalArgumentException("Loop tail has wrong type!");
             }
         }
-        pushScopeVariableInt("currentIteration", m_iteration);
+        pushFlowVariableInt("currentIteration", m_iteration);
         m_iteration++;
         return inData;
     }

@@ -103,7 +103,7 @@ public class NumericRowSplitterNodeDialogPane extends NodeDialogPane {
                 m_lowerBoundCheck.getComponentPanel(), BorderLayout.WEST);
         m_lowerBoundValue = 
             new DialogComponentNumberEdit(lowerBoundValue, "Value: ", 10, 
-                    createScopeVariableModel(lowerBoundValue));
+                    createFlowVariableModel(lowerBoundValue));
         lowerBoundPanel.add(m_lowerBoundValue.getComponentPanel(), 
                 BorderLayout.CENTER);
         m_lowerBound = new DialogComponentStringSelection(
@@ -136,7 +136,7 @@ public class NumericRowSplitterNodeDialogPane extends NodeDialogPane {
                 BorderLayout.WEST);
         m_upperBoundValue = 
             new DialogComponentNumberEdit(upperBoundValue, "Value: ", 10,
-                    createScopeVariableModel(upperBoundValue));
+                    createFlowVariableModel(upperBoundValue));
         upperBoundPanel.add(m_upperBoundValue.getComponentPanel(), 
                 BorderLayout.CENTER);
         m_upperBound = 

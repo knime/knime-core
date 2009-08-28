@@ -70,8 +70,8 @@ implements LoopStartNodeTerminator {
             throw new InvalidSettingsException("Cannot loop fewer than once");
         }
         assert m_iteration == 0;
-        pushScopeVariableInt("currentIteration", m_iteration);
-        pushScopeVariableInt("maxIterations", m_settings.loops());
+        pushFlowVariableInt("currentIteration", m_iteration);
+        pushFlowVariableInt("maxIterations", m_settings.loops());
         return inSpecs;
     }
 
@@ -97,8 +97,8 @@ implements LoopStartNodeTerminator {
 //            }
         }
         // let's also put the counts on the stack for someone else:
-        pushScopeVariableInt("currentIteration", m_iteration);
-        pushScopeVariableInt("maxIterations", m_settings.loops());
+        pushFlowVariableInt("currentIteration", m_iteration);
+        pushFlowVariableInt("maxIterations", m_settings.loops());
         // increment counter for next iteration
         m_iteration++;
         return inData;

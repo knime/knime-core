@@ -38,8 +38,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ScopeVariableListCellRenderer;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
@@ -53,7 +53,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
     /** Inits components. */
     public VariableToTableNodeDialogPane() {
         m_list = new JList(new DefaultListModel());
-        m_list.setCellRenderer(new ScopeVariableListCellRenderer());
+        m_list.setCellRenderer(new FlowVariableListCellRenderer());
         m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         addTab("Variable Selection", new JScrollPane(m_list));
     }
@@ -62,7 +62,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        Map<String, ScopeVariable> scopeVars = getAvailableScopeVariables();
+        Map<String, FlowVariable> scopeVars = getAvailableFlowVariables();
         VariableToTableSettings sets = new VariableToTableSettings();
         sets.loadSettingsFrom(settings, scopeVars);
         DefaultListModel model = (DefaultListModel)m_list.getModel();
@@ -70,10 +70,10 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
         int[] selIndices = new int[sets.getVariablesOfInterest().size()];
         int current = 0;
         int pointer = 0;
-        for (ScopeVariable v : scopeVars.values()) {
+        for (FlowVariable v : scopeVars.values()) {
             model.addElement(v);
             if (sets.getVariablesOfInterest().contains(new Pair<
-                    String, ScopeVariable.Type>(v.getName(), v.getType()))) {
+                    String, FlowVariable.Type>(v.getName(), v.getType()))) {
                 selIndices[pointer++] = current;
             }
             current += 1;
@@ -87,7 +87,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         Object[] sels = m_list.getSelectedValues();
-        ScopeVariable[] svSels = new ScopeVariable[sels.length];
+        FlowVariable[] svSels = new FlowVariable[sels.length];
         System.arraycopy(sels, 0, svSels, 0, sels.length);
         VariableToTableSettings sets = new VariableToTableSettings();
         sets.setVariablesOfInterest(svSels);

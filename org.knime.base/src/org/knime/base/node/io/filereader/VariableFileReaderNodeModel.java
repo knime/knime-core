@@ -44,7 +44,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
@@ -85,7 +85,7 @@ public class VariableFileReaderNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        Map<String, ScopeVariable> stack =
+        Map<String, FlowVariable> stack =
                 createStack(m_frSettings.getVariableName());
         VariableFileReaderNodeSettings settings =
                 m_frSettings.createSettingsFrom(stack);
@@ -167,10 +167,10 @@ public class VariableFileReaderNodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
-    private final Map<String, ScopeVariable> createStack(final String varName) {
-        String loc = peekScopeVariableString(varName);
-        ScopeVariable scopeVar = new ScopeVariable(varName, loc);
-        Map<String, ScopeVariable> stack = new HashMap<String, ScopeVariable>();
+    private final Map<String, FlowVariable> createStack(final String varName) {
+        String loc = peekFlowVariableString(varName);
+        FlowVariable scopeVar = new FlowVariable(varName, loc);
+        Map<String, FlowVariable> stack = new HashMap<String, FlowVariable>();
         if (scopeVar != null) {
             stack.put(varName, scopeVar);
         }

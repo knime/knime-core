@@ -74,16 +74,16 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
 
         m_value = m_settings.from();
         if (m_settings.integerLoop()) {
-            pushScopeVariableInt("loop_from", (int)Math
+            pushFlowVariableInt("loop_from", (int)Math
                     .round(m_settings.from()));
-            pushScopeVariableInt("loop_to", (int)Math.round(m_settings.to()));
-            pushScopeVariableInt("loop_step", (int)m_settings.step());
-            pushScopeVariableInt("loop_value", (int)Math.round(m_value));
+            pushFlowVariableInt("loop_to", (int)Math.round(m_settings.to()));
+            pushFlowVariableInt("loop_step", (int)m_settings.step());
+            pushFlowVariableInt("loop_value", (int)Math.round(m_value));
         } else {
-            pushScopeVariableDouble("loop_from", m_settings.from());
-            pushScopeVariableDouble("loop_to", m_settings.to());
-            pushScopeVariableDouble("loop_step", m_settings.step());
-            pushScopeVariableDouble("loop_value", m_value);
+            pushFlowVariableDouble("loop_from", m_settings.from());
+            pushFlowVariableDouble("loop_to", m_settings.to());
+            pushFlowVariableDouble("loop_step", m_settings.step());
+            pushFlowVariableDouble("loop_value", m_value);
         }
         return inSpecs;
     }
@@ -112,15 +112,15 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         // let's also put the counts on the stack for someone else:
 
         if (m_settings.integerLoop()) {
-            pushScopeVariableInt("loop_from", (int)Math.round(m_settings.from()));
-            pushScopeVariableInt("loop_to", (int)Math.round(m_settings.to()));
-            pushScopeVariableInt("loop_step", (int)m_settings.step());
-            pushScopeVariableInt("loop_value", (int)Math.round(m_value));
+            pushFlowVariableInt("loop_from", (int)Math.round(m_settings.from()));
+            pushFlowVariableInt("loop_to", (int)Math.round(m_settings.to()));
+            pushFlowVariableInt("loop_step", (int)m_settings.step());
+            pushFlowVariableInt("loop_value", (int)Math.round(m_value));
         } else {
-            pushScopeVariableDouble("loop_from", m_settings.from());
-            pushScopeVariableDouble("loop_to", m_settings.to());
-            pushScopeVariableDouble("loop_step", m_settings.step());
-            pushScopeVariableDouble("loop_value", m_value);
+            pushFlowVariableDouble("loop_from", m_settings.from());
+            pushFlowVariableDouble("loop_to", m_settings.to());
+            pushFlowVariableDouble("loop_step", m_settings.step());
+            pushFlowVariableDouble("loop_value", m_value);
         }
 
         // increment counter for next iteration

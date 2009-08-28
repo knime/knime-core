@@ -45,9 +45,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ScopeVariableListCellRenderer;
-import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * This class is the dialog for the condition loop tail node in which the user
@@ -101,13 +101,13 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
 
         c.gridx = 1;
         c.gridwidth = 2;
-        m_variables.setRenderer(new ScopeVariableListCellRenderer());
+        m_variables.setRenderer(new FlowVariableListCellRenderer());
         m_variables.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (m_variables.getSelectedIndex() >= 0) {
-                    ScopeVariable v =
-                            (ScopeVariable)m_variablesModel.getSelectedItem();
+                    FlowVariable v =
+                            (FlowVariable)m_variablesModel.getSelectedItem();
                     m_operator.removeAllItems();
                     if (v.getType().equals(Type.STRING)) {
                         for (Object o : STRING_OPERATORS) {
@@ -175,7 +175,7 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
         m_settings.loadSettingsForDialog(settings);
 
         m_variablesModel.removeAllElements();
-        for (ScopeVariable v : getAvailableScopeVariables().values()) {
+        for (FlowVariable v : getAvailableFlowVariables().values()) {
             m_variablesModel.addElement(v);
             if (v.getName().equals(m_settings.variableName())) {
                 m_variables.setSelectedItem(v);
@@ -201,7 +201,7 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
         if (sel == null) {
             m_settings.variable(null);
         } else {
-            m_settings.variable((ScopeVariable)sel);
+            m_settings.variable((FlowVariable)sel);
         }
 
         m_settings.operator((Operator)m_operator.getSelectedItem());

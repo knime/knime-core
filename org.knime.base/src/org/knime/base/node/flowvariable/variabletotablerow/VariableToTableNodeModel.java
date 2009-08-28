@@ -52,7 +52,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
@@ -76,18 +76,18 @@ public class VariableToTableNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec spec = createOutSpec();
         BufferedDataContainer cont = exec.createDataContainer(spec);
-        List<Pair<String, ScopeVariable.Type>> vars = 
+        List<Pair<String, FlowVariable.Type>> vars = 
             m_settings.getVariablesOfInterest();
         DataCell[] specs = new DataCell[vars.size()];
         List<String> lostVariables = new ArrayList<String>();
         for (int i = 0; i < vars.size(); i++) {
-            Pair<String, ScopeVariable.Type> c = vars.get(i);
+            Pair<String, FlowVariable.Type> c = vars.get(i);
             String name = c.getFirst();
             DataCell cell = DataType.getMissingCell(); // fallback
             switch (c.getSecond()) {
             case DOUBLE:
                 try {
-                    double dValue = peekScopeVariableDouble(c.getFirst());
+                    double dValue = peekFlowVariableDouble(c.getFirst());
                     cell = new DoubleCell(dValue);
                 } catch (NoSuchElementException e) {
                     lostVariables.add(name + " (Double)");
@@ -95,7 +95,7 @@ public class VariableToTableNodeModel extends NodeModel {
                 break;
             case INTEGER:
                 try {
-                    int iValue = peekScopeVariableInt(c.getFirst());
+                    int iValue = peekFlowVariableInt(c.getFirst());
                     cell = new IntCell(iValue);
                 } catch (NoSuchElementException e) {
                     lostVariables.add(name + " (Integer)");
@@ -103,7 +103,7 @@ public class VariableToTableNodeModel extends NodeModel {
                 break;
             case STRING:
                 try {
-                    String sValue = peekScopeVariableString(c.getFirst());
+                    String sValue = peekFlowVariableString(c.getFirst());
                     sValue = sValue == null ? "" : sValue;
                     cell = new StringCell(sValue);
                 } catch (NoSuchElementException e) {
@@ -126,14 +126,14 @@ public class VariableToTableNodeModel extends NodeModel {
     }
     
     private DataTableSpec createOutSpec() throws InvalidSettingsException {
-        List<Pair<String, ScopeVariable.Type>> vars = 
+        List<Pair<String, FlowVariable.Type>> vars = 
             m_settings.getVariablesOfInterest();
         if (vars.isEmpty()) {
             throw new InvalidSettingsException("No variables selected");
         }
         DataColumnSpec[] specs = new DataColumnSpec[vars.size()];
         for (int i = 0; i < vars.size(); i++) {
-            Pair<String, ScopeVariable.Type> c = vars.get(i);
+            Pair<String, FlowVariable.Type> c = vars.get(i);
             DataType type;
             switch (c.getSecond()) {
             case DOUBLE:

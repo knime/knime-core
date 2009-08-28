@@ -55,8 +55,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
-import org.knime.core.node.ScopeVariableModel;
-import org.knime.core.node.ScopeVariableModelButton;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
@@ -89,9 +89,9 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
      * 
-     * @param svm model to allow to use a variable instead of the textfield.
+     * @param fvm model to allow to use a variable instead of the textfield.
      */
-    CSVFilesHistoryPanel(final ScopeVariableModel svm) {
+    CSVFilesHistoryPanel(final FlowVariableModel fvm) {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -147,14 +147,14 @@ public final class CSVFilesHistoryPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         Box fileBox = Box.createHorizontalBox();
         fileBox.add(m_textBox);
-        if (svm != null) {
+        if (fvm != null) {
             fileBox.add(Box.createHorizontalStrut(5));
-            fileBox.add(new ScopeVariableModelButton(svm));
-            svm.addChangeListener(new ChangeListener() {
+            fileBox.add(new FlowVariableModelButton(fvm));
+            fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    ScopeVariableModel wvm =
-                        (ScopeVariableModel)(evt.getSource());
+                    FlowVariableModel wvm =
+                        (FlowVariableModel)(evt.getSource());
                     m_textBox.setEnabled(
                             !wvm.isVariableReplacementEnabled());
                     m_chooseButton.setEnabled(

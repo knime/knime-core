@@ -33,7 +33,7 @@ import java.util.Set;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
@@ -42,28 +42,28 @@ import org.knime.core.util.Pair;
  */
 final class AppendVariableToTableSettings {
     
-    private final List<Pair<String, ScopeVariable.Type>> m_variablesOfInterest
-        = new ArrayList<Pair<String, ScopeVariable.Type>>();
+    private final List<Pair<String, FlowVariable.Type>> m_variablesOfInterest
+        = new ArrayList<Pair<String, FlowVariable.Type>>();
     
     /** @param variablesOfInterest the variablesOfInterest to set */
     public void setVariablesOfInterest(
-            final ScopeVariable[] variablesOfInterest) {
+            final FlowVariable[] variablesOfInterest) {
         m_variablesOfInterest.clear();
-        for (ScopeVariable v : variablesOfInterest) {
-            m_variablesOfInterest.add(new Pair<String, ScopeVariable.Type>(
+        for (FlowVariable v : variablesOfInterest) {
+            m_variablesOfInterest.add(new Pair<String, FlowVariable.Type>(
                     v.getName(), v.getType()));
         }
     }
     
     /** @return the variablesOfInterest */
-    public List<Pair<String, ScopeVariable.Type>> getVariablesOfInterest() {
+    public List<Pair<String, FlowVariable.Type>> getVariablesOfInterest() {
         return m_variablesOfInterest;
     }
     
     /** @param settings to save to. */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         NodeSettingsWO sub = settings.addNodeSettings("variables");
-        for (Pair<String, ScopeVariable.Type> v : m_variablesOfInterest) {
+        for (Pair<String, FlowVariable.Type> v : m_variablesOfInterest) {
             NodeSettingsWO sub2 = sub.addNodeSettings(v.getFirst());
             sub2.addString("name", v.getFirst());
             sub2.addString("type", v.getSecond().name());
@@ -89,15 +89,15 @@ final class AppendVariableToTableSettings {
                 throw new InvalidSettingsException(
                         "Name and type must not be null.");
             }
-            ScopeVariable.Type type;
+            FlowVariable.Type type;
             try {
-                type = ScopeVariable.Type.valueOf(typeS);
+                type = FlowVariable.Type.valueOf(typeS);
             } catch (IllegalArgumentException iae) {
                 throw new InvalidSettingsException(
                         "Can't parse type: " + typeS);
             }
             m_variablesOfInterest.add(
-                    new Pair<String, ScopeVariable.Type>(name, type));
+                    new Pair<String, FlowVariable.Type>(name, type));
         }
     }
     
@@ -107,7 +107,7 @@ final class AppendVariableToTableSettings {
      * @param scopeVariableMap map of keys to scope variables
      */
     public void loadSettingsFrom(final NodeSettingsRO settings, 
-            final Map<String, ScopeVariable> scopeVariableMap) {
+            final Map<String, FlowVariable> scopeVariableMap) {
         m_variablesOfInterest.clear();
         NodeSettingsRO sub = null;
         Set<String> keySet;
@@ -132,14 +132,14 @@ final class AppendVariableToTableSettings {
             if (name == null || typeS == null) {
                 continue;
             }
-            ScopeVariable.Type type;
+            FlowVariable.Type type;
             try {
-                type = ScopeVariable.Type.valueOf(typeS);
+                type = FlowVariable.Type.valueOf(typeS);
             } catch (IllegalArgumentException iae) {
                 continue;
             }
             m_variablesOfInterest.add(
-                    new Pair<String, ScopeVariable.Type>(name, type));
+                    new Pair<String, FlowVariable.Type>(name, type));
         }
     }
 

@@ -52,8 +52,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
-import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * This class is the model for the condition loop tail node. It checks the user
@@ -126,16 +126,16 @@ public class LoopEndConditionNodeModel extends NodeModel implements
         }
 
         try {
-            if (m_settings.variableType() == ScopeVariable.Type.INTEGER) {
-                peekScopeVariableInt(m_settings.variableName());
+            if (m_settings.variableType() == FlowVariable.Type.INTEGER) {
+                peekFlowVariableInt(m_settings.variableName());
                 try {
                     Integer.parseInt(m_settings.value());
                 } catch (NumberFormatException ex) {
                     throw new InvalidSettingsException("Given value '"
                             + m_settings.value() + "' is not an integer");
                 }
-            } else if (m_settings.variableType() == ScopeVariable.Type.DOUBLE) {
-                peekScopeVariableDouble(m_settings.variableName());
+            } else if (m_settings.variableType() == FlowVariable.Type.DOUBLE) {
+                peekFlowVariableDouble(m_settings.variableName());
                 try {
                     Double.parseDouble(m_settings.value());
                 } catch (NumberFormatException ex) {
@@ -143,7 +143,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                             + m_settings.value() + "' is not an number");
                 }
             } else {
-                peekScopeVariableString(m_settings.variableName());
+                peekFlowVariableString(m_settings.variableName());
             }
         } catch (NoSuchElementException ex) {
             throw new InvalidSettingsException("No variable named '"
@@ -161,7 +161,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        int count = peekScopeVariableInt("currentIteration");
+        int count = peekFlowVariableInt("currentIteration");
         exec.setMessage("Iteration " + count);
         DataTableSpec spec1 = createSpec1(inData[0].getDataTableSpec());
         if (m_collectContainer == null) {
@@ -197,14 +197,14 @@ public class LoopEndConditionNodeModel extends NodeModel implements
         RowKey rk = new RowKey("Iteration " + count);
         if (m_settings.variableType() == Type.DOUBLE) {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
-                    new DoubleCell(peekScopeVariableDouble(m_settings
+                    new DoubleCell(peekFlowVariableDouble(m_settings
                             .variableName()))));
         } else if (m_settings.variableType() == Type.INTEGER) {
             m_variableContainer.addRowToTable(new DefaultRow(rk, new IntCell(
-                    peekScopeVariableInt(m_settings.variableName()))));
+                    peekFlowVariableInt(m_settings.variableName()))));
         } else {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
-                    new StringCell(peekScopeVariableString(m_settings
+                    new StringCell(peekFlowVariableString(m_settings
                             .variableName()))));
         }
 
@@ -256,7 +256,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
 
     private boolean checkCondition() {
         if (m_settings.variableType() == Type.INTEGER) {
-            int v = peekScopeVariableInt(m_settings.variableName());
+            int v = peekFlowVariableInt(m_settings.variableName());
             if (m_settings.operator() == Operator.EQ) {
                 return v == Integer.parseInt(m_settings.value());
             } else if (m_settings.operator() == Operator.NE) {
@@ -271,7 +271,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                 return v > Integer.parseInt(m_settings.value());
             }
         } else if (m_settings.variableType() == Type.DOUBLE) {
-            double v = peekScopeVariableDouble(m_settings.variableName());
+            double v = peekFlowVariableDouble(m_settings.variableName());
             if (m_settings.operator() == Operator.EQ) {
                 return v == Double.parseDouble(m_settings.value());
             } else if (m_settings.operator() == Operator.NE) {
@@ -286,7 +286,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                 return v > Double.parseDouble(m_settings.value());
             }
         } else {
-            String s = peekScopeVariableString(m_settings.variableName());
+            String s = peekFlowVariableString(m_settings.variableName());
             if (m_settings.operator() == Operator.EQ) {
                 return s.equals(m_settings.value());
             } else if (m_settings.operator() == Operator.NE) {

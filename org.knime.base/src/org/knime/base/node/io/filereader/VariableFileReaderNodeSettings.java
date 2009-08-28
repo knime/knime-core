@@ -29,7 +29,7 @@ import java.util.Map;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  *
@@ -120,16 +120,16 @@ class VariableFileReaderNodeSettings extends FileReaderNodeSettings {
      *             URL
      */
     VariableFileReaderNodeSettings createSettingsFrom(
-            final Map<String, ScopeVariable> stack)
+            final Map<String, FlowVariable> stack)
             throws MalformedURLException {
         VariableFileReaderNodeSettings result =
                 new VariableFileReaderNodeSettings(this);
-        ScopeVariable var = stack.get(m_variableName);
+        FlowVariable var = stack.get(m_variableName);
         if (var == null) {
             throw new IllegalArgumentException("File location variable ("
                     + m_variableName + ") is not on the stack.");
         }
-        if (!var.getType().equals(ScopeVariable.Type.STRING)) {
+        if (!var.getType().equals(FlowVariable.Type.STRING)) {
             throw new IllegalArgumentException(
                     "Selected file location variable (" + m_variableName
                             + ") is not of type string.");
