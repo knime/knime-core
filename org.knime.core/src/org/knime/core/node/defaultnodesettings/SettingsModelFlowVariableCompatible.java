@@ -24,17 +24,17 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /** Interface for a @link SettingsModel which can be represented by a
- * ScopeVariable.
+ * FlowVariable.
  *
  * This allows DefaultNodeDialogPane implementations to easily use Variables
  * for compatible SettingsModels/DialogComponents.
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public interface SettingsModelScopeVariableCompatible {
+public interface SettingsModelFlowVariableCompatible {
     
     /**
      * @return key of the settings object.
@@ -42,7 +42,7 @@ public interface SettingsModelScopeVariableCompatible {
     public String getKey();
     
     /**
-     * @return required type of the ScopeVariable replacing these settings.
+     * @return required type of the FlowVariable replacing these settings.
      */
-    public ScopeVariable.Type getScopeVariableType();
+    public FlowVariable.Type getFlowVariableType();
 }

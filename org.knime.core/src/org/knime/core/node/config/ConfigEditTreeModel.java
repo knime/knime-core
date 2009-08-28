@@ -37,15 +37,15 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ScopeVariableModel;
+import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Config editor that keeps a mask of variables to overwrite existing settings.
  * This class is used to modify node settings with values assigned from
- * scope variables. It also keeps a list of &quot;exposed variables&quot;, that
+ * flow variables. It also keeps a list of &quot;exposed variables&quot;, that
  * is each individual setting can be exported as a new variable.
  * <p>This class is not meant to be used anywhere else than in the KNIME
  * framework classes.
@@ -99,15 +99,15 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     }
 
     /**
-     * Determines whether a scope variable at hand (represented by its
+     * Determines whether a flow variable at hand (represented by its
      * actual type) can be converted into a desired type. In short: string
      * accepts also double and integer, double accepts integer, integer only
      * accepts integer.
      * 
      * @param desiredType The type that is requested.
      * @param actualType The actual type.
-     * @return If a scope variable of type <code>actualType</code> can be
-     * used to represent a scope variable of type <code>desiredType</code>.
+     * @return If a flow variable of type <code>actualType</code> can be
+     * used to represent a flow variable of type <code>desiredType</code>.
      */
     public static boolean doesTypeAccept(final Type desiredType, 
             final Type actualType) {
@@ -155,8 +155,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * @return A list of exposed variables
      * @throws InvalidSettingsException If reading fails
      */
-    public List<ScopeVariable> overwriteSettings(final Config settingsTree,
-            final Map<String, ScopeVariable> variables)
+    public List<FlowVariable> overwriteSettings(final Config settingsTree,
+            final Map<String, FlowVariable> variables)
         throws InvalidSettingsException {
         return getRoot().overwriteSettings(settingsTree, variables, false);
     }
@@ -197,9 +197,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * tree and the button model are in sync.
      * @param variableModels The models that were registered at the dialog.
      */
-    public void update(final Collection<ScopeVariableModel> variableModels) {
+    public void update(final Collection<FlowVariableModel> variableModels) {
         ConfigEditTreeNode rootNode = getRoot();
-        for (ScopeVariableModel model : variableModels) {
+        for (FlowVariableModel model : variableModels) {
             rootNode.update(model);
         }
     }
@@ -353,10 +353,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         }
 
         /** Implements the functionality described in the
-         * {@link ConfigEditTreeNode#update(ScopeVariableModel)} method.
+         * {@link ConfigEditTreeNode#update(FlowVariableModel)} method.
          * @param model The model that provides the update.
          */
-        void update(final ScopeVariableModel model) {
+        void update(final FlowVariableModel model) {
             for (Enumeration<?> e = children(); e.hasMoreElements();) {
                 ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
                 if (c.getConfigEntry().getKey().equals(model.getKey())) {
@@ -419,14 +419,14 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         /** Implementation of {@link ConfigEditTreeModel#overwriteSettings(
          * Config, Map)}, see above method description for details. */
-        private List<ScopeVariable> overwriteSettings(final Config counterpart,
-                final Map<String, ScopeVariable> variables,
+        private List<FlowVariable> overwriteSettings(final Config counterpart,
+                final Map<String, FlowVariable> variables,
                 final boolean isCounterpartParent)
             throws InvalidSettingsException {
             if (!hasConfiguration()) {
                 return Collections.emptyList();
             }
-            List<ScopeVariable> result = null;
+            List<FlowVariable> result = null;
             AbstractConfigEntry thisEntry = getConfigEntry();
             String key = thisEntry.getKey();
             AbstractConfigEntry original;
@@ -536,31 +536,31 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             if (newVar != null) {
                 assert isLeaf() && isCounterpartParent;
                 AbstractConfigEntry newValue = counterpart.getEntry(key);
-                ScopeVariable exposed;
+                FlowVariable exposed;
                 switch (newValue.getType()) {
                 case xboolean:
                     boolean b = ((ConfigBooleanEntry)newValue).getBoolean();
-                    exposed = new ScopeVariable(newVar, Boolean.toString(b));
+                    exposed = new FlowVariable(newVar, Boolean.toString(b));
                     break;
                 case xstring:
                     String s = ((ConfigStringEntry)newValue).getString();
-                    exposed = new ScopeVariable(newVar, s);
+                    exposed = new FlowVariable(newVar, s);
                     break;
                 case xchar:
                     char c = ((ConfigCharEntry)newValue).getChar();
-                    exposed = new ScopeVariable(newVar, Character.toString(c));
+                    exposed = new FlowVariable(newVar, Character.toString(c));
                     break;
                 case xbyte:
                     byte by = ((ConfigByteEntry)newValue).getByte();
-                    exposed = new ScopeVariable(newVar, by);
+                    exposed = new FlowVariable(newVar, by);
                     break;
                 case xshort:
                     short sh = ((ConfigShortEntry)newValue).getShort();
-                    exposed = new ScopeVariable(newVar, sh);
+                    exposed = new FlowVariable(newVar, sh);
                     break;
                 case xint:
                     int i = ((ConfigIntEntry)newValue).getInt();
-                    exposed = new ScopeVariable(newVar, i);
+                    exposed = new FlowVariable(newVar, i);
                     break;
                 case xlong:
                     long l = ((ConfigLongEntry)newValue).getLong();
@@ -569,33 +569,33 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                                 "Can't export value \"" + l + "\" as "
                                 + "variable \"" + newVar + "\", out of range");
                     }
-                    exposed = new ScopeVariable(newVar, (int)l);
+                    exposed = new FlowVariable(newVar, (int)l);
                     break;
                 case xfloat:
                     float f = ((ConfigFloatEntry)newValue).getFloat();
-                    exposed = new ScopeVariable(newVar, f);
+                    exposed = new FlowVariable(newVar, f);
                     break;
                 case xdouble:
                     double d = ((ConfigDoubleEntry)newValue).getDouble();
-                    exposed = new ScopeVariable(newVar, d);
+                    exposed = new FlowVariable(newVar, d);
                     break;
                 default:
                     throw new InvalidSettingsException("Can't export "
                             + newValue.getType() + " as variable \""
                             + newVar + "\"");
                 }
-                result = new ArrayList<ScopeVariable>();
+                result = new ArrayList<FlowVariable>();
                 result.add(exposed);
             }
 
             if (!isLeaf()) {
                 for (Enumeration<?> e = children(); e.hasMoreElements();) {
                     ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
-                    List<ScopeVariable> r = c.overwriteSettings(
+                    List<FlowVariable> r = c.overwriteSettings(
                             (Config)original, variables, true);
                     if (!r.isEmpty()) {
                         if (result == null) {
-                            result = new ArrayList<ScopeVariable>();
+                            result = new ArrayList<FlowVariable>();
                         }
                         result.addAll(r);
                     }
@@ -632,10 +632,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         /** Getter method throws excpetion of variable name does not exist
          * in map. */
-        private static ScopeVariable getVariable(final String varString,
-                final Map<String, ScopeVariable> variables)
+        private static FlowVariable getVariable(final String varString,
+                final Map<String, FlowVariable> variables)
             throws InvalidSettingsException {
-            ScopeVariable var = variables.get(varString);
+            FlowVariable var = variables.get(varString);
             if (var == null) {
                 throw new InvalidSettingsException(
                         "Unknown variable \"" + varString + "\"");
@@ -645,9 +645,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         /** Getter method to get double value. */
         private static double getDoubleVariable(final String varString,
-                final Map<String, ScopeVariable> variables)
+                final Map<String, FlowVariable> variables)
             throws InvalidSettingsException {
-            ScopeVariable v = getVariable(varString, variables);
+            FlowVariable v = getVariable(varString, variables);
             switch (v.getType()) {
             case DOUBLE:
                 return v.getDoubleValue();
@@ -662,9 +662,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         /** Getter method to get int value. */
         private static int getIntVariable(final String varString,
-                final Map<String, ScopeVariable> variables)
+                final Map<String, FlowVariable> variables)
         throws InvalidSettingsException {
-            ScopeVariable v = getVariable(varString, variables);
+            FlowVariable v = getVariable(varString, variables);
             switch (v.getType()) {
             case INTEGER:
                 return v.getIntValue();
@@ -677,9 +677,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
         /** Getter method to get string value. */
         private static String getStringVariable(final String varString,
-                final Map<String, ScopeVariable> variables)
+                final Map<String, FlowVariable> variables)
         throws InvalidSettingsException {
-            ScopeVariable v = getVariable(varString, variables);
+            FlowVariable v = getVariable(varString, variables);
             switch (v.getType()) {
             case INTEGER:
                 return Integer.toString(v.getIntValue());

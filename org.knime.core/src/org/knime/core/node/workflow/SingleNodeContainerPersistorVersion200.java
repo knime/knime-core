@@ -41,7 +41,7 @@ import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
+import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
@@ -118,23 +118,23 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
-    protected List<ScopeObject> loadScopeObjects(
+    protected List<FlowObject> loadFlowObjects(
             final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        List<ScopeObject> result = new ArrayList<ScopeObject>();
+        List<FlowObject> result = new ArrayList<FlowObject>();
         NodeSettingsRO stackSet = settings.getNodeSettings("scope_stack");
         for (String key : stackSet.keySet()) {
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
             String type = sub.getString("type");
             if ("variable".equals(type)) {
-                ScopeVariable v = ScopeVariable.load(sub);
+                FlowVariable v = FlowVariable.load(sub);
                 result.add(v);
             } else if ("loopcontext".equals(type)) {
-                result.add(new RestoredScopeLoopContext());
+                result.add(new RestoredFlowLoopContext());
 //                int tailID = sub.getInt("tailID");
             } else {
                 throw new InvalidSettingsException(
-                        "Unknown scope object type: " + type);
+                        "Unknown flow object type: " + type);
             }
         }
         return result;
@@ -177,7 +177,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
-        saveScopeObjectStack(settings, snc);
+        saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(nodeDirRef);
@@ -215,25 +215,25 @@ public class SingleNodeContainerPersistorVersion200 extends
         snc.saveSNCSettings(settings);
     }
     
-    protected void saveScopeObjectStack(final NodeSettingsWO settings,
+    protected void saveFlowObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");
-        ScopeObjectStack stack = nc.getScopeObjectStack();
+        FlowObjectStack stack = nc.getFlowObjectStack();
         @SuppressWarnings("unchecked")
-        Iterable<ScopeObject> myObjs = stack == null ? Collections.EMPTY_LIST
-                : stack.getScopeObjectsOwnedBy(nc.getID());
+        Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST
+                : stack.getFlowObjectsOwnedBy(nc.getID());
         int c = 0;
-        for (ScopeObject s : myObjs) {
-            if (s instanceof ScopeVariable) {
-                ScopeVariable v = (ScopeVariable)s;
+        for (FlowObject s : myObjs) {
+            if (s instanceof FlowVariable) {
+                FlowVariable v = (FlowVariable)s;
                 NodeSettingsWO sub = stackSet.addNodeSettings("Variable_" + c);
                 sub.addString("type", "variable");
                 v.save(sub);
-            } else if (s instanceof ScopeLoopContext) {
+            } else if (s instanceof FlowLoopContext) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
                 sub.addString("type", "loopcontext");
             } else {
-                getLogger().error("Saving of scope objects of type \"" 
+                getLogger().error("Saving of flow objects of type \"" 
                         + s.getClass().getSimpleName() +  "\" not implemented");
             }
             c += 1;

@@ -33,30 +33,30 @@ import javax.swing.JList;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * List cell renderer for lists whose elements are of type 
- * {@link ScopeVariable}. It will show the name of the variable along with an
+ * {@link FlowVariable}. It will show the name of the variable along with an
  * icon representing the type.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
+public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
     
-    /** Icon representing double scope variables. */
-    public static final Icon SCOPE_VAR_DOUBLE_ICON;
-    /** Icon representing integer scope variables. */
-    public static final Icon SCOPE_VAR_INT_ICON;
-    /** Icon representing string scope variables. */
-    public static final Icon SCOPE_VAR_STRING_ICON;
+    /** Icon representing double flow variables. */
+    public static final Icon FLOW_VAR_DOUBLE_ICON;
+    /** Icon representing integer flow variables. */
+    public static final Icon FLOW_VAR_INT_ICON;
+    /** Icon representing string flow variables. */
+    public static final Icon FLOW_VAR_STRING_ICON;
     
     static {
-        SCOPE_VAR_DOUBLE_ICON = loadIcon(
-                Node.class, "/icon/scopevar_double.png");
-        SCOPE_VAR_INT_ICON = loadIcon(
-                Node.class, "/icon/scopevar_integer.png");
-        SCOPE_VAR_STRING_ICON = loadIcon(
-                Node.class, "/icon/scopevar_string.png");
+        FLOW_VAR_DOUBLE_ICON = loadIcon(
+                Node.class, "/icon/flowvar_double.png");
+        FLOW_VAR_INT_ICON = loadIcon(
+                Node.class, "/icon/flowvar_integer.png");
+        FLOW_VAR_STRING_ICON = loadIcon(
+                Node.class, "/icon/flowvar_string.png");
     }
     
     private static Icon loadIcon(
@@ -73,7 +73,7 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
             icon = new ImageIcon(
                     loader.getResource(packagePath + correctedPath));
         } catch (Exception e) {
-            NodeLogger.getLogger(ScopeVariableListCellRenderer.class).debug(
+            NodeLogger.getLogger(FlowVariableListCellRenderer.class).debug(
                     "Unable to load icon at path " + path, e);
             icon = null;
         }
@@ -88,22 +88,22 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
         Component c =
                 super.getListCellRendererComponent(list, value, index,
                         isSelected, cellHasFocus);
-        if (value instanceof ScopeVariable) {
-            ScopeVariable v = (ScopeVariable)value;
+        if (value instanceof FlowVariable) {
+            FlowVariable v = (FlowVariable)value;
             Icon icon;
             setText(v.getName());
             String curValue;
             switch (v.getType()) {
             case DOUBLE:
-                icon = SCOPE_VAR_DOUBLE_ICON;
+                icon = FLOW_VAR_DOUBLE_ICON;
                 curValue = Double.toString(v.getDoubleValue());
                 break;
             case INTEGER:
-                icon = SCOPE_VAR_INT_ICON;
+                icon = FLOW_VAR_INT_ICON;
                 curValue = Integer.toString(v.getIntValue());
                 break;
             case STRING:
-                icon = SCOPE_VAR_STRING_ICON;
+                icon = FLOW_VAR_STRING_ICON;
                 curValue = v.getStringValue();
                 break;
             default:

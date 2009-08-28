@@ -118,7 +118,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<ScopeVariable> getWorkflowVariables() {
+    public List<FlowVariable> getWorkflowVariables() {
         throwUnsupportedOperationException();
         return null;
     }

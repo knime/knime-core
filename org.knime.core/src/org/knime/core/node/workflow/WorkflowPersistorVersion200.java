@@ -122,15 +122,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    public List<ScopeVariable> loadWorkflowVariables(
+    public List<FlowVariable> loadWorkflowVariables(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         if (!settings.containsKey(CFG_WKF_VARIABLES)) {
             return Collections.emptyList();
         }
         NodeSettingsRO wfmVarSub = settings.getNodeSettings(CFG_WKF_VARIABLES);
-        List<ScopeVariable> result = new ArrayList<ScopeVariable>();
+        List<FlowVariable> result = new ArrayList<FlowVariable>();
         for (String key : wfmVarSub.keySet()) {
-            result.add(ScopeVariable.load(wfmVarSub.getNodeSettings(key)));
+            result.add(FlowVariable.load(wfmVarSub.getNodeSettings(key)));
         }
         return result;
     }
@@ -432,12 +432,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     protected void saveWorkflowVariables(final WorkflowManager wfm,
             final NodeSettingsWO settings) {
-        List<ScopeVariable> vars = wfm.getWorkflowVariables();
+        List<FlowVariable> vars = wfm.getWorkflowVariables();
         if (!vars.isEmpty()) {
             NodeSettingsWO wfmVarSub = 
                 settings.addNodeSettings(CFG_WKF_VARIABLES);
             int i = 0;
-            for (ScopeVariable v : vars) {
+            for (FlowVariable v : vars) {
                 v.save(wfmVarSub.addNodeSettings("Var_" + (i++)));
             }
         }

@@ -29,12 +29,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * ScopeContext interface holding local variables of basic type.
+ * FlowVariable holding local variables of basic types which can
+ * be passed along connections in a workflow.
  * 
  * @author M. Berthold, University of Konstanz
  */
-public final class ScopeVariable extends ScopeObject {
+public final class FlowVariable extends FlowObject {
     
+    /** reserved prefix for global flow variables. */
     public static final String GLOBAL_CONST_ID = "knime";
 
     /** Type of a variable, supports currently only scalars. */
@@ -54,59 +56,101 @@ public final class ScopeVariable extends ScopeObject {
     private int m_valueI = 0;
     
 
-    private ScopeVariable(final String name, final Type type,
+    private FlowVariable(final String name, final Type type,
             final boolean isGlobalConstant) {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
         }
         if (!isGlobalConstant && name.startsWith(GLOBAL_CONST_ID)) {
-            throw new IllegalContextStackObjectException(
-                    "Name of scope variables must not start with \""
+            throw new IllegalFlowObjectStackException(
+                    "Name of flow variables must not start with \""
                     + GLOBAL_CONST_ID + "\": " + name);
         }
         if (isGlobalConstant && !name.startsWith(GLOBAL_CONST_ID)) {
-            throw new IllegalContextStackObjectException(
-                    "Name of global scope constant must start with \"" 
+            throw new IllegalFlowObjectStackException(
+                    "Name of global flow constant must start with \"" 
                     + GLOBAL_CONST_ID + "\": " + name);
         }
         m_name = name;
         m_type = type;
     }
     
-    public ScopeVariable(final String name, final String valueS) {
+    /** create new FlowVariable representing a string.
+     * 
+     * @param name of the variable
+     * @param valueS string value
+     */
+    public FlowVariable(final String name, final String valueS) {
         this(name, valueS, false);
     }
 
-    public ScopeVariable(final String name, final double valueD) {
+    /** create new FlowVariable representing a double.
+     * 
+     * @param name of the variable
+     * @param valueD double value
+     */
+    public FlowVariable(final String name, final double valueD) {
         this(name, valueD, false);
     }
 
-    public ScopeVariable(final String name, final int valueI) {
+    /** create new FlowVariable representing an integer.
+     * 
+     * @param name of the variable
+     * @param valueI int value
+     */
+    public FlowVariable(final String name, final int valueI) {
         this(name, valueI, false);
     }
-    
-    ScopeVariable(final String name, final String valueS, 
+
+    /** create new FlowVariable representing a string which can either
+     * be a global workflow variable or a local one.
+     * 
+     * @param name of the variable
+     * @param valueS string value
+     * @param isGlobalConstant indicating if the variable is global or not
+     */
+    FlowVariable(final String name, final String valueS, 
             final boolean isGlobalConstant) {
         this(name, Type.STRING, isGlobalConstant);
         m_valueS = valueS;
     }
     
-    ScopeVariable(final String name, final double valueD,
+    /** create new FlowVariable representing a double which can either
+     * be a global workflow variable or a local one.
+     * 
+     * @param name of the variable
+     * @param valueD double value
+     * @param isGlobalConstant indicating if the variable is global or not
+     */
+    FlowVariable(final String name, final double valueD,
             final boolean isGlobalConstant) {
         this(name, Type.DOUBLE, isGlobalConstant);
         m_valueD = valueD;
     }
     
-    ScopeVariable(final String name, final int valueI,
+    /** create new FlowVariable representing an integer which can either
+     * be a global workflow variable or a local one.
+     * 
+     * @param name of the variable
+     * @param valueI int value
+     * @param isGlobalConstant indicating if the variable is global or not
+     */
+    FlowVariable(final String name, final int valueI,
             final boolean isGlobalConstant) {
         this(name, Type.INTEGER, isGlobalConstant);
         m_valueI = valueI;
     }
-    
+
+    /**
+     * @return name of variable.
+     */
     public String getName() {
         return m_name;
     }
-    
+
+    /**
+     * @return true if the variable is a global workflow variable.
+     */
     public boolean isGlobalConstant() {
         return m_name.startsWith(GLOBAL_CONST_ID);
     }
@@ -115,7 +159,10 @@ public final class ScopeVariable extends ScopeObject {
     public Type getType() {
         return m_type;
     }
-    
+
+    /**
+     * @return get string value of the variable or null if it's not a string.
+     */
     public String getStringValue() {
         if (m_type != Type.STRING) {
             return null;
@@ -123,6 +170,10 @@ public final class ScopeVariable extends ScopeObject {
         return m_valueS;
     }
 
+    /**
+     * @return get double value of the variable or Double.NaN if it's not a
+     * double.
+     */
     public double getDoubleValue() {
         if (m_type != Type.DOUBLE) {
             return Double.NaN;
@@ -130,6 +181,9 @@ public final class ScopeVariable extends ScopeObject {
         return m_valueD;
     }
 
+    /**
+     * @return get int value of the variable or 0 if it's not an integer.
+     */
     public int getIntValue() {
         if (m_type != Type.INTEGER) {
             return 0;
@@ -160,13 +214,13 @@ public final class ScopeVariable extends ScopeObject {
     }
     
     /**
-     * Read a scope variable from a settings object. This is the counterpart
+     * Read a flow variable from a settings object. This is the counterpart
      * to {@link #save(NodeSettingsWO)}.
      * @param sub To load from.
-     * @return A new scope variable read from the settings object.
+     * @return A new {@link FlowVariable} read from the settings object.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    static ScopeVariable load(final NodeSettingsRO sub)
+    static FlowVariable load(final NodeSettingsRO sub)
         throws InvalidSettingsException {
         String name = sub.getString("name");
         String typeS = sub.getString("class");
@@ -179,16 +233,16 @@ public final class ScopeVariable extends ScopeObject {
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException("invalid type " + typeS);
         }
-        ScopeVariable v;
+        FlowVariable v;
         switch (varType) {
         case DOUBLE:
-            v = new ScopeVariable(name, sub.getDouble("value"));
+            v = new FlowVariable(name, sub.getDouble("value"));
             break;
         case INTEGER:
-            v = new ScopeVariable(name, sub.getInt("value"));
+            v = new FlowVariable(name, sub.getInt("value"));
             break;
         case STRING:
-            v = new ScopeVariable(name, sub.getString("value"));
+            v = new FlowVariable(name, sub.getString("value"));
             break;
         default:
             throw new InvalidSettingsException("Unknown type " + varType);
@@ -215,10 +269,10 @@ public final class ScopeVariable extends ScopeObject {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof ScopeVariable)) {
+        if (!(obj instanceof FlowVariable)) {
             return false;
         }
-        ScopeVariable v = (ScopeVariable)obj;
+        FlowVariable v = (FlowVariable)obj;
         return v.getType().equals(getType()) && v.getName().equals(getName());
     }
     

@@ -49,7 +49,7 @@ final class CopySingleNodeContainerPersistor implements
     
     private final NodeFactory<NodeModel> m_nodeFactory;
     private final CopyNodePersistor m_nodePersistor;
-    private final List<ScopeObject> m_scopeObjectList;
+    private final List<FlowObject> m_flowObjectList;
     private final SingleNodeContainerSettings m_sncSettings;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     
@@ -60,16 +60,16 @@ final class CopySingleNodeContainerPersistor implements
             final SingleNodeContainer m_original, 
             final boolean preserveDeletableFlag) {
         Node originalNode = m_original.getNode();
-        ScopeObjectStack stack = m_original.getScopeObjectStack();
-        List<ScopeObject> objs;
+        FlowObjectStack stack = m_original.getFlowObjectStack();
+        List<FlowObject> objs;
         if (stack != null) {
-            objs = stack.getScopeObjectsOwnedBy(m_original.getID());
+            objs = stack.getFlowObjectsOwnedBy(m_original.getID());
         } else {
             objs = Collections.emptyList();
         }
-        m_scopeObjectList = new ArrayList<ScopeObject>(objs.size());
-        for (ScopeObject o : objs) {
-            m_scopeObjectList.add(o.cloneAndUnsetOwner());
+        m_flowObjectList = new ArrayList<FlowObject>(objs.size());
+        for (FlowObject o : objs) {
+            m_flowObjectList.add(o.cloneAndUnsetOwner());
         }
         m_sncSettings = m_original.getSingleNodeContainerSettings().clone();
         m_nodeFactory = originalNode.getFactory();
@@ -89,13 +89,13 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public List<ScopeObject> getScopeObjects() {
-        if (m_scopeObjectList.isEmpty()) {
+    public List<FlowObject> getFlowObjects() {
+        if (m_flowObjectList.isEmpty()) {
             return Collections.emptyList();
         }
-        List<ScopeObject> clones = 
-            new ArrayList<ScopeObject>(m_scopeObjectList.size());
-        for (ScopeObject o : m_scopeObjectList) {
+        List<FlowObject> clones = 
+            new ArrayList<FlowObject>(m_flowObjectList.size());
+        for (FlowObject o : m_flowObjectList) {
             clones.add(o.clone());
         }
         return clones;

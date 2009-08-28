@@ -30,15 +30,15 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * Table cell renderer for elements of type {@link ScopeVariable}. It will show
+ * Table cell renderer for elements of type {@link FlowVariable}. It will show
  * the name of the variable along with an icon representing the type.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ScopeVariableTableCellRenderer extends DefaultTableCellRenderer {
+public class FlowVariableTableCellRenderer extends DefaultTableCellRenderer {
 
     /** {@inheritDoc} */
     @Override
@@ -48,22 +48,22 @@ public class ScopeVariableTableCellRenderer extends DefaultTableCellRenderer {
         Component c =
                 super.getTableCellRendererComponent(table, value, isSelected,
                         hasFocus, row, column);
-        if (value instanceof ScopeVariable) {
-            ScopeVariable v = (ScopeVariable)value;
+        if (value instanceof FlowVariable) {
+            FlowVariable v = (FlowVariable)value;
             Icon icon;
             setText(v.getName());
             String curValue;
             switch (v.getType()) {
             case DOUBLE:
-                icon = ScopeVariableListCellRenderer.SCOPE_VAR_DOUBLE_ICON;
+                icon = FlowVariableListCellRenderer.FLOW_VAR_DOUBLE_ICON;
                 curValue = Double.toString(v.getDoubleValue());
                 break;
             case INTEGER:
-                icon = ScopeVariableListCellRenderer.SCOPE_VAR_INT_ICON;
+                icon = FlowVariableListCellRenderer.FLOW_VAR_INT_ICON;
                 curValue = Integer.toString(v.getIntValue());
                 break;
             case STRING:
-                icon = ScopeVariableListCellRenderer.SCOPE_VAR_STRING_ICON;
+                icon = FlowVariableListCellRenderer.FLOW_VAR_STRING_ICON;
                 curValue = v.getStringValue();
                 break;
             default:

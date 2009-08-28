@@ -83,7 +83,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_outPortsBarUIInfo;
     
     private String m_name;
-    private List<ScopeVariable> m_workflowVariables;
+    private List<FlowVariable> m_workflowVariables;
     
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -167,7 +167,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     /** {@inheritDoc} */
     @Override
-    public List<ScopeVariable> getWorkflowVariables() {
+    public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables;
     }
     
@@ -897,7 +897,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      * @return The variables in a list.
      * @throws InvalidSettingsException If any settings-related error occurs.
      */
-    protected List<ScopeVariable> loadWorkflowVariables(
+    protected List<FlowVariable> loadWorkflowVariables(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();
     }

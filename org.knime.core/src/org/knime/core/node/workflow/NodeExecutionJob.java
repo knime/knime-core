@@ -82,7 +82,7 @@ public abstract class NodeExecutionJob implements Runnable {
             }
             try {
                 m_nc.notifyParentExecuteStart();
-            } catch (IllegalContextStackObjectException e) {
+            } catch (IllegalFlowObjectStackException e) {
                 status = NodeContainerExecutionStatus.FAILURE;
             } catch (Throwable throwable) {
                 status = NodeContainerExecutionStatus.FAILURE;

@@ -51,10 +51,10 @@ import javax.swing.border.Border;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.util.ScopeVariableListCellRenderer;
-import org.knime.core.node.workflow.ScopeObjectStack;
-import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Panel that displays a single line/element of a {@link ConfigEditJTree}.
@@ -66,18 +66,18 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
 public class ConfigEditTreeNodePanel extends JPanel {
     
     private static final Icon ICON_STRING = 
-        ScopeVariableListCellRenderer.SCOPE_VAR_STRING_ICON;
+        FlowVariableListCellRenderer.FLOW_VAR_STRING_ICON;
     private static final Icon ICON_INT = 
-        ScopeVariableListCellRenderer.SCOPE_VAR_INT_ICON;
+        FlowVariableListCellRenderer.FLOW_VAR_INT_ICON;
     private static final Icon ICON_DOUBLE = 
-        ScopeVariableListCellRenderer.SCOPE_VAR_DOUBLE_ICON;
+        FlowVariableListCellRenderer.FLOW_VAR_DOUBLE_ICON;
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
     
     private static final Dimension LABEL_DIMENSION = new Dimension(100, 20);
     private final JLabel m_keyLabel;
     private Icon m_keyIcon;
     private final JComboBox m_valueField;
-    private ScopeObjectStack m_scopeObjectStack;
+    private FlowObjectStack m_flowObjectStack;
     private final JTextField m_exposeAsVariableField;
     private ConfigEditTreeNode m_treeNode;
     
@@ -185,11 +185,11 @@ public class ConfigEditTreeNodePanel extends JPanel {
         model.removeAllElements();
         model.addElement(" ");
         @SuppressWarnings("unchecked")
-        Collection<ScopeVariable> allVars = getScopeStack() != null
-            ? getScopeStack().getAvailableVariables().values() 
-            : (Collection<ScopeVariable>)Collections.EMPTY_LIST;
+        Collection<FlowVariable> allVars = getFlowObjectStack() != null
+            ? getFlowObjectStack().getAvailableFlowVariables().values() 
+            : (Collection<FlowVariable>)Collections.EMPTY_LIST;
         ComboBoxElement match = null;
-        for (ScopeVariable v : allVars) {
+        for (FlowVariable v : allVars) {
             boolean isOk = ConfigEditTreeModel.doesTypeAccept(
                     selType, v.getType());
             if (isOk) {
@@ -211,16 +211,16 @@ public class ConfigEditTreeNodePanel extends JPanel {
             m_valueField.setSelectedItem(match);
         } else if (usedVariable != null) {
             String error = "Invalid variable \"" + usedVariable + "\"";
-            ScopeVariable virtualVar;
+            FlowVariable virtualVar;
             switch (selType) {
             case DOUBLE: 
-                virtualVar = new ScopeVariable(usedVariable, 0.0);
+                virtualVar = new FlowVariable(usedVariable, 0.0);
                 break;
             case INTEGER: 
-                virtualVar = new ScopeVariable(usedVariable, 0);
+                virtualVar = new FlowVariable(usedVariable, 0);
                 break;
             default:
-                virtualVar = new ScopeVariable(usedVariable, "");
+                virtualVar = new FlowVariable(usedVariable, "");
                 break;
             }
             ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
@@ -275,32 +275,32 @@ public class ConfigEditTreeNodePanel extends JPanel {
     }
     
     /**
-     * @param scopeObjectStack the variableStack to set
+     * @param flowObjectStack the variableStack to set
      */
-    public void setScopeStack(final ScopeObjectStack scopeObjectStack) {
-        m_scopeObjectStack = scopeObjectStack;
+    public void setFlowObjectStack(final FlowObjectStack flowObjectStack) {
+        m_flowObjectStack = flowObjectStack;
     }
     
     /**
      * @return the variableStack
      */
-    public ScopeObjectStack getScopeStack() {
-        return m_scopeObjectStack;
+    public FlowObjectStack getFlowObjectStack() {
+        return m_flowObjectStack;
     }
     
     /** Elements in the combo box. Used to also indicate errors with the 
      * current selection. */
     private static final class ComboBoxElement {
-        private final ScopeVariable m_variable;
+        private final FlowVariable m_variable;
         private final String m_errorString;
         
         /** Create ordinary element, without error. */
-        private ComboBoxElement(final ScopeVariable v) {
+        private ComboBoxElement(final FlowVariable v) {
             this(v, null);
         }
         
         /** Creator error element. */
-        private ComboBoxElement(final ScopeVariable v, final String error) {
+        private ComboBoxElement(final FlowVariable v, final String error) {
             m_variable = v;
             m_errorString = error;
         }
@@ -329,7 +329,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
             ((JComponent)c).setBorder(m_okBorder);
             if (value instanceof ComboBoxElement) {
                 ComboBoxElement cbe = (ComboBoxElement)value;
-                ScopeVariable v = cbe.m_variable;
+                FlowVariable v = cbe.m_variable;
                 Icon icon;
                 String curValue;
                 switch (v.getType()) {

@@ -20,43 +20,42 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   15.03.2007 (mb): created
+ *   14.03.2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
-/** Object holding base information for a loop context object: the head
- * and tail IDs of the loop's "control" node.
+
+
+/**
+ * Special {@link FlowObject} holding loop information.
  * 
  * @author M. Berthold, University of Konstanz
  */
-abstract class ScopeObject implements Cloneable {
+public class FlowLoopContext extends FlowObject {
 
-    private NodeID m_owner;
-    
-    void setOwner(final NodeID owner) {
-        m_owner = owner;
+    private NodeID m_tailNode;
+
+    public NodeID getHeadNode() {
+        return super.getOwner();
     }
     
-    NodeID getOwner() {
-        return m_owner;
+    public void setTailNode(final NodeID tail) {
+        m_tailNode = tail;
+    }
+    
+    public NodeID getTailNode() {
+        return m_tailNode;
     }
     
     /** {@inheritDoc} */
     @Override
-    protected ScopeObject clone() {
-        try {
-            return (ScopeObject)super.clone();
-        } catch (CloneNotSupportedException e) {
-            InternalError error = new InternalError(
-                    "Unexpected exception, object clone failed");
-            error.initCause(e);
-            throw error;
-        }
+    protected FlowObject cloneAndUnsetOwner() {
+        FlowLoopContext clone = (FlowLoopContext)super.cloneAndUnsetOwner();
+        clone.setTailNode(null);
+        return clone;
     }
     
-    protected ScopeObject cloneAndUnsetOwner() {
-        ScopeObject clone = clone();
-        clone.setOwner(null);
-        return clone;
+    public static class RestoredFlowLoopContext extends FlowLoopContext {
+        
     }
 }

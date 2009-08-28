@@ -20,42 +20,23 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   14.03.2007 (mb): created
+ *   23.03.2007 (berthold): created
  */
 package org.knime.core.node.workflow;
 
-
-
 /**
- * ScopeContext interface holding loop information.
+ * Runtime exception that is thrown when two or more branches of a workflow are
+ * merged and they contain non-compatible {@link FlowObjectStack}.
+ * This can happen when the user connects a node contained in one loop of the
+ * workflow to a node contained in a different loop.
  * 
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class ScopeLoopContext extends ScopeObject {
+class IllegalFlowObjectStackException extends RuntimeException {
 
-    private NodeID m_tailNode;
+    /** @see RuntimeException#RuntimeException(String) */
+    public IllegalFlowObjectStackException(final String message) {
+        super(message);
+    }
 
-    public NodeID getHeadNode() {
-        return super.getOwner();
-    }
-    
-    public void setTailNode(final NodeID tail) {
-        m_tailNode = tail;
-    }
-    
-    public NodeID getTailNode() {
-        return m_tailNode;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    protected ScopeObject cloneAndUnsetOwner() {
-        ScopeLoopContext clone = (ScopeLoopContext)super.cloneAndUnsetOwner();
-        clone.setTailNode(null);
-        return clone;
-    }
-    
-    public static class RestoredScopeLoopContext extends ScopeLoopContext {
-        
-    }
 }

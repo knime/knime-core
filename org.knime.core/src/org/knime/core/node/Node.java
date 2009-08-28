@@ -66,9 +66,9 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
-import org.knime.core.node.workflow.ScopeLoopContext;
-import org.knime.core.node.workflow.ScopeObjectStack;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
@@ -109,7 +109,7 @@ public final class Node implements NodeModelWarningListener {
 
     /** The sub settings entry where the model can save its setup. */
     public static final String CFG_MODEL = "model";
-    /** The sub settings entry containing the scope variable settings. These
+    /** The sub settings entry containing the flow variable settings. These
      * settings are not available in the derived node model. */
     public static final String CFG_VARIABLES = "variables";
 
@@ -710,7 +710,7 @@ public final class Node implements NodeModelWarningListener {
             return false;
         }
         // check if we see a loop status in the NodeModel
-        ScopeLoopContext slc = m_model.getLoopStatus();
+        FlowLoopContext slc = m_model.getLoopStatus();
         boolean continuesLoop = (slc != null);
         if (!setOutPortObjects(newOutData, continuesLoop)) {
             return false;
@@ -1100,9 +1100,9 @@ public final class Node implements NodeModelWarningListener {
      * of the variables (if any).
      * @return a map containing the exposed variables (which are visible to
      * downstream nodes. These variables are put onto the node's
-     * {@link ScopeObjectStack}.
+     * {@link FlowObjectStack}.
      */
-    private Map<String, ScopeVariable> applySettingsUsingScopeStack()
+    private Map<String, FlowVariable> applySettingsUsingFlowObjectStack()
         throws InvalidSettingsException {
         if (m_variablesSettings == null) {
             return Collections.emptyMap();
@@ -1113,7 +1113,7 @@ public final class Node implements NodeModelWarningListener {
         } catch (Throwable e) {
             m_logger.error("Saving of model settings failed with "
                     + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-            String message = "Failed to apply scope variables; "
+            String message = "Failed to apply flow variables; "
                 + "model failed to save its settings";
             throw new InvalidSettingsException(message, e);
         }
@@ -1125,12 +1125,12 @@ public final class Node implements NodeModelWarningListener {
             throw new InvalidSettingsException("Errors reading flow variables: "
                     + e.getMessage(), e);
         }
-        Map<String, ScopeVariable> scopeVariablesMap =
-            getScopeContextStackContainer().getAvailableVariables();
-        List<ScopeVariable> newVariableList;
+        Map<String, FlowVariable> flowVariablesMap =
+            getFlowObjectStack().getAvailableFlowVariables();
+        List<FlowVariable> newVariableList;
         try {
             newVariableList = configEditor.overwriteSettings(
-                    fromModel, scopeVariablesMap);
+                    fromModel, flowVariablesMap);
         } catch (InvalidSettingsException e) {
             throw new InvalidSettingsException(
                     "Errors overwriting node settings with flow variables: "
@@ -1159,9 +1159,9 @@ public final class Node implements NodeModelWarningListener {
                     "Errors loading flow variables into node : "
                     + e.getMessage(), e);
         }
-        Map<String, ScopeVariable> newVariableHash =
-            new LinkedHashMap<String, ScopeVariable>();
-        for (ScopeVariable v : newVariableList) {
+        Map<String, FlowVariable> newVariableHash =
+            new LinkedHashMap<String, FlowVariable>();
+        for (FlowVariable v : newVariableList) {
             if (newVariableHash.put(v.getName(), v) != null) {
                 m_logger.warn("Duplicate variable assignment for key \""
                         + v.getName() + "\")");
@@ -1170,12 +1170,12 @@ public final class Node implements NodeModelWarningListener {
         return newVariableHash;
     }
 
-    private void pushOntoStack(final Map<String, ScopeVariable> newVars) {
-        ScopeObjectStack stack = getScopeContextStackContainer();
-        ArrayList<ScopeVariable> reverseOrder =
-            new ArrayList<ScopeVariable>(newVars.values());
+    private void pushOntoStack(final Map<String, FlowVariable> newVars) {
+        FlowObjectStack stack = getFlowObjectStack();
+        ArrayList<FlowVariable> reverseOrder =
+            new ArrayList<FlowVariable>(newVars.values());
         Collections.reverse(reverseOrder);
-        for (ScopeVariable v : reverseOrder) {
+        for (FlowVariable v : reverseOrder) {
             stack.push(v);
         }
     }
@@ -1211,10 +1211,10 @@ public final class Node implements NodeModelWarningListener {
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
-            Map<String, ScopeVariable> newVariables = Collections.emptyMap();
+            Map<String, FlowVariable> newVariables = Collections.emptyMap();
             try {
                 if (m_variablesSettings != null) {
-                    newVariables = applySettingsUsingScopeStack();
+                    newVariables = applySettingsUsingFlowObjectStack();
                 }
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
@@ -1374,7 +1374,7 @@ public final class Node implements NodeModelWarningListener {
      * @param inSpecs The input specs, which will be forwarded to the dialog's
      *            {@link NodeDialogPane# loadSettingsFrom(NodeSettingsRO,
      *            PortObjectSpec[])}.
-     * @param scopeStack The stack of variables.
+     * @param foStack The stack of variables.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
@@ -1388,7 +1388,7 @@ public final class Node implements NodeModelWarningListener {
      * @see #hasDialog()
      */
     public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final ScopeObjectStack scopeStack,
+            final PortObjectSpec[] inSpecs, final FlowObjectStack foStack,
             final NodeSettingsRO settings)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
@@ -1408,7 +1408,7 @@ public final class Node implements NodeModelWarningListener {
                 corrInSpecs[i] = inSpecs[i];
             }
         }
-        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, scopeStack);
+        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, foStack);
         return dialogPane;
     }
 
@@ -1416,7 +1416,7 @@ public final class Node implements NodeModelWarningListener {
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
      * {@link #getDialogPaneWithSettings(
-     * PortObjectSpec[], ScopeObjectStack, NodeSettings)}
+     * PortObjectSpec[], FlowObjectStack, NodeSettings)}
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
@@ -1718,23 +1718,23 @@ public final class Node implements NodeModelWarningListener {
         view.closeView();
     }
     
-    // //////////////////////
-    // ScopeContext handling
-    // //////////////////////
+    // ////////////////////////
+    // FlowObjectStack handling
+    // ////////////////////////
 
-    public void setScopeContextStackContainer(final ScopeObjectStack scsc) {
-        m_model.setScopeContextStackContainer(scsc);
+    public void setFlowObjectStack(final FlowObjectStack scsc) {
+        m_model.setFlowObjectStack(scsc);
     }
 
-    public ScopeObjectStack getScopeContextStackContainer() {
-        return m_model.getScopeContextStackContainer();
+    public FlowObjectStack getFlowObjectStack() {
+        return m_model.getFlowObjectStack();
     }
 
     public void clearLoopStatus() {
         m_model.clearLoopStatus();
     }
 
-    public ScopeLoopContext getLoopStatus() {
+    public FlowLoopContext getLoopStatus() {
         return m_model.getLoopStatus();
     }
 

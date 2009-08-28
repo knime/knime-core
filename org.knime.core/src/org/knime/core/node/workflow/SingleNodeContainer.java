@@ -818,7 +818,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack inStack, final ExecutionMonitor exec,
+            final FlowObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
@@ -836,10 +836,10 @@ public final class SingleNodeContainer extends NodeContainer {
                 m_node.putOutputTablesIntoGlobalRepository(getParent()
                         .getGlobalTableRepository());
             }
-            for (ScopeObject s : persistor.getScopeObjects()) {
+            for (FlowObject s : persistor.getFlowObjects()) {
                 inStack.push(s);
             }
-            setScopeObjectStack(inStack);
+            setFlowObjectStack(inStack);
             SingleNodeContainerSettings sncSettings =
                 persistor.getSNCSettings();
             if (sncSettings == null) {
@@ -963,26 +963,26 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     ////////////////////////////////////
-    // ScopeObjectStack handling
+    // FlowObjectStack handling
     ////////////////////////////////////
 
     /**
-     * Set ScopeObjectStack.
+     * Set {@link FlowObjectStack}.
      *
      * @param st new stack
      */
-    void setScopeObjectStack(final ScopeObjectStack st) {
+    void setFlowObjectStack(final FlowObjectStack st) {
         synchronized (m_nodeMutex) {
-            m_node.setScopeContextStackContainer(st);
+            m_node.setFlowObjectStack(st);
         }
     }
 
     /**
-     * @return current ScopeObjectStack
+     * @return current FlowObjectStack
      */
-    ScopeObjectStack getScopeObjectStack() {
+    FlowObjectStack getFlowObjectStack() {
         synchronized (m_nodeMutex) {
-            return m_node.getScopeContextStackContainer();
+            return m_node.getFlowObjectStack();
         }
     }
 
@@ -1013,7 +1013,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
             throws NotConfigurableException {
-        ScopeObjectStack stack = getScopeObjectStack();
+        FlowObjectStack stack = getFlowObjectStack();
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings);
         return m_node.getDialogPaneWithSettings(inSpecs, stack, settings);

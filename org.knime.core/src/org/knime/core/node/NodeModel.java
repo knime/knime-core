@@ -39,9 +39,9 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.ScopeLoopContext;
-import org.knime.core.node.workflow.ScopeObjectStack;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
 
 
 /**
@@ -1016,20 +1016,20 @@ public abstract class NodeModel {
         }
     }
 
-    /** Holds the ScopeContext Stack of this node. */
-    private ScopeObjectStack m_scopeContextStackContainer;
+    /** Holds the {@link FlowObjectStack} of this node. */
+    private FlowObjectStack m_flowObjectStack;
 
     /** Get the value of the String variable with the given name leaving the
-     * variable stack unmodified.
+     * flow variable stack unmodified.
      * @param name Name of the variable
      * @return The value of the string variable
      * @throws NullPointerException If the argument is null
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final String peekScopeVariableString(final String name) {
-        return m_scopeContextStackContainer.peekScopeVariable(
-                name, ScopeVariable.Type.STRING).getStringValue();
+    protected final String peekFlowVariableString(final String name) {
+        return m_flowObjectStack.peekFlowVariable(
+                name, FlowVariable.Type.STRING).getStringValue();
     }
 
     /** Put a new variable of type double onto the stack. If such variable
@@ -1038,9 +1038,9 @@ public abstract class NodeModel {
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushScopeVariableDouble(
+    protected final void pushFlowVariableDouble(
             final String name, final double value) {
-        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
+        m_flowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Get the value of the double variable with the given name leaving the
@@ -1051,9 +1051,9 @@ public abstract class NodeModel {
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final double peekScopeVariableDouble(final String name) {
-        return m_scopeContextStackContainer.peekScopeVariable(
-                name, ScopeVariable.Type.DOUBLE).getDoubleValue();
+    protected final double peekFlowVariableDouble(final String name) {
+        return m_flowObjectStack.peekFlowVariable(
+                name, FlowVariable.Type.DOUBLE).getDoubleValue();
     }
 
     /** Put a new variable of type integer onto the stack. If such variable
@@ -1062,9 +1062,9 @@ public abstract class NodeModel {
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushScopeVariableInt(
+    protected final void pushFlowVariableInt(
             final String name, final int value) {
-        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
+        m_flowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Get the value of the integer variable with the given name leaving the
@@ -1075,9 +1075,9 @@ public abstract class NodeModel {
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final int peekScopeVariableInt(final String name) {
-        return m_scopeContextStackContainer.peekScopeVariable(
-                name, ScopeVariable.Type.INTEGER).getIntValue();
+    protected final int peekFlowVariableInt(final String name) {
+        return m_flowObjectStack.peekFlowVariable(
+                name, FlowVariable.Type.INTEGER).getIntValue();
     }
 
     /** Put a new variable of type String onto the stack. If such variable
@@ -1086,20 +1086,20 @@ public abstract class NodeModel {
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushScopeVariableString(
+    protected final void pushFlowVariableString(
             final String name, final String value) {
-        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
+        m_flowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Informs WorkflowManager after execute to continue the loop.
      * Call by the tail of the loop! This will result in both
-     * this Node as well as the creator of the ScopeContext to be
+     * this Node as well as the creator of the FlowLoopContext to be
      * queued for execution once again. In this case the node can return
      * an empty table after execution.
      */
     protected final void continueLoop() {
-        ScopeLoopContext slc = m_scopeContextStackContainer.peek(
-                ScopeLoopContext.class);
+        FlowLoopContext slc = m_flowObjectStack.peek(
+                FlowLoopContext.class);
         if (slc == null) {
             // wrong wiring of the pipeline: head seems to be missing!
             throw new IllegalStateException(
@@ -1110,9 +1110,9 @@ public abstract class NodeModel {
         // in the head node!
     }
 
-    private ScopeLoopContext m_loopStatus;
+    private FlowLoopContext m_loopStatus;
 
-    protected final ScopeLoopContext getLoopStatus() {
+    protected final FlowLoopContext getLoopStatus() {
         return m_loopStatus;
     }
 
@@ -1140,12 +1140,12 @@ public abstract class NodeModel {
         m_loopStartNode = start;
     }
 
-    ScopeObjectStack getScopeContextStackContainer() {
-        return m_scopeContextStackContainer;
+    FlowObjectStack getFlowObjectStack() {
+        return m_flowObjectStack;
     }
 
-    void setScopeContextStackContainer(final ScopeObjectStack scsc) {
-        m_scopeContextStackContainer = scsc;
+    void setFlowObjectStack(final FlowObjectStack scsc) {
+        m_flowObjectStack = scsc;
     }
 
 }

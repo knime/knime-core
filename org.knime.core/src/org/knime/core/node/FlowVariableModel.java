@@ -32,7 +32,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 
 /** Container holding information regarding variables which represent
@@ -43,12 +43,12 @@ import org.knime.core.node.workflow.ScopeVariable;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ScopeVariableModel {
+public class FlowVariableModel {
 
     // private members
     private NodeDialogPane m_parent;
     private String m_key;  // the Config Key associated with this object
-    private ScopeVariable.Type m_type;   // the class of the variable
+    private FlowVariable.Type m_type;   // the class of the variable
 
     /* variable names that are to be used for the corresponding settings
      * as "input" resp. "output". If one or both are null, the replacement
@@ -65,8 +65,8 @@ public class ScopeVariableModel {
      * @param key of corresponding settings object
      * @param type of variable/settings object
      */
-    ScopeVariableModel(final NodeDialogPane parent, final String key,
-            final ScopeVariable.Type type) {
+    FlowVariableModel(final NodeDialogPane parent, final String key,
+            final FlowVariable.Type type) {
         m_parent = parent;
         m_key = key;
         m_type = type;
@@ -90,7 +90,7 @@ public class ScopeVariableModel {
     /**
      * @return the type of the variable/settings object.
      */
-    public ScopeVariable.Type getType() {
+    public FlowVariable.Type getType() {
         return m_type;
     }
 
@@ -141,15 +141,15 @@ public class ScopeVariableModel {
     /**
      * @return array of variables names that match the type of this model.
      */
-    ScopeVariable[] getMatchingVariables() {
-        ArrayList<ScopeVariable> list = new ArrayList<ScopeVariable>();
-        for (ScopeVariable sv 
-                : getParent().getAvailableScopeVariables().values()) {
+    FlowVariable[] getMatchingVariables() {
+        ArrayList<FlowVariable> list = new ArrayList<FlowVariable>();
+        for (FlowVariable sv 
+                : getParent().getAvailableFlowVariables().values()) {
             if (ConfigEditTreeModel.doesTypeAccept(m_type, sv.getType())) {
                 list.add(sv);
             }
         }
-        return list.toArray(new ScopeVariable[list.size()]);
+        return list.toArray(new FlowVariable[list.size()]);
     }
     
     /**

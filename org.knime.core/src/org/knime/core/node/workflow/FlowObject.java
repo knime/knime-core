@@ -20,23 +20,43 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   23.03.2007 (berthold): created
+ *   15.03.2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
-/**
- * Runtime exception that is thrown when two or more branches of a workflow are
- * merged and they contain non-compatible {@link ScopeObjectStack}.
- * This can happen when the user connects a node contained in one loop of the
- * workflow to a node contained in a different loop.
+/** Object holding base information for a loop context object: the head
+ * and tail IDs of the loop's "control" node.
  * 
- * @author Bernd Wiswedel, University of Konstanz
+ * @author M. Berthold, University of Konstanz
  */
-class IllegalContextStackObjectException extends RuntimeException {
+abstract class FlowObject implements Cloneable {
 
-    /** @see RuntimeException#RuntimeException(String) */
-    public IllegalContextStackObjectException(final String message) {
-        super(message);
+    private NodeID m_owner;
+    
+    void setOwner(final NodeID owner) {
+        m_owner = owner;
     }
-
+    
+    NodeID getOwner() {
+        return m_owner;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected FlowObject clone() {
+        try {
+            return (FlowObject)super.clone();
+        } catch (CloneNotSupportedException e) {
+            InternalError error = new InternalError(
+                    "Unexpected exception, object clone failed");
+            error.initCause(e);
+            throw error;
+        }
+    }
+    
+    protected FlowObject cloneAndUnsetOwner() {
+        FlowObject clone = clone();
+        clone.setOwner(null);
+        return clone;
+    }
 }

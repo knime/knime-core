@@ -36,37 +36,37 @@ import java.util.Vector;
 
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.Pair;
 
 
 /**
- * Container for the stack that keeps for an individual node the scope
- * information.
+ * Container for the stack that keeps for an individual node the
+ * {@link FlowObjectStack} information.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class ScopeObjectStack implements Iterable<ScopeObject> {
+public final class FlowObjectStack implements Iterable<FlowObject> {
     
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(ScopeObjectStack.class);
+        NodeLogger.getLogger(FlowObjectStack.class);
     
     /** Root stack with all constants. */
-    private static ScopeObjectStack rootStack = new ScopeObjectStack();
+    private static FlowObjectStack rootStack = new FlowObjectStack();
     
-    /** Stack of ScopeContext, which is shared among nodes along the
+    /** Stack of FlowObjects, which is shared among nodes along the
      * workflow. */
-    private final Vector<ScopeObject> m_stack;
-    /** Owner of ScopeContext object, which are put onto m_stack via this
+    private final Vector<FlowObject> m_stack;
+    /** Owner of FlowObject object, which are put onto m_stack via this
      * StackWrapper. */
     private final NodeID m_nodeID;
     
     /** Root stack. */
-    private ScopeObjectStack() {
+    private FlowObjectStack() {
         m_nodeID = WorkflowManager.ROOT.getID();
-        m_stack = new Vector<ScopeObject>();
+        m_stack = new Vector<FlowObject>();
         File wsDirPath = KNIMEPath.getWorkspaceDirPath();
         if (wsDirPath != null) {
-            push(new ScopeVariable(
+            push(new FlowVariable(
                     "knime.workspace", wsDirPath.getAbsolutePath(), true));
         }
         for (Map.Entry<Object, Object> p : System.getProperties().entrySet()) {
@@ -79,7 +79,7 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
                 case INTEGER:
                     try {
                         int i = Integer.parseInt(value);
-                        push(new ScopeVariable("knime." + key, i, true));
+                        push(new FlowVariable("knime." + key, i, true));
                     } catch (Exception e) {
                         LOGGER.warn("Can't parse assignment of integer "
                                 + "constant \"" + key + "\": " + value);
@@ -88,14 +88,14 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
                 case DOUBLE:
                     try {
                         double d = Double.parseDouble(value);
-                        push(new ScopeVariable("knime." + key, d, true));
+                        push(new FlowVariable("knime." + key, d, true));
                     } catch (Exception e) {
                         LOGGER.warn("Can't parse assignment of double"
                                 + "constant\"" + key + "\": " + value);
                     }
                     break;
                 case STRING:
-                    push(new ScopeVariable("knime." + key, value, true));
+                    push(new FlowVariable("knime." + key, value, true));
                     break;
                 }
             }
@@ -110,16 +110,16 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * @param predStacks The stacks from the predecessor nodes, may be null or
      * empty.
      * @throws NullPointerException If <code>id</code> is <code>null</code>.
-     * @throws IllegalContextStackObjectException If the stacks can't be merged.
+     * @throws IllegalFlowObjectStackException If the stacks can't be merged.
      */
     @SuppressWarnings("unchecked")
-    ScopeObjectStack(final NodeID id,
-            final ScopeObjectStack... predStacks) {
+    FlowObjectStack(final NodeID id,
+            final FlowObjectStack... predStacks) {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
         }
-        List<Vector<ScopeObject>> predecessors = 
-            new ArrayList<Vector<ScopeObject>>();
+        List<Vector<FlowObject>> predecessors = 
+            new ArrayList<Vector<FlowObject>>();
         for (int i = 0; i < predStacks.length; i++) {
             if (predStacks[i] != null) {
                 predecessors.add(predStacks[i].m_stack);
@@ -129,23 +129,23 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
             predecessors.add(rootStack.m_stack);
         }
         if (predecessors.size() == 0) {
-            m_stack = new Vector<ScopeObject>();
+            m_stack = new Vector<FlowObject>();
         } else if (predecessors.size() == 1) {
-            m_stack = (Vector<ScopeObject>)predecessors.get(0).clone();
+            m_stack = (Vector<FlowObject>)predecessors.get(0).clone();
         } else {
             @SuppressWarnings("unchecked")
-            Vector<ScopeObject>[] sos = predecessors.toArray(
+            Vector<FlowObject>[] sos = predecessors.toArray(
                     new Vector[predecessors.size()]);
             m_stack = merge(sos);
         }
         m_nodeID = id;
     }
 
-    private static Vector<ScopeObject> merge(final Vector<ScopeObject>[] sos) {
-        Vector<ScopeObject> result = new Vector<ScopeObject>();
+    private static Vector<FlowObject> merge(final Vector<FlowObject>[] sos) {
+        Vector<FlowObject> result = new Vector<FlowObject>();
         @SuppressWarnings("unchecked") // no generics in array definition
-        Iterator<ScopeObject>[] its = new Iterator[sos.length];
-        ScopeObject[] nexts = new ScopeObject[sos.length];
+        Iterator<FlowObject>[] its = new Iterator[sos.length];
+        FlowObject[] nexts = new FlowObject[sos.length];
         boolean hasMoreElements = false;
         for (int i = 0; i < sos.length; i++) {
             its[i] = sos[i].iterator();
@@ -153,21 +153,21 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
         }
         while (hasMoreElements) {
             hasMoreElements = false;
-            ScopeObject commonScopeO = null;
+            FlowObject commonFlowO = null;
             for (int i = 0; i < sos.length; i++) {
                 while (nexts[i] != null || its[i].hasNext()) {
-                    ScopeObject o = nexts[i] != null ? nexts[i] : its[i].next();
+                    FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
-                    if (o instanceof ScopeLoopContext) {
+                    if (o instanceof FlowLoopContext) {
                         // we must check for identity here - otherwise
                         // nested loops are not possible
-                        if (commonScopeO != null && commonScopeO != o) {
-                            throw new IllegalContextStackObjectException(
+                        if (commonFlowO != null && commonFlowO != o) {
+                            throw new IllegalFlowObjectStackException(
                                     "Stack can't be merged: Conflicting "
-                                    + "ScopeContext objects:" + o + " vs. "
-                                    + commonScopeO);
+                                    + "FlowObjects:" + o + " vs. "
+                                    + commonFlowO);
                         }
-                        commonScopeO = o;
+                        commonFlowO = o;
                         nexts[i] = o;
                         hasMoreElements = true;
                         break;
@@ -175,8 +175,8 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
                     result.add(o);
                 }
             }
-            if (commonScopeO != null) {
-                result.add(commonScopeO);
+            if (commonFlowO != null) {
+                result.add(commonFlowO);
                 for (int i = 0; i < nexts.length; i++) {
                     nexts[i] = null;
                 }
@@ -189,12 +189,12 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * @return The top-most element on the stack that complies with the given
      * class argument or <code>null</code> if no such element is found.
      * @param <T> The class type of the context object
-     * @param type The desired scope class
+     * @param type The desired FlowObject class
      * @see java.util.Stack#peek()
      */
-    public <T extends ScopeObject> T peek(final Class<T> type) {
+    public <T extends FlowObject> T peek(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.get(i);
+            FlowObject e = m_stack.get(i);
             if (type.isInstance(e)) {
                 return type.cast(e);
             }
@@ -207,15 +207,15 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * It also removes the top-most element complying with the given class.
      * If no such element exists, the stack will be empty after this method is
      * called.
-     * @param <T> The desired scope context type.
+     * @param <T> The desired FlowObject type.
      * @param type The class of that type.
      * @return The first (top-most) element on the stack of class
      * <code>type</code> or <code>null</code> if no such element is available.
      * @see java.util.Stack#pop()
      */
-    public <T extends ScopeObject> T pop(final Class<T> type) {
+    public <T extends FlowObject> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.remove(i);
+            FlowObject e = m_stack.remove(i);
             if (type.isInstance(e)) {
                 return type.cast(e);
             }
@@ -229,13 +229,13 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * @param type The type of the variable to seek.
      * @return the variable or null
      */ 
-    public ScopeVariable peekScopeVariable(final String name, final Type type) {
+    public FlowVariable peekFlowVariable(final String name, final Type type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.get(i);
-            if (!(e instanceof ScopeVariable)) {
+            FlowObject e = m_stack.get(i);
+            if (!(e instanceof FlowVariable)) {
                 continue;
             }
-            ScopeVariable v = (ScopeVariable)e;
+            FlowVariable v = (FlowVariable)e;
             if (v.getName().equals(name) && v.getType().equals(type)) {
                 return v;
             }
@@ -248,15 +248,15 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * This method is used to show available variables to the user.
      * @return Such a map.
      */
-    public Map<String, ScopeVariable> getAvailableVariables() {
-        LinkedHashMap<String, ScopeVariable> hash = 
-            new LinkedHashMap<String, ScopeVariable>();
+    public Map<String, FlowVariable> getAvailableFlowVariables() {
+        LinkedHashMap<String, FlowVariable> hash = 
+            new LinkedHashMap<String, FlowVariable>();
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.get(i);
-            if (!(e instanceof ScopeVariable)) {
+            FlowObject e = m_stack.get(i);
+            if (!(e instanceof FlowVariable)) {
                 continue;
             }
-            ScopeVariable v = (ScopeVariable)e;
+            FlowVariable v = (FlowVariable)e;
             if (!hash.containsKey(v.getName())) {
                 hash.put(v.getName(), v);
             }
@@ -270,29 +270,29 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * @return list of all elements that are put onto the stack by 
      *         the argument node
      */
-    List<ScopeObject> getScopeObjectsOwnedBy(final NodeID id) {
-        List<ScopeObject> result = new ArrayList<ScopeObject>();
+    List<FlowObject> getFlowObjectsOwnedBy(final NodeID id) {
+        List<FlowObject> result = new ArrayList<FlowObject>();
         boolean isInSequence = true;
-        for (ScopeObject v : m_stack) {
+        for (FlowObject v : m_stack) {
             if (v.getOwner().equals(id)) {
                 isInSequence = false;
                 result.add(v);
             }
             assert isInSequence || v.getOwner().equals(id)
-                : "Scope objects are not ordered";
+                : "FlowObjects are not ordered";
         }
         return result;
     }
     
 
     /**
-     * @param item ScopeContext to be put onto stack.
+     * @param item FlowObject to be put onto stack.
      * @see java.util.Stack#push(java.lang.Object)
      */
-    public void push(final ScopeObject item) {
+    public void push(final FlowObject item) {
         if ((item.getOwner() != null) && (!item.getOwner().equals(m_nodeID))) {
             throw new IllegalArgumentException(
-                    "Can't put a ScopeContext item onto stack, which already "
+                    "Can't put a FlowObject item onto stack, which already "
                     + "has a different owner.");
         }
         item.setOwner(m_nodeID);
@@ -317,17 +317,23 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
      * after this method returns (iterator on copy).
      * {@inheritDoc} */
     @Override
-    public Iterator<ScopeObject> iterator() {
-        Vector<ScopeObject> copy = new Vector<ScopeObject>(m_stack);
+    public Iterator<FlowObject> iterator() {
+        Vector<FlowObject> copy = new Vector<FlowObject>(m_stack);
         Collections.reverse(copy);
         return Collections.unmodifiableList(copy).iterator();
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return toDeepString();
     }
 
+    /**
+     * @return String representation with list of all objects on stack.
+     */
     public String toDeepString() {
         StringBuilder b = new StringBuilder();
         b.append("---");
@@ -335,7 +341,7 @@ public final class ScopeObjectStack implements Iterable<ScopeObject> {
         b.append("---");
         b.append('\n');
         for (int i = m_stack.size() - 1; i >= 0; --i) {
-            ScopeObject o = m_stack.get(i);
+            FlowObject o = m_stack.get(i);
             b.append(o);
             b.append('\n');
         }

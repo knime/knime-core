@@ -38,8 +38,8 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.ScopeVariableModel;
-import org.knime.core.node.ScopeVariableModelButton;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -59,7 +59,7 @@ public class DialogComponentNumber extends DialogComponent {
     private static final int FIELD_MINWIDTH = 2;
 
     private final JSpinner m_spinner;
-    private final ScopeVariableModelButton m_svmButton;
+    private final FlowVariableModelButton m_svmButton;
 
     private final JLabel m_label;
 
@@ -78,7 +78,7 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /** Puts a label and spinner with default width into panel, offers also
-     * the registration of a {@link ScopeVariableModel}.
+     * the registration of a {@link FlowVariableModel}.
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
      * @param label label for dialog in front of the spinner
@@ -88,7 +88,7 @@ public class DialogComponentNumber extends DialogComponent {
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize,
-            final ScopeVariableModel svm) {
+            final FlowVariableModel svm) {
         this(numberModel, label, stepSize, calcDefaultWidth(numberModel),
                 svm);
     }
@@ -121,7 +121,7 @@ public class DialogComponentNumber extends DialogComponent {
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize, final int compWidth,
-            final ScopeVariableModel svm) {
+            final FlowVariableModel svm) {
         super(numberModel);
 
         if (compWidth < 1) {
@@ -200,7 +200,7 @@ public class DialogComponentNumber extends DialogComponent {
                     m_spinner.setEnabled(!svm.isVariableReplacementEnabled());
                 }
             });
-            m_svmButton = new ScopeVariableModelButton(svm);
+            m_svmButton = new FlowVariableModelButton(svm);
             getComponentPanel().add(m_svmButton);
         } else {
             m_svmButton = null;
@@ -358,7 +358,7 @@ public class DialogComponentNumber extends DialogComponent {
         boolean spinnerEnabled = enabled;
         // enable the spinner according to the variable model
         if (m_svmButton != null) {
-            ScopeVariableModel svmModel = m_svmButton.getScopeVariableModel();
+            FlowVariableModel svmModel = m_svmButton.getFlowVariableModel();
             if (svmModel.isVariableReplacementEnabled()) {
                 spinnerEnabled = false;
             }

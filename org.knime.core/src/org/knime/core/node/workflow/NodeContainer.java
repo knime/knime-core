@@ -118,12 +118,12 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     private boolean m_isDeletable;
 
-    /** this list will hold ScopeObjects of loops in the pipeline which can not
+    /** this list will hold FlowObjects of loops in the pipeline which can not
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
-    private ArrayList<ScopeLoopContext> m_listOfWaitingLoops
-                                        = new ArrayList<ScopeLoopContext>();
+    private ArrayList<FlowLoopContext> m_listOfWaitingLoops
+                                        = new ArrayList<FlowLoopContext>();
 
     private String m_customName;
 
@@ -331,7 +331,7 @@ public abstract class NodeContainer implements NodeProgressListener {
                     notifyParentPreExecuteStart();
                     try {
                         notifyParentExecuteStart();
-                    } catch (IllegalContextStackObjectException e) {
+                    } catch (IllegalFlowObjectStackException e) {
                         // ignore, we have something more serious to deal with
                     }
                     notifyParentPostExecuteStart();
@@ -445,7 +445,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * Invoked by the job executor immediately before the execution is
      * triggered. It invokes doBeforeExecution on the parent.
      *
-     * @throws IllegalContextStackObjectException in case of wrongly connected
+     * @throws IllegalFlowObjectStackException in case of wrongly connected
      *             loops, for instance.
      */
     void notifyParentExecuteStart() {
@@ -453,7 +453,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         // synchronized. The main execution is done asynchronously.
         try {
             getParent().doBeforeExecution(this);
-        } catch (IllegalContextStackObjectException e) {
+        } catch (IllegalFlowObjectStackException e) {
             LOGGER.warn(e.getMessage(), e);
             setNodeMessage(new NodeMessage(
                     NodeMessage.Type.ERROR, e.getMessage()));
@@ -520,18 +520,18 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /** add a loop to the list of waiting loops.
      *
-     * @param slc ScopeObject of the loop.
+     * @param slc FlowLoopContext object of the loop.
      */
-    public void addWaitingLoop(final ScopeLoopContext slc) {
+    public void addWaitingLoop(final FlowLoopContext slc) {
         if (!m_listOfWaitingLoops.contains(slc)) {
             m_listOfWaitingLoops.add(slc);
         }
     }
 
     /**
-     * @return a list of waiting loops (well: their ScopeObjects)
+     * @return a list of waiting loops (well: their FlowLoopContext objects)
      */
-    public List<ScopeLoopContext> getWaitingLoops() {
+    public List<FlowLoopContext> getWaitingLoops() {
         return m_listOfWaitingLoops;
     }
 
@@ -545,7 +545,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      *
      * @param so loop to be removed.
      */
-    public void removeWaitingLoopHeadNode(final ScopeObject so) {
+    public void removeWaitingLoopHeadNode(final FlowObject so) {
         if (m_listOfWaitingLoops.contains(so)) {
             m_listOfWaitingLoops.remove(so);
         }
@@ -1165,7 +1165,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * when loading a workflow.
      * @param persistor To load from.
      * @param tblRep A table repository to restore BufferedDatTables
-     * @param inStack Incoming scope object stack.
+     * @param inStack Incoming {@link FlowObjectStack}.
      * @param exec For progress
      * @param loadResult Where to report errors/warnings to
      * @param preserveNodeMessage Whether possible node messages in the 
@@ -1177,7 +1177,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     abstract NodeID[] loadContent(final NodeContainerPersistor persistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack inStack, final ExecutionMonitor exec,
+            final FlowObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException;
 

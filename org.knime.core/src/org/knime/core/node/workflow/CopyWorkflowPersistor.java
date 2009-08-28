@@ -53,7 +53,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final String m_name;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
-    private final List<ScopeVariable> m_workflowVariables;
+    private final List<FlowVariable> m_workflowVariables;
     
     @SuppressWarnings("unchecked")
     CopyWorkflowPersistor(final WorkflowManager original, 
@@ -93,9 +93,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (ConnectionContainer cc : original.getConnectionContainers()) {
             m_cons.add(new ConnectionContainerTemplate(cc, true));
         }
-        List<ScopeVariable> vars = original.getWorkflowVariables();
+        List<FlowVariable> vars = original.getWorkflowVariables();
         m_workflowVariables = vars == null ? Collections.EMPTY_LIST
-                : new ArrayList<ScopeVariable>(vars);
+                : new ArrayList<FlowVariable>(vars);
     }
     
     /** {@inheritDoc} */
@@ -130,7 +130,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<ScopeVariable> getWorkflowVariables() {
+    public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables;
     }
     

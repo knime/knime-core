@@ -51,12 +51,12 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.node.util.ScopeVariableListCellRenderer;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.workflow.FlowVariable;
 
 
 
-/** Button for a {@link ScopeVariableModel}, launching a dialog which allows to
+/** Button for a {@link FlowVariableModel}, launching a dialog which allows to
  * control the settings.
  *
  * This allows NodeDialogPane implementations to easily use Variables
@@ -65,25 +65,25 @@ import org.knime.core.node.workflow.ScopeVariable;
  * @author Michael Berthold, University of Konstanz
  */
 @SuppressWarnings("serial")
-public class ScopeVariableModelButton extends JButton
+public class FlowVariableModelButton extends JButton
 implements ChangeListener, ActionListener {
 
     /* remember underlying model (to track changes) */
-    private final ScopeVariableModel m_model;
+    private final FlowVariableModel m_model;
 
     /**
      * Create new button based on a model.
-     * @param wvm the underlying model
+     * @param fvm the underlying model
      * @throws NullPointerException If argument is null.
      */
-    public ScopeVariableModelButton(
-            final ScopeVariableModel wvm) {
-        if (wvm == null) {
+    public FlowVariableModelButton(
+            final FlowVariableModel fvm) {
+        if (fvm == null) {
             throw new NullPointerException("Argument must not be null");
         }
-        m_model = wvm;
+        m_model = fvm;
         // add us as listener for changes to the WorkflowVariableModel
-        wvm.addChangeListener(this);
+        fvm.addChangeListener(this);
         // add us as listener for actions on the underlying JButton
         this.addActionListener(this);
         // and make sure we start with the right button layout.
@@ -120,9 +120,9 @@ implements ChangeListener, ActionListener {
     }
     
     /** @return the model as passed in 
-     * {@linkplain #ScopeVariableModelButton(ScopeVariableModel) constructor}.
+     * {@linkplain #FlowVariableModelButton(FlowVariableModel) constructor}.
      */
-    public ScopeVariableModel getScopeVariableModel() {
+    public FlowVariableModel getFlowVariableModel() {
         return m_model;
     }
 
@@ -136,7 +136,7 @@ implements ChangeListener, ActionListener {
         // make sure dialog is modal with respect to the "nearest" frame
         Container c = SwingUtilities.getAncestorOfClass(Frame.class, this);
         Frame parentFrame = (Frame)c;
-        ScopeVarEditDialog ved = new ScopeVarEditDialog(parentFrame);
+        FlowVarEditDialog ved = new FlowVarEditDialog(parentFrame);
 
         if (m_model.getInputVariableName() != null) {
             ved.setInputVariableName(m_model.getInputVariableName());
@@ -148,9 +148,9 @@ implements ChangeListener, ActionListener {
         ved.setVisible(true);
     }
 
-    private class ScopeVarEditDialog extends JDialog {
+    private class FlowVarEditDialog extends JDialog {
         
-        ScopeVarEditDialog(final Frame f) {
+        FlowVarEditDialog(final Frame f) {
             // set title and make dialog modal
             super(f, "Variable Settings", true);
             // set icon of dialog frame
@@ -195,7 +195,7 @@ implements ChangeListener, ActionListener {
             });
             panelTop.add(m_enableInputVar);
             m_inputVar = new JComboBox(m_model.getMatchingVariables());
-            m_inputVar.setRenderer(new ScopeVariableListCellRenderer());
+            m_inputVar.setRenderer(new FlowVariableListCellRenderer());
             m_inputVar.setEnabled(false);
             panelTop.add(m_inputVar);
             cp.add(panelTop);
@@ -229,7 +229,7 @@ implements ChangeListener, ActionListener {
                     // write values back to model
                     if (m_enableInputVar.isSelected()) {
                         m_model.setInputVariableName(
-                       ((ScopeVariable)m_inputVar.getSelectedItem()).getName());
+                       ((FlowVariable)m_inputVar.getSelectedItem()).getName());
                     } else {
                         m_model.setInputVariableName(null);
                     }
@@ -263,8 +263,8 @@ implements ChangeListener, ActionListener {
             m_enableInputVar.setSelected(true);
             m_inputVar.setEnabled(true);
             // try to find variable with corresponding name (and type):
-            ScopeVariable var = null;
-            for (ScopeVariable v : m_model.getMatchingVariables()) {
+            FlowVariable var = null;
+            for (FlowVariable v : m_model.getMatchingVariables()) {
                 if (v.getName().equals(s)) {
                     var = v;
                     break;
@@ -308,7 +308,7 @@ implements ChangeListener, ActionListener {
     }
 
     /** Helper class to allow also the display of disabled list elements. */
-    class CustomListCellRenderer extends ScopeVariableListCellRenderer {
+    class CustomListCellRenderer extends FlowVariableListCellRenderer {
         private String m_toDisable;
         
         /** Create new render which disables given string.

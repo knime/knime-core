@@ -33,7 +33,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellEditor;
 
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
-import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.FlowObjectStack;
 
 /** Editor component for {@link ConfigEditJTree} implementation.
  * @author Bernd Wiswedel, University of Konstanz
@@ -102,12 +102,12 @@ public class ConfigEditTreeEditor extends DefaultTreeCellEditor {
             if (value instanceof ConfigEditTreeNode) {
                 ConfigEditTreeNode node = (ConfigEditTreeNode)value;
                 m_active = node.isLeaf() ? m_panelFull : m_panelPlain;
-                ScopeObjectStack stack = null;
+                FlowObjectStack stack = null;
                 JTree outerTree = ConfigEditTreeEditor.this.tree;
                 if (outerTree instanceof ConfigEditJTree) {
-                    stack = ((ConfigEditJTree)outerTree).getScopeStack();
+                    stack = ((ConfigEditJTree)outerTree).getFlowObjectStack();
                 }
-                m_active.setScopeStack(stack);
+                m_active.setFlowObjectStack(stack);
                 m_active.setTreeNode(node);
                 return m_active;
             } else {

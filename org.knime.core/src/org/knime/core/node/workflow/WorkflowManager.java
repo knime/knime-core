@@ -77,7 +77,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
-import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
+import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -135,7 +135,7 @@ public final class WorkflowManager extends NodeContainer {
     private UIInformation m_outPortsBarUIInfo;
 
     /** Vector holding workflow specific variables. */
-    private Vector<ScopeVariable> m_workflowVariables;
+    private Vector<FlowVariable> m_workflowVariables;
 
     // Misc members:
 
@@ -221,7 +221,7 @@ public final class WorkflowManager extends NodeContainer {
         m_name = persistor.getName();
         m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables =
-            new Vector<ScopeVariable>(persistor.getWorkflowVariables());
+            new Vector<FlowVariable>(persistor.getWorkflowVariables());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -1507,7 +1507,7 @@ public final class WorkflowManager extends NodeContainer {
      * is executed remotely (execution takes place as a single operation).
      *
      * @param nc node whose execution is about to start
-     * @throws IllegalContextStackObjectException If loop end nodes have
+     * @throws IllegalFlowObjectStackException If loop end nodes have
      * problems identifying their start node
      */
     void doBeforeExecution(final NodeContainer nc) {
@@ -1520,18 +1520,18 @@ public final class WorkflowManager extends NodeContainer {
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 if (LoopRole.END.equals(snc.getLoopRole())) {
                     // if this is an END to a loop, make sure it knows its head
-                    ScopeLoopContext slc = snc.getNode().
-                               getScopeContextStackContainer().peek(
-                                       ScopeLoopContext.class);
+                    FlowLoopContext slc = snc.getNode().
+                               getFlowObjectStack().peek(
+                                       FlowLoopContext.class);
                     if (slc == null) {
-                        LOGGER.debug("Incoming scope object stack for "
+                        LOGGER.debug("Incoming flow object stack for "
                                 + snc.getNameWithID() + ":\n"
-                                + snc.getScopeObjectStack().toDeepString());
-                        throw new IllegalContextStackObjectException(
+                                + snc.getFlowObjectStack().toDeepString());
+                        throw new IllegalFlowObjectStackException(
                                 "Encountered loop-end without "
                                 + "corresponding head!");
-                    } else if (slc instanceof RestoredScopeLoopContext) {
-                        throw new IllegalContextStackObjectException(
+                    } else if (slc instanceof RestoredFlowLoopContext) {
+                        throw new IllegalFlowObjectStackException(
                                 "Can't continue loop as the workflow was "
                                 + "restored with the loop being partially "
                                 + "executed. Reset loop start and execute "
@@ -1539,7 +1539,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     NodeContainer headNode = m_workflow.getNode(slc.getOwner());
                     if (headNode == null) {
-                        throw new IllegalContextStackObjectException(
+                        throw new IllegalFlowObjectStackException(
                                 "Loop start and end node must be in the same "
                                 + "workflow");
                     }
@@ -1583,7 +1583,7 @@ public final class WorkflowManager extends NodeContainer {
                 disableNodeForExecution(nc.getID());
                 // and also any nodes which were waiting for this one to
                 // be executed.
-                for (ScopeObject so : nc.getWaitingLoops()) {
+                for (FlowObject so : nc.getWaitingLoops()) {
                     disableNodeForExecution(so.getOwner());
                 }
                 nc.clearWaitingLoopList();
@@ -1602,15 +1602,15 @@ public final class WorkflowManager extends NodeContainer {
                 Node node = snc.getNode();
                 if (node.getLoopStatus() != null) {
                     // we are supposed to execute this loop again!
-                    // first retrieve ScopeContext
-                    ScopeLoopContext slc = node.getLoopStatus();
+                    // first retrieve FlowLoopContext object
+                    FlowLoopContext slc = node.getLoopStatus();
                     // first check if the loop is properly configured:
                     if (m_workflow.getNode(slc.getOwner()) == null) {
                         // obviously not: origin of the loop is not in this WFM!
                         // nothing else to do: NC stays configured
                         assert nc.getState() == NodeContainer.State.CONFIGURED;
                         // and choke
-                        throw new IllegalContextStackObjectException(
+                        throw new IllegalFlowObjectStackException(
                                 "Loop nodes are not in the same workflow!");
                     } else {
                         // make sure the end of the loop is properly
@@ -1630,7 +1630,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc.getWaitingLoops().size() >= 1) {
                 // looks as if some loops were waiting for this node to
                 // finish! Let's try to restart them:
-                for (ScopeLoopContext slc : nc.getWaitingLoops()) {
+                for (FlowLoopContext slc : nc.getWaitingLoops()) {
                     restartLoop(slc);
                 }
                 nc.clearWaitingLoopList();
@@ -1648,9 +1648,9 @@ public final class WorkflowManager extends NodeContainer {
      * we are still waiting for some node in the loop body (or any
      * dangling loop branches) to finish execution
      *
-     * @param sc ScopeObject of the actual loop
+     * @param sc FlowLoopContext of the actual loop
      */
-    private void restartLoop(final ScopeLoopContext slc) {
+    private void restartLoop(final FlowLoopContext slc) {
         NodeContainer tailNode = m_workflow.getNode(slc.getTailNode());
         NodeContainer headNode = m_workflow.getNode(slc.getOwner());
         if ((tailNode == null) || (headNode == null)) {
@@ -1711,7 +1711,7 @@ public final class WorkflowManager extends NodeContainer {
         // (5) configure the nodes from start to rest (it's not
         //     so important if we configure more than the body)
         //     do NOT configure start of loop because otherwise
-        //     we will re-create the ScopeContextStack and
+        //     we will re-create the FlowObjectStack and
         //     remove the loop-object as well!
         configureNodeAndSuccessors(headNode.getID(), false);
         // the current node may have thrown an exception inside
@@ -1765,7 +1765,7 @@ public final class WorkflowManager extends NodeContainer {
                 NodeID succID = cc.getDest();
                 if (succID.equals(this.getID())) {
                     // if any branch leaves this WFM, complain!
-                    throw new IllegalContextStackObjectException(
+                    throw new IllegalFlowObjectStackException(
                             "Loops are not permitted to leave workflows!");
                 }
                 if ((!succID.equals(endNode))
@@ -2451,7 +2451,7 @@ public final class WorkflowManager extends NodeContainer {
         NodeSettings settings = new NodeSettings("wfm_settings");
         saveSettings(settings);
         dialogPane.internalLoadSettingsFrom(
-                settings, inSpecs, new ScopeObjectStack(getID()));
+                settings, inSpecs, new FlowObjectStack(getID()));
         return dialogPane;
     }
 
@@ -2618,7 +2618,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (getWaitingLoops().size() >= 1) {
                     // looks as if some loops were waiting for this node to
                     // finish! Let's try to restart them:
-                    for (ScopeLoopContext slc : getWaitingLoops()) {
+                    for (FlowLoopContext slc : getWaitingLoops()) {
                         getParent().restartLoop(slc);
                     }
                     clearWaitingLoopList();
@@ -2626,7 +2626,7 @@ public final class WorkflowManager extends NodeContainer {
             } else if (!isExecuting) {
                 // something went wrong - if other any loops were waiting
                 // for this node: clean them up!
-                for (ScopeObject so : getWaitingLoops()) {
+                for (FlowObject so : getWaitingLoops()) {
                     getParent().disableNodeForExecution(so.getOwner());
                 }
                 clearWaitingLoopList();
@@ -2767,15 +2767,15 @@ public final class WorkflowManager extends NodeContainer {
             final int inCount = snc.getNrInPorts();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(snc.getID());
             final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
-            final ScopeObjectStack[] sos = new ScopeObjectStack[inCount];
+            final FlowObjectStack[] sos = new FlowObjectStack[inCount];
             final HiLiteHandler[] hiliteHdls = new HiLiteHandler[inCount];
             // check for presence of input specs and collects inport
-            // TableSpecs, ScopeObjectStacks and HiLiteHandlers
+            // TableSpecs, FlowObjectStacks and HiLiteHandlers
             boolean allSpecsExists = true;
             for (int i = 0; i < predPorts.length; i++) {
                 if (predPorts[i] != null) {
                     inSpecs[i] = predPorts[i].getPortObjectSpec();
-                    sos[i] = predPorts[i].getScopeObjectStack();
+                    sos[i] = predPorts[i].getFlowObjectStack();
                     hiliteHdls[i] = predPorts[i].getHiLiteHandler();
                 }
                 allSpecsExists &= inSpecs[i] != null;
@@ -2798,34 +2798,34 @@ public final class WorkflowManager extends NodeContainer {
                 // nodes can be EXECUTINGREMOTELY when loaded (reconnect to a
                 // grid/server) -- also these nodes will be configured() on load
             case EXECUTINGREMOTELY:
-                // create new ScopeContextStack
-                ScopeObjectStack oldSOS = null;
-                oldSOS = snc.getScopeObjectStack();
-                ScopeObjectStack scsc;
-                boolean scopeStackConflict = false;
+                // create new FlowObjectStack
+                FlowObjectStack oldFOS = null;
+                oldFOS = snc.getFlowObjectStack();
+                FlowObjectStack scsc;
+                boolean flowStackConflict = false;
                 if (inCount == 0) {
                     // no input ports - create new stack, prefilled with
                     // Workflow variables:
-                    scsc = new ScopeObjectStack(snc.getID(),
+                    scsc = new FlowObjectStack(snc.getID(),
                             getWorkflowVariableStack());
                 } else {
                     assert inCount >= 1;
                     try {
-                        scsc = new ScopeObjectStack(snc.getID(), sos);
-                    } catch (IllegalContextStackObjectException e) {
-                        LOGGER.warn("Unable to merge scope object stacks: "
+                        scsc = new FlowObjectStack(snc.getID(), sos);
+                    } catch (IllegalFlowObjectStackException e) {
+                        LOGGER.warn("Unable to merge flow object stacks: "
                                 + e.getMessage(), e);
-                        scsc = new ScopeObjectStack(snc.getID());
-                        scopeStackConflict = true;
+                        scsc = new FlowObjectStack(snc.getID());
+                        flowStackConflict = true;
                     }
                 }
                 if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                     // the stack will automatically add the ID of the
                     // head of the loop (the owner!)
-                    ScopeLoopContext slc = new ScopeLoopContext();
+                    FlowLoopContext slc = new FlowLoopContext();
                     scsc.push(slc);
                 }
-                snc.setScopeObjectStack(scsc);
+                snc.setFlowObjectStack(scsc);
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
                 for (int i = 0; i < inCount; i++) {
@@ -2839,7 +2839,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 // configure node itself
                 boolean outputSpecsChanged = false;
-                if (scopeStackConflict && !snc.getState().equals(State.IDLE)) {
+                if (flowStackConflict && !snc.getState().equals(State.IDLE)) {
                     // FIXME how to invalidate the configure state of the node?
                     snc.reset(); // can't configured due to stack clash
                     // different output if any output spec was non-null
@@ -2853,15 +2853,15 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 // NOTE:
                 // no need to clean stacks of LoopEnd nodes - done automagically
-                // inside the getScopeContextStack of the ports of LoopEnd
+                // inside the getFlowObjectStack of the ports of LoopEnd
                 // Nodes.
 
-                // check if ScopeContextStacks have changed
+                // check if FlowObjectStacks have changed
                 boolean stackChanged = false;
                 // TODO: once SOS.equals() actually works...
-                stackChanged = !snc.getScopeObjectStack().isEmpty()
-                  || (oldSOS != null && !oldSOS.isEmpty());
-//                    stackChanged = snc.getScopeObjectStack().equals(old_sos);
+                stackChanged = !snc.getFlowObjectStack().isEmpty()
+                  || (oldFOS != null && !oldFOS.isEmpty());
+//                    stackChanged = snc.getFlowObjectStack().equals(oldFOS);
                 // check if HiLiteHandlers have changed
                 boolean hiLiteHdlsChanged = false;
                 for (int i = 0; i < oldHdl.length; i++) {
@@ -2934,7 +2934,7 @@ public final class WorkflowManager extends NodeContainer {
             wfm.configureWorkFlowPortSuccessors(inportIndex);
             // and finalize stuff
             checkForNodeStateChanges(true);
-            // TODO: clean up scope object stack after we leave WFM?
+            // TODO: clean up flow object stack after we leave WFM?
         }
     }
 
@@ -3357,7 +3357,7 @@ public final class WorkflowManager extends NodeContainer {
             try {
                 return loadContent(persistor,
                         new HashMap<Integer, BufferedDataTable>(),
-                        new ScopeObjectStack(getID()), new ExecutionMonitor(),
+                        new FlowObjectStack(getID()), new ExecutionMonitor(),
                         new LoadResult("Paste into Workflow"), false);
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access"
@@ -3613,7 +3613,7 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec,
+            final FlowObjectStack ignoredStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
@@ -3682,7 +3682,7 @@ public final class WorkflowManager extends NodeContainer {
             final int predCount = predPorts.length;
             PortObject[] portObjects = new PortObject[predCount];
             boolean inPortsContainNull = false;
-            ScopeObjectStack[] predStacks = new ScopeObjectStack[predCount];
+            FlowObjectStack[] predStacks = new FlowObjectStack[predCount];
             for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
                 if (cont instanceof SingleNodeContainer && p != null) {
@@ -3690,20 +3690,20 @@ public final class WorkflowManager extends NodeContainer {
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
                 if (p != null) {
-                    predStacks[i] = p.getScopeObjectStack();
+                    predStacks[i] = p.getFlowObjectStack();
                     portObjects[i] = p.getPortObject();
                     inPortsContainNull &= portObjects[i] == null;
                 }
             }
-            ScopeObjectStack inStack;
+            FlowObjectStack inStack;
             try {
-                inStack = new ScopeObjectStack(cont.getID(), predStacks);
-            } catch (IllegalContextStackObjectException ex) {
-                subResult.addError("Errors creating scope object stack for "
+                inStack = new FlowObjectStack(cont.getID(), predStacks);
+            } catch (IllegalFlowObjectStackException ex) {
+                subResult.addError("Errors creating flow object stack for "
                         + "node \"" + cont.getNameWithID() + "\", (resetting "
-                        + "scope variables): " + ex.getMessage());
+                        + "flow variables): " + ex.getMessage());
                 needsReset = true;
-                inStack = new ScopeObjectStack(cont.getID());
+                inStack = new FlowObjectStack(cont.getID());
             }
             NodeContainerPersistor persistor = persistorMap.get(bfsID);
             State loadState = persistor.getMetaPersistor().getState();
@@ -4338,7 +4338,7 @@ public final class WorkflowManager extends NodeContainer {
     /* Private routine which assembles a stack of workflow variables all
      * the way to the top of the workflow hierarchy.
      */
-    private void pushWorkflowVariablesOnStack(final ScopeObjectStack sos) {
+    private void pushWorkflowVariablesOnStack(final FlowObjectStack sos) {
         if (getID().equals(ROOT.getID())) {
             // reach top of tree, return
             return;
@@ -4348,7 +4348,7 @@ public final class WorkflowManager extends NodeContainer {
         // ... and then our own
         if (m_workflowVariables != null) {
             // if we have some vars, put them on stack
-            for (ScopeVariable sv : m_workflowVariables) {
+            for (FlowVariable sv : m_workflowVariables) {
                 sos.push(sv.clone());
             }
         }
@@ -4359,15 +4359,15 @@ public final class WorkflowManager extends NodeContainer {
      * @return the current workflow variables, never null.
      */
     @SuppressWarnings("unchecked")
-    public List<ScopeVariable> getWorkflowVariables() {
+    public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables == null ? Collections.EMPTY_LIST
                 : Collections.unmodifiableList(m_workflowVariables);
     }
 
     /* @return stack of workflow variables. */
-    private ScopeObjectStack getWorkflowVariableStack() {
+    private FlowObjectStack getWorkflowVariableStack() {
         // assemble new stack
-        ScopeObjectStack sos = new ScopeObjectStack(getID());
+        FlowObjectStack sos = new FlowObjectStack(getID());
         // push own variables and the ones of the parent(s):
         pushWorkflowVariablesOnStack(sos);
         return sos;
@@ -4380,13 +4380,13 @@ public final class WorkflowManager extends NodeContainer {
      * @param skipReset if false the workflow will be re-configured
      */
     public void addWorkflowVariables(final boolean skipReset,
-            final ScopeVariable... newVars) {
+            final FlowVariable... newVars) {
         synchronized (m_workflowMutex) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
-                m_workflowVariables = new Vector<ScopeVariable>();
+                m_workflowVariables = new Vector<FlowVariable>();
             }
-            for (ScopeVariable sv : newVars) {
+            for (FlowVariable sv : newVars) {
                 // make sure old variables of the same name are removed first
                 removeWorkflowVariable(sv.getName());
                 m_workflowVariables.add(sv);
@@ -4400,7 +4400,7 @@ public final class WorkflowManager extends NodeContainer {
             } else {
                 // otherwise only configure already configured nodes. This
                 // is required to make sure they rebuild their
-                // ScopeObjectStack!
+                // FlowObjectStack!
                 reconfigureAll();
             }
             setDirty();
@@ -4413,7 +4413,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void removeWorkflowVariable(final String name) {
         for (int i = 0; i < m_workflowVariables.size(); i++) {
-            ScopeVariable sv = m_workflowVariables.elementAt(i);
+            FlowVariable sv = m_workflowVariables.elementAt(i);
             if (sv.getName().equals(name)) {
                 m_workflowVariables.remove(i);
             }

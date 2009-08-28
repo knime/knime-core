@@ -35,11 +35,11 @@ import javax.swing.tree.TreeModel;
 
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.FlowObjectStack;
 
 /**
  * A tree implementation that allows one to overwrite certain node settings 
- * using flow variables (called scope variables).
+ * using flow variables.
  * 
  * <p>This class is not meant for public use.
  * @author Bernd Wiswedel, University of Konstanz
@@ -51,7 +51,7 @@ public class ConfigEditJTree extends JTree {
         ConfigEditTreeModel.create(new NodeSettings("empty"));
     
     /** To get the available variables from. */
-    private ScopeObjectStack m_scopeStack;
+    private FlowObjectStack m_flowObjectStack;
     
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
@@ -98,17 +98,17 @@ public class ConfigEditJTree extends JTree {
         return (ConfigEditTreeModel)super.getModel();
     }
     
-    /** @param scopeStack the scopeStack to set */
-    public void setScopeStack(final ScopeObjectStack scopeStack) {
-        m_scopeStack = scopeStack;
+    /** @param foStack the flow object stack to set */
+    public void setFlowObjectStack(final FlowObjectStack foStack) {
+        m_flowObjectStack = foStack;
     }
     
-    /** @return the scopeStack */
-    public ScopeObjectStack getScopeStack() {
-        return m_scopeStack;
+    /** @return the flow object Stack */
+    public FlowObjectStack getFlowObjectStack() {
+        return m_flowObjectStack;
     }
     
-    /** Public testing method that displays a simple tree with no scope 
+    /** Public testing method that displays a simple tree with no flow 
      * variable stack, though.
      * @param args command line args, ignored here. */
     public static void main(final String[] args) {

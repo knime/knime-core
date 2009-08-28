@@ -77,11 +77,11 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
     public HiLiteHandler getHiLiteHandler();
 
     /**
-     * Returns the scope object stack of the underlying node.
+     * Returns the {@link FlowObjectStack} of the underlying node.
      *
-     * @return the scope obj stack container
+     * @return the flow obj stack container
      */
-    public ScopeObjectStack getScopeObjectStack();
+    public FlowObjectStack getFlowObjectStack();
 
     /**
      * Opens the port view for this port with the given name.

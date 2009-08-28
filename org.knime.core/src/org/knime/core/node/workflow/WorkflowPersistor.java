@@ -73,7 +73,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * may be unmodifiable.
      * @return The workflow variables. 
      */
-    List<ScopeVariable> getWorkflowVariables();
+    List<FlowVariable> getWorkflowVariables();
     
     WorkflowPortTemplate[] getInPortTemplates();
     

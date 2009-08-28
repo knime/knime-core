@@ -64,12 +64,12 @@ import org.knime.core.node.config.ConfigEditTreeEvent;
 import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
-import org.knime.core.node.defaultnodesettings.SettingsModelScopeVariableCompatible;
+import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
-import org.knime.core.node.workflow.ScopeObjectStack;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
@@ -128,24 +128,24 @@ public abstract class NodeDialogPane {
     /** List of registered models. (Model for little buttons attached to a
      * selected set of components -- used to customize variables in place.)
      */
-    private final List<ScopeVariableModel> m_scopeVariablesModelList;
+    private final List<FlowVariableModel> m_flowVariablesModelList;
     
-    /** Flag whether the settings in any of the scope variable models have 
-     * changed. If so, we need to update the scope variable tab before saving
+    /** Flag whether the settings in any of the flow variable models have 
+     * changed. If so, we need to update the flow variable tab before saving
      * the settings. We can't directly modify the tab during the event because
      * it might not show the current settings tree. */
-    private boolean m_scopeVariablesModelChanged;
+    private boolean m_flowVariablesModelChanged;
 
     /** The tab containing the flow variables. */
-    private final ScopeVariablesTab m_scopeVariableTab;
+    private final FlowVariablesTab m_flowVariableTab;
 
     /** The variables tab settings as loaded from the model. We'll use them as
      * soon as the tab gets activated to update the tree. */
-    private NodeSettings m_scopeVariablesSettings;
+    private NodeSettings m_flowVariablesSettings;
 
-    /** The scope object stack, it's also used when the variables tab get's
+    /** The flow object stack, it's also used when the variables tab get's
      * activated. */
-    private ScopeObjectStack m_scopeObjectStack;
+    private FlowObjectStack m_flowObjectStack;
 
     /** The specs that were provided to the most recent internalLoadSettingsFrom
      * invocation. Ideally this member should not be kept as field but we need
@@ -170,9 +170,9 @@ public abstract class NodeDialogPane {
         // init tabbed pane and at it to the underlying panel
         m_pane = new JTabbedPane();
         m_panel.add(m_pane, BorderLayout.CENTER);
-        m_scopeVariablesModelList =
-            new CopyOnWriteArrayList<ScopeVariableModel>();
-        m_scopeVariableTab = new ScopeVariablesTab();
+        m_flowVariablesModelList =
+            new CopyOnWriteArrayList<FlowVariableModel>();
+        m_flowVariableTab = new FlowVariablesTab();
     }
 
     /**
@@ -200,12 +200,12 @@ public abstract class NodeDialogPane {
         return m_panel;
     }
 
-    /** @return available scope variables in a non-modifiable map
+    /** @return available flow variables in a non-modifiable map
      *           (ensured to be not null) . */
-    public final Map<String, ScopeVariable> getAvailableScopeVariables() {
-        Map<String, ScopeVariable> result = null;
-        if (m_scopeObjectStack != null) {
-            result = m_scopeObjectStack.getAvailableVariables();
+    public final Map<String, FlowVariable> getAvailableFlowVariables() {
+        Map<String, FlowVariable> result = null;
+        if (m_flowObjectStack != null) {
+            result = m_flowObjectStack.getAvailableFlowVariables();
         }
         if (result == null) {
             result = Collections.emptyMap();
@@ -219,21 +219,21 @@ public abstract class NodeDialogPane {
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
      * @param specs The DTSs from the inports.
-     * @param scopeStack Scope object stack (contains flow variables)
+     * @param flowStack Flow object stack (contains flow variables)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     public void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs, final ScopeObjectStack scopeStack)
+            final PortObjectSpec[] specs, final FlowObjectStack foStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
-        m_scopeObjectStack = scopeStack;
+        m_flowObjectStack = foStack;
         m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
-            m_scopeVariablesSettings = l.getVariablesSettings();
+            m_flowVariablesSettings = l.getVariablesSettings();
         } catch (InvalidSettingsException e) {
             // silently ignored here, variables get assigned default values
             // if they are null
@@ -251,23 +251,23 @@ public abstract class NodeDialogPane {
         // add flow variables tab if not yet done
         if (getTab(TAB_NAME_VARIABLES) == null 
                 && Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
+            addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
                 /** {@inheritDoc} */
                 public void stateChanged(final ChangeEvent e) {
-                    if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
-                        updateScopeVariablesTab();
+                    if (m_pane.getSelectedComponent() == m_flowVariableTab) {
+                        updateFlowVariablesTab();
                     }
                 }
             });
         }
-        m_scopeVariableTab.setModified(false);
-        m_scopeVariablesModelChanged = false;
-        if (m_pane.getSelectedComponent() == m_scopeVariableTab 
-                || !m_scopeVariablesModelList.isEmpty()) {
+        m_flowVariableTab.setModified(false);
+        m_flowVariablesModelChanged = false;
+        if (m_pane.getSelectedComponent() == m_flowVariableTab 
+                || !m_flowVariablesModelList.isEmpty()) {
             // this will also update the settings in all elements in
-            // m_scopeVariablesModelList
-            initScopeVariablesTab(modelSettings, m_scopeVariablesSettings);
+            // m_flowVariablesModelList
+            initFlowVariablesTab(modelSettings, m_flowVariablesSettings);
         }
 
         // output memory policy and job manager (stored in NodeContainer)
@@ -317,13 +317,13 @@ public abstract class NodeDialogPane {
             m_logger.error("Failed to save dialog settings", e);
         }
         NodeSettings variables;
-        if (m_scopeVariablesModelChanged) {
-            updateScopeVariablesTab();
+        if (m_flowVariablesModelChanged) {
+            updateFlowVariablesTab();
         }
-        if (m_scopeVariableTab.isModified()) {
-            variables = m_scopeVariableTab.getVariableSettings();
+        if (m_flowVariableTab.isModified()) {
+            variables = m_flowVariableTab.getVariableSettings();
         } else {
-            variables = m_scopeVariablesSettings;
+            variables = m_flowVariablesSettings;
         }
         l.setModelSettings(model);
         l.setVariablesSettings(variables);
@@ -484,7 +484,7 @@ public abstract class NodeDialogPane {
     public final void loadSettingsFrom(final InputStream in)
         throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
-        internalLoadSettingsFrom(settings, m_specs, m_scopeObjectStack);
+        internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack);
     }
 
     /**
@@ -703,7 +703,7 @@ public abstract class NodeDialogPane {
 
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             public void run() {
-                int varTabIdx = m_pane.indexOfComponent(m_scopeVariableTab);
+                int varTabIdx = m_pane.indexOfComponent(m_flowVariableTab);
                 int memIndex = m_pane.indexOfComponent(m_memPolicyTab);
                 int jobMgrIdx = m_pane.indexOfComponent(m_jobMgrTab);
 
@@ -884,16 +884,16 @@ public abstract class NodeDialogPane {
      *
      * @param key of corresponding settings object
      * @param type of variable/settings object
-     * @return new ScopeVariableModel which is already registered
+     * @return new FlowVariableModel which is already registered
      */
-    protected ScopeVariableModel createScopeVariableModel(
-            final String key, final ScopeVariable.Type type) {
-        ScopeVariableModel wvm = new ScopeVariableModel(this, key, type);
-        m_scopeVariablesModelList.add(wvm);
+    protected FlowVariableModel createFlowVariableModel(
+            final String key, final FlowVariable.Type type) {
+        FlowVariableModel wvm = new FlowVariableModel(this, key, type);
+        m_flowVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */
             public void stateChanged(final ChangeEvent e) {
-                m_scopeVariablesModelChanged = true;
+                m_flowVariablesModelChanged = true;
             }
         });
         return wvm;
@@ -903,50 +903,50 @@ public abstract class NodeDialogPane {
      * object.
      *
      * @param dc settings object of corresponding DialogComponent  
-     * @return new ScopeVariableModel which is already registered
+     * @return new FlowVariableModel which is already registered
      */
-    protected ScopeVariableModel createScopeVariableModel(
-            final SettingsModelScopeVariableCompatible dc) {
-        return createScopeVariableModel(dc.getKey(),
-                dc.getScopeVariableType());
+    protected FlowVariableModel createFlowVariableModel(
+            final SettingsModelFlowVariableCompatible dc) {
+        return createFlowVariableModel(dc.getKey(),
+                dc.getFlowVariableType());
     }
     
-    /** Sets the settings from the second argument into the scope variables tab.
+    /** Sets the settings from the second argument into the flow variables tab.
      * The parameter tree is supposed to follow the node settings argument.
      * @param nodeSettings The (user) settings of the node. 
-     * @param variableSettings The scope variable settings.
+     * @param variableSettings The flow variable settings.
      */
     @SuppressWarnings("unchecked")
-    private void initScopeVariablesTab(final NodeSettingsRO nodeSettings, 
+    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings, 
             final NodeSettingsRO variableSettings) {
-        m_scopeVariableTab.setErrorLabel("");
-        m_scopeVariableTab.setModified(true);
-        m_scopeVariableTab.setVariableSettings(nodeSettings, variableSettings,
-                m_scopeObjectStack, Collections.EMPTY_SET);
-        for (ScopeVariableModel m : m_scopeVariablesModelList) {
-            ConfigEditTreeNode configNode = m_scopeVariableTab
+        m_flowVariableTab.setErrorLabel("");
+        m_flowVariableTab.setModified(true);
+        m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings,
+                m_flowObjectStack, Collections.EMPTY_SET);
+        for (FlowVariableModel m : m_flowVariablesModelList) {
+            ConfigEditTreeNode configNode = m_flowVariableTab
                 .findTreeNodeForChild(new String[]{m.getKey()});
             if (configNode != null) {
                 m.setInputVariableName(configNode.getUseVariableName());
                 m.setOutputVariableName(configNode.getExposeVariableName());
             }
         }
-        m_scopeVariablesModelChanged = false;
+        m_flowVariablesModelChanged = false;
     }
 
-    /** Updates the scope variable tab to reflect the current parameter tree.
-     * It also includes the config of the scope variable models (the little
+    /** Updates the flow variable tab to reflect the current parameter tree.
+     * It also includes the config of the flow variable models (the little
      * buttons attached to some control elements). */
-    private void updateScopeVariablesTab() {
-        m_scopeVariableTab.setErrorLabel("");
+    private void updateFlowVariablesTab() {
+        m_flowVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
         NodeSettings variableSettings;
         commitComponentsRecursively(getPanel());
         try {
             saveSettingsTo(settings);
-            variableSettings = m_scopeVariableTab.isModified()
-                ? m_scopeVariableTab.getVariableSettings()
-                : m_scopeVariablesSettings;
+            variableSettings = m_flowVariableTab.isModified()
+                ? m_flowVariableTab.getVariableSettings()
+                : m_flowVariablesSettings;
         } catch (Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
                 m_logger.error("Saving intermediate settings failed with "
@@ -954,18 +954,18 @@ public abstract class NodeDialogPane {
             }
             String error = "Panel does not reflect current settings; failed to "
                 + "save intermediate settings:<br/>" + e.getMessage();
-            m_scopeVariableTab.setErrorLabel(error);
+            m_flowVariableTab.setErrorLabel(error);
             return;
         }
-        m_scopeVariableTab.setModified(true);
-        m_scopeVariableTab.setVariableSettings(settings, variableSettings,
-                m_scopeObjectStack, m_scopeVariablesModelList);
+        m_flowVariableTab.setModified(true);
+        m_flowVariableTab.setVariableSettings(settings, variableSettings,
+                m_flowObjectStack, m_flowVariablesModelList);
     }
 
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
      * of hard-coded values.) */
-    private class ScopeVariablesTab extends JPanel 
+    private class FlowVariablesTab extends JPanel 
         implements ConfigEditTreeEventListener {
 
         private final ConfigEditJTree m_tree;
@@ -973,7 +973,7 @@ public abstract class NodeDialogPane {
         private boolean m_isModified;
 
         /** Creates new tab. */
-        public ScopeVariablesTab() {
+        public FlowVariablesTab() {
             super(new BorderLayout());
             m_tree = new ConfigEditJTree();
             m_errorLabel = new JLabel();
@@ -1003,8 +1003,8 @@ public abstract class NodeDialogPane {
          * of the dialog to overwrite settings in place. */
         void setVariableSettings(final NodeSettingsRO nodeSettings,
                 final NodeSettingsRO varSettings,
-                final ScopeObjectStack stack,
-                final Collection<ScopeVariableModel> variableModels) {
+                final FlowObjectStack stack,
+                final Collection<FlowVariableModel> variableModels) {
             if (nodeSettings != null && !(nodeSettings instanceof Config)) {
                 m_logger.debug("Node settings object not instance of "
                         + Config.class + " -- disabling flow variables tab");
@@ -1032,7 +1032,7 @@ public abstract class NodeDialogPane {
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
             }
             model.update(variableModels);
-            m_tree.setScopeStack(stack);
+            m_tree.setFlowObjectStack(stack);
             m_tree.getModel().removeConfigEditTreeEventListener(this);
             m_tree.setModel(model);
             model.addConfigEditTreeEventListener(this);
@@ -1076,7 +1076,7 @@ public abstract class NodeDialogPane {
         @Override
         public void configEditTreeChanged(final ConfigEditTreeEvent event) {
             String[] keyPath = event.getKeyPath();
-            for (ScopeVariableModel m : m_scopeVariablesModelList) {
+            for (FlowVariableModel m : m_flowVariablesModelList) {
                 if (m.getKey().equals(keyPath[0])) {
                     m.setInputVariableName(event.getUseVariable());
                     m.setOutputVariableName(event.getExposeVariableName());

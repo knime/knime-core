@@ -74,7 +74,7 @@ public class SingleNodeContainerPersistorVersion1xx
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
-    private List<ScopeObject> m_scopeObjects;
+    private List<FlowObject> m_flowObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
     SingleNodeContainerPersistorVersion1xx(
@@ -139,8 +139,8 @@ public class SingleNodeContainerPersistorVersion1xx
     }
     
     /** {@inheritDoc} */
-    public List<ScopeObject> getScopeObjects() {
-        return m_scopeObjects;
+    public List<FlowObject> getFlowObjects() {
+        return m_flowObjects;
     }
     
     /** {@inheritDoc} */
@@ -247,10 +247,10 @@ public class SingleNodeContainerPersistorVersion1xx
             result.addError(error);
         }
         try {
-            m_scopeObjects = loadScopeObjects(m_nodeSettings);
+            m_flowObjects = loadFlowObjects(m_nodeSettings);
         } catch (InvalidSettingsException e) {
-            m_scopeObjects = Collections.emptyList();
-            String error = "Error loading scope objects (flow variables): "
+            m_flowObjects = Collections.emptyList();
+            String error = "Error loading flow variables: "
                 + e.getMessage();
             getLogger().warn(error, e);
             result.addError(error);
@@ -362,7 +362,7 @@ public class SingleNodeContainerPersistorVersion1xx
         return sncs;
     }
     
-    protected List<ScopeObject> loadScopeObjects(
+    protected List<FlowObject> loadFlowObjects(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();
     }

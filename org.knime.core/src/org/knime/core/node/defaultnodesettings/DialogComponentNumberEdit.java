@@ -37,8 +37,8 @@ import javax.swing.event.DocumentListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.ScopeVariableModel;
-import org.knime.core.node.ScopeVariableModelButton;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -62,7 +62,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     private final JTextField m_valueField;
 
-    private final ScopeVariableModelButton m_svmButton;
+    private final FlowVariableModelButton m_svmButton;
 
     private final JLabel m_label;
 
@@ -79,7 +79,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
     
     /**
      * Constructor that puts label and JTextField into panel.
-     * It also enables the definition of a scope variable model to overwrite
+     * It also enables the definition of a flow variable model to overwrite
      * the user setting using a custom variable.
      *
      * @param numberModel the model handling the value
@@ -88,7 +88,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * opening an input dialog is added.)
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
-            final String label, final ScopeVariableModel svm) {
+            final String label, final FlowVariableModel svm) {
         this(numberModel, label, calcDefaultWidth(numberModel
                 .getNumberValueStr()), svm);
     }
@@ -107,7 +107,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
     
     /**
      * Constructor that puts label and JTextField into panel. 
-     * It also enables the definition of a scope variable model to overwrite
+     * It also enables the definition of a flow variable model to overwrite
      * the user setting using a custom variable.
      *
      * @param numberModel the model handling the value
@@ -118,7 +118,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
             final String label, final int compWidth, 
-            final ScopeVariableModel svm) {
+            final FlowVariableModel svm) {
         super(numberModel);
 
         m_label = new JLabel(label);
@@ -171,7 +171,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
                             !svm.isVariableReplacementEnabled());
                 }
             });
-            m_svmButton = new ScopeVariableModelButton(svm);
+            m_svmButton = new FlowVariableModelButton(svm);
             getComponentPanel().add(m_svmButton);
         } else {
             m_svmButton = null;
@@ -268,7 +268,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
         boolean valueFieldEnabled = enabled;
         // enable the spinner according to the variable model
         if (m_svmButton != null) {
-            ScopeVariableModel svmModel = m_svmButton.getScopeVariableModel();
+            FlowVariableModel svmModel = m_svmButton.getFlowVariableModel();
             if (svmModel.isVariableReplacementEnabled()) {
                 valueFieldEnabled = false;
             }

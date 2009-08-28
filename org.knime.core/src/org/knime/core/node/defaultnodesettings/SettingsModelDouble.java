@@ -29,7 +29,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A settingsmodel for double default components.
@@ -37,7 +37,7 @@ import org.knime.core.node.workflow.ScopeVariable;
  * @author ohl, University of Konstanz
  */
 public class SettingsModelDouble extends SettingsModelNumber
-implements SettingsModelScopeVariableCompatible {
+implements SettingsModelFlowVariableCompatible {
 
     private double m_value;
 
@@ -224,7 +224,7 @@ implements SettingsModelScopeVariableCompatible {
      * {@inheritDoc}
      */
     @Override
-    public ScopeVariable.Type getScopeVariableType() {
-        return ScopeVariable.Type.DOUBLE;
+    public FlowVariable.Type getFlowVariableType() {
+        return FlowVariable.Type.DOUBLE;
     }
 }

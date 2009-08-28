@@ -30,20 +30,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.knime.core.node.util.ScopeVariableTableCellRenderer;
+import org.knime.core.node.util.FlowVariableTableCellRenderer;
 
 /**
- * View that displays a given {@link ScopeObjectStack} in a table.
+ * View that displays a given {@link FlowObjectStack} in a table.
  * This view is shown as a separate tab in each node's outport views.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class ScopeObjectStackView extends JPanel {
+final class FlowObjectStackView extends JPanel {
     
-    /** Table displaying name, value and owner of a scope variable. */
+    /** Table displaying name, value and owner of a {@link FlowVariable}. */
     private final JTable m_table;
     
     /** Creates new empty view. */
-    public ScopeObjectStackView() {
+    public FlowObjectStackView() {
         super(new BorderLayout());
         m_table = new JTable(new DefaultTableModel() {
             /** {@inheritDoc} */
@@ -51,7 +51,7 @@ final class ScopeObjectStackView extends JPanel {
             public Class<?> getColumnClass(final int columnIndex) {
                 switch (columnIndex) {
                 case 2:
-                    return ScopeVariable.class;
+                    return FlowVariable.class;
                 default:
                     return super.getColumnClass(columnIndex);
                 }
@@ -62,25 +62,25 @@ final class ScopeObjectStackView extends JPanel {
                 return false;
             }
         });
-        m_table.setDefaultRenderer(ScopeVariable.class, 
-                new ScopeVariableTableCellRenderer());
+        m_table.setDefaultRenderer(FlowVariable.class, 
+                new FlowVariableTableCellRenderer());
         add(new JScrollPane(m_table), BorderLayout.CENTER);
     }
     
     /** Updates the view to display the given stack.
      * @param stack Whose values are to be displayed. */
-    public void update(final ScopeObjectStack stack) {
+    public void update(final FlowObjectStack stack) {
         Object[][] values;
         if (stack != null) {
             values = new Object[stack.size()][];
             int loopCount = 0;
             int counter = 0;
-            for (ScopeObject s : stack) {
+            for (FlowObject s : stack) {
                 Object[] obj = new Object[4];
                 obj[0] = Integer.valueOf(counter);
                 obj[1] = s.getOwner();
-                if (s instanceof ScopeVariable) {
-                    ScopeVariable v = (ScopeVariable)s;
+                if (s instanceof FlowVariable) {
+                    FlowVariable v = (FlowVariable)s;
                     obj[2] = s;
                     Object o;
                     switch (v.getType()) {

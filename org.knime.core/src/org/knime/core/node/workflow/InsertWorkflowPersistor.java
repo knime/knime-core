@@ -93,7 +93,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     
     /** {@inheritDoc} */
     @Override
-    public List<ScopeVariable> getWorkflowVariables() {
+    public List<FlowVariable> getWorkflowVariables() {
         throw new IllegalStateException("can't set workflow variables on root");
     }
 

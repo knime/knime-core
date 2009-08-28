@@ -35,7 +35,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
-import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.FlowObjectStack;
 
 /**
  * Renderer implementation of a {@link ConfigEditJTree}. It uses
@@ -68,7 +68,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     
     /** Called whenever a new value is to be renderer, updates underlying
      * component. 
-     * @param tree The associated tree (get the scope object stack from.)
+     * @param tree The associated tree (get the flow object stack from.)
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
     public void setValue(final JTree tree, final Object value) {
@@ -80,11 +80,11 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
             node = null;
             m_active = m_panelPlain;
         }
-        ScopeObjectStack stack = null;
+        FlowObjectStack stack = null;
         if (tree instanceof ConfigEditJTree) {
-            stack = ((ConfigEditJTree)tree).getScopeStack();
+            stack = ((ConfigEditJTree)tree).getFlowObjectStack();
         }
-        m_active.setScopeStack(stack);
+        m_active.setFlowObjectStack(stack);
         m_active.setTreeNode(node);
         setLeafIcon(m_active.getIcon());
         setOpenIcon(m_active.getIcon());

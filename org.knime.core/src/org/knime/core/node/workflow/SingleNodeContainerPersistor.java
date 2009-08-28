@@ -46,5 +46,5 @@ interface SingleNodeContainerPersistor extends NodeContainerPersistor {
     
     SingleNodeContainerSettings getSNCSettings();
     
-    List<ScopeObject> getScopeObjects();
+    List<FlowObject> getFlowObjects();
 }
