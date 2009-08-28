@@ -43,6 +43,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.StringHistory;
 
@@ -131,6 +132,7 @@ public final class DatabaseDriverLoader {
      * Init driver history on start-up.
      */
     static {
+    	// load all drivers from history file
         for (String hist : DRIVER_LIBRARY_HISTORY.getHistory()) {
             try {
                 File histFile = new File(hist);
@@ -140,7 +142,18 @@ public final class DatabaseDriverLoader {
                         + hist + "\" from history.", t);
             }
         }
-
+        // load additional driver from Java property
+        String[] dbDrivers = System.getProperty(
+        		KNIMEConstants.DATABASE_DRIVER_FILES).split(";");
+        for (String driver : dbDrivers) {
+            try {
+                File driverFile = new File(driver);
+                loadDriver(driverFile);
+            } catch (Throwable t) {
+                LOGGER.info("Could not load driver library file \"" 
+                        + driver + "\" from history.", t);
+            }
+        }
     }
 
     /**
