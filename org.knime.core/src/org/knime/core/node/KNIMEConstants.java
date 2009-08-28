@@ -80,13 +80,6 @@ public final class KNIMEConstants {
      * cases may be slower. (Asynchronous I/O became default with v2.1.) */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
     
-    /** Java property to load addition database driver Jar or Zip files. Files
-     * need to be separated by an ';'. The archives are scanned for 
-     * classes derived from <code>java.sql.Driver</code>.
-     */
-    public static final String DATABASE_DRIVER_FILES 
-    	= "knime.database.driver_files";
-    
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
