@@ -187,18 +187,18 @@ public class JavaScriptingNodeModel extends NodeModel {
     }
     
     /** Reads a variable from this node model. Calls for instance
-     * {@link #peekScopeVariableDouble(String)}.
+     * {@link #peekFlowVariableDouble(String)}.
      * @param name The name of variable.
      * @param type Type of variable.
      * @return The value
      */
     Object readVariable(final String name, final Class<?> type) {
         if (Integer.class.equals(type)) {
-            return peekScopeVariableInt(name);
+            return peekFlowVariableInt(name);
         } else if (Double.class.equals(type)) {
-            return peekScopeVariableDouble(name);
+            return peekFlowVariableDouble(name);
         } else if (String.class.equals(type)) {
-            return peekScopeVariableString(name);
+            return peekFlowVariableString(name);
         } else {
             throw new RuntimeException("Invalid variable class: " + type);
         }

@@ -77,9 +77,9 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
-import org.knime.core.node.util.ScopeVariableListCellRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.StringHistory;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.SimpleFileFilter;
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
@@ -181,7 +181,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        m_scopeVarsList.setCellRenderer(new ScopeVariableListCellRenderer());
+        m_scopeVarsList.setCellRenderer(new FlowVariableListCellRenderer());
         m_expEdit = new JEditorPane();
         Font font = m_expEdit.getFont();
         Font newFont = new Font(Font.MONOSPACED, Font.PLAIN, 
@@ -268,8 +268,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     }
     
     private void onSelectionInVariableList(final Object selected) {
-        if (selected instanceof ScopeVariable) {
-            ScopeVariable v = (ScopeVariable)selected;
+        if (selected instanceof FlowVariable) {
+            FlowVariable v = (FlowVariable)selected;
             String typeChar;
             switch (v.getType()) {
             case DOUBLE:
@@ -561,7 +561,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         DefaultListModel svListModel = 
             (DefaultListModel)m_scopeVarsList.getModel();
         svListModel.removeAllElements();
-        for (ScopeVariable v : getAvailableScopeVariables().values()) {
+        for (FlowVariable v : getAvailableFlowVariables().values()) {
             svListModel.addElement(v);
         }
         m_compileOnCloseChecker.setSelected(isTestCompilation);
