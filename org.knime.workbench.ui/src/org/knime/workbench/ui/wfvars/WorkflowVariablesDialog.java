@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -101,7 +101,7 @@ public class WorkflowVariablesDialog extends Dialog {
         tableComp.setLayout(new FillLayout());
         tableComp.setLayoutData(gridData);
         m_table = new WorkflowVariableTable(tableComp);
-        for (ScopeVariable var : m_workflow.getWorkflowVariables()) {
+        for (FlowVariable var : m_workflow.getWorkflowVariables()) {
             m_table.add(var);
         }
         m_table.getViewer().refresh();
@@ -114,7 +114,7 @@ public class WorkflowVariablesDialog extends Dialog {
                 Table table = m_table.getViewer().getTable();
                 int index = table.getSelectionIndex();
                 // we only get a double-click event for existing items
-                ScopeVariable var = m_table.get(index);
+                FlowVariable var = m_table.get(index);
                 editWorkflowVariable(var, index);
             }
         });
@@ -164,7 +164,7 @@ public class WorkflowVariablesDialog extends Dialog {
                     "Please select the parameter you want to edit.");
                     return;
                 }
-                ScopeVariable selectedVar = m_table.get(selectionIdx);
+                FlowVariable selectedVar = m_table.get(selectionIdx);
                 editWorkflowVariable(selectedVar, selectionIdx);
             }
         });
@@ -186,8 +186,8 @@ public class WorkflowVariablesDialog extends Dialog {
                             "Please select the parameter you want to remove.");
                     return;
                 }
-                ScopeVariable selectedParam =
-                    (ScopeVariable)((IStructuredSelection)m_table
+                FlowVariable selectedParam =
+                    (FlowVariable)((IStructuredSelection)m_table
                         .getViewer().getSelection()).getFirstElement();
                 removeWorkflowVariable(selectedParam);
             }
@@ -234,7 +234,7 @@ public class WorkflowVariablesDialog extends Dialog {
             // if the user has canceled the dialog there is nothing left to do
             return;
         }
-        ScopeVariable var = dialog.getScopeVariable();
+        FlowVariable var = dialog.getScopeVariable();
         if (var == null) {
             // variables was not created
             return;
@@ -250,7 +250,7 @@ public class WorkflowVariablesDialog extends Dialog {
         getShell().forceFocus();
     }
 
-    private void editWorkflowVariable(final ScopeVariable selectedVar,
+    private void editWorkflowVariable(final FlowVariable selectedVar,
             final int selectionIdx) {
         if (selectedVar.isGlobalConstant()) {
             MessageDialog.openError(getParentShell(), "Global Constant",
@@ -265,14 +265,14 @@ public class WorkflowVariablesDialog extends Dialog {
             // if the user has canceled the dialog there is nothing left to do
             return;
         } // else replace it...
-        ScopeVariable var = dialog.getScopeVariable();
+        FlowVariable var = dialog.getScopeVariable();
         if (var != null) {
             m_table.replace(selectionIdx, var);
             m_table.getViewer().refresh();
         }
     }
 
-    private void removeWorkflowVariable(final ScopeVariable var) {
+    private void removeWorkflowVariable(final FlowVariable var) {
         if (var.isGlobalConstant()) {
             MessageDialog.openError(getParentShell(),
                     "Global Constant", var.getName()
@@ -287,26 +287,26 @@ public class WorkflowVariablesDialog extends Dialog {
         m_table.getViewer().refresh();
     }
 
-    private boolean hasValueChanged(final ScopeVariable newVar1,
-            final ScopeVariable newVar2) {
+    private boolean hasValueChanged(final FlowVariable newVar1,
+            final FlowVariable newVar2) {
         if (newVar1.equals(newVar2)) {
             // type and name are the same -> ScopeVariable#equals
             assert newVar1.getType().equals(newVar2.getType());
             assert newVar1.getName().equals(newVar2.getName());
             // now check whether the value has changed
             // without knowing the type of the WorkflowVariable
-            ScopeVariable.Type type = newVar1.getType();
-            if (ScopeVariable.Type.STRING.equals(type)) {
+            FlowVariable.Type type = newVar1.getType();
+            if (FlowVariable.Type.STRING.equals(type)) {
                 if (newVar1.getStringValue().equals(newVar2.getStringValue())) {
                     return false;
                 }
-            } else if (ScopeVariable.Type.DOUBLE.equals(type)) {
+            } else if (FlowVariable.Type.DOUBLE.equals(type)) {
                 if (Double.compare(
                         newVar1.getDoubleValue(),
                         newVar2.getDoubleValue()) == 0) {
                     return false;
                 }
-            } else if (ScopeVariable.Type.INTEGER.equals(type)) {
+            } else if (FlowVariable.Type.INTEGER.equals(type)) {
                 if (newVar1.getIntValue() == newVar2.getIntValue()) {
                     return false;
                 }
@@ -318,14 +318,14 @@ public class WorkflowVariablesDialog extends Dialog {
     }
 
     private boolean hasChanges() {
-        List<ScopeVariable> wfmList = m_workflow.getWorkflowVariables();
-        List<ScopeVariable> dialogList = m_table.getVariables();
+        List<FlowVariable> wfmList = m_workflow.getWorkflowVariables();
+        List<FlowVariable> dialogList = m_table.getVariables();
         // different number of elements -> must contain changes
         if (wfmList.size() != dialogList.size()) {
             return true;
         }
         boolean hasChanges = false;
-        for (ScopeVariable v : dialogList) {
+        for (FlowVariable v : dialogList) {
             int idx = wfmList.indexOf(v);
             if (idx >= 0) {
                 hasChanges |= hasValueChanged(v, wfmList.get(idx));
@@ -340,14 +340,14 @@ public class WorkflowVariablesDialog extends Dialog {
 
 
     private void replaceWorkflowVariables(final boolean skipReset) {
-        List<ScopeVariable> toBeRemoved = new ArrayList<ScopeVariable>();
+        List<FlowVariable> toBeRemoved = new ArrayList<FlowVariable>();
         toBeRemoved.addAll(m_workflow.getWorkflowVariables());
         toBeRemoved.removeAll(m_table.getVariables());
-        for (ScopeVariable v : toBeRemoved) {
+        for (FlowVariable v : toBeRemoved) {
             m_workflow.removeWorkflowVariable(v.getName());
         }
         // replace
-        ScopeVariable[] vars = new ScopeVariable[m_table.getVariables().size()];
+        FlowVariable[] vars = new FlowVariable[m_table.getVariables().size()];
         m_workflow.addWorkflowVariables(skipReset,
                 m_table.getVariables().toArray(vars));
     }

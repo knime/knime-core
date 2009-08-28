@@ -35,16 +35,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.core.node.Node;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 
 /**
- * Displays workflow variables ({@link ScopeVariable}s) with name, type and 
+ * Displays workflow variables ({@link FlowVariable}s) with name, type and 
  * default value in a table.
  *  
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class WorkflowVariableTable implements Iterable<ScopeVariable> {
+public class WorkflowVariableTable implements Iterable<FlowVariable> {
     
     private static final String VAR_NAME = "Name";
     private static final String VAR_TYPE = "Type";
@@ -54,8 +54,8 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
     private static Image intImg;
     private static Image stringImg;
     
-    private final List<ScopeVariable>m_params 
-        = new ArrayList<ScopeVariable>();
+    private final List<FlowVariable>m_params 
+        = new ArrayList<FlowVariable>();
     
     private final TableViewer m_viewer;
     
@@ -75,7 +75,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      *  variable with same name and type
      * 
      */
-    public boolean add(final ScopeVariable param) {
+    public boolean add(final FlowVariable param) {
         // equals of ScopeVariable checks for name and type
         if (m_params.contains(param)) {
             return false;
@@ -88,7 +88,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      * 
      * @param param variable to be removed from the table
      */
-    public void remove(final ScopeVariable param) {
+    public void remove(final FlowVariable param) {
         m_params.remove(param);
     }
     
@@ -97,16 +97,16 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      * @param idx index of the variable
      * @return the variable
      */
-    public ScopeVariable get(final int idx) {
+    public FlowVariable get(final int idx) {
         return m_params.get(idx);
     }
     
 
     /**
      * 
-     * @return an unmodifiable list of the represented {@link ScopeVariable}s.
+     * @return an unmodifiable list of the represented {@link FlowVariable}s.
      */
-    public List<ScopeVariable> getVariables() {
+    public List<FlowVariable> getVariables() {
         return Collections.unmodifiableList(m_params); 
     }
     
@@ -115,7 +115,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      * @param index index of variable to be replaced (starts at 0)
      * @param param new variable which should be inserted at position index
      */
-    public void replace(final int index, final ScopeVariable param) {
+    public void replace(final int index, final FlowVariable param) {
         m_params.set(index, param);
     }
     
@@ -132,14 +132,14 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      * @param var the variable to get the string representation of the value of
      * @return the string representation of the value
      */
-    public static String getValueFrom(final ScopeVariable var) {
-        if (var.getType().equals(ScopeVariable.Type.DOUBLE)) {
+    public static String getValueFrom(final FlowVariable var) {
+        if (var.getType().equals(FlowVariable.Type.DOUBLE)) {
             return Double.toString(var.getDoubleValue());
         } 
-        if (var.getType().equals(ScopeVariable.Type.STRING)) {
+        if (var.getType().equals(FlowVariable.Type.STRING)) {
             return var.getStringValue();
         }
-        if (var.getType().equals(ScopeVariable.Type.INTEGER)) {
+        if (var.getType().equals(FlowVariable.Type.INTEGER)) {
             return Integer.toString(var.getIntValue());
         }
         throw new IllegalArgumentException(
@@ -182,8 +182,8 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
         public Image getColumnImage(final Object arg0, final int arg1) {
             // type column
             if (arg1 == 1) {
-                ScopeVariable.Type type = ((ScopeVariable)arg0).getType();
-                if (type.equals(ScopeVariable.Type.DOUBLE)) {
+                FlowVariable.Type type = ((FlowVariable)arg0).getType();
+                if (type.equals(FlowVariable.Type.DOUBLE)) {
                     if (doubleImg == null) {
                         URL url = Node.class.getResource(
                                 "icon/scopevar_double.png");
@@ -192,7 +192,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
                     }
                     return doubleImg;
                 } 
-                if (type.equals(ScopeVariable.Type.INTEGER)) {
+                if (type.equals(FlowVariable.Type.INTEGER)) {
                     if (intImg == null) {
                         intImg = ImageDescriptor.createFromURL(
                                 Node.class.getResource(
@@ -201,7 +201,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
                     }
                     return intImg;
                 }
-                if (type.equals(ScopeVariable.Type.STRING)) {
+                if (type.equals(FlowVariable.Type.STRING)) {
                     if (stringImg == null) {
                         stringImg = ImageDescriptor.createFromURL(
                                 Node.class.getResource(
@@ -215,7 +215,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
 
         @Override
         public String getColumnText(final Object arg0, final int arg1) {
-            ScopeVariable parameter = (ScopeVariable)arg0;
+            FlowVariable parameter = (FlowVariable)arg0;
             switch (arg1) {
             case 0: return parameter.getName();
             case 1: return parameter.getType().name();
@@ -232,7 +232,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
 
         @Override
         public Object[] getElements(final Object arg0) {
-            List<ScopeVariable>params = (List<ScopeVariable>)arg0;
+            List<FlowVariable>params = (List<FlowVariable>)arg0;
             return params.toArray();
         }
 
@@ -254,7 +254,7 @@ public class WorkflowVariableTable implements Iterable<ScopeVariable> {
      * {@inheritDoc}
      */
     @Override
-    public Iterator<ScopeVariable> iterator() {
+    public Iterator<FlowVariable> iterator() {
         return m_params.iterator();
     }
 }

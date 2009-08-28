@@ -34,7 +34,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Let the user add or edit a workflow variable with name, type and default
@@ -49,8 +49,8 @@ public class WorkflowVariablesEditDialog extends Dialog {
     private Combo m_typeSelectionCtrl;
     private Text m_varDefaultValueCtrl;
 
-    private ScopeVariable m_variable;
-    private ScopeVariable.Type m_type;
+    private FlowVariable m_variable;
+    private FlowVariable.Type m_type;
 
     /**
      *
@@ -72,9 +72,9 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
     /**
      *
-     * @param var {@link ScopeVariable} to fill the fields of the dialog from
+     * @param var {@link FlowVariable} to fill the fields of the dialog from
      */
-    public void loadFrom(final ScopeVariable var) {
+    public void loadFrom(final FlowVariable var) {
         m_varNameCtrl.setText(var.getName());
         m_varNameCtrl.setEditable(false);
         m_varNameCtrl.setEnabled(false);
@@ -116,9 +116,9 @@ public class WorkflowVariablesEditDialog extends Dialog {
             @Override
             public void modifyText(final ModifyEvent arg0) {
                 if (m_varNameCtrl.getText().startsWith(
-                        ScopeVariable.GLOBAL_CONST_ID)) {
+                        FlowVariable.GLOBAL_CONST_ID)) {
                     showError("Scope variables must not start with \""
-                            + ScopeVariable.GLOBAL_CONST_ID + "\"!");
+                            + FlowVariable.GLOBAL_CONST_ID + "\"!");
                     m_varNameCtrl.setText("");
                 }
             }
@@ -130,7 +130,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
         m_typeSelectionCtrl = new Combo(twoColComp,
                 SWT.DROP_DOWN | SWT.READ_ONLY);
-        for (ScopeVariable.Type t : ScopeVariable.Type.values()) {
+        for (FlowVariable.Type t : FlowVariable.Type.values()) {
             m_typeSelectionCtrl.add(t.name());
         }
         m_typeSelectionCtrl.addSelectionListener(new SelectionListener() {
@@ -140,7 +140,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
             }
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
-                m_type = ScopeVariable.Type.valueOf(m_typeSelectionCtrl.getItem(
+                m_type = FlowVariable.Type.valueOf(m_typeSelectionCtrl.getItem(
                         m_typeSelectionCtrl.getSelectionIndex()));
             }
         });
@@ -181,11 +181,11 @@ public class WorkflowVariablesEditDialog extends Dialog {
             throw new IllegalArgumentException(msg);
         }
         String typeString = m_typeSelectionCtrl.getItem(selectionIdx);
-        m_type = ScopeVariable.Type.valueOf(typeString);
-        if (ScopeVariable.Type.DOUBLE.equals(m_type)) {
+        m_type = FlowVariable.Type.valueOf(typeString);
+        if (FlowVariable.Type.DOUBLE.equals(m_type)) {
             if (value != null && value.length() > 0) {
                 try {
-                   m_variable = new ScopeVariable(varName,
+                   m_variable = new FlowVariable(varName,
                            Double.parseDouble(value));
                 } catch (NumberFormatException nfe) {
                     m_variable = null;
@@ -195,9 +195,9 @@ public class WorkflowVariablesEditDialog extends Dialog {
                     throw new OperationCanceledException(msg);
                 }
             }
-        } else if (ScopeVariable.Type.STRING.equals(m_type)) {
+        } else if (FlowVariable.Type.STRING.equals(m_type)) {
             if (value != null && value.length() > 0) {
-                   m_variable = new ScopeVariable(varName, value);
+                   m_variable = new FlowVariable(varName, value);
             } else {
                 m_variable = null;
                 String msg = "Invalid default value " + value
@@ -205,10 +205,10 @@ public class WorkflowVariablesEditDialog extends Dialog {
                 showError(msg);
                 throw new OperationCanceledException(msg);
             }
-        } else if (ScopeVariable.Type.INTEGER.equals(m_type)) {
+        } else if (FlowVariable.Type.INTEGER.equals(m_type)) {
             if (value != null && value.length() > 0) {
                 try {
-                   m_variable = new ScopeVariable(varName, Integer.parseInt(
+                   m_variable = new FlowVariable(varName, Integer.parseInt(
                            value));
                 } catch (NumberFormatException nfe) {
                     m_variable = null;
@@ -228,9 +228,9 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
     /**
      *
-     * @return the created {@link ScopeVariable} or <code>null</code>
+     * @return the created {@link FlowVariable} or <code>null</code>
      */
-    ScopeVariable getScopeVariable() {
+    FlowVariable getScopeVariable() {
         return m_variable;
     }
 }
