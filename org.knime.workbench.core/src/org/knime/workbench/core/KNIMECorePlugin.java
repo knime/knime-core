@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -45,10 +45,10 @@ import org.osgi.framework.BundleContext;
 /**
  * The core plugin, basically a holder for the framework's jar and some minor
  * workbench componentes that are needed everywhere (ErrorDialog,...).
- * 
+ *
  * NOTE: Plugins need to depend upon this, as this plugin exports the underlying
  * framework API !!
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMECorePlugin extends AbstractUIPlugin {
@@ -61,21 +61,21 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             KNIMECorePlugin.class);
 
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
-    
-    
+
+
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
     private static final ArrayList<ConsoleViewAppender> APPENDERS =
             new ArrayList<ConsoleViewAppender>();
-    
+
     /**
      * The constructor.
      */
@@ -86,7 +86,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
 
     /**
      * This method is called upon plug-in activation.
-     * 
+     *
      * @param context The OSGI bundle context
      * @throws Exception If this plugin could not be started
      */
@@ -112,48 +112,79 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                 public void propertyChange(final PropertyChangeEvent event) {
                     if (event.getProperty().equals(
                             HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
+                        if (!(event.getNewValue() instanceof Integer)) {
+                            // when preferences are imported and this value is
+                            // not set, they send an empty string
+                            return;
+                        }
                         int count;
                         try {
                             count = (Integer)event.getNewValue();
                             KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
                                     count);
                         } catch (Exception e) {
-                            LOGGER.warn("Unable to get maximum thread count "
+                            LOGGER.error("Unable to get maximum thread count "
                                     + " from preference page.", e);
                         }
                     } else if (event.getProperty().equals(
                             HeadlessPreferencesConstants.P_TEMP_DIR)) {
-                        File f = new File(event.getNewValue().toString());
-                        LOGGER.debug("Setting temp dir to " 
+                        if (!(event.getNewValue() instanceof String)) {
+                            // when preferences are imported and this value is
+                            // not set, they send an empty string
+                            return;
+                        }
+                        String dirName = (String)event.getNewValue();
+                        if (dirName.isEmpty()) {
+                            return;
+                        }
+                        File f = new File(dirName);
+                        LOGGER.debug("Setting temp dir to "
                                 + f.getAbsolutePath());
                         try {
                             KNIMEConstants.setKNIMETempDir(f);
                         } catch (Exception e) {
-                            LOGGER.warn("Setting temp dir failed", e);
+                            LOGGER.error("Setting temp dir failed: "
+                                    + e.getMessage(), e);
                         }
                     } else if (event.getProperty().equals(
                             HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
-                        String newName = event.getNewValue().toString();
+                        if (!(event.getNewValue() instanceof String)) {
+                            // when preferences are imported and this value is
+                            // not set, they send an empty string
+                            return;
+                        }
+                        String newName = (String)event.getNewValue();
+                        if (newName.isEmpty()) {
+                            return;
+                        }
                         LEVEL level = LEVEL.WARN;
                         try {
                             level = LEVEL.valueOf(newName);
                         } catch (NullPointerException ne) {
-                            LOGGER.warn(
+                            LOGGER.error(
                                     "Null is an invalid log level, using WARN");
                         } catch (IllegalArgumentException iae) {
-                            LOGGER.warn("Invalid log level " + newName
+                            LOGGER.error("Invalid log level " + newName
                                     + ", using WARN");
                         }
                         NodeLogger.setLevel(level);
                     } else if (P_LOGLEVEL_CONSOLE.equals(
                             event.getProperty())) {
-                        String newName = event.getNewValue().toString();
+                        if (!(event.getNewValue() instanceof String)) {
+                            // when preferences are imported and this value is
+                            // not set, they send an empty string
+                            return;
+                        }
+                        String newName = (String)event.getNewValue();
+                        if (newName.isEmpty()) {
+                            return;
+                        }
                         setLogLevel(newName);
                     }
                 }
             });
             // end property listener
-                            
+
             String logLevelConsole =
                 pStore.getString(P_LOGLEVEL_CONSOLE);
             // TODO: only if awt.headless ==  false
@@ -179,7 +210,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         }
-        
+
     }
 
     private void initMaxThreadCountProperty() {
@@ -187,7 +218,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             KNIMECorePlugin.getDefault().getPreferenceStore();
         int maxThreads = pStore.getInt(
                 HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
-        String maxTString = 
+        String maxTString =
             System.getProperty(KNIMEConstants.PROPERTY_MAX_THREAD_COUNT);
         if (maxTString == null) {
             if (maxThreads <= 0) {
@@ -199,8 +230,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         + maxThreads);
             }
         } else {
-            LOGGER.debug("Ignoring thread count from preference page (" 
-                    + maxThreads + "), since it has set by java property " 
+            LOGGER.debug("Ignoring thread count from preference page ("
+                    + maxThreads + "), since it has set by java property "
                     + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
         }
     }
@@ -234,15 +265,15 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             }
         }
         if (tmpDir != null) {
-            LOGGER.debug("Setting KNIME temp dir to \"" 
+            LOGGER.debug("Setting KNIME temp dir to \""
                     + tmpDir.getAbsolutePath() + "\"");
             KNIMEConstants.setKNIMETempDir(tmpDir);
         }
     }
-    
+
     /**
      * This method is called when the plug-in is stopped.
-     * 
+     *
      * @param context The OSGI bundle context
      * @throws Exception If this plugin could not be stopped
      */
@@ -256,8 +287,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         plugin = null;
         m_resourceBundle = null;
     }
-    
-    
+
+
     /**
      * Register the appenders according to logLevel, i.e.
      * PreferenceConstants.P_LOGLEVEL_DEBUG,
@@ -336,11 +367,11 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         }
         return false;
     }
-    
+
 
     /**
      * Returns the shared instance.
-     * 
+     *
      * @return Singleton instance of the Core Plugin
      */
     public static KNIMECorePlugin getDefault() {
@@ -350,7 +381,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
     /**
      * Returns the string from the plugin's resource bundle, or 'key' if not
      * found.
-     * 
+     *
      * @param key The resource key
      * @return The resource value, or the key if not found in the resource
      *         bundle
@@ -367,7 +398,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
 
     /**
      * Returns the plugin's resource bundle.
-     * 
+     *
      * @return The resource bundle, or <code>null</code>
      */
     public ResourceBundle getResourceBundle() {
