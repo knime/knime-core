@@ -24,12 +24,13 @@
  */
 package org.knime.core.node;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeVariable;
 
@@ -140,22 +141,17 @@ public class ScopeVariableModel {
     /**
      * @return array of variables names that match the type of this model.
      */
-    // TODO synchronize this with the Flow(!) Variables Tab which already
-    // does some compatible type matching!
     ScopeVariable[] getMatchingVariables() {
-        HashSet<ScopeVariable> liste = new HashSet<ScopeVariable>();
-        for (ScopeVariable sv
-                      : getParent().getAvailableScopeVariables().values()) {
-            if (sv.getType().equals(m_type)) {
-                liste.add(sv);
+        ArrayList<ScopeVariable> list = new ArrayList<ScopeVariable>();
+        for (ScopeVariable sv 
+                : getParent().getAvailableScopeVariables().values()) {
+            if (ConfigEditTreeModel.doesTypeAccept(m_type, sv.getType())) {
+                list.add(sv);
             }
         }
-        ScopeVariable[] result = new ScopeVariable[liste.size()];
-        liste.toArray(result);
-        return result;
+        return list.toArray(new ScopeVariable[list.size()]);
     }
     
-
     /**
      * Adds a listener which is notified whenever a new value is set in the
      * model. Does nothing if the listener is already registered.

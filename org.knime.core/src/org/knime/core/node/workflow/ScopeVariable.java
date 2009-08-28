@@ -28,10 +28,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
-
-
-
 /**
  * ScopeContext interface holding local variables of basic type.
  * 
@@ -41,7 +37,15 @@ public final class ScopeVariable extends ScopeObject {
     
     public static final String GLOBAL_CONST_ID = "knime";
 
-    public static enum Type {DOUBLE, INTEGER, STRING};
+    /** Type of a variable, supports currently only scalars. */
+    public static enum Type {
+        /** double type. */
+        DOUBLE,
+        /** int type. */
+        INTEGER,
+        /** String type. */
+        STRING
+    };
     
     private final Type m_type;
     private final String m_name;

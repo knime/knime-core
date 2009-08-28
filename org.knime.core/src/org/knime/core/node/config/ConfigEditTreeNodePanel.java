@@ -190,18 +190,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
             : (Collection<ScopeVariable>)Collections.EMPTY_LIST;
         ComboBoxElement match = null;
         for (ScopeVariable v : allVars) {
-            boolean isOk = false;
-            switch (selType) {
-            // case order is important here:
-            // string accepts also double and integer,
-            // double accepts integer, integer only accepts integer
-            case STRING:
-                isOk = true;
-            case DOUBLE:
-                isOk |= v.getType().equals(Type.DOUBLE);
-            case INTEGER:
-                isOk |= v.getType().equals(Type.INTEGER);
-            }
+            boolean isOk = ConfigEditTreeModel.doesTypeAccept(
+                    selType, v.getType());
             if (isOk) {
                 ComboBoxElement cbe = new ComboBoxElement(v);
                 model.addElement(cbe);

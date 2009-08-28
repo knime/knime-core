@@ -40,6 +40,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ScopeVariableModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.ScopeVariable.Type;
 
 /**
  * Config editor that keeps a mask of variables to overwrite existing settings.
@@ -94,6 +95,36 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 recursiveAdd(childTreeNode, (Config)childValue);
             }
             treeNode.add(childTreeNode);
+        }
+    }
+
+    /**
+     * Determines whether a scope variable at hand (represented by its
+     * actual type) can be converted into a desired type. In short: string
+     * accepts also double and integer, double accepts integer, integer only
+     * accepts integer.
+     * 
+     * @param desiredType The type that is requested.
+     * @param actualType The actual type.
+     * @return If a scope variable of type <code>actualType</code> can be
+     * used to represent a scope variable of type <code>desiredType</code>.
+     */
+    public static boolean doesTypeAccept(final Type desiredType, 
+            final Type actualType) {
+        if (desiredType == null || actualType == null) {
+            throw new NullPointerException("Arguments must not be null");
+        }
+        switch (desiredType) {
+        case STRING:
+            return true;
+        case DOUBLE:
+            return Type.DOUBLE.equals(actualType)
+            || Type.INTEGER.equals(actualType);
+        case INTEGER:
+            return Type.INTEGER.equals(actualType);
+        default:
+            assert false : "unknown type: " + desiredType;
+            return false;
         }
     }
 
@@ -662,6 +693,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                         + v.getType() + " (\"" + v + "\")");
             }
         }
+        
     }
 
     /** User object in tree node wrapping config entry, used variable name and

@@ -59,7 +59,7 @@ public class DialogComponentNumber extends DialogComponent {
     private static final int FIELD_MINWIDTH = 2;
 
     private final JSpinner m_spinner;
-    private ScopeVariableModel m_wvm = null;
+    private final ScopeVariableModelButton m_svmButton;
 
     private final JLabel m_label;
 
@@ -83,14 +83,14 @@ public class DialogComponentNumber extends DialogComponent {
      *            or int)
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
-     * @param wvm The variable model (for displaying a little icon next to the 
+     * @param svm The variable model (for displaying a little icon next to the 
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize,
-            final ScopeVariableModel wvm) {
+            final ScopeVariableModel svm) {
         this(numberModel, label, stepSize, calcDefaultWidth(numberModel),
-                wvm);
+                svm);
     }
 
     /**
@@ -114,12 +114,12 @@ public class DialogComponentNumber extends DialogComponent {
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
      * @param compWidth the width (number of columns/characters) of the spinner
-     * @param wvm The variable model (for displaying a little icon next to the 
+     * @param svm The variable model (for displaying a little icon next to the 
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize, final int compWidth,
-            final ScopeVariableModel wvm) {
+            final ScopeVariableModel svm) {
         super(numberModel);
 
         if (compWidth < 1) {
@@ -191,18 +191,17 @@ public class DialogComponentNumber extends DialogComponent {
         getComponentPanel().add(m_spinner);
         
         // add variable editor button if so desired
-        if (wvm != null) {
-            wvm.addChangeListener(new ChangeListener() {
+        if (svm != null) {
+            svm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    ScopeVariableModel wvm1 =
-                        (ScopeVariableModel)(evt.getSource());
-                    m_spinner.setEnabled(
-                            !wvm1.isVariableReplacementEnabled());
+                    m_spinner.setEnabled(!svm.isVariableReplacementEnabled());
                 }
             });
-            getComponentPanel().add(new ScopeVariableModelButton(wvm));
-            m_wvm = wvm;
+            m_svmButton = new ScopeVariableModelButton(svm);
+            getComponentPanel().add(m_svmButton);
+        } else {
+            m_svmButton = null;
         }
 
         //call this method to be in sync with the settings model
@@ -290,13 +289,6 @@ public class DialogComponentNumber extends DialogComponent {
 
         // also update the enable status of all components...
         setEnabledComponents(getModel().isEnabled());
-        // ...plus enable the spinner according to the variable model
-        if (m_wvm != null) {
-            if (m_wvm.isVariableReplacementEnabled()) {
-                m_spinner.setEnabled(false);
-            }
-        }
-
     }
 
     /**
@@ -361,7 +353,16 @@ public class DialogComponentNumber extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        m_spinner.setEnabled(enabled);
+        boolean spinnerEnabled = enabled;
+        // enable the spinner according to the variable model
+        if (m_svmButton != null) {
+            ScopeVariableModel svmModel = m_svmButton.getScopeVariableModel();
+            if (svmModel.isVariableReplacementEnabled()) {
+                spinnerEnabled = false;
+            }
+            m_svmButton.setEnabled(enabled);
+        }
+        m_spinner.setEnabled(spinnerEnabled);
     }
 
     /**

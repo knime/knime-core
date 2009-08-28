@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.ScopeVariable;
 
 
 
-/** Button for a @link ScopeVariableModel, launching a dialog which allows to
+/** Button for a {@link ScopeVariableModel}, launching a dialog which allows to
  * control the settings.
  *
  * This allows NodeDialogPane implementations to easily use Variables
@@ -69,13 +69,18 @@ public class ScopeVariableModelButton extends JButton
 implements ChangeListener, ActionListener {
 
     /* remember underlying model (to track changes) */
-    private ScopeVariableModel m_model;
+    private final ScopeVariableModel m_model;
 
     /**
+     * Create new button based on a model.
      * @param wvm the underlying model
+     * @throws NullPointerException If argument is null.
      */
     public ScopeVariableModelButton(
             final ScopeVariableModel wvm) {
+        if (wvm == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
         m_model = wvm;
         // add us as listener for changes to the WorkflowVariableModel
         wvm.addChangeListener(this);
@@ -112,6 +117,13 @@ implements ChangeListener, ActionListener {
             this.setText(enabled ? "v!" : "v?");
             return;
         }
+    }
+    
+    /** @return the model as passed in 
+     * {@linkplain #ScopeVariableModelButton(ScopeVariableModel) constructor}.
+     */
+    public ScopeVariableModel getScopeVariableModel() {
+        return m_model;
     }
 
     /** React to clicks on the underlying button: open dialog which enables
@@ -308,6 +320,7 @@ implements ChangeListener, ActionListener {
         }
 
         /** {@inheritDoc} */
+        @Override
         public Component getListCellRendererComponent(final JList list,
                 final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
