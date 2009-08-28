@@ -94,7 +94,7 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * Constructor put label and spinner into panel.
+     * Constructor puts label and spinner into panel.
      *
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
@@ -108,7 +108,9 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * Constructor put label and spinner into panel.
+     * Constructor puts label and spinner into panel and allows to specify
+     * width (in #characters) of component.
+     * 
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
      * @param label label for dialog in front of the spinner
@@ -204,7 +206,7 @@ public class DialogComponentNumber extends DialogComponent {
             m_svmButton = null;
         }
 
-        //call this method to be in sync with the settings model
+        // call this method to be in sync with the settings model
         updateComponent();
     }
 
