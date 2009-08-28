@@ -88,16 +88,16 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
         IPreferenceStore prefStore = getPreferenceStore();
-        // for backward compatibility we need to ensure that the master key 
+        // for backward compatibility we need to ensure that the master key
         // pref. store values are copied from the ui into the core plugin
         // FIXME: remove with 2.1+ version of KNIME
         // fix: master key settings are saved in core plugin only
-        IPreferenceStore corePrefStore = 
+        IPreferenceStore corePrefStore =
             KNIMECorePlugin.getDefault().getPreferenceStore();
         if (!corePrefStore.contains(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED)
              && prefStore.contains(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED)) {
             corePrefStore.setValue(
-                    HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED, 
+                    HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED,
                     prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED));
             corePrefStore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED,
                     prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED));
@@ -112,7 +112,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 MasterKeyPreferencePage.SUPPLIER);
 
         getImageRegistry().put("knime",
-                imageDescriptorFromPlugin(PLUGIN_ID, 
+                imageDescriptorFromPlugin(PLUGIN_ID,
                         "/icons/knime_default.png"));
         int freqHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
@@ -125,22 +125,32 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 String prop = event.getProperty();
                 if (PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE.equals(
                         prop)) {
+                    if (!(event.getNewValue() instanceof Integer)) {
+                        // when preferences are imported and this value is
+                        // not set, they send an empty string
+                        return;
+                    }
                     int count;
                     try {
                         count = (Integer)event.getNewValue();
                         NodeUsageRegistry.setMaxFrequentSize(count);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to set maximum number of "
+                        LOGGER.error("Unable to set maximum number of "
                                 + "frequently used nodes", e);
                     }
                 } else if (PreferenceConstants.P_FAV_LAST_USED_SIZE.equals(
                         prop)) {
+                    if (!(event.getNewValue() instanceof Integer)) {
+                        // when preferences are imported and this value is
+                        // not set, they send an empty string
+                        return;
+                    }
                     int count;
                     try {
                         count = (Integer)event.getNewValue();
                         NodeUsageRegistry.setMaxLastUsedSize(count);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to set maximum number of "
+                        LOGGER.error("Unable to set maximum number of "
                                 + "last used nodes", e);
                     }
                 }
@@ -290,6 +300,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     public ImageDescriptor getImageDescriptor(final String pluginID,
             final String filename) {
         return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
-    } 
+    }
 
 }
