@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.ext.sun.nodes.script;
 
@@ -85,23 +85,23 @@ import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JavaScriptingNodeDialog extends NodeDialogPane {
-    
-    private static final String COMMENT_ON_RETURN_STATEMENT = 
+
+    private static final String COMMENT_ON_RETURN_STATEMENT =
           "/* Please note that as of KNIME 2.0\n"
-        + " * you must use the \"return\" keyword\n" 
-        + " * to specify the return value.\n" 
+        + " * you must use the \"return\" keyword\n"
+        + " * to specify the return value.\n"
         + " */\n";
 
     private final JList m_colList;
-    
-    private final JList m_scopeVarsList;
+
+    private final JList m_flowVarsList;
 
     private final JEditorPane m_expEdit;
-    
+
     private final JEditorPane m_headerEdit;
 
     private final JRadioButton m_appendRadio;
@@ -113,15 +113,15 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     private final ColumnSelectionPanel m_replaceCombo;
 
     private final ButtonGroup m_returnTypeButtonGroup;
-    
+
     private final JCheckBox m_isArrayReturnChecker;
-    
+
     private final JCheckBox m_compileOnCloseChecker;
-    
+
     private final JList m_addJarList;
 
     private DataTableSpec m_currentSpec = null;
-    
+
     private int m_currentVersion;
 
     /** Inits GUI. */
@@ -154,43 +154,43 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             }
         });
         m_colList.setCellRenderer(new ListRenderer());
-        m_scopeVarsList = new JList(new DefaultListModel());
-        m_scopeVarsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_scopeVarsList.setToolTipText(""); // enable tooltip
-        m_scopeVarsList.addKeyListener(new KeyAdapter() {
+        m_flowVarsList = new JList(new DefaultListModel());
+        m_flowVarsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_flowVarsList.setToolTipText(""); // enable tooltip
+        m_flowVarsList.addKeyListener(new KeyAdapter() {
             /** {@inheritDoc} */
             @Override
             public void keyTyped(final KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-                    Object selected = m_scopeVarsList.getSelectedValue();
+                    Object selected = m_flowVarsList.getSelectedValue();
                     if (selected != null) {
                         onSelectionInVariableList(selected);
                     }
                 }
             }
         });
-        m_scopeVarsList.addMouseListener(new MouseAdapter() {
+        m_flowVarsList.addMouseListener(new MouseAdapter() {
             /** {@inheritDoc} */
             @Override
             public void mouseClicked(final MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    Object selected = m_scopeVarsList.getSelectedValue();
+                    Object selected = m_flowVarsList.getSelectedValue();
                     if (selected != null) {
                         onSelectionInVariableList(selected);
                     }
                 }
             }
         });
-        m_scopeVarsList.setCellRenderer(new FlowVariableListCellRenderer());
+        m_flowVarsList.setCellRenderer(new FlowVariableListCellRenderer());
         m_expEdit = new JEditorPane();
         Font font = m_expEdit.getFont();
-        Font newFont = new Font(Font.MONOSPACED, Font.PLAIN, 
+        Font newFont = new Font(Font.MONOSPACED, Font.PLAIN,
                 (font == null ? 12 : font.getSize()));
         m_expEdit.setFont(newFont);
-        
+
         m_headerEdit = new JEditorPane();
         m_headerEdit.setFont(newFont);
-        
+
         m_newColNameField = new JTextField(10);
         m_appendRadio = new JRadioButton("Append Column: ");
         m_appendRadio.setToolTipText("Appends a new column to the input "
@@ -199,7 +199,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_replaceRadio.setToolTipText("Replaces the column and changes "
                 + "the column type accordingly");
         // show all columns
-        m_replaceCombo = 
+        m_replaceCombo =
             new ColumnSelectionPanel((Border)null, DataValue.class);
         m_replaceCombo.setRequired(false);
         ButtonGroup buttonGroup = new ButtonGroup();
@@ -213,7 +213,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         };
         m_appendRadio.addActionListener(actionListener);
         m_replaceRadio.addActionListener(actionListener);
-        
+
         m_compileOnCloseChecker = new JCheckBox("Compile on close");
         m_compileOnCloseChecker.setToolTipText("Compiles the code on close "
                 + "to identify potential syntax problems.");
@@ -231,9 +231,9 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_returnTypeButtonGroup.add(doubleReturnRadio);
         m_returnTypeButtonGroup.add(stringReturnRadio);
         m_returnTypeButtonGroup.add(dateReturnRadio);
-        
+
         m_isArrayReturnChecker = new JCheckBox("Array Return");
-        
+
         m_addJarList = new JList(new DefaultListModel()) {
             /** {@inheritDoc} */
             @Override
@@ -250,7 +250,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         addTab("Java Snippet", createPanel());
         addTab("Additional Libraries", createJarPanel());
     }
-    
+
     private void onSelectionInColumnList(final Object selected) {
         if (selected != null) {
             String enter;
@@ -266,7 +266,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             m_expEdit.requestFocus();
         }
     }
-    
+
     private void onSelectionInVariableList(final Object selected) {
         if (selected instanceof FlowVariable) {
             FlowVariable v = (FlowVariable)selected;
@@ -286,38 +286,38 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             }
             String enter = "$${" + typeChar + v.getName() + "}$$";
             m_expEdit.replaceSelection(enter);
-            m_scopeVarsList.clearSelection();
+            m_flowVarsList.clearSelection();
             m_expEdit.requestFocus();
         }
     }
 
     private JPanel createPanel() {
         JPanel finalPanel = new JPanel(new BorderLayout());
-        final JSplitPane varSplitPane = 
+        final JSplitPane varSplitPane =
             new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         JScrollPane pane = new JScrollPane(m_colList);
         pane.setBorder(createEmptyTitledBorder("Column List"));
         varSplitPane.setTopComponent(pane);
         // set variable panel only if expert mode is enabled.
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            pane = new JScrollPane(m_scopeVarsList);
+            pane = new JScrollPane(m_flowVarsList);
             pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
             varSplitPane.setBottomComponent(pane);
             varSplitPane.setOneTouchExpandable(true);
             varSplitPane.setResizeWeight(0.9);
         }
         JComponent editorMainPanel = createEditorPanel();
-        
+
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplitPane.setLeftComponent(varSplitPane);
         mainSplitPane.setRightComponent(editorMainPanel);
         centerPanel.add(mainSplitPane);
-    
+
         JPanel southPanel = new JPanel(new GridLayout(0, 2));
         JPanel replaceOrAppend = createAndOrReplaceColumnPanel();
         southPanel.add(replaceOrAppend);
-    
+
         JPanel returnTypeAndCompilation = createReturnTypeAndCompilationPanel();
         southPanel.add(returnTypeAndCompilation);
 
@@ -326,16 +326,16 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         finalPanel.add(southPanel, BorderLayout.SOUTH);
         return finalPanel;
     }
-    
+
     private JComponent createEditorPanel() {
         final JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         split.setOneTouchExpandable(true);
-        
+
         JScrollPane headerScroller = new JScrollPane(m_headerEdit);
         String borderTitle = "Global Variable Declaration";
         headerScroller.setBorder(createEmptyTitledBorder(borderTitle));
         split.setTopComponent(headerScroller);
-        
+
         JScrollPane bodyScroller = new JScrollPane(m_expEdit);
         borderTitle = "Method Body";
         bodyScroller.setBorder(createEmptyTitledBorder(borderTitle));
@@ -357,31 +357,31 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 m_newColNameField.selectAll();
             }
         });
-        
+
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(m_appendRadio, gbc);
-        
+
         gbc.gridx += 1;
         panel.add(m_newColNameField, gbc);
-        
+
         gbc.gridy += 1;
         gbc.gridx = 0;
         panel.add(m_replaceRadio, gbc);
-        
+
         gbc.gridx += 1;
         panel.add(m_replaceCombo, gbc);
         return panel;
     }
-    
+
     private JPanel createReturnTypeAndCompilationPanel() {
         JPanel returnTypeAndCompilation = new JPanel(new BorderLayout());
         JPanel compilationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         compilationPanel.add(m_compileOnCloseChecker);
         returnTypeAndCompilation.add(compilationPanel, BorderLayout.NORTH);
-        
+
         JPanel returnType = new JPanel(new BorderLayout());
         returnType.setBorder(BorderFactory.createTitledBorder("Return type"));
         JPanel returnFieldType = new JPanel(new GridLayout(0, 2));
@@ -393,7 +393,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         JPanel returnArrayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         returnArrayPanel.add(m_isArrayReturnChecker);
         returnType.add(returnArrayPanel, BorderLayout.SOUTH);
-        
+
         returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
         return returnTypeAndCompilation;
 
@@ -418,7 +418,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 onJarRemove();
-            } 
+            }
         });
         m_addJarList.addListSelectionListener(new ListSelectionListener() {
             /** {@inheritDoc} */
@@ -431,9 +431,9 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         southP.add(addButton);
         southP.add(removeButton);
         p.add(southP, BorderLayout.SOUTH);
-        
+
         JPanel northP = new JPanel(new FlowLayout());
-        JLabel label = new JLabel("<html><body>Specify additional jar files " 
+        JLabel label = new JLabel("<html><body>Specify additional jar files "
                 + "that are necessary for the snippet to run</body></html>");
         northP.add(label);
         p.add(northP, BorderLayout.NORTH);
@@ -448,7 +448,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         for (Enumeration<?> e = model.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
-        StringHistory history = 
+        StringHistory history =
             StringHistory.getInstance("java_snippet_jar_dirs");
         if (m_jarFileChooser == null) {
             File dir = null;
@@ -465,7 +465,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             m_jarFileChooser.setMultiSelectionEnabled(true);
         }
         int result = m_jarFileChooser.showDialog(m_addJarList, "Select");
-        
+
         if (result == JFileChooser.APPROVE_OPTION) {
             for (File f : m_jarFileChooser.getSelectedFiles()) {
                 String s = f.getAbsolutePath();
@@ -482,7 +482,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         DefaultListModel model = (DefaultListModel)m_addJarList.getModel();
         int[] sels = m_addJarList.getSelectedIndices();
         int last = Integer.MAX_VALUE;
-        // traverse backwards (editing list in loop body) 
+        // traverse backwards (editing list in loop body)
         for (int i = sels.length - 1; i >= 0; i--) {
             assert sels[i] < last : "Selection list not ordered";
             model.remove(sels[i]);
@@ -499,7 +499,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.loadSettingsInDialog(settings, specs[0]);
         String exp = s.getExpression();
         String header = s.getHeader();
-        
+
         String rType = s.getReturnType().getName();
         boolean isArrayReturn = s.isArrayReturn();
         String defaultColName = "new column";
@@ -558,14 +558,14 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             DataColumnSpec colSpec = specs[0].getColumnSpec(i);
             listModel.addElement(colSpec);
         }
-        DefaultListModel svListModel = 
-            (DefaultListModel)m_scopeVarsList.getModel();
-        svListModel.removeAllElements();
+        DefaultListModel fvListModel =
+            (DefaultListModel)m_flowVarsList.getModel();
+        fvListModel.removeAllElements();
         for (FlowVariable v : getAvailableFlowVariables().values()) {
-            svListModel.addElement(v);
+            fvListModel.addElement(v);
         }
         m_compileOnCloseChecker.setSelected(isTestCompilation);
-        DefaultListModel jarListModel = 
+        DefaultListModel jarListModel =
             (DefaultListModel)m_addJarList.getModel();
         jarListModel.removeAllElements();
         for (String jarFile : jarFiles) {
@@ -598,7 +598,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.setExpressionVersion(m_currentVersion);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
-        DefaultListModel jarListModel = 
+        DefaultListModel jarListModel =
             (DefaultListModel)m_addJarList.getModel();
         if (jarListModel.getSize() > 0) {
             String[] copy = new String[jarListModel.getSize()];
@@ -614,7 +614,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         }
         s.saveSettingsTo(settings);
     }
-    
+
     /** Create an empty, titled border.
      * @param string Title of the border.
      * @return Such a new border.
