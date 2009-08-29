@@ -38,10 +38,11 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.LoopStartNode;
 
 
 /**
@@ -1092,7 +1093,7 @@ public abstract class NodeModel {
     }
 
     /** Informs WorkflowManager after execute to continue the loop.
-     * Call by the tail of the loop! This will result in both
+     * Call by the end of the loop! This will result in both
      * this Node as well as the creator of the FlowLoopContext to be
      * queued for execution once again. In this case the node can return
      * an empty table after execution.
@@ -1103,7 +1104,7 @@ public abstract class NodeModel {
         if (slc == null) {
             // wrong wiring of the pipeline: head seems to be missing!
             throw new IllegalStateException(
-                    "Missing Loop Head in Pipeline!");
+                    "Missing Loop Start in Pipeline!");
         }
         m_loopStatus = slc;
         // note that the WFM will set the tail ID so we can retrieve it
@@ -1112,30 +1113,48 @@ public abstract class NodeModel {
 
     private FlowLoopContext m_loopStatus;
 
-    protected final FlowLoopContext getLoopStatus() {
+    final FlowLoopContext getLoopStatus() {
         return m_loopStatus;
     }
 
-    protected final void clearLoopStatus() {
+    final void clearLoopStatus() {
         m_loopStatus = null;
     }
 
-    private NodeModel m_loopEndNode = null;
+    private LoopEndNode m_loopEndNode = null;
 
-    protected final NodeModel getLoopEndNode() {
+    /** Access method for loop start nodes to access their respective
+     * loop end. This method returns null if this node is not a loop start or
+     * the loop is not correctly closed by the user.
+     * @return The loop end node or null. Clients typically test and cast to
+     * an expected loop end instance.
+     * @see #getLoopStartNode()
+     */
+    protected final LoopEndNode getLoopEndNode() {
         return m_loopEndNode;
     }
 
-    void setLoopEndNode(final NodeModel end) {
+    /** Setter used by framework to update loop end node.
+     * @param end The end node of the loop (if this is a start node). */
+    void setLoopEndNode(final LoopEndNode end) {
         m_loopEndNode = end;
     }
 
     private LoopStartNode m_loopStartNode = null;
 
+    /** Access method for loop end nodes to access their respective loop start.
+     * This method returns null if this node is not a loop end or the loop is
+     * not correctly closed by the user.
+     * @return The loop start node or null. Clients typically test and cast to
+     * an expected loop start instance.
+     * @see #getLoopEndNode()
+     */
     protected final LoopStartNode getLoopStartNode() {
         return m_loopStartNode;
     }
 
+    /** Setter used by framework to update loop start node.
+     * @param start The start node of the loop (if this is a end node). */
     void setLoopStartNode(final LoopStartNode start) {
         m_loopStartNode = start;
     }
@@ -1146,6 +1165,63 @@ public abstract class NodeModel {
 
     void setFlowObjectStack(final FlowObjectStack scsc) {
         m_flowObjectStack = scsc;
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #pushFlowVariableString(String, String)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final void pushScopeVariableString(
+            final String name, final String value) {
+        pushFlowVariableString(name, value);
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #peekFlowVariableString(String)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final String peekScopeVariableString(final String name) {
+        return peekFlowVariableString(name);
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #pushFlowVariableDouble(String, double)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final void pushScopeVariableDouble(
+            final String name, final double value) {
+        pushFlowVariableDouble(name, value);
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #peekFlowVariableDouble(String)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final double peekScopeVariableDouble(final String name) {
+        return peekFlowVariableDouble(name);
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #pushFlowVariableInt(String, int)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final void pushScopeVariableInt(
+            final String name, final int value) {
+        pushFlowVariableInt(name, value);
+    }
+
+    /** @deprecated This method has been replaced by
+     * {@link #peekFlowVariableInt(String)}.
+     * It will be removed in future versions.
+     */
+    @Deprecated
+    protected final int peekScopeVariableInt(final String name) {
+        return peekFlowVariableInt(name);
     }
 
 }

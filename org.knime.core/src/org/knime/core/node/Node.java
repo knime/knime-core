@@ -60,15 +60,15 @@ import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
-import org.knime.core.node.workflow.FlowLoopContext;
-import org.knime.core.node.workflow.FlowObjectStack;
-import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
@@ -227,7 +227,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /** Create a persistor that is used to paste a copy of this node into
-     * the same or a different workflow. (Used by copy&paste actions and 
+     * the same or a different workflow. (Used by copy&paste actions and
      * undo operations)
      * @return A new copy persistor that clones this node's settings. The copy
      * has a non-executed state (ports and internals are not copied).
@@ -242,7 +242,7 @@ public final class Node implements NodeModelWarningListener {
      * @param loadResult Where to report errors/warnings to
      * @throws CanceledExecutionException If canceled.
      */
-    void load(final NodePersistor loader, final ExecutionMonitor exec, 
+    void load(final NodePersistor loader, final ExecutionMonitor exec,
             final LoadResult loadResult) throws CanceledExecutionException {
         try {
             // this also validates the settings
@@ -337,7 +337,7 @@ public final class Node implements NodeModelWarningListener {
      * @param exec For progress.
      * @param loadResult to add errors and warnings to (if any)
      */
-    public void loadDataAndInternals(final NodeContentPersistor loader, 
+    public void loadDataAndInternals(final NodeContentPersistor loader,
             final ExecutionMonitor exec, final LoadResult loadResult) {
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
@@ -687,7 +687,7 @@ public final class Node implements NodeModelWarningListener {
             // writing to a buffer is done asynchronously -- if this thread
             // is interrupted while waiting for the IO thread to flush we take
             // it as a graceful exit
-            isCanceled = isCanceled || (th instanceof DataContainerException 
+            isCanceled = isCanceled || (th instanceof DataContainerException
                     && th.getCause() instanceof InterruptedException);
             if (isCanceled) {
                 // clear the flag so that the ThreadPool does not kill the
@@ -1697,19 +1697,19 @@ public final class Node implements NodeModelWarningListener {
     public static void invokeEnsureOpen(final BufferedDataTable table) {
         table.ensureOpen();
     }
-    
-    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it 
+
+    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.
      * @param view The view to call the method on.
      * @param title The title for the view (method argument).
      */
-    public static void invokeOpenView(final AbstractNodeView<?> view, 
+    public static void invokeOpenView(final AbstractNodeView<?> view,
             final String title) {
         view.openView(title);
     }
 
-    /** Widens scope of {@link AbstractNodeView#closeView()} method so it 
+    /** Widens scope of {@link AbstractNodeView#closeView()} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.
      * @param view The view to call the method on.
@@ -1717,7 +1717,7 @@ public final class Node implements NodeModelWarningListener {
     public static void invokeCloseView(final AbstractNodeView<?> view) {
         view.closeView();
     }
-    
+
     // ////////////////////////
     // FlowObjectStack handling
     // ////////////////////////
@@ -1754,7 +1754,11 @@ public final class Node implements NodeModelWarningListener {
         if (tail == null) {
             m_model.setLoopEndNode(null);
         } else {
-            m_model.setLoopEndNode(tail.m_model);
+            if (!(tail.m_model instanceof LoopEndNode)) {
+                throw new ClassCastException("Node.setLoopEndNode called with"
+                        + "wrong argument. Not a LoopEndNode!");
+            }
+            m_model.setLoopEndNode((LoopEndNode)tail.m_model);
         }
     }
 

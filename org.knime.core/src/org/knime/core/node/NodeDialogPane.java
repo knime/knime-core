@@ -67,9 +67,9 @@ import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
@@ -129,8 +129,8 @@ public abstract class NodeDialogPane {
      * selected set of components -- used to customize variables in place.)
      */
     private final List<FlowVariableModel> m_flowVariablesModelList;
-    
-    /** Flag whether the settings in any of the flow variable models have 
+
+    /** Flag whether the settings in any of the flow variable models have
      * changed. If so, we need to update the flow variable tab before saving
      * the settings. We can't directly modify the tab during the event because
      * it might not show the current settings tree. */
@@ -219,7 +219,7 @@ public abstract class NodeDialogPane {
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
      * @param specs The DTSs from the inports.
-     * @param flowStack Flow object stack (contains flow variables)
+     * @param foStack Flow object stack (contains flow variables)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
@@ -249,7 +249,7 @@ public abstract class NodeDialogPane {
             m_logger.error("Error loading model settings", e);
         }
         // add flow variables tab if not yet done
-        if (getTab(TAB_NAME_VARIABLES) == null 
+        if (getTab(TAB_NAME_VARIABLES) == null
                 && Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
@@ -263,7 +263,7 @@ public abstract class NodeDialogPane {
         }
         m_flowVariableTab.setModified(false);
         m_flowVariablesModelChanged = false;
-        if (m_pane.getSelectedComponent() == m_flowVariableTab 
+        if (m_pane.getSelectedComponent() == m_flowVariableTab
                 || !m_flowVariablesModelList.isEmpty()) {
             // this will also update the settings in all elements in
             // m_flowVariablesModelList
@@ -902,7 +902,7 @@ public abstract class NodeDialogPane {
     /** Create model and register a new variable for a specific settings
      * object.
      *
-     * @param dc settings object of corresponding DialogComponent  
+     * @param dc settings object of corresponding DialogComponent
      * @return new FlowVariableModel which is already registered
      */
     protected FlowVariableModel createFlowVariableModel(
@@ -910,14 +910,14 @@ public abstract class NodeDialogPane {
         return createFlowVariableModel(dc.getKey(),
                 dc.getFlowVariableType());
     }
-    
+
     /** Sets the settings from the second argument into the flow variables tab.
      * The parameter tree is supposed to follow the node settings argument.
-     * @param nodeSettings The (user) settings of the node. 
+     * @param nodeSettings The (user) settings of the node.
      * @param variableSettings The flow variable settings.
      */
     @SuppressWarnings("unchecked")
-    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings, 
+    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings,
             final NodeSettingsRO variableSettings) {
         m_flowVariableTab.setErrorLabel("");
         m_flowVariableTab.setModified(true);
@@ -965,7 +965,7 @@ public abstract class NodeDialogPane {
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
      * of hard-coded values.) */
-    private class FlowVariablesTab extends JPanel 
+    private class FlowVariablesTab extends JPanel
         implements ConfigEditTreeEventListener {
 
         private final ConfigEditJTree m_tree;
@@ -985,7 +985,7 @@ public abstract class NodeDialogPane {
             add(new JScrollPane(panel), BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
-        
+
         /** Find the tree node that is associated with the given key path.
          * @param keyPath The path in the tree (single root is omitted).
          * @return The config node or null if not present.
