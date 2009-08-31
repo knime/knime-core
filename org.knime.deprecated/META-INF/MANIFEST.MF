@@ -9,8 +9,8 @@ Require-Bundle: org.knime.core
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.mds,
  org.knime.base.node.mine.scorer,
- 
  org.knime.base.node.mine.scorer.entrop,
+ org.knime.base.node.mine.scorer.hilitescorer,
  org.knime.base.node.mine.sota,
  org.knime.base.node.preproc.discretization.caim.modelapply,
  org.knime.base.node.preproc.discretization.caim.modelcreator,
@@ -25,6 +25,7 @@ Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.viz.property.size,
  org.knime.base.node.viz.rulevis2d,
  org.knime.base.node.viz.scatterplot,
+ org.knime.base.node.viz.statistics,
  org.knime.core.node.defaultnodedialog
 Eclipse-LazyStart: true
 Bundle-ClassPath: knime-deprecated.jar

@@ -355,8 +355,8 @@
             id="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"/>
       <node
             category-path="/statistics"
-            factory-class="org.knime.base.node.viz.statistics.StatisticsNodeFactory"
-            id="org.knime.base.node.viz.statistics.StatisticsNodeFactory"/>
+            factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
+            id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
