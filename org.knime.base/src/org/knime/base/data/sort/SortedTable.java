@@ -273,7 +273,6 @@ public class SortedTable implements DataTable {
         for (DataRow row : dataTable) {
             rows[j++] = row;
             if (++m_counter % rows.length == 0) {
-                exec.checkCanceled();
                 Arrays.sort(rows, m_rowComparator);
                 for (int i = 0; i < rows.length; i++) {
                     cont[k].addRowToTable(rows[i]);
@@ -281,13 +280,16 @@ public class SortedTable implements DataTable {
                 }
                 cont[k].close();
                 j = 0;
-                exec.setProgress(m_counter / max, "Reading table, " + m_counter
-                        + " rows read");
                 if (m_counter < dataTable.getRowCount()) {
                     cont[++k] =
                             exec.createDataContainer(dataTable
                                     .getDataTableSpec(), true, 0);
                 }
+            }
+            if (m_counter % 1000 == 0) {
+            	exec.checkCanceled();
+            	exec.setProgress(m_counter / max, "Reading table, " + m_counter
+            		+ " rows read");
             }
         }
         if (j > 0) {
