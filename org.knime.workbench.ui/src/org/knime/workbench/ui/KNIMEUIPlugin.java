@@ -24,6 +24,8 @@
  */
 package org.knime.workbench.ui;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -35,6 +37,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
@@ -164,18 +167,25 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         } catch (Exception e) {
             LOGGER.error("Error during loading of node usage history: ", e);
         }
+        
+        // load database driver files from core preference page
+        String dbDrivers = corePrefStore.getString(
+        		HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
+        if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
+        	for (String d : dbDrivers.split(";")) {
+        		try {
+        			DatabaseDriverLoader.loadDriver(new File(d));
+        		} catch (IOException ioe) {
+        			LOGGER.info("Can't load driver file \"" + d + "\"");
+        		}
+        	}
+        }
     }
-
-
-
-
 
     /**
      * This method is called when the plug-in is stopped.
-     *
      * @param context The bundle context
      * @throws Exception If failed
-     *
      */
     @Override
     public void stop(final BundleContext context) throws Exception {

@@ -45,5 +45,10 @@ public interface HeadlessPreferencesConstants {
     public static final String P_MASTER_KEY_SAVED = "knime.master_key.saved";
     /** Preference constant to store the master key during a session. */
     public static final String P_MASTER_KEY = "knime.master_key";
+    
+    /* --- Database settings constants --- */
+    
+    /** Preference constant to store loaded database driver files. */
+    public static final String P_DATABASE_DRIVERS = "database_drivers";
 
 }
