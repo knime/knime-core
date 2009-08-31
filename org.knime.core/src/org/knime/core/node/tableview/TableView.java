@@ -19,7 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * 2006-06-08 (tm): reviewed 
  */
 package org.knime.core.node.tableview;
 
@@ -39,6 +38,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -108,6 +108,12 @@ public class TableView extends JScrollPane {
     
     /** Last search string, needed for continued search. */
     private String m_searchString;
+    
+    private TableAction m_findAction;
+    
+    private TableAction m_findNextAction;
+    
+    private TableAction m_gotoRowAction;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -384,7 +390,7 @@ public class TableView extends JScrollPane {
     }
     
     /**
-     * Control behaviour to show only hilited rows.
+     * Control behavior to show only hilited rows.
      * 
      * @param showOnlyHilite <code>true</code> Filter and display only
      *        rows whose hilite status is set.
@@ -741,6 +747,19 @@ public class TableView extends JScrollPane {
         m_popup.show(this, p.x, p.y);
     }
     
+    /** Registers the argument action in the components action map.
+     * @param action The action to register (does nothing if 
+     *        it hasn't a key stroke assigned)
+     */
+    private void registerAction(final TableAction action) {
+        KeyStroke stroke = action.getKeyStroke();
+        Object name = action.getValue(TableAction.NAME);
+        if (stroke != null) {
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(stroke, name);
+            getActionMap().put(name, action);
+        }
+    }
+    
     /**
      * Create the navigation menu for this table view.
      *  
@@ -749,72 +768,23 @@ public class TableView extends JScrollPane {
     public JMenu createNavigationMenu() {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
-        JMenuItem goToRowItem = new JMenuItem("Go to Row...");
-        goToRowItem.setAccelerator(KeyStroke.getKeyStroke(
-                KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
-        goToRowItem.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                String rowString = JOptionPane.showInputDialog(
-                        TableView.this, "Enter row number:", "Go to Row", 
-                        JOptionPane.QUESTION_MESSAGE);
-                if (rowString == null) { // canceled
-                     return;
-                }
-                try { 
-                    int row = Integer.parseInt(rowString);
-                    gotoCell(row - 1, 0);
-                } catch (NumberFormatException nfe) {
-                    JOptionPane.showMessageDialog(TableView.this, 
-                            "Can't parse " + rowString, "Error", 
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        TableAction gotoRowAction = registerGotoRowAction();
+        JMenuItem goToRowItem = new JMenuItem(gotoRowAction);
+        goToRowItem.setAccelerator(gotoRowAction.getKeyStroke());
         goToRowItem.addPropertyChangeListener(
                 new EnableListener(this, true, false));
         goToRowItem.setEnabled(hasData());
         result.add(goToRowItem);
-        JMenuItem findItem = new JMenuItem("Find ...");
-        findItem.setAccelerator(KeyStroke.getKeyStroke(
-                KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
-        findItem.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                if (m_searchPosition == null) {
-                    initNewSearchPostion(false);
-                }
-                m_searchPosition.reset();
-                boolean isIDOnly = m_searchPosition.isIDOnly();
-                JCheckBox rowKeyBox = 
-                    new JCheckBox("Row ID only", isIDOnly);
-                JPanel panel = new JPanel(new BorderLayout());
-                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
-                panel.add(rowKeyBox, BorderLayout.EAST);
-                String in = (String)JOptionPane.showInputDialog(
-                        TableView.this, panel, "Search", 
-                        JOptionPane.QUESTION_MESSAGE, null, 
-                        null, m_searchString);
-                if (in == null || in.isEmpty()) { // canceled
-                     return;
-                }
-                find(in, rowKeyBox.isSelected());
-            }
-        });
+        TableAction findAction = registerFindAction();
+        JMenuItem findItem = new JMenuItem(findAction);
+        findItem.setAccelerator(findAction.getKeyStroke());
         findItem.addPropertyChangeListener(
                 new EnableListener(this, true, false));
         findItem.setEnabled(hasData());
         result.add(findItem);
-        final JMenuItem findNextItem = new JMenuItem("Find Next");
-        findNextItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
-        findNextItem.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                if (m_searchString == null) {
-                    return;
-                }
-                assert m_searchPosition != null 
-                : "Search position is null but search string is non-null";
-                find(m_searchString, m_searchPosition.isIDOnly());
-            }
-        });
+        TableAction findNextAction = registerFindNextAction();
+        final JMenuItem findNextItem = new JMenuItem(findNextAction);
+        findNextItem.setAccelerator(findNextAction.getKeyStroke());
         findNextItem.addPropertyChangeListener(
                 new EnableListener(this, true, false) {
             /** {@inheritDoc} */
@@ -1058,6 +1028,118 @@ public class TableView extends JScrollPane {
         return result;
     } // createViewMenu()
     
+    /** Registers all actions for navigation on the table, namely "Find...", 
+     * "Find Next" and "Go to Row...". */
+    public void registerNavigationActions() {
+        registerFindAction();
+        registerFindNextAction();
+        registerGotoRowAction();
+    }
+    
+    /** Creates and registers the "Find ..." action on this component. Multiple
+     * invocation of this method have no effect (lazy initialization).
+     * @return The non-null action representing the find task. 
+     * @see #registerNavigationActions() */
+    public TableAction registerFindAction() {
+        if (m_findAction == null) {
+            String name = "Find..."; 
+            KeyStroke stroke = KeyStroke.getKeyStroke(
+                    KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK);
+            TableAction action = new TableAction(stroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    if (!hasData()) {
+                        return;
+                    }
+                    if (m_searchPosition == null) {
+                        initNewSearchPostion(false);
+                    }
+                    m_searchPosition.reset();
+                    boolean isIDOnly = m_searchPosition.isIDOnly();
+                    JCheckBox rowKeyBox = 
+                        new JCheckBox("Row ID only", isIDOnly);
+                    JPanel panel = new JPanel(new BorderLayout());
+                    panel.add(new JLabel("Find String: "), BorderLayout.WEST);
+                    panel.add(rowKeyBox, BorderLayout.EAST);
+                    String in = (String)JOptionPane.showInputDialog(
+                            TableView.this, panel, "Search", 
+                            JOptionPane.QUESTION_MESSAGE, null, 
+                            null, m_searchString);
+                    if (in == null || in.isEmpty()) { // canceled
+                        return;
+                    }
+                    find(in, rowKeyBox.isSelected());
+                }
+            };
+            registerAction(action);
+            m_findAction = action;
+        }
+        return m_findAction;
+    }
+    
+    /** Creates and registers the "Find Next" action on this component. Multiple
+     * invocation of this method have no effect (lazy initialization).
+     * @return The non-null action representing the find next task.
+     * @see #registerNavigationActions() */
+    public TableAction registerFindNextAction() {
+        registerFindAction();
+        if (m_findNextAction == null) {
+            String name = "Find Next"; 
+            KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
+            TableAction action = new TableAction(stroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    if (m_searchString == null) {
+                        return;
+                    }
+                    assert m_searchPosition != null 
+                    : "Search position is null but search string is non-null";
+                    find(m_searchString, m_searchPosition.isIDOnly());
+                }
+            };
+            registerAction(action);
+            m_findNextAction = action;
+        }
+        return m_findNextAction;
+    }
+    
+    /** Creates and registers the "Go to Row" action on this component. Multiple
+     * invocation of this method have no effect (lazy initialization).
+     * @return The non-null action representing the go to row task.
+     * @see #registerNavigationActions() */
+    public TableAction registerGotoRowAction() {
+        if (m_gotoRowAction == null) {
+            String name = "Go to Row..."; 
+            KeyStroke stroke = KeyStroke.getKeyStroke(
+                    KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK);
+            TableAction action = new TableAction(stroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    if (!hasData()) {
+                        return;
+                    }
+                    String rowString = JOptionPane.showInputDialog(
+                            TableView.this, "Enter row number:", "Go to Row", 
+                            JOptionPane.QUESTION_MESSAGE);
+                    if (rowString == null) { // canceled
+                         return;
+                    }
+                    try { 
+                        int row = Integer.parseInt(rowString);
+                        gotoCell(row - 1, 0);
+                    } catch (NumberFormatException nfe) {
+                        JOptionPane.showMessageDialog(TableView.this, 
+                                "Can't parse " + rowString, "Error", 
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            registerAction(action);
+            m_gotoRowAction = action;
+        }
+        return m_gotoRowAction;
+    }
+    
     /** PropertyChangeListener that will disable/enable the menu items. */
     private static class EnableListener implements PropertyChangeListener {
         private final boolean m_watchData;
@@ -1147,6 +1229,30 @@ public class TableView extends JScrollPane {
         
         private boolean canResize(final Component c, final MouseEvent e) {
             return (c.getHeight() - e.getPoint().y <= 3);
+        }
+    }
+    
+    /** Action associate with the table. There are instances for "Find...", 
+     * "Find Next" and "Go to Row". This class has an additional field for the 
+     * preferred accelerator key.
+     */
+    public abstract static class TableAction extends AbstractAction {
+        
+        private final KeyStroke m_keyStroke;
+        
+        /**
+         * @param keyStroke Key stroke for this actions 
+         *        (needs to be registered elsewhere) 
+         * @param name Name, see {@link AbstractAction#AbstractAction(String)}
+         */
+        TableAction(final KeyStroke keyStroke, final String name) {
+            super(name);
+            m_keyStroke = keyStroke;
+        }
+        
+        /** @return the keyStroke */
+        public KeyStroke getKeyStroke() {
+            return m_keyStroke;
         }
     }
     

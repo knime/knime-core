@@ -55,6 +55,7 @@ public class BufferedDataTableView extends JComponent {
         setBackground(NodeView.COLOR_BACKGROUND);
 
         m_dataView = new TableView();
+        m_dataView.registerNavigationActions();
         m_dataView.getHeaderTable().setShowColorInfo(false);
         updateDataTable();
     }
