@@ -64,11 +64,7 @@ public class DatabaseConnectionSettings {
     /** Keeps the history of all loaded driver and its order. */
     public static final StringHistory DRIVER_ORDER = StringHistory.getInstance(
             "database_drivers");
-    
-    /** Keeps the history of all driver URLs. */
-    public static final StringHistory DRIVER_URLS = StringHistory.getInstance(
-            "driver_urls");
-    
+      
     /** Keeps the history of all database URLs. */
     public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
@@ -179,7 +175,7 @@ public class DatabaseConnectionSettings {
         settings.addString("loaded_driver",
                 (driverFile == null ? null : driverFile.getAbsolutePath()));
         DRIVER_ORDER.add(m_driver);
-        DRIVER_URLS.add(m_dbName);
+        DATABASE_URLS.add(m_dbName);
     }
 
     /**
@@ -227,7 +223,6 @@ public class DatabaseConnectionSettings {
             }
             m_dbName = database;
             DATABASE_URLS.add(m_dbName);
-            DRIVER_URLS.add(m_dbName);
             m_user = user;
             m_pass = password;
             // loaded driver

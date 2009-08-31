@@ -40,7 +40,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
@@ -138,16 +137,6 @@ final class DBWriterNodeModel extends NodeModel {
             }
             m_table = table;
             m_append = append;
-            // loaded driver
-            String loadedDriver = settings.getString("loaded_driver", null);
-            if (loadedDriver != null) {
-                try {
-                    DatabaseDriverLoader.loadDriver(new File(loadedDriver));
-                } catch (Throwable t) {
-                    LOGGER.info("Could not load driver from file \"" 
-                            + loadedDriver + "\".", t);
-                }
-            }
             // load SQL type for each column
             m_types.clear();
             try {
