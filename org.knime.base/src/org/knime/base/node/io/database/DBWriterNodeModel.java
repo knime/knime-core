@@ -35,7 +35,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -54,10 +53,6 @@ final class DBWriterNodeModel extends NodeModel {
      * TODO not yet supported Double.MAX_VALUE, Double.NEGATIVE_INFINITY, and
      * DOUBLE.POSITIVE_INFINITY
      */
-
-    /** Logger for the database writer. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DBWriterNodeModel.class);
     
     private final DatabaseConnectionSettings m_conn;
 
