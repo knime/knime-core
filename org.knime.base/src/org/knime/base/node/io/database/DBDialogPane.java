@@ -27,16 +27,12 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -52,7 +48,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.core.util.SimpleFileFilter;
 
 
 /**
@@ -65,8 +60,6 @@ final class DBDialogPane extends JPanel {
         NodeLogger.getLogger(DBDialogPane.class);
 
     private final JComboBox m_driver = new JComboBox();
-
-    private final JButton m_load = new JButton("Load");
 
     private final JComboBox m_db = new JComboBox();
 
@@ -88,29 +81,11 @@ final class DBDialogPane extends JPanel {
         super(new GridLayout(0, 1));
         m_driver.setEditable(false);
         m_driver.setFont(FONT);
-        m_driver.setPreferredSize(new Dimension(320, 20));
-        m_load.setPreferredSize(new Dimension(75, 20));
-        m_load.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                JFileChooser chooser = createFileChooser();
-                int ret = chooser.showOpenDialog(DBDialogPane.this);
-                if (ret == JFileChooser.APPROVE_OPTION) {
-                    File file = chooser.getSelectedFile();
-                    try {
-                        DatabaseDriverLoader.loadDriver(file);
-                        updateDriver();
-                    } catch (Throwable t) {
-                        LOGGER.info("Could not load driver from file \"" 
-                                + file.getAbsolutePath() + "\".", t);
-                    }
-                }
-            }
-        });
+        m_driver.setPreferredSize(new Dimension(400, 20));
         JPanel driverPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         driverPanel.setBorder(BorderFactory
                 .createTitledBorder(" Database driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
-        driverPanel.add(m_load, BorderLayout.EAST);
         super.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dbPanel.setBorder(BorderFactory.createTitledBorder(
@@ -151,17 +126,6 @@ final class DBDialogPane extends JPanel {
         });
         passPanel.add(m_pass);
         super.add(passPanel);
-    }
-    
-    private JFileChooser createFileChooser() {
-        if (m_chooser == null) {
-            m_chooser = new JFileChooser();
-            m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            m_chooser.setAcceptAllFileFilterUsed(false);
-            m_chooser.setFileFilter(
-                    new SimpleFileFilter(DatabaseDriverLoader.EXTENSIONS));
-        }
-        return m_chooser;
     }
 
     /**
