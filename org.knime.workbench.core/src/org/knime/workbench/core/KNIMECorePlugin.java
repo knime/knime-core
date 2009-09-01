@@ -37,6 +37,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
@@ -206,6 +207,19 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             // and serves as a master key provider
             KnimeEncryption.setEncryptionKeySupplier(
                     new EclipseEncryptionKeySupplier());
+            
+            // load database driver files from core preference page
+            String dbDrivers = pStore.getString(
+            		HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
+            if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
+            	for (String d : dbDrivers.split(";")) {
+            		try {
+            			DatabaseDriverLoader.loadDriver(new File(d));
+            		} catch (IOException ioe) {
+            			LOGGER.info("Can't load driver file \"" + d + "\"");
+            		}
+            	}
+            }
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
