@@ -6,18 +6,15 @@ Bundle-ClassPath: workbench-repository-patches.jar,
  workbench-repository.jar
 Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Provide-Package: org.knime.workbench.repository,
- org.knime.workbench.repository.model,
- org.knime.workbench.repository.view
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.views,
  org.knime.workbench.core,
  org.eclipse.gef,
  org.eclipse.ui.ide
-Eclipse-LazyStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.repository,
  org.knime.workbench.repository.model,
  org.knime.workbench.repository.model.props,
  org.knime.workbench.repository.view
+Bundle-ActivationPolicy: lazy

@@ -3,16 +3,14 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME JavaScripting node
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
 Bundle-Version: 2.1.0.0021700
-Bundle-Activator: org.knime.ext.sun.SunPlugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.base,
  org.eclipse.jdt.core
 Eclipse-RegisterBuddy: org.knime.base
-Eclipse-LazyStart: true
 Bundle-ClassPath: knime-sun-patches.jar,
  knime-sun.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: org.knime.ext.sun,
- org.knime.ext.sun.nodes.script,
+Export-Package: org.knime.ext.sun.nodes.script,
  org.knime.ext.sun.nodes.script.expression
+Bundle-ActivationPolicy: lazy

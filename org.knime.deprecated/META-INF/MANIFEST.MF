@@ -27,5 +27,4 @@ Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.viz.scatterplot,
  org.knime.base.node.viz.statistics,
  org.knime.core.node.defaultnodedialog
-Eclipse-LazyStart: true
 Bundle-ClassPath: knime-deprecated.jar

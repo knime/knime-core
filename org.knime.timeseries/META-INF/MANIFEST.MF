@@ -8,10 +8,10 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)";visibility:=reexport,
  org.knime.workbench.repository;bundle-version="[2.0.0,3.0.0)";visibility:=reexport,
  org.knime.base;bundle-version="[2.0.0,3.0.0)";visibility:=reexport
-Eclipse-LazyStart: true
 Bundle-ClassPath: knime-timeseries-patches.jar,
  knime-timeseries.jar
-Export-Package: org.knime.exp.timeseries.node.fuzzycpmeans,
+Export-Package: org.knime.core.data.date,
+ org.knime.exp.timeseries.node.fuzzycpmeans,
  org.knime.timeseries,
  org.knime.timeseries.node.aggregate,
  org.knime.timeseries.node.diff,
@@ -27,3 +27,4 @@ Export-Package: org.knime.exp.timeseries.node.fuzzycpmeans,
  org.knime.timeseries.node.movavg,
  org.knime.timeseries.node.stringtotimestamp,
  org.knime.timeseries.util
+Bundle-ActivationPolicy: lazy

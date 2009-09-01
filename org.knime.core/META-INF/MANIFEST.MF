@@ -5,7 +5,7 @@ Bundle-Version: 2.1.0.0021700
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
  knime-core.jar
-Provide-Package: log4j,
+Export-Package: log4j,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.collection,
@@ -39,10 +39,10 @@ Provide-Package: log4j,
  org.knime.core.util,
  org.knime.core.xml
 Bundle-Activator: org.knime.core.internal.CorePlugin
-Require-Bundle: org.eclipse.core.runtime;reprovide=true,
+Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,
  org.apache.log4j,
  org.eclipse.core.resources
-Eclipse-LazyStart: true
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ManifestVersion: 2
+Bundle-ActivationPolicy: lazy

@@ -13,12 +13,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
  org.knime.workbench.repository,
  org.eclipse.ui.forms
-Eclipse-LazyStart: true
-Provide-Package: org.knime.workbench.ui,
- org.knime.workbench.ui.preferences,
- org.knime.workbench.ui.views,
- org.knime.workbench.ui.wizards.project,
- org.knime.workbench.ui.wrapper
 Bundle-ManifestVersion: 2
 Export-Package: com.swtdesigner,
  org.knime.workbench.ui.metainfo.editor,
@@ -39,3 +33,4 @@ Export-Package: com.swtdesigner,
  org.knime.workbench.ui.wizards.imports,
  org.knime.workbench.ui.wizards.project,
  org.knime.workbench.ui.wrapper
+Bundle-ActivationPolicy: lazy

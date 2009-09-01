@@ -4,10 +4,8 @@ Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
 Bundle-Version: 2.1.0.0021700
 Bundle-ClassPath: workbench-help-patches.jar,
  workbench-help.jar
-Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
-Provide-Package: org.knime.workbench.help
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.help,
  org.eclipse.help.base,
@@ -20,7 +18,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.update.scheduler,
  org.eclipse.update.ui,
  org.eclipse.help.ui
-Eclipse-LazyStart: true
 Bundle-ManifestVersion: 2
-Export-Package: org.knime.workbench.help,
- org.knime.workbench.help.intro
+Export-Package: org.knime.workbench.help.intro
+Bundle-ActivationPolicy: lazy
