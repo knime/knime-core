@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.02.2005 (cebron): created
  */
@@ -48,7 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
  * and transformed in a output datatable. To compare two datarows, the
  * Comparator compares the {@link org.knime.core.data.DataCell}s with their
  * <code>compareTo</code>-method on each position.
- * 
+ *
  * @see org.knime.core.data.container.DataContainer
  * @see java.util.Arrays#sort(java.lang.Object[], int, int,
  *      java.util.Comparator)
@@ -74,7 +74,7 @@ public class SorterNodeModel extends NodeModel {
      * The key for the Sort Order Array in the NodeSettings.
      */
     static final String SORTORDER_KEY = "sortOrder";
-    
+
     /**
      * The key for the memory-sort flag in the NodeSettings.
      */
@@ -90,7 +90,7 @@ public class SorterNodeModel extends NodeModel {
      * ascending false: descending
      */
     private boolean[] m_sortOrder = null;
-    
+
     /*
      * Flag indicating whether to perform the sorting in memory or not.
      */
@@ -98,7 +98,7 @@ public class SorterNodeModel extends NodeModel {
 
     /**
      * Inits a new <code>SorterNodeModel</code> with one in- and one output.
-     * 
+     *
      */
     SorterNodeModel() {
         super(1, 1);
@@ -112,12 +112,12 @@ public class SorterNodeModel extends NodeModel {
      * one Result-Container. The list of columns that shall be sorted and their
      * corresponding sort order in a boolean array should be set, before
      * executing the model.
-     * 
+     *
      * @param inData the data table at the input port
      * @param exec the execution monitor
      * @return the sorted data table
      * @throws Exception if the settings (includeList and sortOrder) are not set
-     * 
+     *
      * @see java.util.Arrays sort(java.lang.Object[], int, int,
      *      java.util.Comparator)
      * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
@@ -155,7 +155,7 @@ public class SorterNodeModel extends NodeModel {
      * Check if the values of the include list also exist in the
      * {@link DataTableSpec} at the inport. If everything is ok, the v from the
      * inport is translated without modification to the outport.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -167,7 +167,8 @@ public class SorterNodeModel extends NodeModel {
         // check if the values of the include List
         // exist in the DataTableSpec
         for (String ic : m_inclList) {
-            if (!ic.equals(SorterNodeDialogPanel2.NOSORT.getName())) {
+            if (!ic.equals(SorterNodeDialogPanel2.NOSORT.getName())
+                    && !ic.equals(SorterNodeDialogPanel2.ROWKEY.getName())) {
                 if ((inSpecs[INPORT].findColumnIndex(ic) == -1)) {
                     throw new InvalidSettingsException("Column " + ic
                             + " not in spec.");
@@ -180,13 +181,13 @@ public class SorterNodeModel extends NodeModel {
     /**
      * The list of included columns and their sort order are stored in the
      * settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_inclList != null) {
-            
+
             settings.addStringArray(INCLUDELIST_KEY, m_inclList
                     .toArray(new String[0]));
         }
@@ -199,7 +200,7 @@ public class SorterNodeModel extends NodeModel {
     /**
      * Valid settings should contain the list of columns and a corresponding
      * sort order array of same size.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -210,7 +211,7 @@ public class SorterNodeModel extends NodeModel {
         if (inclList == null) {
             throw new InvalidSettingsException("No column selected.");
         }
-        
+
         // scan fur duplicate entries in include list
         for (int i = 0; i < inclList.length; i++) {
             String entry = inclList[i];
@@ -230,7 +231,7 @@ public class SorterNodeModel extends NodeModel {
 
     /**
      * Load the settings (includelist and sort order) in the SorterNodeModel.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -255,6 +256,7 @@ public class SorterNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty.
     }
 
     /**
@@ -264,5 +266,6 @@ public class SorterNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty.
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   14.04.2005 (cebron): created
  */
@@ -49,11 +49,13 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.StringCell;
 
 
 /**
  * This Panel holds subpanels consisting of SortItems.
- * 
+ *
  * @see SortItem
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -66,6 +68,12 @@ public class SorterNodeDialogPanel2 extends JPanel {
     public static final DataColumnSpec NOSORT = new DataColumnSpecCreator(
             "- DO NOT SORT -", DataType.getType(DataCell.class)).createSpec();
 
+    /**
+     * The entry in the JComboBox for sorting by {@link RowKey}.
+     */
+    public static final DataColumnSpec ROWKEY = new DataColumnSpecCreator(
+            "-ROWKEY -", DataType.getType(StringCell.class)).createSpec();
+
     /*
      * Keeps track of the components on this JPanel
      */
@@ -75,12 +83,12 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * The DataTableSpec
      */
     private DataTableSpec m_spec;
-    
+
     /*
      * Flag for whether to perform the sorting in memory or not.
      */
     private boolean m_memory;
-    
+
     /*
      * Corresponding checkbox
      */
@@ -89,7 +97,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
     /**
      * Constructs a new empty JPanel used for displaying the three first
      * selected columns in the according order and the sorting order for each.
-     * 
+     *
      */
     SorterNodeDialogPanel2() {
         BoxLayout bl = new BoxLayout(this, BoxLayout.Y_AXIS);
@@ -101,7 +109,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
     /**
      * Updates this panel based on the DataTableSpec, the list of columns to
      * include and the corresponding sorting order.
-     * 
+     *
      * @param spec the DataTableSpec
      * @param incl the list to include
      * @param sortOrder the sorting order
@@ -120,14 +128,15 @@ public class SorterNodeDialogPanel2 extends JPanel {
         if (spec != null) {
             Vector<DataColumnSpec> values = new Vector<DataColumnSpec>();
             values.add(NOSORT);
+            values.add(ROWKEY);
             for (int j = 0; j < spec.getNumColumns(); j++) {
                 values.add(spec.getColumnSpec(j));
             }
             if ((incl == null) && (sortOrder == null)) {
 
-                for (int i = 0; i < nrsortitems 
+                for (int i = 0; i < nrsortitems
                 && i < spec.getNumColumns(); i++) {
-                    DataColumnSpec selected = 
+                    DataColumnSpec selected =
                             (i == 0) ? values.get(i + 1) : values.get(0);
                     SortItem temp = new SortItem(i, values, selected, true);
                     super.add(temp);
@@ -151,15 +160,22 @@ public class SorterNodeDialogPanel2 extends JPanel {
                         super.add(temp);
                         m_components.add(temp);
                         interncounter++;
+                    } else if (includeString.equals(ROWKEY.getName())) {
+                        SortItem temp = new SortItem(interncounter, values,
+                                ROWKEY, sortOrder[interncounter]);
+                        super.add(temp);
+                        m_components.add(temp);
+                        interncounter++;
                     }
+
                 }
             }
             Box buttonbox = Box.createHorizontalBox();
             Border addColumnBorder = BorderFactory
                     .createTitledBorder("Add columns");
             buttonbox.setBorder(addColumnBorder);
-            int maxCols = m_spec.getNumColumns() - m_components.size();
-            
+            int maxCols = m_spec.getNumColumns() - m_components.size() + 1;
+
             JButton addSortItemButton = new JButton("new columns");
             final JSpinner spinner = new JSpinner();
             SpinnerNumberModel snm;
@@ -180,7 +196,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
             // when spinner's text field is editable false
             spinnertextfield.setEditable(false);
             spinnertextfield.setBackground(backColor);
-           
+
 
             addSortItemButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent ae) {
@@ -194,6 +210,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     int newsize = Integer.parseInt(temp);
                     for (int n = oldsize; n < oldsize + newsize; n++) {
                         newlist.add(NOSORT.getName());
+                        newlist.add(ROWKEY.getName());
                     }
                     boolean[] oldbool = new boolean[oldsize];
                     boolean[] newbool = new boolean[oldsize + newsize];
@@ -233,7 +250,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
 
     /**
      * Returns all columns from the include list.
-     * 
+     *
      * @return a list of all columns from the include list
      */
     public List<String> getIncludedColumnList() {
@@ -249,7 +266,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
 
     /**
      * Returns the sortOrder array.
-     * 
+     *
      * @return sortOrder
      */
     public boolean[] getSortOrder() {
@@ -266,7 +283,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
         }
         return boolarray;
     }
-    
+
     /**
      * @return whether to perform the sorting in memory or not.
      */

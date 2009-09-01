@@ -100,11 +100,14 @@ public class SorterNodeDialog extends NodeDialogPane {
             try {
                 String[] alist =
 
-                    settings.getStringArray(SorterNodeModel.INCLUDELIST_KEY);
+                settings.getStringArray(SorterNodeModel.INCLUDELIST_KEY);
                 if (alist != null) {
                     list = new ArrayList<String>();
                     for (int i = 0; i < alist.length; i++) {
-                        if (specs[0].findColumnIndex(alist[i]) >= 0) {
+                        if (specs[0].findColumnIndex(alist[i]) >= 0
+                                || (alist[i]
+                                        .compareTo(SorterNodeDialogPanel2.ROWKEY
+                                                .getName()) == 0)) {
                             list.add(alist[i]);
                         }
                     }

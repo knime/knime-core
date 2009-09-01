@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -182,7 +183,9 @@ public class SortedTable implements DataTable {
         for (int i = 0; i < inclList.size(); i++) {
             final String dc = inclList.get(i);
             pos = m_spec.findColumnIndex(dc);
-            if (pos == -1) {
+            if (pos == -1
+                    && !(dc.compareTo(SorterNodeDialogPanel2.
+                            ROWKEY.getName()) == 0)) {
                 throw new IllegalArgumentException(
                         "Could not find column name:" + dc.toString());
             }
@@ -474,15 +477,23 @@ public class SortedTable implements DataTable {
             assert (dr1.getNumCells() == dr2.getNumCells());
 
             for (int i = 0; i < m_indices.length; i++) {
-                // only if the cell is in the includeList
-                // same column means that they have the same type
-                final DataValueComparator comp =
-                        m_spec.getColumnSpec(m_indices[i]).getType()
-                                .getComparator();
-                int cellComparison =
-                        comp.compare(dr1.getCell(m_indices[i]), dr2
-                                .getCell(m_indices[i]));
 
+                // only if the cell is in the includeList
+                // -1 is RowKey!
+                int cellComparison = 0;
+                if (m_indices[i] == -1) {
+                    String k1 = dr1.getKey().getString();
+                    String k2 = dr2.getKey().getString();
+                    cellComparison = k1.compareTo(k2);
+                } else {
+                    final DataValueComparator comp =
+                            m_spec.getColumnSpec(m_indices[i]).getType()
+                                    .getComparator();
+                    // same column means that they have the same type
+                    cellComparison =
+                            comp.compare(dr1.getCell(m_indices[i]), dr2
+                                    .getCell(m_indices[i]));
+                }
                 if (cellComparison != 0) {
                     return (m_sortAscending[i] ? cellComparison
                             : -cellComparison);
