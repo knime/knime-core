@@ -76,8 +76,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
-import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -3697,6 +3697,10 @@ public final class WorkflowManager extends NodeContainer {
             }
             FlowObjectStack inStack;
             try {
+                if (predCount == 0) { // source node
+                    predStacks = 
+                        new FlowObjectStack[]{getWorkflowVariableStack()};
+                }
                 inStack = new FlowObjectStack(cont.getID(), predStacks);
             } catch (IllegalFlowObjectStackException ex) {
                 subResult.addError("Errors creating flow object stack for "
