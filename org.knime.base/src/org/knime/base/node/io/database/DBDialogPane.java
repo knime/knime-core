@@ -34,7 +34,6 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -66,8 +65,6 @@ final class DBDialogPane extends JPanel {
     private final JTextField m_user = new JTextField("");
 
     private final JPasswordField m_pass = new JPasswordField();
-
-    private JFileChooser m_chooser = null;
 
     private boolean m_passwordChanged = false;
     
