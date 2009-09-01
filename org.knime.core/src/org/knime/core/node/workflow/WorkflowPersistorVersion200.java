@@ -70,6 +70,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         V210_Pre("2.0.1"),
         /** Version 2.1.x. */
         V210("2.1.0");
+        // TODO change config name for flow variables (was/is scope_stack)
+        // in SNCPV200#saveFlowObjectStack to flow_stack
         
         private final String m_versionString;
         
