@@ -22,6 +22,8 @@
  */
 package org.knime.base.node.io.csvwriter;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
@@ -29,9 +31,13 @@ import java.io.File;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
+import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -59,8 +65,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     /** Checkbox for writing column header. */
     private final JCheckBox m_rowHeaderChecker;
 
-    /** Checkbox if append to output file (if exists). */
-    private final JCheckBox m_appendChecker;
+    private final JRadioButton m_overwritePolicyAbortButton;
+    
+    private final JRadioButton m_overwritePolicyAppendButton;
+    
+    private final JRadioButton m_overwritePolicyOverwriteButton;
 
     private final QuotePanel m_quotePanel;
 
@@ -98,13 +107,30 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 checkCheckerState();
             }
         };
+        ActionListener al = new ActionListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                checkCheckerState();
+            }
+        };
         m_colHeaderChecker = new JCheckBox("Write column header");
         m_colHeaderChecker.addItemListener(l);
         m_colHeaderWriteSkipOnAppend =
                 new JCheckBox("Don't write column headers if file exists");
         m_rowHeaderChecker = new JCheckBox("Write row ID");
-        m_appendChecker = new JCheckBox("Append to output file");
-        m_appendChecker.addItemListener(l);
+        
+        ButtonGroup bg = new ButtonGroup();
+        m_overwritePolicyAppendButton = new JRadioButton("Append");
+        bg.add(m_overwritePolicyAppendButton);
+        m_overwritePolicyAppendButton.addActionListener(al);
+        m_overwritePolicyOverwriteButton = new JRadioButton("Overwrite");
+        bg.add(m_overwritePolicyOverwriteButton);
+        m_overwritePolicyOverwriteButton.addActionListener(al);
+        m_overwritePolicyAbortButton = new JRadioButton("Abort");
+        bg.add(m_overwritePolicyAbortButton);
+        m_overwritePolicyAbortButton.addActionListener(al);
+        m_overwritePolicyAbortButton.doClick();
 
         final JPanel colHeaderPane = new JPanel();
         colHeaderPane.setLayout(new BoxLayout(colHeaderPane, BoxLayout.X_AXIS));
@@ -119,19 +145,31 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         rowHeaderPane.setLayout(new BoxLayout(rowHeaderPane, BoxLayout.X_AXIS));
         rowHeaderPane.add(m_rowHeaderChecker);
         rowHeaderPane.add(Box.createHorizontalGlue());
-        final JPanel appendPane = new JPanel();
-        appendPane.setLayout(new BoxLayout(appendPane, BoxLayout.X_AXIS));
-        appendPane.add(m_appendChecker);
-        appendPane.add(Box.createHorizontalGlue());
+        final JPanel overwriteFileLabelPane = new JPanel();
+        overwriteFileLabelPane.setLayout(
+                new BoxLayout(overwriteFileLabelPane, BoxLayout.X_AXIS));
+        overwriteFileLabelPane.add(new JLabel(" If file exists... "));
+        overwriteFileLabelPane.add(Box.createHorizontalGlue());
+        final JPanel overwriteFilePane = new JPanel();
+        overwriteFilePane.setLayout(
+                new BoxLayout(overwriteFilePane, BoxLayout.X_AXIS));
+        overwriteFilePane.add(m_overwritePolicyOverwriteButton);
+        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(m_overwritePolicyAppendButton);
+        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(m_overwritePolicyAbortButton);
+        overwriteFilePane.add(Box.createHorizontalGlue());
 
         optionsPanel.add(colHeaderPane);
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(colHeaderPane2);
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(rowHeaderPane);
-        optionsPanel.add(Box.createVerticalStrut(5));
-        optionsPanel.add(appendPane);
-        optionsPanel.add(Box.createVerticalStrut(5));
+        optionsPanel.add(Box.createVerticalStrut(15));
+        optionsPanel.add(overwriteFileLabelPane);
+        optionsPanel.add(Box.createVerticalStrut(3));
+        optionsPanel.add(overwriteFilePane);
+        optionsPanel.add(Box.createVerticalGlue());
 
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -158,7 +196,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     /** Checks whether or not the "on file exists" check should be enabled. */
     private void checkCheckerState() {
         m_colHeaderWriteSkipOnAppend.setEnabled(m_colHeaderChecker.isSelected()
-                && m_appendChecker.isSelected());
+                && m_overwritePolicyAppendButton.isSelected());
     }
 
     /**
@@ -182,8 +220,17 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_colHeaderWriteSkipOnAppend.setSelected(newValues
                 .skipColHeaderIfFileExists());
         m_rowHeaderChecker.setSelected(newValues.writeRowID());
-        m_appendChecker.setSelected(newValues.appendToFile());
-        checkCheckerState();
+        
+        switch (newValues.getFileOverwritePolicy()) {
+        case Append:
+            m_overwritePolicyAppendButton.doClick();
+            break;
+        case Overwrite:
+            m_overwritePolicyOverwriteButton.doClick();
+            break;
+        default: // Fail
+            m_overwritePolicyAbortButton.doClick();
+        }
 
         m_quotePanel.loadValuesIntoPanel(newValues);
         m_advancedPanel.loadValuesIntoPanel(newValues);
@@ -211,7 +258,15 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         values.setSkipColHeaderIfFileExists(m_colHeaderWriteSkipOnAppend
                 .isSelected());
         values.setWriteRowID(m_rowHeaderChecker.isSelected());
-        values.setAppendToFile(m_appendChecker.isSelected());
+        FileOverwritePolicy overwritePolicy;
+        if (m_overwritePolicyAppendButton.isSelected()) {
+            overwritePolicy = FileOverwritePolicy.Append;
+        } else if (m_overwritePolicyOverwriteButton.isSelected()) {
+            overwritePolicy = FileOverwritePolicy.Overwrite;
+        } else {
+            overwritePolicy = FileOverwritePolicy.Abort;
+        }
+        values.setFileOverwritePolicy(overwritePolicy);
 
         m_quotePanel.saveValuesFromPanelInto(values);
         m_advancedPanel.saveValuesFromPanelInto(values);

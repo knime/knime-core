@@ -25,11 +25,12 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -48,6 +49,9 @@ public class PMMLWriterNodeModel extends NodeModel {
     
     private final SettingsModelString m_outfile 
         = PMMLWriterNodeDialog.createFileModel();
+    
+    private final SettingsModelBoolean m_overwriteOK
+        = PMMLWriterNodeDialog.createOverwriteOKModel();
     
     /**
      * 
@@ -74,6 +78,7 @@ public class PMMLWriterNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inData, 
             final ExecutionContext exec)
             throws Exception {
+        checkFileLocation(m_outfile.getStringValue());
         File f = new File(m_outfile.getStringValue());
         PMMLPortObject pmml = (PMMLPortObject)inData[0];
         pmml.save(new FileOutputStream(f));
@@ -97,6 +102,12 @@ public class PMMLWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_outfile.loadSettingsFrom(settings);
+        try {
+            // property added in v2.1 -- if missing (old flow), set it to true
+            m_overwriteOK.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_overwriteOK.setBooleanValue(true);
+        }
     }
 
     /**
@@ -123,6 +134,7 @@ public class PMMLWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_outfile.saveSettingsTo(settings);
+        m_overwriteOK.saveSettingsTo(settings);
     }
     
     private void checkFileLocation(final String fileName)
@@ -138,6 +150,10 @@ public class PMMLWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("File name \"" + fileName
                     + "\" is not valid. Please enter a valid file name.");
         }
+        if (f.exists() && !m_overwriteOK.getBooleanValue()) {
+            throw new InvalidSettingsException("File exists and can't be "
+                    + "overwritten, check dialog settings");
+        }
     }
 
     /**
@@ -147,10 +163,12 @@ public class PMMLWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_outfile.validateSettings(settings);
-        String fileName 
-        = ((SettingsModelString)m_outfile.createCloneWithValidatedValue(
-                settings)).getStringValue();
-        checkFileLocation(fileName);
+        String fileName = ((SettingsModelString)m_outfile.
+                createCloneWithValidatedValue(settings)).getStringValue();
+        if (fileName == null || fileName.length() == 0) {
+            throw new InvalidSettingsException("No output file specified");
+        }
+        // overwriteOk added in v2.1 - can't validate
     }
 
 }

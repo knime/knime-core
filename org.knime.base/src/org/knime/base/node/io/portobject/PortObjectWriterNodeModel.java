@@ -30,10 +30,11 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -51,9 +52,15 @@ class PortObjectWriterNodeModel extends NodeModel {
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
 
+    /** Config identifier for overwrite OK. */
+    static final String CFG_OVERWRITE_OK = "overwriteOK";
+    
     private final SettingsModelString m_fileName = 
         new SettingsModelString(FILENAME, null);
 
+    private final SettingsModelBoolean m_overwriteOK =
+        new SettingsModelBoolean(CFG_OVERWRITE_OK, false);
+    
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      * @param writeType The type of the input port.
@@ -68,6 +75,7 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_fileName.saveSettingsTo(settings);
+        m_overwriteOK.saveSettingsTo(settings);
     }
 
     /**
@@ -76,9 +84,13 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString fileName = 
+        SettingsModelString fileNameModel = 
             m_fileName.createCloneWithValidatedValue(settings);
-        checkFileAccess(fileName.getStringValue());
+        String fileName = fileNameModel.getStringValue();
+        if (fileName == null || fileName.length() == 0) {
+            throw new InvalidSettingsException("No output file specified");
+        }
+        // must not verify overwriteOK (added in v2.1)
     }
 
     /**
@@ -88,6 +100,12 @@ class PortObjectWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName.loadSettingsFrom(settings);
+        try {
+            // property added in v2.1 -- if missing (old flow), set it to true
+            m_overwriteOK.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_overwriteOK.setBooleanValue(true);
+        }
     }
 
     /**
@@ -98,7 +116,9 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] portObject,
             final ExecutionContext exec) throws Exception {
-        File realFile = new File(m_fileName.getStringValue());
+        String fileName = m_fileName.getStringValue();
+        checkFileAccess(fileName);
+        File realFile = new File(fileName);
         if (realFile.exists()) {
             realFile.delete();
         }
@@ -155,6 +175,10 @@ class PortObjectWriterNodeModel extends NodeModel {
                 throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");
             }
+        }
+        if (!m_overwriteOK.getBooleanValue()) {
+            throw new InvalidSettingsException("File exists and can't be "
+                    + "overwritten, check dialog settings");
         }
     }
 

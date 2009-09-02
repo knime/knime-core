@@ -28,7 +28,9 @@ import javax.swing.JFileChooser;
 
 import org.knime.base.node.io.table.read.ReadTableNodeModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -47,6 +49,8 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
                 WriteTableNodeDialogPane.class.getName(),
                 JFileChooser.SAVE_DIALOG, 
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
+        addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
+                WriteTableNodeModel.CFG_OVERWRITE_OK, false), "Overwrite OK"));
     }
 
 }

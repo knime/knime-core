@@ -15,6 +15,13 @@
 		At this point in time, it only writes not-sparse ARFF files (i.e. it 
 		always writes out all data, even if its value is zero).
 		</intro>
+        <option name="File Chooser">
+            Choose the file to write to.
+        </option>
+        <option name="Overwrite OK">
+            If unchecked, the node refuses to execute when the output 
+            file exists (prevent unintentional overwrite).
+        </option>
 	</fullDescription>
 	
 	<ports>

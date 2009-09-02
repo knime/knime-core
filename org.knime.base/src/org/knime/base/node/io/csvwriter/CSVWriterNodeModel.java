@@ -199,12 +199,31 @@ public class CSVWriterNodeModel extends NodeModel {
         FileWriterSettings writerSettings = new FileWriterSettings(m_settings);
         writerSettings.setWriteColumnHeader(writeColHeader);
 
-        CSVWriter tableWriter =
-                new CSVWriter(new FileWriter(file, m_settings.appendToFile()),
-                        writerSettings);
+        boolean appendToFile;
+        if (file.exists()) {
+            switch (m_settings.getFileOverwritePolicy()) {
+            case Append:
+                appendToFile = true;
+                break;
+            case Abort:
+                throw new RuntimeException("File \"" + file.getAbsolutePath() 
+                        + "\" exists, must not overwrite it (check " 
+                        + "dialog settings)");
+            case Overwrite:
+                appendToFile = false;
+                break;
+            default:
+                throw new InternalError("Unknown case: " 
+                        + m_settings.getFileOverwritePolicy());
+            }
+        } else {
+            appendToFile = false;
+        }
+        CSVWriter tableWriter = new CSVWriter(
+                new FileWriter(file, appendToFile), writerSettings);
 
         // write the comment header, if we are supposed to
-        writeCommentHeader(m_settings, tableWriter, data[0]);
+        writeCommentHeader(m_settings, tableWriter, data[0], appendToFile);
 
         try {
             tableWriter.write(in, exec);
@@ -245,10 +264,12 @@ public class CSVWriterNodeModel extends NodeModel {
      *            header
      * @param file the writer to write the header out to.
      * @param inData the table that is going to be written in the file.
+     * @param append If the output will be appended to an existing file
      * @throws IOException if something went wrong during writing.
      */
     private void writeCommentHeader(final FileWriterNodeSettings settings,
-            final BufferedWriter file, final DataTable inData)
+            final BufferedWriter file, final DataTable inData, 
+            final boolean append)
             throws IOException {
         if ((file == null) || (settings == null)) {
             return;
@@ -282,7 +303,7 @@ public class CSVWriterNodeModel extends NodeModel {
             if (!blockComment) {
                 file.write(settings.getCommentBegin());
             }
-            if (settings.appendToFile()) {
+            if (append) {
                 file.write("   The following data was added ");
             } else {
                 file.write("   This file was created ");
@@ -383,9 +404,17 @@ public class CSVWriterNodeModel extends NodeModel {
                 throw new InvalidSettingsException("Cannot write to existing "
                         + "file \"" + file.getAbsolutePath() + "\".");
             }
-            if (!m_settings.appendToFile()) {
+            switch (m_settings.getFileOverwritePolicy()) {
+            case Abort:
+                throw new InvalidSettingsException(
+                        "File \"" + file.getAbsolutePath() 
+                        + "\" exists, must not overwrite it (check " 
+                        + "dialog settings)");
+            case Overwrite: 
                 warnMsg +=
-                        "Selected output file exists and will be overwritten!";
+                    "Selected output file exists and will be overwritten!";
+                break;
+            default:
             }
         } else {
             File parentDir = file.getParentFile();

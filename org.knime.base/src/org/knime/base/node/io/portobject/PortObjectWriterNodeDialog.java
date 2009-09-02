@@ -27,7 +27,9 @@ package org.knime.base.node.io.portobject;
 import javax.swing.JFileChooser;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
@@ -38,7 +40,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
 
-    /** Constructor: create NodeDialog with just one default component,
+    /** Constructor: create NodeDialog with default components,
      * the file chooser entry.
      */
     public PortObjectWriterNodeDialog() {
@@ -46,6 +48,9 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
                 new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
                 PortObjectWriterNodeDialog.class.getName(),
                 JFileChooser.SAVE_DIALOG, ".zip"));
+        addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
+                PortObjectWriterNodeModel.CFG_OVERWRITE_OK, false), 
+                "Overwrite OK"));
     }
     
 }

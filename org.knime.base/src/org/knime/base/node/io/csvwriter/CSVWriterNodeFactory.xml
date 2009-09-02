@@ -33,10 +33,12 @@
  		<option name="Write row ID">If checked, the row IDs will be
  			added to the output, as first item in each line.
 			</option>		
- 		<option name="Append to output file">If checked, the output is appended
- 		    to the output file (if it exists). If not checked and the file does 
- 		    exist, the file will be overwritten.
-			</option>		
+ 		<option name="If file exists...">Specify the behavior of the node in 
+ 		    case the output file already exists. <i>Overwrite</i> will replace any 
+ 		    existing file, <i>Append</i> will append the input table to the end
+ 		    of the file (possibly skipping the column header) and <i>Abort</i>
+ 		    will issue an error during the node's execution (to prevent
+ 		    unintentional overwrite).</option>		
         <option name="Data Separator">In the Advanced tab, you can specify the
             character(s) that will be written out between the data items. You can
             use &quot;\t&quot; for a tab or &quot;\n&quot; for a new line character (and must use

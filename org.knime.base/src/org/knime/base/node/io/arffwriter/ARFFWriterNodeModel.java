@@ -34,6 +34,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 
+import org.knime.base.node.io.arffreader.ARFFReaderNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -52,8 +53,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import org.knime.base.node.io.arffreader.ARFFReaderNodeModel;
-
 /**
  *
  * @author Peter Ohl, University of Konstanz
@@ -69,16 +68,22 @@ public class ARFFWriterNodeModel extends NodeModel {
 
     /** The key used to store the filename in the model spec. */
     static final String CFGKEY_SPARSE = "sparseARFF";
-
+    
+    /** The key used to store the Overwrite OK in the model spec. */
+    static final String CFGKEY_OVERWRITE_OK = "overwriteOK";
+    
     /* the file we write to. Must be writable! */
     private File m_file;
+    
+    /** whether overwriting the file is ok. */
+    private boolean m_overwriteOK;
 
     /* indicates that we are supposed to write a sparse ARFF file */
     private boolean m_sparse;
 
     /* the string printed after the "@relation" keyword */
     private String m_relationName;
-
+    
     /**
      * Creates a new ARFF writer model.
      */
@@ -111,6 +116,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_file != null) {
             settings.addString(CFGKEY_FILENAME, m_file.getAbsolutePath());
+            settings.addBoolean(CFGKEY_OVERWRITE_OK, m_overwriteOK);
         }
         if (m_sparse) {
             settings.addBoolean(CFGKEY_SPARSE, m_sparse);
@@ -125,7 +131,7 @@ public class ARFFWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
-
+        // overwrite flag added in v2.1 - not required here
     }
 
     /**
@@ -135,7 +141,8 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file = stringToWriteableFile(settings.getString(CFGKEY_FILENAME));
-
+        // added in v2.1
+        m_overwriteOK = settings.getBoolean(CFGKEY_OVERWRITE_OK, true);
     }
 
     /**
@@ -145,6 +152,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
+        checkFileAccess(m_file);
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         int numOfCols = inSpec.getNumColumns();
 
@@ -409,6 +417,10 @@ public class ARFFWriterNodeModel extends NodeModel {
             // dunno how to check the write access to the directory. If we can't
             // create the file the execute of the node will fail. Well, too bad.
             return;
+        }
+        if (!m_overwriteOK) {
+            throw new InvalidSettingsException("File exists and can't be "
+                    + "overwritten, check dialog settings");
         }
         if (!file.canWrite()) {
             throw new InvalidSettingsException("Cannot write to file \""

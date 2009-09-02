@@ -21,7 +21,9 @@ package org.knime.base.node.io.pmml.write;
 import javax.swing.JFileChooser;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -37,6 +39,8 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentFileChooser(
                 createFileModel(), "pmml.writer.history", 
                 JFileChooser.SAVE_DIALOG, ".pmml", ".xml"));
+        addDialogComponent(new DialogComponentBoolean(
+                createOverwriteOKModel(), "Overwrite OK"));
     }
     
     /**
@@ -45,6 +49,11 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createFileModel() {
         return new SettingsModelString("PMMLWriterFile", "");
+    }
+    
+    /** @return new model for "overwrite OK" checker. */
+    static SettingsModelBoolean createOverwriteOKModel() {
+        return new SettingsModelBoolean("overwriteOK", false);
     }
 
 }

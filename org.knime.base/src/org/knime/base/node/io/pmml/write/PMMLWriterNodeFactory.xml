@@ -20,6 +20,10 @@
         choose a previously selected file from the drop-down list, or select a 
         file from the "Browse..." dialog. 
         </option>
+        <option name="Overwrite OK">
+            If unchecked, the node refuses to execute when the output 
+            file exists (prevent unintentional overwrite).
+        </option>
     </fullDescription>
     
     <ports>

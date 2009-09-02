@@ -12,6 +12,10 @@
 		with the Model Reader node.
 		</intro>
         <option name="Selected File">The file containing the object.</option>
+        <option name="Overwrite OK">
+            If unchecked, the node refuses to execute when the output 
+            file exists (prevent unintentional overwrite).
+        </option>
 	</fullDescription>
 	
 	<ports>

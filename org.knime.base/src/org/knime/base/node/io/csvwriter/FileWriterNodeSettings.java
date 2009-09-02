@@ -33,6 +33,17 @@ import org.knime.core.node.NodeSettingsWO;
  * @author ohl, University of Konstanz
  */
 class FileWriterNodeSettings extends FileWriterSettings {
+    
+    /** Policy how to proceed when output file exists 
+     * (overwrite, abort, append). */
+    enum FileOverwritePolicy {
+        /** Fail during configure/execute. */
+        Abort,
+        /** Overwrite existing file. */
+        Overwrite,
+        /** Append to existing file. */
+        Append
+    }
 
     public static final String CFGKEY_FILE = "filename";
 
@@ -51,12 +62,18 @@ class FileWriterNodeSettings extends FileWriterSettings {
     private static final String CFGKEY_COLHEADER_SKIP_ON_APPEND =
             "skipWriteColHeaderOnAppend";
 
+    /** If to append to existing file, replaced with 
+     * {@link FileOverwritePolicy} since v2.1.
+     */
     private static final String CFGKEY_APPEND = "isAppendToFile";
+    
+    private static final String CFGKEY_OVERWRITE_POLICY = "fileOverwritePolicy";
 
     private String m_fileName;
 
-    private boolean m_appendToFile;
-
+    /** Whether to skip writing the col header when file exists (applicable
+     * only when on {@link FileOverwritePolicy#Append}.
+     */
     private boolean m_skipColHeaderIfFileExists;
 
     // only used if one of the following is true
@@ -71,13 +88,15 @@ class FileWriterNodeSettings extends FileWriterSettings {
     private boolean m_addTableName;
 
     private String m_customCommentLine;
+    
+    private FileOverwritePolicy m_fileOverwritePolicy;
 
     /**
      *
      */
     FileWriterNodeSettings() {
         m_fileName = null;
-        m_appendToFile = false;
+        m_fileOverwritePolicy = FileOverwritePolicy.Abort;
         m_skipColHeaderIfFileExists = false;
         m_commentBegin = "";
         m_commentEnd = "";
@@ -102,9 +121,29 @@ class FileWriterNodeSettings extends FileWriterSettings {
         super(settings);
         m_fileName = settings.getString(CFGKEY_FILE);
 
-        // only available since 1.3.x
-        m_appendToFile = settings.getBoolean(CFGKEY_APPEND, false);
-
+        FileOverwritePolicy fileOverwritePolicy;
+        if (settings.containsKey(CFGKEY_OVERWRITE_POLICY)) { // since v2.1
+            String val = settings.getString(CFGKEY_OVERWRITE_POLICY, 
+                    FileOverwritePolicy.Abort.toString());
+            try {
+                fileOverwritePolicy = FileOverwritePolicy.valueOf(val);
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Unable to parse 'file " 
+                        + "overwrite policy' field: " + val, e);
+            }
+        } else if (settings.containsKey(CFGKEY_APPEND)) { // v1.3 - v2.0
+            if (settings.getBoolean(CFGKEY_APPEND)) {
+                fileOverwritePolicy = FileOverwritePolicy.Append;
+            } else {
+                // preferably this should default to Abort but that would 
+                // break existing flows (change in behavior)
+                fileOverwritePolicy = FileOverwritePolicy.Overwrite;
+            }
+        } else {
+            // way too old - setting meaningful defaults here
+            fileOverwritePolicy = FileOverwritePolicy.Abort;
+        }
+        m_fileOverwritePolicy = fileOverwritePolicy;
         // only available since 1.1.x
         m_skipColHeaderIfFileExists =
                 settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND, false);
@@ -125,7 +164,8 @@ class FileWriterNodeSettings extends FileWriterSettings {
     public void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
         settings.addString(CFGKEY_FILE, m_fileName);
-        settings.addBoolean(CFGKEY_APPEND, m_appendToFile);
+        settings.addString(CFGKEY_OVERWRITE_POLICY, 
+                m_fileOverwritePolicy.toString());
         settings.addBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND,
                 m_skipColHeaderIfFileExists);
         settings.addString(CFGKEY_COMMENT_BEGIN, m_commentBegin);
@@ -186,24 +226,28 @@ class FileWriterNodeSettings extends FileWriterSettings {
     }
 
     /**
-     * @return the appendToFile
-     */
-    boolean appendToFile() {
-        return m_appendToFile;
-    }
-
-    /**
-     * @param appendToFile the appendToFile to set
-     */
-    void setAppendToFile(final boolean appendToFile) {
-        m_appendToFile = appendToFile;
-    }
-
-    /**
      * @return the commentBegin
      */
     String getCommentBegin() {
         return m_commentBegin;
+    }
+    
+    /**
+     * @param fileOverwritePolicy the fileOverwritePolicy to set
+     */
+    void setFileOverwritePolicy(final FileOverwritePolicy fileOverwritePolicy) {
+        if (fileOverwritePolicy == null) {
+            m_fileOverwritePolicy = FileOverwritePolicy.Abort;
+        } else {
+            m_fileOverwritePolicy = fileOverwritePolicy;
+        }
+    }
+    
+    /**
+     * @return the fileOverwritePolicy, never null
+     */
+    FileOverwritePolicy getFileOverwritePolicy() {
+        return m_fileOverwritePolicy;
     }
 
     /**

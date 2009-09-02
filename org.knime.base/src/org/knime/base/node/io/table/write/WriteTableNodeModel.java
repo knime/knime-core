@@ -37,6 +37,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
@@ -50,8 +51,14 @@ public class WriteTableNodeModel extends NodeModel {
     /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
     
+    /** Config identifier for overwrite OK. */
+    static final String CFG_OVERWRITE_OK = "overwriteOK";
+    
     private final SettingsModelString m_fileName =
         new SettingsModelString(CFG_FILENAME, null);
+    
+    private final SettingsModelBoolean m_overwriteOK =
+        new SettingsModelBoolean(CFG_OVERWRITE_OK, false);
     
     /** Creates new NodeModel with one input, no output ports. */
     public WriteTableNodeModel() {
@@ -65,6 +72,7 @@ public class WriteTableNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_fileName.getStringValue() != null) {
             m_fileName.saveSettingsTo(settings);
+            m_overwriteOK.saveSettingsTo(settings);
         }
     }
 
@@ -75,6 +83,7 @@ public class WriteTableNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName.validateSettings(settings);
+        // must not verify overwriteOK (added in v2.1)
     }
 
     /**
@@ -84,6 +93,12 @@ public class WriteTableNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName.loadSettingsFrom(settings);
+        try {
+            // property added in v2.1 -- if missing (old flow), set it to true
+            m_overwriteOK.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_overwriteOK.setBooleanValue(true);
+        }
     }
 
     /**
@@ -93,11 +108,12 @@ public class WriteTableNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
+        checkFileAccess(m_fileName.getStringValue());
         DataContainer.writeToZip(in, 
                 new File(m_fileName.getStringValue()), exec);
         return new BufferedDataTable[0];
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -139,6 +155,10 @@ public class WriteTableNodeModel extends NodeModel {
             // dunno how to check the write access to the directory. If we can't
             // create the file the execute of the node will fail. Well, too bad.
             return;
+        }
+        if (!m_overwriteOK.getBooleanValue()) {
+            throw new InvalidSettingsException("File exists and can't be "
+                    + "overwritten, check dialog settings");
         }
         if (!file.canWrite()) {
             throw new InvalidSettingsException("Cannot write to file \""

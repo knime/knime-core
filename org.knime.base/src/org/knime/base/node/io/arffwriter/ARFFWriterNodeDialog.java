@@ -42,6 +42,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -79,6 +80,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     private JComboBox m_url;
 
     private JLabel m_urlError;
+    
+    private JCheckBox m_overwriteOKChecker;
 
     private static final int TABWIDTH = 600;
 
@@ -156,6 +159,16 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
         innerBox.add(Box.createVerticalStrut(VERT_SPACE));
         sumOfCompHeigth += COMPONENT_HEIGHT + VERT_SPACE;
 
+        m_overwriteOKChecker = new JCheckBox("Overwrite OK");
+        Container overwriteOKBox = Box.createHorizontalBox();
+        overwriteOKBox.add(Box.createHorizontalGlue());
+        overwriteOKBox.add(m_overwriteOKChecker);
+        overwriteOKBox.add(Box.createHorizontalStrut(20));
+        innerBox.add(overwriteOKBox);
+        innerBox.add(Box.createVerticalStrut(VERT_SPACE));
+        sumOfCompHeigth += VERT_SPACE;
+
+        
         innerBox.add(Box.createVerticalStrut(VERT_SPACE));
         sumOfCompHeigth += COMPONENT_HEIGHT + (2 * VERT_SPACE);
 
@@ -163,6 +176,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
         filePanel.add(innerBox);
         filePanel.add(Box.createGlue());
+        
 
         // set a filter to the filename that fills the error text label
         Component editor = m_url.getEditor().getEditorComponent();
@@ -300,9 +314,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
             throw new InvalidSettingsException("Specify valid file location. "
                     + "Or press 'Cancel'.");
         }
-
         settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url
                 .getEditor().getItem().toString());
+        settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, 
+                m_overwriteOKChecker.isSelected());
     }
 
     /**
@@ -327,6 +342,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
         m_url.addItemListener(this);
 
+        m_overwriteOKChecker.setSelected(settings.getBoolean(
+                ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false));
         updateFileError();
     }
 }
