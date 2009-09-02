@@ -24,7 +24,14 @@ package org.knime.base.node.meta.xvalidation;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
@@ -45,13 +52,14 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class XValidatePartitionModel extends NodeModel
-implements LoopStartNodeTerminator {
+public class XValidatePartitionModel extends NodeModel implements
+        LoopStartNodeTerminator {
     private final XValidateSettings m_settings = new XValidateSettings();
 
     private short[] m_partNumbers;
 
     private int m_nrIterations;
+
     private int m_currIteration;
 
     /**
@@ -104,17 +112,38 @@ implements LoopStartNodeTerminator {
 
                 final double partSize =
                         m_partNumbers.length / (double)m_settings.validations();
-                for (int i = 0; i < m_partNumbers.length; i++) {
-                    m_partNumbers[i] =
-                            (short)Math.min(i / partSize, m_partNumbers.length);
-                }
 
-                if (m_settings.randomSampling()) {
+                if (m_settings.stratifiedSampling()) {
+                    ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                    subExec.setMessage("Preparing stratified sampling");
+                    Map<DataCell, List<Integer>> valueCounts =
+                            countValues(inData[0], subExec, m_settings
+                                    .classColumn());
+
+                    int part = 0;
+                    for (Map.Entry<DataCell, List<Integer>> e : valueCounts.entrySet()) {
+                        List<Integer> l = e.getValue();
+
+                        for (Integer i : l) {
+                            m_partNumbers[i] = (short) part++;
+                            part %= m_settings.validations();
+                        }
+                    }
+                } else {
                     for (int i = 0; i < m_partNumbers.length; i++) {
-                        int pos = (int)(Math.random() * m_partNumbers.length);
-                        short x = m_partNumbers[pos];
-                        m_partNumbers[pos] = m_partNumbers[i];
-                        m_partNumbers[i] = x;
+                        m_partNumbers[i] =
+                                (short)Math.min(i / partSize,
+                                        m_partNumbers.length);
+                    }
+
+                    if (m_settings.randomSampling()) {
+                        for (int i = 0; i < m_partNumbers.length; i++) {
+                            int pos =
+                                    (int)(Math.random() * m_partNumbers.length);
+                            short x = m_partNumbers[pos];
+                            m_partNumbers[pos] = m_partNumbers[i];
+                            m_partNumbers[i] = x;
+                        }
                     }
                 }
                 m_nrIterations = m_settings.validations();
@@ -164,7 +193,7 @@ implements LoopStartNodeTerminator {
         m_nrIterations = -1;
         m_partNumbers = null;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -180,6 +209,19 @@ implements LoopStartNodeTerminator {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert m_currIteration == 0;
+
+        if (m_settings.stratifiedSampling()) {
+            if (m_settings.classColumn() == null) {
+                throw new InvalidSettingsException("No class column for "
+                        + "stratified sampling selected");
+            }
+            if (!inSpecs[0].containsName(m_settings.classColumn())) {
+                throw new InvalidSettingsException("Class column '"
+                        + m_settings.classColumn()
+                        + "' does not exist in input table");
+            }
+        }
+
         // we need to put the counts on the stack for the loop's tail to see:
         pushFlowVariableInt("currentIteration", m_currIteration);
         pushFlowVariableInt("maxIterations", m_nrIterations);
@@ -204,5 +246,38 @@ implements LoopStartNodeTerminator {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
+    }
+
+    private static Map<DataCell, List<Integer>> countValues(
+            final BufferedDataTable table, final ExecutionMonitor exec,
+            final String classColumn) throws CanceledExecutionException {
+        HashMap<DataCell, List<Integer>> valueCounts =
+                new LinkedHashMap<DataCell, List<Integer>>();
+
+        int classColIndex =
+                table.getDataTableSpec().findColumnIndex(classColumn);
+
+        final double rowTotalCount = table.getRowCount();
+        int rowCount = 0;
+        for (DataRow row : table) {
+            exec.setProgress(rowCount / rowTotalCount, 
+                    "Row " + rowCount + " (\"" + row.getKey() + "\")");
+            exec.checkCanceled();
+            DataCell cell = row.getCell(classColIndex);
+            List<Integer> rowKeys = valueCounts.get(cell);
+            if (rowKeys == null) {
+                rowKeys = new ArrayList<Integer>();
+                valueCounts.put(cell, rowKeys);
+            }
+            rowKeys.add(rowCount);
+            rowCount++;
+        }
+
+        for (Map.Entry<DataCell, List<Integer>> e : valueCounts.entrySet()) {
+            List<Integer> l = e.getValue();
+            Collections.shuffle(l);
+        }
+
+        return valueCounts;
     }
 }

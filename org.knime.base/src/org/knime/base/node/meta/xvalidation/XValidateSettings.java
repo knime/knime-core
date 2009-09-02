@@ -38,6 +38,11 @@ public class XValidateSettings {
 
     private boolean m_leaveOneOut = false;
 
+    private boolean m_stratifiedSampling = false;
+
+    private String m_classColumn;
+
+
     /**
      * Returns if leave-one-out cross validation should be performed.
      *
@@ -67,6 +72,8 @@ public class XValidateSettings {
         settings.addShort("validations", m_validations);
         settings.addBoolean("randomSampling", m_randomSampling);
         settings.addBoolean("leaveOneOut", m_leaveOneOut);
+        settings.addBoolean("stratifiedSampling", m_stratifiedSampling);
+        settings.addString("classColumn", m_classColumn);
     }
 
     /**
@@ -80,6 +87,9 @@ public class XValidateSettings {
         m_validations = settings.getShort("validations");
         m_randomSampling = settings.getBoolean("randomSampling");
         m_leaveOneOut = settings.getBoolean("leaveOneOut");
+        // added in v2.1
+        m_stratifiedSampling = settings.getBoolean("stratifiedSampling", false);
+        m_classColumn = settings.getString("classColumn", null);
     }
 
     /**
@@ -100,6 +110,44 @@ public class XValidateSettings {
      */
     public void randomSampling(final boolean randomSampling) {
         m_randomSampling = randomSampling;
+    }
+
+    /**
+     * Returns if the rows of the input table should be sampled stratified.
+     *
+     * @return <code>true</code> if the should be sampled stratified,
+     *         <code>false</code> otherwise
+     */
+    public boolean stratifiedSampling() {
+        return m_stratifiedSampling;
+    }
+
+    /**
+     * Sets if the rows of the input table should be sampled stratified.
+     *
+     * @param stratifiedSampling <code>true</code> if the should be sampled
+     *            stratified, <code>false</code> otherwise
+     */
+    public void stratifiedSampling(final boolean stratifiedSampling) {
+        m_stratifiedSampling = stratifiedSampling;
+    }
+
+    /**
+     * Returns the class column's name for stratified sampling.
+     *
+     * @return the class column's name
+     */
+    public String classColumn() {
+        return m_classColumn;
+    }
+
+    /**
+     * Sets the class column's name for stratified sampling.
+     *
+     * @param classColumn the class column's name
+     */
+    public void classColumn(final String classColumn) {
+        m_classColumn = classColumn;
     }
 
     /**
