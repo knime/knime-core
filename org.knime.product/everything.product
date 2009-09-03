@@ -71,7 +71,6 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.ext.r" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.weka" version="2.1.0.0021700"/>
       <feature id="org.knime.features.wizard" version="2.1.0.0021700"/>
-      <feature id="org.knime.features.product" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.jep" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.birt" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.poi" version="2.1.0.0021700"/>
