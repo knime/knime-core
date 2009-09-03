@@ -1184,21 +1184,30 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
-     * Re-configure all configured nodes in this workflow to make sure that
-     * new workflow variables are spread accordingly.
+     * Re-configure all configured (NOT executed) nodes in this workflow
+     * to make sure that new workflow variables are spread accordingly.
      */
     void reconfigureAll() {
         synchronized (m_workflowMutex) {
             for (NodeID id : m_workflow.getNodeIDs()) {
-                boolean hasNonParentPredecessors = false;
+                // Check if this node has only WFM ports or green
+                // nodes as predecessors (or has no inports at all).
+                // Only these nodes are candidates to be reconfigured, all
+                // other yellow ones must be "down the chain" from those.
+                boolean hasOnlyParentOrGreenPredecessors = true;
                 for (ConnectionContainer cc
                         : m_workflow.getConnectionsByDest(id)) {
                     if (!cc.getSource().equals(this.getID())) {
-                        hasNonParentPredecessors = true;
-                        break;
+                        NodeContainer predNC = getNodeContainer(cc.getSource());
+                        if (!predNC.getState().equals(State.EXECUTED)) {
+                            hasOnlyParentOrGreenPredecessors = false;
+                            break;
+                        }
                     }
                 }
-                if (!hasNonParentPredecessors) {
+                // if we did not find non green or WFM predecessors:
+                // launch configure storm:
+                if (hasOnlyParentOrGreenPredecessors) {
                     if (getNodeContainer(id).getState()
                             .equals(State.CONFIGURED)) {
                         // re-configure yellow nodes only
