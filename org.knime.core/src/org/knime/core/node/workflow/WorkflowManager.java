@@ -124,7 +124,7 @@ public final class WorkflowManager extends NodeContainer {
         });
 
     // Nodes and edges forming this workflow:
-    final Workflow m_workflow;
+    private final Workflow m_workflow;
 
     // Ports of the workflow (empty if it is not a subworkflow):
 
@@ -246,6 +246,13 @@ public final class WorkflowManager extends NodeContainer {
         LOGGER.debug("Created subworkflow " + this.getID());
     }
 
+    /**
+     * @return workflow
+     */
+    Workflow getWorkflow() {
+        return m_workflow;
+    }
+    
     ///////////////////////////////////////
     // Node / Project / Metanode operations
     ///////////////////////////////////////
@@ -2366,46 +2373,48 @@ public final class WorkflowManager extends NodeContainer {
      * This method returns immediately, leaving it to the associated
      * executor to do the job. */
     public void executeAll() {
-        Set<NodeID> endNodes = new HashSet<NodeID>();
-        for (NodeID id : m_workflow.getNodeIDs()) {
-            boolean hasNonParentSuccessors = false;
-            for (ConnectionContainer cc
-                    : m_workflow.getConnectionsBySource(id)) {
-                if (!cc.getDest().equals(this.getID())) {
-                    hasNonParentSuccessors = true;
-                    break;
+        synchronized (m_workflowMutex) {
+            Set<NodeID> endNodes = new HashSet<NodeID>();
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                boolean hasNonParentSuccessors = false;
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsBySource(id)) {
+                    if (!cc.getDest().equals(this.getID())) {
+                        hasNonParentSuccessors = true;
+                        break;
+                    }
+                }
+                if (!hasNonParentSuccessors) {
+                    endNodes.add(id);
                 }
             }
-            if (!hasNonParentSuccessors) {
-                endNodes.add(id);
-            }
-        }
-        // now use these "end nodes" to start executing all until we
-        // reach the beginning. Do NOT leave the workflow, though.
-        Set<NodeID> executedNodes = new HashSet<NodeID>();
-        while (endNodes.size() > 0) {
-            NodeID thisID = endNodes.iterator().next();
-            endNodes.remove(thisID);
-            // move all of the predecessors to the "end nodes"
-            for (ConnectionContainer cc
-                    : m_workflow.getConnectionsByDest(thisID)) {
-                NodeID nextID = cc.getSource();
-                if (!endNodes.contains(nextID)
-                        && !executedNodes.contains(nextID)
-                        && !nextID.equals(this.getID())) {
-                    endNodes.add(nextID);
+            // now use these "end nodes" to start executing all until we
+            // reach the beginning. Do NOT leave the workflow, though.
+            Set<NodeID> executedNodes = new HashSet<NodeID>();
+            while (endNodes.size() > 0) {
+                NodeID thisID = endNodes.iterator().next();
+                endNodes.remove(thisID);
+                // move all of the predecessors to the "end nodes"
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsByDest(thisID)) {
+                    NodeID nextID = cc.getSource();
+                    if (!endNodes.contains(nextID)
+                            && !executedNodes.contains(nextID)
+                            && !nextID.equals(this.getID())) {
+                        endNodes.add(nextID);
+                    }
                 }
+                // try to execute the current node
+                NodeContainer nc = m_workflow.getNode(thisID);
+                if (nc.isLocalWFM()) {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).executeAll();
+                } else {
+                    executeUpToHere(thisID);
+                }
+                // and finally move the current node to the other list
+                executedNodes.add(thisID);
             }
-            // try to execute the current node
-            NodeContainer nc = m_workflow.getNode(thisID);
-            if (nc.isLocalWFM()) {
-                assert nc instanceof WorkflowManager;
-                ((WorkflowManager)nc).executeAll();
-            } else {
-                executeUpToHere(thisID);
-            }
-            // and finally move the current node to the other list
-            executedNodes.add(thisID);
         }
     }
 
@@ -2643,9 +2652,14 @@ public final class WorkflowManager extends NodeContainer {
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-            synchronized (getParent().m_workflowMutex) {
+// TAKEN OUT (bw/mb): this type of lock only affects parent nodes which
+// are completely disconnected (=projects) otherwise we hold this lock
+// anyway. Locking the parent here is exactly what we do not want to do:
+// Never lock a child (e.g. node) first and then its parent (e.g. wfm)!
+// should fix bug #1755
+//            synchronized (getParent().m_workflowMutex) {
                 getParent().checkForNodeStateChanges(propagateChanges);
-            }
+//            }
         }
     }
 

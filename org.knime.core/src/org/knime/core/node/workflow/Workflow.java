@@ -269,7 +269,7 @@ class Workflow {
                             // TODO check for unconnected metaoutports?
                             completeSet(nodes, nextNodeID, cc.getDestPort());
                         } else {
-                            Set<Integer> outports = wfm.m_workflow
+                            Set<Integer> outports = wfm.getWorkflow()
                                            .connectedOutPorts(cc.getDestPort());
                             if (outports.contains(cc.getSourcePort())) {
                                 completeSet(nodes, nextNodeID,
@@ -398,7 +398,7 @@ class Workflow {
                 assert thisNode instanceof WorkflowManager;
                 int portToCheck = nodesToCheck.get(thisID); 
                 Set<Integer> connectedOutPorts = 
-                     ((WorkflowManager)thisNode).m_workflow.
+                     ((WorkflowManager)thisNode).getWorkflow().
                                           connectedOutPorts(portToCheck);
                 for (ConnectionContainer cc : m_connectionsBySource.get(
                         thisID)) {
@@ -471,7 +471,7 @@ class Workflow {
                 assert thisNode instanceof WorkflowManager;
                 int portToCheck = nodesToCheck.get(thisID); 
                 Set<Integer> connectedInPorts = 
-                     ((WorkflowManager)thisNode).m_workflow.
+                     ((WorkflowManager)thisNode).getWorkflow().
                                           connectedInPorts(portToCheck);
                 for (ConnectionContainer cc : m_connectionsByDest.get(
                         thisID)) {
@@ -522,7 +522,7 @@ class Workflow {
                     } else {
                         // find out which inports are connected through this
                         // WFM to the given outport
-                        Set<Integer> inports = wfm.m_workflow
+                        Set<Integer> inports = wfm.getWorkflow()
                                       .connectedInPorts(cc.getSourcePort());
                         // and only add the predeccessor if he is connected
                         // to one of those
