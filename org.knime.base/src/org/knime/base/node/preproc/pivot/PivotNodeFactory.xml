@@ -37,7 +37,7 @@
         following methods can be applied to the aggregation column: SUM, MEAN,
         MIN, MAX, VARIANCE, and STD DEVIATION.
         </option>
-        <option name="Hiliting">
+        <option name="Enable hiliting">
         Select, if hiliting is enabled between input and output data.
         </option>
     </fullDescription>
