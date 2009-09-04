@@ -25,6 +25,12 @@
 
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.DefaultStringIconOption;
+import org.knime.core.node.util.StringIconListCellRenderer;
+import org.knime.core.node.util.StringIconOption;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -41,12 +47,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.DefaultStringIconOption;
-import org.knime.core.node.util.StringIconListCellRenderer;
-import org.knime.core.node.util.StringIconOption;
 
 /**
  * Provide a standard component for a dialog that allows to select one or more
@@ -216,8 +216,8 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         if (visibleRowCount < 0) {
             //get the default visible row count or the number of available items
             //if they are less than the default row count
-            rowCount = Math.max(3,
-                    Math.min(m_selectBox.getVisibleRowCount(), list.length));
+            rowCount = Math.max(1, Math.min(
+                    m_selectBox.getVisibleRowCount(), list.length - 1));
         } else {
             rowCount = visibleRowCount;
         }
