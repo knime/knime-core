@@ -483,10 +483,11 @@ public class GroupByTable {
                     break;
                 }
                 buf.append(colName);
-                buf.append(": ");
+                buf.append("=");
                 final Collection<String> groupNames =
                     m_skippedGroupsByColName.get(colName);
                 groupCounter = 0;
+                buf.append("\"");
                 for (final String groupName : groupNames) {
                     if (groupCounter != 0) {
                         buf.append(", ");
@@ -497,6 +498,7 @@ public class GroupByTable {
                     }
                     buf.append(groupName);
                 }
+                buf.append("\"");
             }
             return buf.toString();
         }
