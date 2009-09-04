@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./pca.png" type="Manipulator">
+<name>PCA Predictor</name>
+<shortDescription>Apply principal components projection</shortDescription>
+<fullDescription>
+<intro>
+	        This node applies a projection to the principal components on the given
+	        input data. The data model of the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> 
+	        computation node can be applied to arbitrary data
+	        to reduce it to a given number of dimensions.<br/>
+	        The percentages in the selection of dimensions to reduce to give the expected
+        approximation rates based on the training data fed into the corresponding learner
+        node. These rates assume that data fed into the predictor is distributed equal
+        to the data the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> was computed for.  
+	        
+		</intro>
+		<option name="fail if missing values are encountered">
+          If checked, execution fails if the selected columns contain missing values.
+        </option>
+        <option name="dimensions to reduce to">
+        Determine the number of dimensions the input data is projected to. The percentage values
+        give the estimated approximation rate based on the data the PCA was computed for.
+        </option>
+        <option name="remove original data columns">
+        If checked, the columns containing the input data are removed in the output table.
+        </option>
+		</fullDescription>
+		<ports>
+		<inPort index="0" name="PCA model">Principal Components of training data</inPort>
+		<inPort index="1" name="Table to transform">Input data for the PCA</inPort>
+		<outPort index="0" name="projected data">Data projected to principal components</outPort>
+		</ports>
+		</knimeNode>
