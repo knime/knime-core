@@ -150,7 +150,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         box.add(Box.createVerticalGlue());
         final DialogComponent maxNoneNumericVals =
             new DialogComponentNumber(m_maxUniqueValues,
-                    "Maximum unique values per group", new Integer(1), 5);
+                    "Maximum unique values per group", new Integer(1000), 5);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
         box.add(maxNoneNumericVals.getComponentPanel());
