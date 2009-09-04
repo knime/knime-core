@@ -4402,6 +4402,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Set new workflow variables. All nodes within
      * this workflow will have access to these variables.
+     * The method may change in future versions or removed entirely (bug 1937).
      *
      * @param newVars new variables to be set
      * @param skipReset if false the workflow will be re-configured
@@ -4435,6 +4436,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Remove workflow variable of given name.
+     * The method may change in future versions or removed entirely (bug 1937).
      *
      * @param name of variable to be removed.
      */
