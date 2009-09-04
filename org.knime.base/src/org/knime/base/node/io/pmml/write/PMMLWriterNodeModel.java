@@ -154,6 +154,9 @@ public class PMMLWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("File exists and can't be "
                     + "overwritten, check dialog settings");
         }
+        if (f.exists() && m_overwriteOK.getBooleanValue()) {
+            setWarningMessage("File exists and will be overwritten");
+        }
     }
 
     /**
