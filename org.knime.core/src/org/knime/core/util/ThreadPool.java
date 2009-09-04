@@ -37,7 +37,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -137,6 +136,10 @@ public class ThreadPool {
             }
         }
 
+        void checkException() throws InterruptedException, ExecutionException {
+            super.get();
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -164,7 +167,7 @@ public class ThreadPool {
     private class Worker extends Thread {
         private final Object m_lock = new Object();
 
-        private RunnableFuture<?> m_runnable;
+        private MyFuture<?> m_runnable;
 
         private ThreadPool m_startedFrom;
 
@@ -204,7 +207,7 @@ public class ThreadPool {
 
                     try {
                         m_runnable.run();
-                        m_runnable.get();
+                        m_runnable.checkException();
                     } catch (InterruptedException ex) {
                         LOGGER.debug("Thread was interrupted");
                     } catch (CancellationException ex) {
@@ -234,7 +237,7 @@ public class ThreadPool {
          *         <code>false</code> if not because the thread has already
          *         died
          */
-        public boolean wakeup(final RunnableFuture<?> r, final ThreadPool pool) {
+        public boolean wakeup(final MyFuture<?> r, final ThreadPool pool) {
             synchronized (m_lock) {
                 if (m_stopped || !isAlive()) {
                     return false;
@@ -252,6 +255,8 @@ public class ThreadPool {
     private final AtomicInteger m_maxThreads = new AtomicInteger();
 
     private final AtomicInteger m_invisibleThreads = new AtomicInteger();
+
+    private final AtomicInteger m_pendingJobs = new AtomicInteger();
 
     private final ThreadPool m_parent;
 
@@ -357,6 +362,7 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
 
         synchronized (m_queuedFutures) {
+            m_pendingJobs.incrementAndGet();
             if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
@@ -381,6 +387,7 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
         synchronized (m_queuedFutures) {
+            m_pendingJobs.incrementAndGet();
             if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
@@ -418,7 +425,13 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
 
         synchronized (m_queuedFutures) {
+            m_pendingJobs.incrementAndGet();
             if (wakeupWorker(ftask, this) == null) {
+                if (m_pendingJobs.decrementAndGet() == 0) {
+                    synchronized (m_pendingJobs) {
+                        m_pendingJobs.notifyAll();
+                    }
+                }
                 return null;
             }
         }
@@ -443,7 +456,13 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
         synchronized (m_queuedFutures) {
+            m_pendingJobs.incrementAndGet();
             if (wakeupWorker(ftask, this) == null) {
+                if (m_pendingJobs.decrementAndGet() == 0) {
+                    synchronized (m_pendingJobs) {
+                        m_pendingJobs.notifyAll();
+                    }
+                }
                 return null;
             }
         }
@@ -452,11 +471,11 @@ public class ThreadPool {
     }
 
 
-    private Worker wakeupWorker(final RunnableFuture<?> task,
+    private Worker wakeupWorker(final MyFuture<?> task,
             final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
-                    .get()) {
+            if (m_runningWorkers.size() - m_invisibleThreads.get()
+                    < m_maxThreads.get()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -583,10 +602,18 @@ public class ThreadPool {
      */
     public void shutdown() {
         synchronized (m_queuedFutures) {
-            for (MyFuture<?> future : m_queuedFutures) {
-                future.cancel(true);
+            Iterator<MyFuture<?>> it = m_queuedFutures.iterator();
+            while (it.hasNext()) {
+                MyFuture<?> future = it.next();
+                if (future.getPool() == this) {
+                    m_pendingJobs.decrementAndGet();
+                    future.cancel(true);
+                    it.remove();
+                }
             }
-            m_queuedFutures.clear();
+        }
+        synchronized (m_pendingJobs) {
+           m_pendingJobs.notifyAll();
         }
         setMaxThreads(0);
     }
@@ -653,17 +680,18 @@ public class ThreadPool {
      * @throws InterruptedException if the thread is interrupted while waiting
      */
     public void waitForTermination() throws InterruptedException {
-        synchronized (m_runningWorkers) {
-            if (currentPool() != null) {
-                m_invisibleThreads.incrementAndGet();
+        synchronized (m_pendingJobs) {
+            ThreadPool currentPool = currentPool();
+            if (currentPool != null) {
+                currentPool.m_invisibleThreads.incrementAndGet();
             }
             try {
-                while (!m_runningWorkers.isEmpty()) {
-                    m_runningWorkers.wait();
+                while (m_pendingJobs.get() != 0) {
+                    m_pendingJobs.wait();
                 }
             } finally {
-                if (currentPool() != null) {
-                    m_invisibleThreads.decrementAndGet();
+                if (currentPool != null) {
+                    currentPool.m_invisibleThreads.decrementAndGet();
                 }
             }
         }
@@ -675,11 +703,16 @@ public class ThreadPool {
      * @param w the finished worker
      */
     protected void workerFinished(final Worker w) {
+        if (m_pendingJobs.decrementAndGet() == 0) {
+            synchronized (m_pendingJobs) {
+                m_pendingJobs.notifyAll();
+            }
+        }
+
         if (m_parent != null) {
             synchronized (m_runningWorkers) {
                 m_runningWorkers.remove(w);
             }
-
             m_parent.workerFinished(w);
         } else { // this is the root pool
             synchronized (m_runningWorkers) {
@@ -689,10 +722,6 @@ public class ThreadPool {
             if (checkQueue()) {
                 return;
             }
-        }
-
-        synchronized (m_runningWorkers) {
-            m_runningWorkers.notifyAll();
         }
     }
 
@@ -714,15 +743,6 @@ public class ThreadPool {
     }
 
     /**
-     * Returns the size of the future queue.
-     *
-     * @return the queue size
-     */
-    int getQueueSize() {
-        return m_queuedFutures.size();
-    }
-
-    /**
      * If the current thread is taken out of a thread pool, this method will
      * return the thread pool. Otherwise it will return <code>null</code>.
      *
@@ -735,5 +755,4 @@ public class ThreadPool {
             return null;
         }
     }
-
 }
