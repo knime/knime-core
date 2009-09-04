@@ -176,7 +176,7 @@ class PortObjectWriterNodeModel extends NodeModel {
                     + file.getAbsolutePath() + "\".");
             }
         }
-        if (!m_overwriteOK.getBooleanValue()) {
+        if (file.exists() && !m_overwriteOK.getBooleanValue()) {
             throw new InvalidSettingsException("File exists and can't be "
                     + "overwritten, check dialog settings");
         }
