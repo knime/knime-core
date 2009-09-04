@@ -1,5 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.0.0021700">
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.knime.features.base"
+      label="KNIME Base Feature"
+      version="2.1.0.0021700"
+      provider-name="KNIME GmbH, Konstanz, Germany"
+      plugin="org.knime.product"
+      image="icons/knime64.gif">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
@@ -51,13 +57,13 @@ pay for the privilege of doing so.
 
 0. Subject Matter
 
-This License applies to the computer program known as "KNIME". The
-"Program", below, refers to such program. The Program is a copyrighted
+This License applies to the computer program known as &quot;KNIME&quot;. The
+&quot;Program&quot;, below, refers to such program. The Program is a copyrighted
 work whose copyright is held by The Chair for Bioinformatics and
 Information Mining (Prof. Dr. Michael Berthold) at the University of
-Konstanz, Germany (the "Licensor").
+Konstanz, Germany (the &quot;Licensor&quot;).
 
-A "work based on the Program" means either the Program or any
+A &quot;work based on the Program&quot; means either the Program or any
 derivative work of the Program, as defined in the United States
 Copyright Act of 1976, such as a translation or a modification.
 
@@ -78,7 +84,7 @@ provided, further, that you distribute an unmodified copy of this
 License with the Program:
 
 (a) You may copy and distribute literal (i.e., verbatim) copies of the
-Program's source code as you receive it throughout the world, in any
+Program&apos;s source code as you receive it throughout the world, in any
 medium.
 
 (b) You may modify the Program, create works based on the Program and
@@ -94,7 +100,7 @@ commercial organization to any third party is prohibited if any
 payment is made in connection with such distribution, whether directly
 (as in payment for a copy of the Program) or indirectly (as in payment
 for some service related to the Program, or payment for some product
-or service that includes a copy of the Program "without charge"; these
+or service that includes a copy of the Program &quot;without charge&quot;; these
 are only examples, and not an exhaustive enumeration of prohibited
 activities). The following methods of distribution involving payment
 shall not in and of themselves be a violation of this restriction:
@@ -135,11 +141,11 @@ license only if its contents constitute a work based on the Program
 (c)
 You must meet all of the following conditions with respect to any
 work that you distribute or publish that in whole or in part contains
-or is derived from the Program or any part thereof ("the Work"):
+or is derived from the Program or any part thereof (&quot;the Work&quot;):
 
 (i)
 If you have modified the Program, you must cause the Work to carry
-prominent notices stating that you have modified the Program's files
+prominent notices stating that you have modified the Program&apos;s files
 and the date of any change. In each source file that you have
 modified, you must include a prominent notice that you have modified
 the file, including your name, your e-mail address (if any), and the
@@ -158,7 +164,7 @@ warranty). Such notice must also state that users may redistribute the
 Work only under the conditions of this License and tell the user how
 to view the copy of this License included with the Work. (Exceptions:
 if the Program is interactive but normally prints or displays such an
-announcement only at the request of a user, such as in an "About box",
+announcement only at the request of a user, such as in an &quot;About box&quot;,
 the Work is required to print or display the notice only under the
 same circumstances; if the Program itself is interactive but does not
 normally print such an announcement, the Work is not required to print
@@ -186,7 +192,7 @@ this License and written instructions for printing and/or displaying
 the copy of the License on the distribution medium;
 
 (vi)
-You may not impose any further restrictions on the recipient's
+You may not impose any further restrictions on the recipient&apos;s
 exercise of the rights granted herein.  If distribution of executable
 or object code is made by offering the equivalent ability to copy from
 a designated place, then offering equivalent ability to copy the
@@ -216,7 +222,7 @@ written in the body of this License.
 
 5. Limitations.
 
-THE PROGRAM IS PROVIDED TO YOU "AS IS," WITHOUT WARRANTY. THERE IS NO
+THE PROGRAM IS PROVIDED TO YOU &quot;AS IS,&quot; WITHOUT WARRANTY. THERE IS NO
 WARRANTY FOR THE PROGRAM, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT
 NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF THIRD PARTY
@@ -247,14 +253,14 @@ RESTRICTED RIGHTS. If you are a unit or agency of the United States
 Government or are acquiring the Program for any such unit or agency,
 the following apply:
 
-If the unit or agency is the Department of Defense ("DOD"), the
-Program and its documentation are classified as "commercial computer
-software" and "commercial computer software documentation"
+If the unit or agency is the Department of Defense (&quot;DOD&quot;), the
+Program and its documentation are classified as &quot;commercial computer
+software&quot; and &quot;commercial computer software documentation&quot;
 respectively and, pursuant to DFAR Section 227.7202, the Government is
 acquiring the Program and its documentation in accordance with the
 terms of this License. If the unit or agency is other than DOD, the
-Program and its documentation are classified as "commercial computer
-software" and "commercial computer software documentation"
+Program and its documentation are classified as &quot;commercial computer
+software&quot; and &quot;commercial computer software documentation&quot;
 respectively and, pursuant to FAR Section 12.212, the Government is
 acquiring the Program and its documentation in accordance with the
 terms of this License.
@@ -264,6 +270,10 @@ terms of this License.
       <update label="KNIME Update Site" url="http://www.knime.org/update_2.x"/>
       <discovery label="KNIME" url="http://www.knime.org/update_2.x"/>
    </url>
+
+   <includes
+         id="org.knime.features.base.source"
+         version="0.0.0"/>
 
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
@@ -290,36 +300,99 @@ terms of this License.
       <import plugin="org.eclipse.update.ui"/>
    </requires>
 
-   <includes id="org.knime.features.base.source" version="0.0.0"/>
+   <plugin
+         id="org.knime.base"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.base" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.core" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.core" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.editor"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.editor" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.helpview"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.helpview" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.ui" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.repository"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.repository" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.workbench.help"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.workbench.help" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.ext.sun"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.ext.sun" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.product"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
-   <plugin download-size="0" id="org.knime.product" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.knime.deprecated"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
 
-   <plugin download-size="0" fragment="true" id="org.knime.deprecated" install-size="0" version="0.0.0"/>
+   <plugin
+         id="org.apache.log4j"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
-   <plugin download-size="0" id="org.apache.log4j" install-size="0" unpack="false" version="0.0.0"/>
-   
-   <plugin download-size="0" fragment="true" id="org.eclipse.jdt.compiler.tool" install-size="0" unpack="false" version="0.0.0"/>
+   <plugin
+         id="org.eclipse.jdt.compiler.tool"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
 
-   <plugin download-size="0" id="org.eclipse.jdt.core" install-size="0" unpack="false" version="0.0.0"/>
+   <plugin
+         id="org.eclipse.jdt.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>
