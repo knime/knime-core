@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.nodes.mining.pca;
+package org.knime.base.node.mine.pca;
 
 import java.text.NumberFormat;
 import java.util.Arrays;

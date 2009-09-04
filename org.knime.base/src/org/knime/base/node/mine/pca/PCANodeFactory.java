@@ -1,4 +1,4 @@
-/*
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,42 +20,40 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.nodes.mining.pca;
+package org.knime.base.node.mine.pca;
 
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 
 /**
- * factory for pca inversion node.
+ * Factory class for the PCA Node.
  * 
- * @author uwe, University of Konstanz
+ * @author Uwe Nagel, University of Konstanz
  */
-public class PCAReverseNodeFactory extends NodeFactory<PCAReverseNodeModel> {
-
+public class PCANodeFactory extends NodeFactory<PCANodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new PCAReverseNodeDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return new PCANodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PCAReverseNodeModel createNodeModel() {
-
-        return new PCAReverseNodeModel();
+    public PCANodeModel createNodeModel() {
+        return new PCANodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<PCAReverseNodeModel> createNodeView(
-            final int viewIndex, final PCAReverseNodeModel nodeModel) {
+    public AbstractNodeView<PCANodeModel> createNodeView(final int viewIndex,
+            final PCANodeModel nodeModel) {
         return null;
     }
 
@@ -63,7 +61,7 @@ public class PCAReverseNodeFactory extends NodeFactory<PCAReverseNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
@@ -71,8 +69,7 @@ public class PCAReverseNodeFactory extends NodeFactory<PCAReverseNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
-
 }

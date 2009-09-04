@@ -232,6 +232,12 @@
             level-id="row-transform"
             name="Transform"
             path="/manipulation/row">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="pca"
+            name="PCA"
+            path="/mining">
       </category>      
    </extension>
             
@@ -913,7 +919,33 @@
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
       </node>
-      
+      <node
+            category-path="/mining/pca"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.pca.PCANodeFactory"
+            id="org.knime.base.node.mine.pca.PCANodeFactory">
+      </node>
+            <node
+                  after="org.knime.base.node.mine.pca.PCANodeFactory"
+                  category-path="/mining/pca"
+                  expert-flag="false"
+                  factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
+                  id="org.knime.ext.matrix.nodes.pca.PCAComputeNodeFactory">
+      </node>
+      <node
+            after="org.knime.ext.matrix.nodes.pca.PCAComputeNodeFactory"
+            category-path="/mining/pca"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
+            id="org.knime.ext.matrix.nodes.pca.PCAApplyNodeFactory">
+      </node>
+      <node
+            after="org.knime.ext.matrix.nodes.pca.PCAApplyNodeFactory"
+            category-path="/mining/pca"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.pca.PCAReverseNodeFactory"
+            id="org.knime.ext.matrix.nodes.pca.PCAReverseNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">

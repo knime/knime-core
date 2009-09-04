@@ -23,7 +23,7 @@
  *   04.10.2006 (uwe): created
  */
 
-package org.knime.base.nodes.mining.pca;
+package org.knime.base.node.mine.pca;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;

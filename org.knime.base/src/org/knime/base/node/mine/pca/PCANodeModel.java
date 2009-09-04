@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.nodes.mining.pca;
+package org.knime.base.node.mine.pca;
 
 import java.io.File;
 import java.io.IOException;

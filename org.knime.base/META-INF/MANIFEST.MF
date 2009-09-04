@@ -4,7 +4,8 @@ Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-ManifestVersion: 2
 Bundle-Version: 2.1.0.0021700
 Bundle-ClassPath: knime-base-patches.jar,
- knime-base.jar
+ knime-base.jar,
+ lib/Jama-1.0.2.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Eclipse-RegisterBuddy: org.knime.core
 Require-Bundle: org.knime.core;visibility:=reexport
