@@ -219,6 +219,8 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
                     "" + rule.getSupport());
             atts.addAttribute(null, null, "confidence", CDATA, 
                     "" + rule.getConfidence());
+            atts.addAttribute(null, null, "lift", CDATA, 
+                    "" + rule.getLift());
             atts.addAttribute(null, null, "antecedent", CDATA,
                     rule.getAntecedent().getId());
             atts.addAttribute(null, null, "consequent", CDATA, 

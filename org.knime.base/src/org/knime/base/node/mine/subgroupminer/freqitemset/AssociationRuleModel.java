@@ -50,6 +50,8 @@ public class AssociationRuleModel {
     private static final String CONFIDENCE = "confidence";
 
     private static final String SUPPORT = "support";
+    
+    private static final String LIFT = "lift";
 
     private static final String TYPE = "type";
 
@@ -132,6 +134,7 @@ public class AssociationRuleModel {
                     .addModelContent(ASSOCIATION_RULE + counter++);
             ruleModel.addDouble(SUPPORT, rule.getSupport());
             ruleModel.addDouble(CONFIDENCE, rule.getConfidence());
+            ruleModel.addDouble(LIFT, rule.getLift());
             String name;
             /*
             if (m_nameMapping != null 

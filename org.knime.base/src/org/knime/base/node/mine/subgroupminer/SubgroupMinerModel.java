@@ -433,39 +433,42 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             double support = r.getSupport();
             // get the confidence
             double confidence = r.getConfidence();
+            // get lift
+            double lift = r.getLift();
             // get the antecedence (which is one item) -> cell
             FrequentItemSet antecedent = r.getAntecedent();
             // get the consequence
             FrequentItemSet consequent = r.getConsequent();
 
             DataCell[] allCells 
-                = new DataCell[m_maxItemSetLength.getIntValue() + 4];
+                = new DataCell[m_maxItemSetLength.getIntValue() + 5];
             allCells[0] = new DoubleCell(support);
             allCells[1] = new DoubleCell(confidence);
-            // consequent is alsways only one item -> access with get(0) ok
+            allCells[2] = new DoubleCell(lift);
+            // consequent is always only one item -> access with get(0) ok
             if (m_nameMapping != null 
                     && m_nameMapping.size() > consequent.getItems().get(0)) {
-                allCells[2] = new StringCell(m_nameMapping.get(
+                allCells[3] = new StringCell(m_nameMapping.get(
                         consequent.getItems().get(0)));
             } else {
-                allCells[2] = new StringCell(
+                allCells[3] = new StringCell(
                         "Item" + consequent.getItems().get(0));
             }
-            allCells[3] = new StringCell("<---");
+            allCells[4] = new StringCell("<---");
             for (int i = 0; i < antecedent.getItems().size() 
-                && i < m_maxItemSetLength.getIntValue() + 4; i++) {
+                && i < m_maxItemSetLength.getIntValue() + 5; i++) {
                 if (m_nameMapping != null 
                         && m_nameMapping.size() > antecedent.getItems().get(i)) {
-                    allCells[i + 4] = new StringCell(m_nameMapping
+                    allCells[i + 5] = new StringCell(m_nameMapping
                             .get(antecedent.getItems().get(i)));
                 } else {
-                    allCells[i + 4] = new StringCell(
+                    allCells[i + 5] = new StringCell(
                             "Item" + antecedent.getItems().get(i));
                 }
             }
-            int start = Math.min(antecedent.getItems().size() + 4, 
-                    m_maxItemSetLength.getIntValue() + 4);
-            for (int i = start; i < m_maxItemSetLength.getIntValue() + 4; i++) {
+            int start = Math.min(antecedent.getItems().size() + 5, 
+                    m_maxItemSetLength.getIntValue() + 5);
+            for (int i = start; i < m_maxItemSetLength.getIntValue() + 5; i++) {
                 allCells[i] = DataType.getMissingCell();
             }
             if (antecedent.getItems().size() > 0) {
@@ -584,19 +587,21 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     private DataTableSpec createAssociationRulesSpec() {
         /* now create the table spec */
         DataColumnSpec[] colSpecs 
-            = new DataColumnSpec[m_maxItemSetLength.getIntValue() + 4];
+            = new DataColumnSpec[m_maxItemSetLength.getIntValue() + 5];
         DataColumnSpecCreator creator = new DataColumnSpecCreator("Support",
                 DoubleCell.TYPE);
         colSpecs[0] = creator.createSpec();
         creator = new DataColumnSpecCreator("Confidence", DoubleCell.TYPE);
         colSpecs[1] = creator.createSpec();
-        creator = new DataColumnSpecCreator("Consequent", StringCell.TYPE);
+        creator = new DataColumnSpecCreator("Lift", DoubleCell.TYPE);
         colSpecs[2] = creator.createSpec();
-        creator = new DataColumnSpecCreator("implies", StringCell.TYPE);
+        creator = new DataColumnSpecCreator("Consequent", StringCell.TYPE);
         colSpecs[3] = creator.createSpec();
+        creator = new DataColumnSpecCreator("implies", StringCell.TYPE);
+        colSpecs[4] = creator.createSpec();
         for (int i = 0; i < m_maxItemSetLength.getIntValue(); i++) {
             creator = new DataColumnSpecCreator("Item" + i, StringCell.TYPE);
-            colSpecs[i + 4] = creator.createSpec();
+            colSpecs[i + 5] = creator.createSpec();
         }
         return new DataTableSpec(colSpecs);
     }

@@ -151,6 +151,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
         } else if (name.equals("AssociationRule")) {
             double support = Double.parseDouble(atts.getValue("support"));
             double confidence = Double.parseDouble(atts.getValue("confidence"));
+            double lift = Double.parseDouble(atts.getValue("lift"));
             String antecedentId = atts.getValue("antecedent");
             String consequentId = atts.getValue("consequent");
             FrequentItemSet antecedent = null;
@@ -169,7 +170,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
                         + " in association rule could not be found.");
             }
             m_rules.add(new AssociationRule(
-                    antecedent, consequent, support, confidence));
+                    antecedent, consequent, support, confidence, lift));
         }
     }
 

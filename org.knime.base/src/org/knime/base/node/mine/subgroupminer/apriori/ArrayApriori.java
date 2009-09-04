@@ -316,7 +316,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                     new FrequentItemSet("" + m_idCounter++, withoutI, 1.0),
                     new FrequentItemSet("" + m_idCounter++,
                             iList, 1.0),
-                    1.0, 1.0);
+                    1.0, 1.0, 1.0);
             associationRules.add(rule);
         }
         // for each itemset s in frequentitemsets
@@ -347,7 +347,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                                 new FrequentItemSet(
                                         "" + m_idCounter++, iList, 
                                         getSupportFor(iList)),
-                                        s.getSupport(), c
+                                        s.getSupport(), c, c / getSupportFor(iList)
                                 );
                         associationRules.add(rule);
                         // logger.debug("found association rule: " + rule);

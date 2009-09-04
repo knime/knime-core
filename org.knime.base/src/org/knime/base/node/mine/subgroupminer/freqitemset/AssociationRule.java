@@ -39,6 +39,8 @@ public class AssociationRule {
 
     private double m_support;
     
+    private double m_lift;
+    
     private final FrequentItemSet m_antecedent;
     
     private final FrequentItemSet m_consequent;
@@ -66,11 +68,12 @@ public class AssociationRule {
      */
     public AssociationRule(final FrequentItemSet antecedent, 
             final FrequentItemSet consequent, final double support,
-            final double confidence) {
+            final double confidence, final double lift) {
         m_antecedent = antecedent;
         m_consequent = consequent;
         m_support = support;
         m_confidence = confidence;
+        m_lift = lift;
     }
     
     
@@ -79,13 +82,6 @@ public class AssociationRule {
      */
     public double getSupport() {
         return m_support;
-    }
-
-    /**
-     * @param confidence the confidence to set
-     */
-    public void setConfidence(final double confidence) {
-        m_confidence = confidence;
     }
 
     /**
@@ -100,6 +96,13 @@ public class AssociationRule {
      */
     public FrequentItemSet getAntecedent() {
         return m_antecedent;
+    }
+    
+    /**
+     * @return lift value
+     */
+    public double getLift() {
+    	return m_lift;
     }
 
 
@@ -117,7 +120,7 @@ public class AssociationRule {
     @Override
     public String toString() {
         return "support: " + m_support + " confidence: " + m_confidence
-                + " antecedent: " + m_antecedent.getId() + " consequent: "
-                + m_consequent.getId();
+                + " lift: " + m_lift + " antecedent: " + m_antecedent.getId() 
+                + " consequent: " + m_consequent.getId();
     }
 }

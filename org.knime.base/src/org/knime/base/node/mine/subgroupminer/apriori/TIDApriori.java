@@ -338,7 +338,7 @@ public class TIDApriori implements AprioriAlgorithm {
             AssociationRule rule = new AssociationRule(
                     new FrequentItemSet("" + m_idCounter++, rest, 1.0), 
                     new FrequentItemSet("" + m_idCounter++, itemList, 1.0),
-                    1.0, 1.0);
+                    1.0, 1.0, 1.0);
             associationRules.add(rule);
         }
         // for each itemset
@@ -384,7 +384,7 @@ public class TIDApriori implements AprioriAlgorithm {
                                         iList, 
                                         // TODO: support of single item
                                         tidItem.getSupport()),
-                                s.getSupport(), c);
+                                s.getSupport(), c, c / tidItem.getSupport());
                         associationRules.add(rule);
                     }
                 }
