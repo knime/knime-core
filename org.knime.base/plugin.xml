@@ -919,6 +919,15 @@
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
       </node>
+
+      <node
+            after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory"
+            id="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory">
+      </node>
+
       <node
             category-path="/mining/pca"
             expert-flag="false"
