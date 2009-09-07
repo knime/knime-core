@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.base"
-      label="KNIME Base Feature"
+      label="%featureName"
       version="2.1.0.0021700"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
 
    <description url="http://www.knime.org/">
-      This features containes KNIME. All plugins needed to run the
-information mining workbench are included. Note that there are
-additional features available.
+      %description
    </description>
 
    <copyright>
