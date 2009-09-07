@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -35,10 +36,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -58,6 +63,16 @@ public class WorkflowVariablesDialog extends Dialog {
 
     private final WorkflowManager m_workflow;
 
+    private Button m_addVarBtn;
+
+    private Button m_editVarBtn;
+
+    private Button m_removeVarBtn;
+
+    private Label m_warningLabel;
+
+    private NodeStateChangeListener m_listener;
+
     /**
      *
      * @param shell parent shell
@@ -66,7 +81,28 @@ public class WorkflowVariablesDialog extends Dialog {
     public WorkflowVariablesDialog(final Shell shell,
             final WorkflowManager workflow) {
         super(shell);
+        if (workflow == null) {
+            throw new IllegalArgumentException("Workflow must not be null!");
+        }
         m_workflow = workflow;
+        m_listener = new NodeStateChangeListener() {
+
+            public void stateChanged(final NodeStateEvent state) {
+                final boolean inProgress = !state.getState()
+                    .executionInProgress();
+                // switch to SWT thread
+                Display.getDefault().asyncExec(new Runnable() {
+                    /**
+                     * {@inheritDoc}
+                     */
+                    public void run() {
+                        setEditable(inProgress);
+                    }
+                });
+            }
+
+        };
+        m_workflow.addNodeStateChangeListener(m_listener);
     }
 
     /**
@@ -90,7 +126,7 @@ public class WorkflowVariablesDialog extends Dialog {
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
         // composite contains:
 
-        // second row (new composite):
+        // first row (new composite):
         Composite tableAndBtnsComp = new Composite(composite, SWT.NONE);
         tableAndBtnsComp.setLayoutData(new GridData(GridData.FILL_BOTH));
         tableAndBtnsComp.setLayout(new GridLayout(2, false));
@@ -126,9 +162,9 @@ public class WorkflowVariablesDialog extends Dialog {
         gridData.verticalAlignment = GridData.VERTICAL_ALIGN_CENTER;
         btnsComp.setLayoutData(gridData);
 
-        Button addBtn = new Button(btnsComp, SWT.PUSH);
-        addBtn.setText("Add");
-        addBtn.addSelectionListener(new SelectionListener() {
+        m_addVarBtn = new Button(btnsComp, SWT.PUSH);
+        m_addVarBtn.setText("Add");
+        m_addVarBtn.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetDefaultSelected(final SelectionEvent arg0) {
                 widgetSelected(arg0);
@@ -143,12 +179,12 @@ public class WorkflowVariablesDialog extends Dialog {
         gridData = new GridData();
         gridData.widthHint = 80;
         gridData.heightHint = 20;
-        addBtn.setLayoutData(gridData);
+        m_addVarBtn.setLayoutData(gridData);
 
-        Button editBtn = new Button(btnsComp, SWT.PUSH);
-        editBtn.setText("Edit");
-        editBtn.setLayoutData(gridData);
-        editBtn.addSelectionListener(new SelectionListener() {
+        m_editVarBtn = new Button(btnsComp, SWT.PUSH);
+        m_editVarBtn.setText("Edit");
+        m_editVarBtn.setLayoutData(gridData);
+        m_editVarBtn.addSelectionListener(new SelectionListener() {
 
             @Override
             public void widgetDefaultSelected(final SelectionEvent arg0) {
@@ -169,10 +205,10 @@ public class WorkflowVariablesDialog extends Dialog {
             }
         });
 
-        Button removeBtn = new Button(btnsComp, SWT.PUSH);
-        removeBtn.setText("Remove");
-        removeBtn.setLayoutData(gridData);
-        removeBtn.addSelectionListener(new SelectionListener() {
+        m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
+        m_removeVarBtn.setText("Remove");
+        m_removeVarBtn.setLayoutData(gridData);
+        m_removeVarBtn.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetDefaultSelected(final SelectionEvent arg0) {
                 widgetSelected(arg0);
@@ -192,7 +228,28 @@ public class WorkflowVariablesDialog extends Dialog {
                 removeWorkflowVariable(selectedParam);
             }
         });
+
+        // second row: the warning label (in case the edit buttons are disabled
+        // due to executing workflow...)
+        m_warningLabel = new Label(composite, SWT.NONE);
+        m_warningLabel.setText("");
+        m_warningLabel.setForeground(Display.getDefault().getSystemColor(
+                SWT.COLOR_RED));
+        m_warningLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         return composite;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void create() {
+        // we have to override the create contents method, since the dialog area
+        // is created before the button bar at the bottom is created, where we
+        // have to disable the OK button in case the workflow is running
+        super.create();
+        // update button state...
+        setEditable(!m_workflow.getState().executionInProgress());
     }
 
     private int openConfirmationDialog() {
@@ -394,4 +451,48 @@ public class WorkflowVariablesDialog extends Dialog {
         }
         super.cancelPressed();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean close() {
+        // unregister listener from workflow
+        m_workflow.removeNodeStateChangeListener(m_listener);
+        return super.close();
+    }
+
+
+    private void setEditable(final boolean isEditable) {
+        Shell shell = getShell();
+        if (shell == null) {
+            // in case the method is called before the dialog was actually open
+            return;
+        }
+        Button okBtn = getButton(IDialogConstants.OK_ID);
+        if (okBtn != null && !okBtn.isDisposed()) {
+            okBtn.setEnabled(isEditable);
+        }
+        if (m_addVarBtn != null && !m_addVarBtn.isDisposed()) {
+            m_addVarBtn.setEnabled(isEditable);
+        }
+        if (m_editVarBtn != null && !m_editVarBtn.isDisposed()) {
+            m_editVarBtn.setEnabled(isEditable);
+        }
+        if (m_removeVarBtn != null && !m_removeVarBtn.isDisposed()) {
+            m_removeVarBtn.setEnabled(isEditable);
+        }
+        // set message if not editable
+        if (m_warningLabel != null && !m_warningLabel.isDisposed()) {
+            if (!isEditable) {
+                m_warningLabel.setText("Workflow variables are not editable "
+                        + "while the workflow is in execution!");
+            } else {
+                // reset warning
+                m_warningLabel.setText("");
+            }
+        }
+        getShell().redraw();
+    }
+
 }
