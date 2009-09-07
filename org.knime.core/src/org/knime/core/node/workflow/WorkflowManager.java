@@ -1006,6 +1006,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     private void markForExecutionAllNodesInWorkflow(final boolean flag) {
         synchronized (m_workflowMutex) {
+            boolean changed = false; // will be true in case of state changes
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof SingleNodeContainer) {
                     SingleNodeContainer snc = (SingleNodeContainer)nc;
@@ -1013,6 +1014,7 @@ public final class WorkflowManager extends NodeContainer {
                         switch (nc.getState()) {
                         case CONFIGURED:
                         case IDLE:
+                            changed = true;
                             snc.markForExecution(true);
                             break;
                         default:
@@ -1023,6 +1025,7 @@ public final class WorkflowManager extends NodeContainer {
                         switch (nc.getState()) {
                         case MARKEDFOREXEC:
                         case UNCONFIGURED_MARKEDFOREXEC:
+                            changed = true;
                             snc.markForExecution(false);
                             break;
                         default:
@@ -1031,8 +1034,14 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 } else {
                     WorkflowManager wfm = ((WorkflowManager)nc);
+                    // does not need to set "changed" flag here as this child
+                    // will propagate state changes by calling
+                    // call checkForNodeStateChanges (possibly too often)
                     wfm.markForExecutionAllNodesInWorkflow(flag);
                 }
+            }
+            if (changed) {
+                checkForNodeStateChanges(true);
             }
         }
     }
