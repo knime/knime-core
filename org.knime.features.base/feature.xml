@@ -271,7 +271,7 @@ terms of this License.
       <discovery label="KNIME" url="http://www.knime.org/update_2.x"/>
    </url>
 
-   <includes
+   <plugin
          id="org.knime.features.base.source"
          version="0.0.0"/>
 
