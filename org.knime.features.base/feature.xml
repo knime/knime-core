@@ -271,10 +271,7 @@ terms of this License.
       <discovery label="KNIME" url="http://www.knime.org/update_2.x"/>
    </url>
 
-   <plugin
-         id="org.knime.features.base.source"
-         version="0.0.0"/>
-
+   
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.jface"/>
@@ -395,4 +392,5 @@ terms of this License.
          version="0.0.0"
          unpack="false"/>
 
+    <plugin id="org.knime.features.base.source" version="0.0.0" />
 </feature>
