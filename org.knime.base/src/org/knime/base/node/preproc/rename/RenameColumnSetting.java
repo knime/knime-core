@@ -235,8 +235,12 @@ final class RenameColumnSetting {
         String newName = m_newColumnName == null ? m_name : m_newColumnName;
         Class<? extends DataValue> newVal = 
             possibleTypes[getNewValueClassIndex()];
-        boolean useToString = newVal.equals(StringValue.class)
-                && !oldType.isCompatible(StringValue.class);
+        boolean useToString = 
+            newVal.equals(StringValue.class) 
+                // columns with only missing values (and corresponding col-spec)
+                // need to handled separately, bug #1939
+                && (DataType.getMissingCell().getType().equals(oldType)
+                    || !oldType.isCompatible(StringValue.class));
         DataColumnDomain newDomain;
         DataType newType;
         if (useToString) {
