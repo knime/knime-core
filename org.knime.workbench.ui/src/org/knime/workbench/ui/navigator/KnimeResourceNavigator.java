@@ -28,6 +28,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.GroupMarker;
@@ -201,13 +202,13 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 try {
-                    String name = ProjectWorkflowMap
-                            .findProjectFor(nodeResource);
-                    if (name != null) {
+                    IPath path =
+                        ProjectWorkflowMap.findProjectFor(nodeResource);
+                    if (path != null) {
                         // we have to find the resource again, hence we cannot
                         // put the project's name with toLowercase into the map
                         IResource rsrc = ResourcesPlugin.getWorkspace()
-                                .getRoot().findMember(new Path(name));
+                                .getRoot().findMember(path);
                         if (rsrc != null) {
                             getTreeViewer().update(rsrc, null);
                         }

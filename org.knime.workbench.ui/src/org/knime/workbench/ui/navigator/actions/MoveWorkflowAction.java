@@ -187,7 +187,7 @@ public class MoveWorkflowAction extends Action
 
     private boolean isOpenedWorkflow(final IResource source) {
         NodeContainer nc = ProjectWorkflowMap.getWorkflow(
-                source.getFullPath().toString());
+                source.getFullPath());
         if (nc != null) {
             return true;
         }

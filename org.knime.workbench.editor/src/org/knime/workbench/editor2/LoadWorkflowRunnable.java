@@ -102,11 +102,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
         // this is done if the file is empty
         boolean createEmptyWorkflow = false;
         
-        // name of the workflow in case a new one is created (not loaded)
+        // name of workflow will be null (uses directory name then)
         String name = null;
-        if (m_workflowFile != null) {
-            name = m_workflowFile.getParentFile().getName();
-        }
 
         // set the loading canceled variable to false
         m_editor.setLoadingCanceled(false);

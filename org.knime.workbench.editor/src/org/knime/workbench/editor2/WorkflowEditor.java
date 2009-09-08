@@ -36,6 +36,7 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -318,8 +319,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         if (m_fileResource != null) {
-            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath()
-                    .toString());
+            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath());
         }
 
         // remember that this editor has been closed
@@ -649,7 +649,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
             ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getParent().getFullPath().toString(),
+                    m_fileResource.getParent().getFullPath(),
 //                    m_fileResource.getParent().getName(),
                     m_manager);
             m_manager.addListener(this);
@@ -1311,26 +1311,31 @@ public class WorkflowEditor extends GraphicalEditor implements
 //                    + m_fileResource.getProject() + " Deltat type: "
 //                    + getTypeString(delta));
             // Parent project removed? close this editor....
-            if (m_fileResource.getProject().equals(delta.getResource())) {
-
+            if (m_fileResource.equals(delta.getResource())) {
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-                    final String newName = delta.getMovedToPath().segment(0);
-                    String oldName = 
-                        m_fileResource.getParent().getFullPath().toString();
+                    // remove workflow.knime from moved to path
+                    IPath newDirPath = 
+                        delta.getMovedToPath().removeLastSegments(1);
+                    // directory name (without workflow groups)
+                    final String newName = newDirPath.lastSegment();
+                    IPath oldPath = m_fileResource.getParent().getFullPath();
                     WorkflowEditor.this.m_manager.renameWorkflowDirectory(
                             newName);
-                    ProjectWorkflowMap.replace(
-                            delta.getMovedToPath().toString(),
-                            WorkflowEditor.this.m_manager, oldName);
+                    ProjectWorkflowMap.replace(newDirPath,
+                            WorkflowEditor.this.m_manager, oldPath);
                     Display.getDefault().syncExec(new Runnable() {
                         public void run() {
                             String newTitle = m_manager.getID()
                                 .getIDWithoutRoot() + ": " + newName;
                             setTitleToolTip(newTitle);
                             setPartName(newTitle);
+                            m_fileResource = ResourcesPlugin.getWorkspace().
+                                getRoot().getFile(delta.getMovedToPath());
+                            setDefaultInput(
+                                    new FileEditorInput(m_fileResource));
                         }
                     });
-
+                    return false;
                 }
             }
 
@@ -1339,33 +1344,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return true;
             }
 
-            // listen for "MOVED_TO" deltas...
-            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-
-                // This updates UI, so we need the code to be executed in the
-                // SWT UI thread.
-                Display.getDefault().syncExec(new Runnable() {
-                    public void run() {
-
-                        // // get the new name
-                        // String newName =
-                        // delta.getMovedToPath().lastSegment();
-                        // // set the part name
-                        // setPartName(newName);
-
-                        // we need to update the file resource that we have
-                        // currently opened in our editor, so that we now have
-                        // the "new" file
-                        m_fileResource =
-                                ResourcesPlugin.getWorkspace().getRoot()
-                                        .getFile(delta.getMovedToPath());
-                        setDefaultInput(new FileEditorInput(m_fileResource));
-
-                    }
-                });
-
-                return false;
-            } else if ((delta.getKind() == IResourceDelta.REMOVED)) {
+            if ((delta.getKind() == IResourceDelta.REMOVED)) {
                 LOGGER.info(m_fileResource.getName()
                         + " resource has been removed.");
 

@@ -56,7 +56,7 @@ public abstract class AbstractWorkflowAction extends Action {
             IContainer cont = (IContainer)element;
             if (cont.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
                 m_workflow = (WorkflowManager)ProjectWorkflowMap
-                        .getWorkflow(cont.getFullPath().toString());
+                    .getWorkflow(cont.getFullPath());
                 if (m_workflow != null) {
                     return true;
                 }

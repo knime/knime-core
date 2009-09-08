@@ -154,7 +154,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             final Object element) {
         if (element instanceof IContainer) {
             NodeContainer cont = ProjectWorkflowMap.getWorkflow(
-                    ((IContainer)element).getFullPath().toString());
+                    ((IContainer)element).getFullPath());
             if (cont != null) {
                 URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
@@ -237,7 +237,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             if (container.exists(WORKFLOW_FILE)) {
                 // in any case a knime workflow or meta node (!)
                 projectNode = ProjectWorkflowMap.getWorkflow(
-                        container.getFullPath().toString());
+                        container.getFullPath());
                 if (projectNode == null && !isMetaNode(container)) {
                     return CLOSED;
                 }

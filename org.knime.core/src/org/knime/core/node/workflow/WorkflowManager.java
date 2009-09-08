@@ -105,10 +105,9 @@ public final class WorkflowManager extends NodeContainer {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowManager.class);
 
-    private static final String DEFAULT_NAME = "Workflow Manager";
-
-    /** Name of this workflow (usually displayed at top of the node figure). */
-    private String m_name = DEFAULT_NAME;
+    /** Name of this workflow (usually displayed at top of the node figure). 
+     * May be null to use name of workflow directory. */
+    private String m_name;
 
     /** Executor for asynchronous event notification. */
     private static final Executor WORKFLOW_NOTIFIER =
@@ -4198,15 +4197,13 @@ public final class WorkflowManager extends NodeContainer {
         return m_outPorts.length;
     }
 
-    /** Set new name of this workflow.
-     * @param name The new name.
-     * @throws NullPointerException If argument is null.
+    /** Set new name of this workflow or null to reset the name (will then
+     * return the workflow directory in {@link #getName()} or null if this flow
+     * has not been saved yet).
+     * @param name The new name or null
      */
     public void setName(final String name) {
-        if (name == null) {
-            throw new NullPointerException("Name must not be null.");
-        }
-        if (!m_name.equals(name)) {
+        if (!ConvenienceMethods.areEqual(m_name, name)) {
             setDirty();
             m_name = name;
         }
@@ -4221,14 +4218,36 @@ public final class WorkflowManager extends NodeContainer {
     public boolean renameWorkflowDirectory(final String newName) {
         ReferencedFile file = getNodeContainerDirectory();
         if (file == null) {
-            throw new IllegalStateException("Worklow has not yet been saved");
+            throw new IllegalStateException("Worklow has not been saved yet.");
         }
         return file.rename(newName);
     }
 
-    /** {@inheritDoc} */
+    /** Get the name of the workflow. If none has been set, a name is derived
+     * from the workflow directory name. If no directory has been set, a static
+     * string is returned. This method never returns null.
+     * {@inheritDoc} */
     @Override
     public String getName() {
+        if (m_name != null) {
+            return m_name;
+        }
+        ReferencedFile refFile = getNodeContainerDirectory();
+        if (refFile != null) {
+            File file = refFile.getFile();
+            String dirName = file.getName();
+            if (dirName != null) {
+                return dirName;
+            }
+        }
+        return "Workflow Manager";
+    }
+    
+    /** @return the name set in the constructor or via {@link #setName(String)}.
+     * In comparison to {@link #getName()} this method does not use the workflow
+     * directory name if no other name is set. 
+     */
+    String getNameField() {
         return m_name;
     }
 

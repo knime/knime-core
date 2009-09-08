@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
@@ -62,14 +63,15 @@ public final class ProjectWorkflowMap {
     }
 
     /*
-     * Map with name of IProject to lowercase and referring workflow manager
+     * Map with name of workflow path and referring workflow manager
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
+     * (This map contains only open workflows.)
      */
-    private static final Map<String, NodeContainer> PROJECTS
-        = new LinkedHashMap<String, NodeContainer>() {
+    private static final Map<IPath, NodeContainer> PROJECTS
+        = new LinkedHashMap<IPath, NodeContainer>() {
         
         @Override
-        public NodeContainer put(final String key, final NodeContainer value) {
+        public NodeContainer put(final IPath key, final NodeContainer value) {
             NodeContainer old = super.put(key, value);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key 
@@ -191,21 +193,20 @@ public final class ProjectWorkflowMap {
 
     /**
      *
-     * @param newName the new name of the {@link IProject} after a rename
-     *  operation
+     * @param newPath the new path of the {@link IProject} after renaming
      * @param nc the {@link WorkflowManager} with a project new associated name
-     * @param oldName the old {@link IProject} name, under which the opened
+     * @param oldPath the old {@link IProject} path, under which the opened
      *  {@link WorkflowManager} is stored in the map
      */
-    public static void replace(final String newName,
-            final WorkflowManager nc, final String oldName) {
-        if (oldName != null) {
-            PROJECTS.remove(oldName);
+    public static void replace(final IPath newPath,
+            final WorkflowManager nc, final IPath oldPath) {
+        if (oldPath != null) {
+            PROJECTS.remove(oldPath);
         }
-        putWorkflow(newName, nc);
+        putWorkflow(newPath, nc);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
                 WorkflowEvent.Type.NODE_ADDED, nc.getID(),
-                oldName, nc));
+                null, nc));
         NSC_LISTENER.stateChanged(new NodeStateEvent(nc.getID(),
                 nc.getState()));
     }
@@ -213,13 +214,13 @@ public final class ProjectWorkflowMap {
     /**
      * Removes the {@link WorkflowManager} from the map, typically when the
      *  referring editor is closed and the WorkflowEditor is disposed.
-     * @param name nameof the {@link IProject} under which the
+     * @param path path of the {@link IProject} under which the
      * {@link WorkflowManager} is stored in the map.
      */
-    public static void remove(final String name) {
-        WorkflowManager manager = (WorkflowManager)PROJECTS.get(name);
+    public static void remove(final IPath path) {
+        WorkflowManager manager = (WorkflowManager)PROJECTS.get(path);
         if (manager != null) {
-            PROJECTS.remove(name);
+            PROJECTS.remove(path);
             WF_LISTENER.workflowChanged(new WorkflowEvent(
                     WorkflowEvent.Type.NODE_REMOVED, manager.getID(),
                     manager, null));
@@ -231,16 +232,15 @@ public final class ProjectWorkflowMap {
     }
 
     /**
-     * Adds a {@link WorkflowManager} of an opened workflow with the name of
-     * the referring {@link IProject} name to the map. Used by the
-     * WorkflowEditor.
+     * Adds a {@link WorkflowManager} of an opened workflow with the path of
+     * the referring {@link IProject} to the map. Used by the WorkflowEditor.
      *
-     * @param name name of the referring {@link IProject}
+     * @param path path of the referring {@link IProject}
      * @param manager open {@link WorkflowManager}
      */
-    public static void putWorkflow(final String name,
+    public static void putWorkflow(final IPath path,
             final WorkflowManager manager) {
-        PROJECTS.put(name, manager);
+        PROJECTS.put(path, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
         manager.addNodeMessageListener(MSG_LISTENER);
@@ -252,31 +252,30 @@ public final class ProjectWorkflowMap {
 
     /**
      * Returns the {@link WorkflowManager} instance which is registered under
-     * the name of the project file resource (usually the directory name).
-     * Might be <code>null</code> if the {@link WorkflowManager} was not
-     * registered under this name or is already closed.
+     * the project file resource. Might be <code>null</code> if the 
+     * {@link WorkflowManager} was not registered under this path or 
+     * is closed.
      *
      * @see KnimeResourceContentProvider
      * @see KnimeResourceLabelProvider
      *
-     * @param projectName name of the project file resource (usually the
-     *  directory name)
+     * @param path project file resource (usually the directory)
      * @return the referring {@link WorkflowManager} or <code>null</code> if the
      * workflow manager is not registered under the passed name.
      */
-    public static NodeContainer getWorkflow(final String projectName) {
-        return PROJECTS.get(projectName);
+    public static NodeContainer getWorkflow(final IPath path) {
+        return PROJECTS.get(path);
     }
 
     /**
-     * Finds the name of the project file resource based on the {@link NodeID}
+     * Finds the the project file resource based on the {@link NodeID}
      * of the referring workflow manager.
      * @param workflowID id of the {@link WorkflowManager} for which the name of
      * the project should be found
-     * @return name of the {@link IProject}'s file resource
+     * @return path of the {@link IProject}'s file resource
      */
-    public static final String findProjectFor(final NodeID workflowID) {
-        for (Map.Entry<String, NodeContainer> entry : PROJECTS.entrySet()) {
+    public static final IPath findProjectFor(final NodeID workflowID) {
+        for (Map.Entry<IPath, NodeContainer> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
                 return entry.getKey();
             }

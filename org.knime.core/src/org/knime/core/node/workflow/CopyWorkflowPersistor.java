@@ -75,7 +75,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             m_outportTemplates[i] = 
                 new WorkflowPortTemplate(i, in.getPortType());
         }
-        m_name = original.getName();
+        m_name = original.getNameField();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags);
         if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {

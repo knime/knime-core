@@ -46,7 +46,7 @@ public class JobManagerDecorator implements
      * {@inheritDoc}
      */
     @Override
-    public void addListener(ILabelProviderListener listener) {
+    public void addListener(final ILabelProviderListener listener) {
         m_listeners.add(listener);
     }
 
@@ -62,7 +62,7 @@ public class JobManagerDecorator implements
      * {@inheritDoc}
      */
     @Override
-    public boolean isLabelProperty(Object element, String property) {
+    public boolean isLabelProperty(final Object element, final String property) {
         // TODO Auto-generated method stub
         return true;
     }
@@ -71,15 +71,15 @@ public class JobManagerDecorator implements
      * {@inheritDoc}
      */
     @Override
-    public void removeListener(ILabelProviderListener listener) {
+    public void removeListener(final ILabelProviderListener listener) {
         m_listeners.remove(listener);
     }
 
     @Override
-    public Image decorateImage(Image image, Object element) {
+    public Image decorateImage(final Image image, final Object element) {
         if (element instanceof IContainer) {
             NodeContainer cont = ProjectWorkflowMap.getWorkflow(
-                    ((IContainer)element).getFullPath().toString());
+                    ((IContainer)element).getFullPath());
             if (cont != null) {
                 URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
@@ -94,7 +94,7 @@ public class JobManagerDecorator implements
     }
 
     @Override
-    public String decorateText(String text, Object element) {
+    public String decorateText(final String text, final Object element) {
         // TODO Auto-generated method stub
         return null;
     }

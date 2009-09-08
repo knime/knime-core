@@ -67,7 +67,7 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
-                    project.getFullPath().toString());
+                    project.getFullPath());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and 
                 // the number of contained nodes is returned
@@ -130,7 +130,7 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(project
-                    .getFullPath().toString());
+                    .getFullPath());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned

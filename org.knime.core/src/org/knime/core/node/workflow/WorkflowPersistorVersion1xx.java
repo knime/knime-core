@@ -274,7 +274,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             loadResult.addError(error);
-            m_name = "Workflow";
+            m_name = null;
         }
         
         try {
@@ -912,7 +912,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return null;
     }
     
-    protected WorkflowPortTemplate loadInPortTemplate(NodeSettingsRO settings) 
+    protected WorkflowPortTemplate loadInPortTemplate(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
         throw new InvalidSettingsException(
                 "No ports for meta nodes in version 1.x.x");
@@ -928,7 +928,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return null;
     }
     
-    protected WorkflowPortTemplate loadOutPortTemplate(NodeSettingsRO settings)
+    protected WorkflowPortTemplate loadOutPortTemplate(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         throw new InvalidSettingsException(
             "No ports for meta nodes in version 1.x.x");
