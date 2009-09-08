@@ -274,28 +274,11 @@ terms of this License.
          version="0.0.0"/>
 
    <requires>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.jface"/>
-      <import plugin="org.eclipse.platform"/>
-      <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.eclipse.draw2d"/>
-      <import plugin="org.eclipse.gef"/>
-      <import plugin="org.eclipse.osgi"/>
-      <import plugin="org.eclipse.swt"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.ui.ide"/>
-      <import plugin="org.eclipse.ui.views"/>
-      <import plugin="org.eclipse.ui.workbench"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.help.webapp"/>
-      <import plugin="org.eclipse.help.ui"/>
-      <import plugin="org.eclipse.help"/>
-      <import plugin="org.eclipse.help.base"/>
-      <import plugin="org.eclipse.ui.intro"/>
-      <import plugin="org.eclipse.update.configurator"/>
-      <import plugin="org.eclipse.update.core"/>
-      <import plugin="org.eclipse.update.scheduler"/>
-      <import plugin="org.eclipse.update.ui"/>
+      <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>
+      <import feature="org.eclipse.platform" version="3.4.2.R342_v20090122-9I96EiWElHi8lheoJKJIvhM3JfVsYbRrgVIWL" match="compatible"/>
+      <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.apache.log4j"/>
    </requires>
 
    <plugin
@@ -370,27 +353,5 @@ terms of this License.
          install-size="0"
          version="0.0.0"
          fragment="true"/>
-
-   <plugin
-         id="org.apache.log4j"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.compiler.tool"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
 </feature>
