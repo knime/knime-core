@@ -939,21 +939,27 @@
                   category-path="/mining/pca"
                   expert-flag="false"
                   factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
-                  id="org.knime.ext.matrix.nodes.pca.PCAComputeNodeFactory">
+                  id="org.knime.base.node.mine.pca.PCAComputeNodeFactory">
       </node>
       <node
-            after="org.knime.ext.matrix.nodes.pca.PCAComputeNodeFactory"
+            after="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
             category-path="/mining/pca"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
-            id="org.knime.ext.matrix.nodes.pca.PCAApplyNodeFactory">
+            id="org.knime.base.node.mine.pca.PCAApplyNodeFactory">
       </node>
       <node
-            after="org.knime.ext.matrix.nodes.pca.PCAApplyNodeFactory"
+            after="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
             category-path="/mining/pca"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.pca.PCAReverseNodeFactory"
-            id="org.knime.ext.matrix.nodes.pca.PCAReverseNodeFactory">
+            id="org.knime.base.node.mine.pca.PCAReverseNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory"
+            id="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory">
       </node>
    </extension>
       <extension
