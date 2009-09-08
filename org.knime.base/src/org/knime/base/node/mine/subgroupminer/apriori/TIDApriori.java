@@ -47,6 +47,7 @@ import org.knime.core.node.NodeLogger;
  * @author Fabian Dill, University of Konstanz
  */
 public class TIDApriori implements AprioriAlgorithm {
+	
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TIDApriori.class);
 
@@ -67,7 +68,7 @@ public class TIDApriori implements AprioriAlgorithm {
     private int m_idCounter = 0;
 
     /**
-     * Identify those items which occure in a sufficient, that is the minimum
+     * Identify those items which occur in a sufficient, that is the minimum
      * support, number of transactions and stores them with the ids of the
      * transactions they appear in. At the end the always frequent items, which
      * occur in every transaction are filtered.
@@ -186,7 +187,7 @@ public class TIDApriori implements AprioriAlgorithm {
     private void findFrequentItemsDepthFirst(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         TIDItemSet emptySet = TIDItemSet.createEmptyTIDItemSet(
-                "" + m_idCounter++, m_dbsize);
+                Integer.toString(m_idCounter++), m_dbsize);
         m_prefixTree = new TIDPrefixTreeNode(emptySet);
         expandDepthFirstTree(m_prefixTree, 0, exec);
     }
@@ -249,9 +250,7 @@ public class TIDApriori implements AprioriAlgorithm {
             List<Integer> id = new ArrayList<Integer>();
             id.add(i.getId());
             TIDFrequentItemSet freqSet = new TIDFrequentItemSet(
-                    "" + m_idCounter++,
-                    id, 1.0,
-                    tids);
+                    Integer.toString(m_idCounter++), id, 1.0, tids);
             freqSets.add(freqSet);
         }
         if (type.equals(FrequentItemSet.Type.FREE)) {
@@ -384,7 +383,8 @@ public class TIDApriori implements AprioriAlgorithm {
                                         iList, 
                                         // TODO: support of single item
                                         tidItem.getSupport()),
-                                s.getSupport(), c, c / tidItem.getSupport());
+                                        s.getSupport(), c, 
+                                        c / tidItem.getSupport() * m_dbsize);
                         associationRules.add(rule);
                     }
                 }

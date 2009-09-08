@@ -362,7 +362,7 @@ public class ArrayApriori implements AprioriAlgorithm {
         ArrayPrefixTreeNode child = m_root;
         double support = 0;
         for (Integer item : itemset) {
-            support += child.getCounterFor(m_mapping[item]);
+            support = child.getCounterFor(m_mapping[item]);
             child = child.getChild(m_mapping[item]);
         }
         return support / m_dbsize;
@@ -377,10 +377,11 @@ public class ArrayApriori implements AprioriAlgorithm {
             List<Integer> id = new ArrayList<Integer>();
             id.add(i);
             FrequentItemSet set = new FrequentItemSet(
-                    "" + m_idCounter++, id, 1);
+                    Integer.toString(m_idCounter++), id, 1);
             list.add(set);
         }
-        FrequentItemSet initialSet = new FrequentItemSet("" + m_idCounter++);
+        FrequentItemSet initialSet = new FrequentItemSet(
+        		Integer.toString(m_idCounter++));
         getFrequentItemSets(m_root, list, initialSet, 0);
         if (type.equals(FrequentItemSet.Type.CLOSED)) {
             List<FrequentItemSet> resultList = filterClosedItemsets(list);
