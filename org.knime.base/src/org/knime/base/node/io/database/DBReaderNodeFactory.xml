@@ -17,9 +17,8 @@
 	<option name="Database driver: ">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
-	</option>
-	<option name="Load: ">
-	    Register additional driver from Zip or Jar files.
+		Additional driver can be registered via KNIME's preference page
+		(Database drivers).
 	</option>
 	<option name="Database name: ">
         Enter the database name here, for example 
