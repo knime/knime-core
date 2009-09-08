@@ -63,8 +63,7 @@ All other trademarks are the property of their respective owners.
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.knime.features.base" version="2.1.0.0021700"/>
-      <feature id="org.knime.features.chem.types" version="2.1.0.0021700"/>
-      <feature id="org.knime.features.ext.chem.cdk" version="2.1.0.0021700"/>
+      <feature id="org.knime.features.distmatrix" version="2.1.0.0021700"/>
    </features>
 
 </product>
