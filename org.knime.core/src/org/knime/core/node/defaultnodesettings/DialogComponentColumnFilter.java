@@ -38,6 +38,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
@@ -72,7 +73,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             final int inPortIndex) {
         this(model, inPortIndex, DataValue.class);
     }
-
+    
     /**
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
@@ -88,12 +89,30 @@ public class DialogComponentColumnFilter extends DialogComponent {
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex,
             final Class<? extends DataValue>... allowedTypes) {
+    	this(model, inPortIndex, 
+    			new ColumnFilterPanel.ValueClassFilter(allowedTypes));
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter. The allowed types filters out every column which is not
+     * compatible with the allowed type.
+     *
+     * @param model a string array model that stores the value
+     * @param inPortIndex the index of the port whose table is filtered.
+     * @param filter for the columns, all column not compatible with
+     *            any of the allowed types are not displayed.
+     */
+    public DialogComponentColumnFilter(final SettingsModelFilterString model,
+            final int inPortIndex, final ColumnFilter filter) {
         super(model);
 
         m_inPortIndex = inPortIndex;
         m_specInFilter = null;
 
-        m_columnFilter = new ColumnFilterPanel(allowedTypes);
+        m_columnFilter = new ColumnFilterPanel(filter);
         getComponentPanel().add(m_columnFilter);
 
         // when the user input changes we need to update the model.

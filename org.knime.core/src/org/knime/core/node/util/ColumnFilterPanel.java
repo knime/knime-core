@@ -130,11 +130,56 @@ public class ColumnFilterPanel extends JPanel {
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_excludeBorder;
-
+    
     /**
-     * Show only columns of types that are compatible to one of theses classes.
+     * Class that filters all columns based on a given set of compatible
+     * <code>DataValue</code> classes.
      */
-    private final Class<? extends DataValue>[] m_filterClasses;
+    public static class ValueClassFilter implements ColumnFilter {
+    	/**
+    	 * Show only columns of types that are compatible to one of theses 
+    	 * classes.
+    	 */
+    	private final Class<? extends DataValue>[] m_filterClasses;
+    	/**
+    	 * Creates a new value class filter.
+    	 * @param filterValueClasses all classes that are compatible with
+    	 *        the type allowed in {@link #isValidColumn(DataColumnSoec)}.
+    	 */
+    	public ValueClassFilter(
+    			final Class<? extends DataValue>... filterValueClasses) {
+            if (filterValueClasses == null || filterValueClasses.length == 0) {
+                throw new NullPointerException("Classes must not be null");
+            }
+            List<Class<? extends DataValue>> list = Arrays
+                    .asList(filterValueClasses);
+            if (list.contains(null)) {
+                throw new NullPointerException("List of value classes must not "
+                        + "contain null elements.");
+            }
+    		m_filterClasses = filterValueClasses;
+    	}
+        /**
+         * Checks if the given column type is included in the list of allowed 
+         * types. If the list is empty, all types are valid.
+         */
+        public final boolean includeColumn(final DataColumnSpec cspec) {
+            for (Class<? extends DataValue> cl : m_filterClasses) {
+                if (cspec.getType().isCompatible(cl)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+		/** {@inheritDoc} */
+        @Override
+        public String allFilteredMsg() {
+        	return "No columns compatible with the specific column types.";
+        }
+    };
+    
+    /** The filter used to filter out/int valid column types. */
+    private final ColumnFilter m_filter;
 
     private final HashSet<DataColumnSpec> m_hideColumns = 
         new HashSet<DataColumnSpec>();
@@ -167,22 +212,7 @@ public class ColumnFilterPanel extends JPanel {
     public ColumnFilterPanel() {
         this(DataValue.class);
     }
-
-    /* Only used to init the filter class array. */
-    private static Class<? extends DataValue>[] init(
-            final Class<? extends DataValue>... filterValueClasses) {
-        if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
-        }
-        List<Class<? extends DataValue>> list = Arrays
-                .asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not "
-                    + "contain null elements.");
-        }
-        return filterValueClasses;
-    }
-
+    
     /**
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
@@ -197,7 +227,22 @@ public class ColumnFilterPanel extends JPanel {
      */
     public ColumnFilterPanel(
             final Class<? extends DataValue>... filterValueClasses) {
-        m_filterClasses = init(filterValueClasses);
+    	this(new ValueClassFilter(filterValueClasses));
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter.
+     * 
+     * @param filter specifies valid column values. Will be check during update
+     * 
+     * @see #update(DataTableSpec, boolean, Collection)
+     * @see #update(DataTableSpec, boolean, String...)
+     */
+    public ColumnFilterPanel(final ColumnFilter filter) {
+        m_filter = filter;
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
@@ -513,19 +558,6 @@ public class ColumnFilterPanel extends JPanel {
         this.update(spec, exclude, Arrays.asList(cells));
     }
 
-    /*
-     * Checks if the given type is included in the list of allowed types. If the
-     * list is empty, all types are valid.
-     */
-    private boolean typeAllowed(final DataType type) {
-        for (Class<? extends DataValue> cl : m_filterClasses) {
-            if (type.isCompatible(cl)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Updates this filter panel by removing all current selections from the
      * include and exclude list. The include list will contains all column names
@@ -545,7 +577,7 @@ public class ColumnFilterPanel extends JPanel {
         m_hideColumns.clear();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
-            if (!typeAllowed(cSpec.getType())) {
+            if (!m_filter.includeColumn(cSpec)) {
                 continue;
             }
             final String c = cSpec.getName();
@@ -573,6 +605,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return a set of all columns from the exclude list
      * @deprecated Use {@link #getExcludedColumnSet()} instead
      */
+    @Deprecated
     public Set<String> getExcludedColumnList() {
         return getExcludedColumnSet();
     }
@@ -593,6 +626,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return a list of all columns from the include list
      * @deprecated Use {@link #getIncludedColumnSet()} instead
      */
+    @Deprecated
     public Set<String> getIncludedColumnList() {
         return getIncludedColumnSet();
     }
