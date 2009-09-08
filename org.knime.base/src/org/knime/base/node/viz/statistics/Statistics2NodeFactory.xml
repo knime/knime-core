@@ -22,12 +22,15 @@
 		independently to find the values that divides the distribution into two
 		halves of the same number of values.
 		</option>
+		<option name="Column filter">Filter columns for counting all possible 
+		values.
+		</option>
 		<option name="Nominal values">Adjusts the number of counts for both,
 		top number of frequent and infrequent occurrences of categorical
-		values (displayed in the node view!).
+		values per column (displayed in the node view!).
 		</option>
 		<option name="Nominal values in output">Adjusts the maximum number of 
-		possible values in the nominal output table.
+		possible values per column in the nominal output table.
         </option>
 	</fullDescription>
 	

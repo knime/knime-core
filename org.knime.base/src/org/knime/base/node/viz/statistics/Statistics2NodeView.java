@@ -94,7 +94,8 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
     
     private void refreshNominalValues() {
         Statistics2NodeModel myModel = getNodeModel();
-        if (myModel.getColumnNames() == null) {
+        String[] columnNames = myModel.getNominalColumnNames();
+        if (columnNames == null) {
             return;
         }
         
@@ -104,18 +105,19 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
         buffer.append("<p>&nbsp</p>");
         buffer.append("<table border = \"1\">");
 
-        String[] columnNames = myModel.getColumnNames();
         for (int i = 0; i < columnNames.length; i++) {
             if (myModel.getNominals()[i] != null) {
-                buffer.append("<th style=\"white-space: nowrap\">" + columnNames[i] + "</th>");
+                buffer.append("<th style=\"white-space: nowrap\">" 
+                		+ columnNames[i] + "</th>");
             }
         }
         
         buffer.append("<tr valign=\"top\">");
         double[] missings = myModel.getNumMissingValues();
-        for (int i = 0; i < missings.length; i++) {
-            if (myModel.getNominals()[i] != null) {
-                buffer.append("<td style=\"white-space: nowrap\"><strong>No. missings: </strong>" 
+        for (int i = 0; i < columnNames.length; i++) {
+        	if (myModel.getNominals()[i] != null) {
+                buffer.append("<td style=\"white-space: nowrap\"><strong>"
+                		+ "No. missings: </strong>" 
                         + ((int) missings[i]) + "</td>");
             }
         }
@@ -165,7 +167,8 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
                     if (size >= numNomValues) {
                         int cnt = 0;
                         for (DataCell c : map.keySet()) {
-                            if (cnt >= Math.max(numNomValues, size - numNomValues)) {
+                            if (cnt >= 
+                            	  Math.max(numNomValues, size - numNomValues)) {
                                 buffer.append(c.toString() + " : " 
                                             + map.get(c) + "<br>");
                             }

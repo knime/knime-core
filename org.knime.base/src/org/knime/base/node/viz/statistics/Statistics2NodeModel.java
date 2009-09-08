@@ -44,6 +44,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -69,6 +70,9 @@ public class Statistics2NodeModel extends NodeModel {
     private final SettingsModelIntegerBounded m_nominalValuesOutput = 
         Statistics2NodeDialogPane.createNominalValuesModelOutput();
     
+    private final SettingsModelFilterString m_nominalFilter =
+    	Statistics2NodeDialogPane.createNominalFilterModel();
+    
     /** One input and one output. */
     Statistics2NodeModel() {
         super(1, 2);
@@ -85,7 +89,8 @@ public class Statistics2NodeModel extends NodeModel {
             throws InvalidSettingsException {
         return new DataTableSpec[]{
                 Statistics2Table.createOutSpecNumeric(inSpecs[0]),
-                Statistics2Table.createOutSpecNominal(inSpecs[0])};
+                Statistics2Table.createOutSpecNominal(inSpecs[0], 
+                		m_nominalFilter.getIncludeList())};
     }
 
     /**
@@ -99,13 +104,15 @@ public class Statistics2NodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         m_statTable = new Statistics2Table(
                 inData[0], m_computeMedian.getBooleanValue(), 
-                numOfNominalValuesOutput(), exec);
+                numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(), 
+                exec);
         BufferedDataTable outTable1 = exec.createBufferedDataTable(
                 m_statTable.createStatisticMomentsTable(), 
                 exec.createSubProgress(0.5));
         BufferedDataTable outTable2 = exec.createBufferedDataTable(
-                m_statTable.createNominalValueTable(), 
-                exec.createSubProgress(0.5));
+                m_statTable.createNominalValueTable(
+                		m_nominalFilter.getIncludeList()), 
+                		exec.createSubProgress(0.5));
         return new BufferedDataTable[]{outTable1, outTable2};
     }
 
@@ -118,6 +125,7 @@ public class Statistics2NodeModel extends NodeModel {
         m_computeMedian.loadSettingsFrom(settings);
         m_nominalValues.loadSettingsFrom(settings);
         m_nominalValuesOutput.loadSettingsFrom(settings);
+        m_nominalFilter.loadSettingsFrom(settings);
     }
 
     /**
@@ -136,7 +144,17 @@ public class Statistics2NodeModel extends NodeModel {
     }
 
     /**
-     * @return Returns the column Names.
+     * @return columns used to count co-occurrences
+     */
+    String[] getNominalColumnNames() {
+        if (m_statTable == null) {
+            return null;
+        }
+        return m_nominalFilter.getIncludeList().toArray(new String[0]);
+    }
+
+    /**
+     * @return all column names
      */
     String[] getColumnNames() {
         if (m_statTable == null) {
@@ -178,6 +196,7 @@ public class Statistics2NodeModel extends NodeModel {
         m_computeMedian.saveSettingsTo(settings);
         m_nominalValues.saveSettingsTo(settings);
         m_nominalValuesOutput.saveSettingsTo(settings);
+        m_nominalFilter.saveSettingsTo(settings);
     }
 
     /**
@@ -189,6 +208,7 @@ public class Statistics2NodeModel extends NodeModel {
         m_computeMedian.validateSettings(settings);
         m_nominalValues.validateSettings(settings);
         m_nominalValuesOutput.validateSettings(settings);
+        m_nominalFilter.validateSettings(settings);
     }
     
     /**

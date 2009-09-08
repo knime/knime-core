@@ -24,8 +24,10 @@ package org.knime.base.node.viz.statistics;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
@@ -34,6 +36,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class Statistics2NodeDialogPane extends DefaultNodeSettingsPane {
+	
+	private final SettingsModelFilterString m_filterModel;
     
     /** Default constructor. */
     Statistics2NodeDialogPane() {
@@ -41,17 +45,26 @@ public class Statistics2NodeDialogPane extends DefaultNodeSettingsPane {
                 createMedianModel(), 
                 "Calculate median values (computationally expensive)"));
         createNewGroup("Nominal values");
+        m_filterModel = createNominalFilterModel();
+        addDialogComponent(new DialogComponentColumnFilter(m_filterModel, 0));
         DialogComponentNumber numNomValueComp = 
             new DialogComponentNumber(createNominalValuesModel(), 
-                "Max no. of most frequent and infrequent (in view): ", 5);
+             "Max no. of most frequent and infrequent values (in view): ", 5);
         numNomValueComp.setToolTipText(
-             "Max no. of most frequent and infrequent attribute "
-                + "values displayed in the node view.");
+             "Max no. of most frequent and infrequent "
+                + "values per column displayed in the node view.");
         addDialogComponent(numNomValueComp);
         DialogComponentNumber numNomValueCompOutput = 
             new DialogComponentNumber(createNominalValuesModelOutput(), 
-                "Max no. of possible values (in output table): ", 5);
+                "Max no. of possible values per column (in output table): ", 5);
         addDialogComponent(numNomValueCompOutput);
+    }
+    
+    /**
+     * @return create nominal filter model
+     */
+    static SettingsModelFilterString createNominalFilterModel() {
+        return new SettingsModelFilterString("filter_nominal_columns");
     }
     
     /**
@@ -74,6 +87,6 @@ public class Statistics2NodeDialogPane extends DefaultNodeSettingsPane {
      */
     static SettingsModelIntegerBounded createNominalValuesModelOutput() {
         return new SettingsModelIntegerBounded(
-                "num_nominal-values_output", 10000, 0, Integer.MAX_VALUE);
+                "num_nominal-values_output", 1000, 0, Integer.MAX_VALUE);
     }
 }

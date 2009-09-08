@@ -362,7 +362,7 @@ public class ArrayApriori implements AprioriAlgorithm {
         ArrayPrefixTreeNode child = m_root;
         double support = 0;
         for (Integer item : itemset) {
-            support = child.getCounterFor(m_mapping[item]);
+            support += child.getCounterFor(m_mapping[item]);
             child = child.getChild(m_mapping[item]);
         }
         return support / m_dbsize;

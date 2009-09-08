@@ -43,7 +43,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
@@ -99,11 +98,6 @@ public class Statistics2Table {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(Statistics2Table.class);
-    
-    public Statistics2Table(final BufferedDataTable data, 
-    		final ExecutionContext exec) throws CanceledExecutionException {
-		this(data, false, 0, exec);
-	}
 
     /**
      * Create new statistic table from an existing one. This constructor
@@ -112,13 +106,16 @@ public class Statistics2Table {
      * passed.
      * @param table table to be wrapped
      * @param computeMedian if the median has to be computed
-     * @param numNomValuesOutput number of possible values in output table 
+     * @param numNomValuesOutput number of possible values in output table
+     * @param nominalValueColumns columns used to determine all poss. values 
      * @param exec an object to check with if user canceled operation
      * @throws CanceledExecutionException if user canceled
      */
     public Statistics2Table(final BufferedDataTable table,
             final boolean computeMedian,
-            final int numNomValuesOutput, final ExecutionContext exec) 
+            final int numNomValuesOutput,
+            final List<String> nominalValueColumns,
+            final ExecutionContext exec) 
             throws CanceledExecutionException {
         int nrCols = table.getDataTableSpec().getNumColumns();
         m_spec = table.getDataTableSpec();
@@ -130,7 +127,7 @@ public class Statistics2Table {
         m_maxValues = new double[nrCols];
         m_missingValueCnt = new double[nrCols];
         m_median = new double[nrCols];
-        m_nominalValues = new Map[nrCols];
+        m_nominalValues = new Map[nominalValueColumns.size()];
         // the number of non-missing cells in each column
         int[] validCount = new int[nrCols];
         double[] sumsquare = new double[nrCols];
@@ -146,10 +143,9 @@ public class Statistics2Table {
             validCount[i] = 0;
         }
         
-        int cntNomValues = 0;
-
         // temp map used to sort later based in occurrences
-        Map<DataCell, MutableInteger>[] nominalValues = new Map[nrCols];
+        Map<DataCell, MutableInteger>[] nominalValues = 
+        	new Map[m_nominalValues.length];
 
         final int rowCnt = table.getRowCount();
         double diffProgress = rowCnt;
@@ -167,13 +163,14 @@ public class Statistics2Table {
             exec.setProgress(rowIdx / diffProgress,
                         "Calculating statistics, processing row "
                           + (rowIdx + 1) + " (\"" + row.getKey() + "\")");
+            int colIdx = 0;
             for (int c = 0; c < nrCols; c++) {
                 exec.checkCanceled();
+                DataColumnSpec cspec = m_spec.getColumnSpec(c);
                 final DataCell cell = row.getCell(c);
                 if (!(cell.isMissing())) {
                     // for double columns we calc the sum (for the mean calc)
-                    DataType type = m_spec.getColumnSpec(c).getType();
-                    if (type.isCompatible(DoubleValue.class)) {
+                    if (cspec.getType().isCompatible(DoubleValue.class)) {
                         double d = ((DoubleValue)cell).getDoubleValue();
                         // keep the min and max for each column
                         if ((Double.isNaN(m_minValues[c]))
@@ -195,35 +192,28 @@ public class Statistics2Table {
                 } else {
                     m_missingValueCnt[c]++;
                 }
-                if (nominalValues[c] == null 
-                        || (nominalValues[c] != null 
-                                && nominalValues[c].size() > 0)) {
-                    DataColumnSpec cspec = m_spec.getColumnSpec(c);
-                    if (cspec.getType().isCompatible(NominalValue.class)) {
-                        if (nominalValues[c] == null) {
-                            nominalValues[c] =
-                                new LinkedHashMap<DataCell, MutableInteger>();
-                        }
-                        MutableInteger cnt = nominalValues[c].get(cell);
-                        if (cnt == null) {
-                            nominalValues[c].put(cell, new MutableInteger(1));
-                            cntNomValues++;
-                        } else {
-                            cnt.inc();
-                        }
-                        if (nominalValues[c].size() 
-                                == numNomValuesOutput) {
-                            cntNomValues -= numNomValuesOutput;
-                            LOGGER
-                                    .warn("Maximum number of unique nominal "
-                                            + "values exeeds "
-                                            + numNomValuesOutput + " (total="
-                                            + cntNomValues + ") for column \""
-                                            + m_spec.getColumnSpec(c).getName()
-                                            + "\".");
-                            nominalValues[c].clear();
-                        }
+                if (nominalValueColumns.contains(cspec.getName())
+                		&& (nominalValues[colIdx] == null 
+                				|| (nominalValues[colIdx] != null 
+                				&& nominalValues[colIdx].size() > 0))) {
+                    if (nominalValues[colIdx] == null) {
+                        nominalValues[colIdx] =
+                            new LinkedHashMap<DataCell, MutableInteger>();
                     }
+                    MutableInteger cnt = nominalValues[colIdx].get(cell);
+                    if (cnt == null) {
+                        nominalValues[colIdx].put(cell, new MutableInteger(1));
+                    } else {
+                        cnt.inc();
+                    }
+                    if (nominalValues[colIdx].size() == numNomValuesOutput) {
+                        LOGGER.warn("Maximum number of unique nominal "
+                            + "values exeeds " + numNomValuesOutput 
+                            + " for column \"" 
+                            + m_spec.getColumnSpec(colIdx).getName() + "\".");
+                        nominalValues[colIdx].clear();
+                    }
+                    colIdx++;
                 }
             }
         }
@@ -369,8 +359,8 @@ public class Statistics2Table {
      * their occurrences.
      * @return nominal value output table
      */
-    public DataTable createNominalValueTable() {
-        DataTableSpec outSpec = createOutSpecNominal(m_spec);
+    public DataTable createNominalValueTable(final List<String> nominalValues) {
+        DataTableSpec outSpec = createOutSpecNominal(m_spec, nominalValues);
         Iterator[] it = new Iterator[outSpec.getNumColumns() / 2];
         int idx = 0;
         for (int i = 0; i < m_nominalValues.length; i++) {
@@ -446,14 +436,15 @@ public class Statistics2Table {
      * Create spec containing only nominal columns in same order as the input 
      * spec.
      * @param inSpec input spec 
+     * @param nominalValues used in map of co-occurrences
      * @return a new spec with all nominal columns
      */
     public static DataTableSpec createOutSpecNominal(
-            final DataTableSpec inSpec) {
+            final DataTableSpec inSpec, final List<String> nominalValues) {
         ArrayList<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
             DataColumnSpec cspec = inSpec.getColumnSpec(i);
-            if (cspec.getType().isCompatible(NominalValue.class)) {
+            if (nominalValues.contains(cspec.getName())) {
                 cspecs.add(cspec);
                 String countCol = DataTableSpec.getUniqueColumnName(
                         inSpec, cspec.getName() + "_Count");
