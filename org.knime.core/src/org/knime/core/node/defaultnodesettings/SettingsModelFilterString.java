@@ -91,7 +91,7 @@ public class SettingsModelFilterString extends SettingsModel {
                 // entries can't be in the include and exclude list!
                 if (m_inclList.contains(e)) {
                     throw new IllegalArgumentException(
-                            "The include and exclude"
+                            "The include and exclude "
                                     + "lists contain the same object.");
                 }
                 if (!m_exclList.contains(e)) {
