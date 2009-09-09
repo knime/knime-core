@@ -904,7 +904,6 @@
       </node>
       <node
             category-path="manipulation/row/row-filter"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
       </node>
@@ -923,43 +922,43 @@
       <node
             after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
             category-path="/manipulation/column/column-transform"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory"
             id="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory">
       </node>
 
       <node
             category-path="/mining/pca"
-            expert-flag="false"
             factory-class="org.knime.base.node.mine.pca.PCANodeFactory"
             id="org.knime.base.node.mine.pca.PCANodeFactory">
       </node>
-            <node
-                  after="org.knime.base.node.mine.pca.PCANodeFactory"
-                  category-path="/mining/pca"
-                  expert-flag="false"
-                  factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
-                  id="org.knime.base.node.mine.pca.PCAComputeNodeFactory">
+      <node
+            after="org.knime.base.node.mine.pca.PCANodeFactory"
+            category-path="/mining/pca"
+            factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
+            id="org.knime.base.node.mine.pca.PCAComputeNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
             category-path="/mining/pca"
-            expert-flag="false"
             factory-class="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
             id="org.knime.base.node.mine.pca.PCAApplyNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
             category-path="/mining/pca"
-            expert-flag="false"
             factory-class="org.knime.base.node.mine.pca.PCAReverseNodeFactory"
             id="org.knime.base.node.mine.pca.PCAReverseNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
             category-path="/manipulation/column/column-convert+replace"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory"
             id="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.filter.hilite.collector.HiLiteCollectorNodeFactory"
+            id="org.knime.base.node.preproc.filter.hilite.collector.HiLiteCollectorNodeFactory">
       </node>
    </extension>
       <extension
