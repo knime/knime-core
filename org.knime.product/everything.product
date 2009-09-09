@@ -94,6 +94,7 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.ext.libsvm" version="2.1.0.0021700"/>
       <feature id="org.knime.features.ext.matrix" version="1.0.0"/>
       <feature id="org.knime.features.ext.md" version="1.0.0"/>
+      <feature id="org.knime.features.exp.lda" version="1.0.0"/>
    </features>
 
 </product>
