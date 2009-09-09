@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./pca.png" type="Manipulator">
-<name>PCA Predictor</name>
+<knimeNode icon="./pca_apply.png" type="Manipulator">
+<name>PCA Apply</name>
 <shortDescription>Apply principal components projection</shortDescription>
 <fullDescription>
 <intro>
@@ -16,7 +16,7 @@
 	        
 		</intro>
 		<option name="fail if missing values are encountered">
-          If checked, execution fails if the selected columns contain missing values.
+          If checked, execution fails if the selected columns contain missing values. By default rows containing missing values are ignored.
         </option>
         <option name="dimensions to reduce to">
         Determine the number of dimensions the input data is projected to. The percentage values

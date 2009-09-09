@@ -38,7 +38,9 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -50,8 +52,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
@@ -73,20 +75,18 @@ public class PCANodeModel extends NodeModel {
      */
     static final String INPUT_COLUMNS = "input_columns";
 
-    /**
-     * Config key, for the number of dimensions the original data is reduced to.
-     */
-    protected static final String RESULT_DIMENSIONS = "result_dimensions";
-
     /** Index of input data port. */
     public static final int DATA_INPORT = 0;
 
     /** Index of input data port. */
-    public static final int DATA_OUTPORT = 0;
+    public static final int DATA_OUTPORT = 2;
 
-    /** number of dimensions to reduce to. */
-    private final SettingsModelInteger m_reduceToDimensions =
-            new SettingsModelInteger(PCANodeModel.RESULT_DIMENSIONS, 2);
+    /** Index of decomposition output port. */
+    public static final int INFO_OUTPORT = 1;
+
+    /** Index of covariance matrix output port. */
+
+    public static final int MATRIX_OUTPORT = 0;
 
     /** numeric columns to be used as input. */
     private final SettingsModelFilterString m_inputColumns =
@@ -102,9 +102,7 @@ public class PCANodeModel extends NodeModel {
     private final SettingsModelBoolean m_failOnMissingValues =
             new SettingsModelBoolean(FAIL_MISSING, false);
 
-    private final SettingsModel[] m_settingsModels =
-            {m_inputColumns, m_reduceToDimensions, m_removeOriginalCols,
-                    m_failOnMissingValues};
+    private String[] m_inputColumnNames;
 
     /**
      * description String for dimension.
@@ -115,11 +113,42 @@ public class PCANodeModel extends NodeModel {
     static final String REMOVE_COLUMNS = "removeColumns";
 
     /**
+     * config String for selecting whether the number of dimensions or the
+     * minimum quality is configured.
+     */
+    public static final String DIMENSIONS_SELECTION =
+            "output_dimensions_selected";
+
+    private final SettingsModelPCADimensions m_dimSelection =
+            new SettingsModelPCADimensions(DIMENSIONS_SELECTION, 2, 100, false);
+
+    private final SettingsModel[] m_settingsModels =
+            {m_inputColumns, m_removeOriginalCols, m_failOnMissingValues,
+                    m_dimSelection};
+
+    /**
      * One input, one output table.
      */
     PCANodeModel() {
-        super(1, 1);
+        super(1, 3);
 
+    }
+
+    /**
+     * select all compatible columns as input.
+     * 
+     * @param inSpecs in specs
+     */
+    private void selectDefaultColumns(final PortObjectSpec[] inSpecs) {
+        m_inputColumnIndices =
+                PCANodeModel
+                        .getDefaultColumns((DataTableSpec)inSpecs[DATA_INPORT]);
+        m_inputColumnNames = new String[m_inputColumnIndices.length];
+        for (int i = 0; i < m_inputColumnIndices.length; i++) {
+            m_inputColumnNames[i] =
+                    ((DataTableSpec)inSpecs[DATA_INPORT]).getColumnSpec(i)
+                            .getName();
+        }
     }
 
     /**
@@ -135,42 +164,93 @@ public class PCANodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         if (m_inputColumns.getIncludeList().size() == 0) {
-            m_inputColumnIndices = getDefaultColumns(inSpecs[DATA_INPORT]);
-            m_reduceToDimensions.setIntValue(m_inputColumnIndices.length);
+            // default config fallback
+            selectDefaultColumns(inSpecs);
             setWarningMessage("using as default all possible columns ("
                     + m_inputColumnIndices.length + ") for PCA!");
-        }
-        m_inputColumnIndices = new int[m_inputColumns.getIncludeList().size()];
-        int colIndex = 0;
-        for (final String colName : m_inputColumns.getIncludeList()) {
-            final DataColumnSpec colspec =
-                    inSpecs[DATA_INPORT].getColumnSpec(colName);
-            if (colspec == null) {
-                m_inputColumnIndices = getDefaultColumns(inSpecs[DATA_INPORT]);
-                m_reduceToDimensions.setIntValue(m_inputColumnIndices.length);
-                setWarningMessage("using as default all possible columns ("
-                        + m_inputColumnIndices.length + ") for PCA!");
-                break;
-            } else if (!colspec.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("column \"" + colName
-                        + "\" is not compatible with double");
+        } else {
+            // read config from dialog
+            m_inputColumnIndices =
+                    new int[m_inputColumns.getIncludeList().size()];
+            m_inputColumnNames = new String[m_inputColumnIndices.length];
+            int colIndex = 0;
+            for (final String colName : m_inputColumns.getIncludeList()) {
+                final DataColumnSpec colspec =
+                        inSpecs[DATA_INPORT].getColumnSpec(colName);
+                if (colspec == null) {
+                    selectDefaultColumns(inSpecs);
+                    m_dimSelection.setDimensions(m_inputColumnIndices.length);
+                    setWarningMessage("using as default all possible columns ("
+                            + m_inputColumnIndices.length + ") for PCA!");
+                    break;
+                } else if (!colspec.getType().isCompatible(DoubleValue.class)) {
+                    throw new InvalidSettingsException("column \"" + colName
+                            + "\" is not compatible with double");
+                }
+                m_inputColumnIndices[colIndex] =
+                        inSpecs[DATA_INPORT].findColumnIndex(colName);
+                m_inputColumnNames[colIndex] = colName;
+                colIndex++;
             }
-            m_inputColumnIndices[colIndex++] =
-                    inSpecs[DATA_INPORT].findColumnIndex(colName);
+        }
+
+        int dim =
+                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+        if (dim == -1) {
+            if (!m_dimSelection.getDimensionsSelected()
+                    && m_dimSelection.getMinQuality() != 100) {
+                // cannot determine needed dimensions without knowing
+                // decomposition
+                return null;
+            }
+            m_dimSelection.setDimensionsSelected(false);
+            m_dimSelection.setMinQuality(100);
+            dim = m_inputColumnIndices.length;
         }
         final DataColumnSpec[] specs =
-                createAddTableSpec(inSpecs[DATA_INPORT], m_reduceToDimensions
-                        .getIntValue());
-        final DataTableSpec dts =
-                AppendedColumnTable.getTableSpec(inSpecs[0], specs);
+                createAddTableSpec(inSpecs[DATA_INPORT], dim);
+        final DataTableSpec data =
+                AppendedColumnTable.getTableSpec(inSpecs[DATA_INPORT], specs);
         if (m_removeOriginalCols.getBooleanValue()) {
-            final ColumnRearranger columnRearranger = new ColumnRearranger(dts);
+            final ColumnRearranger columnRearranger =
+                    new ColumnRearranger(data);
             columnRearranger.remove(m_inputColumnIndices);
             return new DataTableSpec[]{columnRearranger.createSpec()};
         }
 
-        return new DataTableSpec[]{dts};
+        final DataTableSpec[] outspec = new DataTableSpec[3];
+        outspec[DATA_OUTPORT] = data;
+        outspec[INFO_OUTPORT] =
+                createDecompositionTableSpec(m_inputColumnIndices.length);
+        outspec[MATRIX_OUTPORT] =
+                createCovarianceMatrixSpec(m_inputColumnNames);
+        return outspec;
 
+    }
+
+    /**
+     * create table spec for output of spectral decomposition.
+     * 
+     * @param dimensions number of dimension of input
+     * @return table spec (first col for eigenvalues, others for components of
+     *         eigenvectors)
+     */
+    public static DataTableSpec createDecompositionTableSpec(
+            final int dimensions) {
+        final DataColumnSpecCreator createEVCol =
+                new DataColumnSpecCreator("eigenvalue", DoubleCell.TYPE);
+
+        final DataColumnSpec[] colsSpecs = new DataColumnSpec[dimensions + 1];
+        colsSpecs[0] = createEVCol.createSpec();
+
+        for (int i = 1; i < colsSpecs.length; i++) {
+            colsSpecs[i] =
+                    new DataColumnSpecCreator("comp_" + i, DoubleCell.TYPE)
+                            .createSpec();
+        }
+        final DataTableSpec info =
+                new DataTableSpec("spectral decomposition", colsSpecs);
+        return info;
     }
 
     /**
@@ -198,8 +278,8 @@ public class PCANodeModel extends NodeModel {
     /**
      * create part of table spec to be added to the input table.
      * 
-     * @param inSpecs inpecs (for unique column names)
-     * @param resultDimensions TODO
+     * @param inSpecs input specs (for unique column names)
+     * @param resultDimensions number of dimensions in output
      * @return part of table spec to be added to input table
      */
     public static DataColumnSpec[] createAddTableSpec(
@@ -231,12 +311,6 @@ public class PCANodeModel extends NodeModel {
         // remove all non-numeric columns from the input date
         // final DataTable filteredTable =
         // filterNonNumericalColumns(inData[DATA_INPORT]);
-        final int dimensions = m_reduceToDimensions.getIntValue();
-        // adjust to selected numerical columns
-        if (dimensions > m_inputColumnIndices.length || dimensions < 1) {
-            throw new IllegalArgumentException(
-                    "invalid number of dimensions to reduce to: " + dimensions);
-        }
 
         final BufferedDataTable dataTable =
                 (BufferedDataTable)inData[DATA_INPORT];
@@ -266,26 +340,36 @@ public class PCANodeModel extends NodeModel {
 
         }
         exec.setMessage("computing spectral decomposition");
+
         final EigenvalueDecomposition eig = covarianceMatrix.eig();
         final double[] evs = EigenValue.extractEVVector(eig);
+        m_dimSelection.setEigenValues(evs);
+        final int dimensions =
+                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+        // don't remember these, in case input changes
+        m_dimSelection.setEigenValues(null);
+        // adjust to selected numerical columns
+        if (dimensions > m_inputColumnIndices.length || dimensions < 1) {
+            throw new IllegalArgumentException(
+                    "invalid number of dimensions to reduce to: " + dimensions);
+        }
         final Matrix eigenvectors =
                 EigenValue.getSortedEigenVectors(eig.getV().getArray(), evs,
                         dimensions);
-        eigenvectors.transpose();
+
         final double postDecompositionProgress = 0.7;
         exec.setProgress(postDecompositionProgress);
         final DataColumnSpec[] specs =
                 createAddTableSpec(
                         (DataTableSpec)inData[DATA_INPORT].getSpec(),
-                        m_reduceToDimensions.getIntValue());
+                        dimensions);
 
         final CellFactory fac = new CellFactory() {
 
             @Override
             public DataCell[] getCells(final DataRow row) {
                 return convertInputRow(eigenvectors, row, meanVector,
-                        m_inputColumnIndices, m_reduceToDimensions
-                                .getIntValue(), false);
+                        m_inputColumnIndices, dimensions, false);
             }
 
             @Override
@@ -315,8 +399,40 @@ public class PCANodeModel extends NodeModel {
         final BufferedDataTable result =
                 exec.createColumnRearrangeTable((BufferedDataTable)inData[0],
                         cr, exec);
-        final PortObject[] out = {result};
+        final PortObject[] out = new PortObject[3];
+        out[DATA_OUTPORT] = result;
+        out[INFO_OUTPORT] =
+                createDecompositionOutputTable(exec, evs, eig.getV());
+        out[MATRIX_OUTPORT] =
+                createCovarianceTable(exec, covarianceMatrix.getArray(),
+                        m_inputColumnNames);
         return out;
+    }
+
+    /**
+     * create a table containing the given spectral decomposition.
+     * 
+     * @param exec execution context for table creation
+     * @param evs eigenvalues
+     * @param eigenvectors (column contains an eigenvector)
+     * @return the created table
+     */
+    public static BufferedDataTable createDecompositionOutputTable(
+            final ExecutionContext exec, final double[] evs,
+            final Matrix eigenvectors) {
+        final DataTableSpec outSpec = createDecompositionTableSpec(evs.length);
+        final BufferedDataContainer result = exec.createDataContainer(outSpec);
+        for (int i = evs.length - 1; i >= 0; i--) {
+            final DataCell[] values = new DataCell[evs.length + 1];
+            values[0] = new DoubleCell(evs[i]);
+            for (int j = 1; j < evs.length + 1; j++) {
+                values[j] = new DoubleCell(eigenvectors.get(j - 1, i));
+            }
+            result.addRowToTable(new DefaultRow(new RowKey(evs.length - i
+                    + ". eigenvector"), values));
+        }
+        result.close();
+        return result.getTable();
     }
 
     /**
@@ -564,5 +680,42 @@ public class PCANodeModel extends NodeModel {
         for (final SettingsModel s : this.m_settingsModels) {
             s.validateSettings(settings);
         }
+    }
+
+    /**
+     * create data table from covariance matrix.
+     * 
+     * @param exec execution context
+     * @param m covariance matrix
+     * @param inputColumnNames names of input columns the matrix was created
+     *            from
+     * @return table
+     */
+    public static BufferedDataTable createCovarianceTable(
+            final ExecutionContext exec, final double[][] m,
+            final String[] inputColumnNames) {
+        final BufferedDataContainer bdt =
+                exec
+                        .createDataContainer(createCovarianceMatrixSpec(inputColumnNames));
+        for (int i = 0; i < m.length; i++) {
+            final DataCell[] cells = new DataCell[inputColumnNames.length];
+            for (int j = 0; j < m[i].length; j++) {
+                cells[j] = new DoubleCell(m[i][j]);
+            }
+            bdt.addRowToTable(new DefaultRow(inputColumnNames[i], cells));
+        }
+        bdt.close();
+        final BufferedDataTable covarianceTable = bdt.getTable();
+        return covarianceTable;
+    }
+
+    public static DataTableSpec createCovarianceMatrixSpec(
+            final String[] inputColumnNames) {
+        final DataType[] types = new DataType[inputColumnNames.length];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = DoubleCell.TYPE;
+        }
+        return new DataTableSpec("covariance matrix", inputColumnNames, types);
+
     }
 }

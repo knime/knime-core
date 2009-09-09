@@ -51,14 +51,9 @@ package org.knime.base.node.mine.pca;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -104,14 +99,13 @@ public class PCAComputeNodeModel extends NodeModel {
 
     private String[] m_inputColumnNames;
 
-    private DataTableSpec m_dataTableSpec;
-
     /**
      * create node model.
      */
     public PCAComputeNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-                BufferedDataTable.TYPE, PCAModelPortObject.TYPE});
+                BufferedDataTable.TYPE, BufferedDataTable.TYPE,
+                PCAModelPortObject.TYPE});
     }
 
     /**
@@ -149,16 +143,6 @@ public class PCAComputeNodeModel extends NodeModel {
         }
 
         final Matrix covarianceMatrix = new Matrix(m);
-        final BufferedDataContainer bdt =
-                exec.createDataContainer(m_dataTableSpec);
-        for (int i = 0; i < m.length; i++) {
-            final DataCell[] cells = new DataCell[m_inputColumnNames.length];
-            for (int j = 0; j < m[i].length; j++) {
-                cells[j] = new DoubleCell(m[i][j]);
-            }
-            bdt.addRowToTable(new DefaultRow(m_inputColumnNames[i], cells));
-        }
-        bdt.close();
         exec.setProgress(0.6, "calculation of spectral decomposition");
         final EigenvalueDecomposition evd = covarianceMatrix.eig();
         final Matrix d = evd.getD();
@@ -166,8 +150,12 @@ public class PCAComputeNodeModel extends NodeModel {
         for (int i = 0; i < evs.length; i++) {
             evs[i] = d.get(i, i);
         }
+
         return new PortObject[]{
-                bdt.getTable(),
+                PCANodeModel.createCovarianceTable(exec, m, m_inputColumnNames),
+                PCANodeModel.createDecompositionOutputTable(exec, evs,
+                        EigenValue.getSortedEigenVectors(evd.getV().getArray(),
+                                evs, evs.length)),
                 new PCAModelPortObject(evd.getV().getArray(), evs,
                         m_inputColumnNames, meanVector)};
 
@@ -240,14 +228,11 @@ public class PCAComputeNodeModel extends NodeModel {
 
             }
         }
-        final DataType[] types = new DataType[m_inputColumnNames.length];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = DoubleCell.TYPE;
-        }
-        m_dataTableSpec =
-                new DataTableSpec("covariance matrix", m_inputColumnNames,
-                        types);
-        return new PortObjectSpec[]{m_dataTableSpec,
+
+        return new PortObjectSpec[]{
+                PCANodeModel.createCovarianceMatrixSpec(m_inputColumnNames),
+                PCANodeModel
+                        .createDecompositionTableSpec(m_inputColumnIndices.length),
                 new PCAModelPortObjectSpec(m_inputColumnNames)};
     }
 

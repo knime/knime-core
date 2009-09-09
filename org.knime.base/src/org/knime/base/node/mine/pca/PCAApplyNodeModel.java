@@ -45,7 +45,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -70,11 +69,6 @@ public class PCAApplyNodeModel extends NodeModel {
 
     }
 
-    /**
-     * Config key, for the number of dimensions the original data is reduced to.
-     */
-    protected static final String RESULT_DIMENSIONS = "result_dimensions";
-
     /** Index of input data port. */
     public static final int DATA_INPORT = 1;
 
@@ -84,9 +78,16 @@ public class PCAApplyNodeModel extends NodeModel {
     /** Index of input data port. */
     public static final int DATA_OUTPORT = 0;
 
+    /**
+     * Config key, for the minimum fraction of information to be preserved by
+     * the projection. (based on training data)
+     */
+
+    public static final String MIN_QUALPRESERVATION = "dimension_selection";
+
     /** number of dimensions to reduce to. */
-    private final SettingsModelString m_reduceToDimensions =
-            new SettingsModelString(PCANodeModel.RESULT_DIMENSIONS, "");
+    private final SettingsModelPCADimensions m_dimSelection =
+            new SettingsModelPCADimensions(MIN_QUALPRESERVATION, 2, 100, false);
 
     /** remove original columns? */
     private final SettingsModelBoolean m_removeOriginalCols =
@@ -99,7 +100,7 @@ public class PCAApplyNodeModel extends NodeModel {
     private String[] m_inputColumnNames = {};
 
     private final SettingsModel[] m_settingsModels =
-            {m_reduceToDimensions, m_removeOriginalCols, m_failOnMissingValues};
+            {m_dimSelection, m_removeOriginalCols, m_failOnMissingValues};
 
     private int[] m_inputColumnIndices;
 
@@ -112,22 +113,13 @@ public class PCAApplyNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
 
-        // remove all non-numeric columns from the input date
-        // final DataTable filteredTable =
-        // filterNonNumericalColumns(inData[DATA_INPORT]);
-        final String dimValue = m_reduceToDimensions.getStringValue();
-
-        int dimensions =
-                dimValue.length() > 0 ? Integer
-                        .parseInt(dimValue.split(" ")[0]) : 2;
-        // adjust to selected numerical columns
-        if (dimensions > m_inputColumnNames.length || dimensions < 1) {
-            // throw new IllegalArgumentException(
-            // "invalid number of dimensions to reduce to: " + dimensions);
-
-            dimensions = m_inputColumnIndices.length;
-            setWarningMessage("result dimensions resetted to " + dimensions);
-
+        final PCAModelPortObject model =
+                (PCAModelPortObject)inData[MODEL_INPORT];
+        final int dimensions =
+                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+        if (dimensions == -1) {
+            throw new IllegalArgumentException(
+                    "Number of dimensions not correct configured");
         }
         if (m_failOnMissingValues.getBooleanValue()) {
             for (final DataRow row : (DataTable)inData[DATA_INPORT]) {
@@ -140,8 +132,7 @@ public class PCAApplyNodeModel extends NodeModel {
             }
 
         }
-        final PCAModelPortObject model =
-                (PCAModelPortObject)inData[MODEL_INPORT];
+
         final Matrix eigenvectors =
                 EigenValue.getSortedEigenVectors(model.getEigenVectors(), model
                         .getEigenvalues(), dimensions);
@@ -195,9 +186,9 @@ public class PCAApplyNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_inputColumnNames =
-                ((PCAModelPortObjectSpec)inSpecs[MODEL_INPORT])
-                        .getColumnNames();
+        final PCAModelPortObjectSpec modelPort =
+                (PCAModelPortObjectSpec)inSpecs[MODEL_INPORT];
+        m_inputColumnNames = modelPort.getColumnNames();
         if (m_inputColumnNames.length == 0) {
             throw new InvalidSettingsException("no columns for pca chosen");
         }
@@ -220,19 +211,17 @@ public class PCAApplyNodeModel extends NodeModel {
                             .findColumnIndex(colName);
         }
 
-        final String dimValue = m_reduceToDimensions.getStringValue();
+        m_dimSelection.setEigenValues(modelPort.getEigenValues());
 
-        int resultDimensions =
-                dimValue.equals("") ? 2 : Integer
-                        .parseInt(dimValue.split(" ")[0]);
-        if (resultDimensions > m_inputColumnIndices.length) {
-            resultDimensions = m_inputColumnIndices.length;
-            setWarningMessage("result dimensions resetted to "
-                    + resultDimensions);
+        final int dimensions =
+                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+        if (dimensions == -1) {
+            return null;
         }
+
         final DataColumnSpec[] specs =
                 PCANodeModel.createAddTableSpec(
-                        (DataTableSpec)inSpecs[DATA_INPORT], resultDimensions);
+                        (DataTableSpec)inSpecs[DATA_INPORT], dimensions);
 
         final DataTableSpec dts =
                 AppendedColumnTable.getTableSpec(

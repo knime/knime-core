@@ -28,10 +28,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 /**
  * Dialog for the PCA node.
@@ -49,9 +47,9 @@ public class PCANodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 PCANodeModel.FAIL_MISSING, false),
                 "Fail if missing values are encountered (skipped per default)"));
-        addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(
-                PCANodeModel.RESULT_DIMENSIONS, 2),
-                "Number of dimensions to reduce to", 1));
+        addDialogComponent(new DialogComponentChoiceConfig(
+                new SettingsModelPCADimensions(
+                        PCANodeModel.DIMENSIONS_SELECTION, 2, 100, false)));
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 PCANodeModel.REMOVE_COLUMNS, false),
                 "Replace original data columns"));
