@@ -9,9 +9,11 @@
 	        input data. Given the number of dimensions to reduce to, the data is projected into a space of this
 	        dimension with a minimum of information loss.
 		</intro>
-		<option name="dimensions to reduce to">
+		<option name="Target dimensions">
         Determine the number of dimensions the input data is projected to. 
-        The number of dimensions must be lower or equal than the number of input columns.
+        The number of target dimensions can either be selected directly or by specifying the 
+        minimal amount of information to be preserved.
+        If selected directly, number of dimensions must be lower or equal than the number of input columns.
         </option>
         <option name="remove original data columns">
         If checked, the columns containing the input data are removed in the output table.
@@ -21,7 +23,7 @@
            By default rows containing missing values are ignored.
         </option>
         <option name="columns">
-        Select columns that are included in the analysis of principal components.
+        Select columns that are included in the analysis of principal components, i.e the original features.
         </option>
 		</fullDescription>
 		<ports>

@@ -25,6 +25,7 @@ package org.knime.base.node.mine.pca;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -56,6 +57,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         super(model);
 
         final JPanel panel = getComponentPanel();
+        panel.setBorder(BorderFactory.createTitledBorder("Target dimensions"));
         panel.setLayout(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -71,14 +73,16 @@ public class DialogComponentChoiceConfig extends DialogComponent {
 
         gbc.gridy++;
         gbc.gridx = 0;
-        m_qualitySelection = new JRadioButton("minimum preserved information");
+        m_qualitySelection =
+                new JRadioButton("minimum information fraction to preserve (%)");
         panel.add(m_qualitySelection, gbc);
         gbc.gridx++;
         m_qualitySlider = new JSpinner(new SpinnerNumberModel(100, 1, 100, 1));
 
         setSliderLabels();
+        gbc.anchor = GridBagConstraints.WEST;
         panel.add(m_qualitySlider, gbc);
-
+        gbc.anchor = GridBagConstraints.EAST;
         final ButtonGroup bg = new ButtonGroup();
         bg.add(m_dimensionSelection);
         bg.add(m_qualitySelection);

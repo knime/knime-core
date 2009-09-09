@@ -25,7 +25,6 @@ package org.knime.base.node.mine.pca;
 import java.text.NumberFormat;
 import java.util.Arrays;
 
-import javax.swing.AbstractSpinnerModel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
@@ -163,6 +162,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
         m_minQuality = quality;
         m_dimensions = dimensions;
         m_dimensionsSelected = dimensionsSelected;
+        notifyChangeListeners();
 
     }
 
@@ -232,6 +232,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
 
     /**
      * get number of dimensions to reduce to based on these settings.
+     * 
      * @param maxDimensions dimensionality of input data
      * 
      * @return number of output dimensions as configured, or -1 of it cannot be
@@ -315,9 +316,12 @@ public class SettingsModelPCADimensions extends SettingsModel {
                 }
                 values = v;
             }
+            // last value is always 100% (numerical problem)
+            values[values.length - 1] = 100;
             final Object currentValue = spinner.getValue();
             spinner.setModel(new ArraySpinnerModel(values));
             spinner.setValue(currentValue);
+            // spinner.setEditor(new JSpinner.NumberEditor(spinner, "###"));
         } else {
             final int val =
                     Math.max(Math.min((Integer)spinner.getValue(), 100), 25);
@@ -326,7 +330,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
 
     }
 
-    public class ArraySpinnerModel extends AbstractSpinnerModel {
+    public class ArraySpinnerModel extends SpinnerNumberModel {
         int[] m_values;
 
         int index = 0;
@@ -336,21 +340,25 @@ public class SettingsModelPCADimensions extends SettingsModel {
             index = m_values.length - 1;
         }
 
+        @Override
         public Object getNextValue() {
             return index == m_values.length - 1 ? m_values[index]
                     : m_values[index + 1];
 
         }
 
+        @Override
         public Object getPreviousValue() {
             return index > 0 ? m_values[index - 1] : m_values[index];
 
         }
 
+        @Override
         public Object getValue() {
             return m_values[index];
         }
 
+        @Override
         public void setValue(final Object value) {
             final int oldIndex = index;
             final int v = (Integer)value;

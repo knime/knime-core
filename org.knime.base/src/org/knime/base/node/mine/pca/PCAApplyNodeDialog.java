@@ -65,11 +65,13 @@ public class PCAApplyNodeDialog extends DefaultNodeSettingsPane {
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
-        final PCAModelPortObjectSpec modelPort =
-                (PCAModelPortObjectSpec)specs[PCAApplyNodeModel.MODEL_INPORT];
+        if (specs != null && specs[PCAApplyNodeModel.MODEL_INPORT] != null) {
+            final PCAModelPortObjectSpec modelPort =
+                    (PCAModelPortObjectSpec)specs[PCAApplyNodeModel.MODEL_INPORT];
 
-        m_pcaModel.setEigenValues(modelPort.getEigenValues());
-        m_pcaConfig.updateComponent();
+            m_pcaModel.setEigenValues(modelPort.getEigenValues());
+            m_pcaConfig.updateComponent();
+        }
     }
 
 }

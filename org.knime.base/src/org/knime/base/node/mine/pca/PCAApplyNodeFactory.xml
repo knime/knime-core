@@ -18,11 +18,17 @@
 		<option name="fail if missing values are encountered">
           If checked, execution fails if the selected columns contain missing values. By default rows containing missing values are ignored.
         </option>
-        <option name="dimensions to reduce to">
-        Determine the number of dimensions the input data is projected to. The percentage values
-        give the estimated approximation rate based on the data the PCA was computed for.
+        <option name="Target dimensions">
+        Determine the number of dimensions the input data is projected to. 
+        The number of target dimensions can either be selected directly or by specifying the 
+        minimal amount of information to be preserved.
+        If selected directly, number of dimensions must be lower or equal than the number of input columns.
+        If the PCACompute node is connected and executed the possible choices for information preservation 
+        correspond to the number of dimensions.
+        That is each of the choices for the minimum fraction of information to be
+         preserved corresponds to a possible number of dimensions to reduce to.
         </option>
-        <option name="remove original data columns">
+        <option name="Replace original data columns">
         If checked, the columns containing the input data are removed in the output table.
         </option>
 		</fullDescription>
