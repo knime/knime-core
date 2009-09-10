@@ -1091,7 +1091,11 @@ public final class SingleNodeContainer extends NodeContainer {
          * sure that they are read (and either copied into TMP or into memory),
          * so the underlying node directory can be savely deleted.
          */
-        m_node.ensureOutputDataIsRead();
+        // if-statement fixes bug 1777: ensureOpen can cause trouble if there
+        // is a deep hierarchy of BDTs
+        if (!isDirty()) {
+            m_node.ensureOutputDataIsRead();
+        }
         super.setDirty();
     }
 
