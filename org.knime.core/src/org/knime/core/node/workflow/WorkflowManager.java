@@ -1194,35 +1194,65 @@ public final class WorkflowManager extends NodeContainer {
     /**
      * Re-configure all configured (NOT executed) nodes in this workflow
      * to make sure that new workflow variables are spread accordingly.
+     * Note that this does NOT affect any successors of this workflow
+     * manager but touches all nodes inside this wfm and its kids.
      */
-    void reconfigureAll() {
+    void reconfigureAllNodesOnlyInThisWFM() {
         synchronized (m_workflowMutex) {
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                // Check if this node has only WFM ports or green
-                // nodes as predecessors (or has no inports at all).
-                // Only these nodes are candidates to be reconfigured, all
-                // other yellow ones must be "down the chain" from those.
-                boolean hasOnlyParentOrGreenPredecessors = true;
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsByDest(id)) {
-                    if (!cc.getSource().equals(this.getID())) {
-                        NodeContainer predNC = getNodeContainer(cc.getSource());
-                        if (!predNC.getState().equals(State.EXECUTED)) {
-                            hasOnlyParentOrGreenPredecessors = false;
-                            break;
-                        }
+            // do not worry about pipelines, just process all nodes "left
+            // to right" and make sure we touch all of them (also yellow
+            // nodes in a metanode that is connected to red nodes only)...
+            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(
+                     m_workflow.getNodeIDs(), true).keySet()) {
+                NodeContainer nc = getNodeContainer(sortedID);
+                if (nc instanceof SingleNodeContainer) {
+                    if (nc.getState().equals(State.CONFIGURED)) {
+                        configureSingleNodeContainer(
+                            (SingleNodeContainer)nc,
+                            /* keepNodemessage=*/ false);
                     }
-                }
-                // if we did not find non green or WFM predecessors:
-                // launch configure storm:
-                if (hasOnlyParentOrGreenPredecessors) {
-                    if (getNodeContainer(id).getState()
-                            .equals(State.CONFIGURED)) {
-                        // re-configure yellow nodes only
-                        configureNodeAndSuccessors(id, true);
-                    }
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
                 }
             }
+        }
+    }
+
+    /**
+     * Reset all executed nodes in this workflow to make sure that new
+     * workflow variables are spread accordingly. If a node is already
+     * reset (or we just reset it), also configure it.
+     * Note that this does NOT affect any successors of this workflow
+     * manager but touches all nodes inside this wfm and its kids.
+     */
+    void resetAllNodesOnlyInThisWFM() {
+        synchronized (m_workflowMutex) {
+            // do not worry about pipelines, just process all nodes "left
+            // to right" and make sure we touch all of them (also yellow/green
+            // nodes in a metanode that is connected to red nodes only)...
+            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(
+                     m_workflow.getNodeIDs(), true).keySet()) {
+                NodeContainer nc = getNodeContainer(sortedID);
+                if (nc instanceof SingleNodeContainer) {
+                    if (nc.isResetable()) {
+                        // reset and configure if red:
+                        ((SingleNodeContainer)nc).reset();
+                        configureSingleNodeContainer(
+                                (SingleNodeContainer)nc,
+                                /* keepNodemessage=*/ false);
+                    } else if (nc.getState().equals(State.CONFIGURED)) {
+                        // also re-configure it if it was yellow:
+                        configureSingleNodeContainer(
+                                (SingleNodeContainer)nc,
+                                /* keepNodemessage=*/ false);
+                    }
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).resetAllNodesOnlyInThisWFM();
+                }
+            }
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -4452,12 +4482,12 @@ public final class WorkflowManager extends NodeContainer {
                 // new variable settings are used by all nodes!
                 // Note that resetAll also needs to configure non-executed
                 // nodes in order to spread those new variables correctly!
-                resetAll();
+                resetAllNodesOnlyInThisWFM();
             } else {
                 // otherwise only configure already configured nodes. This
                 // is required to make sure they rebuild their
                 // FlowObjectStack!
-                reconfigureAll();
+                reconfigureAllNodesOnlyInThisWFM();
             }
             setDirty();
         }
