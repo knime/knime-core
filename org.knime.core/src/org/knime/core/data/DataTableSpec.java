@@ -312,7 +312,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Constructor for a new <code>DataTableSpec</code> based on two existing
      * specifications that are to be concatenated. The new spec name is combined
-     * by both specs' names.
+     * by both specs' names, though a concatenation of 
+     * "default+default+...+default" is avoided.
      * 
      * @param spec1 The first spec.
      * @param spec2 The second spec.
@@ -322,7 +323,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             names.
      */
     public DataTableSpec(final DataTableSpec spec1, final DataTableSpec spec2) {
-        this(spec1.getName() + "+" + spec2.getName(), spec1, spec2);
+        this(getConcatName(spec1.getName(), spec2.getName()), spec1, spec2);
     }
 
     /**
@@ -873,6 +874,23 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             uniquifier++;
         }
         return result;
+    }
+    
+    /** Creates concatenation of the two argument strings. This are names of
+     * specs to be merged. It handles cases where one of the two argument is
+     * just "default".
+     * @param n1 Name of first spec
+     * @param n2 Name of second spec
+     * @return A nice new name.
+     */
+    private static String getConcatName(final String n1, final String n2) {
+        if (DFT_SPEC_NAME.equals(n1)) {
+            return n2;
+        } else if (DFT_SPEC_NAME.equals(n2)) {
+            return n1;
+        } else {
+            return n1 + "+" + n2;
+        }
     }
     
     /** Columns used to guess class column in the order they are specified. */
