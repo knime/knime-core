@@ -362,7 +362,8 @@
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
-            id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
+            id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
+            after="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
@@ -572,7 +573,7 @@
             after="org.knime.base.node.correlation.pmcc.PMCCNodeFactory"
             category-path="/statistics"
             factory-class="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"
-            id="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory "/>
+            id="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"
@@ -580,7 +581,8 @@
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
-            id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"/>
+            id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
+            after="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
       <node
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
