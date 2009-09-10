@@ -1242,7 +1242,10 @@ public final class WorkflowManager extends NodeContainer {
                                 (SingleNodeContainer)nc,
                                 /* keepNodemessage=*/ false);
                     } else if (nc.getState().equals(State.CONFIGURED)) {
-                        // also re-configure it if it was yellow:
+                        // only re-configure it if it was yellow:
+                        // node that there still may be metanodes
+                        // connected to this one which contain green
+                        // nodes! (hence the brute force left-to-right approach
                         configureSingleNodeContainer(
                                 (SingleNodeContainer)nc,
                                 /* keepNodemessage=*/ false);
