@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,7 +55,6 @@ import javax.tools.StandardLocation;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject.Kind;
 
-import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -63,6 +63,8 @@ import org.knime.core.data.TimestampValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.ext.sun.nodes.script.JavaScriptingSettings;
+
+import com.sun.tools.javac.api.JavacTool;
 
 
 /**
@@ -196,7 +198,7 @@ public final class Expression {
         }
         compileArgs.add("-nowarn");
         final StringWriter logString = new StringWriter();
-        JavaCompiler compiler = new EclipseCompiler();
+        JavaCompiler compiler = JavacTool.create();
         DiagnosticCollector<JavaFileObject> digsCollector = 
             new DiagnosticCollector<JavaFileObject>();
         JavaFileObject jfo = new InMemoryJavaSourceFileObject(name, source);
@@ -213,17 +215,36 @@ public final class Expression {
             }
         } else {
             boolean hasDiagnostic = false;
-            LOGGER.debug("<<<< Expression Start >>>>");
-            logDebugPreserveLineBreaks(source);
-            LOGGER.debug("<<<< Expression End >>>>");
+            String[] sourceLines = getSourceLines(source);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("<<<< Expression Start >>>>");
+                for (int i = 0; i < sourceLines.length; i++) {
+                    LOGGER.debug((i + 1) + ": " + sourceLines[i]);
+                }
+                LOGGER.debug("<<<< Expression End >>>>");
+            }
             StringBuilder b = new StringBuilder("Unable to compile expression");
             for (Diagnostic<? extends JavaFileObject> d 
                     : digsCollector.getDiagnostics()) {
                 switch (d.getKind()) {
                 case ERROR:
+                    if (hasDiagnostic) {
+                        b.append("\n"); // follow up error, insert empty line
+                    }
                     hasDiagnostic = true;
-                    b.append("\nERROR at line ").append(d.getLineNumber());
+                    int lineIndex = (int)(d.getLineNumber() - 1);
+                    b.append("\nERROR at line ").append(lineIndex + 1);
                     b.append("\n").append(d.getMessage(null));
+                    if (lineIndex - 1 >= 0 && lineIndex - 1 < source.length()) {
+                        // previous line
+                        b.append("\n  Line : ").append(lineIndex);
+                        b.append("  ").append(sourceLines[lineIndex - 1]);
+                    }
+                    if (lineIndex >= 0 && lineIndex < source.length()) {
+                        // error line
+                        b.append("\n  Line : ").append(lineIndex + 1);
+                        b.append("  ").append(sourceLines[lineIndex]);
+                    }
                     break;
                 default:
                     break;
@@ -789,21 +810,24 @@ public final class Expression {
         }
     }
     
-    private static void logDebugPreserveLineBreaks(final String log) {
-        if (!LOGGER.isDebugEnabled()) {
-            return;
-        }
-        BufferedReader reader = new BufferedReader(new StringReader(log));
+    /** Get the source code in an array, each array element representing the
+     * corresponding row in the source code.
+     * @param source The source code
+     * @return The source code, split by line breaks.
+     */
+    private static String[] getSourceLines(final String source) {
+        BufferedReader reader = new BufferedReader(new StringReader(source));
+        List<String> result = new ArrayList<String>();
         String token;
-        int i = 1;
         try {
             while ((token = reader.readLine()) != null) {
-                LOGGER.debug(i++ + ": " + token);
+                result.add(token);
             }
             reader.close();
         } catch (IOException e) {
             LOGGER.fatal("Unexpected IOException while reading String", e);
         }
+        return result.toArray(new String[result.size()]);
     }
 
     /** String containing the objectivy method for compilation. */
