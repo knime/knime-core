@@ -105,7 +105,7 @@ public final class WorkflowManager extends NodeContainer {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowManager.class);
 
-    /** Name of this workflow (usually displayed at top of the node figure). 
+    /** Name of this workflow (usually displayed at top of the node figure).
      * May be null to use name of workflow directory. */
     private String m_name;
 
@@ -251,7 +251,7 @@ public final class WorkflowManager extends NodeContainer {
     Workflow getWorkflow() {
         return m_workflow;
     }
-    
+
     ///////////////////////////////////////
     // Node / Project / Metanode operations
     ///////////////////////////////////////
@@ -348,7 +348,7 @@ public final class WorkflowManager extends NodeContainer {
     /** Remove node if possible. Throws an exception if node is "busy" and can
      * not be removed at this time. If the node does not exist, this method
      * returns without exception.
-     * 
+     *
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
@@ -691,7 +691,7 @@ public final class WorkflowManager extends NodeContainer {
          * - if the source port is a super type of the destination port,
          *   for instance a reader node that reads a general PMML objects,
          *   validity is checked using the runtime class of the actual
-         *   port object then 
+         *   port object then
          * if one port is a BDT and the other is not, no connection is allowed
          * */
         Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
@@ -702,7 +702,7 @@ public final class WorkflowManager extends NodeContainer {
         } else if (BufferedDataTable.class.equals(destCl)
                 && !BufferedDataTable.class.equals(sourceCl)) {
             return false;
-        } else if (!destCl.isAssignableFrom(sourceCl) 
+        } else if (!destCl.isAssignableFrom(sourceCl)
             && !sourceCl.isAssignableFrom(destCl)) {
             return false;
         }
@@ -1216,6 +1216,7 @@ public final class WorkflowManager extends NodeContainer {
                     ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
                 }
             }
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1233,6 +1234,7 @@ public final class WorkflowManager extends NodeContainer {
             // nodes in a metanode that is connected to red nodes only)...
             for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(
                      m_workflow.getNodeIDs(), true).keySet()) {
+                // TODO reset all nodes in reverse order first
                 NodeContainer nc = getNodeContainer(sortedID);
                 if (nc instanceof SingleNodeContainer) {
                     if (nc.isResetable()) {
@@ -2846,7 +2848,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!allSpecsExists) {
                 // only configure nodes with all Input Specs present
-                // (NodeMessage did not change -- can exit here) 
+                // (NodeMessage did not change -- can exit here)
                 return false;
             }
             // configure node only if it's not yet running, queued or done.
@@ -3046,7 +3048,7 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc,
                             /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
@@ -3123,7 +3125,7 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc,
                             /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
@@ -3262,7 +3264,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         return nc;
     }
-    
+
     /** Does the workflow contain a node with the argument id?
      * @param id The id in question.
      * @return true if there is node with the given id, false otherwise.
@@ -3270,7 +3272,7 @@ public final class WorkflowManager extends NodeContainer {
     public boolean containsNodeContainer(final NodeID id) {
         return m_workflow.getNode(id) != null;
     }
-    
+
     /**
      * @return list of errors messages (list empty if none exist).
      */
@@ -3366,7 +3368,7 @@ public final class WorkflowManager extends NodeContainer {
     //////////////////////////////////////
 
     /** Copies the nodes with the given ids from the argument workflow manager
-     * into this wfm instance. All nodes wil be reset (and configured id 
+     * into this wfm instance. All nodes wil be reset (and configured id
      * possible). Connections among the nodes are kept.
      * @param sourceManager The wfm to copy from
      * @param nodeIDs The node ids to copy (must exist in sourceManager)
@@ -3374,12 +3376,12 @@ public final class WorkflowManager extends NodeContainer {
      */
     public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
             final NodeID... nodeIDs) {
-        WorkflowPersistor copyPersistor = 
+        WorkflowPersistor copyPersistor =
             sourceManager.copy(nodeIDs);
         return paste(copyPersistor);
     }
 
-    /** Copy the nodes with the given ids. 
+    /** Copy the nodes with the given ids.
      * @param nodeIDs The nodes to copy (must exist).
      * @return A workflow persistor hosting the node templates, ready to be
      * used in the {@link #paste(WorkflowPersistor)} method.
@@ -3400,7 +3402,7 @@ public final class WorkflowManager extends NodeContainer {
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
                 loaderMap.put(cont.getID().getIndex(),
                         cont.getCopyPersistor(m_globalTableRepository, false));
-                for (ConnectionContainer out 
+                for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
                         connTemplates.add(
@@ -3411,7 +3413,7 @@ public final class WorkflowManager extends NodeContainer {
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates);
         }
     }
-    
+
     /** Pastes the contents of the argument persistor into this wfm.
      * @param persistor The persistor created with {@link #copy(NodeID...)}.
      * @return The new node ids of the inserted nodes.
@@ -3530,7 +3532,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
      * @param keepNodeMessages Whether to keep the messages that are associated
-     * with the nodes in the loaded workflow (mostly false but true when 
+     * with the nodes in the loaded workflow (mostly false but true when
      * remotely computed results are loaded).
      * @return A workflow load result, which also contains the loaded workflow.
      * @throws IOException If errors reading the "important" files fails due to
@@ -3539,7 +3541,7 @@ public final class WorkflowManager extends NodeContainer {
      * @throws CanceledExecutionException If canceled.
      */
     public WorkflowLoadResult load(final File directory,
-            final ExecutionMonitor exec, 
+            final ExecutionMonitor exec,
             final boolean keepNodeMessages) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
@@ -3612,7 +3614,7 @@ public final class WorkflowManager extends NodeContainer {
         Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
         synchronized (mutex) {
             m_loadVersion = persistor.getLoadVersion();
-            NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, 
+            NodeID[] newIDs = loadContent(insertPersistor, tblRep, null,
                     exec, result, keepNodeMessages);
             if (newIDs.length != 1) {
                 throw new InvalidSettingsException("Loading workflow failed, "
@@ -3706,7 +3708,7 @@ public final class WorkflowManager extends NodeContainer {
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), 
+        postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(),
                 exec, loadResult, preserveNodeMessage);
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
@@ -3762,7 +3764,7 @@ public final class WorkflowManager extends NodeContainer {
             FlowObjectStack inStack;
             try {
                 if (predCount == 0) { // source node
-                    predStacks = 
+                    predStacks =
                         new FlowObjectStack[]{getWorkflowVariableStack()};
                 }
                 inStack = new FlowObjectStack(cont.getID(), predStacks);
@@ -3803,7 +3805,7 @@ public final class WorkflowManager extends NodeContainer {
             Object mutex = cont instanceof WorkflowManager
                 ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
             synchronized (mutex) {
-                cont.loadContent(persistor, tblRep, inStack, 
+                cont.loadContent(persistor, tblRep, inStack,
                         sub2, subResult, keepNodeMessage);
             }
             sub2.setProgress(1.0);
@@ -3844,7 +3846,7 @@ public final class WorkflowManager extends NodeContainer {
                 failedNodes.add(bfsID);
             }
             if (!isExecuted && cont instanceof SingleNodeContainer) {
-                configureSingleNodeContainer((SingleNodeContainer)cont, 
+                configureSingleNodeContainer((SingleNodeContainer)cont,
                         keepNodeMessage);
             }
             if (persistor.mustComplainIfStateDoesNotMatch()
@@ -4031,8 +4033,8 @@ public final class WorkflowManager extends NodeContainer {
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with a previous version "
-                            + "of KNIME (workflow version " + m_loadVersion 
-                            + "), converting to current version. This may " 
+                            + "of KNIME (workflow version " + m_loadVersion
+                            + "), converting to current version. This may "
                             + "take some time.");
                     setDirtyAll();
                     if (isWorkingDirectory) {
@@ -4275,10 +4277,10 @@ public final class WorkflowManager extends NodeContainer {
         }
         return "Workflow Manager";
     }
-    
+
     /** @return the name set in the constructor or via {@link #setName(String)}.
      * In comparison to {@link #getName()} this method does not use the workflow
-     * directory name if no other name is set. 
+     * directory name if no other name is set.
      */
     String getNameField() {
         return m_name;
