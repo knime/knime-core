@@ -313,8 +313,8 @@ public class ArrayApriori implements AprioriAlgorithm {
 //            AssociationRule rule = new AssociationRule(
 //                    i, withoutI, 1, m_dbsize);
             AssociationRule rule = new AssociationRule(
-                    new FrequentItemSet("" + m_idCounter++, withoutI, 1.0),
-                    new FrequentItemSet("" + m_idCounter++,
+                    new FrequentItemSet(Integer.toString(m_idCounter++), withoutI, 1.0),
+                    new FrequentItemSet(Integer.toString(m_idCounter++),
                             iList, 1.0),
                     1.0, 1.0, 1.0);
             associationRules.add(rule);
@@ -342,10 +342,10 @@ public class ArrayApriori implements AprioriAlgorithm {
                         iList.add(i);
                         AssociationRule rule = new AssociationRule(
                                 new FrequentItemSet(
-                                        "" + m_idCounter++, 
+                                        Integer.toString(m_idCounter++), 
                                         sWithoutI, newSupport),
                                 new FrequentItemSet(
-                                        "" + m_idCounter++, iList, 
+                                        Integer.toString(m_idCounter++), iList, 
                                         getSupportFor(iList)),
                                         s.getSupport(), c, c / getSupportFor(iList)
                                 );
