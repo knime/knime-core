@@ -4472,6 +4472,11 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void addWorkflowVariables(final boolean skipReset,
             final FlowVariable... newVars) {
+        // meta node variables not supported for two reasons
+        // (1) missing configure propagation and (2) meta-node variables need
+        // to be hidden in outer workflow
+        assert (getNrInPorts() == 0 && getNrOutPorts() == 0)
+            : "Workflow variables can't be set on meta nodes";
         synchronized (m_workflowMutex) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
