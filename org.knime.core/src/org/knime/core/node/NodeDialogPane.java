@@ -76,9 +76,19 @@ import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.MutableInteger;
 
+
 /**
+ * The base class for all node dialogs. It provides a tabbed pane to which the
+ * derived dialog can add its own components (method
+ * {@link #addTab(String, Component)}. Subclasses will also override 
+ * {@link #saveSettingsTo(NodeSettingsWO)} and either
+ * {@link #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])} or
+ * {@link #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}, whereby the 
+ * latter is only of interest when dealing with custom port types. Failing to
+ * override one of the two load methods will result in errors during runtime.
  *
- * @author Michael Berthold, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
+ * @see org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane
  */
 public abstract class NodeDialogPane {
 
