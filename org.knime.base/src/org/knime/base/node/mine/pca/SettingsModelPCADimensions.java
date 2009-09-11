@@ -344,7 +344,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
             final Object currentValue = spinner.getValue();
             spinner.setModel(new ArraySpinnerModel(values));
             spinner.setValue(currentValue);
-            // spinner.setEditor(new JSpinner.NumberEditor(spinner, "###"));
+            spinner.setEditor(new JSpinner.NumberEditor(spinner, "###"));
         } else {
             final int val =
                     Math.max(Math.min((Integer)spinner.getValue(), 100), 25);

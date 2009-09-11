@@ -45,7 +45,7 @@ public class PCAReverseNodeDialog extends DefaultNodeSettingsPane {
                         + "(skipped per default)"));
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 PCAReverseNodeModel.REMOVE_PCACOLS, false),
-                "replace PCA columns"));
+                "Replace PCA columns"));
         addDialogComponent(new DialogComponentColumnFilter(
                 new SettingsModelFilterString(PCAReverseNodeModel.PCA_COLUMNS),
                 PCAReverseNodeModel.DATA_INPORT, DoubleValue.class));

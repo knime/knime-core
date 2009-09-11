@@ -24,6 +24,7 @@ package org.knime.base.node.mine.pca;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.text.ParseException;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -40,11 +41,17 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
+/**
+ * dialog component for dimension selection in PCA configuration, used for
+ * {@link SettingsModelPCADimensions}
+ * 
+ * @author uwe, University of Konstanz
+ */
 public class DialogComponentChoiceConfig extends DialogComponent {
-    /** spinner for setting dimensions */
+    /** spinner for setting dimensions. */
     private final JSpinner m_dimSpinner;
 
-    /** spinner for setting preserved quality */
+    /** spinner for setting preserved quality. */
     private final JSpinner m_qualitySlider;
 
     /** selection by dimension? */
@@ -73,13 +80,12 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        m_dimensionSelection = new JRadioButton("dimensions to reduce to");
+        m_dimensionSelection = new JRadioButton("Dimensions to reduce to");
         panel.add(m_dimensionSelection, gbc);
         gbc.gridx++;
         m_dimSpinner =
                 new JSpinner(new SpinnerNumberModel(2, 1, Integer.MAX_VALUE, 1));
 
-        m_dimSpinner.setEditor(new JSpinner.NumberEditor(m_dimSpinner));
         panel.add(m_dimSpinner, gbc);
         if (showAdditionalInfo) {
             m_qualityLabel =
@@ -92,11 +98,12 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         gbc.gridy++;
         gbc.gridx = 0;
         m_qualitySelection =
-                new JRadioButton("minimum information fraction "
+                new JRadioButton("Minimum information fraction "
                         + "to preserve (%)");
         panel.add(m_qualitySelection, gbc);
         gbc.gridx++;
-        m_qualitySlider = new JSpinner(new SpinnerNumberModel(100, 1, 100, 1));
+        m_qualitySlider =
+                new JSpinner(new SpinnerNumberModel(100d, 1d, 100d, 1d));
 
         setSliderLabels();
         gbc.anchor = GridBagConstraints.WEST;
@@ -148,7 +155,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
             public void stateChanged(final ChangeEvent arg0) {
                 final SettingsModelPCADimensions smodel =
                         (SettingsModelPCADimensions)getModel();
-                smodel.setValues((Integer)m_qualitySlider.getValue(),
+                smodel.setValues((Double)m_qualitySlider.getValue(),
                         (Integer)m_dimSpinner.getValue(), m_dimensionSelection
                                 .isSelected());
                 if (showAdditionalInfo) {
@@ -186,7 +193,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
 
         final SettingsModelPCADimensions model =
                 (SettingsModelPCADimensions)getModel();
-        model.configureQualitySlider(m_qualitySlider);
+        // model.configureQualitySlider(m_qualitySlider);
 
         m_qualitySlider.repaint();
         if (model.getEigenvalues() != null) {
@@ -194,12 +201,20 @@ public class DialogComponentChoiceConfig extends DialogComponent {
                     .getDimensions()));
             m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
                     1, model.getEigenvalues().length, 1));
-            m_dimSpinner.repaint();
 
         } else {
             m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
                     1, Integer.MAX_VALUE, 1));
-            m_dimSpinner.repaint();
+
+        }
+        ((JSpinner.NumberEditor)m_dimSpinner.getEditor()).getTextField()
+                .setText("" + model.getDimensions());
+
+        try {
+            m_dimSpinner.commitEdit();
+            // m_dimSpinner.repaint();
+        } catch (final ParseException e) {
+            // TODO Auto-generated catch block
         }
         if (m_qualityLabel != null) {
             m_qualityLabel.setText(" ("
