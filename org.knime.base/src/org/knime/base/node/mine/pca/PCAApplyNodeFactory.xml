@@ -9,23 +9,24 @@
 	        input data. The data model of the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> 
 	        computation node can be applied to arbitrary data
 	        to reduce it to a given number of dimensions.<br/>
-	        The percentages in the selection of dimensions to reduce to give the expected
-        approximation rates based on the training data fed into the corresponding learner
-        node. These rates assume that data fed into the predictor is distributed equal
-        to the data the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> was computed for.  
+	        The information preservation rates in the selection of the target dimensions give the expected
+        approximation rates based on the training data fed into the connected PCA Compute
+        node. These rates assume that data fed into the predictor is equally distributed
+        as the data the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> was computed for initially.  
 	        
 		</intro>
-		<option name="fail if missing values are encountered">
-          If checked, execution fails if the selected columns contain missing values. By default rows containing missing values are ignored.
+		<option name="Fail if missing values are encountered">
+          If checked, execution fails, when the selected columns contain missing values. 
+          By default, rows containing missing values are ignored and not considered in the computation of the principal components.
         </option>
         <option name="Target dimensions">
         Determine the number of dimensions the input data is projected to. 
         The number of target dimensions can either be selected directly or by specifying the 
         minimal amount of information to be preserved.
-        If selected directly, number of dimensions must be lower or equal than the number of input columns.
-        If the PCACompute node is connected and executed the possible choices for information preservation 
+        If selected directly, the number of dimensions must be lower or equal than the number of input columns.
+        If the PCA compute node is connected and executed the possible choices for information preservation 
         correspond to the number of dimensions.
-        That is each of the choices for the minimum fraction of information to be
+        Each of the choices for the minimum fraction of information to be
          preserved corresponds to a possible number of dimensions to reduce to.
         </option>
         <option name="Replace original data columns">
@@ -35,6 +36,6 @@
 		<ports>
 		<inPort index="0" name="PCA model">Principal Components of training data</inPort>
 		<inPort index="1" name="Table to transform">Input data for the PCA</inPort>
-		<outPort index="0" name="projected data">Data projected to principal components</outPort>
+		<outPort index="0" name="Projected data">Data projected to its principal components</outPort>
 		</ports>
 		</knimeNode>

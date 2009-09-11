@@ -152,7 +152,10 @@ public class PCAModelPortObject extends AbstractSimplePortObject {
     @Override
     public JComponent[] getViews() {
         final String description = "<html>" + getSummary() + "</html>";
-        return new JComponent[]{new JLabel(description)};
+
+        final JLabel label = new JLabel(description);
+        label.setName("PCA port");
+        return new JComponent[]{label};
     }
 
     /**

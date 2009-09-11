@@ -142,6 +142,7 @@ public class PCAApplyNodeModel extends NodeModel {
                         (DataTableSpec)inData[DATA_INPORT].getSpec(),
                         dimensions);
         final int dim = dimensions;
+
         final CellFactory fac = new CellFactory() {
 
             @Override
@@ -160,7 +161,8 @@ public class PCAApplyNodeModel extends NodeModel {
             @Override
             public void setProgress(final int curRowNr, final int rowCount,
                     final RowKey lastKey, final ExecutionMonitor texec) {
-                texec.setProgress((double)curRowNr / rowCount);
+                texec.setProgress((double)curRowNr / rowCount,
+                        "converting input row " + curRowNr + " of " + rowCount);
 
             }
 

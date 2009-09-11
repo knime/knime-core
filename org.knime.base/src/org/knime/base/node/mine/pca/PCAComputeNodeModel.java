@@ -22,30 +22,6 @@
  * History
  *   04.10.2006 (uwe): created
  */
-/*
- * -------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
- *
- * Copyright, 2003 - 2009
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
- *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
- *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
- * -------------------------------------------------------------------
- * 
- * History
- *   04.10.2006 (uwe): created
- */
 package org.knime.base.node.mine.pca;
 
 import java.io.File;
@@ -125,13 +101,14 @@ public class PCAComputeNodeModel extends NodeModel {
 
         final double[] meanVector =
                 PCANodeModel.getMeanVector(dataTable, m_inputColumnIndices,
-                        m_failOnMissingValues.getBooleanValue());
+                        m_failOnMissingValues.getBooleanValue(), exec
+                                .createSubExecutionContext(0.4));
         final double[][] m =
                 new double[m_inputColumnIndices.length][m_inputColumnIndices.length];
-
+        exec.checkCanceled();
         final int missingValues =
                 PCANodeModel.getCovarianceMatrix(exec
-                        .createSubExecutionContext(0.5), dataTable,
+                        .createSubExecutionContext(0.4), dataTable,
                         m_inputColumnIndices, meanVector, m);
         if (missingValues > 0) {
             if (m_failOnMissingValues.getBooleanValue()) {
@@ -139,23 +116,28 @@ public class PCAComputeNodeModel extends NodeModel {
                         "missing, infinite or impossible values in table");
             }
             setWarningMessage(missingValues
-                    + " rows ignored because of missing, infinite or impossible values");
+                    + " rows ignored because of missing, "
+                    + "infinite or impossible values");
         }
-
+        exec.checkCanceled();
         final Matrix covarianceMatrix = new Matrix(m);
-        exec.setProgress(0.6, "calculation of spectral decomposition");
+        exec.setProgress("calculation of spectral decomposition");
         final EigenvalueDecomposition evd = covarianceMatrix.eig();
+        exec.checkCanceled();
+        exec.setProgress(0.9);
         final Matrix d = evd.getD();
         final double[] evs = new double[d.getRowDimension()];
         for (int i = 0; i < evs.length; i++) {
             evs[i] = d.get(i, i);
         }
+        exec.checkCanceled();
 
         return new PortObject[]{
                 PCANodeModel.createCovarianceTable(exec, m, m_inputColumnNames),
-                PCANodeModel.createDecompositionOutputTable(exec, evs,
-                        EigenValue.getSortedEigenVectors(evd.getV().getArray(),
-                                evs, evs.length)),
+                PCANodeModel.createDecompositionOutputTable(exec
+                        .createSubExecutionContext(0.1), evs, EigenValue
+                        .getSortedEigenVectors(evd.getV().getArray(), evs,
+                                evs.length)),
                 new PCAModelPortObject(evd.getV().getArray(), evs,
                         m_inputColumnNames, meanVector)};
 

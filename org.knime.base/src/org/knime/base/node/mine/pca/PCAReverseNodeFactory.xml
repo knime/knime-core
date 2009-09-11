@@ -9,13 +9,14 @@
 	        Given data in the space resulting from the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> reduction is transformed back to its original space.
 	        Information that was lost in the <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">PCA</a> reduction can of course not be recovered.
 		</intro>
-		<option name="fail if missing values are encountered">
-          If checked, execution fails if the selected columns contain missing values. By default rows containing missing values are ignored.
-        </option> 
-        <option name="remove pca columns">
-        If checked, the pca columns are removed in the output table.
+		<option name="Fail if missing values are encountered">
+          If checked, execution fails, when the selected columns contain missing values. 
+          By default, rows containing missing values are ignored and not considered in the computation of the principal components.
         </option>
-        <option name="columns">
+        <option name="Replace PCA columns">
+        If checked, the PCA columns are removed in the output table.
+        </option>
+        <option name="Columns">
         Select <b>all</b> columns containing the principal components of the original data. Usually the default selection should capture all of these.
         </option>
 		</fullDescription>

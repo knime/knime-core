@@ -79,7 +79,7 @@ public class PCANodeModel extends NodeModel {
     public static final int DATA_INPORT = 0;
 
     /** Index of input data port. */
-    public static final int DATA_OUTPORT = 2;
+    public static final int DATA_OUTPORT = 0;
 
     /** Index of decomposition output port. */
     public static final int INFO_OUTPORT = 1;
@@ -130,7 +130,7 @@ public class PCANodeModel extends NodeModel {
      * One input, one output table.
      */
     PCANodeModel() {
-        super(1, 3);
+        super(1, 1);
 
     }
 
@@ -218,12 +218,12 @@ public class PCANodeModel extends NodeModel {
             return new DataTableSpec[]{columnRearranger.createSpec()};
         }
 
-        final DataTableSpec[] outspec = new DataTableSpec[3];
+        final DataTableSpec[] outspec = new DataTableSpec[1];
         outspec[DATA_OUTPORT] = data;
-        outspec[INFO_OUTPORT] =
-                createDecompositionTableSpec(m_inputColumnIndices.length);
-        outspec[MATRIX_OUTPORT] =
-                createCovarianceMatrixSpec(m_inputColumnNames);
+        // outspec[INFO_OUTPORT] =
+        // createDecompositionTableSpec(m_inputColumnIndices.length);
+        // outspec[MATRIX_OUTPORT] =
+        // createCovarianceMatrixSpec(m_inputColumnNames);
         return outspec;
 
     }
@@ -322,11 +322,13 @@ public class PCANodeModel extends NodeModel {
         }
 
         final double[] meanVector =
-                getMeanVector(dataTable, m_inputColumnIndices, false);
+                getMeanVector(dataTable, m_inputColumnIndices, false, exec
+                        .createSubExecutionContext(0.2));
         final double[][] m =
                 new double[m_inputColumnIndices.length][m_inputColumnIndices.length];
+
         final int missingValues =
-                getCovarianceMatrix(exec.createSubExecutionContext(0.5),
+                getCovarianceMatrix(exec.createSubExecutionContext(0.2),
                         dataTable, m_inputColumnIndices, meanVector, m);
         final Matrix covarianceMatrix = new Matrix(m);
         if (missingValues > 0) {
@@ -339,9 +341,11 @@ public class PCANodeModel extends NodeModel {
                     + ", infinite or impossible values");
 
         }
-        exec.setMessage("computing spectral decomposition");
-
+        final ExecutionContext evdContext = exec.createSubExecutionContext(0.2);
+        evdContext.setMessage("computing spectral decomposition");
         final EigenvalueDecomposition eig = covarianceMatrix.eig();
+        exec.checkCanceled();
+        evdContext.setProgress(0.8);
         final double[] evs = EigenValue.extractEVVector(eig);
         m_dimSelection.setEigenValues(evs);
         final int dimensions =
@@ -353,12 +357,15 @@ public class PCANodeModel extends NodeModel {
             throw new IllegalArgumentException(
                     "invalid number of dimensions to reduce to: " + dimensions);
         }
+        exec.checkCanceled();
+        evdContext.setProgress(0.9);
         final Matrix eigenvectors =
                 EigenValue.getSortedEigenVectors(eig.getV().getArray(), evs,
                         dimensions);
+        exec.checkCanceled();
+        evdContext.setProgress(1);
+        exec.checkCanceled();
 
-        final double postDecompositionProgress = 0.7;
-        exec.setProgress(postDecompositionProgress);
         final DataColumnSpec[] specs =
                 createAddTableSpec(
                         (DataTableSpec)inData[DATA_INPORT].getSpec(),
@@ -381,10 +388,8 @@ public class PCANodeModel extends NodeModel {
             @Override
             public void setProgress(final int curRowNr, final int rowCount,
                     final RowKey lastKey, final ExecutionMonitor texec) {
-                texec.setProgress(postDecompositionProgress
-                        + (1d - postDecompositionProgress) * curRowNr
-                        / rowCount, "processing " + curRowNr + " of "
-                        + rowCount);
+                texec.setProgress(curRowNr / (double)rowCount, "processing "
+                        + curRowNr + " of " + rowCount);
 
             }
 
@@ -398,14 +403,14 @@ public class PCANodeModel extends NodeModel {
         }
         final BufferedDataTable result =
                 exec.createColumnRearrangeTable((BufferedDataTable)inData[0],
-                        cr, exec);
-        final PortObject[] out = new PortObject[3];
+                        cr, exec.createSubProgress(0.4));
+        final PortObject[] out = new PortObject[1];
         out[DATA_OUTPORT] = result;
-        out[INFO_OUTPORT] =
-                createDecompositionOutputTable(exec, evs, eig.getV());
-        out[MATRIX_OUTPORT] =
-                createCovarianceTable(exec, covarianceMatrix.getArray(),
-                        m_inputColumnNames);
+        // out[INFO_OUTPORT] =
+        // createDecompositionOutputTable(exec, evs, eig.getV());
+        // out[MATRIX_OUTPORT] =
+        // createCovarianceTable(exec, covarianceMatrix.getArray(),
+        // m_inputColumnNames);
         return out;
     }
 
@@ -416,10 +421,11 @@ public class PCANodeModel extends NodeModel {
      * @param evs eigenvalues
      * @param eigenvectors (column contains an eigenvector)
      * @return the created table
+     * @throws CanceledExecutionException
      */
     public static BufferedDataTable createDecompositionOutputTable(
             final ExecutionContext exec, final double[] evs,
-            final Matrix eigenvectors) {
+            final Matrix eigenvectors) throws CanceledExecutionException {
         final DataTableSpec outSpec = createDecompositionTableSpec(evs.length);
         final BufferedDataContainer result = exec.createDataContainer(outSpec);
         for (int i = evs.length - 1; i >= 0; i--) {
@@ -430,8 +436,11 @@ public class PCANodeModel extends NodeModel {
             }
             result.addRowToTable(new DefaultRow(new RowKey(evs.length - i
                     + ". eigenvector"), values));
+            exec.checkCanceled();
+
         }
         result.close();
+        exec.setProgress(1);
         return result.getTable();
     }
 
@@ -552,14 +561,14 @@ public class PCANodeModel extends NodeModel {
                             || Double.isNaN(dataMatrix[i][j])) {
                         throw new IllegalArgumentException(
                                 "computation failed for numerical problems"
-                                        + ", probably some numbers are to huge");
+                                        + ", probably some numbers are too huge");
                     }
                 }
             }
             counter++;
             exec.setProgress((double)counter / dataTable.getRowCount(),
-                    "processing row " + counter + " of "
-                            + dataTable.getRowCount());
+                    "create covariance matrix, processing row " + counter
+                            + " of " + dataTable.getRowCount());
             exec.checkCanceled();
         }
         if (counter < 2) {
@@ -581,14 +590,24 @@ public class PCANodeModel extends NodeModel {
      * @param numericIndices indices of columns to use
      * @param failOnMissingValues if true, throw exception if missing values are
      *            encountered
+     * @param executionContext
      * @return vector of column mean values
+     * @throws CanceledExecutionException
      */
     static double[] getMeanVector(final DataTable dataTable,
-            final int[] numericIndices, final boolean failOnMissingValues) {
+            final int[] numericIndices, final boolean failOnMissingValues,
+            final ExecutionContext exec) throws CanceledExecutionException {
         final double[] means = new double[numericIndices.length];
         int numRows = 0;
+        final double rowCount = ((BufferedDataTable)dataTable).getRowCount();
+        int totalRowCount = 0;
         // calculate mean for each row and column
         ROW: for (final DataRow row : dataTable) {
+            totalRowCount++;
+            exec.checkCanceled();
+            exec.setProgress(totalRowCount / rowCount,
+                    "mean calculations, row " + totalRowCount + " of "
+                            + rowCount);
             // ignore rows with missing cells
             for (int i = 0; i < numericIndices.length; i++) {
                 if (row.getCell(numericIndices[i]).isMissing()) {
@@ -605,6 +624,7 @@ public class PCANodeModel extends NodeModel {
 
                     continue ROW;
                 }
+
             }
 
             int i = 0;
@@ -613,6 +633,7 @@ public class PCANodeModel extends NodeModel {
                         ((DoubleValue)row.getCell(index)).getDoubleValue();
             }
             numRows++;
+
         }
         for (int i = 0; i < means.length; i++) {
             means[i] /= numRows;

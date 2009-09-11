@@ -5,32 +5,35 @@
 <shortDescription>Principal component analysis</shortDescription>
 <fullDescription>
 <intro>
-	        This node performs a <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis (PCA)</a> on the given
-	        input data. Given the number of dimensions to reduce to, the data is projected into a space of this
+	        This node performs a <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">
+	        principal component analysis (PCA)</a> on the given  data. 
+	        The input data is projected from its original feature space into a space of (possibly) lower
 	        dimension with a minimum of information loss.
 		</intro>
 		<option name="Target dimensions">
-        Determine the number of dimensions the input data is projected to. 
+        Select the number of dimensions the input data is projected to. 
         The number of target dimensions can either be selected directly or by specifying the 
         minimal amount of information to be preserved.
         If selected directly, number of dimensions must be lower or equal than the number of input columns.
         </option>
-        <option name="remove original data columns">
-        If checked, the columns containing the input data are removed in the output table.
+        <option name="Replace original data columns">
+        If checked, the columns containing the input data are removed in the output table 
+        and only the coordinates produces by the projection to the principal components remain.
         </option>
-		<option name="fail if missing values are encountered">
-          If checked, execution fails if the selected columns contain missing values. 
-           By default rows containing missing values are ignored.
+		<option name="Fail if missing values are encountered">
+          If checked, execution fails, when the selected columns contain missing values. 
+          By default, rows containing missing values are ignored and not considered in the computation of the principal components.
         </option>
-        <option name="columns">
+        <option name="Columns">
         Select columns that are included in the analysis of principal components, i.e the original features.
         </option>
 		</fullDescription>
 		<ports>
 		<inPort index="0" name="Table to transform">Input data for the PCA</inPort>
-		<outPort index="0" name="Covariance Matrix">Covariance matrix of the input columns.</outPort>
+<!--		<outPort index="0" name="Covariance Matrix">Covariance matrix of the input columns.</outPort>
 		<outPort index="1" name="Spectral decomposition">Table containing the eigenvalues and eigenvectors of the spectral decomposition of the PCA matrix</outPort>
-		<outPort index="2" name="Projected data">Table with input values projected to their principal components</outPort>
+		-->
+		<outPort index="0" name="Projected data">Table with input values projected to their principal components</outPort>
 		
 		</ports>
 		</knimeNode>

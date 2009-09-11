@@ -5,21 +5,23 @@
 <shortDescription>Principal component analysis computation</shortDescription>
 <fullDescription>
 <intro>
-	        This node performs a <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis (PCA)</a> on the given
-	        input data. The directions of maximal variance (the principal components) are extracted and can be used in the corresponding predictor 
-	        for projection to a lower dimensional space preserving a maximum of information.
+	        This node performs a <a href="http://en.wikipedia.org/wiki/Principal_component_analysis">
+	        principal component analysis (PCA)</a> on the given input data. 
+	        The directions of maximal variance (the principal components) are extracted and can be used in the PCA Apply node 
+	        to project the input into a space of lower dimension while preserving a maximum of information.
 		</intro>
-		<option name="fail if missing values are encountered">
-		  If checked, execution fails if the selected columns contain missing values, else lines containing missing values are ignored.
+		<option name="Fail if missing values are encountered">
+		  If checked, execution fails, when the selected columns contain missing values. 
+          By default, rows containing missing values are ignored and not considered in the computation of the principal components.
 		</option> 
-		<option name="columns">
-		Select columns that are included in the analysis of principal components.
+		<option name="Columns">
+		Select the columns that are included in the analysis of principal components, i.e. the numerical features of the data.
 		</option>
 		</fullDescription>
 		<ports>
 		<inPort index="0" name="Table to transform">Input data for the PCA</inPort>
 		<outPort index="0" name="Covariance matrix">Covariance matrix of the input columns</outPort>
-		<outPort index="1" name="spectral decomposition">Spectral decomposition of covariance matrix</outPort>
+		<outPort index="1" name="Spectral decomposition">Spectral decomposition of covariance matrix</outPort>
 		<outPort index="2" name="Projection model">Model with projection to principal components</outPort>
 		
 		</ports>

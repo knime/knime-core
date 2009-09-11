@@ -70,6 +70,14 @@ public class PCAModelPortObjectSpec implements PortObjectSpec {
      */
     @Override
     public JComponent[] getViews() {
+        // final String description =
+        // "<html>contains "
+        // + (m_eigenvalues != null ? m_eigenvalues.length + " "
+        // : "") + "principal components" + "</html>";
+        // ;
+        // final JLabel label = new JLabel(description);
+        // label.setName("PCA model port");
+        // return new JComponent[]{label};
         return new JComponent[]{};
     }
 

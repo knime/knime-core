@@ -49,7 +49,7 @@ public class PCANodeDialog extends DefaultNodeSettingsPane {
                 "Fail if missing values are encountered (skipped per default)"));
         addDialogComponent(new DialogComponentChoiceConfig(
                 new SettingsModelPCADimensions(
-                        PCANodeModel.DIMENSIONS_SELECTION, 2, 100, false)));
+                        PCANodeModel.DIMENSIONS_SELECTION, 2, 100, false), false));
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 PCANodeModel.REMOVE_COLUMNS, false),
                 "Replace original data columns"));

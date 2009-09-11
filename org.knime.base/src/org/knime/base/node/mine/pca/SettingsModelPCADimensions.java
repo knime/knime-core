@@ -143,7 +143,13 @@ public class SettingsModelPCADimensions extends SettingsModel {
                     settings.getNodeSettings(m_configName);
             setValues(mySettings.getDouble("doubleVal"), mySettings
                     .getInt("intVal"), mySettings.getBoolean("choice"));
-            m_eigenvalues = mySettings.getDoubleArray("eigenvalues", null);
+            if (specs.length > 1 && specs[1] instanceof PCAModelPortObjectSpec) {
+                m_eigenvalues =
+                        ((PCAModelPortObjectSpec)specs[1]).getEigenValues();
+
+            } else {
+                m_eigenvalues = null;
+            }
 
         } catch (final InvalidSettingsException e) {
             setValues(100, 2, false);
@@ -230,6 +236,10 @@ public class SettingsModelPCADimensions extends SettingsModel {
 
     }
 
+    public double[] getEigenvalues() {
+        return m_eigenvalues;
+    }
+
     /**
      * get number of dimensions to reduce to based on these settings.
      * 
@@ -245,6 +255,9 @@ public class SettingsModelPCADimensions extends SettingsModel {
         }
         double qual = getMinQuality();
         if (qual == 100) {
+            if (m_eigenvalues != null) {
+                return m_eigenvalues.length;
+            }
             return maxDimensions;
         }
         // no quality selection without eigenvalues
@@ -282,6 +295,16 @@ public class SettingsModelPCADimensions extends SettingsModel {
     }
 
     private double[] m_eigenvalues;
+
+    public String getNeededDimensionDescription() {
+        final int dim =
+                getNeededDimensions(m_eigenvalues != null ? m_eigenvalues.length
+                        : -1);
+        if (dim == -1) {
+            return "target dimensionality unknown";
+        }
+        return dim + " dimensions in output";
+    }
 
     /**
      * @return labels for quality slider
@@ -388,6 +411,32 @@ public class SettingsModelPCADimensions extends SettingsModel {
             }
 
         }
+
+    }
+
+    /**
+     * @param dim dimensions to reduce to
+     * @return preserved information int percent, based on eigenvalues
+     */
+    public String getInformationPreservation(final int dim) {
+        if (m_eigenvalues == null) {
+            return "unknown information preservation";
+        }
+        // numerical problems
+        if (dim >= m_eigenvalues.length || dim <= 0) {
+            return "100% information preservation";
+        }
+        double sum = 0;
+        for (final double t : m_eigenvalues) {
+            sum += t;
+        }
+
+        double frac = 0;
+        for (int i = 0; i < dim; i++) {
+            frac += m_eigenvalues[m_eigenvalues.length - 1 - i];
+        }
+        // floor
+        return (int)(100d * frac / sum) + "% information preservation";
 
     }
 

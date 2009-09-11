@@ -51,7 +51,7 @@ public class PCAApplyNodeDialog extends DefaultNodeSettingsPane {
         m_pcaModel =
                 new SettingsModelPCADimensions(
                         PCAApplyNodeModel.MIN_QUALPRESERVATION, 2, 100, false);
-        m_pcaConfig = new DialogComponentChoiceConfig(m_pcaModel);
+        m_pcaConfig = new DialogComponentChoiceConfig(m_pcaModel, true);
         addDialogComponent(m_pcaConfig);
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 PCAApplyNodeModel.REMOVE_COLUMNS, false),

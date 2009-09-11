@@ -27,6 +27,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
@@ -40,22 +41,30 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 public class DialogComponentChoiceConfig extends DialogComponent {
-
+    /** spinner for setting dimensions */
     private final JSpinner m_dimSpinner;
 
+    /** spinner for setting preserved quality */
     private final JSpinner m_qualitySlider;
 
+    /** selection by dimension? */
     private final JRadioButton m_dimensionSelection;
 
+    /** selection by preserved quality? */
     private final JRadioButton m_qualitySelection;
 
-    /**
-     * @param nodeDialog TODO
-     * @param model
-     */
-    public DialogComponentChoiceConfig(final SettingsModelPCADimensions model) {
-        super(model);
+    private JLabel m_qualityLabel;
 
+    private JLabel m_dimensionLabel;
+
+    /**
+     * @param model corresponding settings model
+     * @param showAdditionalInfo if <code>true</code> additionally
+     */
+    public DialogComponentChoiceConfig(final SettingsModelPCADimensions model,
+            final boolean showAdditionalInfo) {
+        super(model);
+        // TODO make label showing number of dimensions
         final JPanel panel = getComponentPanel();
         panel.setBorder(BorderFactory.createTitledBorder("Target dimensions"));
         panel.setLayout(new GridBagLayout());
@@ -63,18 +72,28 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         m_dimensionSelection = new JRadioButton("dimensions to reduce to");
         panel.add(m_dimensionSelection, gbc);
         gbc.gridx++;
-        m_dimSpinner = new JSpinner(new SpinnerNumberModel(2, 1, 100, 1));
+        m_dimSpinner =
+                new JSpinner(new SpinnerNumberModel(2, 1, Integer.MAX_VALUE, 1));
 
         m_dimSpinner.setEditor(new JSpinner.NumberEditor(m_dimSpinner));
         panel.add(m_dimSpinner, gbc);
-
+        if (showAdditionalInfo) {
+            m_qualityLabel =
+                    new JLabel(" unknown fraction of information preserved");
+            gbc.weightx = 1;
+            gbc.gridx++;
+            panel.add(m_qualityLabel, gbc);
+            gbc.weightx = 0;
+        }
         gbc.gridy++;
         gbc.gridx = 0;
         m_qualitySelection =
-                new JRadioButton("minimum information fraction to preserve (%)");
+                new JRadioButton("minimum information fraction "
+                        + "to preserve (%)");
         panel.add(m_qualitySelection, gbc);
         gbc.gridx++;
         m_qualitySlider = new JSpinner(new SpinnerNumberModel(100, 1, 100, 1));
@@ -82,7 +101,14 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         setSliderLabels();
         gbc.anchor = GridBagConstraints.WEST;
         panel.add(m_qualitySlider, gbc);
-        gbc.anchor = GridBagConstraints.EAST;
+        if (showAdditionalInfo) {
+            m_dimensionLabel = new JLabel(" all dimensions");
+            gbc.gridx++;
+            gbc.weightx = 1;
+            panel.add(m_dimensionLabel, gbc);
+            gbc.weightx = 0;
+        }
+
         final ButtonGroup bg = new ButtonGroup();
         bg.add(m_dimensionSelection);
         bg.add(m_qualitySelection);
@@ -90,6 +116,16 @@ public class DialogComponentChoiceConfig extends DialogComponent {
 
             public void stateChanged(final ChangeEvent e) {
                 m_dimSpinner.setEnabled(m_dimensionSelection.isSelected());
+                if (showAdditionalInfo) {
+                    m_qualityLabel
+                            .setEnabled(m_dimensionSelection.isSelected());
+                    final int dim =
+                            ((SettingsModelPCADimensions)getModel())
+                                    .getNeededDimensions(-1);
+                    m_qualityLabel.setText(" ("
+                            + ((SettingsModelPCADimensions)getModel())
+                                    .getInformationPreservation(dim) + ")");
+                }
             }
 
         });
@@ -97,6 +133,11 @@ public class DialogComponentChoiceConfig extends DialogComponent {
 
             public void stateChanged(final ChangeEvent e) {
                 m_qualitySlider.setEnabled(m_qualitySelection.isSelected());
+                if (showAdditionalInfo) {
+                    m_dimensionLabel
+                            .setEnabled(m_qualitySelection.isSelected());
+
+                }
             }
 
         });
@@ -105,16 +146,37 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         final ChangeListener cl = new ChangeListener() {
 
             public void stateChanged(final ChangeEvent arg0) {
-                ((SettingsModelPCADimensions)getModel()).setValues(
-                        (Integer)m_qualitySlider.getValue(),
+                final SettingsModelPCADimensions smodel =
+                        (SettingsModelPCADimensions)getModel();
+                smodel.setValues((Integer)m_qualitySlider.getValue(),
                         (Integer)m_dimSpinner.getValue(), m_dimensionSelection
                                 .isSelected());
+                if (showAdditionalInfo) {
+                    final int dim = smodel.getNeededDimensions(-1);
+                    // if(dim<0 && model.getEigenval)
+                    if (m_qualitySelection.isSelected()) {
+                        if (smodel.getEigenvalues() != null
+                                || m_qualitySlider.getValue().equals(100)) {
+                            m_dimensionLabel.setText(" ("
+                                    + (dim > 0 ? dim + "" : "all")
+                                    + " dimensions)");
+                        } else {
+                            m_dimensionLabel.setText("");
+                        }
+                    }
+                    if (m_dimensionSelection.isSelected()) {
+                        m_qualityLabel.setText(" ("
+                                + smodel.getInformationPreservation(dim) + ")");
+                    }
+
+                }
             }
 
         };
         m_qualitySelection.addChangeListener(cl);
         m_dimSpinner.addChangeListener(cl);
         m_qualitySlider.addChangeListener(cl);
+        cl.stateChanged(null);
     }
 
     /**
@@ -122,10 +184,29 @@ public class DialogComponentChoiceConfig extends DialogComponent {
      */
     private void setSliderLabels() {
 
-        ((SettingsModelPCADimensions)getModel())
-                .configureQualitySlider(m_qualitySlider);
-        m_qualitySlider.repaint();
+        final SettingsModelPCADimensions model =
+                (SettingsModelPCADimensions)getModel();
+        model.configureQualitySlider(m_qualitySlider);
 
+        m_qualitySlider.repaint();
+        if (model.getEigenvalues() != null) {
+            model.setDimensions(Math.min(model.getEigenvalues().length, model
+                    .getDimensions()));
+            m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
+                    1, model.getEigenvalues().length, 1));
+            m_dimSpinner.repaint();
+
+        } else {
+            m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
+                    1, Integer.MAX_VALUE, 1));
+            m_dimSpinner.repaint();
+        }
+        if (m_qualityLabel != null) {
+            m_qualityLabel.setText(" ("
+                    + ((SettingsModelPCADimensions)getModel())
+                            .getInformationPreservation(model.getDimensions())
+                    + ")");
+        }
     }
 
     /**
