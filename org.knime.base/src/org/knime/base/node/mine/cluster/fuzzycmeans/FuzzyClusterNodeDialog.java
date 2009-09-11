@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
-import java.awt.Checkbox;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -46,14 +45,14 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -109,7 +108,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     private final JRadioButton m_notprovidedeltaRB = new JRadioButton(
             "Autom. delta, lambda:");
 
-    private final Checkbox m_noisecheck = new Checkbox("Induce noise cluster",
+    private final JCheckBox m_noisecheck = new JCheckBox("Induce noise cluster",
             false);
     
     private final JCheckBox m_memoryCB;
@@ -227,7 +226,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         });
         m_noisecheck.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                boolean state = m_noisecheck.getState();
+                boolean state = m_noisecheck.isSelected();
                 m_providedeltaRB.setEnabled(state);
                 m_notprovidedeltaRB.setEnabled(state);
                 m_deltaSpinner.setEnabled(state);
@@ -347,7 +346,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 boolean noise = settings
                         .getBoolean(FuzzyClusterNodeModel.NOISE_KEY);
                 if (noise) {
-                    m_noisecheck.setState(noise);
+                    m_noisecheck.setSelected(noise);
                     if (settings
                           .containsKey(FuzzyClusterNodeModel.DELTAVALUE_KEY)) {
                         double delta = settings
@@ -465,7 +464,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 .toArray(new String[0]));
 
         settings.addBoolean(FuzzyClusterNodeModel.NOISE_KEY, m_noisecheck
-                .getState());
+                .isSelected());
         if (m_providedeltaRB.isSelected()) {
             settings.addDouble(FuzzyClusterNodeModel.DELTAVALUE_KEY,
                     (Double)m_deltaSpinner.getValue());
