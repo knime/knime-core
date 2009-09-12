@@ -2168,10 +2168,13 @@ public final class WorkflowManager extends NodeContainer {
                     // and launch configure starting with this node
                     configureNodeAndSuccessors(id, true);
                 } else if (nc.getState().equals(State.IDLE)) {
-                    // the destination node we disconnected from is IDLE
-                    // we don't need to reset it but we should remove
-                    // its node message!
+                    // the node is IDLE: we don't need to reset it but we
+                    // should remove its node message! (This for instance
+                    // matters when we disconnect the inport of this node
+                    // and it showed an error due to conflicting stacks!)
                     nc.setNodeMessage(null);
+                    // But maybe the node is configurable?
+                    configureNodeAndSuccessors(id, true);
                 }
             } else {
                 throw new IllegalStateException(
