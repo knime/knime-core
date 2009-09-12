@@ -106,8 +106,8 @@ implements ChangeListener, ActionListener {
             String packagePath = 
                 this.getClass().getPackage().getName().replace('.', '/');
             String correctedPath = "/icon/"
-                + (enabled ? "variable_dialog_active.png"
-                            : "variable_dialog_inactive.png");
+                + (enabled ? "varbuttonON.png"
+                            : "varbuttonOFF.png");
             icon = new ImageIcon(
                     loader.getResource(packagePath + correctedPath));
             this.setText("");
