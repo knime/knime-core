@@ -78,6 +78,7 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -818,7 +819,7 @@ public final class WorkflowManager extends NodeContainer {
             Set<ConnectionContainer> inConns = m_workflow.getConnectionsByDest(dest);
             if (!inConns.remove(cc)) {
                 throw new IllegalArgumentException(
-                "Connection did not exist (it did exist as incoming conn.)!");
+                "Connection did not exist (it did exist as outcoming conn.)!");
             }
             // handle special cases with port reference chains (WFM border
             // crossing connections:
@@ -2166,6 +2167,11 @@ public final class WorkflowManager extends NodeContainer {
                     nc.resetJobManagerViews();
                     // and launch configure starting with this node
                     configureNodeAndSuccessors(id, true);
+                } else if (nc.getState().equals(State.IDLE)) {
+                    // the destination node we disconnected from is IDLE
+                    // we don't need to reset it but we should remove
+                    // its node message!
+                    nc.setNodeMessage(null);
                 }
             } else {
                 throw new IllegalStateException(
@@ -2905,9 +2911,16 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 // configure node itself
                 boolean outputSpecsChanged = false;
-                if (flowStackConflict && !snc.getState().equals(State.IDLE)) {
-                    // FIXME how to invalidate the configure state of the node?
-                    snc.reset(); // can't configured due to stack clash
+                if (flowStackConflict) {
+                    // can't configured due to stack clash
+                    if (!snc.getState().equals(State.IDLE)) {
+                        // if not already idle make sure it is!
+                        snc.reset(); 
+                    }
+                    // report the problem
+                    snc.setNodeMessage(new NodeMessage(Type.ERROR,
+                            "Can't merge FlowVariable Stacks! (likely " +
+                            "a loop problem."));
                     // different output if any output spec was non-null
                     for (PortObjectSpec s : inSpecs) {
                         if (s != null) {
