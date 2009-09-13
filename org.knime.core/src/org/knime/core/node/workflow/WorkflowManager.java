@@ -1207,7 +1207,10 @@ public final class WorkflowManager extends NodeContainer {
                      m_workflow.getNodeIDs(), true).keySet()) {
                 NodeContainer nc = getNodeContainer(sortedID);
                 if (nc instanceof SingleNodeContainer) {
-                    if (nc.getState().equals(State.CONFIGURED)) {
+                    // reconfigure yellow AND red nodes - it could be that
+                    // the reason for the red state were the variables!
+                    if (nc.getState().equals(State.CONFIGURED)
+                            || nc.getState().equals(State.IDLE)) {
                         configureSingleNodeContainer(
                             (SingleNodeContainer)nc,
                             /* keepNodemessage=*/ false);
@@ -1238,15 +1241,15 @@ public final class WorkflowManager extends NodeContainer {
                 // TODO reset all nodes in reverse order first
                 NodeContainer nc = getNodeContainer(sortedID);
                 if (nc instanceof SingleNodeContainer) {
+                    // (reset) and configure yellow AND red nodes - it could be
+                    // that the reason for the red state were the variables!
                     if (nc.isResetable()) {
-                        // reset and configure if red:
                         ((SingleNodeContainer)nc).reset();
-                        configureSingleNodeContainer(
-                                (SingleNodeContainer)nc,
-                                /* keepNodemessage=*/ false);
-                    } else if (nc.getState().equals(State.CONFIGURED)) {
-                        // only re-configure it if it was yellow:
-                        // node that there still may be metanodes
+                    }
+                    if (nc.getState().equals(State.CONFIGURED)
+                            || nc.getState().equals(State.IDLE)) {
+                        // re-configure if node was yellow or we just reset it.
+                        // note that there still may be metanodes
                         // connected to this one which contain green
                         // nodes! (hence the brute force left-to-right approach
                         configureSingleNodeContainer(

@@ -98,7 +98,6 @@ implements ChangeListener, ActionListener {
     @Override
     public void stateChanged(final ChangeEvent evt) {
         boolean enabled = m_model.isVariableReplacementEnabled();
-        this.setToolTipText(enabled ? m_model.getInputVariableName() : "N/A");
         try {
             // try to load icon(s)
             ImageIcon icon;
@@ -117,6 +116,22 @@ implements ChangeListener, ActionListener {
             this.setText(enabled ? "v!" : "v?");
             return;
         }
+        // compose tooltip with current var names (if available)
+        StringBuffer tooltip = new StringBuffer("Flow variable: ");
+        if (enabled) {
+            tooltip.append("replacing with '" + m_model.getInputVariableName()
+                    + "'");
+        } else {
+            tooltip.append("<no variable replacement>");
+        }
+        tooltip.append(", ");
+        if (m_model.getOutputVariableName() != null) {
+            tooltip.append("export as '"
+                    + m_model.getOutputVariableName() + "'");
+        } else {
+            tooltip.append("<no export as variable>");
+        }
+        this.setToolTipText(tooltip.toString());
     }
     
     /** @return the model as passed in 
@@ -194,8 +209,14 @@ implements ChangeListener, ActionListener {
                 }
             });
             panelTop.add(m_enableInputVar);
-            m_inputVar = new JComboBox(m_model.getMatchingVariables());
-            m_inputVar.setRenderer(new FlowVariableListCellRenderer());
+            FlowVariable[] matchingVars = m_model.getMatchingVariables();
+            if (matchingVars.length > 0) {
+                m_inputVar = new JComboBox(matchingVars);
+                m_inputVar.setRenderer(new FlowVariableListCellRenderer());
+            } else {
+                m_inputVar = new JComboBox(new String[] {"<no matching vars>"});
+                m_inputVar.setEnabled(false);
+            }
             m_inputVar.setEnabled(false);
             panelTop.add(m_inputVar);
             cp.add(panelTop);
@@ -260,8 +281,19 @@ implements ChangeListener, ActionListener {
         }
         
         void setInputVariableName(final String s) {
-            m_enableInputVar.setSelected(true);
-            m_inputVar.setEnabled(true);
+            if (s == null) {
+                m_inputVar.setEnabled(false);
+                m_enableInputVar.setSelected(false);
+                m_enableInputVar.setEnabled(true);
+                if (m_model.getMatchingVariables().length == 0) {
+                    // we have no matching variables
+                    m_enableInputVar.setEnabled(false);
+                    m_inputVar = new JComboBox(
+                            new String[] {"<no matching vars>"});
+                }
+                return;
+            }
+            assert s != null;
             // try to find variable with corresponding name (and type):
             FlowVariable var = null;
             for (FlowVariable v : m_model.getMatchingVariables()) {
@@ -271,38 +303,62 @@ implements ChangeListener, ActionListener {
                 }
             }
             if (var != null) {
-                // found it: we can select it. Everything fine.
+                // found it: we can select it and enable button+combobox.
                 m_inputVar.setSelectedItem(var);
+                m_inputVar.setEnabled(true);
+                m_enableInputVar.setSelected(true);
+                m_enableInputVar.setEnabled(true);
             } else {
-                // could not find it: add a non-selectable entry to
-                // the list so the user knows what's wrong. KNIME will
-                // complain during configure anyway and let her know
-                // that the variable does not exist (anymore).
-                m_inputVar.addItem(s);
-                m_inputVar.setRenderer(new CustomListCellRenderer(s));
-                m_inputVar.setSelectedItem(s);
-                m_inputVar.addActionListener(new ActionListener() {
-                    private Object m_oldSelection = null;
-                    public void actionPerformed(final ActionEvent evt) {
-                        Object o = m_inputVar.getSelectedItem();
-                        if (o.equals(s)) {
-                            if (!o.equals(m_oldSelection)) {
-                                // only try to select the previous (hopefully
-                                // legal) selection if it was different!
-                                m_inputVar.setSelectedItem(m_oldSelection);
+                // could not find it - two options:
+                if (m_model.getMatchingVariables().length == 0) {
+                    // 1) we have no matching variables
+                    // ComboBox already has a fake entry, nothing needs to
+                    // change - but to be sure:
+                    m_inputVar = new JComboBox(
+                            new String[] {"<no matching vars>"});
+                    m_enableInputVar.setSelected(false);
+                    m_enableInputVar.setEnabled(false);
+                    m_inputVar.setEnabled(false);
+                } else {
+                    // 2) we do have other variables that match:
+                    // add a non-selectable entry to
+                    // the list so the user knows what's wrong. KNIME will
+                    // complain during configure anyway and let her know
+                    // that the variable does not exist (anymore).
+                    m_inputVar.addItem(s);
+                    m_inputVar.setRenderer(new CustomListCellRenderer(s));
+                    m_inputVar.setSelectedItem(s);
+                    m_inputVar.addActionListener(new ActionListener() {
+                        private Object m_oldSelection = s;
+                        public void actionPerformed(final ActionEvent evt) {
+                            Object o = m_inputVar.getSelectedItem();
+                            if (o.equals(s)) {
+                                if (!o.equals(m_oldSelection)) {
+                                    // only select the previous (hopefully
+                                    // legal) selection if it was different!
+                                    m_inputVar.setSelectedItem(m_oldSelection);
+                                }
+                            } else {
+                                m_oldSelection = o;
                             }
-                        } else {
-                            m_oldSelection = o;
                         }
-                    }
-                });
+                    });
+                    m_enableInputVar.setSelected(true);
+                    m_inputVar.setEnabled(true);
+                }
             }
         }
 
         void setOutputVariableName(final String s) {
-            m_enableOutputVar.setSelected(true);
-            m_outputVar.setEnabled(true);
-            m_outputVar.setText(s);
+            if (s != null) {
+                m_enableOutputVar.setSelected(true);
+                m_outputVar.setEnabled(true);
+                m_outputVar.setText(s);
+            } else {
+                m_enableOutputVar.setSelected(false);
+                m_outputVar.setEnabled(false);
+                m_outputVar.setText("");
+            }
         }
         
     }
@@ -329,6 +385,7 @@ implements ChangeListener, ActionListener {
             if (value.toString().equals(m_toDisable)) {
                 comp.setFocusable(false);
                 comp.setEnabled(false);
+                comp.setBackground(Color.red);
             }
             return comp;
         }
