@@ -44,11 +44,15 @@ import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.nature.KNIMEProjectNature;
 import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ * Helper class for the meta info file which contains the meta information 
+ * entered by the user for workflow groups and workflows, such as author, date,
+ * comments.
+ *  
  * @author Fabian Dill, KNIME.com GmbH
  */
 public final class MetaInfoFile {
@@ -185,17 +189,27 @@ public final class MetaInfoFile {
     /**
      * Creates a new workflow group project (with the referring nature).
      * @param name name of the project
+     * @param natureId one of {@link KNIMEProjectNature} 
+     *  or {@link KNIMEWorkflowSetProjectNature}
      * @return the created project (already open and with description)
      * @throws Exception if something goes wrong
      * 
      * @see {@link KNIMEWorkflowSetProjectNature}
      */
-    public static IProject createWorkflowSetProject(final String name) 
+    public static IProject createKnimeProject(final String name, 
+            final String natureId) 
         throws Exception {
+        if (!KNIMEProjectNature.ID.equals(natureId) 
+                && !KNIMEWorkflowSetProjectNature.ID.equals(natureId)) {
+            throw new IllegalArgumentException(
+                    "Unsupported project nature " + natureId + ". "
+                    + "Only KnimeProjectNature and " 
+                    + "KnimeWorkflowSetProjectNature are supported!");
+        }
         final IProgressService ps = PlatformUI.getWorkbench()
             .getProgressService();
         final ProjectCreationRunnable runnable = new ProjectCreationRunnable(
-                name);
+                name, natureId);
         // we have to run the runnable with progress in the UI thread
         Display.getDefault().syncExec(new Runnable() {
             @Override
@@ -215,9 +229,12 @@ public final class MetaInfoFile {
         
         private IProject m_newProject;
         private final String m_newProjectName;
+        private final String m_natureID;
         
-        public ProjectCreationRunnable(final String newProjectName) {
+        public ProjectCreationRunnable(final String newProjectName, 
+                final String natureID) {
             m_newProjectName = newProjectName;
+            m_natureID = natureID;
         }
         
         public IProject getNewProject() {
@@ -236,7 +253,7 @@ public final class MetaInfoFile {
                     .getDescription();
                 desc.setNatureIds(
                         new String[] {
-                        KNIMEWorkflowSetProjectNature.ID});
+                        m_natureID});
                 m_newProject.setDescription(desc, null);
             } catch (Throwable e) {
                 e.printStackTrace();
