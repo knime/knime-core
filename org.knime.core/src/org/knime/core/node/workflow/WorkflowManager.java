@@ -2925,8 +2925,8 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     // report the problem
                     snc.setNodeMessage(new NodeMessage(Type.ERROR,
-                            "Can't merge FlowVariable Stacks! (likely " +
-                            "a loop problem."));
+                            "Can't merge FlowVariable Stacks! (likely " 
+                            + "a loop problem.)"));
                     // different output if any output spec was non-null
                     for (PortObjectSpec s : inSpecs) {
                         if (s != null) {
