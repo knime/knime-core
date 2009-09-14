@@ -383,12 +383,12 @@ public final class WorkflowManager extends NodeContainer {
             if (this != ROOT && ncDir != null) {
                 m_deletedNodesFileLocations.add(ncDir);
             }
+            checkForNodeStateChanges(true);
         }
         setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
                 getID(), nc, null));
-        checkForNodeStateChanges(true);
     }
 
     /** Creates new meta node. We will automatically find the next available
@@ -1619,8 +1619,8 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Cleanup a node after execution. This will also permit the argument node
-     * to change its state in
-     * {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
+     * to change its state in {@link NodeContainer#
+     * performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be
      * continued.
      *
