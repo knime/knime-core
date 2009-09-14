@@ -24,28 +24,24 @@
  */
 package org.knime.workbench.ui.navigator.actions;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkbench;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.wizards.imports.WorkflowImportWizard;
 
 /**
- * Action to invoke the knime import wizard.
+ * Action to invoke the KNIME import wizard.
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class ImportKnimeWorkflowAction extends Action {
-
-    private static final int SIZING_WIZARD_WIDTH = 470;
-
-    private static final int SIZING_WIZARD_HEIGHT = 550;
     
     private static final ImageDescriptor ICON 
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
@@ -60,14 +56,14 @@ public class ImportKnimeWorkflowAction extends Action {
      * The workbench window; or <code>null</code> if this action has been
      * <code>dispose</code>d.
      */
-    private IWorkbenchWindow m_workbenchWindow;
+    private final IWorkbenchWindow m_workbenchWindow;
 
     /**
      * Create a new instance of this class.
      * 
      * @param window the window
      */
-    public ImportKnimeWorkflowAction(IWorkbenchWindow window) {
+    public ImportKnimeWorkflowAction(final IWorkbenchWindow window) {
         super("Import KNIME workflow...");
         if (window == null) {
             throw new IllegalArgumentException();
@@ -75,23 +71,9 @@ public class ImportKnimeWorkflowAction extends Action {
         this.m_workbenchWindow = window;
         setToolTipText("Imports a KNIME workflow from an archive"
                 + " or a directory structure");
-        setId(ID); //$NON-NLS-1$
-//        window.getWorkbench().getHelpSystem().setHelp(this,
-//                IWorkbenchHelpContextIds.IMPORT_ACTION);
-        // self-register selection listener (new for 3.0)
-       
+        setId(ID);
     }
 
-    /**
-     * Create a new instance of this class.
-     * 
-     * @param workbench the workbench
-     * @deprecated use the constructor
-     *             <code>ImportKnimeWorkflowAction(IWorkbenchWindow)</code>
-     */
-    public ImportKnimeWorkflowAction(final IWorkbench workbench) {
-        this(workbench.getActiveWorkbenchWindow());
-    }
     
     /**
      * {@inheritDoc}
@@ -104,51 +86,25 @@ public class ImportKnimeWorkflowAction extends Action {
     /**
      * Invoke the Import wizards selection Wizard.
      */
+    @Override
     public void run() {
-        if (m_workbenchWindow == null) {
-            // action has been disposed
-            return;
-        }
-        
-        WorkflowImportWizard wizard =
-                new WorkflowImportWizard();
-        
+        WorkflowImportWizard wizard = new WorkflowImportWizard();
+        WizardDialog dialog = new WizardDialog(
+                Display.getDefault().getActiveShell(), wizard);
         IStructuredSelection selectionToPass;
         // get the current workbench selection
-        ISelection workbenchSelection =
-                m_workbenchWindow.getSelectionService().getSelection();
+        ISelection workbenchSelection = m_workbenchWindow.getSelectionService()
+            .getSelection();
         if (workbenchSelection instanceof IStructuredSelection) {
             selectionToPass = (IStructuredSelection)workbenchSelection;
-        } else {
-            selectionToPass = StructuredSelection.EMPTY;
+            if (selectionToPass.size() == 1) {
+                Object o = selectionToPass.getFirstElement();
+                if (o instanceof IContainer) {
+                    wizard.setInitialDestination((IContainer)o);
+                }
+            }
         }
-
-        wizard.init(m_workbenchWindow.getWorkbench(), selectionToPass);
-
-        //wizard.setForcePreviousAndNextButtons(true);
-
-        Shell parent = m_workbenchWindow.getShell();
-        WizardDialog dialog = new WizardDialog(parent, wizard);
-        dialog.create();
-        dialog.getShell().setSize(
-                Math.max(SIZING_WIZARD_WIDTH, dialog.getShell().getSize().x),
-                SIZING_WIZARD_HEIGHT);
-//        PlatformUI.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
-//                IWorkbenchHelpContextIds.IMPORT_WIZARD);
         dialog.open();
     }
 
-    /*
-     * (non-Javadoc) Method declared on ActionFactory.IWorkbenchAction.
-     * 
-     * @since 3.0
-     */
-    public void dispose() {
-        if (m_workbenchWindow == null) {
-            // action has already been disposed
-            return;
-        }
-       
-        m_workbenchWindow = null;
-    }
 }
