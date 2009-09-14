@@ -207,6 +207,12 @@ public class PCANodeModel extends NodeModel {
             m_dimSelection.setMinQuality(100);
             dim = m_inputColumnIndices.length;
         }
+        if (dim > m_inputColumnIndices.length) {
+            m_dimSelection.setDimensionsSelected(true);
+            dim = m_inputColumnIndices.length;
+            m_dimSelection.setDimensions(dim);
+            setWarningMessage("dimensions resetted to " + dim);
+        }
         final DataColumnSpec[] specs =
                 createAddTableSpec(inSpecs[DATA_INPORT], dim);
         final DataTableSpec data =

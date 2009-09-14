@@ -215,10 +215,16 @@ public class PCAApplyNodeModel extends NodeModel {
 
         m_dimSelection.setEigenValues(modelPort.getEigenValues());
 
-        final int dimensions =
+        int dimensions =
                 m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
-        if (dimensions == -1) {
+        if (dimensions <= 0) {
             return null;
+        }
+        if (dimensions > m_inputColumnIndices.length) {
+            m_dimSelection.setDimensionsSelected(true);
+            dimensions = m_inputColumnIndices.length;
+            m_dimSelection.setDimensions(dimensions);
+            setWarningMessage("dimensions resetted to " + dimensions);
         }
 
         final DataColumnSpec[] specs =

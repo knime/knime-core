@@ -24,6 +24,8 @@ package org.knime.base.node.mine.pca;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.ParseException;
 
 import javax.swing.BorderFactory;
@@ -119,9 +121,15 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         final ButtonGroup bg = new ButtonGroup();
         bg.add(m_dimensionSelection);
         bg.add(m_qualitySelection);
-        m_dimensionSelection.addChangeListener(new ChangeListener() {
+        final ActionListener al = new ActionListener() {
 
-            public void stateChanged(final ChangeEvent e) {
+            public void actionPerformed(final ActionEvent e) {
+                m_qualitySlider.setEnabled(m_qualitySelection.isSelected());
+                if (showAdditionalInfo) {
+                    m_dimensionLabel
+                            .setEnabled(m_qualitySelection.isSelected());
+
+                }
                 m_dimSpinner.setEnabled(m_dimensionSelection.isSelected());
                 if (showAdditionalInfo) {
                     m_qualityLabel
@@ -135,19 +143,9 @@ public class DialogComponentChoiceConfig extends DialogComponent {
                 }
             }
 
-        });
-        m_qualitySelection.addChangeListener(new ChangeListener() {
-
-            public void stateChanged(final ChangeEvent e) {
-                m_qualitySlider.setEnabled(m_qualitySelection.isSelected());
-                if (showAdditionalInfo) {
-                    m_dimensionLabel
-                            .setEnabled(m_qualitySelection.isSelected());
-
-                }
-            }
-
-        });
+        };
+        m_dimensionSelection.addActionListener(al);
+        m_qualitySelection.addActionListener(al);
         m_qualitySelection.setSelected(true);
         m_dimSpinner.setEnabled(false);
         final ChangeListener cl = new ChangeListener() {
@@ -180,7 +178,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
             }
 
         };
-        m_qualitySelection.addChangeListener(cl);
+        // m_qualitySelection.addActionListener(al)(cl);
         m_dimSpinner.addChangeListener(cl);
         m_qualitySlider.addChangeListener(cl);
         cl.stateChanged(null);
