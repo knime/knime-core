@@ -134,6 +134,22 @@
             This wizard creates a new KNIME workflow project.
          </description>
       </wizard>
+      <wizard
+            category="org.knime.workbench.ui.wizards.category"
+            class="org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizard"
+            descriptionImage="icons/new_knime48.png"
+            finalPerspective="org.knime.workbench.ui.ModellerPerspective"
+            icon="icons/new_knime16.png"
+            id="org.knime.workbench.ui.newworkflowgroup"
+            name="New Workflow Group"
+            preferredPerspectives="org.knime.workbench.ui.ModellerPerspective">
+         <description>
+            Creates a new workflow group helping to organize your workflows
+         </description>
+      </wizard>
+      <primaryWizard
+            id="org.knime.workbench.ui.newworkflowgroup">
+      </primaryWizard>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
