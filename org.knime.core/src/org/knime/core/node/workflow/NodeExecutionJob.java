@@ -74,6 +74,7 @@ public abstract class NodeExecutionJob implements Runnable {
         NodeContainerExecutionStatus status = null;
         if (!isReConnecting()) {
             try {
+                // sets state PREEXECUTE
                 m_nc.notifyParentPreExecuteStart();
                 beforeExecute();
             } catch (Throwable throwable) {
@@ -81,6 +82,7 @@ public abstract class NodeExecutionJob implements Runnable {
                 status = NodeContainerExecutionStatus.FAILURE;
             }
             try {
+                // sets state EXECUTING
                 m_nc.notifyParentExecuteStart();
             } catch (IllegalFlowObjectStackException e) {
                 status = NodeContainerExecutionStatus.FAILURE;
@@ -98,6 +100,7 @@ public abstract class NodeExecutionJob implements Runnable {
             logError(throwable);
         }
         try {
+            // sets state POSTEXECUTE
             m_nc.notifyParentPostExecuteStart();
             afterExecute();
         } catch (Throwable throwable) {
@@ -105,6 +108,7 @@ public abstract class NodeExecutionJob implements Runnable {
             logError(throwable);
         }
         try {
+            // sets state EXECUTED
             m_nc.notifyParentExecuteFinished(status);
         } catch (Throwable throwable) {
             logError(throwable);

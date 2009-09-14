@@ -607,6 +607,8 @@ public final class SingleNodeContainer extends NodeContainer {
     void mimicRemotePostExecute() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
+            case PREEXECUTE: // in case of errors, e.g. flow stack problems 
+                             // encountered during doBeforeExecution
             case EXECUTINGREMOTELY:
                 setState(State.POSTEXECUTE);
                 break;
@@ -675,6 +677,8 @@ public final class SingleNodeContainer extends NodeContainer {
     void performStateTransitionPOSTEXECUTE() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
+            case PREEXECUTE: // in case of errors, e.g. flow stack problems 
+                             // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
                 setState(State.POSTEXECUTE);
