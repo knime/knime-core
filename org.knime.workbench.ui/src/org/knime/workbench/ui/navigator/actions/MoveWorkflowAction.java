@@ -35,6 +35,9 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
+import org.knime.workbench.ui.nature.KNIMEProjectNature;
+import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
@@ -115,6 +118,16 @@ public class MoveWorkflowAction extends Action
         if (source == null || target == null) {
             return;
         }
+        // check for linked projects (unfortunately still supported)
+        if (source instanceof IProject) {
+            IProject p = (IProject)source;
+            IPath loc = p.getLocation();
+            if (!ResourcesPlugin.getWorkspace().getRoot().getLocation()
+                    .isPrefixOf(loc)) {
+                showUnsupportedLinkedProject(source.getName());
+                return;                    
+            }
+        }
         // check whether the target is contained in source 
         if (getSource().isPrefixOf(getTarget())) {
             LOGGER.debug("Operation not allowed. " + source.getName() 
@@ -158,13 +171,18 @@ public class MoveWorkflowAction extends Action
                         showAlreadyExists(newProject.getName(), 
                                 "workspace root");
                         return;
-                    }                            
-                     newProject = MetaInfoFile.createWorkflowSetProject(
-                                    newProject.getName());
+                    }
+                    // check whether this is a workflow or a workflow group
+                    String natureId = KNIMEWorkflowSetProjectNature.ID;
+                    if (KnimeResourceUtil.isWorkflow(source)) {
+                        natureId = KNIMEProjectNature.ID; 
+                    } 
+                    newProject = MetaInfoFile.createKnimeProject(
+                                        newProject.getName(), natureId);
                 }
                 // exception handling
-                targetRes.refreshLocal(IResource.DEPTH_ONE, monitor);
                 source.delete(true, monitor);
+                targetRes.refreshLocal(IResource.DEPTH_INFINITE, monitor);
             } catch (Exception e) {
                 LOGGER.error("Error while moving resource " + source,  e);
                 throw new InvocationTargetException(e);
