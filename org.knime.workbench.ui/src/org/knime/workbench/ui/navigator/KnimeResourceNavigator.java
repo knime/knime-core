@@ -73,7 +73,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.actions.CancelWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ConfigureWorkflowAction;
-import org.knime.workbench.ui.navigator.actions.CreateSubfolderAction;
+import org.knime.workbench.ui.navigator.actions.CreateWorkflowGroupAction;
 import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
 import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
@@ -416,8 +416,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
 
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        menu.insertAfter(ExportKnimeWorkflowAction.ID,
-                new CreateSubfolderAction());
         menu
                 .insertAfter(ExportKnimeWorkflowAction.ID,
                         new EditMetaInfoAction());
@@ -460,6 +458,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         }
         menu.add(new NewKnimeWorkflowAction(PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow()));
+        menu.add(new CreateWorkflowGroupAction());
         for (int i = 1; i < items.length; i++) {
             menu.add(items[i]);
         }

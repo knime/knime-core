@@ -24,10 +24,10 @@
  */
 package org.knime.workbench.ui.navigator;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
+import org.knime.core.node.workflow.NodeContainer;
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
  * the project has to be shown.
@@ -41,18 +41,19 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
     @Override
     public boolean select(final Viewer viewer, final Object parentElement,
             final Object element) {
-        if (element instanceof IFile) {
-            return false;
-        }
-        if (element instanceof IProject) {
-            IProject project = (IProject)element;
-            boolean isKnimeProject = false;
-            isKnimeProject = project.exists(
+        if (element instanceof IContainer) {
+            IContainer folder = (IContainer)element;
+            boolean select = false;
+            select = folder.exists(
                     KnimeResourceLabelProvider.WORKFLOW_FILE);
-            isKnimeProject |= project.exists(
+            select |= folder.exists(
                     KnimeResourceLabelProvider.METAINFO_FILE);
-            return isKnimeProject;
+            select |= folder.exists(KnimeResourceLabelProvider.NODE_FILE);
+            return select;
         }
-        return true;
+        if (element instanceof NodeContainer) {
+            return true;
+        }
+        return false;
     }
 }

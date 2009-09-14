@@ -54,6 +54,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -72,21 +73,26 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
 //    private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
 //            KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
 
-    private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
+    /** Icon representing the executing state. */
+    public static final Image EXECUTING = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
-    private static final Image EXECUTED = KNIMEUIPlugin.getDefault()
+    /** Icon representing the executed state. */
+    public static final Image EXECUTED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed.png");
-    private static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
+    /** Icon representing the configured state. */
+    public static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
-    private static final Image CLOSED = KNIMEUIPlugin.getDefault()
+    /** Icon representing a closed workflow. */
+    public static final Image CLOSED_WORKFLOW = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
-    private static final Image ERROR = KNIMEUIPlugin.getDefault()
+    /** Error icon. */
+    public static final Image ERROR = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_Error.png");
-    
-    private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
+    /** Icon representing a node in the resource navigator. */
+    public static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
-    
-    private static final Image WORKFLOW_SET 
+    /** Icon represneting a workflow group in the resource navigator. */
+    public static final Image WORKFLOW_GROUP 
         = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID, 
                 "icons/wf_set.png").createImage(); 
         
@@ -100,6 +106,11 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /** Path representation of the meta info file. */
     public static final Path METAINFO_FILE = new Path(
             MetaInfoFile.METAINFO_FILE);
+
+    /** Path representation of the node settings file. */
+    public static final Path NODE_FILE = new Path(
+            SingleNodeContainerPersistorVersion200.SETTINGS_FILE_NAME);
+    
     /**
      * Returns a workbench label provider that is hooked up to the decorator
      * mechanism.
@@ -239,13 +250,13 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                 projectNode = ProjectWorkflowMap.getWorkflow(
                         container.getFullPath());
                 if (projectNode == null && !isMetaNode(container)) {
-                    return CLOSED;
+                    return CLOSED_WORKFLOW;
                 }
             }
             if (isMetaNode(container)) {
                 return NODE;
             } else if (container.exists(METAINFO_FILE)) {
-                return WORKFLOW_SET;
+                return WORKFLOW_GROUP;
             }
         } else if (element instanceof NodeContainer) {
                 projectNode = (NodeContainer)element;
