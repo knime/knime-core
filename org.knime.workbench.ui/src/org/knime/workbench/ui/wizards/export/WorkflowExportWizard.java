@@ -29,17 +29,15 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
@@ -55,14 +53,18 @@ import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
- * This wizard is intended to export a knime workflow project.
+ * This wizard exports KNIME workflows and workflow groups if workflows are 
+ * selected which are in different workflow groups. 
  *
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
-public class WorkflowExportWizard extends ExportWizard implements IExportWizard {
+public class WorkflowExportWizard extends ExportWizard 
+    implements IExportWizard {
 
 //    private static final NodeLogger LOGGER =
 //            NodeLogger.getLogger(WorkflowExportWizard.class);
@@ -71,6 +73,15 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
     private ISelection m_selection;
 
+    private final Collection<IContainer>m_workflowsToExport 
+        = new ArrayList<IContainer>();
+    
+    private boolean m_excludeData;
+    
+    private IContainer m_container;
+    
+    private String m_fileName;
+    
     /**
      * Constructor.
      */
@@ -88,6 +99,15 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         m_page = new WorkflowExportPage(m_selection);
         addPage(m_page);
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canFinish() {
+        return m_page.isPageComplete();
+    }
 
     /**
      * This method is called when 'Finish' button is pressed in the wizard. We
@@ -103,14 +123,19 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         if (canceled) {
             return false;
         }
-        final String containerName = m_page.getContainerName();
-        final String fileName = m_page.getFileName().trim();
-        final boolean excludeData = m_page.excludeData();
-
+        
+        m_page.saveDialogSettings();
+        
+        m_container = m_page.getSelectedContainer();
+        m_fileName = m_page.getFileName().trim();
+        m_excludeData = m_page.excludeData();
+        m_workflowsToExport.clear();
+        m_workflowsToExport.addAll(m_page.getWorkflows());
+        
         // if the specified export file already exist ask the user
         // for confirmation
 
-        final File exportFile = new File(fileName);
+        final File exportFile = new File(m_fileName);
 
         if (exportFile.exists()) {
             // if it exists we have to check if we can write to:
@@ -119,13 +144,11 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                 m_page.setErrorMessage("Cannot write to specified file");
                 return false;
             }
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-            mb.setText("File already exists...");
-            mb.setMessage("File already exists.\nDo you want to "
-                    + "overwrite the specified file ?");
-            if (mb.open() != SWT.YES) {
+            boolean overwrite = MessageDialog.openQuestion(getShell(), 
+                    "File already exists...", 
+                    "File already exists.\nDo you want to overwrite the " 
+                    + "specified file ?");
+            if (!overwrite) {
                 return false;
             }
         } else {
@@ -161,7 +184,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             public void run(final IProgressMonitor monitor)
                     throws InvocationTargetException {
                 try {
-                    doFinish(containerName, exportFile, monitor, excludeData);
+                    doFinish(m_container, exportFile, monitor);
                 } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
@@ -178,7 +201,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             String message = realException.getMessage();
 
             message = "Problem during export: " + e.getMessage();
-
+            e.printStackTrace();
             MessageDialog.openError(getShell(), "Error", message);
             return false;
         }
@@ -211,11 +234,12 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         // exclusion list for workflows in format of 2.x
         switch (resource.getType()) {
             case IResource.FOLDER:
-                if (name.startsWith(NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
+                if (name.startsWith(
+                        NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
                     return true;
                 }
-                if (name
-                        .startsWith(NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
+                if (name.startsWith(
+                        NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
                     return true;
                 }
                 if (name.startsWith(NodePersistor.INTERN_FILE_DIR)) {
@@ -234,19 +258,96 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         return name.toLowerCase().endsWith(".zip");
     }
 
-    private void addNonExcludingFiles(final List resouceList,
-            final IResource resource) {
 
+    /**
+     * The worker method. It will find the container, create the export file if
+     * missing or just replace its contents.
+     */
+    private void doFinish(final IContainer container, final File fileName,
+            final IProgressMonitor monitor)
+            throws CoreException {
+        // start zipping
+        monitor.beginTask("Collect resources... ", 3);
+        container.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+
+        // if the data should be excluded from the export
+        // iterate over the resources and add only the wanted stuff
+        // i.e. the "intern" folder and "*.zip" files are excluded
+        final List<IResource> resourceList = new ArrayList<IResource>();
+        // also add .project or .metainfo files to export
+        addResourcesFor(resourceList, container, m_excludeData);
+        for (IContainer child : m_workflowsToExport) {            
+            addResourcesFor(resourceList, child, m_excludeData);
+        }
+        monitor.worked(1);
+        try {
+            ArchiveFileExportOperation exportOperation = null;
+            // find lead offset
+            final int leadOffset = findLeadOffset();
+            if (leadOffset >= 0) {
+                // if we have a workflow selected which is inside a workflow
+                // group we want to export only the workflow, i.e. strip the 
+                // preceeding workflow groups from path:
+                // this is done with the offset
+                exportOperation = new OffsetArchiveFileExportOperation(
+                                container, resourceList, fileName.getPath());
+                ((OffsetArchiveFileExportOperation)exportOperation).setOffset(
+                        leadOffset);
+            } else {
+                exportOperation = new ArchiveFileExportOperation(
+                        container, resourceList, fileName.getPath()); 
+            }
+            monitor.beginTask("Write to file... " + fileName, 3);
+            exportOperation.run(monitor);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_WARNING | SWT.OK);
+            mb.setText("Export could not be completed...");
+            mb.setMessage("KNIME project could not be exported.\n Reason: "
+                    + t.getMessage());
+        }
+        monitor.worked(1);
+
+    }
+    
+    private int findLeadOffset() {
+        // go up until root is reached
+        int offset = 0;
+        IContainer p = m_container;
+        if (ResourcesPlugin.getWorkspace().getRoot().equals(
+                m_container.getParent())) {
+            // nothing to strip -> use common export operation
+            return -1;
+        }
+        while (p != null && !p.equals(ResourcesPlugin.getWorkspace()
+                .getRoot())) {
+            offset++;
+            p = p.getParent();
+        }
+        return offset;
+    }
+    
+    private void addResourcesFor(final List<IResource> resourceList, 
+            final IResource resource, final boolean excludeData) {
         // if this resource must be excluded do not add to resource list and
         // return
-        if (excludeResource(resource)) {
+        if (excludeData && excludeResource(resource)) {
             return;
         }
-
         // if this is a file add it to the list
-        if (resource.getType() == IResource.FILE) {
-            resouceList.add(resource);
+        if (resource instanceof IFile) {
+            resourceList.add(resource);
             return;
+        }
+        
+        if (KnimeResourceUtil.isWorkflow(resource) 
+                || KnimeResourceUtil.isWorkflowGroup(resource)) {
+            if (!m_workflowsToExport.contains(resource)) {
+                // abort recursion
+                return;
+            }
         }
 
         IResource[] resources;
@@ -258,109 +359,26 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         }
         // else vistit all child resources
         for (IResource currentResource : resources) {
-            addNonExcludingFiles(resouceList, currentResource);
+            addResourcesFor(resourceList, currentResource, excludeData);
         }
     }
-
-    /**
-     * The worker method. It will find the container, create the export file if
-     * missing or just replace its contents.
-     */
-    private void doFinish(final String containerName, final File fileName,
-            final IProgressMonitor monitor, final boolean excludeData)
-            throws CoreException {
-
-        // start zipping
-        monitor.beginTask("Collect resources... ", 3);
-
-        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        IResource resource = root.findMember(new Path(containerName));
-        if (!resource.exists() || !(resource instanceof IContainer)) {
-            throwCoreException("Container \"" + containerName
-                    + "\" does not exist.");
-        }
-
-        IContainer container = (IContainer)resource;
-        container.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-
-        // if the data should be excluded from the export
-        // iterate over the resources and add only the wanted stuff
-        // i.e. the "intern" folder and "*.zip" files are excluded
-        List resourceList = new ArrayList();
-        if (excludeData) {
-            addNonExcludingFiles(resourceList, container);
-        } else {
-            resourceList.add(container);
-        }
-
-        monitor.worked(1);
-
-        ArchiveFileExportOperation exportOperation =
-                new ArchiveFileExportOperation(resourceList, fileName.getPath());
-
-        monitor.beginTask("Write to file... " + fileName, 3);
-
-        try {
-            exportOperation.run(monitor);
-        } catch (Throwable t) {
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Export could not be completed...");
-            mb.setMessage("KNIME project could not be exported.\n Reason: "
-                    + t.getMessage());
-        }
-
-        // final IFile file = container.getFile(new Path(fileName));
-        // try {
-        // InputStream stream = openContentStream();
-        // if (file.exists()) {
-        // file.setContents(stream, true, true, monitor);
-        // } else {
-        // file.create(stream, true, monitor);
-        // }
-        // stream.close();
-        // } catch (IOException e) {
-        // WorkbenchErrorLogger.error("Can't create file", e);
-        //
-        // }
-
-        // getShell().getDisplay().asyncExec(new Runnable() {
-        // public void run() {
-        // IWorkbenchPage page = PlatformUI.getWorkbench()
-        // .getActiveWorkbenchWindow().getActivePage();
-        // try {
-        // IDE.openEditor(page, file, true);
-        // } catch (PartInitException e) {
-        // WorkbenchErrorLogger.error("Can't open file", e);
-        // }
-        // }
-        // });
-        monitor.worked(1);
-
-    }
+    
 
     /**
      * We will initialize file contents with a sample text.
+     * @return an empty content stream
      */
     InputStream openContentStream() {
         String contents = "";
         return new ByteArrayInputStream(contents.getBytes());
     }
 
-    private void throwCoreException(final String message) throws CoreException {
-        IStatus status =
-                new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,
-                        message, null);
-        throw new CoreException(status);
-    }
 
     /**
      * We will accept the selection in the workbench to see if we can initialize
      * from it.
      *
-     * @see org.eclipse.ui.IWorkbenchWizard# init(org.eclipse.ui.IWorkbench,
-     *      org.eclipse.jface.viewers.IStructuredSelection)
+     * {@inheritDoc}
      */
     @Override
     public void init(final IWorkbench workbench,
