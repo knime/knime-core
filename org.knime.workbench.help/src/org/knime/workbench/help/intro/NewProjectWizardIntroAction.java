@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.intro.IIntroManager;
@@ -70,7 +71,8 @@ public class NewProjectWizardIntroAction implements IIntroAction {
                                 InterruptedException {
                             try {
                                 // call static method on NewProjectWizard
-                                NewProjectWizard.doFinish("KNIME_project",
+                                NewProjectWizard.doFinish(
+                                        new Path("KNIME_project"),
                                         monitor);
                             } catch (CoreException ce) {
                                 throw new RuntimeException(ce);
