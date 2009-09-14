@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -35,6 +36,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
@@ -49,13 +51,15 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ContainerGenerator;
 import org.eclipse.ui.ide.IDE;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
+import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
- * Wizard for the creation of a new modeller project. TODO FIXME not yet
- * implemented
+ * Wizard for the creation of a new workflow.
  *
  * @author Florian Georg, University of Konstanz
  * @author Fabian Dill, KNIME.com GmbH
@@ -64,6 +68,8 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     private NewProjectWizardPage m_page;
 
+    private IStructuredSelection m_initialSelection;
+    
     /**
      * Creates the wizard.
      */
@@ -75,9 +81,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void init(final IWorkbench workbench,
             final IStructuredSelection selection) {
-
+        m_initialSelection = selection;
     }
 
     /**
@@ -85,7 +92,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      */
     @Override
     public void addPages() {
-        m_page = new NewProjectWizardPage();
+        m_page = new NewProjectWizardPage(m_initialSelection, true);
         addPage(m_page);
     }
 
@@ -96,7 +103,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      */
     @Override
     public boolean performFinish() {
-        final String projectName = m_page.getProjectName();
+        final IPath workflowPath = m_page.getWorkflowPath();
         // final boolean addDataset = m_page.getAddDataset();
 
         // Create new runnable
@@ -105,7 +112,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     throws InvocationTargetException {
                 try {
                     // call the worker method
-                    doFinish(projectName, monitor);
+                    doFinish(workflowPath, monitor);
                 } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
@@ -113,9 +120,11 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 }
             }
         };
-
         try {
             getContainer().run(true, false, op);
+            IResource r = ResourcesPlugin.getWorkspace().getRoot().findMember(
+                    workflowPath);
+            KnimeResourceUtil.revealInNavigator(r);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
@@ -136,47 +145,49 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     /**
      * Worker method, creates the project using the given options.
      *
-     * @param projectName Name of the project to create in workspace
+     * @param workflowPath path of the workflow to create in workspace
      * @param monitor Progress monitor
      * @throws CoreException if error while creating the project
      */
-    public static void doFinish(final String projectName,
+    public static void doFinish(final IPath workflowPath,
             final IProgressMonitor monitor) throws CoreException {
 
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-
-        //
-        // 1. Create the project, throw exception if it exists already
-        //
-        IResource resource = root.findMember(new Path(projectName.trim()));
+        IResource resource = root.findMember(workflowPath);
         if (resource != null) {
-            throwCoreException("Project \"" + projectName.trim()
+            throwCoreException("Resource \"" + workflowPath.toString()
                     + "\" does already exist.", null);
         }
-        // Create project description, set the nature IDs and build-commands
-        IProject project = root.getProject(projectName.trim());
-        
-        // actually create the project in workspace
-        project.create(monitor);
-        // open the project
-        project.open(monitor);
-
-        try {
-            IProjectDescription description = project.getDescription();
-            description.setName(projectName.trim());
-            description.setNatureIds(new String[]{KNIMEProjectNature.ID});
-            project.setDescription(description, monitor);
-        } catch (CoreException ce) {
-            throwCoreException("Error while creating project description for " 
-                    + project.getName(), ce);
+        ContainerGenerator generator = new ContainerGenerator(workflowPath);
+        IContainer containerResult = generator.generateContainer(monitor);
+        if (containerResult instanceof IProject) {
+            IProject project = (IProject)containerResult;
+            // open the project
+            project.open(monitor);
+            // Create project description, set the nature IDs and build-commands
+            try {
+                IProjectDescription description = project.getDescription();
+                description.setName(workflowPath.toString());
+                String natureId = KNIMEProjectNature.ID;
+                if (workflowPath.segmentCount() > 1) {
+                    natureId = KNIMEWorkflowSetProjectNature.ID;
+                }
+                description.setNatureIds(new String[]{
+                        natureId});
+                project.setDescription(description, monitor);
+            } catch (CoreException ce) {
+                throwCoreException(
+                        "Error while creating project description for " 
+                        + project.getName(), ce);
+            }
         }
 
         //
         // 2. Create the optional files, if wanted
         //
         final IFile defaultFile =
-                project.getFile(WorkflowPersistor.WORKFLOW_FILE);
-
+                containerResult.getFile(
+                        new Path(WorkflowPersistor.WORKFLOW_FILE));
         InputStream is = new ByteArrayInputStream("".getBytes());
         defaultFile.create(is, true, monitor);
 
