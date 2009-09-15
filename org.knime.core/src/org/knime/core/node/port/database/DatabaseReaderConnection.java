@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
@@ -120,9 +121,10 @@ public final class DatabaseReaderConnection {
                 String pQuery = "SELECT * FROM (" + m_conn.getQuery() 
                     + ") table_" + hashAlias + " WHERE 1 = 0";
                 ResultSet result = null;
+                final Connection conn = m_conn.createConnection();
                 try {
                     // try to see if prepared statements are supported
-                    m_stmt = m_conn.createConnection().prepareStatement(pQuery);
+                    m_stmt = conn.prepareStatement(pQuery);
                     ((PreparedStatement) m_stmt).execute();
                     m_spec = createTableSpec(
                             ((PreparedStatement) m_stmt).getMetaData());
@@ -130,7 +132,7 @@ public final class DatabaseReaderConnection {
                     LOGGER.warn("PreparedStatment not support by database: "
                             + e.getMessage(), e);
                     // otherwise use standard statement
-                    m_stmt = m_conn.createConnection().createStatement();
+                    m_stmt = conn.createStatement();
                     result = m_stmt.executeQuery(pQuery);
                     m_spec = createTableSpec(result.getMetaData());
                 } finally {
@@ -139,7 +141,7 @@ public final class DatabaseReaderConnection {
                     }
                     // ensure we have a non-prepared statement to access data
                     if (m_stmt != null && m_stmt instanceof PreparedStatement) {
-                        m_stmt = m_conn.createConnection().createStatement();   
+                        m_stmt = conn.createStatement();   
                     }
                 }
             } catch (SQLException sql) {
@@ -233,6 +235,9 @@ public final class DatabaseReaderConnection {
     private DataTableSpec createTableSpec(final ResultSetMetaData meta)
             throws SQLException {
         int cols = meta.getColumnCount();
+        if (cols == 0) {
+        	return new DataTableSpec("database");
+        }
         DataTableSpec spec = null;
         for (int i = 0; i < cols; i++) {
             int dbIdx = i + 1;
