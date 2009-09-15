@@ -102,8 +102,11 @@ public class ThreadPool {
          */
         @Override
         public boolean cancel(final boolean mayInterruptIfRunning) {
-            m_startWaiter.countDown();
-            return super.cancel(mayInterruptIfRunning);
+            boolean b = super.cancel(mayInterruptIfRunning);
+            if (b) {
+                m_startWaiter.countDown();
+            }
+            return b;
         }
 
         /**
