@@ -2322,8 +2322,8 @@ public final class WorkflowManager extends NodeContainer {
      * @param nc node to be canceled
      */
     public void cancelExecution(final NodeContainer nc) {
-        disableNodeForExecution(nc.getID());
         synchronized (m_workflowMutex) {
+            disableNodeForExecution(nc.getID());
             if (nc.getState().executionInProgress()) {
                 nc.cancelExecution();
             }
