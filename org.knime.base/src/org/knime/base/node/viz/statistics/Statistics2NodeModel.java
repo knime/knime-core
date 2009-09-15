@@ -52,7 +52,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * The StatisticsNodeModel creates a new StatisticTable based on the input data
  * table.
  * 
- * @author Nicolas Cebron, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class Statistics2NodeModel extends NodeModel {
     
@@ -71,7 +71,7 @@ public class Statistics2NodeModel extends NodeModel {
         Statistics2NodeDialogPane.createNominalValuesModelOutput();
     
     private final SettingsModelFilterString m_nominalFilter =
-    	Statistics2NodeDialogPane.createNominalFilterModel();
+        Statistics2NodeDialogPane.createNominalFilterModel();
     
     /** One input and one output. */
     Statistics2NodeModel() {
@@ -106,6 +106,9 @@ public class Statistics2NodeModel extends NodeModel {
                 inData[0], m_computeMedian.getBooleanValue(), 
                 numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(), 
                 exec);
+        if (m_statTable.getWarning() != null) {
+        	super.setWarningMessage(m_statTable.getWarning());
+        }
         BufferedDataTable outTable1 = exec.createBufferedDataTable(
                 m_statTable.createStatisticMomentsTable(), 
                 exec.createSubProgress(0.5));
@@ -215,7 +218,7 @@ public class Statistics2NodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected HiLiteHandler getOutHiLiteHandler(int outIndex) {
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
         return m_hilite;
     }
 

@@ -55,7 +55,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MutableInteger;
@@ -96,8 +95,8 @@ public class Statistics2Table {
     /** Column name from the original data table spec. */
     private final DataTableSpec m_spec;
     
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(Statistics2Table.class);
+    /** If not null, a warning has been created during construction. */
+    private final String m_warning;
 
     /**
      * Create new statistic table from an existing one. This constructor
@@ -142,6 +141,9 @@ public class Statistics2Table {
             sumsquare[i] = 0.0;
             validCount[i] = 0;
         }
+        
+        // used to store warnings
+        final StringBuilder warn = new StringBuilder();
         
         // temp map used to sort later based in occurrences
         Map<DataCell, MutableInteger>[] nominalValues = 
@@ -207,15 +209,27 @@ public class Statistics2Table {
                         cnt.inc();
                     }
                     if (nominalValues[colIdx].size() == numNomValuesOutput) {
-                        LOGGER.warn("Maximum number of unique nominal "
-                            + "values exeeds " + numNomValuesOutput 
-                            + " for column \"" 
-                            + m_spec.getColumnSpec(colIdx).getName() + "\".");
+                    	if (warn.length() == 0) {
+                    		warn.append("Maximum number of unique possible "
+                    				+ "values (" + numNomValuesOutput 
+                    				+ ") exceeds for column(s): ");
+                    	} else {
+                    		warn.append(",");
+                    	}
+                        warn.append("\"" + 
+                        		m_spec.getColumnSpec(colIdx).getName() + "\"");
                         nominalValues[colIdx].clear();
                     }
                     colIdx++;
                 }
             }
+        }
+        
+        // init warning message
+        if (warn.length() > 0) {
+        	m_warning = warn.toString();
+        } else {
+        	m_warning = null;
         }
 
         for (int j = 0; j < nrCols; j++) {
@@ -682,7 +696,17 @@ public class Statistics2Table {
         m_sum = sum;
         m_missingValueCnt = missings;
         m_nominalValues = nomValues;
-    }                              
+        m_warning = null;
+    }
+    
+    /**
+     * Returns warning message if number of possible values exceeds predefined 
+     * maximum.
+     * @return null or a warning issued during construction time
+     */
+    public String getWarning() {
+    	return m_warning;
+    }
     
     /**
      * Load a new statistic table by the given settings object.
