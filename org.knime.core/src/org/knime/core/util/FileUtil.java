@@ -34,11 +34,14 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import javax.swing.JFileChooser;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -117,23 +120,23 @@ public final class FileUtil {
         CanceledExecutionException cee = null;
         exec.setMessage("Copying \"" + file.getName() + "\"");
         try {
-	        while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
-	            copyOutStream.write(cache, 0, read);
-	            processed += read;
-	            exec.setProgress(processed / (double)size);
-	            try {
-	                exec.checkCanceled();
-	            } catch (CanceledExecutionException c) {
-	                cee = c;
-	                break;
-	            }
-	        }
+            while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
+                copyOutStream.write(cache, 0, read);
+                processed += read;
+                exec.setProgress(processed / (double)size);
+                try {
+                    exec.checkCanceled();
+                } catch (CanceledExecutionException c) {
+                    cee = c;
+                    break;
+                }
+            }
         } finally {
-        	try {
-        		copyOutStream.close();
-        	} finally {
-        		copyInStream.close();
-        	}
+            try {
+                copyOutStream.close();
+            } finally {
+                copyInStream.close();
+            }
         }
         // delete destination file if canceled.
         if (cee != null) {
@@ -144,42 +147,42 @@ public final class FileUtil {
             throw cee;
         }
     } // copy(File, File, ExecutionMonitor)
-    
+
     /**
-     * Copies the given source (either a file or a directory) into the given 
+     * Copies the given source (either a file or a directory) into the given
      * source. If the source file or directory exist, it will be removed first.
      * File permissions are not handled explicitly.
+     *
      * @param sourceDir contains all source file and directories to be copied
      * @param targetDir target file (created or replaced) with the given source
-     *        file structure
+     *            file structure
      * @throws IOException if the source does not exist or the source could not
-     *         be copied due to file permissions
+     *             be copied due to file permissions
      */
-	public static void copyDir(final File sourceDir, final File targetDir)
-			throws IOException {
-		if (!sourceDir.exists()) {
-			throw new IOException("Source directory \"" + sourceDir 
-					+ "\" does not exist.");
-		}
-		if (sourceDir.isDirectory()) {
-			if (!targetDir.exists()) {
-				targetDir.mkdirs();
-			}
-			if (sourceDir.list() == null) {
-				throw new IOException("Can't copy directory \"" 
-						+ sourceDir + "\", no read permissions.");
-			}	
-			for (String child : sourceDir.list()) {
-				copyDir(
-					new File(sourceDir, child), new File(targetDir, child));
-			}
-		} else {
-			if (targetDir.isDirectory()) {
-				FileUtil.deleteRecursively(targetDir);
-			}
-			copy(sourceDir, targetDir);
-		}
-	}
+    public static void copyDir(final File sourceDir, final File targetDir)
+            throws IOException {
+        if (!sourceDir.exists()) {
+            throw new IOException("Source directory \"" + sourceDir
+                    + "\" does not exist.");
+        }
+        if (sourceDir.isDirectory()) {
+            if (!targetDir.exists()) {
+                targetDir.mkdirs();
+            }
+            if (sourceDir.list() == null) {
+                throw new IOException("Can't copy directory \"" + sourceDir
+                        + "\", no read permissions.");
+            }
+            for (String child : sourceDir.list()) {
+                copyDir(new File(sourceDir, child), new File(targetDir, child));
+            }
+        } else {
+            if (targetDir.isDirectory()) {
+                FileUtil.deleteRecursively(targetDir);
+            }
+            copy(sourceDir, targetDir);
+        }
+    }
 
     /**
      * Copies the bytes as read from <code>input</code> to the output stream
@@ -296,23 +299,61 @@ public final class FileUtil {
         return dir.delete();
     } // deleteRecursively(File)
 
+
+    // size of read buffer when reading/writing from/to a zip stream
+    private static final int BUFF_SIZE = 16384;
+
     /**
      * Recursively packs all the the files and directories beneath the
-     * <code>rootDir</code> into a zip file. The zip file will contain the
-     * root directory as the only entry in its root.
+     * <code>rootDir</code> into a zip file. The zip file contains the root
+     * directory as the only entry in its root.
      *
-     * @param zipFile the zip file that should be created
-     * @param rootDir the root directory
+     * @param zipFile the zip file that should be created. If it exists it will
+     *            be overwritten.
+     * @param rootDir the directory to pack.
+     * @param addRootFiles a list of files that is added to the archive (in
+     *            addition to the content of the <code>rootDir</code>). The
+     *            files are placed in the rootDir - i.e. if the archive is
+     *            unzipped, the files are located in the root dir, named with
+     *            their original (simple) name. Optional, can be null.
      * @param compressionLevel the desired compression level, see
      *            {@link ZipOutputStream#setLevel(int)}
+     * @param filter each file (and dir) contained in the rootDir is only
+     *            included in the zip archive if it is accepted by the filter.
+     *            The rootDir is always included. Files from the
+     *            <code>addRootFiles</code> list are also not filtered. Must not
+     *            be null.
+     * @param exec receives progress messages and is checked for cancel
+     *            requests. Optional, can be null.
+     *
+     * @return <code>true</code> if all files and dirs are included,
+     *         <code>false</code> if an error occurs reading a file, if a
+     *         directory is unreadable, or a file in the
+     *         <code>addRootFiles</code> list is a directory, not readable or
+     *         doesn't exist.
+     * @throws CanceledExecutionException if the operation was canceled through
+     *             the <code>exec</code>
      * @throws IOException if an I/O error occurs
      */
-    public static void zipDir(final File zipFile, final File rootDir,
-            final int compressionLevel) throws IOException {
+    public static boolean zipDir(final File zipFile, final File rootDir,
+            final Collection<File> addRootFiles, final int compressionLevel,
+            final ZipFileFilter filter, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+
         if (!rootDir.isDirectory()) {
             throw new IllegalArgumentException("The given root directory '"
                     + rootDir.getAbsolutePath() + "' is not a directory.");
         }
+        ExecutionMonitor execMon = exec;
+        if (execMon == null) {
+            execMon = new ExecutionMonitor();
+        }
+
+        // the read buffer, re-used for each file
+        final byte[] buff = new byte[BUFF_SIZE];
+
+        // false if unable to look into a sub dir or an I/O error occurs
+        boolean complete = true;
 
         ZipOutputStream zout =
                 new ZipOutputStream(new BufferedOutputStream(
@@ -320,33 +361,54 @@ public final class FileUtil {
         zout.setLevel(compressionLevel);
 
         Stack<File> dirs = new Stack<File>();
-        dirs.push(rootDir);
-        zout.putNextEntry(new ZipEntry(rootDir.getName() + "/"));
+
+        String rootName = rootDir.getName();
+        zout.putNextEntry(new ZipEntry(rootName + "/"));
         zout.closeEntry();
 
-        byte[] buf = new byte[4096];
+        // after creating the root entry - add the additional files
+        if (addRootFiles != null && addRootFiles.size() > 0) {
+            for (File rf : addRootFiles) {
+                if (!rf.isFile()) {
+                    complete = false;
+                    continue;
+                }
+                String entryName = rootName + "/" + rf.getName();
+                complete &= addZipEntry(buff, zout, rf, entryName, execMon);
+            }
+        }
+
+        // now, traverse the root dir
+        dirs.push(rootDir);
+
+        int rootEndIdx = rootDir.getAbsolutePath().length() + 1;
         while (!dirs.isEmpty()) {
+
             File d = dirs.pop();
-            for (File f : d.listFiles()) {
-                final String name =
-                        rootDir.getName()
-                                + "/"
-                                + f.getCanonicalPath()
-                                        .substring(
-                                                rootDir.getCanonicalPath()
-                                                        .length() + 1);
+            File[] ls = d.listFiles();
+            if (ls == null) {
+                // the dir was not accessible
+                complete = false;
+                continue;
+            }
+            for (File f : ls) {
+
+                if (!filter.include(f)) {
+                    continue;
+                }
+
+                String fName =
+                        f.getAbsolutePath().substring(rootEndIdx).replace('\\',
+                                '/');
+                String entryName = rootName + "/" + fName;
 
                 if (f.isFile()) {
-                    InputStream in = new FileInputStream(f);
-                    zout.putNextEntry(new ZipEntry(name));
-                    int read;
-                    while ((read = in.read(buf)) >= 0) {
-                        zout.write(buf, 0, read);
-                    }
-                    zout.closeEntry();
-                    in.close();
+
+                    complete &= addZipEntry(buff, zout, f, entryName, execMon);
+
                 } else if (f.isDirectory()) {
-                    zout.putNextEntry(new ZipEntry(name + "/"));
+
+                    zout.putNextEntry(new ZipEntry(entryName + "/"));
                     zout.closeEntry();
                     dirs.push(f);
                 }
@@ -354,6 +416,117 @@ public final class FileUtil {
         }
 
         zout.close();
+        return complete;
+    }
+
+    private static boolean addZipEntry(final byte[] buf, final ZipOutputStream zout,
+            final File f, final String entryName, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        InputStream in = null;
+        try {
+            exec.setProgress("Adding file " + entryName);
+            in = new FileInputStream(f);
+            zout.putNextEntry(new ZipEntry(entryName));
+            int read;
+            while ((read = in.read(buf)) >= 0) {
+                exec.checkCanceled();
+                zout.write(buf, 0, read);
+            }
+        } catch (CanceledExecutionException cee) {
+            throw cee;
+        } catch (Throwable t) {
+            LOGGER.debug("Error while adding file to zip archive ("
+                    + f.getAbsolutePath() + ")", t);
+            return false;
+        } finally {
+            zout.closeEntry();
+            in.close();
+        }
+        return true;
+    }
+
+    /**
+     * Passed to the
+     * {@link FileUtil#zipDir(File, File, Collection, int, ZipFileFilter, ExecutionMonitor)}
+     * method to exclude certain files from being archived and added to the zip
+     * file.
+     *
+     * @author Peter Ohl, KNIME.
+     */
+    public static interface ZipFileFilter {
+        /**
+         * Called with each file in the to-be-zipped directory.
+         *
+         * @param f the to be added to the zip archive.
+         * @return true, if the file should be added to the zip file, false, if
+         *         it should be skipped/excluded.
+         */
+        public boolean include(final File f);
+    }
+
+    /**
+     * Recursively packs all the the files and directories beneath the
+     * <code>rootDir</code> into a zip file. The zip file contains the root
+     * directory as the only entry in its root.
+     *
+     * @param zipFile the zip file that should be created. If it exists it will
+     *            be overwritten.
+     * @param rootDir the directory to pack.
+     * @param compressionLevel the desired compression level, see
+     *            {@link ZipOutputStream#setLevel(int)}
+     *
+     * @return <code>true</code> if all files and dirs are included,
+     *         <code>false</code> if an error occurs reading a file or if a
+     *         directory is unreadable.
+     * @throws IOException if an I/O error occurs
+     */
+    public static boolean zipDir(final File zipFile, final File rootDir,
+            final int compressionLevel) throws IOException {
+        try {
+            return zipDir(zipFile, rootDir, null, compressionLevel,
+                    new ZipFileFilter() {
+                        public boolean include(final File f) {
+                            return true;
+                        }
+                    }, null);
+        } catch (CanceledExecutionException e) {
+            // doesn't happen as we provide no execution monitor
+            return false;
+        }
+    }
+
+    /**
+     * Recursively packs all the the files and directories beneath the
+     * <code>rootDir</code> into a zip file. The zip file contains the root
+     * directory as the only entry in its root.
+     *
+     * @param zipFile the zip file that should be created. If it exists it will
+     *            be overwritten.
+     * @param rootDir the directory to pack.
+     * @param compressionLevel the desired compression level, see
+     *            {@link ZipOutputStream#setLevel(int)}
+     * @param filter each file (and dir) contained in the rootDir is only
+     *            included in the zip archive if it is accepted by the filter.
+     *            The rootDir is always included. Files from the
+     *            <code>addRootFiles</code> list are also not filtered. Must not
+     *            be null.
+     * @param exec receives progress messages and is checked for cancel
+     *            requests. Optional, can be null.
+     *
+     * @return <code>true</code> if all files and dirs are included,
+     *         <code>false</code> if an error occurs reading a file, if a
+     *         directory is unreadable, or a file in the
+     *         <code>addRootFiles</code> list is a directory, not readable or
+     *         doesn't exist.
+     * @throws CanceledExecutionException if the operation was canceled through
+     *             the <code>exec</code>
+     * @throws IOException if an I/O error occurs
+     */
+    public static boolean zipDir(final File zipFile, final File rootDir,
+            final int compressionLevel, final ZipFileFilter filter,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        return zipDir(zipFile, rootDir, null, compressionLevel, filter, exec);
     }
 
     /**
@@ -367,25 +540,50 @@ public final class FileUtil {
     public static void unzip(final File zipFile, final File destDir)
             throws IOException {
         if (!destDir.exists()) {
-            throw new IOException("Destination directory does no exist: "
+            throw new IOException("Destination directory does not exist: "
                     + destDir);
         }
         if (!destDir.isDirectory()) {
             throw new IOException("Destination is not a directory: " + destDir);
         }
         ZipInputStream in = new ZipInputStream(new FileInputStream(zipFile));
+        unzip(in, destDir, 0);
+    }
 
+    /**
+     * Stores the content of the zip stream in the specified directory. If a
+     * strip level larger than zero is specified, it strips off that many path
+     * segments from the zip entries. If the zip stream contains elements with
+     * less path segments, they all end up directly in the specified dir.
+     *
+     * @param zipStream must contain a zip archive. Is unpacked an stored in the
+     *            specified directory.
+     * @param dir the destination directory the content of the zip stream is
+     *            stored in
+     * @param stripLevel the number of path segments (directory levels) striped
+     *            off the file (and dir) names in the zip archive.
+     * @throws IOException if it was not able to store the content
+     */
+    public static void unzip(final ZipInputStream zipStream, final File dir,
+            final int stripLevel) throws IOException {
         ZipEntry e;
-        byte[] buf = new byte[4096];
-        while ((e = in.getNextEntry()) != null) {
+        byte[] buf = new byte[BUFF_SIZE];
+        while ((e = zipStream.getNextEntry()) != null) {
+
+            String name = e.getName();
+            name.replace('\\', '/');
+            name = stripOff(name, stripLevel);
+
             if (e.isDirectory()) {
-                File d = new File(destDir, e.getName());
-                if (!d.mkdirs()) {
-                    throw new IOException("Could not create directory '"
-                            + d.getAbsolutePath() + "'.");
+                if (!name.isEmpty() && !name.equals("/")) {
+                    File d = new File(dir, name);
+                    if (!d.mkdirs()) {
+                        throw new IOException("Could not create directory '"
+                                + d.getAbsolutePath() + "'.");
+                    }
                 }
             } else {
-                File f = new File(destDir, e.getName());
+                File f = new File(dir, name);
                 File parentDir = f.getParentFile();
                 if (!parentDir.exists()) {
                     if (!parentDir.mkdirs()) {
@@ -394,15 +592,38 @@ public final class FileUtil {
                     }
                 }
 
-                FileOutputStream out = new FileOutputStream(f);
+                OutputStream out = new FileOutputStream(f);
                 int read;
-                while ((read = in.read(buf)) >= 0) {
+                while ((read = zipStream.read(buf)) >= 0) {
                     out.write(buf, 0, read);
                 }
                 out.close();
             }
         }
-        in.close();
+        zipStream.close();
+
+    }
+
+    /**
+     * Strip off the path the specified amount of segments. Segment separator
+     * must be a '/'.
+     *
+     * @param path the string from which the first <code>level</code> segments
+     *            are stripped off
+     * @param level the number of segments that are stripped off.
+     * @return the specified <code>path</code> with the first <code>level</code>
+     *         segments (that is directories) stripped off.
+     */
+    private static String stripOff(final String path, final int level) {
+        if (path == null) {
+            return null;
+        }
+        int l = level;
+        if (!path.isEmpty() && path.charAt(0) == '/') {
+            l++;
+        }
+        String[] segm = path.split("/", l + 1);
+        return segm[segm.length - 1];
     }
 
     /**
@@ -460,8 +681,8 @@ public final class FileUtil {
      *            if its value shouldn't be changed
      * @param executable if the executable-bit should be set, or
      *            <code>null</code> if its value shouldn't be changed
-     * @param ownerOnly If <code>true</code>, the read permission applies
-     *            only to the owner's read permission; otherwise, it applies to
+     * @param ownerOnly If <code>true</code>, the read permission applies only
+     *            to the owner's read permission; otherwise, it applies to
      *            everybody. If the underlying file system can not distinguish
      *            the owner's read permission from that of others, then the
      *            permission will apply to everybody, regardless of this value.
@@ -480,7 +701,8 @@ public final class FileUtil {
                 File[] dirList = f.listFiles(); // null if no read permissions
                 if (dirList != null) {
                     for (File entry : dirList) {
-                        b &= chmod(entry, readable, writable, executable,
+                        b &=
+                                chmod(entry, readable, writable, executable,
                                         ownerOnly);
                     }
                 }
@@ -499,11 +721,12 @@ public final class FileUtil {
 
         // in all other cases do the recursion after changing the permissions
         if (executable == null || executable.booleanValue()) {
-        if (f.isDirectory()) {
-                File[] dirList = f.listFiles();  // null if no read permissions
+            if (f.isDirectory()) {
+                File[] dirList = f.listFiles(); // null if no read permissions
                 if (dirList != null) {
                     for (File entry : dirList) {
-                        b &= chmod(entry, readable, writable, executable,
+                        b &=
+                                chmod(entry, readable, writable, executable,
                                         ownerOnly);
                     }
                 }
@@ -511,5 +734,35 @@ public final class FileUtil {
         }
 
         return b;
+    }
+
+    public static void main(final String[] args) {
+
+        JFileChooser fc = new JFileChooser();
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        while (true) {
+            if (fc.showOpenDialog(null) == JFileChooser.CANCEL_OPTION) {
+                return;
+            }
+            File dir = fc.getSelectedFile();
+
+            try {
+                zipDir(new File("C:\\TEMP\\testzip.zip"), dir, null, 0,
+                        new ZipFileFilter() {
+
+                            public boolean include(final File f) {
+                                return true;
+                            }
+                        }, null);
+            } catch (IOException e) {
+                System.err.println("IO Error!");
+                continue;
+            } catch (CanceledExecutionException e) {
+                System.out.println("Canceled.");
+                continue;
+            }
+
+        }
+
     }
 }
