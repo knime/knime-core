@@ -55,7 +55,6 @@ public class SettingsModelLongBounded extends SettingsModelLong {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected SettingsModelLongBounded createClone() {
         return new SettingsModelLongBounded(getConfigName(), 
                 getLongValue(), m_minValue, m_maxValue);

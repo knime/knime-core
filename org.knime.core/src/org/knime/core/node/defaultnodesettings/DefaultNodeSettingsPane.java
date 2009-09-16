@@ -283,7 +283,6 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * @throws NotConfigurableException if the node can currently not be
      *             configured
      */
-    @SuppressWarnings("unused")
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         DataTableSpec[] dtsArray = new DataTableSpec[specs.length];
@@ -326,7 +325,6 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * @param settings the <code>NodeSettings</code> to write into
      * @throws InvalidSettingsException if the user has entered wrong values
      */
-    @SuppressWarnings("unused")
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         assert settings != null;

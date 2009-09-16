@@ -355,7 +355,8 @@ public class DialogComponentButtonGroup extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) {
+    protected void checkConfigurabilityBeforeLoad(
+            final PortObjectSpec[] specs) {
         //nothing to check
     }
 

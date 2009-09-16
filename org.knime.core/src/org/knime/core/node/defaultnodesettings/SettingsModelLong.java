@@ -191,7 +191,7 @@ public class SettingsModelLong extends SettingsModelNumber {
     }
     
     /**
-     * Called during {@link #validateSettingsForModel}, can be overridden by
+     * Called during {@link #validateSettingsForModel}, can be overwritten by
      * derived classes.
      * 
      * @param value the value to validate
@@ -200,9 +200,7 @@ public class SettingsModelLong extends SettingsModelNumber {
      */
     protected void validateValue(final long value)
             throws InvalidSettingsException {
-        if (value != value) {
-            throw new InvalidSettingsException("Value is not equal to itself");
-        }
+        // deriving class needs to check value
     }    
 
 }

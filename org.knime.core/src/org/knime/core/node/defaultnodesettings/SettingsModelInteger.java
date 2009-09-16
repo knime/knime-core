@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   25.09.2006 (ohl): created
  */
@@ -32,7 +32,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class SettingsModelInteger extends SettingsModelNumber
@@ -44,12 +44,12 @@ implements SettingsModelFlowVariableCompatible {
 
     /**
      * Creates a new object holding an integer value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
-    public SettingsModelInteger(final String configName, 
+    public SettingsModelInteger(final String configName,
             final int defaultValue) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
@@ -86,7 +86,7 @@ implements SettingsModelFlowVariableCompatible {
 
     /**
      * set the value stored to the new value.
-     * 
+     *
      * @param newValue the new value to store.
      */
     public void setIntValue(final int newValue) {
@@ -109,7 +109,7 @@ implements SettingsModelFlowVariableCompatible {
     /**
      * Allows to set a new value by passing a string that will be parsed and, if
      * valid, set as new value.
-     * 
+     *
      * @param newValueStr the new value to be set, as string representation
      */
     @Override
@@ -171,18 +171,16 @@ implements SettingsModelFlowVariableCompatible {
     }
 
     /**
-     * Called during {@link #validateSettingsForModel}, can be overriden by
+     * Called during {@link #validateSettingsForModel}, can be overwritten by
      * derived classes.
-     * 
+     *
      * @param value the value to validate
      * @throws InvalidSettingsException if the value is not valid and should be
      *             rejected
      */
     protected void validateValue(final int value)
             throws InvalidSettingsException {
-        if (value != value) {
-            throw new InvalidSettingsException("Value is not equal to itself");
-        }
+        // deriving class needs to check value
     }
 
     /**
@@ -222,7 +220,7 @@ implements SettingsModelFlowVariableCompatible {
     public String getKey() {
         return m_configName;
     }
-    
+
     /**
      * {@inheritDoc}
      */

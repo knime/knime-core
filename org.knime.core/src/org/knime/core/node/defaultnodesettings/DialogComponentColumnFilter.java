@@ -50,12 +50,12 @@ import org.knime.core.node.util.ColumnFilterPanel;
  */
 public class DialogComponentColumnFilter extends DialogComponent {
 
-    /* the index of the port to take the table (spec) from. */
+    /** Index of the port to take the table (spec) from. */
     private final int m_inPortIndex;
 
     private final ColumnFilterPanel m_columnFilter;
 
-    // the table spec that was sent last into the filter component
+    /** Table spec that was sent last into the filter component. */
     private DataTableSpec m_specInFilter;
 
     /**
@@ -89,8 +89,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex,
             final Class<? extends DataValue>... allowedTypes) {
-    	this(model, inPortIndex, 
-    			new ColumnFilterPanel.ValueClassFilter(allowedTypes));
+        this(model, inPortIndex, 
+                new ColumnFilterPanel.ValueClassFilter(allowedTypes));
     }
 
     /**
