@@ -31,6 +31,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -111,7 +112,13 @@ implements ChangeListener, ActionListener {
                     loader.getResource(packagePath + correctedPath));
             this.setText("");
             this.setBorder(new LineBorder(Color.gray, 0));
-            this.setIcon(icon);
+            if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+                this.setIcon(icon);                
+            } else {
+                // if in non expert mode hide icon by make it really small
+                this.setIcon(new ImageIcon(icon.getImage()
+                        .getScaledInstance(1, 1, Image.SCALE_DEFAULT)));
+            }
         } catch (Exception e) {
             this.setText(enabled ? "v!" : "v?");
             return;
