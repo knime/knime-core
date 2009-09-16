@@ -164,10 +164,10 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         fvm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                FlowVariableModel svm =
+                FlowVariableModel fvm =
                     (FlowVariableModel)(evt.getSource());
                 m_nrClustersSpinner.setEnabled(
-                        !svm.isVariableReplacementEnabled());
+                        !fvm.isVariableReplacementEnabled());
             }
         });
         clusterPropPane.add(new FlowVariableModelButton(fvm));
