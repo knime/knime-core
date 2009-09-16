@@ -36,10 +36,10 @@ import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -59,7 +59,7 @@ public class DialogComponentNumber extends DialogComponent {
     private static final int FIELD_MINWIDTH = 2;
 
     private final JSpinner m_spinner;
-    private final FlowVariableModelButton m_svmButton;
+    private final FlowVariableModelButton m_fvmButton;
 
     private final JLabel m_label;
 
@@ -83,14 +83,14 @@ public class DialogComponentNumber extends DialogComponent {
      *            or int)
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
-     * @param svm The variable model (for displaying a little icon next to the 
+     * @param fvm The variable model (for displaying a little icon next to the 
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize,
-            final FlowVariableModel svm) {
+            final FlowVariableModel fvm) {
         this(numberModel, label, stepSize, calcDefaultWidth(numberModel),
-                svm);
+                fvm);
     }
 
     /**
@@ -116,12 +116,12 @@ public class DialogComponentNumber extends DialogComponent {
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
      * @param compWidth the width (number of columns/characters) of the spinner
-     * @param svm The variable model (for displaying a little icon next to the 
+     * @param fvm The variable model (for displaying a little icon next to the 
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize, final int compWidth,
-            final FlowVariableModel svm) {
+            final FlowVariableModel fvm) {
         super(numberModel);
 
         if (compWidth < 1) {
@@ -193,17 +193,17 @@ public class DialogComponentNumber extends DialogComponent {
         getComponentPanel().add(m_spinner);
         
         // add variable editor button if so desired
-        if (svm != null) {
-            svm.addChangeListener(new ChangeListener() {
+        if (fvm != null) {
+            fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    m_spinner.setEnabled(!svm.isVariableReplacementEnabled());
+                    m_spinner.setEnabled(!fvm.isVariableReplacementEnabled());
                 }
             });
-            m_svmButton = new FlowVariableModelButton(svm);
-            getComponentPanel().add(m_svmButton);
+            m_fvmButton = new FlowVariableModelButton(fvm);
+            getComponentPanel().add(m_fvmButton);
         } else {
-            m_svmButton = null;
+            m_fvmButton = null;
         }
 
         // call this method to be in sync with the settings model
@@ -357,12 +357,12 @@ public class DialogComponentNumber extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         boolean spinnerEnabled = enabled;
         // enable the spinner according to the variable model
-        if (m_svmButton != null) {
-            FlowVariableModel svmModel = m_svmButton.getFlowVariableModel();
+        if (m_fvmButton != null) {
+            FlowVariableModel svmModel = m_fvmButton.getFlowVariableModel();
             if (svmModel.isVariableReplacementEnabled()) {
                 spinnerEnabled = false;
             }
-            m_svmButton.setEnabled(enabled);
+            m_fvmButton.setEnabled(enabled);
         }
         m_spinner.setEnabled(spinnerEnabled);
     }

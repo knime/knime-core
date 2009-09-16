@@ -35,10 +35,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -62,7 +62,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     private final JTextField m_valueField;
 
-    private final FlowVariableModelButton m_svmButton;
+    private final FlowVariableModelButton m_fvmButton;
 
     private final JLabel m_label;
 
@@ -84,13 +84,13 @@ public class DialogComponentNumberEdit extends DialogComponent {
      *
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
-     * @param svm A variable model or null. (If not null, a small button 
+     * @param fvm A variable model or null. (If not null, a small button 
      * opening an input dialog is added.)
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
-            final String label, final FlowVariableModel svm) {
+            final String label, final FlowVariableModel fvm) {
         this(numberModel, label, calcDefaultWidth(numberModel
-                .getNumberValueStr()), svm);
+                .getNumberValueStr()), fvm);
     }
 
     /**
@@ -113,12 +113,12 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
      * @param compWidth the width (in columns/characters) of the edit field.
-     * @param svm A variable model or null. (If not null, a small button 
+     * @param fvm A variable model or null. (If not null, a small button 
      * opening an input dialog is added.)
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
             final String label, final int compWidth, 
-            final FlowVariableModel svm) {
+            final FlowVariableModel fvm) {
         super(numberModel);
 
         m_label = new JLabel(label);
@@ -163,18 +163,18 @@ public class DialogComponentNumberEdit extends DialogComponent {
         });
 
         // add variable editor button if so desired
-        if (svm != null) {
-            svm.addChangeListener(new ChangeListener() {
+        if (fvm != null) {
+            fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
                     m_valueField.setEnabled(
-                            !svm.isVariableReplacementEnabled());
+                            !fvm.isVariableReplacementEnabled());
                 }
             });
-            m_svmButton = new FlowVariableModelButton(svm);
-            getComponentPanel().add(m_svmButton);
+            m_fvmButton = new FlowVariableModelButton(fvm);
+            getComponentPanel().add(m_fvmButton);
         } else {
-            m_svmButton = null;
+            m_fvmButton = null;
         }
 
         //call this method to be in sync with the settings model
@@ -267,12 +267,12 @@ public class DialogComponentNumberEdit extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         boolean valueFieldEnabled = enabled;
         // enable the spinner according to the variable model
-        if (m_svmButton != null) {
-            FlowVariableModel svmModel = m_svmButton.getFlowVariableModel();
+        if (m_fvmButton != null) {
+            FlowVariableModel svmModel = m_fvmButton.getFlowVariableModel();
             if (svmModel.isVariableReplacementEnabled()) {
                 valueFieldEnabled = false;
             }
-            m_svmButton.setEnabled(enabled);
+            m_fvmButton.setEnabled(enabled);
         }
         m_valueField.setEnabled(valueFieldEnabled);
     }
