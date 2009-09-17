@@ -1389,6 +1389,7 @@ class Buffer implements KNIMEStreamConstants {
                     m_useBackIntoMemoryIterator = false;
                     m_backIntoMemoryIterator = iterator();
                     m_list = new ArrayList<BlobSupportDataRow>(size());
+                    return new FromListIterator();
                 }
             }
             FromFileIterator f;
