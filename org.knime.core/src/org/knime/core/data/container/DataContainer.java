@@ -473,7 +473,7 @@ public class DataContainer implements RowAppender {
     }
 
     private void checkAsyncWriteThrowable() {
-        Throwable t = m_writeThrowable.getAndSet(null);
+        Throwable t = m_writeThrowable.get();
         if (t != null) {
             StringBuilder error = new StringBuilder();
             if (t.getMessage() != null) {
