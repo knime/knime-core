@@ -99,7 +99,7 @@ public abstract class NodeExecutionJob implements Runnable {
                 final long time = System.currentTimeMillis();
                 m_logger.debug(m_nc.getNameWithID() + " Start execute");
                 status = mainExecute();
-                if (NodeContainerExecutionStatus.SUCCESS.equals(status)) {
+                if (status != null && status.isSuccess()) {
                     String elapsed = StringFormat.formatElapsedTime(
                             System.currentTimeMillis() - time);
                     m_logger.info(m_nc.getNameWithID() 
