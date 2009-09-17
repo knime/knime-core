@@ -59,7 +59,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
@@ -620,9 +619,6 @@ public final class Node implements NodeModelWarningListener {
      */
     public boolean execute(final PortObject[] data,
             final ExecutionContext exec) {
-        // start message and keep start time
-        final long time = System.currentTimeMillis();
-        m_logger.debug("Start execute");
         // reset the message object
         createResetMessageAndNotify();
         // notify state listeners
@@ -744,9 +740,6 @@ public final class Node implements NodeModelWarningListener {
                 m_internalHeldTables = null;
             }
         }
-        String elapsed = StringFormat.formatElapsedTime(
-                System.currentTimeMillis() - time);
-        m_logger.info("End execute (" + elapsed + ")");
         return true;
     } // executeNode(ExecutionMonitor)
 

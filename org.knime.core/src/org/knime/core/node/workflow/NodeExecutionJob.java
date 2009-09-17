@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
@@ -93,7 +94,17 @@ public abstract class NodeExecutionJob implements Runnable {
         }
         try {
             if (status == null) {
+                NodeLogger.getLogger(m_nc.getClass());
+                // start message and keep start time
+                final long time = System.currentTimeMillis();
+                m_logger.debug(m_nc.getNameWithID() + " Start execute");
                 status = mainExecute();
+                if (NodeContainerExecutionStatus.SUCCESS.equals(status)) {
+                    String elapsed = StringFormat.formatElapsedTime(
+                            System.currentTimeMillis() - time);
+                    m_logger.info(m_nc.getNameWithID() 
+                            + " End execute (" + elapsed + ")");
+                }
             }
         } catch (Throwable throwable) {
             status = NodeContainerExecutionStatus.FAILURE;
