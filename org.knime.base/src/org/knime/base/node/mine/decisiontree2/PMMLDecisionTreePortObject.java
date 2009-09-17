@@ -39,6 +39,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitContinuous;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominal;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominalBinary;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
@@ -62,7 +63,6 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     /**
      *
      */
-    @SuppressWarnings("hiding")
     public static final PortType TYPE =
             new PortType(PMMLDecisionTreePortObject.class);
 
@@ -103,6 +103,20 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         }
         atts.addAttribute(null, null, "splitCharacteristic", CDATA,
                 splitCharacteristic);
+
+        PMMLMissingValueStrategy mvStrategy = m_tree.getMVStrategy();
+        if (mvStrategy != null
+                && mvStrategy != PMMLMissingValueStrategy.getDefault()) {
+            atts.addAttribute(null, null, "missingValueStrategy", CDATA,
+                    mvStrategy.toString());
+        }
+        PMMLNoTrueChildStrategy ntcStrategy = m_tree.getNTCStrategy();
+        if (ntcStrategy != null
+                && ntcStrategy != PMMLNoTrueChildStrategy.getDefault()) {
+            atts.addAttribute(null, null, "noTrueChildStrategy", CDATA,
+                    ntcStrategy.toString());
+        }
+
         handler.startElement(null, null, "TreeModel", atts);
 
         PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
@@ -129,6 +143,18 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         if (node instanceof DecisionTreeNodeSplitNominal) {
             return true;
         }
+        if (node instanceof DecisionTreeNodeSplitPMML) {
+            int childCount = node.getChildCount();
+            if (childCount > 2) {
+                return true;
+            } else {
+                boolean first = treeIsMultisplit((DecisionTreeNode)
+                        node.getChildAt(0));
+                boolean second = treeIsMultisplit((DecisionTreeNode)
+                        node.getChildAt(1));
+                return (first || second);
+            }
+        }
         // and we should never reach this point
         assert false;
         return false;
@@ -149,6 +175,14 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
                 .toString());
         atts.addAttribute(null, null, "recordCount", CDATA, ((Double)node
                 .getEntireClassCount()).toString());
+        if (node instanceof DecisionTreeNodeSplitPMML) {
+            int defaultChild =
+                ((DecisionTreeNodeSplitPMML)node).getDefaultChildIndex();
+            if (defaultChild > -1) {
+                atts.addAttribute(null, null, "defaultChild", CDATA,
+                        String.valueOf(defaultChild));
+            }
+        }
         handler.startElement(null, null, "Node", atts);
 
         // adding score and stuff from parent
@@ -191,7 +225,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
             List<Integer> indices = null;
             if (splitNode.getIndex(node) == SplitNominalBinary.LEFT_PARTITION) {
                 indices = splitNode.getLeftChildIndices();
-            } else if (splitNode.getIndex(node) 
+            } else if (splitNode.getIndex(node)
                     == SplitNominalBinary.RIGHT_PARTITION) {
                 indices = splitNode.getRightChildIndices();
             }
@@ -219,6 +253,14 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
                     .getSplitValues()[nodeIndex].toString());
             handler.startElement(null, null, "SimplePredicate", predAtts);
             handler.endElement(null, null, "SimplePredicate");
+        } else if (parent instanceof DecisionTreeNodeSplitPMML) {
+          DecisionTreeNodeSplitPMML splitNode =
+                  (DecisionTreeNodeSplitPMML)parent;
+          int nodeIndex = parent.getIndex(node);
+          // get the PMML predicate of the current node from its parent
+          PMMLPredicate predicate = splitNode.getSplitPred()[nodeIndex];
+          // delegate the writing to the predicate
+          predicate.writePMML(handler);
         } else {
             LOGGER.error("Node Type " + parent.getClass()
                     + " is not supported!");

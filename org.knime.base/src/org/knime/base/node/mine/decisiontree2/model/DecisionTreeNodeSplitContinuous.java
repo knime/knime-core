@@ -45,9 +45,12 @@ import org.w3c.dom.NodeList;
 
 /**
  *
+ * Is replaced by the more general DecisionTreeNodeSplitPMML node.
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
     // private static final NodeLogger LOGGER =
@@ -167,7 +170,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * Determine class counts for a new pattern given as a row of values.
      * Returns a HashMap listing counts for all classes. For the continuous
-     * split we need to analyse the attribute for this split and then ask the
+     * split we need to analyze the attribute for this split and then ask the
      * left resp. right subtree for it's prediction. Whoever calls us was nice
      * enough to already pick out the DataCell used for this split so we do not
      * need to find it. It is also guaranteed that it is not missing and of the
@@ -177,7 +180,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
@@ -198,7 +201,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
@@ -221,7 +224,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row  (between 0.0 and 1.0)
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public void addCoveredColor(final DataCell cell, final DataRow row,
@@ -308,9 +311,9 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * Returns the split threashold of this continous split.
+     * Returns the split threshold of this continuous split.
      *
-     * @return the split threashold of this continous split
+     * @return the split threshold of this continuous split
      */
     public double getThreshold() {
         return m_threshold;

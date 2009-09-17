@@ -45,11 +45,15 @@ import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Node;
 
 /**
+ *
+ * Is replaced by the more general DecisionTreeNodeSplitPMML node.
+ *
  * Represents a nominal split node that splits subsets of values in a binary
  * manner.
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class DecisionTreeNodeSplitNominalBinary extends
         DecisionTreeNodeSplitNominal {
     /** The node logger for this class. */
@@ -136,7 +140,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
         // set the left child (at index 0 - no need to force "left" or "right"
         // index consistency here since the child knows which values to check
         // for. But the partitioning and mapping relies on proper indexing!
-        DecisionTreeNode leftChild = 
+        DecisionTreeNode leftChild =
             children[SplitNominalBinary.LEFT_PARTITION];
         super.setChildNodeIndex(0, leftChild.getOwnIndex());
         addNode(leftChild, 0);
@@ -153,7 +157,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
                     + getNominalValueString(splitValues, splitMappingsLeft));
 
         // set the right child - at index 1, see above.
-        DecisionTreeNode rightChild = 
+        DecisionTreeNode rightChild =
             children[SplitNominalBinary.RIGHT_PARTITION];
         super.setChildNodeIndex(1, rightChild.getOwnIndex());
         addNode(rightChild, 1);

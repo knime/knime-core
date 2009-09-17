@@ -278,7 +278,6 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             }
         }
         if (winner == null) {
-            assert false;
             return DataType.getMissingCell();
         }
         return winner;
@@ -381,7 +380,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             }
         }
     }
-    
+
     /**
      * @return true of the colors of this node were overwritten.
      */
@@ -415,7 +414,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         }
         return overallColorCount;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -484,6 +483,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             predParams.addString("className", "ContinuousSplit");
         } else if (this instanceof DecisionTreeNodeSplitNominal) {
             predParams.addString("className", "NominalSplit");
+        } else if (this instanceof DecisionTreeNodeSplitPMML) {
+            predParams.addString("className", "PMMLPredicateSplit");
         } else {
             LOGGER.error("DecisionTreeNode.saveToPredictorParams() doesn't"
                     + " know this node type: " + this.getClass().getName());
@@ -584,7 +585,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             } else {
                 newNode = new DecisionTreeNodeSplitNominal();
             }
+        } else if (className.equals("PMMLPredicateSplit")) {
+            newNode = new DecisionTreeNodeSplitPMML();
         }
+
         if (newNode == null) {
             throw new InvalidSettingsException("Load DecisionTreeNode failed!"
                     + " Unknown type: " + className);

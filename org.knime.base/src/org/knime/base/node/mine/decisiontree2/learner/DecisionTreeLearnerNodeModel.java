@@ -31,19 +31,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
+import org.knime.base.node.mine.decisiontree2.PMMLOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitContinuous;
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominal;
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominalBinary;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -422,7 +428,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         timer = System.currentTimeMillis();
 
         DecisionTreeNode root = null;
-        root = buildTree(initialTable, exec, 0, splitQualityMeasure, 
+        root = buildTree(initialTable, exec, 0, splitQualityMeasure,
                 parallelProcessing);
 
         LOGGER.info("Tree built in (ms) "
@@ -673,27 +679,68 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             if (split instanceof SplitContinuous) {
                 double splitValue =
                         ((SplitContinuous)split).getBestSplitValue();
-                return new DecisionTreeNodeSplitContinuous(nodeId,
-                        majorityClass, frequencies, split
-                                .getSplitAttributeName(), children, splitValue);
+//                return new DecisionTreeNodeSplitContinuous(nodeId,
+//                        majorityClass, frequencies, split
+//                              .getSplitAttributeName(), children, splitValue);
+                String splitAttribute = split.getSplitAttributeName();
+                PMMLPredicate[] splitPredicates = new PMMLPredicate[] {
+                    new PMMLSimplePredicate(splitAttribute,
+                            PMMLOperator.LESS_OR_EQUAL,
+                            Double.toString(splitValue)),
+                            new PMMLTruePredicate()
+                    };
+                return new DecisionTreeNodeSplitPMML(nodeId, majorityClass,
+                        frequencies, splitAttribute,
+                        splitPredicates, children);
             } else if (split instanceof SplitNominalNormal) {
                 // else the attribute is nominal
                 DataCell[] splitValues =
                         ((SplitNominalNormal)split).getSplitValues();
-                return new DecisionTreeNodeSplitNominal(nodeId, majorityClass,
-                        frequencies, split.getSplitAttributeName(),
-                        splitValues, children);
+//                return new DecisionTreeNodeSplitNominal(nodeId, majorityClass,
+//                        frequencies, split.getSplitAttributeName(),
+//                        splitValues, children);
+                int num = children.length;
+                PMMLPredicate[] splitPredicates = new PMMLPredicate[num];
+                String splitAttribute = split.getSplitAttributeName();
+                for (int j = 0; j < num; j++) {
+                    splitPredicates[j] = new PMMLSimplePredicate(splitAttribute,
+                            PMMLOperator.EQUAL, splitValues[j].toString());
+                }
+                return new DecisionTreeNodeSplitPMML(nodeId, majorityClass,
+                        frequencies, splitAttribute,
+                        splitPredicates, children);
             } else {
                 // binary nominal
                 SplitNominalBinary splitNominalBinary =
                         (SplitNominalBinary)split;
                 DataCell[] splitValues = splitNominalBinary.getSplitValues();
-                return new DecisionTreeNodeSplitNominalBinary(nodeId,
-                        majorityClass, frequencies, split
-                                .getSplitAttributeName(), splitValues,
+//                return new DecisionTreeNodeSplitNominalBinary(nodeId,
+//                        majorityClass, frequencies, split
+//                                .getSplitAttributeName(), splitValues,
+//                        splitNominalBinary.getIntMappingsLeftPartition(),
+//                        splitNominalBinary.getIntMappingsRightPartition(),
+//                        children/* children[0]=left, ..[1] right */);
+                String splitAttribute = split.getSplitAttributeName();
+                int[][] indices = new int[][] {
                         splitNominalBinary.getIntMappingsLeftPartition(),
-                        splitNominalBinary.getIntMappingsRightPartition(),
-                        children/* children[0]=left, ..[1] right */);
+                        splitNominalBinary.getIntMappingsRightPartition()
+                };
+                PMMLPredicate[] splitPredicates = new PMMLPredicate[2];
+                for (int j = 0; j < splitPredicates.length; j++) {
+                    PMMLSimpleSetPredicate pred = null;
+                    pred = new PMMLSimpleSetPredicate(splitAttribute,
+                            PMMLSetOperator.IS_IN);
+                    pred.setArrayType(PMMLArrayType.STRING);
+                    LinkedHashSet<String> values = new LinkedHashSet<String>();
+                    for (int index : indices[j]) {
+                       values.add(splitValues[index].toString());
+                    }
+                    pred.setValues(values);
+                    splitPredicates[j] = pred;
+                }
+                return new DecisionTreeNodeSplitPMML(nodeId, majorityClass,
+                        frequencies, splitAttribute,
+                        splitPredicates, children);
             }
         }
     }

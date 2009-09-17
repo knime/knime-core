@@ -23,14 +23,13 @@
 package org.knime.base.node.mine.decisiontree2;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 
 /**
- *
  * @author albrecht, University of Konstanz
+ * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 class TempTreeNodeContainer {
 
@@ -40,40 +39,35 @@ class TempTreeNodeContainer {
 
     private DataCell m_class;
 
-    private double m_allClassFrequency;
+    private double m_ownClassFrequency;
 
-    private ParentNodeType m_parentType;
+    private double m_allClassFrequency;
 
     private LinkedHashMap<DataCell, Double> m_classCounts;
 
-    private String m_splitAttribute = null;
+    private int m_defaultChild = -1;
 
-    private double m_ownClassFrequency;
-
-    //if parent is continuous split node
-    private Double m_threshold = Double.NaN;
-
-    //if parent is normal nominal split node
-    private String m_splitValue = null;
-
-    //if parent is binary nominal split node
-    private List<String> m_splitValues = null;
+    private PMMLPredicate m_predicate;
 
     /**
      * @param ownIndex index of this node
      * @param majorityClass of this node
      * @param allClassFrequency sum of class frequencies
      * @param level depth of tree for this node
+     * @param defaultChild the index of the default child
      */
-    TempTreeNodeContainer(final int ownIndex,
-            final String majorityClass, final double allClassFrequency,
-            final int level) {
+    TempTreeNodeContainer(final int ownIndex, final String majorityClass,
+            final double allClassFrequency, final int level,
+            final String defaultChild) {
         m_index = ownIndex;
         m_class = new StringCell(majorityClass);
         m_allClassFrequency = allClassFrequency;
         m_level = level;
         m_classCounts = new LinkedHashMap<DataCell, Double>();
-        m_parentType = ParentNodeType.UNKNOWN;
+        m_predicate = null;
+        if (defaultChild != null) {
+            m_defaultChild = Integer.parseInt(defaultChild);
+        }
     }
 
     /**
@@ -88,61 +82,17 @@ class TempTreeNodeContainer {
     }
 
     /**
-     * @param splitAttribute to be added
+     * @param pred the child predicate to be set
      */
-    void addSplitAttribute(final String splitAttribute) {
-        if (m_splitAttribute != null) {
-            return;
-        }
-        m_splitAttribute = splitAttribute;
+    void setPredicate(final PMMLPredicate pred) {
+        m_predicate = pred;
     }
 
     /**
-     * @param value the value to be decided on
-     * @param attrOp operator used for this value (we can hopefully use
-     * this to determine the type of split)
-     * @throws IllegalArgumentException if something doesn't make sense
+     * @return the predicate
      */
-    void addSimplePredicateSplitValue(final String value, final String attrOp) {
-        if ((m_splitValue != null)
-                || (!Double.isNaN(m_threshold))) {
-            // this should never be called more than once!
-            throw new IllegalArgumentException("PMML SimplePredicate "
-                    + " can only appear once (in decision trees): "
-                    + this.toString());
-        }
-        if (attrOp.equals("lessThan")
-                || attrOp.equals("lessOrEqual")
-                || attrOp.equals("greaterThan")
-                || attrOp.equals("greaterOrEqual")) {
-            try {
-                m_threshold = Double.parseDouble(value);
-                m_parentType = ParentNodeType.CONTINUOUS_SPLIT_NODE;
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("PMML operator for "
-                        + "continuous test (" + attrOp + ") not a number: "
-                        + value);
-            }
-        } else if (attrOp.equals("equal")
-                || attrOp.equals("notEqual")) {
-            m_parentType = ParentNodeType.NOMINAL_SPLIT_NODE_NORMAL;
-            m_splitValue = value;
-        } else if (attrOp.equals("isMissing")
-                || attrOp.equals("isNotMissing")) {
-            throw new IllegalArgumentException("PMML missing data operators ("
-                    + attrOp + ") not supported in decision trees.");
-        } else {
-            throw new IllegalArgumentException("PMML operator " + attrOp
-                    + " not supported in decision trees.");
-        }
-    }
-
-    /**
-     * @param values to be added
-     */
-    void addSplitValues(final List<String> values) {
-        m_parentType = ParentNodeType.NOMINAL_SPLIT_NODE_BINARY;
-        m_splitValues = values;
+    public PMMLPredicate getPredicate() {
+        return m_predicate;
     }
 
     /**
@@ -181,10 +131,10 @@ class TempTreeNodeContainer {
     }
 
     /**
-     * @return the type of node to create
+     * @return the defaultChild
      */
-    ParentNodeType getParentNodeType() {
-        return m_parentType;
+    public int getDefaultChild() {
+        return m_defaultChild;
     }
 
     /**
@@ -194,47 +144,10 @@ class TempTreeNodeContainer {
         return m_classCounts;
     }
 
-    /**
-     * @return the split attribute
-     */
-    String getSplitAttribute() {
-        return m_splitAttribute;
-    }
-
-    /**
-     * @return threshold for continuous parent split node
-     */
-    Double getThreshold() {
-        return m_threshold;
-    }
-
-    /**
-     * @return split value for normal nominal parent split node
-     */
-    String getSplitValue() {
-        return m_splitValue;
-    }
-
-    /**
-     * @return split values for binary nominal parent split node
-     */
-    List<String> getSplitValues() {
-        return m_splitValues;
-    }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Class: " + m_class);
-        b.append("; attribute: " + m_splitAttribute);
-        if (m_splitValue != null) {
-            b.append("; split value: " + m_splitValue);
-        } else if (m_splitValues != null) {
-            b.append("; split values: " + m_splitValues);
-        } else if (m_threshold != null) {
-            b.append("; threshold: " + m_threshold);
-        }
-        return b.toString();
+        return "Class: " + m_class + "; predicate: " + m_predicate;
     }
-
 }

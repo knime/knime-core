@@ -26,6 +26,7 @@ package org.knime.base.node.mine.decisiontree2;
  *
  * @author albrecht, University of Konstanz
  */
+@Deprecated
 enum ParentNodeType {
 
     /**

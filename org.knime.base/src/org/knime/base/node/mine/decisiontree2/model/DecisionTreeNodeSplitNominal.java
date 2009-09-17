@@ -43,10 +43,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * Is replaced by the more general DecisionTreeNodeSplitPMML node.
  *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =

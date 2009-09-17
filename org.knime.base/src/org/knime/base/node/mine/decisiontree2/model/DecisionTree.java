@@ -27,6 +27,8 @@ package org.knime.base.node.mine.decisiontree2.model;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 
+import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
+import org.knime.base.node.mine.decisiontree2.PMMLNoTrueChildStrategy;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -50,6 +52,32 @@ public class DecisionTree implements Serializable {
 
     private String m_classifyColumn;
 
+    private PMMLMissingValueStrategy m_missingValueStrategy;
+    private PMMLNoTrueChildStrategy m_noTrueChildStrategy;
+
+    /**
+     * Create DecisionTree based on a root node to which the remainder of the
+     * tree is already attached.
+     *
+     * @param rootNode the node to attach everything to
+     * @param classifyColumn name of attribute to classify with this tree
+     * @param mvStrategy the strategy to to apply in case of missing values
+     * @param ntcStrategy the strategy to apply when no branch is found for a value
+     */
+    public DecisionTree(final DecisionTreeNode rootNode,
+            final String classifyColumn,
+            final PMMLMissingValueStrategy mvStrategy,
+            final PMMLNoTrueChildStrategy ntcStrategy) {
+        this(rootNode, classifyColumn);
+        m_missingValueStrategy = mvStrategy;
+        m_noTrueChildStrategy = ntcStrategy;
+        if (rootNode instanceof DecisionTreeNodeSplit) {
+            DecisionTreeNodeSplit splitNode = (DecisionTreeNodeSplit)rootNode;
+            splitNode.setMVStrategy(m_missingValueStrategy);
+            splitNode.setNTCStrategy(m_noTrueChildStrategy);
+        }
+    }
+
     /**
      * Create DecisionTree based on a root node to which the remainder of the
      * tree is already attached.
@@ -57,10 +85,14 @@ public class DecisionTree implements Serializable {
      * @param rootNode the node to attach everything to
      * @param classifyColumn name of attribute to classify with this tree
      */
-    public DecisionTree(final DecisionTreeNode rootNode, final String classifyColumn) {
+    public DecisionTree(final DecisionTreeNode rootNode,
+            final String classifyColumn) {
         m_rootNode = rootNode;
         m_classifyColumn = classifyColumn;
+        m_missingValueStrategy = PMMLMissingValueStrategy.getDefault();
+        m_noTrueChildStrategy = PMMLNoTrueChildStrategy.getDefault();
     }
+
 
     /**
      * Create Decision Tree based on an ModelContent object.
@@ -134,7 +166,7 @@ public class DecisionTree implements Serializable {
             final DataTableSpec spec) throws Exception {
         return m_rootNode.getClassCounts(row, spec);
     }
-    
+
     /**
      * Clean all color information in the entire tree.
      */
@@ -222,5 +254,19 @@ public class DecisionTree implements Serializable {
      */
     public String getClassifyColumn(){
         return m_classifyColumn;
+    }
+
+    /**
+     * @return the missing value strategy
+     */
+    public PMMLMissingValueStrategy getMVStrategy() {
+        return m_missingValueStrategy;
+    }
+
+    /**
+     * @return the noTrueChildStrategy
+     */
+    public PMMLNoTrueChildStrategy getNTCStrategy() {
+        return m_noTrueChildStrategy;
     }
 }

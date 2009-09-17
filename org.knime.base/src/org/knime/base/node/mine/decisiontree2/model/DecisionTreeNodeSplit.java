@@ -32,6 +32,8 @@ import java.util.Set;
 import javax.swing.tree.TreeNode;
 
 import org.knime.base.data.util.DataCellStringMapper;
+import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
+import org.knime.base.node.mine.decisiontree2.PMMLNoTrueChildStrategy;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -52,13 +54,19 @@ import org.w3c.dom.Node;
 public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(DecisionTreeNodeSplitContinuous.class);
+            NodeLogger.getLogger(DecisionTreeNodeSplit.class);
 
+    /** Returns the name of the field the predicate operates on, an empty String
+    * if it works on multiple attributes, or null if not applicable.
+    * (Can only be empty for compound predicates operating on multiple
+    * attributes. */
     private String m_splitAttr;
 
     private DecisionTreeNode[] m_child;
 
     private int[] m_childIndex;
+    private PMMLMissingValueStrategy m_mvStrategy;
+    private PMMLNoTrueChildStrategy m_ntcStrategy;
 
     /**
      * Empty Constructor visible only within package.
@@ -215,11 +223,11 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * {@inheritDoc}
      */
     @Override
-    public final LinkedHashMap<DataCell, Double> getClassCounts(
+    public LinkedHashMap<DataCell, Double> getClassCounts(
             final DataRow row,
             final DataTableSpec spec) throws Exception {
         assert (spec != null);
-        if (m_splitAttr != null) {
+        if (m_splitAttr != null && !m_splitAttr.isEmpty()) {
             if (spec != m_previousSpec) {
                 m_previousIndex = spec.findColumnIndex(m_splitAttr);
                 if (m_previousIndex == -1) {
@@ -233,36 +241,42 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // if we can not determine the split at this node because
-                // value is missing, we have to combine all class weights
-                // from _all_ branches
-                // initialize result HashMap
-                LinkedHashMap<DataCell, Double> result =
-                        new LinkedHashMap<DataCell, Double>();
-                // check each branch for it's counts and add them up
-                for (DecisionTreeNode nodeIt : m_child) {
-                    LinkedHashMap<DataCell, Double> thisNodeCounts =
-                            nodeIt.getClassCounts();
-                    for (DataCell cellIt : thisNodeCounts.keySet()) {
-                        // if entry for this class already exist, modify
-                        // value, otherwise insert new one
-                        if (result.containsKey(cellIt)) {
-                            double newCount =
-                                    thisNodeCounts.get(cellIt)
-                                            + result.get(cellIt);
-                            result.remove(cellIt);
-                            result.put(cellIt, newCount);
-                        } else {
-                            result.put(cellIt, thisNodeCounts.get(cellIt));
-                        }
-                    }
-                }
-                // return result
-                return result;
+                // we can not determine the split at this node because value is missing
+                return getNodeClassWeights();
             }
             return getClassCounts(cell, row, spec);
         }
         return getClassCounts(null, row, spec);
+    }
+
+    /**
+     * Combines all class weights from _all_ branches of this node.
+     * @return the combined class weights.
+     */
+    protected LinkedHashMap<DataCell, Double> getNodeClassWeights() {
+        // initialize result HashMap
+        LinkedHashMap<DataCell, Double> result =
+                new LinkedHashMap<DataCell, Double>();
+        // check each branch for it's counts and add them up
+        for (DecisionTreeNode nodeIt : m_child) {
+            LinkedHashMap<DataCell, Double> thisNodeCounts =
+                    nodeIt.getClassCounts();
+            for (DataCell cellIt : thisNodeCounts.keySet()) {
+                // if entry for this class already exist, modify
+                // value, otherwise insert new one
+                if (result.containsKey(cellIt)) {
+                    double newCount =
+                            thisNodeCounts.get(cellIt)
+                                    + result.get(cellIt);
+                    result.remove(cellIt);
+                    result.put(cellIt, newCount);
+                } else {
+                    result.put(cellIt, thisNodeCounts.get(cellIt));
+                }
+            }
+        }
+        // return result
+        return result;
     }
 
     /**
@@ -286,7 +300,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     public final void addCoveredPattern(final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
         assert (spec != null);
-        if (m_splitAttr != null) {
+        if (m_splitAttr != null && !m_splitAttr.isEmpty()) {
             if (spec != m_previousSpec) {
                 m_previousIndex = spec.findColumnIndex(m_splitAttr);
                 if (m_previousIndex == -1) {
@@ -340,7 +354,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     public final void addCoveredColor(final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
         assert (spec != null);
-        if (m_splitAttr != null) {
+        if (m_splitAttr != null && !m_splitAttr.isEmpty()) {
             if (spec != m_previousSpec) {
                 m_previousIndex = spec.findColumnIndex(m_splitAttr);
                 if (m_previousIndex == -1) {
@@ -565,5 +579,48 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
         }
 
         return childCounts + 1;
+    }
+
+    /**
+     * @return the missing value strategy
+     */
+    public PMMLMissingValueStrategy getMVStrategy() {
+        return m_mvStrategy;
+    }
+
+    /**
+     * Set the missing value strategy and propagate it to all children that
+     * are split nodes.
+     * @param strategy the strategy to set
+     */
+    public void setMVStrategy(final PMMLMissingValueStrategy strategy) {
+        m_mvStrategy = strategy;
+        for (DecisionTreeNode child : m_child) {
+            if (child instanceof DecisionTreeNodeSplit) {
+                ((DecisionTreeNodeSplit)child).setMVStrategy(strategy);
+            }
+        }
+    }
+
+    /**
+     * @return the the no true child strategy
+     */
+    public PMMLNoTrueChildStrategy getNTCStrategy() {
+        return m_ntcStrategy;
+    }
+
+    /**
+     * Set the no true child strategy and propagate it to all children that are
+     * split nodes.
+     *
+     * @param ntcStrategy the strategy to set
+     */
+    public void setNTCStrategy(final PMMLNoTrueChildStrategy ntcStrategy) {
+        m_ntcStrategy = ntcStrategy;
+        for (DecisionTreeNode child : m_child) {
+            if (child instanceof DecisionTreeNodeSplit) {
+                ((DecisionTreeNodeSplit)child).setNTCStrategy(ntcStrategy);
+            }
+        }
     }
 }
