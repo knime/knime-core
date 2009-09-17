@@ -208,7 +208,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         // now create new filter panels
         m_rangePanel = new RowNoRowFilterPanel();
         m_rowIDPanel = new RowIDRowFilterPanel();
-        m_colValPanel = new ColumnRowFilterPanel(specs[0]);
+        m_colValPanel = new ColumnRowFilterPanel(this, specs[0]);
 
         /*
          * now read the filters. We support three different filters:

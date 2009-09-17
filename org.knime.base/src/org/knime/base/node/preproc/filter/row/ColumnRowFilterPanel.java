@@ -44,6 +44,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -65,9 +67,12 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  *
@@ -84,6 +89,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
     private JRadioButton m_useRange;
 
     private JRadioButton m_useRegExpr;
+    private FlowVariableModelButton m_regExprVarButton;
 
     private ButtonGroup m_radios;
 
@@ -117,7 +123,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
      * @param tSpec table spec containing column specs to select from
      * @throws NotConfigurableException it tspec is <code>null</code> or emtpy
      */
-    public ColumnRowFilterPanel(final DataTableSpec tSpec)
+    public ColumnRowFilterPanel(final RowFilterNodeDialogPane parentPane,
+            final DataTableSpec tSpec)
             throws NotConfigurableException {
 
         super(400, 350);
@@ -128,7 +135,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         }
         m_tSpec = tSpec;
 
-        instantiateComponents(m_tSpec);
+        instantiateComponents(parentPane, m_tSpec);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -161,6 +168,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         exprBox.add(m_regLabel);
         exprBox.add(Box.createHorizontalStrut(3));
         exprBox.add(m_regExpr);
+        exprBox.add(m_regExprVarButton);
         m_regExpr.setPreferredSize(new Dimension(150, 20));
         m_regExpr.setMaximumSize(new Dimension(150, 20));
         m_regExpr.setPreferredSize(new Dimension(150, 20));
@@ -234,7 +242,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
     }
 
     @SuppressWarnings("unchecked")
-    private void instantiateComponents(final DataTableSpec tSpec)
+    private void instantiateComponents(final RowFilterNodeDialogPane parentPane,
+            final DataTableSpec tSpec)
             throws NotConfigurableException {
 
         /* instantiate the col idx selector, depending on the table spec */
@@ -329,6 +338,28 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             }
         });
         m_regExpr.addItemListener(this);
+
+        /* add flow variable button for the pattern/regexpr */
+        FlowVariableModel fvm = parentPane.createFlowVariableModel(
+                new String[] {RowFilterNodeModel.CFGFILTER,
+                        StringCompareRowFilter.CFGKEY_PATTERN},
+                FlowVariable.Type.STRING);
+        fvm.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent evt) {
+                FlowVariableModel fvm =
+                    (FlowVariableModel)(evt.getSource());
+                m_regExpr.setEnabled(!fvm.isVariableReplacementEnabled());
+                if (fvm.isVariableReplacementEnabled()
+                        && m_regExpr.getSelectedItem().equals("")) {
+                    // TODO: replace with more meaningful default - empty
+                    // pattern are rejected by dialog.
+                    m_regExpr.setSelectedItem(fvm.getInputVariableName());
+                }
+            }
+        });
+        m_regExprVarButton = new FlowVariableModelButton(fvm);
+
         m_caseSensitive = new JCheckBox("case sensitive match");
         m_isRegExpr = new JCheckBox("regular expression");
         m_hasWildCards = new JCheckBox("contains wild cards");

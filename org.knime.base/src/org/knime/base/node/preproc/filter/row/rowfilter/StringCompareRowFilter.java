@@ -48,7 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class StringCompareRowFilter extends AttrValueRowFilter {
 
-    private static final String CFGKEY_PATTERN = "Pattern";
+    public static final String CFGKEY_PATTERN = "Pattern";
 
     private static final String CFGKEY_CASE = "CaseSensitive";
 
