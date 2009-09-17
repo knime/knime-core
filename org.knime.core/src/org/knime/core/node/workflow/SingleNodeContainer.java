@@ -278,7 +278,6 @@ public final class SingleNodeContainer extends NodeContainer {
 
     public ExecutionContext createExecutionContext() {
         NodeProgressMonitor progressMonitor = getProgressMonitor();
-        progressMonitor.reset();
         return new ExecutionContext(progressMonitor, getNode(),
                 getOutDataMemoryPolicy(),
                 getParent().getGlobalTableRepository());
@@ -571,6 +570,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void mimicRemotePreExecute() {
         synchronized (m_nodeMutex) {
+            getProgressMonitor().reset();
             switch (getState()) {
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
@@ -643,6 +643,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void performStateTransitionPREEXECUTE() {
         synchronized (m_nodeMutex) {
+            getProgressMonitor().reset();
             switch (getState()) {
             case QUEUED:
                 setState(State.PREEXECUTE);
