@@ -357,11 +357,20 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
          * @param model The model that provides the update.
          */
         void update(final FlowVariableModel model) {
-            for (Enumeration<?> e = children(); e.hasMoreElements();) {
+            Enumeration<?> e = children();
+            int k = 0;
+            while (e.hasMoreElements() && (k < model.getKeys().length)) {
                 ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
-                if (c.getConfigEntry().getKey().equals(model.getKey())) {
-                    c.setUseVariableName(model.getInputVariableName());
-                    c.setExposeVariableName(model.getOutputVariableName());
+                if (c.getConfigEntry().getKey().equals(model.getKeys()[k])) {
+                    if ((k + 1) == model.getKeys().length) {
+                        // reached last entry of hierarchy: apply settings
+                        c.setUseVariableName(model.getInputVariableName());
+                        c.setExposeVariableName(model.getOutputVariableName());
+                    } else {
+                        // dive deeper into hierarchy of keys
+                        k++;
+                        e = c.children();
+                    }
                 }
             }
         }

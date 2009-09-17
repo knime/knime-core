@@ -47,7 +47,7 @@ public class FlowVariableModel {
 
     // private members
     private NodeDialogPane m_parent;
-    private String m_key;  // the Config Key associated with this object
+    private String[] m_keys;  // the hierarchy of Config Keys for this object
     private FlowVariable.Type m_type;   // the class of the variable
 
     /* variable names that are to be used for the corresponding settings
@@ -62,13 +62,13 @@ public class FlowVariableModel {
     /** Create a new WVM object.
      * 
      * @param parent NodeDialogPane (needed to retrieve visible variables)
-     * @param key of corresponding settings object
+     * @param keys of corresponding settings object
      * @param type of variable/settings object
      */
-    FlowVariableModel(final NodeDialogPane parent, final String key,
+    FlowVariableModel(final NodeDialogPane parent, final String[] keys,
             final FlowVariable.Type type) {
         m_parent = parent;
-        m_key = key;
+        m_keys = keys.clone();
         m_type = type;
         m_listeners = new CopyOnWriteArrayList<ChangeListener>();
     }
@@ -83,8 +83,8 @@ public class FlowVariableModel {
     /**
      * @return the key of the corresponding setting object.
      */
-    public String getKey() {
-        return m_key;
+    public String[] getKeys() {
+        return m_keys;
     }
 
     /**

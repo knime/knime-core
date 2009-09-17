@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -885,7 +886,8 @@ public abstract class NodeDialogPane {
         return m_pane.indexOfTab(title);
     }
 
-    /** Create model and register a new variable for a specific settings entry.
+    /** Create model and register a new variable for a specific settings entry
+     * (in a non-hierarchical settings object).
      * This can serve two purposes:
      * 1) replace the actual value in the settings object by the value of
      *    the variable
@@ -896,9 +898,26 @@ public abstract class NodeDialogPane {
      * @param type of variable/settings object
      * @return new FlowVariableModel which is already registered
      */
-    protected FlowVariableModel createFlowVariableModel(
+    public FlowVariableModel createFlowVariableModel(
             final String key, final FlowVariable.Type type) {
-        FlowVariableModel wvm = new FlowVariableModel(this, key, type);
+        return createFlowVariableModel(new String[] {key}, type);
+    }
+
+    /** Create model and register a new variable for a specific settings entry
+     * for a hierarchical settings object.
+     * This can serve two purposes:
+     * 1) replace the actual value in the settings object by the value of
+     *    the variable
+     * 2) and/or put the current value of the settings object into the
+     *    specified variable.
+     *
+     * @param keys hierarchy of keys of corresponding settings object
+     * @param type of variable/settings object
+     * @return new FlowVariableModel which is already registered
+     */
+    public FlowVariableModel createFlowVariableModel(
+            final String[] keys, final FlowVariable.Type type) {
+        FlowVariableModel wvm = new FlowVariableModel(this, keys, type);
         m_flowVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */
@@ -935,7 +954,7 @@ public abstract class NodeDialogPane {
                 m_flowObjectStack, Collections.EMPTY_SET);
         for (FlowVariableModel m : m_flowVariablesModelList) {
             ConfigEditTreeNode configNode = m_flowVariableTab
-                .findTreeNodeForChild(new String[]{m.getKey()});
+                .findTreeNodeForChild(m.getKeys());
             if (configNode != null) {
                 m.setInputVariableName(configNode.getUseVariableName());
                 m.setOutputVariableName(configNode.getExposeVariableName());
@@ -1087,7 +1106,7 @@ public abstract class NodeDialogPane {
         public void configEditTreeChanged(final ConfigEditTreeEvent event) {
             String[] keyPath = event.getKeyPath();
             for (FlowVariableModel m : m_flowVariablesModelList) {
-                if (m.getKey().equals(keyPath[0])) {
+                if (Arrays.equals(m.getKeys(), keyPath)) {
                     m.setInputVariableName(event.getUseVariable());
                     m.setOutputVariableName(event.getExposeVariableName());
                 }
