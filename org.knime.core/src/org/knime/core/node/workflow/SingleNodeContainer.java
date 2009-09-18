@@ -700,18 +700,18 @@ public final class SingleNodeContainer extends NodeContainer {
                 if (status.isSuccess()) {
                     if (m_node.getLoopStatus() == null) {
                         setState(State.EXECUTED);
-
                     } else {
                         // loop not yet done - "stay" configured until done.
                         setState(State.CONFIGURED);
                     }
                 } else {
-                    // also clean loop status:
+                    // node will be configured in doAfterExecute.
+                    // for now we assume complete failure and clean up:
+                    NodeMessage oldMessage = getNodeMessage();
+                    m_node.reset();
                     m_node.clearLoopStatus();
-                    // note was already reset/configured in doAfterExecute.
-                    // in theory this should always be the correct state...
-                    // TODO do better - also handle catastrophes
-                    setState(State.CONFIGURED);
+                    setNodeMessage(oldMessage);
+                    setState(State.IDLE);
                 }
                 setExecutionJob(null);
                 break;
@@ -751,18 +751,8 @@ public final class SingleNodeContainer extends NodeContainer {
             putOutputTablesIntoGlobalRepository(ec);
         } else {
             // something went wrong: reset and configure node to reach
-            // a solid state again - but remember original node message!
-            NodeMessage orgMessage = getNodeMessage();
-            m_node.reset();
-            PortObjectSpec[] specs = new PortObjectSpec[m_node.getNrInPorts()];
-            for (int i = 0; i < specs.length; i++) {
-                specs[i] = inObjects[i].getSpec();
-            }
-            if (!nodeConfigure(specs)) {
-                LOGGER.error("Configure failed after Execute failed!");
-            }
-            // TODO don't remove the stack conflict message (if any)
-            setNodeMessage(orgMessage);
+            // a solid state again will be done by WorkflowManager (in
+            // doAfterExecute().
         }
         return success ? NodeContainerExecutionStatus.SUCCESS
                 : NodeContainerExecutionStatus.FAILURE;
