@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -289,7 +290,7 @@ public class ColumnFilterPanel extends JPanel {
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
-        buttonPan.add(new JPanel());
+        buttonPan.add(Box.createVerticalStrut(20));
 
         m_addButton = new JButton("add >>");
         m_addButton.setMaximumSize(new Dimension(125, 25));
@@ -299,7 +300,7 @@ public class ColumnFilterPanel extends JPanel {
                 onAddIt();
             }
         });
-        buttonPan.add(new JPanel());
+        buttonPan.add(Box.createVerticalStrut(25));
 
         m_addAllButton = new JButton("add all >>");
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
@@ -309,7 +310,7 @@ public class ColumnFilterPanel extends JPanel {
                 onAddAll();
             }
         });
-        buttonPan.add(new JPanel());
+        buttonPan.add(Box.createVerticalStrut(25));
 
         m_remButton = new JButton("<< remove");
         m_remButton.setMaximumSize(new Dimension(125, 25));
@@ -319,7 +320,7 @@ public class ColumnFilterPanel extends JPanel {
                 onRemIt();
             }
         });
-        buttonPan.add(new JPanel());
+        buttonPan.add(Box.createVerticalStrut(25));
 
         m_remAllButton = new JButton("<< remove all");
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
@@ -329,7 +330,8 @@ public class ColumnFilterPanel extends JPanel {
                 onRemAll();
             }
         });
-        buttonPan.add(new JPanel());
+        buttonPan.add(Box.createVerticalStrut(20));
+        buttonPan.add(Box.createGlue());
 
         // include list
         m_inclMdl = new DefaultListModel();
@@ -442,7 +444,6 @@ public class ColumnFilterPanel extends JPanel {
             m_keepAllBox = new JCheckBox("Always include all columns");
             m_keepAllBox.setToolTipText("If the set of input columns changes, "
                     + "all columns stay included.");
-            m_keepAllBox.setBorder(BorderFactory.createTitledBorder(""));
             m_keepAllBox.addItemListener(new ItemListener() {
                 /** {@inheritDoc} */
                 @Override
@@ -459,18 +460,22 @@ public class ColumnFilterPanel extends JPanel {
         }
 
         // adds include, button, exclude component
-        JPanel center = new JPanel(new BorderLayout());
-        super.setLayout(new BorderLayout());
-        center.add(excludePanel, BorderLayout.CENTER);
-        center.add(buttonPan2, BorderLayout.EAST);
-        super.add(center, BorderLayout.WEST);
-        super.add(includePanel, BorderLayout.CENTER);
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center, BoxLayout.X_AXIS));
+        center.add(excludePanel);
+        center.add(buttonPan2);
+        center.add(includePanel);
+        JPanel all = new JPanel();
+        all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
+        all.add(center);
         if (m_keepAllBox != null) {
             JPanel keepAllPanel = new JPanel(
                     new FlowLayout(FlowLayout.RIGHT, 0, 0));
             keepAllPanel.add(m_keepAllBox);
-            super.add(keepAllPanel, BorderLayout.SOUTH);
+            all.add(keepAllPanel);
         }
+        super.setLayout(new GridLayout(1, 1));
+        super.add(all);
     }
 
     /**
@@ -481,7 +486,7 @@ public class ColumnFilterPanel extends JPanel {
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
         if (m_keepAllBox != null) {
-        	m_keepAllBox.setEnabled(enabled);
+            m_keepAllBox.setEnabled(enabled);
         }
         boolean newEnabled = enabled && !isKeepAllSelected();
         enabledComponents(newEnabled);
@@ -556,7 +561,7 @@ public class ColumnFilterPanel extends JPanel {
     public final void setKeepAllSelected(final boolean select) {
         if (m_keepAllBox != null) {
             m_keepAllBox.setSelected(select);
-          	enabledComponents(m_keepAllBox.isEnabled() && !select);
+              enabledComponents(m_keepAllBox.isEnabled() && !select);
         }
     }
 
