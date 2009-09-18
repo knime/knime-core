@@ -46,6 +46,9 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
     /** If encryption with master key is enabled. */
     public boolean m_isEnabled = true;
 
+    /** Master key has been set before, but was not saved. */
+    public boolean m_wasSet = false;
+
     /**
      * Creates a new encryption key supplier.
      */
@@ -63,14 +66,21 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             KNIMECorePlugin.getDefault().getPreferenceStore();
         coreStore.setDefault(
                 HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, true);
+        // if an master key has been provided before, the pref page contains
+        // an entry that this key was saved or not
+        m_wasSet =
+            coreStore.contains(HeadlessPreferencesConstants.P_MASTER_KEY_SAVED);
 
-        if (m_isEnabled && m_lastMasterKey == null) {
-        // the masterkey preference page was opened at least once.
+        if (m_isEnabled
+                && (m_lastMasterKey == null || m_lastMasterKey.isEmpty())) {
+            // the masterkey preference page was opened at least once.
             m_isEnabled = coreStore.getBoolean(
                     HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED);
             if (m_isEnabled) {
-                if (coreStore.getBoolean(
-                        HeadlessPreferencesConstants.P_MASTER_KEY_SAVED)) {
+                // master key is enabled and was (not) saved
+                boolean wasSaved = coreStore.getBoolean(
+                        HeadlessPreferencesConstants.P_MASTER_KEY_SAVED);
+                if (wasSaved) {
                     try {
                         String mk = coreStore.getString(
                                      HeadlessPreferencesConstants.P_MASTER_KEY);

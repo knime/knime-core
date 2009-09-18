@@ -31,7 +31,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.util.KnimeEncryption;
@@ -61,31 +60,50 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      * first time.
      */
     public static final EclipseEncryptionKeySupplier SUPPLIER =
-            new EclipseEncryptionKeySupplier() {
-                /**
-                 * Derived method to open a dialog, if the master key is not
-                 * set. {@inheritDoc}
-                 */
-                @Override
-                public synchronized String getEncryptionKey() {
-                    super.getEncryptionKey();
-                    if (m_isEnabled && m_lastMasterKey == null) {
-                        Display.getDefault().syncExec(new Runnable() {
-                            public void run() {
-                                m_lastMasterKey = openDialogAndReadKey();
-                            }
-                        });
-                    }
-                    return m_lastMasterKey;
+        new EclipseEncryptionKeySupplier() {
+            /**
+             * Derived method to open a dialog, if the master key is not
+             * set. {@inheritDoc}
+             */
+            @Override
+            public synchronized String getEncryptionKey() {
+                super.getEncryptionKey();
+                if (m_isEnabled 
+                    && (m_lastMasterKey == null || m_lastMasterKey.isEmpty())) {
+                    Display.getDefault().syncExec(new Runnable() {
+                        public void run() {
+                            MasterKeyDialog.openDialogAndReadKey();
+                        }
+                    });
                 }
-            };
+                return m_lastMasterKey;
+            }
+        };
+         
+    private static final String DESCRIPTION =
+            "KNIME requires an encryption key to encrypt/decrypt passwords,\n"
+            + "mainly for database passwords in nodes connecting to databases\n"
+            + "(e.g. database reader/writer nodes).\n"
+            + "This avoids having to enter passwords for each new session\n"
+            + "and each node individually. In order to avoid storing those\n"
+            + "passwords in plain text, a central master key is used.\n\n";
+
 
     /**
      * Create a new master key preference page.
      */
     public MasterKeyPreferencePage() {
         super(GRID);
-        setDescription(DESCRIPTION);
+        String desc;
+        if (SUPPLIER.m_wasSet) {
+            desc = "A master key was entered in a previous session which\n"
+                   + "has been used to encrypt passwords, those passwords can\n"
+                   + "only be decrypted with the same master key.\n\n";
+        } else {
+            desc = 
+            "No master key has been supplied yet to en-/decrypt passwords.\n\n";
+        }
+        setDescription(desc + DESCRIPTION);
     }
 
     /**
@@ -93,30 +111,45 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     @Override
     protected void createFieldEditors() {
-        final Composite parent = getFieldEditorParent();
-        m_isMasterKey =
-                new BooleanFieldEditor(
-                        HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED,
-                        "Enable password en-/decryption", parent);
+    	final Composite parent = getFieldEditorParent();
+        m_isMasterKey = new BooleanFieldEditor(
+                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED,
+                "Enable password en-/decryption", parent) {
+        	/** {@inheritDoc}  */
+        	@Override
+            protected void valueChanged(final boolean old, final boolean neu) {
+        		enableFields(neu);
+        	}
+        };
         m_isMasterKey.load();
-        super.addField(m_isMasterKey);
-        m_masterKey =
-                new StringFieldEditor("master_key_field", "Master Key: ", 20,
-                        parent);
+      	super.addField(m_isMasterKey);
+        m_masterKey = new StringFieldEditor("master_key_field", "Master Key: ", 
+        		20, parent);
         m_masterKey.getTextControl(parent).setEchoChar('*');
         super.addField(m_masterKey);
-        m_masterKeyConfirm =
-                new StringFieldEditor("master_key_field", "Confirm: ", 20,
-                        parent);
+        m_masterKeyConfirm = new StringFieldEditor("master_key_field", 
+        		"Confirm: ", 20, parent);
         m_masterKeyConfirm.getTextControl(parent).setEchoChar('*');
         super.addField(m_masterKeyConfirm);
-        m_saveMasterKey =
-                new BooleanFieldEditor(
-                        HeadlessPreferencesConstants.P_MASTER_KEY_SAVED,
-                        "Save Master Key and don't ask again on restart (unsafe)",
-                        parent);
+        m_saveMasterKey = new BooleanFieldEditor(
+            HeadlessPreferencesConstants.P_MASTER_KEY_SAVED,
+            "Save Master Key and don't ask again on restart (unsafe)", parent);
         m_saveMasterKey.load();
         super.addField(m_saveMasterKey);
+    }
+    
+    private void enableFields(final boolean enabled) {
+    	Composite parent = super.getFieldEditorParent();
+    	if (m_isMasterKey.getBooleanValue()) {
+    		m_isMasterKey.setEnabled(!SUPPLIER.m_wasSet, parent);
+    	} else {
+    		m_isMasterKey.setEnabled(true, parent);
+    	}
+    	m_masterKey.setEnabled(enabled, parent);
+        m_masterKey.setEmptyStringAllowed(!enabled);
+    	m_masterKeyConfirm.setEnabled(enabled, parent);
+        m_masterKeyConfirm.setEmptyStringAllowed(!enabled);
+    	m_saveMasterKey.setEnabled(enabled, parent);
     }
 
     /**
@@ -145,7 +178,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
             m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
         }
-
+        enableFields(SUPPLIER.m_isEnabled);
     }
 
     /**
@@ -155,6 +188,10 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         initPrefStore();
     }
 
+    /**
+     * Preference store is initialized by the org.knime.workbench.core
+     * store.
+     */
     public void initPrefStore() {
         IPreferenceStore corePrefStore =
             KNIMECorePlugin.getDefault().getPreferenceStore();
@@ -215,9 +252,8 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             return null;
         }
         try {
-            SecretKey secretKey =
-                    KnimeEncryption
-                            .createSecretKey(HeadlessPreferencesConstants.P_MASTER_KEY);
+            SecretKey secretKey = KnimeEncryption.createSecretKey(
+            		HeadlessPreferencesConstants.P_MASTER_KEY);
             return KnimeEncryption.encrypt(secretKey, masterKey.toCharArray());
         } catch (Exception e) {
             MessageBox mb =
@@ -236,29 +272,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void performApply() {
         this.performOk();
-    }
-
-    private static final String DESCRIPTION =
-            "KNIME requires an encryption key to encrypt/decrypt passwords,\n"
-                    + "mainly for database passwords in nodes connecting to databases\n"
-                    + "(e.g. database reader/writer nodes).\n"
-                    + "This avoids having to enter passwords for each new session\n"
-                    + "and each node individually. In order to avoid storing those\n"
-                    + "passwords in plain text, a central encryption key is used.\n\n"
-
-                    + "No key has been supplied yet to encrypt/decrypt passwords.\n\n"
-
-                    + "Note: if you have entered a key in a previous session which\n"
-                    + "has been used to encrypt passwords, those passwords can\n"
-                    + "obviously only be decrypted with the same key.\n\n";
-
-    private static String openDialogAndReadKey() {
-        Shell shell = Display.getDefault().getActiveShell();
-        if (shell == null) {
-            shell = new Shell();
-        }
-        new MasterKeyDialog(shell).open();
-        return SUPPLIER.m_lastMasterKey;
     }
 
 }
