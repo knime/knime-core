@@ -88,7 +88,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
-     * 
+     *
      * @param fvm model to allow to use a variable instead of the textfield.
      */
     CSVFilesHistoryPanel(final FlowVariableModel fvm) {
@@ -134,6 +134,13 @@ public final class CSVFilesHistoryPanel extends JPanel {
             public void actionPerformed(final ActionEvent e) {
                 String newFile = getOutputFileName();
                 if (newFile != null) {
+                    newFile = newFile.trim();
+                    if (newFile.length() < 5
+                            || newFile.lastIndexOf('.')
+                                    < newFile.length() - 4) {
+                        // they have no extension - add .csv
+                        newFile += ".csv";
+                    }
                     m_textBox.setSelectedItem(newFile);
                 }
             }
@@ -154,11 +161,10 @@ public final class CSVFilesHistoryPanel extends JPanel {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
                     FlowVariableModel wvm =
-                        (FlowVariableModel)(evt.getSource());
-                    m_textBox.setEnabled(
-                            !wvm.isVariableReplacementEnabled());
-                    m_chooseButton.setEnabled(
-                            !wvm.isVariableReplacementEnabled());
+                            (FlowVariableModel)(evt.getSource());
+                    m_textBox.setEnabled(!wvm.isVariableReplacementEnabled());
+                    m_chooseButton.setEnabled(!wvm
+                            .isVariableReplacementEnabled());
                 }
             });
 
