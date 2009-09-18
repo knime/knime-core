@@ -120,28 +120,29 @@ public class PivotNodeModel extends NodeModel {
         }
         if (m_makeAgg.getStringValue().equals(
                 PivotNodeDialogPane.MAKE_AGGREGATION[1])) {
-        	final int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
+            final int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
             if (agg < 0) {
                 throw new InvalidSettingsException(
                         "Aggregation column not found.");
             }
             if (!inSpecs[0].getColumnSpec(agg).getType().isCompatible(
-            		DoubleValue.class)) {
-            	throw new InvalidSettingsException(
-            			"Selected aggregation column '" 
-            			+ m_agg.getStringValue() + "' not of type double.");
+                    DoubleValue.class)) {
+                throw new InvalidSettingsException(
+                        "Selected aggregation column '"
+                        + m_agg.getStringValue() + "' not of type double.");
             }
         }
         final DataColumnSpec cspec = inSpecs[0].getColumnSpec(pivot);
-        if (!cspec.getDomain().hasValues()) {
-            return new DataTableSpec[1];
-        } else {
-            final Set<DataCell> vals = new LinkedHashSet<DataCell>(
-                    cspec.getDomain().getValues());
-            if (!m_ignoreMissValues.getBooleanValue()) {
-                vals.add(DataType.getMissingCell());
+        if (cspec.getDomain().hasValues()) {
+            if (m_ignoreMissValues.getBooleanValue()) {
+                final Set<DataCell> vals = new LinkedHashSet<DataCell>(
+                        cspec.getDomain().getValues());
+                return new DataTableSpec[]{initSpec(vals)};
+            } else {
+                return new DataTableSpec[1];
             }
-            return new DataTableSpec[]{initSpec(vals)};
+        } else {
+            return new DataTableSpec[1];
         }
     }
 
@@ -378,12 +379,12 @@ public class PivotNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_translator.removeAllToHiliteHandlers();
         m_translator.addToHiLiteHandler(hiLiteHdl);
     }
-    
+
     /**
      * {@inheritDoc}
      */
