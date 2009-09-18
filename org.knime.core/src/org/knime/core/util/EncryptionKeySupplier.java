@@ -37,7 +37,7 @@ package org.knime.core.util;
 public interface EncryptionKeySupplier {
 
     /**
-     * This method must return a key that should be use to encrypt/decrypt Knime
+     * This method must return a key that should be use to encrypt/decrypt KNIME
      * used passwords, keys, etc.
      * 
      * @return the encryption key as string
