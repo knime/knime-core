@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 
+import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -193,7 +194,11 @@ public class CSVWriterNodeModel extends NodeModel {
         // figure out if the writer is actually supposed to write col headers
         boolean writeColHeader = m_settings.writeColumnHeader();
         if (writeColHeader && file.exists()) {
-            writeColHeader = !m_settings.skipColHeaderIfFileExists();
+            if (m_settings.getFileOverwritePolicy().equals(
+                    FileOverwritePolicy.Append)) {
+                // do not write headers if the file exists and we append to it
+                writeColHeader = !m_settings.skipColHeaderIfFileExists();
+            }
         }
         // make a copy of the settings with the modified value
         FileWriterSettings writerSettings = new FileWriterSettings(m_settings);
@@ -206,21 +211,22 @@ public class CSVWriterNodeModel extends NodeModel {
                 appendToFile = true;
                 break;
             case Abort:
-                throw new RuntimeException("File \"" + file.getAbsolutePath() 
-                        + "\" exists, must not overwrite it (check " 
+                throw new RuntimeException("File \"" + file.getAbsolutePath()
+                        + "\" exists, must not overwrite it (check "
                         + "dialog settings)");
             case Overwrite:
                 appendToFile = false;
                 break;
             default:
-                throw new InternalError("Unknown case: " 
+                throw new InternalError("Unknown case: "
                         + m_settings.getFileOverwritePolicy());
             }
         } else {
             appendToFile = false;
         }
-        CSVWriter tableWriter = new CSVWriter(
-                new FileWriter(file, appendToFile), writerSettings);
+        CSVWriter tableWriter =
+                new CSVWriter(new FileWriter(file, appendToFile),
+                        writerSettings);
 
         // write the comment header, if we are supposed to
         writeCommentHeader(m_settings, tableWriter, data[0], appendToFile);
@@ -268,9 +274,8 @@ public class CSVWriterNodeModel extends NodeModel {
      * @throws IOException if something went wrong during writing.
      */
     private void writeCommentHeader(final FileWriterNodeSettings settings,
-            final BufferedWriter file, final DataTable inData, 
-            final boolean append)
-            throws IOException {
+            final BufferedWriter file, final DataTable inData,
+            final boolean append) throws IOException {
         if ((file == null) || (settings == null)) {
             return;
         }
@@ -406,13 +411,13 @@ public class CSVWriterNodeModel extends NodeModel {
             }
             switch (m_settings.getFileOverwritePolicy()) {
             case Abort:
-                throw new InvalidSettingsException(
-                        "File \"" + file.getAbsolutePath() 
-                        + "\" exists, must not overwrite it (check " 
+                throw new InvalidSettingsException("File \""
+                        + file.getAbsolutePath()
+                        + "\" exists, must not overwrite it (check "
                         + "dialog settings)");
-            case Overwrite: 
+            case Overwrite:
                 warnMsg +=
-                    "Selected output file exists and will be overwritten!";
+                        "Selected output file exists and will be overwritten!";
                 break;
             default:
             }
@@ -458,8 +463,9 @@ public class CSVWriterNodeModel extends NodeModel {
         if (inSpec.containsCompatibleType(DoubleValue.class)) {
             if (m_settings.getColSeparator().indexOf(
                     m_settings.getDecimalSeparator()) >= 0) {
-                warnMsg += "The data separator contains (or is equal to) the "
-                    + "decimal separator\nWritten data will be hard to read!";
+                warnMsg +=
+                        "The data separator contains (or is equal to) the "
+                                + "decimal separator\nWritten data will be hard to read!";
             }
         }
 
