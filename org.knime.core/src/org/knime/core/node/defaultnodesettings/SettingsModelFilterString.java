@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   31.10.2006 (ohl): created
  */
@@ -41,8 +41,8 @@ import org.knime.core.node.port.PortObjectSpec;
  * Implements a settings model that provides include and exclude lists. These
  * lists contain strings. It's currently used e.g. in the column filter
  * component and provides the list of column names to include and exclude.
- * 
- * @author ohl, University of Konstanz
+ *
+ * @author Peter Ohl, University of Konstanz
  */
 public class SettingsModelFilterString extends SettingsModel {
 
@@ -50,16 +50,20 @@ public class SettingsModelFilterString extends SettingsModel {
 
     private static final String CFGKEY_EXCL = "ExclList";
 
+    private static final String CFGKEY_KEEPALL = "keep_all_columns_selected";
+
     private final String m_configName;
 
     private final List<String> m_inclList;
 
     private final List<String> m_exclList;
 
+    private boolean m_keepAll = false;
+
     /**
      * Creates a new object holding a list of strings in an exclude list and a
      * list of strings in an include list..
-     * 
+     *
      * @param configName the identifier the values are stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
@@ -68,6 +72,23 @@ public class SettingsModelFilterString extends SettingsModel {
     public SettingsModelFilterString(final String configName,
             final Collection<String> defaultInclList,
             final Collection<String> defaultExclList) {
+        this(configName, defaultInclList, defaultExclList, false);
+    }
+
+    /**
+     * Creates a new object holding a list of strings in an exclude list and a
+     * list of strings in an include list..
+     *
+     * @param configName the identifier the values are stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param defaultInclList the initial value for the include list
+     * @param defaultExclList the initial value for the exclude list.
+     * @param keepAll true, if all column should be kept selected
+     */
+    public SettingsModelFilterString(final String configName,
+            final Collection<String> defaultInclList,
+            final Collection<String> defaultExclList,
+            final boolean keepAll) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
@@ -99,13 +120,13 @@ public class SettingsModelFilterString extends SettingsModel {
                 }
             }
         }
-
+        m_keepAll = keepAll;
     }
 
     /**
      * Creates a new object holding a list of strings in an exclude list and a
      * list of strings in an include list..
-     * 
+     *
      * @param configName the identifier the values are stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
@@ -113,20 +134,53 @@ public class SettingsModelFilterString extends SettingsModel {
      */
     public SettingsModelFilterString(final String configName,
             final String[] defaultInclList, final String[] defaultExclList) {
-        this(configName, Arrays.asList(defaultInclList), Arrays
-                .asList(defaultExclList));
+        this(configName, Arrays.asList(defaultInclList),
+                Arrays.asList(defaultExclList), false);
     }
 
     /**
-     * Constructs a new model with initially empty include and exclude lists.  
+     * Creates a new object holding a list of strings in an exclude list and a
+     * list of strings in an include list.
+     *
+     * @param configName the identifier the values are stored within the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param defaultInclList the initial value for the include list
+     * @param defaultExclList the initial value for the exclude list.
+     * @param keepAll true, if all column should be kept selected
+     */
+    public SettingsModelFilterString(final String configName,
+            final String[] defaultInclList, final String[] defaultExclList,
+            final boolean keepAll) {
+        this(configName, Arrays.asList(defaultInclList),
+                Arrays.asList(defaultExclList), keepAll);
+    }
+
+    /**
+     * Returns the status of the keep-all columns selection box.
+     * @return true, if all column should be kept selected
+     */
+    public boolean isKeepAllSelected() {
+        return m_keepAll;
+    }
+
+    /**
+     * Set a new keep all selection state.
+     * @param selected if keep all box is selected or not
+     */
+    public void setKeepAllSelected(final boolean selected) {
+        m_keepAll = selected;
+    }
+
+    /**
+     * Constructs a new model with initially empty include and exclude lists.
      *
      * @param configName the identifier the values are stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      */
     public SettingsModelFilterString(final String configName) {
-        this(configName, (Collection<String>)null, (Collection<String>)null); 
+        this(configName, (Collection<String>)null, (Collection<String>)null);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -135,7 +189,7 @@ public class SettingsModelFilterString extends SettingsModel {
     protected SettingsModelFilterString createClone() {
         return new SettingsModelFilterString(m_configName,
                 new LinkedList<String>(m_inclList), new LinkedList<String>(
-                        m_exclList));
+                        m_exclList), m_keepAll);
     }
 
     /**
@@ -166,11 +220,12 @@ public class SettingsModelFilterString extends SettingsModel {
             // transferred into the dialog. Which is okay, I guess.
             setIncludeList(lists.getStringArray(CFGKEY_INCL, (String[])null));
             setExcludeList(lists.getStringArray(CFGKEY_EXCL, (String[])null));
+            setKeepAllSelected(lists.getBoolean(CFGKEY_KEEPALL, false));
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
         } catch (InvalidSettingsException ise) {
             // no settings - keep the old value.
-        } 
+        }
 
     }
 
@@ -185,7 +240,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     /**
      * set the value of the stored include list.
-     * 
+     *
      * @param newValue the new value to store as include list.
      */
     public void setIncludeList(final String[] newValue) {
@@ -194,7 +249,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     /**
      * set the value of the stored include list.
-     * 
+     *
      * @param newValue the new value to store as include list. Can't be null.
      */
     public void setIncludeList(final Collection<String> newValue) {
@@ -214,12 +269,12 @@ public class SettingsModelFilterString extends SettingsModel {
         // now take over the new list
         m_inclList.clear();
         m_inclList.addAll(newValue);
-                
+
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
         }
-        
+
     }
 
     /**
@@ -231,7 +286,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     /**
      * set the value of the stored exclude list.
-     * 
+     *
      * @param newValue the new value to store as exclude list.
      */
     public void setExcludeList(final String[] newValue) {
@@ -240,7 +295,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     /**
      * set the value of the stored exclude list.
-     * 
+     *
      * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
@@ -256,11 +311,11 @@ public class SettingsModelFilterString extends SettingsModel {
                 }
             }
         }
-        
+
         // now take over the new list
         m_exclList.clear();
         m_exclList.addAll(newValue);
-                
+
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
@@ -287,6 +342,8 @@ public class SettingsModelFilterString extends SettingsModel {
             String[] excl = lists.getStringArray(CFGKEY_EXCL);
             setIncludeList(incl);
             setExcludeList(excl);
+            boolean keepAll = lists.getBoolean(CFGKEY_KEEPALL, false);
+            setKeepAllSelected(keepAll);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
         }
@@ -302,6 +359,7 @@ public class SettingsModelFilterString extends SettingsModel {
                 new String[0]));
         lists.addStringArray(CFGKEY_EXCL, getExcludeList().toArray(
                 new String[0]));
+        lists.addBoolean(CFGKEY_KEEPALL, m_keepAll);
     }
 
     /**
