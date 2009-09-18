@@ -381,6 +381,11 @@
             factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
       <node
+            after="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
+            category-path="/manipulation/row/row-filter"
+            factory-class="org.knime.base.node.preproc.filter.row.RowFilter2PortNodeFactory"
+            id="org.knime.base.node.preproc.filter.row.RowFilter2PortNodeFactory"/>
+      <node
             factory-class="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"
             category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"/>

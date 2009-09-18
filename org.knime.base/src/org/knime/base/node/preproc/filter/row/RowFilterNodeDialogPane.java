@@ -90,7 +90,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         addTab("Filter Criteria", dlg);
     }
 
-    private JPanel createDialogPanel() {
+    protected JPanel createDialogPanel() {
 
         JPanel result = new JPanel();
         result.setLayout(new BoxLayout(result, BoxLayout.X_AXIS));
