@@ -207,18 +207,18 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             // and serves as a master key provider
             KnimeEncryption.setEncryptionKeySupplier(
                     new EclipseEncryptionKeySupplier());
-            
+
             // load database driver files from core preference page
             String dbDrivers = pStore.getString(
-            		HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
+                    HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
             if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
-            	for (String d : dbDrivers.split(";")) {
-            		try {
-            			DatabaseDriverLoader.loadDriver(new File(d));
-            		} catch (IOException ioe) {
-            			LOGGER.info("Can't load driver file \"" + d + "\"");
-            		}
-            	}
+                for (String d : dbDrivers.split(";")) {
+                    try {
+                        DatabaseDriverLoader.loadDriver(new File(d));
+                    } catch (IOException ioe) {
+                        LOGGER.info("Can't load driver file \"" + d + "\"");
+                    }
+                }
             }
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
