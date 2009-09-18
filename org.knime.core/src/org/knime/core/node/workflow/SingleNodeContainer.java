@@ -641,15 +641,25 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void performStateTransitionPREEXECUTE() {
+    boolean performStateTransitionPREEXECUTE() {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
             switch (getState()) {
             case QUEUED:
                 setState(State.PREEXECUTE);
-                break;
+                return true;
             default:
-                throwIllegalStateException();
+                // ignore any other state: other states indicate that the node
+                // was canceled before it is actually run
+                // (this method is called from a worker thread, whereas cancel
+                // typically from the UI thread)
+                if (!Thread.currentThread().isInterrupted()) {
+                    LOGGER.debug("Execution of node " + getNameWithID() 
+                            + " was probably canceled (node is " + getState()
+                            + " during 'preexecute') but calling thead is not" 
+                            + " interrupted");
+                }
+                return false;
             }
         }
     }
@@ -700,6 +710,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 if (status.isSuccess()) {
                     if (m_node.getLoopStatus() == null) {
                         setState(State.EXECUTED);
+
                     } else {
                         // loop not yet done - "stay" configured until done.
                         setState(State.CONFIGURED);

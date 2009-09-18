@@ -436,9 +436,12 @@ public abstract class NodeContainer implements NodeProgressListener {
      * this node's parent. It will then call back on
      * {@link #performStateTransitionPREEXECUTE()} to allow for a synchronized
      * state transition.
+     * @return true if the node did an actual state transition. It may abort the
+     * state change if the job was cancel (cancel checking is to be done in the
+     * synchronized block -- therefore the return value)
      */
-    void notifyParentPreExecuteStart() {
-        getParent().doBeforePreExecution(this);
+    boolean notifyParentPreExecuteStart() {
+        return getParent().doBeforePreExecution(this);
     }
 
     /**
@@ -486,8 +489,11 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /** Called when the state of a node should switch from
      * {@link State#QUEUED} to {@link State#PREEXECUTE}. The method is to be
-     * called from the node's parent in a synchronized environment. */
-    abstract void performStateTransitionPREEXECUTE();
+     * called from the node's parent in a synchronized environment.
+     * @return whether there was an actual state transition, false if the 
+     *         execution was canceled (cancel checking to be done in 
+     *         synchronized block) */
+    abstract boolean performStateTransitionPREEXECUTE();
 
     /**
      * This should be used to change the nodes states correctly (and likely

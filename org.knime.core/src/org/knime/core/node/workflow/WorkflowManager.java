@@ -125,7 +125,7 @@ public final class WorkflowManager extends NodeContainer {
                 return t;
             }
         });
-    
+
     /** Executor for asynchronous invocation of checkForNodeStateChanges
      * in an unconnected parent.
      * If a checkForNodeStateChanges-Thread is already waiting, additional
@@ -1555,13 +1555,19 @@ public final class WorkflowManager extends NodeContainer {
      * only called with {@link SingleNodeContainer} as argument but may also be
      * called with a remotely executed meta node.
      * @param nc node whose execution is about to start
+     * @return whether there was an actual state transition, false if the 
+     *         execution was canceled (cancel checking to be done in 
+     *         synchronized block)
      */
-    void doBeforePreExecution(final NodeContainer nc) {
+    boolean doBeforePreExecution(final NodeContainer nc) {
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
         synchronized (m_workflowMutex) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePreExecution");
-            nc.performStateTransitionPREEXECUTE();
-            checkForNodeStateChanges(true);
+            if (nc.performStateTransitionPREEXECUTE()) {
+                checkForNodeStateChanges(true);
+                return true;
+            }
+            return false;
         }
     }
 
@@ -1683,40 +1689,40 @@ public final class WorkflowManager extends NodeContainer {
                     snc.setNodeMessage(oldMessage);
                 } else {
                     // process loop context for "real" nodes:
-                    if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
-                        // if this was BEGIN, it's not anymore (until we do not
-                        // restart it explicitly!)
-                        snc.getNode().setLoopEndNode(null);
-                    }
-                    Node node = snc.getNode();
-                    if (node.getLoopStatus() != null) {
-                        // we are supposed to execute this loop again!
-                        // first retrieve FlowLoopContext object
-                        FlowLoopContext slc = node.getLoopStatus();
-                        // first check if the loop is properly configured:
-                        if (m_workflow.getNode(slc.getOwner()) == null) {
+                if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                    // if this was BEGIN, it's not anymore (until we do not
+                    // restart it explicitly!)
+                    snc.getNode().setLoopEndNode(null);
+                }
+                Node node = snc.getNode();
+                if (node.getLoopStatus() != null) {
+                    // we are supposed to execute this loop again!
+                    // first retrieve FlowLoopContext object
+                    FlowLoopContext slc = node.getLoopStatus();
+                    // first check if the loop is properly configured:
+                    if (m_workflow.getNode(slc.getOwner()) == null) {
                             // obviously not: origin of loop is not in this WFM!
-                            // nothing else to do: NC stays configured
+                        // nothing else to do: NC stays configured
                             assert nc.getState()
                                     == NodeContainer.State.CONFIGURED;
-                            // and choke
-                            throw new IllegalFlowObjectStackException(
-                                    "Loop nodes are not in the same workflow!");
-                        } else {
-                            // make sure the end of the loop is properly
-                            // configured:
-                            slc.setTailNode(nc.getID());
-                            // and try to restart loop
-                            restartLoop(slc);
-                            // clear stack (= loop context)
-                            node.clearLoopStatus();
+                        // and choke
+                        throw new IllegalFlowObjectStackException(
+                                "Loop nodes are not in the same workflow!");
+                    } else {
+                        // make sure the end of the loop is properly
+                        // configured:
+                        slc.setTailNode(nc.getID());
+                        // and try to restart loop
+                        restartLoop(slc);
+                        // clear stack (= loop context)
+                        node.clearLoopStatus();
                             // make sure we do not accidentally configure the
-                            // remainder of this node since we are not yet done
-                            // with the loop
-                            canConfigureSuccessors = false;
-                        }
+                        // remainder of this node since we are not yet done
+                        // with the loop
+                        canConfigureSuccessors = false;
                     }
                 }
+            }
             }
             if (nc.getWaitingLoops().size() >= 1) {
                 // looks as if some loops were waiting for this node to
@@ -1974,15 +1980,25 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void performStateTransitionPREEXECUTE() {
+    boolean performStateTransitionPREEXECUTE() {
         assert !isLocalWFM() : "Execution of meta node not allowed"
             + " for locally executing (sub-)flows";
         synchronized (m_nodeMutex) {
-            for (NodeContainer nc : m_workflow.getNodeValues()) {
-                nc.mimicRemotePreExecute();
+            if (getState().executionInProgress()) {
+                for (NodeContainer nc : m_workflow.getNodeValues()) {
+                    nc.mimicRemotePreExecute();
+                }
+                // method is called from parent, don't propagate state changes
+                checkForNodeStateChanges(false);
+                return true;
+            } else {
+                // node may not be executinInProgress when previously queued 
+                // but then canceled upon user request; this method is called 
+                // from a worker thread, which does not know about cancelation  
+                // yet (it is interrupted when run as local job ... but this  
+                // isn't a local job)
+                return false;
             }
-            // method is called from parent, don't propagate state changes
-            checkForNodeStateChanges(false);
         }
     }
 

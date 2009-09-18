@@ -24,6 +24,7 @@ package org.knime.core.node.workflow;
 
 import java.util.Arrays;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.StringFormat;
@@ -76,7 +77,10 @@ public abstract class NodeExecutionJob implements Runnable {
         if (!isReConnecting()) {
             try {
                 // sets state PREEXECUTE
-                m_nc.notifyParentPreExecuteStart();
+                if (!m_nc.notifyParentPreExecuteStart()) {
+                    // node was canceled, ommit any subsequent state transitions
+                    return;
+                }
                 beforeExecute();
             } catch (Throwable throwable) {
                 logError(throwable);
@@ -90,6 +94,21 @@ public abstract class NodeExecutionJob implements Runnable {
             } catch (Throwable throwable) {
                 status = NodeContainerExecutionStatus.FAILURE;
                 logError(throwable);
+            }
+        }
+        // check thread cancelation
+        if (status == null) {
+            if (Thread.interrupted()) {
+                status = NodeContainerExecutionStatus.FAILURE;
+            } else {
+                try {
+                    m_nc.getProgressMonitor().checkCanceled();
+                } catch (CanceledExecutionException cee) {
+                    status = NodeContainerExecutionStatus.FAILURE;
+                }
+            }
+            if (status != null) {
+                System.out.println(status);
             }
         }
         try {
