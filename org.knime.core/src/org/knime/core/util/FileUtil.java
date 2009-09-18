@@ -500,11 +500,13 @@ public final class FileUtil {
 
     /**
      * Passed to the
-     * {@link FileUtil#zipDir(File, File, Collection, int, ZipFileFilter, ExecutionMonitor)}
+     * {@link FileUtil#zipDir(File, Collection, int, ZipFileFilter,
+     * ExecutionMonitor)}
      * method to exclude certain files from being archived and added to the zip
-     * file.
+     * file.<br />
+     * A default implementation accepting all files is
+     * {@link #ZIP_INCLUDEALL_FILTER}
      *
-     * @author Peter Ohl, KNIME.
      */
     public static interface ZipFileFilter {
         /**
