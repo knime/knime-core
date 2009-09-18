@@ -35,13 +35,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import javax.swing.JFileChooser;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -299,51 +298,93 @@ public final class FileUtil {
         return dir.delete();
     } // deleteRecursively(File)
 
-
     // size of read buffer when reading/writing from/to a zip stream
     private static final int BUFF_SIZE = 16384;
 
     /**
-     * Recursively packs all the the files and directories beneath the
-     * <code>rootDir</code> into a zip file. The zip file contains the root
-     * directory as the only entry in its root.
+     * Packs all files and directories passed in the includeList into a zip
+     * file. Recursively adds all files contained in directories. Files in the
+     * include list are placed in the root of the archive. Files and directories
+     * in the include list must not have the same (simple) name - otherwise an
+     * I/O Exception is thrown.
      *
      * @param zipFile the zip file that should be created. If it exists it will
      *            be overwritten.
-     * @param rootDir the directory to pack.
-     * @param addRootFiles a list of files that is added to the archive (in
-     *            addition to the content of the <code>rootDir</code>). The
-     *            files are placed in the rootDir - i.e. if the archive is
-     *            unzipped, the files are located in the root dir, named with
-     *            their original (simple) name. Optional, can be null.
+     * @param includeList list of files or directories to add to the zip
+     *            archive. Directories will be added with their content
+     *            (recursively). Files are placed in the root of the archive
+     *            (i.e. their path is not preserved). If entries have the same
+     *            (simple) name, an I/O Exception is thrown.
      * @param compressionLevel the desired compression level, see
      *            {@link ZipOutputStream#setLevel(int)}
-     * @param filter each file (and dir) contained in the rootDir is only
-     *            included in the zip archive if it is accepted by the filter.
-     *            The rootDir is always included. Files from the
-     *            <code>addRootFiles</code> list are also not filtered. Must not
-     *            be null.
+     * @param filter each file (and directory) contained is only included in the
+     *            zip archive if it is accepted by the filter. If a directory is
+     *            not accepted, it entire content is excluded from the zip. Must
+     *            not be null.
      * @param exec receives progress messages and is checked for cancel
      *            requests. Optional, can be null.
      *
-     * @return <code>true</code> if all files and dirs are included,
-     *         <code>false</code> if an error occurs reading a file, if a
-     *         directory is unreadable, or a file in the
-     *         <code>addRootFiles</code> list is a directory, not readable or
-     *         doesn't exist.
+     * @return <code>true</code> if all files and dirs accepted by the filter
+     *         are included, <code>false</code> if an error occurs reading a
+     *         file, if a directory is unreadable.
      * @throws CanceledExecutionException if the operation was canceled through
      *             the <code>exec</code>
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs when writing the zip file, or
+     *             if two files or directories in the include list have the same
+     *             (simple) name.
      */
-    public static boolean zipDir(final File zipFile, final File rootDir,
-            final Collection<File> addRootFiles, final int compressionLevel,
+    public static boolean zipDir(final File zipFile,
+            final Collection<File> includeList, final int compressionLevel,
             final ZipFileFilter filter, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-
-        if (!rootDir.isDirectory()) {
-            throw new IllegalArgumentException("The given root directory '"
-                    + rootDir.getAbsolutePath() + "' is not a directory.");
+        ZipOutputStream zout =
+                new ZipOutputStream(new BufferedOutputStream(
+                        new FileOutputStream(zipFile)));
+        zout.setLevel(compressionLevel);
+        try {
+            return zipDir(zout, includeList, filter, exec);
+        } finally {
+            zout.close();
         }
+    }
+
+    /**
+     * Packs all files and directories passed in the includeList into a zip
+     * stream. Recursively adds all files contained in directories. Files in the
+     * include list are placed in the root of the archive. Files and directories
+     * in the include list must not have the same (simple) name - otherwise an
+     * I/O Exception is thrown. The passed stream is not closed when the method
+     * returns. The stream should have the appropriate compression level set.
+     *
+     * @param zout a zipped output stream. Zip entries for each file are added
+     *            to the stream. The compression level is not changed by this
+     *            method. The stream remains open after the method returns!
+     * @param includeList list of files or directories to add to the zip
+     *            archive. Directories will be added with their content
+     *            (recursively). Files are placed in the root of the archive
+     *            (i.e. their path is not preserved).
+     * @param filter each file (and directory) contained is only included in the
+     *            zip archive if it is accepted by the filter. If a directory is
+     *            not accepted, it entire content is excluded from the zip. Must
+     *            not be null.
+     * @param exec receives progress messages and is checked for cancel
+     *            requests. Optional, can be null.
+     *
+     * @return <code>true</code> if all files and dirs accepted by the filter
+     *         are included, <code>false</code> if an error occurs reading a
+     *         file in a directory, if a directory is unreadable.
+     * @throws CanceledExecutionException if the operation was canceled through
+     *             the <code>exec</code>
+     * @throws IOException if an I/O error occurs when writing the zip file, or
+     *             if two files or directories in the include list have the same
+     *             (simple) name, or an element in the include list doesn't
+     *             exist.
+     */
+    public static boolean zipDir(final ZipOutputStream zout,
+            final Collection<File> includeList, final ZipFileFilter filter,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
         ExecutionMonitor execMon = exec;
         if (execMon == null) {
             execMon = new ExecutionMonitor();
@@ -355,28 +396,37 @@ public final class FileUtil {
         // false if unable to look into a sub dir or an I/O error occurs
         boolean complete = true;
 
-        ZipOutputStream zout =
-                new ZipOutputStream(new BufferedOutputStream(
-                        new FileOutputStream(zipFile)));
-        zout.setLevel(compressionLevel);
+        for (File f : includeList) {
+
+            if (!filter.include(f)) {
+                continue;
+            }
+            if (f.isFile()) {
+                complete &= addZipEntry(buff, zout, f, f.getName(), execMon);
+            } else if (f.isDirectory()) {
+                complete &= addOneDir(zout, f, filter, execMon, buff);
+            } else {
+                throw new IOException("File " + f.getAbsolutePath()
+                        + " not added to zip archive");
+            }
+        }
+
+        return complete;
+    }
+
+    private static boolean addOneDir(final ZipOutputStream zout,
+            final File rootDir, final ZipFileFilter filter,
+            final ExecutionMonitor exec, final byte[] buff) throws IOException,
+            CanceledExecutionException {
+
+        // false if unable to look into a sub dir or an I/O error occurs
+        boolean complete = true;
 
         Stack<File> dirs = new Stack<File>();
 
         String rootName = rootDir.getName();
         zout.putNextEntry(new ZipEntry(rootName + "/"));
         zout.closeEntry();
-
-        // after creating the root entry - add the additional files
-        if (addRootFiles != null && addRootFiles.size() > 0) {
-            for (File rf : addRootFiles) {
-                if (!rf.isFile()) {
-                    complete = false;
-                    continue;
-                }
-                String entryName = rootName + "/" + rf.getName();
-                complete &= addZipEntry(buff, zout, rf, entryName, execMon);
-            }
-        }
 
         // now, traverse the root dir
         dirs.push(rootDir);
@@ -404,7 +454,7 @@ public final class FileUtil {
 
                 if (f.isFile()) {
 
-                    complete &= addZipEntry(buff, zout, f, entryName, execMon);
+                    complete &= addZipEntry(buff, zout, f, entryName, exec);
 
                 } else if (f.isDirectory()) {
 
@@ -415,13 +465,14 @@ public final class FileUtil {
             }
         }
 
-        zout.close();
         return complete;
+
     }
 
-    private static boolean addZipEntry(final byte[] buf, final ZipOutputStream zout,
-            final File f, final String entryName, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    private static boolean addZipEntry(final byte[] buf,
+            final ZipOutputStream zout, final File f, final String entryName,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         InputStream in = null;
         try {
             exec.setProgress("Adding file " + entryName);
@@ -434,6 +485,8 @@ public final class FileUtil {
             }
         } catch (CanceledExecutionException cee) {
             throw cee;
+        } catch (IOException ioe) {
+            throw ioe;
         } catch (Throwable t) {
             LOGGER.debug("Error while adding file to zip archive ("
                     + f.getAbsolutePath() + ")", t);
@@ -465,6 +518,17 @@ public final class FileUtil {
     }
 
     /**
+     * A filter that causes all files to be included in the zip archive.
+     */
+    public static final ZipFileFilter ZIP_INCLUDEALL_FILTER =
+            new ZipFileFilter() {
+
+                public boolean include(final File f) {
+                    return true;
+                }
+            };
+
+    /**
      * Recursively packs all the the files and directories beneath the
      * <code>rootDir</code> into a zip file. The zip file contains the root
      * directory as the only entry in its root.
@@ -483,12 +547,8 @@ public final class FileUtil {
     public static boolean zipDir(final File zipFile, final File rootDir,
             final int compressionLevel) throws IOException {
         try {
-            return zipDir(zipFile, rootDir, null, compressionLevel,
-                    new ZipFileFilter() {
-                        public boolean include(final File f) {
-                            return true;
-                        }
-                    }, null);
+            return zipDir(zipFile, rootDir, compressionLevel,
+                    ZIP_INCLUDEALL_FILTER, null);
         } catch (CanceledExecutionException e) {
             // doesn't happen as we provide no execution monitor
             return false;
@@ -526,7 +586,8 @@ public final class FileUtil {
             final int compressionLevel, final ZipFileFilter filter,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        return zipDir(zipFile, rootDir, null, compressionLevel, filter, exec);
+        return zipDir(zipFile, Collections.singletonList(rootDir),
+                compressionLevel, filter, exec);
     }
 
     /**
@@ -736,33 +797,4 @@ public final class FileUtil {
         return b;
     }
 
-    public static void main(final String[] args) {
-
-        JFileChooser fc = new JFileChooser();
-        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        while (true) {
-            if (fc.showOpenDialog(null) == JFileChooser.CANCEL_OPTION) {
-                return;
-            }
-            File dir = fc.getSelectedFile();
-
-            try {
-                zipDir(new File("C:\\TEMP\\testzip.zip"), dir, null, 0,
-                        new ZipFileFilter() {
-
-                            public boolean include(final File f) {
-                                return true;
-                            }
-                        }, null);
-            } catch (IOException e) {
-                System.err.println("IO Error!");
-                continue;
-            } catch (CanceledExecutionException e) {
-                System.out.println("Canceled.");
-                continue;
-            }
-
-        }
-
-    }
 }
