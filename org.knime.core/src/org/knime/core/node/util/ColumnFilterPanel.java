@@ -465,10 +465,10 @@ public class ColumnFilterPanel extends JPanel {
         super.add(center, BorderLayout.WEST);
         super.add(includePanel, BorderLayout.CENTER);
         if (m_keepAllBox != null) {
-        	JPanel keepAllPanel = new JPanel(
-        			new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        	keepAllPanel.add(m_keepAllBox);
-        	super.add(keepAllPanel, BorderLayout.SOUTH);
+            JPanel keepAllPanel = new JPanel(
+                    new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            keepAllPanel.add(m_keepAllBox);
+            super.add(keepAllPanel, BorderLayout.SOUTH);
         }
     }
 
@@ -492,7 +492,7 @@ public class ColumnFilterPanel extends JPanel {
         m_addAllButton.setEnabled(enabled);
         m_addButton.setEnabled(enabled);
         if (m_keepAllBox != null) {
-        	m_keepAllBox.setEnabled(enabled);
+            m_keepAllBox.setEnabled(enabled);
         }
     }
 
@@ -540,7 +540,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return true, if keep all columns check box is selected, otherwise false
      */
     public final boolean isKeepAllSelected() {
-    	return m_keepAllBox != null && m_keepAllBox.isSelected();
+        return m_keepAllBox != null && m_keepAllBox.isSelected();
     }
 
     /**
@@ -548,9 +548,9 @@ public class ColumnFilterPanel extends JPanel {
      * @param select true, if the box should be selected
      */
     public final void setKeepAllSelected(final boolean select) {
-    	if (m_keepAllBox != null) {
-    		m_keepAllBox.setSelected(select);
-    	}
+        if (m_keepAllBox != null) {
+            m_keepAllBox.setSelected(select);
+        }
     }
 
     /**
@@ -565,8 +565,9 @@ public class ColumnFilterPanel extends JPanel {
         for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
+        boolean changed = false;
         for (int i = 0; i < o.length; i++) {
-            m_inclMdl.removeElement(o[i]);
+            changed |= m_inclMdl.removeElement(o[i]);
         }
         m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
@@ -575,7 +576,9 @@ public class ColumnFilterPanel extends JPanel {
             }
         }
         setKeepAllSelected(false);
-        fireFilteringChangedEvent();
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
     }
 
 
@@ -585,6 +588,7 @@ public class ColumnFilterPanel extends JPanel {
      * list.
      */
     private void onRemAll() {
+        boolean changed = m_inclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
@@ -593,7 +597,9 @@ public class ColumnFilterPanel extends JPanel {
             }
         }
         setKeepAllSelected(false);
-        fireFilteringChangedEvent();
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
     }
 
     /**
@@ -608,8 +614,9 @@ public class ColumnFilterPanel extends JPanel {
         for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
+        boolean changed = false;
         for (int i = 0; i < o.length; i++) {
-            m_exclMdl.removeElement(o[i]);
+            changed |= m_exclMdl.removeElement(o[i]);
         }
         m_inclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
@@ -617,7 +624,9 @@ public class ColumnFilterPanel extends JPanel {
                 m_inclMdl.addElement(c);
             }
         }
-        fireFilteringChangedEvent();
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
     }
 
     /**
@@ -625,6 +634,7 @@ public class ColumnFilterPanel extends JPanel {
      * exclude list.
      */
     private void onAddAll() {
+        boolean changed = m_exclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         for (DataColumnSpec c : m_order) {
@@ -632,7 +642,9 @@ public class ColumnFilterPanel extends JPanel {
                 m_inclMdl.addElement(c);
             }
         }
-        fireFilteringChangedEvent();
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
     }
 
     /**
@@ -675,21 +687,21 @@ public class ColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (isKeepAllSelected()) {
-            	m_inclMdl.addElement(cSpec);
+                m_inclMdl.addElement(cSpec);
             } else {
-            	if (exclude) {
-	                if (list.contains(c)) {
-	                	m_exclMdl.addElement(cSpec);
-	                } else {
-	                    m_inclMdl.addElement(cSpec);
-	                }
-	            } else {
-	                if (list.contains(c)) {
-	                	m_inclMdl.addElement(cSpec);
-	                } else {
-	                	m_exclMdl.addElement(cSpec);
-	                }
-	            }
+                if (exclude) {
+                    if (list.contains(c)) {
+                        m_exclMdl.addElement(cSpec);
+                    } else {
+                        m_inclMdl.addElement(cSpec);
+                    }
+                } else {
+                    if (list.contains(c)) {
+                        m_inclMdl.addElement(cSpec);
+                    } else {
+                        m_exclMdl.addElement(cSpec);
+                    }
+                }
             }
         }
         repaint();
@@ -922,16 +934,19 @@ public class ColumnFilterPanel extends JPanel {
      * @param columns the columns to remove
      */
     public final void hideColumns(final DataColumnSpec... columns) {
+        boolean changed = false;
         for (DataColumnSpec column : columns) {
             if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
-                m_inclMdl.removeElement(column);
+                changed |= m_inclMdl.removeElement(column);
             } else if (m_exclMdl.contains(column)) {
                 m_hideColumns.add(column);
-                m_exclMdl.removeElement(column);
+                changed |= m_exclMdl.removeElement(column);
             }
         }
-        fireFilteringChangedEvent();
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
     }
 
     /**
