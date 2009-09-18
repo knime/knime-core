@@ -40,12 +40,12 @@ import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
+import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
-import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -436,7 +436,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // the decision tree model saved as PMML at the second out-port
         m_decisionTree = new DecisionTree(root,
-                m_classifyColumn.getStringValue());
+                m_classifyColumn.getStringValue(),
+                /* strategy has to be set explicitly as the default in PMML is
+                    none, which means rows with missing values are not
+                    classified. */
+                PMMLMissingValueStrategy.LAST_PREDICTION);
 
         // prune the tree
         timer = System.currentTimeMillis();
@@ -683,12 +687,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 //                        majorityClass, frequencies, split
 //                              .getSplitAttributeName(), children, splitValue);
                 String splitAttribute = split.getSplitAttributeName();
-                PMMLPredicate[] splitPredicates = new PMMLPredicate[] {
-                    new PMMLSimplePredicate(splitAttribute,
-                            PMMLOperator.LESS_OR_EQUAL,
-                            Double.toString(splitValue)),
-                            new PMMLTruePredicate()
-                    };
+                PMMLPredicate[] splitPredicates =
+                        new PMMLPredicate[]{
+                                new PMMLSimplePredicate(splitAttribute,
+                                        PMMLOperator.LESS_OR_EQUAL, Double
+                                                .toString(splitValue)),
+                                new PMMLSimplePredicate(splitAttribute,
+                                        PMMLOperator.GREATER_THAN, Double
+                                                .toString(splitValue))};
                 return new DecisionTreeNodeSplitPMML(nodeId, majorityClass,
                         frequencies, splitAttribute,
                         splitPredicates, children);

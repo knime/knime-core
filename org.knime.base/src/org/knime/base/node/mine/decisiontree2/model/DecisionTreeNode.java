@@ -268,6 +268,17 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final DataCell classifyPattern(final DataRow row,
             final DataTableSpec spec) throws Exception {
         LinkedHashMap<DataCell, Double> classCounts = getClassCounts(row, spec);
+        return getWinner(classCounts);
+    }
+
+    /**
+     * Find the winning data cell. Returns the class with the maximum count.
+     * @param classCounts HashMap with the class counts
+     *
+     * @return class of pattern the decision tree predicts
+     */
+    public static final DataCell getWinner(final LinkedHashMap<DataCell, Double>
+            classCounts) {
         double winnerCount = -1.0;
         DataCell winner = null;
         for (DataCell classCell : classCounts.keySet()) {

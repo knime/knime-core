@@ -62,7 +62,7 @@ public class DecisionTree implements Serializable {
      * @param rootNode the node to attach everything to
      * @param classifyColumn name of attribute to classify with this tree
      * @param mvStrategy the strategy to to apply in case of missing values
-     * @param ntcStrategy the strategy to apply when no branch is found for a value
+     * @param ntcStrategy the strategy to apply when no branch is found
      */
     public DecisionTree(final DecisionTreeNode rootNode,
             final String classifyColumn,
@@ -75,6 +75,25 @@ public class DecisionTree implements Serializable {
             DecisionTreeNodeSplit splitNode = (DecisionTreeNodeSplit)rootNode;
             splitNode.setMVStrategy(m_missingValueStrategy);
             splitNode.setNTCStrategy(m_noTrueChildStrategy);
+        }
+    }
+
+    /**
+     * Create DecisionTree based on a root node to which the remainder of the
+     * tree is already attached.
+     *
+     * @param rootNode the node to attach everything to
+     * @param classifyColumn name of attribute to classify with this tree
+     * @param mvStrategy the strategy to to apply in case of missing values
+     */
+    public DecisionTree(final DecisionTreeNode rootNode,
+            final String classifyColumn,
+            final PMMLMissingValueStrategy mvStrategy) {
+        this(rootNode, classifyColumn);
+        m_missingValueStrategy = mvStrategy;
+        if (rootNode instanceof DecisionTreeNodeSplit) {
+            DecisionTreeNodeSplit splitNode = (DecisionTreeNodeSplit)rootNode;
+            splitNode.setMVStrategy(m_missingValueStrategy);
         }
     }
 
@@ -126,6 +145,7 @@ public class DecisionTree implements Serializable {
             final DataTableSpec spec) throws Exception {
         return m_rootNode.classifyPattern(row, spec);
     }
+
 
     /**
      * Add a new pattern to this tree for HiLiting purposes. Stores pattern ID

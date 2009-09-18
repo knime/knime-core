@@ -30,30 +30,42 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleBarRenderer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -84,14 +96,21 @@ public class DecTreePredictorNodeModel extends NodeModel {
                     /* min: */0,
                     /* max: */100000);
 
+    /** XML tag name in configuration file for show distribution flag. */
+    public static final String SHOW_DISTRIBUTION = "ShowDistribution";
+
+    /** Field was added for version 2.1. */
+    private final SettingsModelBoolean m_showDistribution
+            = new SettingsModelBoolean(SHOW_DISTRIBUTION, false);
+
     private DecisionTree m_decTree;
 
     /**
      * Creates a new predictor for PMMLDecisionTreePortObject models as input
-     * and one additional data input, and the scored data as output. 
+     * and one additional data input, and the scored data as output.
      */
     public DecTreePredictorNodeModel() {
-        super(new PortType[]{PMMLDecisionTreePortObject.TYPE, 
+        super(new PortType[]{PMMLDecisionTreePortObject.TYPE,
               BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
         m_decTree = null;
     }
@@ -110,6 +129,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_maxNumCoveredPattern.saveSettingsTo(settings);
+        m_showDistribution.saveSettingsTo(settings);
     }
 
     /**
@@ -118,6 +138,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // no checks as fields were added after first release
     }
 
     /**
@@ -130,6 +151,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
             m_maxNumCoveredPattern.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
             m_maxNumCoveredPattern.setIntValue(10000);
+        }
+
+        try {
+            m_showDistribution.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_showDistribution.setBooleanValue(false);
         }
     }
 
@@ -148,8 +175,9 @@ public class DecTreePredictorNodeModel extends NodeModel {
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         assert m_decTree != null;
         LOGGER.info("Decision Tree Predictor: start execution.");
-        DataTableSpec outSpec =
-                createOutTableSpec(inData.getDataTableSpec());
+        PortObjectSpec[] inSpecs = new PortObjectSpec[] {
+                inPorts[0].getSpec(), inPorts[1].getSpec() };
+        DataTableSpec outSpec = createOutTableSpec(inSpecs);
         BufferedDataContainer outData = exec.createDataContainer(outSpec);
         int coveredPattern = 0;
         int nrPattern = 0;
@@ -158,10 +186,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
         exec.setMessage("Classifying...");
         for (DataRow thisRow : inData) {
             DataCell cl = null;
+            LinkedHashMap<String, Double> classDistrib = null;
             try {
-                cl =
-                        m_decTree.classifyPattern(thisRow, inData
-                                .getDataTableSpec());
+                LinkedHashMap<DataCell, Double> classCounts =
+                   m_decTree.getClassCounts(thisRow, inData.getDataTableSpec());
+                cl = DecisionTreeNode.getWinner(classCounts);
+                classDistrib = getDistribution(classCounts);
                 if (coveredPattern < m_maxNumCoveredPattern.getIntValue()) {
                     // remember this one for HiLite support
                     m_decTree.addCoveredPattern(thisRow, inData
@@ -182,11 +212,21 @@ public class DecTreePredictorNodeModel extends NodeModel {
                 LOGGER.error("Decision Tree evaluation failed: result empty");
                 throw new Exception("Decision Tree evaluation failed.");
             }
-            DataCell[] newCells = new DataCell[thisRow.getNumCells() + 1];
-            for (int i = 0; i < thisRow.getNumCells(); i++) {
+
+            DataCell[] newCells = new DataCell[outSpec.getNumColumns()];
+            int numInCells = thisRow.getNumCells();
+            for (int i = 0; i < numInCells; i++) {
                 newCells[i] = thisRow.getCell(i);
             }
-            newCells[thisRow.getNumCells()] = cl;
+
+            if (m_showDistribution.getBooleanValue()) {
+                for (int i = numInCells; i < newCells.length - 1; i++) {
+                    String predClass = outSpec.getColumnSpec(i).getName();
+                    newCells[i] = new DoubleCell(classDistrib.get(predClass));
+                }
+            }
+            newCells[newCells.length - 1] = cl;
+
             outData.addRowToTable(new DefaultRow(thisRow.getKey(), newCells));
 
             rowCount++;
@@ -209,6 +249,29 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
+     * @param classCounts
+     * @return
+     */
+    private static LinkedHashMap<String, Double> getDistribution(
+            final LinkedHashMap<DataCell, Double> classCounts) {
+        LinkedHashMap<String, Double> dist
+                = new LinkedHashMap<String, Double>(classCounts.size());
+        Double total = 0.0;
+        for (Double count : classCounts.values()) {
+            total += count;
+        }
+        if (total == 0.0) {
+            return null;
+        } else {
+            for (Entry<DataCell, Double> classCount : classCounts.entrySet()) {
+                dist.put(classCount.getKey().toString(),
+                        classCount.getValue() / total);
+            }
+            return dist;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -222,27 +285,73 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inSpecs[0];
+        PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inSpecs[INMODELPORT];
         DataTableSpec inSpec = (DataTableSpec)inSpecs[1];
         for (String learnColName : treeSpec.getLearningFields()) {
             if (!inSpec.containsName(learnColName)) {
                 throw new InvalidSettingsException(
-                        "Learning column \"" + learnColName 
+                        "Learning column \"" + learnColName
                         + "\" not found in input "
                         + "data to be predicted");
             }
         }
         return new PortObjectSpec[]{
-                createOutTableSpec((DataTableSpec)inSpecs[INDATAPORT])};
+                createOutTableSpec(inSpecs)};
     }
 
-    private static DataTableSpec createOutTableSpec(
-            final DataTableSpec inSpec) {
-        DataColumnSpec newCol =
-                new DataColumnSpecCreator("Prediction (DecTree)",
+    private LinkedList<DataCell> getPredictionValues(
+            final PMMLPortObjectSpec treeSpec) {
+        String targetCol = treeSpec.getTargetFields().get(0);
+        DataColumnSpec colSpec =
+                treeSpec.getDataTableSpec().getColumnSpec(targetCol);
+        if (colSpec.getDomain().hasValues()) {
+            LinkedList<DataCell> predValues = new LinkedList<DataCell>();
+            predValues.addAll(colSpec.getDomain().getValues());
+            return predValues;
+        } else {
+            return null;
+        }
+    }
+
+    private DataTableSpec createOutTableSpec(
+            final PortObjectSpec[] inSpecs) {
+        LinkedList<DataCell>  predValues = null;
+        if (m_showDistribution.getBooleanValue()) {
+            predValues = getPredictionValues(
+                    (PMMLPortObjectSpec)inSpecs[INMODELPORT]);
+            if (predValues == null) {
+                return null; // no out spec can be determined
+            }
+        }
+
+        int numCols = (predValues == null ? 0 : predValues.size()) + 1;
+
+        DataTableSpec inSpec = (DataTableSpec)inSpecs[INDATAPORT];
+        DataColumnSpec[] newCols = new DataColumnSpec[numCols];
+
+        /* Set bar renderer and domain [0,1] as default for the double cells
+         * containing the distribution */
+        DataColumnProperties propsRendering = new DataColumnProperties(
+                Collections.singletonMap(
+                        DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                        DoubleBarRenderer.DESCRIPTION));
+        DataColumnDomain domain = new DataColumnDomainCreator(
+                new DoubleCell(0.0), new DoubleCell(1.0))
+                .createDomain();
+
+        // add all distribution columns
+        for (int i = 0; i < numCols - 1; i++) {
+            DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(
+                    predValues.get(i).toString(), DoubleCell.TYPE);
+            colSpecCreator.setProperties(propsRendering);
+            colSpecCreator.setDomain(domain);
+            newCols[i] = colSpecCreator.createSpec();
+        }
+        //add the prediction column
+        newCols[numCols - 1] = new DataColumnSpecCreator("Prediction (DecTree)",
                         StringCell.TYPE).createSpec();
         DataTableSpec newColSpec =
-                new DataTableSpec(new DataColumnSpec[]{newCol});
+                new DataTableSpec(newCols);
         return new DataTableSpec(inSpec, newColSpec);
     }
 

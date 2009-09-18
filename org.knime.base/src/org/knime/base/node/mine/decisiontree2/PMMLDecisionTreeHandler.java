@@ -206,12 +206,13 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         if (name.equals("Array")
                 && m_elementStack.peek().equals("SimpleSetPredicate")) {
             // remove optional quotes and split on whitespace
-            // FIXME: Support escaped quotes
-            String buffer = m_buffer.toString().replace('"', ' ');
+            String buffer = m_buffer.toString();
             String[] temp = buffer.trim().split("\\s+");
             List<String> splitValues = new ArrayList<String>();
             for (String value : temp) {
-                splitValues.add(value);
+                // FIXME: Encoded backslashes have to be considered
+                // -> Bernds Method?
+                splitValues.add(value.replaceAll("(?<!\\\\)\"", " "));
             }
             m_buffer.setLength(0);
             getPreviousSimpleSetPredicate().setValues(splitValues);

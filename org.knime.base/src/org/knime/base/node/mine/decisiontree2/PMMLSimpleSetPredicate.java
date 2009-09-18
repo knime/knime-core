@@ -234,7 +234,9 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
         handler.startElement(null, null, "Array", arrayAtts);
         StringBuffer sb = new StringBuffer();
         for (String value : m_values) {
+            sb.append('"');
             sb.append(value);
+            sb.append('"');
             sb.append(' ');
         }
         handler.characters(sb.toString().toCharArray(), 0, sb.length());

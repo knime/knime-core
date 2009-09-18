@@ -22,6 +22,7 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
+import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,9 @@ public abstract class PMMLPredicate {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER
         = NodeLogger.getLogger(PMMLPredicate.class);
+
+    /** For formatting the predicates toString output. */
+    protected static NumberFormat NUMBERFORMAT = NumberFormat.getInstance();
 
     /** The key to store the predicate type in configurations. */
     protected static final String TYPE_KEY = "type";

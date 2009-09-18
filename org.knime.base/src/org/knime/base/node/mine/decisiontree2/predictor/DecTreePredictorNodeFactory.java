@@ -24,20 +24,22 @@
  */
 package org.knime.base.node.mine.decisiontree2.predictor;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeFactory 
+public class DecTreePredictorNodeFactory
         extends NodeFactory<DecTreePredictorNodeModel> {
-    
+
     /**
      * {@inheritDoc}
      */
@@ -86,6 +88,11 @@ public class DecTreePredictorNodeFactory
                       /* max: */100000),
                    /* label: */"Maximum number of stored patterns "
                                 + "for HiLite-ing: ", 100));
+                addDialogComponent(new DialogComponentBoolean(
+                        new SettingsModelBoolean(
+                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
+                             false),
+                     "Show class distribution"));
             }
         };
     }

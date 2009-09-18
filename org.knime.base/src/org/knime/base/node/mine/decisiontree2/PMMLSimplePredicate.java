@@ -45,6 +45,8 @@ public class PMMLSimplePredicate extends PMMLPredicate {
     /** The key to store the threshold in configurations. */
     protected static final String THRESHOLD_KEY = "threshold";
 
+
+
     /** The threshold to compare against. */
     private String m_threshold;
     /* Used for storing numerical thresholds to avoid unnecessary casts. */
@@ -75,7 +77,20 @@ public class PMMLSimplePredicate extends PMMLPredicate {
             final PMMLOperator operator, final String value) {
         setSplitAttribute(attribute);
         setOperator(operator);
-        m_threshold = value;
+        setThreshold(value);
+    }
+
+
+    /**
+     * @param threshold the threshold to set
+     */
+    public void setThreshold(final String threshold) {
+        m_threshold = threshold;
+        try {
+            m_thresholdNumerical = Double.valueOf(threshold);
+        } catch (final NumberFormatException e) {
+            // no numerical threshold
+        }
     }
 
     /**
@@ -93,6 +108,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
             if (m_thresholdNumerical == null) {
                 m_thresholdNumerical = Double.valueOf(m_threshold);
             }
+
             Double value = ((DoubleValue)cell).getDoubleValue();
             return getOperator().evaluate(value, m_thresholdNumerical);
         } else {
@@ -106,8 +122,13 @@ public class PMMLSimplePredicate extends PMMLPredicate {
      */
     @Override
     public String toString() {
-        return getSplitAttribute() + " " + getOperator().getSymbol() + " "
-        + m_threshold;
+        if (m_thresholdNumerical != null) {
+            return getSplitAttribute() + " " + getOperator().getSymbol() + " "
+            + NUMBERFORMAT.format(m_thresholdNumerical);
+        } else {
+            return getSplitAttribute() + " " + getOperator().getSymbol() + " "
+            + m_threshold;
+        }
     }
 
     /**
@@ -142,7 +163,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         assert conf.getString(PMMLPredicate.TYPE_KEY).equals(NAME);
         setSplitAttribute(conf.getString(PMMLPredicate.ATTRIBUTE_KEY));
         setOperator(conf.getString(PMMLPredicate.OPERATOR_KEY));
-        m_threshold = conf.getString(THRESHOLD_KEY);
+        setThreshold(conf.getString(THRESHOLD_KEY));
     }
 
     /**
