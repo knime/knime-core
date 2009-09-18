@@ -213,8 +213,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             getTreeViewer().update(rsrc, null);
                         }
                     } else {
-                        LOGGER.debug("didn't find project name - do refresh");
-                        getTreeViewer().refresh();
+                        /* this is a meta node used in a project. Currently we
+                         * don't need to refresh the tree because meta node 
+                         * states are not shown in the tree */
+                        //LOGGER.debug("didn't find project name - do refresh");
+                        //getTreeViewer().refresh();
                     }
                 } catch (IllegalArgumentException iae) {
                     // node couldn't be found -> so we don't make a refresh
