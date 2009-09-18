@@ -41,6 +41,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -523,6 +524,17 @@ public class AggregationColumnPanel extends MouseAdapter {
         for (final DataColumnSpec colSpec : spec) {
             m_avAggrColSpecs.add(colSpec);
         }
-        m_aggrColTableModel.initialize(colAggrs);
+      //remove all invalid column aggregator
+        final List<ColumnAggregator> colAggrs2Use =
+            new ArrayList<ColumnAggregator>(colAggrs.size());
+        for (final ColumnAggregator colAggr : colAggrs) {
+            final DataColumnSpec colSpec =
+                spec.getColumnSpec(colAggr.getColName());
+            if (colSpec != null
+                    && colSpec.getType().equals(colAggr.getDataType())) {
+                colAggrs2Use.add(colAggr);
+            }
+        }
+        m_aggrColTableModel.initialize(colAggrs2Use);
     }
 }

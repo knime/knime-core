@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -137,6 +138,8 @@ public class GroupByNodeModel extends NodeModel {
 
     private final List<ColumnAggregator> m_columnAggregators =
         new LinkedList<ColumnAggregator>();
+
+    private List<ColumnAggregator> m_columnAggregators2Use;
 
     /**
      * Node returns a new hilite handler instance.
@@ -374,30 +377,36 @@ public class GroupByNodeModel extends NodeModel {
         //be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
         //remove all invalid column aggregator
-        final List<ColumnAggregator> invalidColAggrs =
-            new LinkedList<ColumnAggregator>();
+        m_columnAggregators2Use =
+            new ArrayList<ColumnAggregator>(m_columnAggregators.size());
+        final ArrayList<ColumnAggregator> invalidColAggrs =
+            new ArrayList<ColumnAggregator>(1);
         for (final ColumnAggregator colAggr : m_columnAggregators) {
             final DataColumnSpec colSpec =
                 origSpec.getColumnSpec(colAggr.getColName());
-            if (colSpec == null
-                    || !colSpec.getType().equals(colAggr.getDataType())) {
+            if (colSpec != null
+                    && colSpec.getType().equals(colAggr.getDataType())) {
+                m_columnAggregators2Use.add(colAggr);
+            } else {
                 invalidColAggrs.add(colAggr);
             }
         }
         if (!invalidColAggrs.isEmpty()) {
-            m_columnAggregators.removeAll(invalidColAggrs);
+            setWarningMessage("Invalid aggregation columns removed.");
         }
-
-        if (m_columnAggregators.isEmpty()) {
+        if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
         }
 
-        //we have to explicit set the all not group columns in the
-        //exclude list of the SettingsModelFilterString
+        //we have to explicitly set all not group columns in the
+        //exclude list of the SettingsModelFilterString.
+        //The DialogComponentColumnFilter component always uses the exclude
+        //list to update the component if we don't set the exclude list
+        //all columns are added as group by columns.
         final Collection<String> exclList =
             getExcludeList(origSpec, groupByCols);
         m_groupByCols.setExcludeList(exclList);
-        //remove all invalid group columns
+        //check for invalid group columns
         try {
             GroupByTable.checkGroupCols(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
@@ -410,7 +419,7 @@ public class GroupByNodeModel extends NodeModel {
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
-                origSpec, groupByCols, m_columnAggregators.toArray(
+                origSpec, groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), colNamePolicy);
 
         return new DataTableSpec[] {spec};
@@ -456,7 +465,7 @@ public class GroupByNodeModel extends NodeModel {
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
         final GroupByTable resultTable = new GroupByTable(exec, table,
-                groupByCols, m_columnAggregators.toArray(
+                groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), maxUniqueVals, sortInMemory,
                         enableHilite, colNamePolicy, retainOrder);
         if (m_enableHilite.getBooleanValue()) {
