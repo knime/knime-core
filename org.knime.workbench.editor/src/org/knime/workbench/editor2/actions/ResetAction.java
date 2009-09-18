@@ -152,7 +152,7 @@ public class ResetAction extends AbstractNodeAction {
     }
 
     /**
-     * @return <code>true</code> if at least one node is executed
+     * @return <code>true</code> if at least one node is resetable
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
@@ -161,8 +161,7 @@ public class ResetAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];
             NodeContainer nc = part.getNodeContainer();
-            if (nc.getState().equals(NodeContainer.State.EXECUTED)
-                    && getManager().canResetNode(nc.getID())) {
+            if (getManager().canResetNode(nc.getID())) {
                 return true;
             }
         }
