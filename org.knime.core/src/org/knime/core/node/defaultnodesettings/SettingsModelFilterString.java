@@ -168,7 +168,16 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param selected if keep all box is selected or not
      */
     public void setKeepAllSelected(final boolean selected) {
-        m_keepAll = selected;
+    	boolean notify = setKeepAllSelectedNO(selected);
+    	if (notify) {
+    		notifyChangeListeners();
+    	}
+    }
+
+    private boolean setKeepAllSelectedNO(final boolean selected) {
+    	boolean notify = (m_keepAll != selected);
+    	m_keepAll = selected;
+    	return notify;
     }
 
     /**
@@ -253,7 +262,15 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param newValue the new value to store as include list. Can't be null.
      */
     public void setIncludeList(final Collection<String> newValue) {
-        // figure out if we need to notify listeners
+        boolean notify = setIncludeListNO(newValue);
+        // if we got a different list we need to let all listeners know.
+        if (notify) {
+            notifyChangeListeners();
+        }
+    }
+
+    private boolean setIncludeListNO(final Collection<String> newValue) {
+    	// figure out if we need to notify listeners
         boolean notify = (newValue.size() != m_inclList.size());
         if (!notify) {
             // if the size is the same we need to compare each list item (the
@@ -270,11 +287,17 @@ public class SettingsModelFilterString extends SettingsModel {
         m_inclList.clear();
         m_inclList.addAll(newValue);
 
-        // if we got a different list we need to let all listeners know.
-        if (notify) {
-            notifyChangeListeners();
-        }
+        return notify;
+    }
 
+    public final void setNewValues(final Collection<String> incl,
+    		final Collection<String> excl, final boolean keepAll) {
+    	boolean notify = setKeepAllSelectedNO(keepAll);
+    	notify |= setIncludeListNO(incl);
+    	notify |= setExcludeListNO(excl);
+    	if (notify) {
+    		notifyChangeListeners();
+    	}
     }
 
     /**
@@ -299,6 +322,14 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
+    	boolean notify = setExcludeListNO(newValue);
+        // if we got a different list we need to let all listeners know.
+        if (notify) {
+            notifyChangeListeners();
+        }
+    }
+
+    private boolean setExcludeListNO(final Collection<String> newValue){
         // figure out if we need to notify listeners
         boolean notify = (newValue.size() != m_exclList.size());
         if (!notify) {
@@ -315,11 +346,7 @@ public class SettingsModelFilterString extends SettingsModel {
         // now take over the new list
         m_exclList.clear();
         m_exclList.addAll(newValue);
-
-        // if we got a different list we need to let all listeners know.
-        if (notify) {
-            notifyChangeListeners();
-        }
+        return notify;
     }
 
     /**

@@ -451,6 +451,7 @@ public class ColumnFilterPanel extends JPanel {
                     if (keepAll) {
                         onAddAll();
                     }
+                    enabledComponents(!keepAll);
                 }
             });
         } else {
@@ -479,21 +480,26 @@ public class ColumnFilterPanel extends JPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
-        m_searchFieldIncl.setEnabled(enabled);
-        m_searchButtonIncl.setEnabled(enabled);
-        m_searchFieldExcl.setEnabled(enabled);
-        m_searchButtonExcl.setEnabled(enabled);
-        m_inclList.setEnabled(enabled);
-        m_exclList.setEnabled(enabled);
-        m_markAllHitsIncl.setEnabled(enabled);
-        m_markAllHitsExcl.setEnabled(enabled);
-        m_remAllButton.setEnabled(enabled);
-        m_remButton.setEnabled(enabled);
-        m_addAllButton.setEnabled(enabled);
-        m_addButton.setEnabled(enabled);
         if (m_keepAllBox != null) {
-            m_keepAllBox.setEnabled(enabled);
+        	m_keepAllBox.setEnabled(enabled);
         }
+        boolean newEnabled = enabled && !isKeepAllSelected();
+        enabledComponents(newEnabled);
+    }
+
+    private void enabledComponents(final boolean newEnabled) {
+        m_searchFieldIncl.setEnabled(newEnabled);
+        m_searchButtonIncl.setEnabled(newEnabled);
+        m_searchFieldExcl.setEnabled(newEnabled);
+        m_searchButtonExcl.setEnabled(newEnabled);
+        m_inclList.setEnabled(newEnabled);
+        m_exclList.setEnabled(newEnabled);
+        m_markAllHitsIncl.setEnabled(newEnabled);
+        m_markAllHitsExcl.setEnabled(newEnabled);
+        m_remAllButton.setEnabled(newEnabled);
+        m_remButton.setEnabled(newEnabled);
+        m_addAllButton.setEnabled(newEnabled);
+        m_addButton.setEnabled(newEnabled);
     }
 
     /**
@@ -550,6 +556,7 @@ public class ColumnFilterPanel extends JPanel {
     public final void setKeepAllSelected(final boolean select) {
         if (m_keepAllBox != null) {
             m_keepAllBox.setSelected(select);
+          	enabledComponents(m_keepAllBox.isEnabled() && !select);
         }
     }
 

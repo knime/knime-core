@@ -25,8 +25,6 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.util.List;
 import java.util.Set;
 
@@ -232,16 +230,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * transfers the settings from the component into the settings model.
      */
     private void updateModel() {
-        final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
+    	final boolean keepAll = m_columnFilter.isKeepAllSelected();
+    	final SettingsModelFilterString filterModel =
+    		(SettingsModelFilterString)getModel();
+    	final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
         final Set<String> exclList = m_columnFilter.getExcludedColumnSet();
 
-        final SettingsModelFilterString filterModel =
-                (SettingsModelFilterString)getModel();
-        filterModel.setIncludeList(inclList);
-        filterModel.setExcludeList(exclList);
-
-        final boolean keepAll = m_columnFilter.isKeepAllSelected();
-        filterModel.setKeepAllSelected(keepAll);
+        filterModel.setNewValues(inclList, exclList, keepAll);
     }
 
     /**
@@ -271,18 +266,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        recSetEnabledContainer(m_columnFilter, enabled);
-    }
-
-    private void recSetEnabledContainer(final Container cont, final boolean b) {
-        cont.setEnabled(b);
-        for (final Component c : cont.getComponents()) {
-            if (c instanceof Container) {
-                recSetEnabledContainer((Container)c, b);
-            } else {
-                c.setEnabled(b);
-            }
-        }
+        m_columnFilter.setEnabled(enabled);
     }
 
     /**
