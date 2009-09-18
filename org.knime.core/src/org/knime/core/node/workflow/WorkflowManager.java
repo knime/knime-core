@@ -43,10 +43,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -122,6 +125,21 @@ public final class WorkflowManager extends NodeContainer {
                 return t;
             }
         });
+    
+    /** Executor for asynchronous invocation of checkForNodeStateChanges
+     * in an unconnected parent.
+     * If a checkForNodeStateChanges-Thread is already waiting, additional
+     * ones will be discarded. */
+    private static final Executor PARENT_NOTIFIER =
+        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, 
+                new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+                    /** {@inheritDoc} */
+                    @Override
+                    public Thread newThread(final Runnable r) {
+                        Thread t = new Thread(r, "KNIME-WFM-Parent-Notifier");
+                        return t;
+                    }
+                }, new ThreadPoolExecutor.DiscardPolicy());
 
     // Nodes and edges forming this workflow:
     private final Workflow m_workflow;
@@ -2716,14 +2734,27 @@ public final class WorkflowManager extends NodeContainer {
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-// TAKEN OUT (bw/mb): this type of lock only affects parent nodes which
-// are completely disconnected (=projects) otherwise we hold this lock
-// anyway. Locking the parent here is exactly what we do not want to do:
-// Never lock a child (e.g. node) first and then its parent (e.g. wfm)!
-// should fix bug #1755
-//            synchronized (getParent().m_workflowMutex) {
+            if (m_workflowMutex.equals(getParent().m_workflowMutex)) {
+                // simple: mutexes are the same which means that we have
+                // either in- or outgoing connections (or both). No need
+                // to add an synchronize on the parent-mutex.
                 getParent().checkForNodeStateChanges(propagateChanges);
-//            }
+            } else {
+                // Different mutexes, that is this workflowmanager is a
+                // project and the state check in the parent has do be
+                // done asynchronosly to avoid deadlocks.
+                // Locking the parent here would be exactly what we do not want
+                // to do: Never lock a child (e.g. node) first and then its
+                // parent (e.g. wfm) - see also bug #1755!
+                PARENT_NOTIFIER.execute(new Runnable() {
+                    public void run() {
+                        synchronized (getParent().m_workflowMutex) {
+                                getParent().checkForNodeStateChanges(
+                                        propagateChanges);
+                        }
+                    }
+                  });
+            }
         }
     }
 
