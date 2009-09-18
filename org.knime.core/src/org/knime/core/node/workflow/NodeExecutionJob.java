@@ -107,9 +107,6 @@ public abstract class NodeExecutionJob implements Runnable {
                     status = NodeContainerExecutionStatus.FAILURE;
                 }
             }
-            if (status != null) {
-                System.out.println(status);
-            }
         }
         try {
             if (status == null) {
