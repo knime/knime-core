@@ -33,6 +33,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -161,8 +163,18 @@ public class ResetAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];
             NodeContainer nc = part.getNodeContainer();
-            if (getManager().canResetNode(nc.getID())) {
-                return true;
+            boolean canReset = getManager().canResetNode(nc.getID());
+            if (canReset) {
+                // SNC#isResetable is a bit too flexible (allows CONFIGURED 
+                // nodes to be reset)
+                if (nc instanceof SingleNodeContainer) {
+                    if (State.EXECUTED.equals(nc.getState())) {
+                        return true;
+                    }
+                } else {
+                    // meta nodes can always be reset (for now -- to be revised)
+                    return true;
+                }
             }
         }
         return false;
