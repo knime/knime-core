@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   03.07.2007 (cebron): created
  */
@@ -32,11 +32,11 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 /**
  * Dialog for the Number to String Node.
  * Lets the user choose the columns to use.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class NumberToStringNodeDialog extends DefaultNodeSettingsPane {
-    
+
     /**
      * Constructor.
      *
@@ -45,7 +45,7 @@ public class NumberToStringNodeDialog extends DefaultNodeSettingsPane {
     public NumberToStringNodeDialog() {
         addDialogComponent(new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
-                        NumberToStringNodeModel.CFG_INCLUDED_COLUMNS), 0,
+                        NumberToStringNodeModel.CFG_INCLUDED_COLUMNS), 0, true,
                 new Class[]{DoubleValue.class}));
     }
 }

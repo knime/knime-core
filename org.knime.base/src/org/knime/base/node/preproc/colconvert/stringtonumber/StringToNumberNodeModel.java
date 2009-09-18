@@ -131,37 +131,8 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        StringBuilder warnings = new StringBuilder();
-        List<String> inclcols = m_inclCols.getIncludeList();
-        if (inclcols.size() == 0) {
-            warnings.append("No columns selected");
-        }
-        // find indices to work on.
-        Vector<Integer> indicesvec = new Vector<Integer>();
-
-        for (int i = 0; i < inclcols.size(); i++) {
-            int colIndex = inSpecs[0].findColumnIndex(inclcols.get(i));
-            if (colIndex >= 0) {
-                DataType type = inSpecs[0].getColumnSpec(colIndex).getType();
-                if (type.isCompatible(StringValue.class)) {
-                    indicesvec.add(colIndex);
-                } else {
-                    warnings.append("Ignoring column \'"
-                            + inSpecs[0].getColumnSpec(colIndex).getName()
-                            + "\'\n");
-                }
-            } else {
-                throw new InvalidSettingsException("Column index for "
-                        + inclcols.get(i) + " not found.");
-            }
-        }
-        if (warnings.length() > 0) {
-            setWarningMessage(warnings.toString());
-        }
-        int[] indices = new int[indicesvec.size()];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = indicesvec.get(i);
-        }
+        // find indices to work on
+        int[] indices = findColumnIndices(inSpecs[0]);
         ConverterFactory converterFac =
                 new ConverterFactory(indices, inSpecs[0], m_parseType);
         ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
@@ -186,30 +157,9 @@ public class StringToNumberNodeModel extends NodeModel {
                     + " returning input DataTable.");
             return new BufferedDataTable[]{inData[0]};
         }
-        Vector<Integer> indicesvec = new Vector<Integer>();
-        for (int i = 0; i < inclcols.size(); i++) {
-            int colIndex = inspec.findColumnIndex(inclcols.get(i));
-            if (colIndex >= 0) {
-                DataType type = inspec.getColumnSpec(colIndex).getType();
-                if (type.isCompatible(StringValue.class)) {
-                    indicesvec.add(colIndex);
-                } else {
-                    warnings
-                            .append("Ignoring column \'"
-                                    + inspec.getColumnSpec(colIndex).getName()
-                                    + "\'\n");
-                }
-            } else {
-                throw new Exception("Column index for " + inclcols.get(i)
-                        + " not found.");
-            }
-        }
-        int[] indices = new int[indicesvec.size()];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = indicesvec.get(i);
-        }
-        ConverterFactory converterFac =
-                new ConverterFactory(indices, inspec, m_parseType);
+        int[] indices = findColumnIndices(inData[0].getSpec());
+        ConverterFactory converterFac = new ConverterFactory(
+        		indices, inspec, m_parseType);
         ColumnRearranger colre = new ColumnRearranger(inspec);
         colre.replace(converterFac, indices);
 
@@ -218,8 +168,7 @@ public class StringToNumberNodeModel extends NodeModel {
         String errorMessage = converterFac.getErrorMessage();
 
         if (errorMessage.length() > 0) {
-            warnings.append(warnings.length() > 0 ? "\n" : "");
-            warnings.append(errorMessage);
+            warnings.append("Problems occurred, see Console messages.\n");
         }
         if (warnings.length() > 0) {
             LOGGER.warn(errorMessage);
@@ -227,6 +176,48 @@ public class StringToNumberNodeModel extends NodeModel {
         }
         return new BufferedDataTable[]{resultTable};
     }
+
+	private int[] findColumnIndices(final DataTableSpec spec)
+			throws InvalidSettingsException {
+		List<String> inclcols = m_inclCols.getIncludeList();
+		StringBuilder warnings = new StringBuilder();
+		if (inclcols.size() == 0) {
+			warnings.append("No columns selected");
+		}
+		Vector<Integer> indicesvec = new Vector<Integer>();
+		if (m_inclCols.isKeepAllSelected()) {
+			for (DataColumnSpec cspec : spec) {
+				if (cspec.getType().isCompatible(StringValue.class)) {
+					indicesvec.add(spec.findColumnIndex(cspec.getName()));
+				}
+			}
+		} else {
+			for (int i = 0; i < inclcols.size(); i++) {
+				int colIndex = spec.findColumnIndex(inclcols.get(i));
+				if (colIndex >= 0) {
+					DataType type = spec.getColumnSpec(colIndex).getType();
+					if (type.isCompatible(StringValue.class)) {
+						indicesvec.add(colIndex);
+					} else {
+						warnings.append("Ignoring column \""
+								+ spec.getColumnSpec(colIndex).getName()
+								+ "\"\n");
+					}
+				} else {
+					throw new InvalidSettingsException("Column \""
+							+ inclcols.get(i) + "\" not found.");
+				}
+			}
+		}
+		if (warnings.length() > 0) {
+			setWarningMessage(warnings.toString());
+		}
+		int[] indices = new int[indicesvec.size()];
+		for (int i = 0; i < indices.length; i++) {
+			indices[i] = indicesvec.get(i);
+		}
+		return indices;
+	}
 
     /**
      * {@inheritDoc}

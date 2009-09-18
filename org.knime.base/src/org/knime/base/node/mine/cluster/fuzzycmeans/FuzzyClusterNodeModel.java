@@ -119,10 +119,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     public static final String MEASURES_KEY = "measures";
 
-    /*
-     * List contains the data cells to include.
-     */
+    /** Config key to keep all columns in include list. */
+    public static final String CFGKEY_KEEPALL = "keep_all_columns";
+
+    /** List contains the columns to include. */
     private ArrayList<String> m_list;
+
+    private boolean m_keepAll = false;
 
     /**
      * The input port used here.
@@ -416,7 +419,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-
+        settings.addBoolean(CFGKEY_KEEPALL, m_keepAll);
         settings.addInt(NRCLUSTERS_KEY, m_nrClusters);
         settings.addInt(MAXITERATIONS_KEY, m_maxNrIterations);
         settings.addDouble(FUZZIFIER_KEY, m_fuzzifier);
@@ -523,6 +526,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (settings.containsKey(MEASURES_KEY)) {
             m_measures = settings.getBoolean(MEASURES_KEY);
         }
+        m_keepAll = settings.getBoolean(CFGKEY_KEEPALL, false);
     }
 
     /**
@@ -534,15 +538,17 @@ public class FuzzyClusterNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec inspec = (DataTableSpec) inSpecs[0];
-        if (m_list == null) {
+        if (m_keepAll || m_list == null) {
             m_list = new ArrayList<String>();
             for (DataColumnSpec colspec : inspec) {
                 if (colspec.getType().isCompatible(DoubleValue.class)) {
                     m_list.add(colspec.getName());
                 }
             }
-            setWarningMessage("List of columns to use has been set"
+            if (!m_keepAll) {
+            	setWarningMessage("List of columns to use has been set"
                     + " automatically, please check it in the dialog.");
+            }
         }
         List<String> learningCols = new LinkedList<String>();
         List<String> ignoreCols = new LinkedList<String>();
@@ -587,7 +593,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @return the cluster centres in a 2-dimensional double matrix
+     * @return the cluster centers as 2-dimensional double matrix
      */
     public double[][] getClusterCentres() {
         if (m_fcmAlgo != null) {

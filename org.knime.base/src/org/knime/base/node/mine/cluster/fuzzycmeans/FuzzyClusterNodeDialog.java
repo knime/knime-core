@@ -60,7 +60,7 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  * Dialog for {@link FuzzyClusterNodeModel}- allows to adjust number of
  * clusters and other properties.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -79,7 +79,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     private JSpinner m_fuzzifierSpinner;
 
     private JSpinner m_deltaSpinner;
-    
+
     private JSpinner m_lambdaSpinner;
 
     /*
@@ -110,7 +110,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
 
     private final JCheckBox m_noisecheck = new JCheckBox("Induce noise cluster",
             false);
-    
+
     private final JCheckBox m_memoryCB;
 
     private final JCheckBox m_measuresCB;
@@ -133,7 +133,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         JPanel all = new JPanel();
         BoxLayout bl = new BoxLayout(all, BoxLayout.Y_AXIS);
         all.setLayout(bl);
-        
+
         // create panel content for special property-tab
         JPanel clusterPropPane = new JPanel();
         Border border = BorderFactory.createTitledBorder("Fuzzy c-means");
@@ -145,15 +145,15 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         c.insets = new Insets(10, 10, 10, 10);
         // Option: Number of clusters
         JLabel nrClustersLabel = new JLabel("Number of clusters: ");
-        c.gridx = 0;                      
-        c.gridy = 0;             
-        gbl.setConstraints(nrClustersLabel, c); 
+        c.gridx = 0;
+        c.gridy = 0;
+        gbl.setConstraints(nrClustersLabel, c);
         SpinnerNumberModel nrclustersmodel = new SpinnerNumberModel(3, 1,
                 MAXNRCLUSTERS, 1);
         m_nrClustersSpinner = new JSpinner(nrclustersmodel);
-        c.gridx = 1;                      
-        c.gridy = 0;                      
-        gbl.setConstraints(m_nrClustersSpinner, c);   
+        c.gridx = 1;
+        c.gridy = 0;
+        gbl.setConstraints(m_nrClustersSpinner, c);
         clusterPropPane.add(nrClustersLabel);
         clusterPropPane.add(m_nrClustersSpinner);
         // also add a variable Model + corresponding icon to make this
@@ -173,28 +173,28 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         clusterPropPane.add(new FlowVariableModelButton(fvm));
         // Option: Upper limit for number of iterations
         JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
-        c.gridx = 0;                      
-        c.gridy = 1;                      
-        gbl.setConstraints(maxNrIterationsLabel, c); 
-        
+        c.gridx = 0;
+        c.gridy = 1;
+        gbl.setConstraints(maxNrIterationsLabel, c);
+
         SpinnerNumberModel nrmaxiterationsmodel = new SpinnerNumberModel(99, 1,
                 9999, 1);
         m_maxNrIterationsSpinner = new JSpinner(nrmaxiterationsmodel);
-        c.gridx = 1;                      
-        c.gridy = 1;                      
-        gbl.setConstraints(m_maxNrIterationsSpinner, c); 
+        c.gridx = 1;
+        c.gridy = 1;
+        gbl.setConstraints(m_maxNrIterationsSpinner, c);
         clusterPropPane.add(maxNrIterationsLabel);
         clusterPropPane.add(m_maxNrIterationsSpinner);
 
         JLabel fuzzifierLabel = new JLabel("Fuzzifier: ");
-        c.gridx = 0;                      
-        c.gridy = 2;                      
+        c.gridx = 0;
+        c.gridy = 2;
         gbl.setConstraints(fuzzifierLabel, c);
         SpinnerNumberModel fuzzifiermodel = new SpinnerNumberModel(2.0, 1.0,
                 10.0, .1);
         m_fuzzifierSpinner = new JSpinner(fuzzifiermodel);
-        c.gridx = 1;                      
-        c.gridy = 2;                      
+        c.gridx = 1;
+        c.gridy = 2;
         gbl.setConstraints(m_fuzzifierSpinner, c);
         clusterPropPane.add(fuzzifierLabel);
         clusterPropPane.add(m_fuzzifierSpinner);
@@ -202,7 +202,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         noisePropPane.setLayout(gbl);
         Border border2 = BorderFactory.createTitledBorder("Noise Clustering");
         noisePropPane.setBorder(border2);
-        
+
         // RadioButtons for choosing delta
         ButtonGroup group = new ButtonGroup();
         group.add(m_providedeltaRB);
@@ -241,12 +241,12 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        c.gridx = 0;                      
-        c.gridy = 0;                      
+        c.gridx = 0;
+        c.gridy = 0;
         gbl.setConstraints(m_noisecheck, c);
         noisePropPane.add(m_noisecheck);
-        c.gridx = 0;                      
-        c.gridy = 1;                      
+        c.gridx = 0;
+        c.gridy = 1;
         gbl.setConstraints(m_providedeltaRB, c);
         noisePropPane.add(m_providedeltaRB);
         SpinnerNumberModel deltaSpinnermodel = new SpinnerNumberModel(.2, .0,
@@ -254,12 +254,12 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         m_deltaSpinner = new JSpinner(deltaSpinnermodel);
         m_deltaSpinner.setEnabled(false);
         m_deltaSpinner.setPreferredSize(new Dimension(60, 20));
-        c.gridx = 1;                      
-        c.gridy = 1;                      
+        c.gridx = 1;
+        c.gridy = 1;
         gbl.setConstraints(m_deltaSpinner, c);
         noisePropPane.add(m_deltaSpinner);
-        c.gridx = 0;                      
-        c.gridy = 2;                      
+        c.gridx = 0;
+        c.gridy = 2;
         gbl.setConstraints(m_notprovidedeltaRB, c);
         noisePropPane.add(m_notprovidedeltaRB);
         SpinnerNumberModel lambdaSpinnermodel = new SpinnerNumberModel(.1, .0,
@@ -267,8 +267,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         m_lambdaSpinner = new JSpinner(lambdaSpinnermodel);
         m_lambdaSpinner.setEnabled(false);
         m_lambdaSpinner.setPreferredSize(new Dimension(60, 20));
-        c.gridx = 1;                      
-        c.gridy = 2;    
+        c.gridx = 1;
+        c.gridy = 2;
         gbl.setConstraints(m_lambdaSpinner, c);
         noisePropPane.add(m_lambdaSpinner);
         m_memoryCB = new JCheckBox("Perform the clustering in memory");
@@ -278,7 +278,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         all.add(m_memoryCB);
         all.add(m_measuresCB);
         super.addTab(TAB, all);
-        m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
+        m_filterpanel = new ColumnFilterPanel(true, DoubleValue.class);
         super.addTab(TAB2, m_filterpanel);
     }
 
@@ -357,7 +357,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                             m_providedeltaRB.setSelected(true);
                             m_deltaSpinner.setEnabled(true);
                             m_deltaSpinner.setValue(delta);
-                        } 
+                        }
                     }
                     if (settings.containsKey(
                             FuzzyClusterNodeModel.LAMBDAVALUE_KEY)) {
@@ -371,7 +371,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                             m_lambdaSpinner.setValue(lambda);
                         }
                     }
-                } 
+                }
             } catch (InvalidSettingsException e) {
                 LOGGER.debug("Invalid Settings", e);
             }
@@ -399,7 +399,9 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         } else {
             p.update(specs[FuzzyClusterNodeModel.INPORT], true, new String[]{});
         }
-        
+        p.setKeepAllSelected(settings.getBoolean(
+                FuzzyClusterNodeModel.CFGKEY_KEEPALL, false));
+
         if (settings.containsKey(FuzzyClusterNodeModel.MEMORY_KEY)) {
             try {
                 boolean memory = settings
@@ -409,7 +411,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 // nothing to do here.
             }
         }
-        
+
         if (settings.containsKey(FuzzyClusterNodeModel.MEASURES_KEY)) {
             try {
                 boolean measures = settings
@@ -423,8 +425,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
 
     /**
      * Save the settings from the dialog, Number of Clusters and
-     * maximum number of Iterations. 
-     * 
+     * maximum number of Iterations.
+     *
      * {@inheritDoc}
      */
     @Override
@@ -462,7 +464,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         Set<String> list = m_filterpanel.getIncludedColumnSet();
         settings.addStringArray(FuzzyClusterNodeModel.INCLUDELIST_KEY, list
                 .toArray(new String[0]));
-
+        settings.addBoolean(FuzzyClusterNodeModel.CFGKEY_KEEPALL,
+                m_filterpanel.isKeepAllSelected());
         settings.addBoolean(FuzzyClusterNodeModel.NOISE_KEY, m_noisecheck
                 .isSelected());
         if (m_providedeltaRB.isSelected()) {
