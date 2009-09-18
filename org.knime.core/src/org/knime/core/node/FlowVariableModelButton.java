@@ -219,7 +219,7 @@ implements ChangeListener, ActionListener {
                 m_inputVar.setRenderer(new FlowVariableListCellRenderer());
             } else {
                 m_inputVar = new JComboBox(new String[] {"<no matching vars>"});
-                m_inputVar.setEnabled(false);
+                m_enableInputVar.setEnabled(false);
             }
             m_inputVar.setEnabled(false);
             panelTop.add(m_inputVar);
