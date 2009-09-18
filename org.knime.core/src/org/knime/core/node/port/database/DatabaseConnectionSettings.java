@@ -41,6 +41,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
@@ -72,10 +73,55 @@ public class DatabaseConnectionSettings {
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR = 
         Executors.newCachedThreadPool();
     
-    /** DriverManager login timeout for database connection; not implemented/
+    /** 
+     * DriverManager login timeout for database connection; not implemented/
      * used by all databases.
      */
-    private static final int LOGIN_TIMEOUT = 5;
+    private static int LOGIN_TIMEOUT = 5;
+    static {
+    	String tout = System.getProperty(
+    			KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
+    	if (tout != null) {
+    		try {
+    			int timeout = Integer.parseInt(tout);
+    			if (timeout > 0) {
+    				LOGIN_TIMEOUT = timeout;
+    			} else {
+    				LOGGER.warn("Database login timeout not valid (<=0) '" 
+    					+ tout + "', using default '" + LOGIN_TIMEOUT + "'.");
+    			}
+    		} catch (NumberFormatException nfe) {
+				LOGGER.warn("Database login timeout not valid '" + tout 
+						+ "', using default '" + LOGIN_TIMEOUT + "'.");
+			}
+    	}
+    	LOGGER.info("Database login timeout: " + LOGIN_TIMEOUT + " sec.");
+    	DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
+    }
+    
+    /** 
+     * DriverManager fetch size to chunk specified number of rows.
+     */
+    private static Integer FETCH_SIZE = null;
+    static {
+    	String fsize = System.getProperty(
+    			KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
+    	if (fsize != null) {
+    		try {
+    			int fetchsize = Integer.parseInt(fsize);
+    			if (fetchsize >= 0) {
+    				FETCH_SIZE = fetchsize;
+    			} else {
+    				LOGGER.warn("Database fetch size not valid (<0) '" + fsize 
+    						+ "', using default '" + FETCH_SIZE + "'.");
+    			}
+    		} catch (NumberFormatException nfe) {
+				LOGGER.warn("Database fetch size not valid '" + fsize 
+						+ "', using default '" + FETCH_SIZE + "'.");
+			}
+    		LOGGER.info("Database fetch size: " + FETCH_SIZE + " rows.");
+    	}
+    }
 
     private String m_driver;
     private String m_dbName;
@@ -83,6 +129,7 @@ public class DatabaseConnectionSettings {
     private String m_pass = null;
 
     /**
+     * Create a default settings connection object.
      */
     public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
@@ -138,21 +185,18 @@ public class DatabaseConnectionSettings {
         final String password = KnimeEncryption.decrypt(m_pass);
         final String user = m_user;
         final String dbName = m_dbName;
-
+        
         Callable<Connection> callable = new Callable<Connection>() {
             /** {@inheritDoc} */
             @Override
             public Connection call() throws Exception {
                 LOGGER.debug("Opening database connection to \"" 
                         + dbName + "\"...");
-                DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
                 return DriverManager.getConnection(dbName, user, password);
             }
         };
         Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
         try {
-            LOGGER.debug("Setting database login timeout to " 
-                    + LOGIN_TIMEOUT + "sec.");
             return task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
         } catch (ExecutionException ee) {
             throw new SQLException(ee.getCause());
@@ -259,6 +303,9 @@ public class DatabaseConnectionSettings {
         try {
             conn = createConnection();
             stmt = conn.createStatement();
+            if (FETCH_SIZE != null) {
+            	stmt.setFetchSize(FETCH_SIZE);
+            }
             stmt.execute(statement);
         } finally {
             if (stmt != null) {

@@ -88,6 +88,21 @@ public final class KNIMEConstants {
      */
     public static final String KNIME_HOME_PROPERTYNAME = "knime.home";
 
+    /**
+     * Java property used to set the timeout in seconds trying to establish a
+     * connection to a database.
+     */
+    public static final String KNIME_DATABASE_LOGIN_TIMEOUT 
+    	= "knime.database.timeout";
+    
+    /**
+     * Java property used to adjust the fetch size for retrieving data from
+     * a database. 
+     */
+    public static final String KNIME_DATABASE_FETCHSIZE 
+		= "knime.database.fetchsize";
+
+    
     /** KNIME home directory. */
     private static File knimeHomeDir;
     
@@ -148,7 +163,7 @@ public final class KNIMEConstants {
             icon = null;
         }
         KNIME16X16 = icon;
-        // we prefer to have all gui-related locales being set to us-standard,
+        // we prefer to have all gui-related locales being set to us-standard
         try {
             Locale.setDefault(Locale.US);
         } catch (Exception e) {
