@@ -26,15 +26,12 @@ package org.knime.timeseries.node.filter.sample;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.TimestampValue;
-import org.knime.core.data.def.TimestampCell;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -45,32 +42,23 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * This is the model for the node that extracts one row of data 
  * per day from the input table.
  * 
  * @author Rosaria Silipo 
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class OneSampleperDayNodeModel extends NodeModel {
-    /** Config identifier: column name. */
-    static final String CFG_COLUMN_NAME = "column_name";
 
-    /** Config identifier: AT Timestamp. */
-    static final String CFG_TIMESTAMP_AT = "timestamp_at";
+    private final SettingsModelCalendar m_timestampAt =
+         OneSampleperDayDialog.createTimeModel();
 
-    /** Config identifier: TO Timestamp. */
- //   static final String DATE_FORMAT = "1992-10-01;09:00:00";
-    static final String DATE_FORMAT = "09:00:00";
-
-    private SettingsModelString m_timestampAt =
-         new SettingsModelString(CFG_TIMESTAMP_AT, DATE_FORMAT);
-
-    private SettingsModelString m_columnName =
-        new SettingsModelString(CFG_COLUMN_NAME, null);
-
-    private TimestampCell m_tscAt; 
-    private SimpleDateFormat m_df = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss");
+    private final SettingsModelString m_columnName =
+        OneSampleperDayDialog.createColModel();
+    
     private int m_hours;
     private int m_minutes;
     private int m_seconds;
@@ -86,72 +74,49 @@ public class OneSampleperDayNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-                
-        try {
-            int colIndex = -1;
 
-            if (m_timestampAt.getStringValue() == null) {
-                throw new InvalidSettingsException(
-                    "No \"AT:\" Timestamp selected."); 
-            } else {
-                String time = "1992-10-01;" + m_timestampAt.getStringValue();
-                m_tscAt = 
-                    new TimestampCell(time, m_df);
-            }
-            if (m_tscAt == null) {
-                throw new InvalidSettingsException(
-                "AT: Invalid timestamp value."); 
-            }
-            
-            Calendar d2 = Calendar.getInstance();
-            d2.setTime(m_tscAt.getDate());
-            m_hours = d2.get(Calendar.HOUR_OF_DAY);
-            m_minutes = d2.get(Calendar.MINUTE);
-            m_seconds = d2.get(Calendar.SECOND);
+        int colIndex = -1;
+        Calendar at = m_timestampAt.getCalendar();
+        m_hours = at.get(Calendar.HOUR_OF_DAY);
+        m_minutes = at.get(Calendar.MINUTE);
+        m_seconds = at.get(Calendar.SECOND);
 
-            
-            if (m_columnName.getStringValue() == null) {
-                int i = 0;
-                for (DataColumnSpec cs : inSpecs[0]) {
-                    if (cs.getType().isCompatible(TimestampValue.class)) {
-                        if (colIndex != -1) {
-                            throw new InvalidSettingsException(
-                                    "1. No column selected.");
-                        }
-                        colIndex = i;
+        if (m_columnName.getStringValue() == null) {
+            int i = 0;
+            for (DataColumnSpec cs : inSpecs[0]) {
+                if (cs.getType().isCompatible(TimestampValue.class)) {
+                    if (colIndex != -1) {
+                        throw new InvalidSettingsException(
+                                "No column selected.");
                     }
-                    i++;
+                    colIndex = i;
                 }
-
-                if (colIndex == -1) {
-                    throw new InvalidSettingsException("2. No column selected.");
-                }
-                m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
-                        .getName());
-                setWarningMessage("Column '" + m_columnName.getStringValue()
-                        + "' auto selected");
-            } else {
-                colIndex =
-                   inSpecs[0].findColumnIndex(m_columnName.getStringValue());
-                if (colIndex < 0) {
-                    throw new InvalidSettingsException("No such column: "
-                            + m_columnName.getStringValue());
-                }
-
-                DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-                if (!colSpec.getType().isCompatible(TimestampValue.class)) {
-                  throw new InvalidSettingsException("Column \"" + m_columnName
-                            + "\" does not contain string values: "
-                            + colSpec.getType().toString());
-                }
+                i++;
             }
 
-        } catch (ParseException pe) {
-            throw new InvalidSettingsException(
-                    "Invalid timestamp value. Parse error."); 
+            if (colIndex == -1) {
+                throw new InvalidSettingsException("No column selected.");
+            }
+            m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
+                    .getName());
+            setWarningMessage("Column '" + m_columnName.getStringValue()
+                    + "' auto selected");
+        } else {
+            colIndex = inSpecs[0]
+                    .findColumnIndex(m_columnName.getStringValue());
+            if (colIndex < 0) {
+                throw new InvalidSettingsException("No such column: "
+                        + m_columnName.getStringValue());
+            }
+
+            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
+            if (!colSpec.getType().isCompatible(TimestampValue.class)) {
+                throw new InvalidSettingsException("Column \"" + m_columnName
+                        + "\" does not contain string values: "
+                        + colSpec.getType().toString());
+            }
         }
-        
-        DataTableSpec [] outs = inSpecs.clone();
+        DataTableSpec[] outs = inSpecs.clone();
         return outs;
     }
             
@@ -173,8 +138,7 @@ public class OneSampleperDayNodeModel extends NodeModel {
            for (DataRow r : in) {
               TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
             
-              Calendar d1 = Calendar.getInstance();
-              d1.setTime(tsc.getDate());
+              Calendar d1 = tsc.getUTCCalendarClone();
               int hours = d1.get(Calendar.HOUR_OF_DAY);
               int minutes = d1.get(Calendar.MINUTE);
               int seconds = d1.get(Calendar.SECOND);
@@ -197,14 +161,9 @@ public class OneSampleperDayNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString temp =
-            new SettingsModelString(CFG_TIMESTAMP_AT, null);        
-        temp.loadSettingsFrom(settings);
- 
-        SettingsModelString temp1 =
-            new SettingsModelString(CFG_COLUMN_NAME, null);        
-        temp1.loadSettingsFrom(settings);
-}
+        m_columnName.validateSettings(settings);
+        m_timestampAt.validateSettings(settings);
+    }
 
     /**
      * {@inheritDoc}

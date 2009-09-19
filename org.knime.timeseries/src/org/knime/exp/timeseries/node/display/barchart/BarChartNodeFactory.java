@@ -22,7 +22,7 @@
  * History
 *   06.02.2007 (rs): created from line plot node
  */
-package org.knime.timeseries.node.display.barchart;
+package org.knime.exp.timeseries.node.display.barchart;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

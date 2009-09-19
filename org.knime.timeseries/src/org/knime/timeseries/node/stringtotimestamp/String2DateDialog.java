@@ -156,6 +156,10 @@ public class String2DateDialog extends DefaultNodeSettingsPane {
         // (if not already present) to the combobox...
         m_formatSelectionUI.replaceListItems(createPredefinedFormats(), 
                 m_formatModel.getStringValue());
+        // initialize with default selected column name... 
+        m_colNameModel.setStringValue(
+                m_colSelectionModel.getStringValue() + "_time");
+        
     }
 
     static SettingsModelBoolean createReplaceModel() {

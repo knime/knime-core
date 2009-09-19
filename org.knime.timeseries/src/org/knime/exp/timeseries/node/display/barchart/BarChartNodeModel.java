@@ -22,7 +22,7 @@
  * History
  *   07.02.2007 (rs): created
  */
-package org.knime.timeseries.node.display.barchart;
+package org.knime.exp.timeseries.node.display.barchart;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +39,9 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.TimestampValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -77,7 +77,7 @@ public class BarChartNodeModel extends DefaultVisualizationNodeModel implements
     /** Config identifier: column name. */
     static final String CFG_COLUMN_NAME = "column_name";
 
-    private SettingsModelString m_columnName =
+    private final SettingsModelString m_columnName =
         new SettingsModelString(CFG_COLUMN_NAME, null);
 
     private static final String FILE_NAME = "internals";

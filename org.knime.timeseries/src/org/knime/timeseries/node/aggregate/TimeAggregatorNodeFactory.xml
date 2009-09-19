@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode  type="Manipulator">
+<knimeNode  type="Manipulator" icon="time_aggregator.png">
     <name>Time Aggregator</name>
     
     <shortDescription>

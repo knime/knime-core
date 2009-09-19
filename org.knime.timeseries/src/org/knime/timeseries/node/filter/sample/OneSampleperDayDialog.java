@@ -24,12 +24,16 @@
  */
 package org.knime.timeseries.node.filter.sample;
 
-import org.knime.core.data.TimestampValue;
+import java.util.Calendar;
+
+import org.knime.core.data.date.TimestampCell;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.DialogComponentTime;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * This dialog lets the user choose the column that contains the string values
@@ -45,24 +49,27 @@ public class OneSampleperDayDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     
     public OneSampleperDayDialog() {
-                
-        SettingsModelString columnName =
-            new SettingsModelString(OneSampleperDayNodeModel.CFG_COLUMN_NAME,
-                    null);
-
         DialogComponent columnChooser =
-            new DialogComponentColumnNameSelection(columnName,
+            new DialogComponentColumnNameSelection(createColModel(),
                     "Columns containing Timestamp: ", 0, TimestampValue.class);
+        
         addDialogComponent(columnChooser);
 
-        SettingsModelString timestampAt =
-            new SettingsModelString(
-                    OneSampleperDayNodeModel.CFG_TIMESTAMP_AT,
-                    OneSampleperDayNodeModel.DATE_FORMAT);
-       DialogComponent editTimestampAt = 
-            new DialogComponentString(timestampAt,  
-                    "AT (change default time of day): ");
+       DialogComponentTime editTimestampAt = 
+            new DialogComponentTime(createTimeModel(),  
+                    "Time of day (to draw the sample): ");
         addDialogComponent(editTimestampAt);
         
+    }
+    
+    static SettingsModelCalendar createTimeModel() {
+        Calendar cal = TimestampCell.getUTCCalendar();
+        cal = TimestampCell.resetDateFields(cal);
+        return new SettingsModelCalendar("OneSamplePerDay.time", cal, false, 
+                true);
+    }
+    
+    static SettingsModelString createColModel() {
+        return new SettingsModelString("column_name", null); 
     }
 }

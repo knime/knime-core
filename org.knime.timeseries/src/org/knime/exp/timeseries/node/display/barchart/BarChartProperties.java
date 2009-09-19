@@ -22,7 +22,7 @@
  * History
  *   13.02.2007 (rs): created
  */
-package org.knime.timeseries.node.display.barchart;
+package org.knime.exp.timeseries.node.display.barchart;
 
 import java.awt.Color;
 import java.util.Map;

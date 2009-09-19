@@ -22,7 +22,7 @@
  * History
  *   07.02.2007 (Rosaria Silipo): created
  */
-package org.knime.timeseries.node.display.barchart;
+package org.knime.exp.timeseries.node.display.barchart;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;

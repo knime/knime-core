@@ -5,37 +5,20 @@
          point="org.knime.workbench.repository.nodes">
          <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.display.barchart.BarChartNodeFactory"
-            id="org.knime.dev.nodes.timeseries.display.barchart.BarChartNodeFactory"/>
-         <node
-            category-path="/timeseries"
             factory-class="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"
-            id="org.knime.dev.nodes.timeseries.display.timeplot.TimePlotterNodeFactory"/>
-        <node
-            category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.filter.events.patterns.PatternsBetweenEventsNodeFactory"
-            id="org.knime.dev.nodes.timeseries.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"/>
-        <node
-            category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.filter.events.timeseries.TSBetweenEventsNodeFactory"
-            id="org.knime.dev.nodes.timeseries.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"/>
+            id="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"/>
        <node
             category-path="/timeseries"
             factory-class="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"
-            id="org.knime.dev.nodes.timeseries.Segmentation.ExtractOneSampleperDay.ExtractOneSampleperDayNodeFactory"/>
+            id="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"/>
        <node
             category-path="/timeseries"
             factory-class="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"
-            id="org.knime.dev.nodes.timeseries.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"/>
+            id="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"/>
       <node
             category-path="/timeseries"
             factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"
-            id="org.knime.dev.nodes.timeseries.MovingAverageNodeFactory"/>
-      <node
-            category-path="/timeseries"
-            factory-class="org.knime.exp.timeseries.node.fuzzycpmeans.FuzzyPearsonClusterNodeFactory"
-            id="org.knime.timeseries.node.fuzzyCPmeans.FuzzyPearsonClusterNodeFactory">
-      </node>
+            id="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"/>
       <node
             category-path="/timeseries"
             factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
@@ -51,7 +34,7 @@
             category-path="/timeseries"
             expert-flag="false"
             factory-class="org.knime.timeseries.node.aggregate.TimeAggregatorNodeFactory"
-            id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
+            id="org.knime.timeseries.node.aggregate.TimeAggregatorNodeFactory">
       </node>
       <node
             category-path="timeseries"

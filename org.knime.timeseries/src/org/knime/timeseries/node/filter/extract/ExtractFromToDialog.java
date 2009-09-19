@@ -24,7 +24,10 @@
  */
 package org.knime.timeseries.node.filter.extract;
 
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.date.TimestampValue;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -41,18 +44,36 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  */
 public class ExtractFromToDialog extends DefaultNodeSettingsPane {
 
+    private final SettingsModelString m_colName;
+    private final SettingsModelCalendar m_from;
+    private final SettingsModelCalendar m_to;
+    
     /** Constructor adding three components. */
     @SuppressWarnings("unchecked")
-    
     public ExtractFromToDialog() {
+        m_colName = createColumnNameModel();
+        m_from = createFromModel();
+        m_to = createToModel();
         DialogComponent columnChooser =
-            new DialogComponentColumnNameSelection(createColumnNameModel(),
+            new DialogComponentColumnNameSelection(m_colName,
                     "Columns containing Timestamp: ", 0, TimestampValue.class);
         addDialogComponent(columnChooser);
-        addDialogComponent(new DialogComponentCalendar(createFromModel(), 
+        addDialogComponent(new DialogComponentCalendar(m_from, 
                 "Select starting point:"));
         addDialogComponent(new DialogComponentCalendar(
-                createToModel(), "Select end point:"));
+                m_to, "Select end point:"));
+    }
+    
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        // get the spec for minimum and maximum date
     }
     
     /**

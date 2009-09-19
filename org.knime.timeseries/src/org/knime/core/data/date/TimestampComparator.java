@@ -12,36 +12,33 @@
  * as specified in the license file distributed with this product.
  *
  * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ * website: www.knime.com
+ * email: contact@knime.com
  * ---------------------------------------------------------------------
  * 
  * History
- *   28.07.2009 (Fabian Dill): created
+ *   14.09.2009 (Fabian Dill): created
  */
 package org.knime.core.data.date;
 
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+
 /**
- * Utility class for rendering times and dates.
+ * Comapres to {@link TimestampValue}s by comparing their UTC time.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public final class TimeRenderUtil {
-    
-    private TimeRenderUtil() {
-        // utility class
-    }
-    
+public class TimestampComparator extends DataValueComparator {
+
     /**
-     * 
-     * @param dateField day. month or year
-     * @return the date fields with a trailing "0" to be of two digits 
+     * {@inheritDoc}
      */
-    public static String getStringForDateField(final int dateField) {
-        if (dateField < 10) {
-            return "0" + Integer.toString(dateField);
-        }
-        return Integer.toString(dateField);
+    @Override
+    protected int compareDataValues(final DataValue v1, final DataValue v2) {
+        TimestampValue t1 = (TimestampValue)v1;
+        TimestampValue t2 = (TimestampValue)v2;
+        return t1.getUTCCalendarClone().compareTo(t2.getUTCCalendarClone());
     }
 
 }

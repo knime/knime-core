@@ -3,6 +3,7 @@ package org.knime.timeseries.node.aggregate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -33,7 +34,7 @@ public class TimeAggregatorNodeDialog extends DefaultNodeSettingsPane {
         // select column containing the time values
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), "Select time column", 0,
-                org.knime.core.data.TimestampValue.class));
+                TimestampValue.class));
         // get the aggregation granularity from TimeDifference node!
         List<String> methods = new ArrayList<String>();
         methods.addAll(TimeLevelNames.getAggregationLevels());
@@ -43,21 +44,31 @@ public class TimeAggregatorNodeDialog extends DefaultNodeSettingsPane {
         // add new column name text field
         addDialogComponent(new DialogComponentString(createNewColNameModel(),
                 "Appended column name"));
-
     }
 
     /*
      * Models...
      */
 
+    /**
+     * @return model for the selected column
+     */
     static SettingsModelString createColumnModel() {
         return new SettingsModelString(CFG_COL, "");
     }
 
+    /**
+     * 
+     * @return model for the new column name
+     */
     static SettingsModelString createNewColNameModel() {
         return new SettingsModelString(CFG_NEW_COL, "Aggregated_Time");
     }
 
+    /**
+     * 
+     * @return model for the granularity (time unit)  
+     */
     static SettingsModelString createLevelModel() {
         return new SettingsModelString(CFG_LEVEL, 
                 TimeLevelNames.QUARTER);

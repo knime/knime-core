@@ -27,13 +27,12 @@ package org.knime.timeseries.node.filter.extract;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Date;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -74,7 +73,6 @@ public class ExtractFromToNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        validateFromTo(m_fromDate.getCalendar(), m_toDate.getCalendar());
         int colIndex = -1;
         if (m_columnName.getStringValue() == null) {
             // no value yet -> auto-configure
@@ -95,6 +93,23 @@ public class ExtractFromToNodeModel extends NodeModel {
             if (colIndex == -1) {
                 throw new InvalidSettingsException("No column selected.");
             }
+            // set the from and to calendars to the minimum and maximum date of
+            // the auto-selected column
+            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(
+                    m_columnName.getStringValue());
+            if (colSpec.getType().isCompatible(TimestampValue.class)
+                    && colSpec.getDomain().hasBounds()) {
+                DataCell lower = colSpec.getDomain().getLowerBound();
+                DataCell upper = colSpec.getDomain().getUpperBound();
+                if (lower != null && upper != null
+                        && lower.getType().isCompatible(TimestampValue.class)
+                        && upper.getType().isCompatible(TimestampValue.class)) {
+                    Calendar c = ((TimestampValue)lower).getUTCCalendarClone();
+                    m_fromDate.setCalendar(c);
+                    c = ((TimestampValue)upper).getUTCCalendarClone();
+                    m_toDate.setCalendar(c);
+                }
+            }
         } else {
             // configured once -> we have a name selected
             colIndex = inSpecs[0]
@@ -109,7 +124,8 @@ public class ExtractFromToNodeModel extends NodeModel {
                         + "\" does not contain string values: "
                         + colSpec.getType().toString());
             }
-        }
+        }        
+        validateFromTo(m_fromDate.getCalendar(), m_toDate.getCalendar());
         // we return input specs since only rows are filtered
         // (no structural changes)
         DataTableSpec[] outs = inSpecs.clone();
@@ -154,9 +170,12 @@ public class ExtractFromToNodeModel extends NodeModel {
                     // do not include missing values -> skip it
                     continue;
                 }
-                Date time = ((TimestampValue)cell).getDate();
-                if (time.after(m_fromDate.getCalendar().getTime())
-                        && time.before(m_toDate.getCalendar().getTime())) {
+                Calendar time = ((TimestampValue)cell).getUTCCalendarClone();
+                // use "compareTo" in order to include also the dates on the 
+                // interval borders (instead of using "after" and "before", 
+                // which is implemented as a real < or >
+                if (time.compareTo(m_fromDate.getCalendar()) >= 0
+                        && time.compareTo(m_toDate.getCalendar()) <= 0) {
                     t.addRowToTable(r);
                 }
             }

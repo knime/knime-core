@@ -1,6 +1,6 @@
 package org.knime.timeseries.node.diff;
 
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
@@ -13,7 +13,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * Dialog for the TimeDifference node with a column selection for the first date
  * column, one for the other date column, a text field for the new column, a
- * selectino list for the desired granularity (year, quarter, month, week, day,
+ * selection list for the desired granularity (year, quarter, month, week, day,
  * hour, minute) of the difference and a spinner to chosse the rounding of the
  * fraction digits of the result.
  * 
@@ -44,7 +44,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
         // second date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumn2Model(), "Select second date column", 0,
-                TimestampValue.class));
+                org.knime.core.data.date.TimestampValue.class));
         // granularity selection
         addDialogComponent(new DialogComponentStringSelection(
                 createGranularityModel(),

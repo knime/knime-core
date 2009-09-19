@@ -22,10 +22,10 @@
  * History
  *   14.02.2007 (Rosaria Silipo): created
  */
-package org.knime.timeseries.node.display.barchart;
+package org.knime.exp.timeseries.node.display.barchart;
 
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;

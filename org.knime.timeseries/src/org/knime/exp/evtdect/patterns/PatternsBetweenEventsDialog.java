@@ -22,7 +22,7 @@
  * History
  *   January 26, 2007 (rosaria): created 
  */
-package org.knime.timeseries.node.filter.events.patterns;
+package org.knime.exp.evtdect.patterns;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;

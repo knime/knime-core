@@ -22,7 +22,7 @@
  * History
  *   Jan 24, 2007 (rs): created
  */
-package org.knime.timeseries.node.filter.events.patterns;
+package org.knime.exp.evtdect.patterns;
 
 import java.io.File;
 import java.io.IOException;

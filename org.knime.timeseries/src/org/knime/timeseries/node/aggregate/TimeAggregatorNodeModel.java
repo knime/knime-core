@@ -3,7 +3,6 @@ package org.knime.timeseries.node.aggregate;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 import org.knime.core.data.DataCell;
@@ -15,6 +14,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.TimeRenderUtil;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -50,8 +50,6 @@ public class TimeAggregatorNodeModel extends NodeModel {
     // the aggregation level
     private final SettingsModelString m_level = TimeAggregatorNodeDialog
             .createLevelModel();
-    
-
 
 
     /**
@@ -81,12 +79,9 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 if (row.getCell(m_colIdx).isMissing()) {
                     return DataType.getMissingCell();
                 }
-                // get the date
-                Date d = ((org.knime.core.data.TimestampValue)row
-                        .getCell(m_colIdx)).getDate();
                 // get a calendar
-                Calendar c = Calendar.getInstance();
-                c.setTime(d);
+                Calendar c = ((TimestampValue)row.getCell(m_colIdx))
+                    .getUTCCalendarClone();
                 // get the selected granularity level
                 String level = m_level.getStringValue();
                 // depending on the selected granularity level

@@ -22,14 +22,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.date.DateCell;
-import org.knime.core.data.date.DateTimeCell;
-import org.knime.core.data.date.TimeCell;
+import org.knime.core.data.date.TimestampCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -56,7 +52,9 @@ public class DateGeneratorNodeModel extends NodeModel {
     private final SettingsModelInteger m_noOfRows = DateGeneratorNodeDialog
         .createNumberOfRowsModel();
     
-    private DataType m_type;
+    private boolean m_useDate;
+    
+    private boolean m_useTime;
 
     /**
      *
@@ -72,29 +70,15 @@ public class DateGeneratorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        validateDates(m_from.getCalendar(), m_to.getCalendar());
+        validateDates(m_from, m_to);
         return new DataTableSpec[] {
                 createOutSpec()
         };
     }
 
     private DataTableSpec createOutSpec() {
-        String name;
-        // check data type
-        // 1. only date?
-        if (!m_from.useTime() && !m_to.useTime()) {
-            // only date
-            m_type = DateCell.TYPE;
-            name = "Date";
-        } else if (!m_from.useDate() && !m_to.useDate()) {
-            m_type = TimeCell.TYPE;
-            name = "Time";
-        } else {
-            m_type = DateTimeCell.TYPE;
-            name = "DateTime";
-        }
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                name, m_type);
+                "Timestamp", TimestampCell.TYPE);
         return new DataTableSpec(creator.createSpec());
     }
 
@@ -108,33 +92,29 @@ public class DateGeneratorNodeModel extends NodeModel {
         // prepare the calendars
         Calendar from = m_from.getCalendar();
         Calendar to = m_to.getCalendar();
-        if (m_type.equals(TimeCell.TYPE)) {
-            // "reset" the date fields 
-            from = TimeCell.resetDateFields(from);
-            to = TimeCell.resetDateFields(to);
-        } else if (m_type.equals(DateCell.TYPE)) {
-            from = DateCell.resetTimeFields(from);
-            to = DateCell.resetTimeFields(to);    
+        if (m_useDate && !m_useTime) {
+            TimestampCell.resetTimeFields(from);
+            TimestampCell.resetTimeFields(to);
+        } else if (m_useTime && !m_useDate) {
+            TimestampCell.resetDateFields(from);
+            TimestampCell.resetDateFields(to);
         }
-        long offset = (m_to.getCalendar().getTimeInMillis()
-                - m_from.getCalendar().getTimeInMillis())
+        long offset = (to.getTimeInMillis() - from.getTimeInMillis())
                 / m_noOfRows.getIntValue();
         BufferedDataContainer container = exec.createDataContainer(
                 createOutSpec());
-        long currentTime = m_from.getCalendar().getTimeInMillis();
+        // offset is shorter than a day -> so we need the time fields
+        boolean needsTimeFields = offset < 86400000; // <- one day
+        // if offset is smaller than a minute milliseconds might be of interest
+        boolean needsMillis = offset < 60000;
+        long currentTime = from.getTimeInMillis();
+        Calendar test = TimestampCell.getUTCCalendar();
+        test.setTimeInMillis(currentTime);
         for (int i = 0; i < m_noOfRows.getIntValue(); i++) {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
-            DataCell cell;
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(currentTime);
-            if (m_type.equals(TimeCell.TYPE)) {
-                cell = new TimeCell(c);
-            } else if (m_type.equals(DateCell.TYPE)) {
-                cell = new DateCell(c);
-            } else {
-                cell = new DateTimeCell(c);
-            }
+            TimestampCell cell = new TimestampCell(currentTime, 
+                    m_useDate, m_useTime || needsTimeFields, needsMillis);
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;
         }
@@ -143,25 +123,6 @@ public class DateGeneratorNodeModel extends NodeModel {
                 exec.createBufferedDataTable(container.getTable(), exec)
         };
     }
-
-//    private Calendar resetDateFields(final Calendar calendar) {
-//        calendar.clear(Calendar.YEAR);
-//        calendar.clear(Calendar.MONTH);
-//        calendar.clear(Calendar.DAY_OF_MONTH);
-//        return calendar;
-//    }
-//    
-//    private void resetTimeFields(final Calendar calendar) {
-//        // reset the time to 12 o clock
-//        calendar.clear(Calendar.HOUR_OF_DAY);
-//        calendar.clear(Calendar.MINUTE);
-//        calendar.clear(Calendar.SECOND);
-//        // ignore millisecond
-//    }
-
-    /**
-     * {@inheritDoc}
-     */
 
     /**
      * {@inheritDoc}
@@ -191,21 +152,31 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.validateSettings(settings);
         m_to.validateSettings(settings);
         m_noOfRows.validateSettings(settings);
-        Calendar from = ((SettingsModelCalendar)m_from
-                    .createCloneWithValidatedValue(settings)).getCalendar();
-        Calendar to = ((SettingsModelCalendar)m_to
-                    .createCloneWithValidatedValue(settings)).getCalendar();
+        SettingsModelCalendar from = m_from.createCloneWithValidatedValue(
+                settings);
+        SettingsModelCalendar to = m_to.createCloneWithValidatedValue(settings);
+        // check for !useDate and !useTime
+        if (!from.useDate() && !from.useTime()) {
+            throw new InvalidSettingsException(
+                    "Timestamp must consists of date or time!");
+        }
+        if (!to.useDate() && !to.useTime()) {
+            throw new InvalidSettingsException(
+                    "Timestamp must consists of date or time!");
+        }
         validateDates(from, to);
     }
 
-    private void validateDates(final Calendar start, final Calendar end)
+    private void validateDates(final SettingsModelCalendar start, 
+            final SettingsModelCalendar end)
         throws InvalidSettingsException {
-        if (end.before(start)
-                || end.getTimeInMillis() == start.getTimeInMillis()) {
+        if (end.getCalendar().before(start.getCalendar())
+                || end.getCalendar().getTimeInMillis() == start.getCalendar()
+                .getTimeInMillis()) {
             throw new InvalidSettingsException("End point "
-                    + end.getTime().toString()
+                    + end.toString()
                     + " must be after starting point "
-                    + start.getTime().toString());
+                    + start.toString());
         }
     }
 
@@ -219,6 +190,18 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.loadSettingsFrom(settings);
         m_to.loadSettingsFrom(settings);
         m_noOfRows.loadSettingsFrom(settings);
+        m_useDate = false;
+        m_useTime = false;
+        // check data type
+        // 1. only date?
+        if (m_from.useDate() || m_to.useDate()) {
+            // only date
+            m_useDate = true;
+        } 
+        if (m_from.useTime() || m_to.useTime()) {
+            // only time
+            m_useTime = true;
+        }
     }
 
 
@@ -229,8 +212,7 @@ public class DateGeneratorNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no view -> no internals
     }
 
     /**
@@ -240,8 +222,7 @@ public class DateGeneratorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no view -> no internals
     }
 
 }

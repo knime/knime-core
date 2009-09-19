@@ -22,10 +22,10 @@
  * History
  *   January 24, 2007 (rosaria): created 
  */
-package org.knime.timeseries.node.filter.events.timeseries;
+package org.knime.exp.timeseries.node.filter.events.timeseries;
 
 import org.knime.core.data.StringValue;
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;

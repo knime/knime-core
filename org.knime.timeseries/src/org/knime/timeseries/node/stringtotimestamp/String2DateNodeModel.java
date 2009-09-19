@@ -30,6 +30,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -40,10 +41,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.date.DateCell;
-import org.knime.core.data.date.DateTimeCell;
-import org.knime.core.data.date.TimeCell;
-import org.knime.core.data.def.TimestampCell;
+import org.knime.core.data.date.TimestampCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -81,7 +79,11 @@ public class String2DateNodeModel extends NodeModel {
 
     private SimpleDateFormat m_dateFormat;
     
-    private DataType m_type;
+    private boolean m_useDate;
+    
+    private boolean m_useTime;
+    
+    private boolean m_useMillis;
 
     /** Inits node, 1 input, 1 output. */
     public String2DateNodeModel() {
@@ -96,9 +98,9 @@ public class String2DateNodeModel extends NodeModel {
             throws InvalidSettingsException {
         if (m_formatModel.getStringValue() == null) {
             throw new InvalidSettingsException("No format selected.");
-        } else {
-            m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
         }
+        m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
+        m_dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         if (m_dateFormat == null) {
             throw new InvalidSettingsException("Invalid format: "
                     + m_formatModel.getStringValue());
@@ -150,8 +152,9 @@ public class String2DateNodeModel extends NodeModel {
             m_newColNameModel.setStringValue(uniqueColName);
         }
         DataColumnSpec newColSpec = new DataColumnSpecCreator(uniqueColName,
-                m_type).createSpec();
+                TimestampCell.TYPE).createSpec();
         m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
+        m_dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         SingleCellFactory c = new SingleCellFactory(newColSpec) {
             private int m_failCounter = 0;
             @Override
@@ -163,17 +166,14 @@ public class String2DateNodeModel extends NodeModel {
                 try {
                     String source = ((StringValue)cell).getStringValue();
                     Date date = m_dateFormat.parse(source);
-                    Calendar c = Calendar.getInstance();
-                    c.setTime(date);
+                    Calendar c = TimestampCell.getUTCCalendar();
+                    c.setTimeInMillis(date.getTime());
                     m_failCounter = 0;
                     // dependent on the type create the referring cell
-                    if (m_type.equals(TimeCell.TYPE)) {
-                        return new TimeCell(c);
-                    } else if (m_type.equals(DateCell.TYPE)) {
-                        return new DateCell(c);
-                    } else {
-                        return new DateTimeCell(c);
-                    }
+                    TimestampCell result = new TimestampCell(
+                            c.getTimeInMillis(), 
+                            m_useDate, m_useTime, m_useMillis);
+                    return result;
                 } catch (ParseException pe) {
                     setWarningMessage("Missing Cell due to Parse Exception.\n"
                             + "Date format incorrect?");
@@ -255,15 +255,9 @@ public class String2DateNodeModel extends NodeModel {
         // if it contains H, m, s -> time
         // if it contains y, M or d -> date
         String dateformat = m_formatModel.getStringValue();
-        boolean time = containsTime(dateformat);
-        boolean date = containsDate(dateformat);
-        if (time && !date) {
-            m_type = TimeCell.TYPE;
-        } else if (date && !time) {
-            m_type = DateCell.TYPE;
-        } else {
-            m_type = DateTimeCell.TYPE;
-        }
+        m_useTime = containsTime(dateformat);
+        m_useDate = containsDate(dateformat);
+        m_useMillis = containsMillis(dateformat);
         // if it is not a predefined one -> store it
         if (!String2DateDialog.PREDEFINED_FORMATS.contains(dateformat)) {
             StringHistory.getInstance(String2DateDialog.FORMAT_HISTORY_KEY).add(
@@ -274,6 +268,13 @@ public class String2DateNodeModel extends NodeModel {
     private boolean containsTime(final String dateFormat) {
         return dateFormat.contains("H") || dateFormat.contains("m")
             || dateFormat.contains("s");
+    }
+    
+    private boolean containsMillis(final String dateFormat) {
+        if (!containsTime(dateFormat)) {
+            return false;
+        }
+        return dateFormat.contains("S");
     }
     
     private boolean containsDate(final String dateFormat) {

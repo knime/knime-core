@@ -19,10 +19,9 @@
 package org.knime.timeseries.util;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 
-import org.knime.core.data.date.DateCell;
-import org.knime.core.data.date.TimeCell;
+import org.knime.core.data.date.TimeRenderUtil;
+import org.knime.core.data.date.TimestampCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -82,8 +81,8 @@ public class SettingsModelCalendar extends SettingsModel {
         } else {
             m_value = Calendar.getInstance();
         }
-        m_useDate = true;
-        m_useTime = false;
+        m_useDate = useDate;
+        m_useTime = useTime;
     }
 
     /**
@@ -116,9 +115,9 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     public void setCalendar(final Calendar calendar) {
         if (useTime() && !useDate()) {
-            m_value = TimeCell.resetDateFields(calendar);
+            m_value = TimestampCell.resetDateFields(calendar);
         } else if (!useTime() && useDate()) {
-            m_value = DateCell.resetTimeFields(calendar);
+            m_value = TimestampCell.resetTimeFields(calendar);
         } else {
             m_value = calendar;
         }
@@ -138,6 +137,9 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     public void setUseDate(final boolean useDate) {
         m_useDate = useDate;
+        if (!useDate) {
+            m_value = TimestampCell.resetDateFields(m_value);
+        }
     }
     
     /**
@@ -154,6 +156,9 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     public void setUseTime(final boolean useTime) {
         m_useTime = useTime;
+        if (!useTime) {
+            m_value = TimestampCell.resetTimeFields(m_value); 
+        }
     }
     
     
@@ -181,7 +186,7 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     @Override
     protected String getModelTypeID() {
-        return "settingsmodel.date";
+        return "settingsmodel.datetime";
     }
 
     /**
@@ -202,15 +207,11 @@ public class SettingsModelCalendar extends SettingsModel {
     
 
     private void loadFromInternals(final Config internals) {
-        Calendar tmpTime = Calendar.getInstance();
-        String timeZone = internals.getString(KEY_TIMEZONE, 
-                tmpTime.getTimeZone().getID());
+        Calendar tmpTime = TimestampCell.getUTCCalendar();
         long time = internals.getLong(KEY_TIME, 
                 tmpTime.getTimeInMillis());
-        tmpTime = Calendar.getInstance(TimeZone.getTimeZone(timeZone));
         tmpTime.setTimeInMillis(time);
         m_value = tmpTime;
-        tmpTime = null;
         m_useDate = internals.getBoolean(KEY_USE_DATE, true);
         m_useTime = internals.getBoolean(KEY_USE_TIME, false);
     }
@@ -261,7 +262,29 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     @Override
     public String toString() {
-        return m_value.getTime().toString();
+        String result = "";
+        if (m_useDate) {
+            result = "Date: ";
+            result += 
+                TimeRenderUtil.getStringForDateField(m_value.get(Calendar.YEAR))
+                + "-" + TimeRenderUtil.getStringForDateField(
+                        m_value.get(Calendar.MONTH)) + "-" 
+                + TimeRenderUtil.getStringForDateField(
+                        m_value.get(Calendar.DAY_OF_MONTH)) + " ";
+        }
+        if (m_useTime) {
+            if (!m_useDate) {
+                result = "Time: ";
+            }
+           result += TimeRenderUtil.getStringForDateField(
+                   m_value.get(Calendar.HOUR_OF_DAY)) + ":" 
+               + TimeRenderUtil.getStringForDateField(
+                       m_value.get(Calendar.MINUTE)) + ":" 
+               + TimeRenderUtil.getStringForDateField(
+                       m_value.get(Calendar.SECOND)) + "." 
+               + m_value.get(Calendar.MILLISECOND); 
+        }
+        return result;
     }
 
     /**
@@ -285,7 +308,6 @@ public class SettingsModelCalendar extends SettingsModel {
         // since every possible long is a valid one (even negatives = in order 
         // to be able to store dates before 1970) 
         internals.getLong(KEY_TIME);
-        
     }
 
 }

@@ -25,7 +25,7 @@
 package org.knime.timeseries.node.display.timeplot;
 
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.data.TimestampValue;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;

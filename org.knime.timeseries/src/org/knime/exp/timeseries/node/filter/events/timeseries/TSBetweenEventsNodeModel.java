@@ -22,19 +22,20 @@
  * History
  *   Jan 24, 2007 (rs): created
  */
-package org.knime.timeseries.node.filter.events.timeseries;
+package org.knime.exp.timeseries.node.filter.events.timeseries;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.TimestampValue;
-import org.knime.core.data.def.TimestampCell;
+import org.knime.core.data.date.TimestampCell;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -68,24 +69,24 @@ public class TSBetweenEventsNodeModel extends NodeModel {
     /** Config identifier: date conatined in output table. */
     static final String CFG_TIMESTAMP_OUTPUT = "timeStampOutput";
 
-    private SettingsModelString m_eventName =
+    private final SettingsModelString m_eventName =
          new SettingsModelString(CFG_EVENT_NAME, "split");
 
-    private SettingsModelString m_columnName =
+    private final SettingsModelString m_columnName =
         new SettingsModelString(CFG_COLUMN_NAME, null);
 
 //    private SettingsModelString m_dateFormat =
 //        new SettingsModelString(CFG_DATE_FORMAT, "yyyy-MM-dd;HH:mm:ss.S");
 
-    private SettingsModelString m_timeStampOutput =
+    private final SettingsModelString m_timeStampOutput =
         new SettingsModelString(CFG_TIMESTAMP_OUTPUT, "yyyy-MM-dd;HH:mm:ss.S");
    
-    private SettingsModelString m_timestampColumnName =
+    private final SettingsModelString m_timestampColumnName =
         new SettingsModelString(CFG_TIMESTAMP_COLUMN_NAME, null);
 
     private String m_event; 
     private String m_dateOutput;
-    private SimpleDateFormat m_df = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss.S"); 
+    private final SimpleDateFormat m_df = new SimpleDateFormat("yyyy-MM-dd;HH:mm:ss.S"); 
 
         /** Inits node, 1 input, 1 output. */
     public TSBetweenEventsNodeModel() {
@@ -223,8 +224,18 @@ public class TSBetweenEventsNodeModel extends NodeModel {
        
         int outputTableIndex = -1;
         
+        
+        // FIXME: this is just based on assumptions that it will work!!!!
+        /* this it was before:
         TimestampCell tscOutput = 
             new TimestampCell(m_dateOutput, m_df);
+            */
+        // changed to:
+        m_df.setTimeZone(TimestampCell.UTC_TIMEZONE);
+        Date parseResult = m_df.parse(m_dateOutput);
+        // set all booleans to true - since I don't know better
+        TimestampCell tscOutput = new TimestampCell(
+                parseResult.getTime(), true, true, true);
 
         BufferedDataContainer t = exec.createDataContainer(outs);
         Vector<BufferedDataTable> tables = new Vector<BufferedDataTable>();
@@ -233,8 +244,8 @@ public class TSBetweenEventsNodeModel extends NodeModel {
            int count = 0;
            for (DataRow r : in) {
               String event = r.getCell(colIndex).toString();
-              TimestampValue tsc = (TimestampValue) r.getCell(timestampColIndex);
-              
+              TimestampValue tsc = (TimestampValue) r.getCell(
+                      timestampColIndex);
               if (event.equals(m_event)) {
                   t.close();
                   count++;
@@ -243,8 +254,9 @@ public class TSBetweenEventsNodeModel extends NodeModel {
                   }
                   t = exec.createDataContainer(outs);
               }
-                            
-              if (tsc.getDate().compareTo(tscOutput.getDate()) == 0) {
+              
+              if (tsc.getUTCCalendarClone().equals(
+                      tscOutput.getUTCCalendarClone())) {
                   outputTableIndex = count;
               }
               t.addRowToTable(r);

@@ -3,16 +3,15 @@ package org.knime.timeseries.node.diff;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Date;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.TimestampValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.date.TimestampValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -91,10 +90,12 @@ public class TimeDifferenceNodeModel extends NodeModel {
              *         granularity and rounding
              */
             @Override
-            public DataCell getCell(DataRow row) {
-                Date first = ((TimestampValue)row.getCell(m_col1Idx)).getDate();
-                Date last = ((TimestampValue)row.getCell(m_col2Idx)).getDate();
-                double diffTime = (last.getTime() - first.getTime()) / g.getFactor();
+            public DataCell getCell(final DataRow row) {
+                long first = ((TimestampValue)row.getCell(m_col1Idx))
+                    .getUTCTime();
+                long last = ((TimestampValue)row.getCell(m_col2Idx))
+                    .getUTCTime();
+                double diffTime = (last - first) / g.getFactor();
                 BigDecimal bd = new BigDecimal(diffTime);
                 bd = bd.setScale(m_rounding.getIntValue(),
                         BigDecimal.ROUND_CEILING);
