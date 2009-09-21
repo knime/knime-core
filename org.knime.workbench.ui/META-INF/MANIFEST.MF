@@ -9,7 +9,7 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.core.resources,
- org.eclipse.ui.ide,
+ org.eclipse.ui.ide;bundle-version="3.4.2",
  org.knime.workbench.core,
  org.knime.workbench.repository,
  org.eclipse.ui.forms
