@@ -657,9 +657,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
                     // do not set the root path
                     .getRoot())) {
                 m_targetTextUI.setText(target.getFullPath().toString());
-                // TODO: check for valid workflows
             } else {
-                m_targetTextUI.setText("");
+                m_targetTextUI.setText(Path.ROOT.toString());
             }
         }
         validateWorkflows();
