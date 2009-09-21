@@ -15,7 +15,7 @@
  * website: www.knime.com
  * email: contact@knime.com
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.08.2009 (Fabian Dill): created
  */
@@ -83,34 +83,34 @@ import org.knime.workbench.ui.wizards.workflowgroup.WorkflowGroupSelectionDialog
 /**
  * Import page providing the hierarchical user interface to select workflows and
  * workflow groups to import from either a directory or an archive file.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class WorkflowImportSelectionPage extends WizardPage {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             WorkflowImportSelectionPage.class);
 
     /** Identifier for this page within a wizard. */
     public static final String NAME = "Workflow import selection";
-    
+
     private static final ImageDescriptor ICON = KNIMEUIPlugin
         .imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
             "icons/knime_import55.png");
-    
-    private static final Image IMG_WARN 
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID, 
+
+    private static final Image IMG_WARN
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
                 "icons/warning.gif").createImage();
-    
+
     // constant from WizardArchiveFileResourceImportPage1
     private static final String[] ZIP_FILE_MASK = {
-            "*.jar;*.zip;*.tar;*.tar.gz;*.tgz", "*.*" }; //$NON-NLS-1$ 
+            "*.jar;*.zip;*.tar;*.tar.gz;*.tgz", "*.*" }; //$NON-NLS-1$
 
     // keys and fields for dialog settings
     private static final String KEY_ZIP_LOC = "initialZipLocation";
-    private static final String KEY_DIR_LOC = "initialDirLocation"; 
+    private static final String KEY_DIR_LOC = "initialDirLocation";
     private static final String KEY_FROM_DIR = "initiallyFromDir";
-    
+
     private static String initialZipLocation = "";
     private static String initialDirLocation = "";
     private static boolean initialFromDir = true;
@@ -119,41 +119,41 @@ public class WorkflowImportSelectionPage extends WizardPage {
 
     private static final GridData FILL_BOTH = new GridData(GridData.FILL_BOTH);
     private final GridData m_btnData;
-    
-    // source selection part components 
+
+    // source selection part components
     private Button m_fromDirUI;
     private Text m_fromDirTextUI;
     private Button m_dirBrowseBtn;
     private Button m_fromZipUI;
     private Text m_fromZipTextUI;
     private Button m_zipBrowseBtn;
-    
+
     // target selection part components
     private Text m_targetTextUI;
-    
+    private Button m_browseWorkflowGroupsBtn;
+
     // workflow list part components
     private CheckboxTreeViewer m_workflowListUI;
     private Button m_copyProjectsUI;
-    
-    private IWorkflowImportElement m_importRoot; 
-    
-    private final Collection<IWorkflowImportElement>m_invalidAndCheckedImports 
+
+    private IWorkflowImportElement m_importRoot;
+
+    private final Collection<IWorkflowImportElement>m_invalidAndCheckedImports
         = new ArrayList<IWorkflowImportElement>();
-    
-    private final Collection<IWorkflowImportElement>m_validAndCheckedImports 
-        = new ArrayList<IWorkflowImportElement>(); 
-    
-    
+
+    private final Collection<IWorkflowImportElement>m_validAndCheckedImports
+        = new ArrayList<IWorkflowImportElement>();
+
     /*
      * We keep the next page (the rename page here), because it is not possible
-     * to dynamically change the page in the wizard. See the getNextPage method 
-     * where the correct next page (depending on duplicate workflows) is 
+     * to dynamically change the page in the wizard. See the getNextPage method
+     * where the correct next page (depending on duplicate workflows) is
      * returned.
      */
-    private RenameWorkflowImportPage m_renamePage; 
+    private RenameWorkflowImportPage m_renamePage;
 
     /**
-     * 
+     *
      */
     public WorkflowImportSelectionPage() {
         super(NAME);
@@ -164,7 +164,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         m_btnData.widthHint = 70;
         m_btnData.horizontalAlignment = SWT.RIGHT;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -178,9 +178,9 @@ public class WorkflowImportSelectionPage extends WizardPage {
         createWorkflowListComposite(overall);
         setControl(overall);
     }
-    
+
     /**
-     * 
+     *
      * @param parent parent
      * @return composite to select the destination of the import
      */
@@ -199,14 +199,14 @@ public class WorkflowImportSelectionPage extends WizardPage {
             public void modifyText(final ModifyEvent e) {
                 validateWorkflows();
             }
-            
+
         });
-        Button browseWorkflowGroup = new Button(overall, SWT.PUSH);
-        browseWorkflowGroup.setText("Browse...");
-        browseWorkflowGroup.setLayoutData(m_btnData);
-        browseWorkflowGroup.setEnabled(
+        m_browseWorkflowGroupsBtn = new Button(overall, SWT.PUSH);
+        m_browseWorkflowGroupsBtn.setText("Browse...");
+        m_browseWorkflowGroupsBtn.setLayoutData(m_btnData);
+        m_browseWorkflowGroupsBtn.setEnabled(
                 KnimeResourceUtil.existsWorkflowGroupInWorkspace());
-        browseWorkflowGroup.addSelectionListener(new SelectionListener() {
+        m_browseWorkflowGroupsBtn.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
@@ -217,8 +217,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
             }
         });
         // set initial selection
-        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot(); 
-        if (m_initialDestination != null 
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        if (m_initialDestination != null
                 && !m_initialDestination.equals(root)) {
             m_targetTextUI.setText(
                     m_initialDestination.getFullPath().toString());
@@ -227,19 +227,19 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         return overall;
     }
-    
+
     /**
-     * 
+     *
      * @param parent the parent composite
      * @return the composite of the import page containing the selection
-     *  between archive file or directory 
+     *  between archive file or directory
      */
     protected Composite createImportComposite(final Composite parent) {
         Group overall = new Group(parent, SWT.FILL | SWT.SHADOW_ETCHED_IN);
         overall.setText("Source:");
         GridData fillHorizontal = new GridData(GridData.FILL_HORIZONTAL);
         overall.setLayoutData(fillHorizontal);
-        
+
         overall.setLayout(new GridLayout(3, false));
         m_fromDirUI = new Button(overall, SWT.RADIO);
         m_fromDirUI.setText("Select root directory:");
@@ -256,7 +256,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 enableZipComponents(!fromDir);
                 clear();
                 // restore imports from previously selected dir
-                if (m_fromDirTextUI.getText() != null 
+                if (m_fromDirTextUI.getText() != null
                         && !m_fromDirTextUI.getText().trim().isEmpty()) {
                     collectWorkflowsFromDir(m_fromDirTextUI.getText().trim());
                 }
@@ -278,7 +278,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 handleDirBrowseButtonPressed();
             }
         });
-        
+
         m_fromZipUI = new Button(overall, SWT.RADIO);
         m_fromZipUI.setText("Select archive file:");
         m_fromZipUI.addSelectionListener(new SelectionListener() {
@@ -294,13 +294,13 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 enableZipComponents(fromZip);
                 clear();
                 // restore imports from previously selected file
-                if (m_fromZipTextUI.getText() != null 
+                if (m_fromZipTextUI.getText() != null
                         && !m_fromZipTextUI.getText().trim().isEmpty()) {
                     collectWorkflowsFromZipFile(
                             m_fromZipTextUI.getText().trim());
                 }
             }
-            
+
         });
         m_fromZipTextUI = new Text(overall, SWT.BORDER | SWT.READ_ONLY);
         m_fromZipTextUI.setLayoutData(fillHorizontal);
@@ -317,7 +317,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 handleZipBrowseButtonPressed();
             }
         });
-        
+
         // set the initial selection
         m_fromDirUI.setSelection(initialFromDir);
         enableDirComponents(initialFromDir);
@@ -325,10 +325,10 @@ public class WorkflowImportSelectionPage extends WizardPage {
         enableZipComponents(!initialFromDir);
         return overall;
     }
-    
+
     /**
-     * 
-     * @param enable true if the zip file selection UI elements should be 
+     *
+     * @param enable true if the zip file selection UI elements should be
      *  enabled
      */
     public void enableZipComponents(final boolean enable) {
@@ -338,21 +338,21 @@ public class WorkflowImportSelectionPage extends WizardPage {
             m_copyProjectsUI.setEnabled(!enable);
         }
     }
-    
+
     /**
-     * 
-     * @param enable true if the directory selection UI elements should be 
+     *
+     * @param enable true if the directory selection UI elements should be
      *  enabled
      */
     public void enableDirComponents(final boolean enable) {
         m_fromDirTextUI.setEnabled(enable);
         m_dirBrowseBtn.setEnabled(enable);
     }
-    
+
     /**
-     * 
+     *
      * @param parent parent composite
-     * @return the lower part of the workflow selection page, the list with 
+     * @return the lower part of the workflow selection page, the list with
      *  selected workflows to import
      */
     protected Composite createWorkflowListComposite(final Composite parent) {
@@ -431,8 +431,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
             public void checkStateChanged(final CheckStateChangedEvent event) {
                 Object o = event.getElement();
                 boolean isChecked = event.getChecked();
-                // first expand in order to be able to check children as well  
-                m_workflowListUI.expandToLevel(o, 
+                // first expand in order to be able to check children as well
+                m_workflowListUI.expandToLevel(o,
                         AbstractTreeViewer.ALL_LEVELS);
                 m_workflowListUI.setSubtreeChecked(o, isChecked);
                 if (o instanceof IWorkflowImportElement) {
@@ -482,7 +482,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                     m_workflowListUI.setAllChecked(false);
                 }
             }
-        });        
+        });
         // below a check box -> copy projects
         m_copyProjectsUI = new Button(overall, SWT.CHECK);
         m_copyProjectsUI.setText("Copy projects into workspace");
@@ -501,39 +501,39 @@ public class WorkflowImportSelectionPage extends WizardPage {
         m_copyProjectsUI.setEnabled(initialFromDir);
         return parent;
     }
-    
+
     /**
-     * 
+     *
      * @return the underlying tree that displays the workflows to import
      */
     public CheckboxTreeViewer getViewer() {
         return m_workflowListUI;
     }
-    
+
     /**
-     * 
+     *
      * @return the valid and checked workflow imports
      */
     public Collection<IWorkflowImportElement> getWorkflowsToImport() {
         return m_validAndCheckedImports;
     }
-    
+
     /**
-     * 
+     *
      * @return the destination path
      */
     protected String getDestination() {
         return m_targetTextUI.getText();
     }
-    
+
     /**
-     * 
+     *
      * @param viewer the viewer which items should be (un-)checked
      * @param element the element whose parents should be checked
      * @param state true for checked, false for uncheck
      */
-    private void setParentTreeChecked(final CheckboxTreeViewer viewer, 
-            final IWorkflowImportElement element, 
+    private void setParentTreeChecked(final CheckboxTreeViewer viewer,
+            final IWorkflowImportElement element,
             final boolean state) {
         // trivial case -> go up and set active
         if (state) {
@@ -550,14 +550,14 @@ public class WorkflowImportSelectionPage extends WizardPage {
             IWorkflowImportElement parent = element.getParent();
             while (parent != null) {
                 // since we change the checked elements in this while loop we
-                // have to retrieve the currently checked elements in each 
+                // have to retrieve the currently checked elements in each
                 // iteration
                 List allChecked = Arrays.asList(
                         viewer.getCheckedElements());
                 Collection children = new ArrayList();
                 children.addAll(parent.getChildren());
-                // if there are no common elements between 
-                // the parent's children and the uncheck elements -> 
+                // if there are no common elements between
+                // the parent's children and the uncheck elements ->
                 // no other checked children
                 // -> then we can uncheck it
                 children.retainAll(allChecked);
@@ -570,19 +570,19 @@ public class WorkflowImportSelectionPage extends WizardPage {
             }
         }
     }
-    
+
     private void handleZipBrowseButtonPressed() {
         // open a FileSelection dialog
         FileDialog dialog = new FileDialog(getShell());
         // allow only archive files
         dialog.setFilterExtensions(ZIP_FILE_MASK);
-        
+
         // set initial location (either an already selected one)
-        String fileName = m_fromZipTextUI.getText().trim(); 
+        String fileName = m_fromZipTextUI.getText().trim();
         if (fileName.isEmpty()) {
             // restore
             fileName = initialZipLocation;
-        } 
+        }
         // if still empty -> set to workspace root
         if (fileName.isEmpty()) {
             fileName = ResourcesPlugin.getWorkspace().getRoot().getLocation()
@@ -605,8 +605,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
             collectWorkflowsFromZipFile(selectedFile);
         }
     }
-    
-    
+
+
     private void handleDirBrowseButtonPressed() {
         DirectoryDialog dialog = new DirectoryDialog(getShell());
         // get initial root
@@ -624,7 +624,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         File initialDir = new File(fileName);
         if (initialDir.exists()) {
             if (!initialDir.isDirectory()) {
-                initialDir = initialDir.getParentFile();                
+                initialDir = initialDir.getParentFile();
             }
             dialog.setFilterPath(initialDir.getAbsolutePath());
         }
@@ -634,7 +634,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
             collectWorkflowsFromDir(selectedDir);
         }
     }
-    
+
     private void handleWorkflowGroupBrowseButtonPressed() {
         // get the value from the text field
         String wfGroupPath = m_targetTextUI.getText();
@@ -642,7 +642,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
             .getFullPath();
         // if not yet set take workflow root
         if (wfGroupPath != null && !wfGroupPath.trim().isEmpty()) {
-            initialPath = new Path(wfGroupPath); 
+            initialPath = new Path(wfGroupPath);
         }
         WorkflowGroupSelectionDialog dialog = new WorkflowGroupSelectionDialog(
                 getShell());
@@ -662,9 +662,9 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         validateWorkflows();
     }
-    
+
     /**
-     * 
+     *
      * @param selectedDir the directory to collect the contained workflows from
      */
     public void collectWorkflowsFromDir(final String selectedDir) {
@@ -673,11 +673,11 @@ public class WorkflowImportSelectionPage extends WizardPage {
         m_fromDirTextUI.setText(selectedDir);
         File dir = new File(selectedDir);
         IWorkflowImportElement root = null;
-        // FIXME: this is a hack - should work if the user selects a 
-        // workflow. Flag workflowSelected indicates that not the path but 
+        // FIXME: this is a hack - should work if the user selects a
+        // workflow. Flag workflowSelected indicates that not the path but
         // the name only is considered when the resource is created
         if (WorkflowImportElementFromFile.isWorkflow(dir)) {
-            // if the user selected a workflow we set the parent and the 
+            // if the user selected a workflow we set the parent and the
             // child to this workflow - otherwise it would not be displayed
             root = new WorkflowImportElementFromFile(dir, true);
             root.addChild(new WorkflowImportElementFromFile(dir));
@@ -691,19 +691,19 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 public void run(final IProgressMonitor monitor)
                         throws InvocationTargetException,
                         InterruptedException {
-                    monitor.beginTask("Looking for workflows in ", 
+                    monitor.beginTask("Looking for workflows in ",
                             IProgressMonitor.UNKNOWN);
                     collectWorkflowsFromDir(
-                            (WorkflowImportElementFromFile)m_importRoot, 
+                            (WorkflowImportElementFromFile)m_importRoot,
                             monitor);
                     monitor.done();
                 }
             });
         } catch (Exception e) {
-            String message = "Error while trying to import workflows from " 
+            String message = "Error while trying to import workflows from "
                 + selectedDir;
-            IStatus status = new Status(IStatus.ERROR, 
-                    KNIMEUIPlugin.PLUGIN_ID, 
+            IStatus status = new Status(IStatus.ERROR,
+                    KNIMEUIPlugin.PLUGIN_ID,
                     message, e);
             setErrorMessage(message);
             LOGGER.error(message, e);
@@ -713,9 +713,9 @@ public class WorkflowImportSelectionPage extends WizardPage {
         m_workflowListUI.setInput(m_importRoot);
         m_workflowListUI.refresh(true);
     }
-    
+
     private void collectWorkflowsFromDir(
-            final WorkflowImportElementFromFile parent, 
+            final WorkflowImportElementFromFile parent,
             final IProgressMonitor monitor) {
         if (monitor.isCanceled()) {
             m_importRoot = null;
@@ -725,7 +725,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 public void run() {
                     m_fromDirTextUI.setText("");
                 }
-                
+
             });
             return;
         }
@@ -740,25 +740,25 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         if (WorkflowImportElementFromFile.isWorkflow(rootDir)) {
             // abort recursion!
-            return;            
+            return;
         }
         monitor.subTask(rootDir.getName());
         // else go through all files
         if (rootDir.canRead()) {
             for (File f : rootDir.listFiles()) {
                 if (f.isDirectory()) {
-                    WorkflowImportElementFromFile child 
+                    WorkflowImportElementFromFile child
                         = new WorkflowImportElementFromFile(f);
                     collectWorkflowsFromDir(child, monitor);
                     if (child.isWorkflow() || child.isWorkflowGroup()) {
                         parent.addChild(child);
                     }
-                } 
+                }
             }
         }
     }
 
-    
+
     private void collectWorkflowsFromZipFile(final String path) {
         ILeveledImportStructureProvider provider = null;
         if (ArchiveFileManipulations.isTarFile(path)) {
@@ -782,7 +782,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                         + ". Contains no workflows");
             }
         }
-        // TODO: store only the workflows (dirs are created automatically) 
+        // TODO: store only the workflows (dirs are created automatically)
         final ILeveledImportStructureProvider finalProvider = provider;
         if (provider != null) {
             // reset error
@@ -796,7 +796,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                         Object child = finalProvider.getRoot();
                         m_importRoot = new WorkflowImportElementFromArchive(
                                 finalProvider, child, 0);
-                        monitor.beginTask("Scanning for workflows in ", 
+                        monitor.beginTask("Scanning for workflows in ",
                                 IProgressMonitor.UNKNOWN);
                         collectWorkflowsFromProvider(
                                 (WorkflowImportElementFromArchive)m_importRoot,
@@ -805,10 +805,10 @@ public class WorkflowImportSelectionPage extends WizardPage {
 
                 });
             } catch (Exception e) {
-                String message = "Error while trying to import workflows from " 
+                String message = "Error while trying to import workflows from "
                     + path;
-                IStatus status = new Status(IStatus.ERROR, 
-                        KNIMEUIPlugin.PLUGIN_ID, 
+                IStatus status = new Status(IStatus.ERROR,
+                        KNIMEUIPlugin.PLUGIN_ID,
                         message, e);
                 setErrorMessage(message);
                 LOGGER.error(message, e);
@@ -819,14 +819,14 @@ public class WorkflowImportSelectionPage extends WizardPage {
             m_workflowListUI.refresh(true);
         }
     }
-    
+
     /**
-     * 
+     *
      * @param parent the archive element to collect the workflows from
      * @param monitor progress monitor
      */
     public void collectWorkflowsFromProvider(
-            final WorkflowImportElementFromArchive parent, 
+            final WorkflowImportElementFromArchive parent,
             final IProgressMonitor monitor) {
         if (monitor.isCanceled()) {
             m_importRoot = null;
@@ -854,8 +854,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
         while (childrenEnum.hasNext()) {
             Object child = childrenEnum.next();
             if (provider.isFolder(child)) {
-                WorkflowImportElementFromArchive childElement 
-                    = new WorkflowImportElementFromArchive(provider, child, 
+                WorkflowImportElementFromArchive childElement
+                    = new WorkflowImportElementFromArchive(provider, child,
                             parent.getLevel() + 1);
                 collectWorkflowsFromProvider(childElement, monitor);
                 // either it's a workflow
@@ -867,31 +867,42 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 }
             }
         }
-    } 
-    
+    }
+
     /**
-     * 
-     * @param importRoot the workflow import element to import from 
+     * Sets a predefined import root so that it is not selectable by the user.
+     *
+     * @param importRoot the workflow import element to import from
      *  (might be a zip entry)
      */
     public void setImportRoot(final IWorkflowImportElement importRoot) {
-        // public in order to make it possible to use this wizard to import 
+        // public in order to make it possible to use this wizard to import
         // workflows from a zip entry
+        boolean isFile = importRoot instanceof WorkflowImportElementFromFile;
+        m_fromDirUI.setSelection(isFile);
+        m_fromZipUI.setSelection(!isFile);
+        m_fromDirUI.setEnabled(false);
+        m_fromZipUI.setEnabled(false);
+        m_copyProjectsUI.setEnabled(isFile);
         m_importRoot = importRoot;
     }
-    
-    
+
+    public void enableTargetSelection(final boolean enable) {
+        m_browseWorkflowGroupsBtn.setEnabled(enable);
+    }
+
+
     /**
-     * 
+     *
      * @return true if there are some workflows selected which already exist
      *  in the target location
      */
     public boolean containsInvalidAndCheckedImports() {
         return m_invalidAndCheckedImports.size() > 0;
     }
-    
+
     /**
-     * Checks the tree for selected workflows which already exist in the target 
+     * Checks the tree for selected workflows which already exist in the target
      * location.
      */
     protected void collectInvalidAndCheckedImports() {
@@ -900,22 +911,22 @@ public class WorkflowImportSelectionPage extends WizardPage {
         if (m_importRoot == null) {
             return;
         }
-        collectInvalids(m_validAndCheckedImports, 
+        collectInvalids(m_validAndCheckedImports,
                 m_invalidAndCheckedImports, m_importRoot);
     }
-    
+
     /**
-     * 
+     *
      * @param valids list of valid workflows
-     * @param invalids list of invalid (already existing) workflows 
+     * @param invalids list of invalid (already existing) workflows
      * @param node current tree node
      */
     protected void collectInvalids(
             final Collection<IWorkflowImportElement> valids,
-            final Collection<IWorkflowImportElement> invalids, 
+            final Collection<IWorkflowImportElement> invalids,
             final IWorkflowImportElement node) {
         if (m_workflowListUI.getChecked(node)) {
-            if (node.isInvalid()) {                
+            if (node.isInvalid()) {
                 invalids.add(node);
             } else {
                 valids.add(node);
@@ -925,7 +936,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
             collectInvalids(valids, invalids, child);
         }
     }
-    
+
     /**
      * Updates the wizard for the current selected import and target location.
      */
@@ -938,7 +949,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         setErrorMessage(null);
         // get the path
         IPath destination = getDestinationPath();
-        
+
         // clear invalid list
         m_invalidAndCheckedImports.clear();
         // traverse over all items in the tree
@@ -946,7 +957,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         collectInvalidAndCheckedImports();
         if (containsInvalidAndCheckedImports()) {
             m_renamePage = new RenameWorkflowImportPage(this,
-                    m_invalidAndCheckedImports); 
+                    m_invalidAndCheckedImports);
             m_renamePage.setWizard(getWizard());
             m_renamePage.setPreviousPage(this);
         } else {
@@ -958,32 +969,32 @@ public class WorkflowImportSelectionPage extends WizardPage {
         getWizard().canFinish();
         m_workflowListUI.refresh(true);
     }
-    
-    
+
+
     /**
-     * 
-     * @return the destination path 
+     *
+     * @return the destination path
      */
     protected IPath getDestinationPath() {
-        IPath destination = Path.ROOT; 
+        IPath destination = Path.ROOT;
         if (!m_targetTextUI.getText().trim().isEmpty()) {
             destination = new Path(m_targetTextUI.getText().trim());
         }
         return destination;
     }
-    
+
 
     /**
-     * Sets the invalid flag of the import element to true if the a resource 
-     * with the same name already exists in the destination location. 
-     * 
+     * Sets the invalid flag of the import element to true if the a resource
+     * with the same name already exists in the destination location.
+     *
      * @param destination the destination path
      * @param element the workflow import element to check
      */
-    protected void isValidImport(final IPath destination, 
+    protected void isValidImport(final IPath destination,
             final IWorkflowImportElement element) {
         // get path
-        IPath childPath = element.getPath();
+        IPath childPath = element.getRenamedPath();
         // append to the destination path
         IPath result = destination.append(childPath);
         // check whether this exists
@@ -1000,15 +1011,15 @@ public class WorkflowImportSelectionPage extends WizardPage {
             isValidImport(destination, child);
         }
     }
-    
+
     /**
-     * 
+     *
      * @param destination the initial destination container
      */
     public void setInitialTarget(final IContainer destination) {
         m_initialDestination = destination;
     }
-    
+
     /**
      * Saves the settings of this dialog.
      */
@@ -1021,7 +1032,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         // last selected dir/file
     }
-    
+
     /**
      * Restores the settings of this dialog from last opened wizard.
      */
@@ -1033,45 +1044,45 @@ public class WorkflowImportSelectionPage extends WizardPage {
             initialDirLocation = settings.get(KEY_DIR_LOC);
             initialFromDir = settings.getBoolean(KEY_FROM_DIR);
             if (!initialFromDir) {
-                if (m_copyProjectsUI != null 
+                if (m_copyProjectsUI != null
                         && !m_copyProjectsUI.isDisposed()) {
                     m_copyProjectsUI.setEnabled(false);
                 }
             }
         }
     }
-    
+
     /**
      * Updates the wizard messages.
      */
     protected void updateMessages() {
         if (containsInvalidAndCheckedImports()) {
-            setErrorMessage("Some of the workflows already exists in the " 
-                    + "target destination! Change the target destination or " 
+            setErrorMessage("Some of the workflows already exists in the "
+                    + "target destination! Change the target destination or "
                     + "rename them by clicking \"Next\".");
         } else {
             setErrorMessage(null);
         }
         if (m_importRoot == null) {
-            setMessage("Select an import source: either from a directory" 
-                    + " containing the workflows or from an archive file.", 
+            setMessage("Select an import source: either from a directory"
+                    + " containing the workflows or from an archive file.",
                     INFORMATION);
         } else if (m_validAndCheckedImports.size() == 0) {
-            setMessage("Select the workflows to import, already existing" 
-                    + " workflows can be renamed on the next page.", 
+            setMessage("Select the workflows to import, already existing"
+                    + " workflows can be renamed on the next page.",
                     INFORMATION);
         } else if (!m_copyProjectsUI.getSelection()) {
             // check if target is != WorkspaceRoot -> fail
-            if (!m_targetTextUI.getText().isEmpty() 
+            if (!m_targetTextUI.getText().isEmpty()
                     && !m_targetTextUI.getText().equals("/")) {
-                setMessage("Workflows cannot be linked into workflow " 
+                setMessage("Workflows cannot be linked into workflow "
                         + "groups!", ERROR);
                 setPageComplete(false);
                 getWizard().canFinish();
             } else {
                 setMessage(
                         "Projects can only be linked into workspace root "
-                        + "it will not be possible to use " 
+                        + "it will not be possible to use "
                         + "them within a workflow group!", WARNING);
             }
         } else {
@@ -1079,9 +1090,9 @@ public class WorkflowImportSelectionPage extends WizardPage {
             setMessage(null);
         }
     }
-    
+
     /**
-     * Clears everything, the import elements tree, messages, selected imports, 
+     * Clears everything, the import elements tree, messages, selected imports,
      * use only if different location was selected.
      */
     protected void clear() {
@@ -1094,10 +1105,10 @@ public class WorkflowImportSelectionPage extends WizardPage {
         m_workflowListUI.setInput(null);
         m_workflowListUI.refresh();
     }
-    
+
     /**
-     * 
-     * @return true if there are checked and valid imports and no checked an 
+     *
+     * @return true if there are checked and valid imports and no checked an
      *  invalid imports
      */
     public boolean canFinish() {
@@ -1108,18 +1119,27 @@ public class WorkflowImportSelectionPage extends WizardPage {
         return isPageComplete() && m_validAndCheckedImports.size() > 0
             && (!containsInvalidAndCheckedImports());
     }
-    
+
     /**
-     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCurrentPage() {
+        // make this method publically available
+        return super.isCurrentPage();
+    }
+
+    /**
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean canFlipToNextPage() {
         return containsInvalidAndCheckedImports() || m_renamePage != null;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -1130,11 +1150,11 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         return null;
     }
-    
+
     /**
-     * 
-     * @return true if the copy workflow checkbox is selected (recommended), 
-     * 
+     *
+     * @return true if the copy workflow checkbox is selected (recommended),
+     *
      */
     public boolean isCopyWorkflows() {
         return m_copyProjectsUI.getSelection();

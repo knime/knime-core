@@ -15,15 +15,13 @@
  * website: www.knime.com
  * email: contact@knime.com
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.08.2009 (Fabian Dill): created
  */
 package org.knime.workbench.ui.wizards.imports;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -42,33 +40,30 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * A page where workflows and workflow groups which should be imported can be 
+ * A page where workflows and workflow groups which should be imported can be
  * renamed. This is necessary if a resource with the same name already exists in
  * the target destination.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class RenameWorkflowImportPage extends WizardPage {
 
     private final Collection<IWorkflowImportElement>m_invalids;
-    
+
     private final WorkflowImportSelectionPage m_previousPage;
-    
+
     /** Identifier for this page. */
     public static final String NAME = "Rename duplicate workflows";
 
-    private final Map<IPath, String>m_newNameMapping  
-        = new HashMap<IPath, String>();
-
     private boolean m_isNameValid = true;
-    
+
     private boolean m_nameExists = false;
-    
+
     /**
-     * 
+     *
      * @param invalids the duplicate workflows
-     * @param previousPage the previous import selection page to update when 
-     *  the name(s) are changed 
+     * @param previousPage the previous import selection page to update when
+     *  the name(s) are changed
      */
     public RenameWorkflowImportPage(
             final WorkflowImportSelectionPage previousPage,
@@ -80,7 +75,7 @@ public class RenameWorkflowImportPage extends WizardPage {
         setDescription("Rename the workflows to import");
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -91,7 +86,7 @@ public class RenameWorkflowImportPage extends WizardPage {
         GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
         overall.setLayoutData(gridData);
         overall.setText("Duplicate workflows:");
-        
+
         if (m_invalids == null || m_invalids.isEmpty()) {
             Label ok = new Label(overall, SWT.NONE);
             ok.setText("No duplicate workflows found!");
@@ -105,7 +100,7 @@ public class RenameWorkflowImportPage extends WizardPage {
             row.setLayoutData(horizontalFill);
             // path // name // overwrite? checkbox
             Label path = new Label(row, SWT.NONE);
-            path.setText(element.getPath().toString());
+            path.setText(element.getOriginalPath().toString());
             final Text name = new Text(row, SWT.FILL | SWT.BORDER);
             name.setText(element.getName());
             name.setLayoutData(horizontalFill);
@@ -115,32 +110,39 @@ public class RenameWorkflowImportPage extends WizardPage {
                     String newName = name.getText();
                     checkIsNameValid(newName);
                     checkNameExists(newName);
+                    if (m_isNameValid) {
+                        // if the name is valid -> set it
+                        // such that it is visible on the previous page
+                        // (in the tree viewer)
+                        // Convenient if the element is renamed to another
+                        // existing resource in the target location
+                        element.setName(newName);
+                    }
                     if (m_isNameValid && !m_nameExists) {
                         setErrorMessage(null);
-                        m_newNameMapping.put(element.getPath(), newName);
-                        element.setName(newName);
                         element.setInvalid(false);
-                        m_previousPage.validateWorkflows();
                         setPageComplete(canFinish());
                     }
+                    // in any case validate the workflows
+                    m_previousPage.validateWorkflows();
                     getWizard().getContainer().updateButtons();
                 }
             });
         }
         setControl(overall);
     }
-    
+
     private boolean checkIsNameValid(final String name) {
         IStatus isValid = ResourcesPlugin.getWorkspace().validateName(
                 name, IResource.FOLDER);
         m_isNameValid = isValid.isOK();
         if (!m_isNameValid) {
             setErrorMessage(name + " is not a valid name!");
-            setPageComplete(false);            
+            setPageComplete(false);
         }
         return m_isNameValid;
     }
-    
+
     private boolean checkNameExists(final String name) {
         IPath destination = m_previousPage.getDestinationPath();
         destination = destination.append(name);
@@ -153,18 +155,18 @@ public class RenameWorkflowImportPage extends WizardPage {
         }
         return m_nameExists;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean canFlipToNextPage() {
         return false;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -172,9 +174,9 @@ public class RenameWorkflowImportPage extends WizardPage {
         // not possible to return to previous page....
         return super.getPreviousPage();
     }
-    
+
     /**
-     * 
+     *
      * @return true if all workflows have been renamed
      */
     public boolean canFinish() {
@@ -192,24 +194,16 @@ public class RenameWorkflowImportPage extends WizardPage {
                 return false;
             }
         }
-        return true;    
+        return true;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public IWizardPage getNextPage() {
         return null;
-    }
-    
-    /**
-     * 
-     * @return the old element with the new name
-     */
-    public Map<IPath, String>getNameMapping() {
-        return m_newNameMapping;
     }
 
 }
