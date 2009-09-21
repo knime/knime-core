@@ -561,7 +561,7 @@ public class ColumnFilterPanel extends JPanel {
     public final void setKeepAllSelected(final boolean select) {
         if (m_keepAllBox != null) {
             m_keepAllBox.setSelected(select);
-              enabledComponents(m_keepAllBox.isEnabled() && !select);
+            enabledComponents(m_keepAllBox.isEnabled() && !select);
         }
     }
 
