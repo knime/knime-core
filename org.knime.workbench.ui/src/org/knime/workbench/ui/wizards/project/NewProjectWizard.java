@@ -167,7 +167,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             // Create project description, set the nature IDs and build-commands
             try {
                 IProjectDescription description = project.getDescription();
-                description.setName(workflowPath.toString());
+                description.setName(project.getName());
                 String natureId = KNIMEProjectNature.ID;
                 if (workflowPath.segmentCount() > 1) {
                     natureId = KNIMEWorkflowSetProjectNature.ID;
