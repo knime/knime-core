@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -153,7 +154,17 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         while (hasMoreElements) {
             hasMoreElements = false;
+            // hash of variables to fix bug 1959 (constants are duplicated
+            // on nodes with 2+ inports)
+            LinkedHashSet<FlowObject> variableSet = 
+                new LinkedHashSet<FlowObject>();
             FlowObject commonFlowO = null;
+            /* for each input stack, traverse the stack bottom up until either
+             * the top or a FlowLoopContext control object is found. The loop
+             * controls must come in the same order on each of the stacks (if
+             * present). Repeat that until the top of the stack is reached. For
+             * each of the buckets, put the variables into a hash and add the 
+             * hash set content to the result list. */
             for (int i = 0; i < sos.length; i++) {
                 while (nexts[i] != null || its[i].hasNext()) {
                     FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
@@ -172,9 +183,14 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                         hasMoreElements = true;
                         break;
                     }
-                    result.add(o);
+                    // remove any previously added variable first to update
+                    // variable order ("add" overwrites variables but does not 
+                    // update insertion order)
+                    variableSet.remove(o);
+                    variableSet.add(o);
                 }
             }
+            result.addAll(variableSet);
             if (commonFlowO != null) {
                 result.add(commonFlowO);
                 for (int i = 0; i < nexts.length; i++) {
