@@ -604,6 +604,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
             // do this in separate thread...
             collectWorkflowsFromZipFile(selectedFile);
         }
+        validateWorkflows();
     }
 
 
@@ -633,6 +634,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         if (selectedDir != null) {
             collectWorkflowsFromDir(selectedDir);
         }
+        validateWorkflows();
     }
 
     private void handleWorkflowGroupBrowseButtonPressed() {
@@ -711,6 +713,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
         }
         validateWorkflows();
         m_workflowListUI.setInput(m_importRoot);
+        m_workflowListUI.expandAll();
+        m_workflowListUI.setAllChecked(true);
         m_workflowListUI.refresh(true);
     }
 
@@ -816,6 +820,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
             }
             validateWorkflows();
             m_workflowListUI.setInput(m_importRoot);
+            m_workflowListUI.expandAll();
+            m_workflowListUI.setAllChecked(true);
             m_workflowListUI.refresh(true);
         }
     }
