@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
@@ -89,6 +90,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /** Key for the included columns, used for dialog settings. */
     static final String CFG_VARIATES = "included_columns";
 
+    /** Key for whether to include all appropriate columns by default. */
+    static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
+    
     /** Key for the target column, used for dialog settings. */
     static final String CFG_TARGET = "target";
 
@@ -97,6 +101,14 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /** The column names to include. */
     private String[] m_includes;
+    
+    /** Whether to include all appropriate columns by default, overwrites
+     * {@link #m_includes}. (added in v2.1) */
+    private boolean m_includeAll;
+    
+    /** Names of the columns that were actually used. If {@link #m_includeAll}
+     * is false, this is identical to {@link #m_includes}. */
+    private String[] m_actualUsedColumns;
 
     /** The response column. */
     private String m_target;
@@ -134,8 +146,12 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_includes != null) {
-            settings.addStringArray(CFG_VARIATES, m_includes);
+        if (m_target != null) {
+            if (m_includeAll) {
+                settings.addBoolean(CFG_VARIATES_USE_ALL, true);
+            } else {
+                settings.addStringArray(CFG_VARIATES, m_includes);
+            }
             settings.addString(CFG_TARGET, m_target);
             settings.addBoolean(CFG_CALC_ERROR, m_isCalcError);
             settings.addInt(CFG_FROMROW, m_firstRowPaint);
@@ -149,25 +165,29 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // we check for null in the line below, improved error message
-        String[] includes =
-            settings.getStringArray(CFG_VARIATES, (String[])null);
-        if (includes == null || includes.length == 0) {
-            throw new InvalidSettingsException(
-                    "No columns for regression have been set.");
-        }
         String target = settings.getString(CFG_TARGET);
         if (target == null) {
             throw new InvalidSettingsException("No target set.");
         }
-        List<String> asList = Arrays.asList(includes);
-        if (asList.contains(null)) {
-            throw new InvalidSettingsException("Included columns "
-                    + "must not contain null values");
-        }
-        if (asList.contains(target)) {
-            throw new InvalidSettingsException("Included columns "
-                    + "must not contain target value: " + target);
+        // we check for null in the line below, improved error message
+        String[] includes =
+            settings.getStringArray(CFG_VARIATES, (String[])null);
+        // added in v2.1
+        boolean includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, false);
+        if (!includeAll) {
+            if (includes == null || includes.length == 0) {
+                throw new InvalidSettingsException(
+                        "No columns for regression have been set.");
+            }
+            List<String> asList = Arrays.asList(includes);
+            if (asList.contains(null)) {
+                throw new InvalidSettingsException("Included columns "
+                        + "must not contain null values");
+            }
+            if (asList.contains(target)) {
+                throw new InvalidSettingsException("Included columns "
+                        + "must not contain target value: " + target);
+            }
         }
         settings.getBoolean(CFG_CALC_ERROR);
 
@@ -188,7 +208,13 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_includes = settings.getStringArray(CFG_VARIATES);
+        // field added in v2.1
+        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, false);
+        if (m_includeAll) {
+            m_includes = new String[0];
+        } else {
+            m_includes = settings.getStringArray(CFG_VARIATES);
+        }
         m_target = settings.getString(CFG_TARGET);
         m_isCalcError = settings.getBoolean(CFG_CALC_ERROR);
         m_firstRowPaint = settings.getInt(CFG_FROMROW);
@@ -210,12 +236,14 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         // reset was called, must be cleared
         final BufferedDataTable data = (BufferedDataTable)inData[0];
         final DataTableSpec spec = data.getDataTableSpec();
-        final int nrUnknown = m_includes.length + 1;
-        double[] means = new double[m_includes.length];
+        String[] includes = computeIncludes(spec);
+        m_actualUsedColumns = includes;
+        final int nrUnknown = includes.length + 1;
+        double[] means = new double[includes.length];
         // indices of the columns in m_includes
-        final int[] colIndizes = new int[m_includes.length];
-        for (int i = 0; i < m_includes.length; i++) {
-            colIndizes[i] = spec.findColumnIndex(m_includes[i]);
+        final int[] colIndizes = new int[includes.length];
+        for (int i = 0; i < includes.length; i++) {
+            colIndizes[i] = spec.findColumnIndex(includes[i]);
         }
         // index of m_target
         final int target = spec.findColumnIndex(m_target);
@@ -421,6 +449,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         m_nrRows = 0;
         m_error = 0.0;
         m_params = null;
+        m_actualUsedColumns = null;
     }
 
     /** {@inheritDoc} */
@@ -439,14 +468,14 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     private DataTableSpec getLearningSpec(final DataTableSpec in)
     throws InvalidSettingsException {
-        if (m_includes == null) {
-            throw new InvalidSettingsException("No settings available");
+        if (m_target == null) {
+            throw new InvalidSettingsException("No target column set");
         }
-        assert m_target != null;
+        String[] includes = computeIncludes(in);
         // array containing element from m_include and also m_target
-        String[] mustHaveColumns = new String[m_includes.length + 1];
-        System.arraycopy(m_includes, 0, mustHaveColumns, 0, m_includes.length);
-        mustHaveColumns[m_includes.length] = m_target;
+        String[] mustHaveColumns = new String[includes.length + 1];
+        System.arraycopy(includes, 0, mustHaveColumns, 0, includes.length);
+        mustHaveColumns[includes.length] = m_target;
         // check if contained in data and if DoubleValue-compatible.
         for (String include : mustHaveColumns) {
             DataColumnSpec colSpec = in.getColumnSpec(include);
@@ -461,7 +490,43 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         }
         return FilterColumnTable.createFilterTableSpec(in, mustHaveColumns);
     }
-
+    
+    /** Determines the list of variate columns (learning columns). This is
+     * either the m_includes[] field or, if m_includeAll is set, the list
+     * of double-compatible columns in the input table spec (excluding the 
+     * response column).
+     * @param in Spec contributing the column list
+     * @return A new array containg the variates
+     * @throws InvalidSettingsException If no double-compatible learning columns
+     * exist in the input table.
+     */
+    private String[] computeIncludes(final DataTableSpec in) 
+        throws InvalidSettingsException {
+        String[] includes;
+        if (m_includeAll) {
+            List<String> includeList = new ArrayList<String>();
+            for (DataColumnSpec s : in) {
+                if (s.getType().isCompatible(DoubleValue.class)) {
+                    String name = s.getName();
+                    if (!name.equals(m_target)) {
+                        includeList.add(name);
+                    }
+                }
+            }
+            includes = includeList.toArray(new String[includeList.size()]);
+            if (includes.length == 0) {
+                throw new InvalidSettingsException("No double-compatible " 
+                        + "variables (learning columns) in input table");
+            }
+        } else {
+            if (m_includes == null) {
+                throw new InvalidSettingsException("No settings available");
+            }
+            includes = m_includes.clone();
+        }
+        return includes;
+    }
+    
     /**
      * @return the nrRowsProcessed.
      */
@@ -514,8 +579,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
-    public String[] getIncludedColumns() {
-        return m_includes;
+    public String[] getLearningColumns() {
+        return m_actualUsedColumns;
     }
 
     /**

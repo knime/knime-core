@@ -76,7 +76,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
 
         // get the included columns
         String[] includedCols =
-                ((LinRegDataProvider)getDataProvider()).getIncludedColumns();
+                ((LinRegDataProvider)getDataProvider()).getLearningColumns();
         ((LinRegLinePlotterProperties)getProperties())
                 .setIncludedColumns(includedCols);
         // update the combo boxes
@@ -136,7 +136,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
         String xName = getSelectedXColumn().getName();
         List<String>includedCols = Arrays.asList(
                 ((LinRegDataProvider)getDataProvider())
-            .getIncludedColumns());
+            .getLearningColumns());
 
         if (!xName.equals(params.getTargetColumnName())
                 && includedCols.contains(xName)) {

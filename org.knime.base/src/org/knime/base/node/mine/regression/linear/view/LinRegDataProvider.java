@@ -54,6 +54,6 @@ public interface LinRegDataProvider extends DataProvider {
      * 
      * @return those columns which were used to calculate the model
      */
-    public String[] getIncludedColumns();
+    public String[] getLearningColumns();
     
 }

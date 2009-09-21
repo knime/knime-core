@@ -71,7 +71,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     public LinRegLearnerNodeDialogPane() {
         super();
-        m_filterPanel = new ColumnFilterPanel(DoubleValue.class);
+        m_filterPanel = new ColumnFilterPanel(true, DoubleValue.class);
         m_selectionPanel = new ColumnSelectionPanel((Border)null,
                 DoubleValue.class);
         JPanel panel = new JPanel(new BorderLayout());
@@ -145,17 +145,20 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
             throw new NotConfigurableException("Too few numeric columns "
                     + "(need at least 2): " + numColsCount);
         }
+        boolean includeAll = settings.getBoolean(
+                LinRegLearnerNodeModel.CFG_VARIATES_USE_ALL, false);
         String[] includes = settings.getStringArray(
                 LinRegLearnerNodeModel.CFG_VARIATES, new String[0]);
         String target = settings.getString(LinRegLearnerNodeModel.CFG_TARGET,
                 null);
         boolean isCalcError = settings.getBoolean(
                 LinRegLearnerNodeModel.CFG_CALC_ERROR, true);
-        boolean includeAll = includes.length == 0;
         int first = settings.getInt(LinRegLearnerNodeModel.CFG_FROMROW, 1);
         int count = settings.getInt(LinRegLearnerNodeModel.CFG_ROWCNT, 10000);
         m_selectionPanel.update(specs[0], target);
-        m_filterPanel.update(specs[0], includeAll, includes);
+        m_filterPanel.setKeepAllSelected(includeAll);
+        // if includes list is empty, put everything into the include list
+        m_filterPanel.update(specs[0], includes.length == 0, includes);
         // must hide the target from filter panel
         // updating m_filterPanel first does not work as the first
         // element in the spec will always be in the exclude list.
@@ -182,7 +185,14 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
         boolean isCalcError = m_isCalcErrorChecker.isSelected();
         int first = (Integer)m_firstSpinner.getValue();
         int count = (Integer)m_countSpinner.getValue();
-        settings.addStringArray(LinRegLearnerNodeModel.CFG_VARIATES, includes);
+        boolean includeAll = m_filterPanel.isKeepAllSelected();
+        if (includeAll) {
+            settings.addBoolean(
+                    LinRegLearnerNodeModel.CFG_VARIATES_USE_ALL, true);
+        } else {
+            settings.addStringArray(
+                    LinRegLearnerNodeModel.CFG_VARIATES, includes);
+        }
         settings.addString(LinRegLearnerNodeModel.CFG_TARGET, target);
         settings.addBoolean(LinRegLearnerNodeModel.CFG_CALC_ERROR, isCalcError);
         settings.addInt(LinRegLearnerNodeModel.CFG_FROMROW, first);
