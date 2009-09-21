@@ -55,7 +55,6 @@ import org.eclipse.ui.dialogs.ContainerGenerator;
 import org.eclipse.ui.ide.IDE;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
-import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
@@ -166,14 +165,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             project.open(monitor);
             // Create project description, set the nature IDs and build-commands
             try {
+                // set the nature id of the project is enough
+                // the name is already set by IProject#create()
                 IProjectDescription description = project.getDescription();
-                description.setName(project.getName());
-                String natureId = KNIMEProjectNature.ID;
-                if (workflowPath.segmentCount() > 1) {
-                    natureId = KNIMEWorkflowSetProjectNature.ID;
-                }
-                description.setNatureIds(new String[]{
-                        natureId});
+                description.setNatureIds(new String[]{KNIMEProjectNature.ID});
                 project.setDescription(description, monitor);
             } catch (CoreException ce) {
                 throwCoreException(
