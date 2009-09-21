@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -56,14 +57,14 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
- * This wizard exports KNIME workflows and workflow groups if workflows are 
- * selected which are in different workflow groups. 
+ * This wizard exports KNIME workflows and workflow groups if workflows are
+ * selected which are in different workflow groups.
  *
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
-public class WorkflowExportWizard extends ExportWizard 
+public class WorkflowExportWizard extends ExportWizard
     implements IExportWizard {
 
 //    private static final NodeLogger LOGGER =
@@ -73,15 +74,15 @@ public class WorkflowExportWizard extends ExportWizard
 
     private ISelection m_selection;
 
-    private final Collection<IContainer>m_workflowsToExport 
+    private final Collection<IContainer>m_workflowsToExport
         = new ArrayList<IContainer>();
-    
+
     private boolean m_excludeData;
-    
+
     private IContainer m_container;
-    
+
     private String m_fileName;
-    
+
     /**
      * Constructor.
      */
@@ -99,9 +100,9 @@ public class WorkflowExportWizard extends ExportWizard
         m_page = new WorkflowExportPage(m_selection);
         addPage(m_page);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -123,15 +124,15 @@ public class WorkflowExportWizard extends ExportWizard
         if (canceled) {
             return false;
         }
-        
+
         m_page.saveDialogSettings();
-        
+
         m_container = m_page.getSelectedContainer();
         m_fileName = m_page.getFileName().trim();
         m_excludeData = m_page.excludeData();
         m_workflowsToExport.clear();
         m_workflowsToExport.addAll(m_page.getWorkflows());
-        
+
         // if the specified export file already exist ask the user
         // for confirmation
 
@@ -144,9 +145,9 @@ public class WorkflowExportWizard extends ExportWizard
                 m_page.setErrorMessage("Cannot write to specified file");
                 return false;
             }
-            boolean overwrite = MessageDialog.openQuestion(getShell(), 
-                    "File already exists...", 
-                    "File already exists.\nDo you want to overwrite the " 
+            boolean overwrite = MessageDialog.openQuestion(getShell(),
+                    "File already exists...",
+                    "File already exists.\nDo you want to overwrite the "
                     + "specified file ?");
             if (!overwrite) {
                 return false;
@@ -215,13 +216,10 @@ public class WorkflowExportWizard extends ExportWizard
      * @param resource the resource to check
      */
     private boolean excludeResource(final IResource resource) {
-
         String name = resource.getName();
-
         if (name.equals("internal")) {
             return true;
         }
-
         if (resource.getType() == IResource.FILE) {
             if (name.startsWith("model_")) {
                 return true;
@@ -230,7 +228,6 @@ public class WorkflowExportWizard extends ExportWizard
                 return true;
             }
         }
-
         // exclusion list for workflows in format of 2.x
         switch (resource.getType()) {
             case IResource.FOLDER:
@@ -253,7 +250,6 @@ public class WorkflowExportWizard extends ExportWizard
                 break;
             default:
         }
-
         // get extension to check if this resource is a zip file
         return name.toLowerCase().endsWith(".zip");
     }
@@ -276,7 +272,7 @@ public class WorkflowExportWizard extends ExportWizard
         final List<IResource> resourceList = new ArrayList<IResource>();
         // also add .project or .metainfo files to export
         addResourcesFor(resourceList, container, m_excludeData);
-        for (IContainer child : m_workflowsToExport) {            
+        for (IContainer child : m_workflowsToExport) {
             addResourcesFor(resourceList, child, m_excludeData);
         }
         monitor.worked(1);
@@ -286,7 +282,7 @@ public class WorkflowExportWizard extends ExportWizard
             final int leadOffset = findLeadOffset();
             if (leadOffset >= 0) {
                 // if we have a workflow selected which is inside a workflow
-                // group we want to export only the workflow, i.e. strip the 
+                // group we want to export only the workflow, i.e. strip the
                 // preceeding workflow groups from path:
                 // this is done with the offset
                 exportOperation = new OffsetArchiveFileExportOperation(
@@ -295,7 +291,7 @@ public class WorkflowExportWizard extends ExportWizard
                         leadOffset);
             } else {
                 exportOperation = new ArchiveFileExportOperation(
-                        container, resourceList, fileName.getPath()); 
+                        container, resourceList, fileName.getPath());
             }
             monitor.beginTask("Write to file... " + fileName, 3);
             exportOperation.run(monitor);
@@ -311,7 +307,7 @@ public class WorkflowExportWizard extends ExportWizard
         monitor.worked(1);
 
     }
-    
+
     private int findLeadOffset() {
         // go up until root is reached
         int offset = 0;
@@ -328,21 +324,35 @@ public class WorkflowExportWizard extends ExportWizard
         }
         return offset;
     }
-    
-    private void addResourcesFor(final List<IResource> resourceList, 
+
+    private void addResourcesFor(final List<IResource> resourceList,
             final IResource resource, final boolean excludeData) {
         // if this resource must be excluded do not add to resource list and
         // return
         if (excludeData && excludeResource(resource)) {
             return;
         }
+        /*
+         * We do not want to export any non-KNIME project.
+         * Since we are going top-down, excluding the projects is enough,
+         * #addResourcesFor will not go down another level of recursion
+         */
+        if (resource instanceof IProject) {
+            if (!KnimeResourceUtil.isWorkflow(resource)
+                    && !KnimeResourceUtil.isWorkflowGroup(resource)) {
+                return;
+            }
+        }
         // if this is a file add it to the list
         if (resource instanceof IFile) {
             resourceList.add(resource);
             return;
         }
-        
-        if (KnimeResourceUtil.isWorkflow(resource) 
+        /*
+         * This test is still necessary for workflow groups which are no
+         * projects but might contain unchecked workflows
+         */
+        if (KnimeResourceUtil.isWorkflow(resource)
                 || KnimeResourceUtil.isWorkflowGroup(resource)) {
             if (!m_workflowsToExport.contains(resource)) {
                 // abort recursion
@@ -362,7 +372,7 @@ public class WorkflowExportWizard extends ExportWizard
             addResourcesFor(resourceList, currentResource, excludeData);
         }
     }
-    
+
 
     /**
      * We will initialize file contents with a sample text.
