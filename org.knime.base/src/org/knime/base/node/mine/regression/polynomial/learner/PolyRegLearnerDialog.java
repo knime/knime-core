@@ -69,7 +69,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
             10000, 1, Integer.MAX_VALUE, 10));
 
     private final ColumnFilterPanel m_colSelectionPanel = new ColumnFilterPanel(
-            DoubleValue.class);
+            true, DoubleValue.class);
 
     /**
      * Creates a new dialog for the polynomial regression learner node.
@@ -141,16 +141,17 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
                     defSelected.add(s.getName());
                 }
             }
-            m_settings.selectedColumns(defSelected);
+            m_settings.setSelectedColumns(defSelected);
             // for the rest: ignore it, defaults are used instead
         }
         m_targetColumn.update(specs[0], m_settings.getTargetColumn());
         m_degree.getModel().setValue(m_settings.getDegree());
         m_viewRows.getModel().setValue(m_settings.getMaxRowsForView());
         m_colSelectionPanel
-                .update(specs[0], false, m_settings.selectedColumns());
+                .update(specs[0], false, m_settings.getSelectedColumns());
         m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
                 .getSelectedItem());
+        m_colSelectionPanel.setKeepAllSelected(m_settings.isIncludeAll());
     }
 
     /**
@@ -162,7 +163,9 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_settings.setTargetColumn(m_targetColumn.getSelectedColumn());
         m_settings.setDegree((Integer)m_degree.getModel().getValue());
         m_settings.setMaxRowsForView((Integer)m_viewRows.getModel().getValue());
-        m_settings.selectedColumns(m_colSelectionPanel.getIncludedColumnSet());
+        m_settings.setIncludeAll(m_colSelectionPanel.isKeepAllSelected());
+        m_settings.setSelectedColumns(
+                m_colSelectionPanel.getIncludedColumnSet());
         m_settings.saveSettingsTo(settings);
     }
 }

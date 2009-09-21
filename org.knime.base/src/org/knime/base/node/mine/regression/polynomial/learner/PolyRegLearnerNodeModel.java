@@ -28,6 +28,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.filter.column.FilterColumnTable;
@@ -55,8 +60,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -105,8 +110,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
-
-        for (String colName : m_settings.selectedColumns()) {
+        String[] selectedCols = computeSelectedColumns(tableSpec);
+        for (String colName : selectedCols) {
             DataColumnSpec dcs = tableSpec.getColumnSpec(colName);
             if (dcs == null) {
                 throw new InvalidSettingsException("Selected column '"
@@ -128,8 +133,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                     + m_settings.getTargetColumn() + "' does not exist.");
         }
 
-        DataColumnSpecCreator crea =
-                new DataColumnSpecCreator("PolyReg prediction", DoubleCell.TYPE);
+        DataColumnSpecCreator crea = new DataColumnSpecCreator(
+                "PolyReg prediction", DoubleCell.TYPE);
         DataColumnSpec col1 = crea.createSpec();
 
         crea = new DataColumnSpecCreator("Prediction Error", DoubleCell.TYPE);
@@ -142,11 +147,13 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
     private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec) 
         throws InvalidSettingsException {
-        DataColumnSpec[] usedColumns =
-                new DataColumnSpec[m_settings.selectedColumns().size() + 1];
+        String[] selectedCols = computeSelectedColumns(inSpec);
+        DataColumnSpec[] usedColumns = 
+            new DataColumnSpec[selectedCols.length + 1];
         int k = 0;
+        Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
         for (DataColumnSpec dcs : inSpec) {
-            if (m_settings.selectedColumns().contains(dcs.getName())) {
+            if (hash.contains(dcs.getName())) {
                 usedColumns[k++] = dcs;
             }
         }
@@ -166,18 +173,19 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
+        DataTableSpec inSpec = inTable.getDataTableSpec();
 
-        final int colCount = inTable.getDataTableSpec().getNumColumns();
+        final int colCount = inSpec.getNumColumns();
+        String[] selectedCols = computeSelectedColumns(inSpec);
+        Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
         m_colSelected = new boolean[colCount];
         for (int i = 0; i < colCount; i++) {
-            m_colSelected[i] =
-                    m_settings.selectedColumns().contains(
-                            inTable.getDataTableSpec().getColumnSpec(i)
-                                    .getName());
+            m_colSelected[i] = hash.contains(
+                    inTable.getDataTableSpec().getColumnSpec(i).getName());
         }
 
         final int rowCount = inTable.getRowCount();
-        final int independentVariables = m_settings.selectedColumns().size();
+        final int independentVariables = selectedCols.length;
         final int degree = m_settings.getDegree();
         final int dependentIndex =
                 inTable.getDataTableSpec().findColumnIndex(
@@ -256,7 +264,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             m_betas[i] = betas[i][0];
         }
 
-        m_columnNames = m_settings.selectedColumns().toArray(new String[0]);
+        m_columnNames = selectedCols;
         String[] temp = new String[m_columnNames.length + 1];
         System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
         temp[temp.length - 1] = m_settings.getTargetColumn();
@@ -470,6 +478,42 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         if (s.getTargetColumn() == null) {
             throw new InvalidSettingsException("No target column selected");
         }
+    }
+    
+    /** Depending on whether the includeAll flag is set, it determines the list
+     * of learning (independent) columns. If the flag is not set, it returns 
+     * the list stored in m_settings.
+     * @param spec to get column names from.
+     * @return The list of learning columns.
+     * @throws InvalidSettingsException If no valid columns are in the spec. 
+     */
+    private String[] computeSelectedColumns(final DataTableSpec spec) 
+    throws InvalidSettingsException {
+        String[] includes;
+        String target = m_settings.getTargetColumn();
+        if (m_settings.isIncludeAll()) {
+            List<String> includeList = new ArrayList<String>();
+            for (DataColumnSpec s : spec) {
+                if (s.getType().isCompatible(DoubleValue.class)) {
+                    String name = s.getName();
+                    if (!name.equals(target)) {
+                        includeList.add(name);
+                    }
+                }
+            }
+            includes = includeList.toArray(new String[includeList.size()]);
+            if (includes.length == 0) {
+                throw new InvalidSettingsException("No double-compatible " 
+                        + "variables (learning columns) in input table");
+            }
+        } else {
+            Set<String> selSettings = m_settings.getSelectedColumns();
+            if (selSettings == null || selSettings.isEmpty()) {
+                throw new InvalidSettingsException("No settings available");
+            }
+            includes = selSettings.toArray(new String[selSettings.size()]);
+        }
+        return includes;
     }
 
     /**

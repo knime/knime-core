@@ -43,6 +43,8 @@ public class PolyRegLearnerSettings {
 
     private final Set<String> m_selectedColumnNames = 
         new LinkedHashSet<String>();
+    
+    private boolean m_includeAll = false;
 
     private final Set<String> m_unmodSelectedColumnNames = Collections
             .unmodifiableSet(m_selectedColumnNames);
@@ -78,9 +80,12 @@ public class PolyRegLearnerSettings {
         m_degree = settings.getInt("degree");
         m_targetColumn = settings.getString("targetColumn");
         m_maxRowsForView = settings.getInt("maxViewRows");
+        m_includeAll = settings.getBoolean("includeAll", false); // added v2.1
         m_selectedColumnNames.clear();
-        for (String s : settings.getStringArray("selectedColumns")) {
-            m_selectedColumnNames.add(s);
+        if (!m_includeAll) {
+            for (String s : settings.getStringArray("selectedColumns")) {
+                m_selectedColumnNames.add(s);
+            }
         }
     }
 
@@ -94,8 +99,11 @@ public class PolyRegLearnerSettings {
             settings.addInt("degree", m_degree);
             settings.addString("targetColumn", m_targetColumn);
             settings.addInt("maxViewRows", m_maxRowsForView);
-            settings.addStringArray("selectedColumns", m_selectedColumnNames
-                    .toArray(new String[m_selectedColumnNames.size()]));
+            settings.addBoolean("includeAll", m_includeAll);
+            if (!m_includeAll) {
+                settings.addStringArray("selectedColumns", m_selectedColumnNames
+                        .toArray(new String[m_selectedColumnNames.size()]));
+            }
         }
     }
 
@@ -141,7 +149,7 @@ public class PolyRegLearnerSettings {
      * 
      * @param columnNames a set with the selected column names
      */
-    public void selectedColumns(final Set<String> columnNames) {
+    public void setSelectedColumns(final Set<String> columnNames) {
         m_selectedColumnNames.clear();
         for (String s : columnNames) {
             m_selectedColumnNames.add(s);
@@ -153,7 +161,21 @@ public class PolyRegLearnerSettings {
      * 
      * @return a set with the selectec column names
      */
-    public Set<String> selectedColumns() {
+    public Set<String> getSelectedColumns() {
         return m_unmodSelectedColumnNames;
+    }
+    
+    /**
+     * @return the includeAll
+     */
+    public boolean isIncludeAll() {
+        return m_includeAll;
+    }
+    
+    /**
+     * @param includeAll the includeAll to set
+     */
+    public void setIncludeAll(final boolean includeAll) {
+        m_includeAll = includeAll;
     }
 }
