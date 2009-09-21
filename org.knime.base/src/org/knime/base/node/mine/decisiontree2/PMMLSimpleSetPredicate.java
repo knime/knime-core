@@ -233,11 +233,18 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
                 m_arrayType.toString());
         handler.startElement(null, null, "Array", arrayAtts);
         StringBuffer sb = new StringBuffer();
-        for (String value : m_values) {
-            sb.append('"');
-            sb.append(value);
-            sb.append('"');
-            sb.append(' ');
+        if (m_arrayType == PMMLArrayType.STRING) {
+            for (String value : m_values) {
+                sb.append('"');
+                sb.append(value.replace("\"", "\\\""));
+                sb.append('"');
+                sb.append(' ');
+            }
+        } else {
+            for (String value : m_values) {
+                sb.append(value);
+                sb.append(' ');
+            }
         }
         handler.characters(sb.toString().toCharArray(), 0, sb.length());
         handler.endElement(null, null, "Array");

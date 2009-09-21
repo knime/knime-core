@@ -22,6 +22,7 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import org.knime.base.node.io.filetokenizer.FileTokenizer;
+import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -66,6 +69,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
 
         IGNORED.add("Extension");
         IGNORED.add("Output");
+        IGNORED.add("OutputField");
         IGNORED.add("ModelStats");
         IGNORED.add("ModelExplanation");
         IGNORED.add("Targets");
@@ -171,10 +175,13 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             double value = Double.parseDouble(atts.getValue("recordCount"));
             m_nodeStack.peek().addClassCount(className, value);
         } else if (name.equals("MiningField")) {
-            // the class column should only be set once
-            assert m_classColumn == null;
             String type = atts.getValue("usageType");
             if (type != null && type.equals("predicted")) {
+                // the class column should only be set once
+                if (m_classColumn != null) {
+                    throw new IllegalArgumentException("Multiple predicted "
+                            + "fields in mining schema found.");
+                }
                 m_classColumn = atts.getValue("name");
             }
         } else if (name.equals("DataField")) {
@@ -206,14 +213,27 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         if (name.equals("Array")
                 && m_elementStack.peek().equals("SimpleSetPredicate")) {
             // remove optional quotes and split on whitespace
-            String buffer = m_buffer.toString();
-            String[] temp = buffer.trim().split("\\s+");
+            FileTokenizer tokenizer = new FileTokenizer(new StringReader(
+                    m_buffer.toString().trim()));
+            //create settings for the tokenizer
+            FileTokenizerSettings settings = new FileTokenizerSettings();
+            settings.addDelimiterPattern(" ",
+                    /* combine multiple= */true,
+                    /* return as token= */ false,
+                    /* include in token= */false);
+            settings.addQuotePattern("\"", "\"", '\\');
+            settings.addWhiteSpaceCharacter(' ');
+            settings.addWhiteSpaceCharacter('\t');
+            settings.addWhiteSpaceCharacter('\n');
+            tokenizer.setSettings(settings);
+
             List<String> splitValues = new ArrayList<String>();
-            for (String value : temp) {
-                // FIXME: Encoded backslashes have to be considered
-                // -> Bernds Method?
-                splitValues.add(value.replaceAll("(?<!\\\\)\"", " "));
+            String token = null;
+            while ((token = tokenizer.nextToken()) != null) {
+                splitValues.add(token);
             }
+            LOGGER.debug("Parsed split values: " + splitValues);
+
             m_buffer.setLength(0);
             getPreviousSimpleSetPredicate().setValues(splitValues);
         } else if (name.equals("CompoundPredicate")) {
@@ -289,6 +309,10 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
     public void endDocument() throws SAXException {
         // we should have only one node left - the root node
         assert m_childStack.size() == 1;
+        if (m_classColumn == null) {
+            throw new IllegalArgumentException("No predicted "
+                    + "field in mining schema found.");
+        }
         m_tree = new DecisionTree(m_childStack.pop(), m_classColumn,
                 m_mvStrategy, m_ntcStrategy);
         LOGGER.info("Decision tree with 'missing value strateg: "
