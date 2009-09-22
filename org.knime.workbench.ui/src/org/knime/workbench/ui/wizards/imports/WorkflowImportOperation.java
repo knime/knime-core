@@ -41,6 +41,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.dialogs.ContainerGenerator;
@@ -52,6 +53,7 @@ import org.eclipse.ui.wizards.datatransfer.ImportOperation;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
 import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
  * Imports workflows from a zip file or directory into the workspace.
@@ -101,7 +103,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
             throws InvocationTargetException, InterruptedException {
         ILeveledImportStructureProvider provider = null;
         try {
-            monitor.beginTask("Importing workflows", m_workflows.size());
+            monitor.beginTask("", m_workflows.size());
             if (monitor.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -117,6 +119,17 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
             }
             // clean up afterwards
             m_missingMetaInfoLocations.clear();
+            ResourcesPlugin.getWorkspace().getRoot().refreshLocal(
+                    IResource.DEPTH_INFINITE, new NullProgressMonitor());
+            final IResource result = ResourcesPlugin.getWorkspace().getRoot()
+                .findMember(m_targetPath);
+            if (result != null) {
+                Display.getDefault().syncExec(new Runnable() {
+                    public void run() {
+                        KnimeResourceUtil.revealInNavigator(result);
+                    }
+                });
+            }
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         } finally {
