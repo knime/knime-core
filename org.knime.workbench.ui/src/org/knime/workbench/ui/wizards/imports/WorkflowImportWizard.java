@@ -15,7 +15,7 @@
  * website: www.knime.com
  * email: contact@knime.com
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.08.2009 (Fabian Dill): created
  */
@@ -25,12 +25,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -42,52 +40,52 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
- * Wizard for importing workflows and workflow groups from a directory or an 
- * archive file into the workspace. 
- * 
+ * Wizard for importing workflows and workflow groups from a directory or an
+ * archive file into the workspace.
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class WorkflowImportWizard extends Wizard {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             WorkflowImportWizard.class);
 
     private WorkflowImportSelectionPage m_import;
-    
+
     private IContainer m_initialDestination = ResourcesPlugin.getWorkspace()
         .getRoot();
-    
+
     /**
-     * 
+     *
      */
     public WorkflowImportWizard() {
         super();
         setWindowTitle("Import");
         setNeedsProgressMonitor(true);
     }
-    
+
     /**
-     * Sets the initial destination of the import, only workflow groups or root 
-     * are allowed. If a workflow or node is passed the next higher workflow 
+     * Sets the initial destination of the import, only workflow groups or root
+     * are allowed. If a workflow or node is passed the next higher workflow
      * group or - eventually - root is chosen.
-     * 
+     *
      * @param destination the inital destination of the import
      */
     public void setInitialDestination(final IContainer destination) {
-        // TODO: make here all the necessary checks whether the initial 
+        // TODO: make here all the necessary checks whether the initial
         // selection is valid: workflow group or root only...
         IContainer helper = destination;
         IContainer root = ResourcesPlugin.getWorkspace().getRoot();
-        while (helper != null 
-                && !KnimeResourceUtil.isWorkflowGroup(helper) 
+        while (helper != null
+                && !KnimeResourceUtil.isWorkflowGroup(helper)
                 && !helper.equals(root)) {
             helper = helper.getParent();
         }
         m_initialDestination = helper;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -100,7 +98,7 @@ public class WorkflowImportWizard extends Wizard {
             // the next page is returned by the import page
             setForcePreviousAndNextButtons(true);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -110,35 +108,35 @@ public class WorkflowImportWizard extends Wizard {
         m_import.saveDialogSettings();
         return createWorkflows();
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public IWizardPage getNextPage(final IWizardPage page) {
         return m_import.getNextPage();
     }
-    
-    
-    
+
+
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean canFinish() {
         return m_import.canFinish();
     }
-    
+
     /**
      * Create the selected workflows.
-     * 
+     *
      * @return boolean <code>true</code> if all project creations were
      *         successful.
      */
     public boolean createWorkflows() {
-       final boolean copy = m_import.isCopyWorkflows(); 
+       final boolean copy = m_import.isCopyWorkflows();
        final String target = m_import.getDestination();
        final Collection<IWorkflowImportElement> workflows = m_import
            .getWorkflowsToImport();
@@ -148,13 +146,7 @@ public class WorkflowImportWizard extends Wizard {
                workflows, targetPath, copy, getShell());
         // run the new project creation operation
         try {
-            getContainer().run(true, true, op);
-            ResourcesPlugin.getWorkspace().getRoot().refreshLocal(
-                    IResource.DEPTH_INFINITE, new NullProgressMonitor());
-            KnimeResourceUtil.revealInNavigator(
-                    ResourcesPlugin.getWorkspace().getRoot().findMember(
-                            targetPath));
-            // recursively create meta info files...
+            getContainer().run(true, false, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
@@ -172,7 +164,7 @@ public class WorkflowImportWizard extends Wizard {
             ErrorDialog.openError(getShell(), message, null, status);
             return false;
         } catch (Exception e) {
-            String message = "Error during import!"; 
+            String message = "Error during import!";
             IStatus status = new Status(IStatus.ERROR,
                     KNIMEUIPlugin.PLUGIN_ID, 1, message, e);
             ErrorDialog.openError(getShell(), message, null, status);
@@ -180,7 +172,7 @@ public class WorkflowImportWizard extends Wizard {
         }
         return true;
     }
-    
+
     private IPath getValidatedTargetPath(final String destination) {
         if (destination == null || destination.isEmpty()) {
             return ResourcesPlugin.getWorkspace().getRoot().getFullPath();
@@ -188,6 +180,6 @@ public class WorkflowImportWizard extends Wizard {
         IPath path = new Path(destination);
         return path;
     }
-    
+
 
 }
