@@ -25,7 +25,7 @@ import java.util.Calendar;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.date.TimestampCell;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -78,7 +78,7 @@ public class DateGeneratorNodeModel extends NodeModel {
 
     private DataTableSpec createOutSpec() {
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                "Timestamp", TimestampCell.TYPE);
+                "Timestamp", DateAndTimeCell.TYPE);
         return new DataTableSpec(creator.createSpec());
     }
 
@@ -93,11 +93,11 @@ public class DateGeneratorNodeModel extends NodeModel {
         Calendar from = m_from.getCalendar();
         Calendar to = m_to.getCalendar();
         if (m_useDate && !m_useTime) {
-            TimestampCell.resetTimeFields(from);
-            TimestampCell.resetTimeFields(to);
+            DateAndTimeCell.resetTimeFields(from);
+            DateAndTimeCell.resetTimeFields(to);
         } else if (m_useTime && !m_useDate) {
-            TimestampCell.resetDateFields(from);
-            TimestampCell.resetDateFields(to);
+            DateAndTimeCell.resetDateFields(from);
+            DateAndTimeCell.resetDateFields(to);
         }
         long offset = (to.getTimeInMillis() - from.getTimeInMillis())
                 / m_noOfRows.getIntValue();
@@ -108,12 +108,12 @@ public class DateGeneratorNodeModel extends NodeModel {
         // if offset is smaller than a minute milliseconds might be of interest
         boolean needsMillis = offset < 60000;
         long currentTime = from.getTimeInMillis();
-        Calendar test = TimestampCell.getUTCCalendar();
+        Calendar test = DateAndTimeCell.getUTCCalendar();
         test.setTimeInMillis(currentTime);
         for (int i = 0; i < m_noOfRows.getIntValue(); i++) {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
-            TimestampCell cell = new TimestampCell(currentTime, 
+            DateAndTimeCell cell = new DateAndTimeCell(currentTime, 
                     m_useDate, m_useTime || needsTimeFields, needsMillis);
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;

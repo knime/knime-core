@@ -24,32 +24,32 @@ package org.knime.core.data.date;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Renders the a {@link TimestampValue}.
+ * Renders the a {@link DateAndTimeValue}.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
+public abstract class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
     
     /**
      * Renders the timestamp as yyyy/dd/mm and hh:mm:ss.S am/pm.
      */
-    public static final TimestampValueRenderer US 
-        = new TimestampValueRenderer() {
+    public static final DateAndTimeValueRenderer US 
+        = new DateAndTimeValueRenderer() {
 
         @Override
-        protected String getDateString(final TimestampValue value) {
-            return TimeRenderUtil.getStringForDateField(value.getYear()) 
-                + "/" + TimeRenderUtil.getStringForDateField(
+        protected String getDateString(final DateAndTimeValue value) {
+            return DateAndTimeRenderUtil.getStringForDateField(value.getYear()) 
+                + "/" + DateAndTimeRenderUtil.getStringForDateField(
                         value.getDayOfMonth()) + "/" 
-                + TimeRenderUtil.getStringForDateField(value.getMonth());
+                + DateAndTimeRenderUtil.getStringForDateField(value.getMonth());
         }
 
         @Override
-        protected String getTimeString(final TimestampValue value) {
-            String withoutMillis = TimeRenderUtil.getStringForDateField(
+        protected String getTimeString(final DateAndTimeValue value) {
+            String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay() % 12) + ":" 
-                    + TimeRenderUtil.getStringForDateField(value.getMinute())
-                    + ":" + TimeRenderUtil.getStringForDateField(
+                    + DateAndTimeRenderUtil.getStringForDateField(value.getMinute())
+                    + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {
                 withoutMillis += "." + value.getMillis();
@@ -72,23 +72,23 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
     /**
      * Renders the timestamp as yyyy/dd/mm and hh:mm:ss.S am/pm.
      */
-    public static final TimestampValueRenderer EU 
-        = new TimestampValueRenderer() {
+    public static final DateAndTimeValueRenderer EU 
+        = new DateAndTimeValueRenderer() {
 
         @Override
-        protected String getDateString(final TimestampValue value) {
-            return TimeRenderUtil.getStringForDateField(value.getDayOfMonth()) 
-                + "." + TimeRenderUtil.getStringForDateField(
+        protected String getDateString(final DateAndTimeValue value) {
+            return DateAndTimeRenderUtil.getStringForDateField(value.getDayOfMonth()) 
+                + "." + DateAndTimeRenderUtil.getStringForDateField(
                         value.getMonth()) + "." 
-                + TimeRenderUtil.getStringForDateField(value.getYear());
+                + DateAndTimeRenderUtil.getStringForDateField(value.getYear());
         }
 
         @Override
-        protected String getTimeString(final TimestampValue value) {
-            String withoutMillis = TimeRenderUtil.getStringForDateField(
+        protected String getTimeString(final DateAndTimeValue value) {
+            String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay()) + ":" 
-                    + TimeRenderUtil.getStringForDateField(value.getMinute())
-                    + ":" + TimeRenderUtil.getStringForDateField(
+                    + DateAndTimeRenderUtil.getStringForDateField(value.getMinute())
+                    + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {
                 withoutMillis += "." + value.getMillis();
@@ -109,8 +109,8 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
      */
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof TimestampValue) {
-            super.setValue(getStringRepresentationFor((TimestampValue)value));
+        if (value instanceof DateAndTimeValue) {
+            super.setValue(getStringRepresentationFor((DateAndTimeValue)value));
         } else {
             super.setValue(value);
         }
@@ -121,7 +121,7 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
      * @param value the timestamp to render 
      * @return a string representation of the passed timestamp
      */
-    protected String getStringRepresentationFor(final TimestampValue value) {
+    protected String getStringRepresentationFor(final DateAndTimeValue value) {
         String timestamp = "";
         if (value.hasDate()) {
             timestamp = getDateString(value); 
@@ -146,7 +146,7 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
      * @param value a timestamp value
      * @return a string representation of the date fields of that value
      */
-    protected abstract String getDateString(final TimestampValue value);
+    protected abstract String getDateString(final DateAndTimeValue value);
     
     /**
      * Return a string representation of the passed time. One can safely assume
@@ -155,6 +155,6 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
      * @param value a timestamp value
      * @return a string representation of the time fields
      */
-    protected abstract String getTimeString(final TimestampValue value);
+    protected abstract String getTimeString(final DateAndTimeValue value);
 
 }

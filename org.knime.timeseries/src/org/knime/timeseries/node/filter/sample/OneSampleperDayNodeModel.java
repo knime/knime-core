@@ -31,7 +31,7 @@ import java.util.Calendar;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -84,7 +84,7 @@ public class OneSampleperDayNodeModel extends NodeModel {
         if (m_columnName.getStringValue() == null) {
             int i = 0;
             for (DataColumnSpec cs : inSpecs[0]) {
-                if (cs.getType().isCompatible(TimestampValue.class)) {
+                if (cs.getType().isCompatible(DateAndTimeValue.class)) {
                     if (colIndex != -1) {
                         throw new InvalidSettingsException(
                                 "No column selected.");
@@ -110,7 +110,7 @@ public class OneSampleperDayNodeModel extends NodeModel {
             }
 
             DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-            if (!colSpec.getType().isCompatible(TimestampValue.class)) {
+            if (!colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                 throw new InvalidSettingsException("Column \"" + m_columnName
                         + "\" does not contain string values: "
                         + colSpec.getType().toString());
@@ -136,7 +136,7 @@ public class OneSampleperDayNodeModel extends NodeModel {
 
         try {
            for (DataRow r : in) {
-              TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
+              DateAndTimeValue tsc = (DateAndTimeValue) r.getCell(colIndex);
             
               Calendar d1 = tsc.getUTCCalendarClone();
               int hours = d1.get(Calendar.HOUR_OF_DAY);

@@ -26,8 +26,8 @@ package org.knime.timeseries.node.filter.sample;
 
 import java.util.Calendar;
 
-import org.knime.core.data.date.TimestampCell;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -51,7 +51,7 @@ public class OneSampleperDayDialog extends DefaultNodeSettingsPane {
     public OneSampleperDayDialog() {
         DialogComponent columnChooser =
             new DialogComponentColumnNameSelection(createColModel(),
-                    "Columns containing Timestamp: ", 0, TimestampValue.class);
+                    "Columns containing Timestamp: ", 0, DateAndTimeValue.class);
         
         addDialogComponent(columnChooser);
 
@@ -63,8 +63,8 @@ public class OneSampleperDayDialog extends DefaultNodeSettingsPane {
     }
     
     static SettingsModelCalendar createTimeModel() {
-        Calendar cal = TimestampCell.getUTCCalendar();
-        TimestampCell.resetDateFields(cal);
+        Calendar cal = DateAndTimeCell.getUTCCalendar();
+        DateAndTimeCell.resetDateFields(cal);
         return new SettingsModelCalendar("OneSamplePerDay.time", cal, false, 
                 true);
     }

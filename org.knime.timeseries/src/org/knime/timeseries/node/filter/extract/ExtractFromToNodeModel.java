@@ -32,7 +32,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,7 +78,7 @@ public class ExtractFromToNodeModel extends NodeModel {
             // no value yet -> auto-configure
             int i = 0;
             for (DataColumnSpec cs : inSpecs[0]) {
-                if (cs.getType().isCompatible(TimestampValue.class)) {
+                if (cs.getType().isCompatible(DateAndTimeValue.class)) {
                     colIndex = i;
                     // found first date compatible column
                     // -> auto-select it
@@ -97,16 +97,16 @@ public class ExtractFromToNodeModel extends NodeModel {
             // the auto-selected column
             DataColumnSpec colSpec = inSpecs[0].getColumnSpec(
                     m_columnName.getStringValue());
-            if (colSpec.getType().isCompatible(TimestampValue.class)
+            if (colSpec.getType().isCompatible(DateAndTimeValue.class)
                     && colSpec.getDomain().hasBounds()) {
                 DataCell lower = colSpec.getDomain().getLowerBound();
                 DataCell upper = colSpec.getDomain().getUpperBound();
                 if (lower != null && upper != null
-                        && lower.getType().isCompatible(TimestampValue.class)
-                        && upper.getType().isCompatible(TimestampValue.class)) {
-                    Calendar c = ((TimestampValue)lower).getUTCCalendarClone();
+                        && lower.getType().isCompatible(DateAndTimeValue.class)
+                        && upper.getType().isCompatible(DateAndTimeValue.class)) {
+                    Calendar c = ((DateAndTimeValue)lower).getUTCCalendarClone();
                     m_fromDate.setCalendar(c);
-                    c = ((TimestampValue)upper).getUTCCalendarClone();
+                    c = ((DateAndTimeValue)upper).getUTCCalendarClone();
                     m_toDate.setCalendar(c);
                 }
             }
@@ -119,7 +119,7 @@ public class ExtractFromToNodeModel extends NodeModel {
                         + m_columnName.getStringValue());
             }
             DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-            if (!colSpec.getType().isCompatible(TimestampValue.class)) {
+            if (!colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                 throw new InvalidSettingsException("Column \"" + m_columnName
                         + "\" does not contain string values: "
                         + colSpec.getType().toString());
@@ -170,7 +170,7 @@ public class ExtractFromToNodeModel extends NodeModel {
                     // do not include missing values -> skip it
                     continue;
                 }
-                Calendar time = ((TimestampValue)cell).getUTCCalendarClone();
+                Calendar time = ((DateAndTimeValue)cell).getUTCCalendarClone();
                 // use "compareTo" in order to include also the dates on the 
                 // interval borders (instead of using "after" and "before", 
                 // which is implemented as a real < or >

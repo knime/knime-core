@@ -3,7 +3,7 @@ package org.knime.timeseries.node.aggregate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -34,7 +34,7 @@ public class TimeAggregatorNodeDialog extends DefaultNodeSettingsPane {
         // select column containing the time values
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), "Select time column", 0,
-                TimestampValue.class));
+                DateAndTimeValue.class));
         // get the aggregation granularity from TimeDifference node!
         List<String> methods = new ArrayList<String>();
         methods.addAll(TimeLevelNames.getAggregationLevels());

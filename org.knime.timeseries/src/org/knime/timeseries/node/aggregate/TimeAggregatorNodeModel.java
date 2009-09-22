@@ -13,8 +13,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.date.TimeRenderUtil;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeRenderUtil;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -80,7 +80,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 // get a calendar
-                Calendar c = ((TimestampValue)row.getCell(m_colIdx))
+                Calendar c = ((DateAndTimeValue)row.getCell(m_colIdx))
                     .getUTCCalendarClone();
                 // get the selected granularity level
                 String level = m_level.getStringValue();
@@ -138,7 +138,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 // month starts with 0!
                 month++;
                 String s = "" + year;
-                s += "_" + TimeRenderUtil.getStringForDateField(month);
+                s += "_" + DateAndTimeRenderUtil.getStringForDateField(month);
                 return s;
             }
 
@@ -147,7 +147,7 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 int year = c.get(Calendar.YEAR);
                 int week = c.get(Calendar.WEEK_OF_YEAR);
                 String s = "" + year;
-                s += "_" + TimeRenderUtil.getStringForDateField(week);
+                s += "_" + DateAndTimeRenderUtil.getStringForDateField(week);
                 return s;
             }
 
@@ -159,18 +159,18 @@ public class TimeAggregatorNodeModel extends NodeModel {
                 month++;
                 int day = c.get(Calendar.DAY_OF_MONTH);
                 String s = "" + year;
-                s += "_" + TimeRenderUtil.getStringForDateField(month);
-                s += "_" + TimeRenderUtil.getStringForDateField(day);
+                s += "_" + DateAndTimeRenderUtil.getStringForDateField(month);
+                s += "_" + DateAndTimeRenderUtil.getStringForDateField(day);
                 return s;
             }
             
             private String getHour(final Calendar c) {
-                return TimeRenderUtil.getStringForDateField(
+                return DateAndTimeRenderUtil.getStringForDateField(
                         c.get(Calendar.HOUR_OF_DAY));
             }
             
             private String getMinute(final Calendar c) {
-                return TimeRenderUtil.getStringForDateField(
+                return DateAndTimeRenderUtil.getStringForDateField(
                         c.get(Calendar.MINUTE));
             }
         };

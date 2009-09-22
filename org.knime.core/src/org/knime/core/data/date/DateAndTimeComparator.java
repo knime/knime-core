@@ -25,24 +25,24 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 
 /**
- * Comapres to {@link TimestampValue}s by comparing their UTC time.
+ * Comapres to {@link DateAndTimeValue}s by comparing their UTC time.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimestampComparator extends DataValueComparator {
+public class DateAndTimeComparator extends DataValueComparator {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected int compareDataValues(final DataValue v1, final DataValue v2) {
-        if ((v1 instanceof TimestampCell) && (v2 instanceof TimestampCell)) {
-            return ((TimestampCell)v1).getInternalUTCCalendarMember().
-            compareTo(((TimestampCell)v2).getInternalUTCCalendarMember());
+        if ((v1 instanceof DateAndTimeCell) && (v2 instanceof DateAndTimeCell)) {
+            return ((DateAndTimeCell)v1).getInternalUTCCalendarMember().
+            compareTo(((DateAndTimeCell)v2).getInternalUTCCalendarMember());
         }
         // not native implementation: compare via public methods:
-        TimestampValue t1 = (TimestampValue)v1;
-        TimestampValue t2 = (TimestampValue)v2;
+        DateAndTimeValue t1 = (DateAndTimeValue)v1;
+        DateAndTimeValue t2 = (DateAndTimeValue)v2;
         return t1.getUTCCalendarClone().compareTo(t2.getUTCCalendarClone());
     }
 

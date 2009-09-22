@@ -30,19 +30,19 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
 /**
- * The {@link UtilityFactory} for the {@link TimestampValue} providing access to
+ * The {@link UtilityFactory} for the {@link DateAndTimeValue} providing access to
  * the icon, the renderer and the comparator.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimestampUtility extends UtilityFactory {
+public class DateAndTimeUtility extends UtilityFactory {
     
     /** Singleton icon to be used to display this cell type. */
     private static final Icon ICON = loadIcon(
-            TimestampUtility.class, "icons/date_time.png");
+            DateAndTimeUtility.class, "icons/date_time.png");
     
     private static final DataValueComparator COMPARATOR 
-        = new TimestampComparator();
+        = new DateAndTimeComparator();
     
     /**
      * 
@@ -70,7 +70,7 @@ public class TimestampUtility extends UtilityFactory {
     protected DataValueRendererFamily getRendererFamily(
             final DataColumnSpec spec) {
         return new DefaultDataValueRendererFamily(
-                TimestampValueRenderer.EU, TimestampValueRenderer.US);
+                DateAndTimeValueRenderer.EU, DateAndTimeValueRenderer.US);
     }
 
 }

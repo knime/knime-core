@@ -11,7 +11,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -91,9 +91,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
              */
             @Override
             public DataCell getCell(final DataRow row) {
-                long first = ((TimestampValue)row.getCell(m_col1Idx))
+                long first = ((DateAndTimeValue)row.getCell(m_col1Idx))
                     .getUTCTimeInMillis();
-                long last = ((TimestampValue)row.getCell(m_col2Idx))
+                long last = ((DateAndTimeValue)row.getCell(m_col2Idx))
                     .getUTCTimeInMillis();
                 double diffTime = (last - first) / g.getFactor();
                 BigDecimal bd = new BigDecimal(diffTime);

@@ -25,7 +25,7 @@
 package org.knime.timeseries.node.filter.extract;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -56,7 +56,7 @@ public class ExtractFromToDialog extends DefaultNodeSettingsPane {
         m_to = createToModel();
         DialogComponent columnChooser =
             new DialogComponentColumnNameSelection(m_colName,
-                    "Columns containing Timestamp: ", 0, TimestampValue.class);
+                    "Columns containing Timestamp: ", 0, DateAndTimeValue.class);
         addDialogComponent(columnChooser);
         addDialogComponent(new DialogComponentCalendar(m_from, 
                 "Select starting point:"));

@@ -20,8 +20,8 @@ package org.knime.timeseries.util;
 
 import java.util.Calendar;
 
-import org.knime.core.data.date.TimeRenderUtil;
-import org.knime.core.data.date.TimestampCell;
+import org.knime.core.data.date.DateAndTimeRenderUtil;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -116,9 +116,9 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setCalendar(final Calendar calendar) {
         m_value = (Calendar)(calendar.clone());
         if (useTime() && !useDate()) {
-            TimestampCell.resetDateFields(m_value);
+            DateAndTimeCell.resetDateFields(m_value);
         } else if (!useTime() && useDate()) {
-            TimestampCell.resetTimeFields(m_value);
+            DateAndTimeCell.resetTimeFields(m_value);
         }
     }
     
@@ -137,7 +137,7 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setUseDate(final boolean useDate) {
         m_useDate = useDate;
         if (!useDate) {
-            TimestampCell.resetDateFields(m_value);
+            DateAndTimeCell.resetDateFields(m_value);
         }
     }
     
@@ -156,7 +156,7 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setUseTime(final boolean useTime) {
         m_useTime = useTime;
         if (!useTime) {
-            TimestampCell.resetTimeFields(m_value); 
+            DateAndTimeCell.resetTimeFields(m_value); 
         }
     }
     
@@ -206,7 +206,7 @@ public class SettingsModelCalendar extends SettingsModel {
     
 
     private void loadFromInternals(final Config internals) {
-        Calendar tmpTime = TimestampCell.getUTCCalendar();
+        Calendar tmpTime = DateAndTimeCell.getUTCCalendar();
         long time = internals.getLong(KEY_TIME, 
                 tmpTime.getTimeInMillis());
         tmpTime.setTimeInMillis(time);
@@ -265,21 +265,21 @@ public class SettingsModelCalendar extends SettingsModel {
         if (m_useDate) {
             result = "Date: ";
             result += 
-                TimeRenderUtil.getStringForDateField(m_value.get(Calendar.YEAR))
-                + "-" + TimeRenderUtil.getStringForDateField(
+                DateAndTimeRenderUtil.getStringForDateField(m_value.get(Calendar.YEAR))
+                + "-" + DateAndTimeRenderUtil.getStringForDateField(
                         m_value.get(Calendar.MONTH)) + "-" 
-                + TimeRenderUtil.getStringForDateField(
+                + DateAndTimeRenderUtil.getStringForDateField(
                         m_value.get(Calendar.DAY_OF_MONTH)) + " ";
         }
         if (m_useTime) {
             if (!m_useDate) {
                 result = "Time: ";
             }
-           result += TimeRenderUtil.getStringForDateField(
+           result += DateAndTimeRenderUtil.getStringForDateField(
                    m_value.get(Calendar.HOUR_OF_DAY)) + ":" 
-               + TimeRenderUtil.getStringForDateField(
+               + DateAndTimeRenderUtil.getStringForDateField(
                        m_value.get(Calendar.MINUTE)) + ":" 
-               + TimeRenderUtil.getStringForDateField(
+               + DateAndTimeRenderUtil.getStringForDateField(
                        m_value.get(Calendar.SECOND)) + "." 
                + m_value.get(Calendar.MILLISECOND); 
         }

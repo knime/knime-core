@@ -28,25 +28,25 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 
 /**
- * Serializes a {@link TimestampCell} by writing the long representing the UTC 
+ * Serializes a {@link DateAndTimeCell} by writing the long representing the UTC 
  * time and the booleans whether date, time, or milliseconds are available.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimestampCellSerializer implements
-        DataCellSerializer<TimestampCell> {
+public class DateAndTimeCellSerializer implements
+        DataCellSerializer<DateAndTimeCell> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TimestampCell deserialize(final DataCellDataInput input)
+    public DateAndTimeCell deserialize(final DataCellDataInput input)
             throws IOException {
         long utcTime = input.readLong();
         boolean hasDate = input.readBoolean();
         boolean hasTime = input.readBoolean();
         boolean hasMillis = input.readBoolean();
-        TimestampCell cell = new TimestampCell(utcTime, hasDate, hasTime, 
+        DateAndTimeCell cell = new DateAndTimeCell(utcTime, hasDate, hasTime, 
                 hasMillis);
         return cell;
     }
@@ -55,7 +55,7 @@ public class TimestampCellSerializer implements
      * {@inheritDoc}
      */
     @Override
-    public void serialize(final TimestampCell cell, 
+    public void serialize(final DateAndTimeCell cell, 
             final DataCellDataOutput output)
             throws IOException {
         output.writeLong(cell.getUTCTimeInMillis());

@@ -1,6 +1,6 @@
 package org.knime.timeseries.node.diff;
 
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
@@ -40,11 +40,11 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
         // first date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColmn1Model(), "Select first date column", 0,
-                TimestampValue.class));
+                DateAndTimeValue.class));
         // second date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumn2Model(), "Select second date column", 0,
-                org.knime.core.data.date.TimestampValue.class));
+                org.knime.core.data.date.DateAndTimeValue.class));
         // granularity selection
         addDialogComponent(new DialogComponentStringSelection(
                 createGranularityModel(),

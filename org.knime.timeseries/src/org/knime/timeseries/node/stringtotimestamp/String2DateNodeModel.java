@@ -41,7 +41,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.date.TimestampCell;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -57,7 +57,7 @@ import org.knime.core.node.util.StringHistory;
 
 /**
  * This is the model for the node that converts
- * {@link org.knime.core.data.def.StringCell}s into {@link TimestampCell}s.
+ * {@link org.knime.core.data.def.StringCell}s into {@link DateAndTimeCell}s.
  *
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
@@ -152,7 +152,7 @@ public class String2DateNodeModel extends NodeModel {
             m_newColNameModel.setStringValue(uniqueColName);
         }
         DataColumnSpec newColSpec = new DataColumnSpecCreator(uniqueColName,
-                TimestampCell.TYPE).createSpec();
+                DateAndTimeCell.TYPE).createSpec();
         m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
         m_dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         SingleCellFactory c = new SingleCellFactory(newColSpec) {
@@ -166,11 +166,11 @@ public class String2DateNodeModel extends NodeModel {
                 try {
                     String source = ((StringValue)cell).getStringValue();
                     Date date = m_dateFormat.parse(source);
-                    Calendar c = TimestampCell.getUTCCalendar();
+                    Calendar c = DateAndTimeCell.getUTCCalendar();
                     c.setTimeInMillis(date.getTime());
                     m_failCounter = 0;
                     // dependent on the type create the referring cell
-                    TimestampCell result = new TimestampCell(
+                    DateAndTimeCell result = new DateAndTimeCell(
                             c.getTimeInMillis(), 
                             m_useDate, m_useTime, m_useMillis);
                     return result;

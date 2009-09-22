@@ -41,7 +41,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -149,7 +149,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
           // nominal value
           if (!colSpec.getType().isCompatible(NominalValue.class) 
                     && !colSpec.getType().isCompatible(DoubleValue.class)
-                    && !colSpec.getType().isCompatible(TimestampValue.class)) {
+                    && !colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                     excludedCols.add(currColIdx);
           }
           if (colSpec.getType().isCompatible(NominalValue.class)) {
@@ -178,7 +178,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
         if (m_columnName.getStringValue() == null) {
              int i = 0;
              for (DataColumnSpec cs : inSpecs[0]) {
-                if (cs.getType().isCompatible(TimestampValue.class)) {
+                if (cs.getType().isCompatible(DateAndTimeValue.class)) {
                     if (colIndex != -1) {
                         throw new InvalidSettingsException(
                                 "No time stamp column available.");
@@ -205,7 +205,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
              }
 
              DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-             if (!colSpec.getType().isCompatible(TimestampValue.class)) {
+             if (!colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                   throw new InvalidSettingsException("Column \"" + m_columnName
                             + "\" does not contain time stamp values: "
                             + colSpec.getType().toString());

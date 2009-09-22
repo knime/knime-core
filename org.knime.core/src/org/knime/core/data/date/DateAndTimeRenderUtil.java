@@ -26,9 +26,9 @@ package org.knime.core.data.date;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public final class TimeRenderUtil {
+public final class DateAndTimeRenderUtil {
     
-    private TimeRenderUtil() {
+    private DateAndTimeRenderUtil() {
         // utility class
     }
     

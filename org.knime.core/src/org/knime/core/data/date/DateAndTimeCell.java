@@ -33,20 +33,20 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Cell storing a time and/or date. Time is represented by a {@link Calendar} 
- * set to UTC time. No support for time zones. A {@link TimestampCell} can be 
+ * set to UTC time. No support for time zones. A {@link DateAndTimeCell} can be 
  * created by passing only the date fields (year, month, day), only the time 
  * fields (hour, minute, seconds, and milliseconds).
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimestampCell extends DataCell 
-    implements TimestampValue, BoundedValue {
+public class DateAndTimeCell extends DataCell 
+    implements DateAndTimeValue, BoundedValue {
     
     /** The UTC time zone used to represent the time. */
     public static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone("UTC");
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            TimestampCell.class);
+            DateAndTimeCell.class);
     
     /**
      * 
@@ -92,10 +92,10 @@ public class TimestampCell extends DataCell
     
     
     /** {@link DataType} of this cell. */
-    public static final DataType TYPE = DataType.getType(TimestampCell.class);
+    public static final DataType TYPE = DataType.getType(DateAndTimeCell.class);
     
-    private static final DataCellSerializer<TimestampCell>SERIALIZER 
-            = new TimestampCellSerializer();
+    private static final DataCellSerializer<DateAndTimeCell>SERIALIZER 
+            = new DateAndTimeCellSerializer();
     
     /**
      * 
@@ -103,7 +103,7 @@ public class TimestampCell extends DataCell
      * @see DataCellSerializer
      * @see DataCell
      */
-    public static final DataCellSerializer<TimestampCell> getCellSerializer() {
+    public static final DataCellSerializer<DateAndTimeCell> getCellSerializer() {
         return SERIALIZER;
     }
     
@@ -126,7 +126,7 @@ public class TimestampCell extends DataCell
      * @param month the month (1-12)
      * @param dayOfMonth the day of the month (1-31)
      */
-    public TimestampCell(final int year, final int month, 
+    public DateAndTimeCell(final int year, final int month, 
             final int dayOfMonth) {
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.clear();
@@ -144,7 +144,7 @@ public class TimestampCell extends DataCell
      * @param second the second
      * @param milliseconds the milliseconds (or <0 if they should not be set) 
      */
-    public TimestampCell(final int hourOfDay, final int minute, 
+    public DateAndTimeCell(final int hourOfDay, final int minute, 
             final int second, final int milliseconds) {
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.clear();
@@ -170,7 +170,7 @@ public class TimestampCell extends DataCell
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
      */
-    public TimestampCell(final int year, final int month, final int dayOfMonth,
+    public DateAndTimeCell(final int year, final int month, final int dayOfMonth,
             final int hourOfDay, final int minute, final int second) {
         this(year, month, dayOfMonth, hourOfDay, minute, second, -1);
     }
@@ -186,7 +186,7 @@ public class TimestampCell extends DataCell
      * @param millisecond milliseconds {@link Calendar#MILLISECOND}
      *    (or <0 if they should not be set)
      */
-    public TimestampCell(final int year, final int month, final int dayOfMonth,
+    public DateAndTimeCell(final int year, final int month, final int dayOfMonth,
             final int hourOfDay, final int minute, final int second, 
             final int millisecond) {
         m_utcCalendar = getUTCCalendar();
@@ -210,7 +210,7 @@ public class TimestampCell extends DataCell
      * @param hasTime true if the time is available (hour, minute, second)
      * @param hasMillis true if milliseconds are available 
      */
-    public TimestampCell(final long utcTime, final boolean hasDate, 
+    public DateAndTimeCell(final long utcTime, final boolean hasDate, 
             final boolean hasTime, final boolean hasMillis) {
         if (hasMillis & !hasTime) {
             throw new IllegalArgumentException("Timestamp with Millis but "
@@ -414,8 +414,8 @@ public class TimestampCell extends DataCell
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        if (dc != null && dc.getType().isCompatible(TimestampValue.class)) {
-            TimestampValue tv = (TimestampValue)dc;
+        if (dc != null && dc.getType().isCompatible(DateAndTimeValue.class)) {
+            DateAndTimeValue tv = (DateAndTimeValue)dc;
             boolean isEqual = (tv.getUTCTimeInMillis() 
                 == m_utcCalendar.getTimeInMillis());
             isEqual &= (this.m_hasDate == tv.hasDate());

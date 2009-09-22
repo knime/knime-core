@@ -25,7 +25,7 @@
 package org.knime.timeseries.node.display.timeplot;
 
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.data.date.TimestampValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -78,7 +78,7 @@ public class TimePlotNodeDialog extends DefaultNodeSettingsPane {
                     null);
         DialogComponent columnChooser =
             new DialogComponentColumnNameSelection(columnName,
-                    "Columns containing Timestamp: ", 0, TimestampValue.class);
+                    "Columns containing Timestamp: ", 0, DateAndTimeValue.class);
         addDialogComponent(columnChooser);
     }
 

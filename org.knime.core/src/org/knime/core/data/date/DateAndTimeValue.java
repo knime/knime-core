@@ -31,10 +31,10 @@ import org.knime.core.data.DataValue;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public interface TimestampValue extends DataValue {
+public interface DateAndTimeValue extends DataValue {
     
     /** Utility implementation for timestamp values. */
-    public static final TimestampUtility UTILITY = new TimestampUtility();
+    public static final DateAndTimeUtility UTILITY = new DateAndTimeUtility();
     
     /**
      * @return the year of this date
