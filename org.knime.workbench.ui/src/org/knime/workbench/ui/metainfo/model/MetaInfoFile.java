@@ -49,49 +49,49 @@ import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * Helper class for the meta info file which contains the meta information 
+ * Helper class for the meta info file which contains the meta information
  * entered by the user for workflow groups and workflows, such as author, date,
  * comments.
- *  
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public final class MetaInfoFile {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MetaInfoFile.class);
-    
+
     /** Preference key for a workflow template. */
-    public static final String PREF_KEY_META_INFO_TEMPLATE_WF 
+    public static final String PREF_KEY_META_INFO_TEMPLATE_WF
         = "org.knime.ui.metainfo.template.workflow";
 
     /** Preference key for a workflow group template. */
-    public static final String PREF_KEY_META_INFO_TEMPLATE_WFS 
+    public static final String PREF_KEY_META_INFO_TEMPLATE_WFS
         = "org.knime.ui.metainfo.template.workflowset";
-    
+
     private MetaInfoFile() {
         // utility class
     }
-    
+
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
-    
+
     /**
      * Creates a meta info file with default content.
      * @param parent parent file
      * @param isWorkflow true if it is a meta info for a workflow
      */
-    public static void createMetaInfoFile(final File parent, 
+    public static void createMetaInfoFile(final File parent,
             final boolean isWorkflow) {
         // look into preference store
-        File f = getFileFromPreferences(isWorkflow); 
+        File f = getFileFromPreferences(isWorkflow);
         if (f != null) {
             writeFileFromPreferences(parent, f);
         } else {
             createDefaultFileFallback(parent);
         }
     }
-    
-    private static void writeFileFromPreferences(final File parent, 
+
+    private static void writeFileFromPreferences(final File parent,
             final File f) {
         File dest = new File(parent, METAINFO_FILE);
         try {
@@ -120,11 +120,11 @@ public final class MetaInfoFile {
 
     private static void createDefaultFileFallback(final File parent) {
         try {
-            File meta = new File(parent, METAINFO_FILE); 
-            SAXTransformerFactory fac 
+            File meta = new File(parent, METAINFO_FILE);
+            SAXTransformerFactory fac
                 = (SAXTransformerFactory)TransformerFactory.newInstance();
             TransformerHandler handler = fac.newTransformerHandler();
-        
+
             Transformer t = handler.getTransformer();
             t.setOutputProperty(OutputKeys.METHOD, "xml");
             t.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -137,73 +137,73 @@ public final class MetaInfoFile {
             atts.addAttribute(null, null, "nrOfElements", "CDATA", ""
                     + 2);
             handler.startElement(null, null, "KNIMEMetaInfo", atts);
-            
+
             // author
             atts = new AttributesImpl();
-            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
                     MetaGUIElement.TEXT);
-            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA",
                     "Author");
             handler.startElement(null, null, MetaGUIElement.ELEMENT, atts);
             handler.endElement(null, null, MetaGUIElement.ELEMENT);
-            
+
             // creation date
             atts = new AttributesImpl();
-            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
                     MetaGUIElement.DATE);
-            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA",
                     "Creation Date");
-//            atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+//            atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA",
 //                    "true");
             handler.startElement(null, null, MetaGUIElement.ELEMENT, atts);
             Calendar current = Calendar.getInstance();
             String date = DateMetaGUIElement.createStorageString(
-                    current.get(Calendar.DAY_OF_MONTH), 
-                    current.get(Calendar.MONTH), 
+                    current.get(Calendar.DAY_OF_MONTH),
+                    current.get(Calendar.MONTH),
                     current.get(Calendar.YEAR));
             char[] dateChars = date.toCharArray();
             handler.characters(dateChars, 0, dateChars.length);
             handler.endElement(null, null, MetaGUIElement.ELEMENT);
 
-            
-            // comments 
+
+            // comments
             atts = new AttributesImpl();
-            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
                     MetaGUIElement.MULTILINE);
-            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", 
+            atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA",
                     "Comments");
             handler.startElement(null, null, MetaGUIElement.ELEMENT, atts);
-            handler.endElement(null, null, MetaGUIElement.ELEMENT);  
-            
+            handler.endElement(null, null, MetaGUIElement.ELEMENT);
+
             // TODO: add here all default elements
-            
+
             handler.endElement(null, null, "KNIMEMetaInfo");
             handler.endDocument();
             out.close();
             } catch (Exception e) {
-                LOGGER.error("Error while trying to create default " 
-                        + "meta info file for" + parent.getName(), e);
+                LOGGER.error("Error while trying to create default "
+                        + "meta info file for " + parent.getName(), e);
             }
     }
-    
+
     /**
      * Creates a new workflow group project (with the referring nature).
      * @param name name of the project
-     * @param natureId one of {@link KNIMEProjectNature} 
+     * @param natureId one of {@link KNIMEProjectNature}
      *  or {@link KNIMEWorkflowSetProjectNature}
      * @return the created project (already open and with description)
      * @throws Exception if something goes wrong
-     * 
+     *
      * @see {@link KNIMEWorkflowSetProjectNature}
      */
-    public static IProject createKnimeProject(final String name, 
-            final String natureId) 
+    public static IProject createKnimeProject(final String name,
+            final String natureId)
         throws Exception {
-        if (!KNIMEProjectNature.ID.equals(natureId) 
+        if (!KNIMEProjectNature.ID.equals(natureId)
                 && !KNIMEWorkflowSetProjectNature.ID.equals(natureId)) {
             throw new IllegalArgumentException(
                     "Unsupported project nature " + natureId + ". "
-                    + "Only KnimeProjectNature and " 
+                    + "Only KnimeProjectNature and "
                     + "KnimeWorkflowSetProjectNature are supported!");
         }
         final IProgressService ps = PlatformUI.getWorkbench()
@@ -220,23 +220,23 @@ public final class MetaInfoFile {
                     LOGGER.error("Error while creating project "  + name, e);
                 }
             }
-        });        
+        });
         return runnable.getNewProject();
     }
-    
-    private static class ProjectCreationRunnable 
+
+    private static class ProjectCreationRunnable
         implements IRunnableWithProgress {
-        
+
         private IProject m_newProject;
         private final String m_newProjectName;
         private final String m_natureID;
-        
-        public ProjectCreationRunnable(final String newProjectName, 
+
+        public ProjectCreationRunnable(final String newProjectName,
                 final String natureID) {
             m_newProjectName = newProjectName;
             m_natureID = natureID;
         }
-        
+
         public IProject getNewProject() {
             return m_newProject;
         }
@@ -258,9 +258,9 @@ public final class MetaInfoFile {
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw new InvocationTargetException(e);
-            }    
+            }
         }
     }
-    
-    
+
+
 }
