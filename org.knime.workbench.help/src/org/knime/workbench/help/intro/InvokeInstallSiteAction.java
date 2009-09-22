@@ -24,7 +24,11 @@
  */
 package org.knime.workbench.help.intro;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog;
+import org.eclipse.equinox.internal.provisional.p2.ui.operations.AddColocatedRepositoryOperation;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.widgets.Display;
 
@@ -43,7 +47,19 @@ public class InvokeInstallSiteAction extends Action {
      * Constructor.
      */
     public InvokeInstallSiteAction() {
-        // do nothing
+        // TODO: define KNIME Update Site URL somewhere statically
+        // FIXME: update this hardcoded update site!!!
+        // FIXME: as of Eclipse 3.5 the update sites defined in the features
+        // should be added automatically to the p2 update/install dialog
+        // then this hack becomes obsolete
+        try {
+            AddColocatedRepositoryOperation op
+                = new AddColocatedRepositoryOperation("KNIME",
+                        new URL("http://www.knime.org/update_2.x/"));
+            op.runInBackground();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

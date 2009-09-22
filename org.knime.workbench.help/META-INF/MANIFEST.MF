@@ -14,7 +14,11 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.ui,
  org.eclipse.ui.ide,
  org.eclipse.help.ui,
- org.eclipse.equinox.p2.ui.sdk
+ org.eclipse.equinox.p2.ui.sdk,
+ org.eclipse.equinox.p2.ui;bundle-version="1.0.4",
+ org.eclipse.equinox.p2.core;bundle-version="1.0.4",
+ org.eclipse.equinox.p2.artifact.repository;bundle-version="1.0.4",
+ org.eclipse.equinox.p2.metadata.repository;bundle-version="1.0.0"
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.help.intro
 Bundle-ActivationPolicy: lazy
