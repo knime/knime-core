@@ -26,8 +26,8 @@ import org.knime.core.node.NodeSettingsWO;
  * selected column of a row matches the included possible values the row is
  * added to the included rows at first out port, else to the excluded at second
  * outport.
- * 
- * 
+ *
+ *
  * @author KNIME GmbH
  */
 public class NominalValueRowFilterNodeModel extends NodeModel {
@@ -60,7 +60,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             if (matches(row)) {
                 positive.addRowToTable(row);
             }
-            exec.setProgress(currentRow / (double)inData[0].getRowCount(),
+            exec.setProgress(currentRow / inData[0].getRowCount(),
                     "filtering row # " + currentRow);
             currentRow++;
             exec.checkCanceled();
@@ -124,9 +124,12 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             }
             // all values included?
             if (inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
-                    .getValues().size() == m_selectedAttr.size()) {
-                setWarningMessage("All values are included! "
-                        + "Input will be mirrored at out-port 0 (included)");
+                    .hasValues()) {
+                if (inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
+                        .getValues().size() == m_selectedAttr.size()) {
+                    setWarningMessage("All values are included! Input will be "
+                            + "mirrored at out-port 0 (included)");
+                }
             }
             // if attribute values isn't found in domain also throw exception
             boolean validAttrVal = false;
