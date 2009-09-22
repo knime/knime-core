@@ -18,6 +18,8 @@
  */
 package org.knime.timeseries.node.generator;
 
+import java.util.Calendar;
+
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -59,7 +61,9 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
      * @return the calendar model for the starting point
      */
     static SettingsModelCalendar createStartingPointModel() {
-        return new SettingsModelCalendar("starting-point", null);
+        Calendar c = Calendar.getInstance();
+        c.roll(Calendar.YEAR, false);
+        return new SettingsModelCalendar("starting-point", c);
     }
 
     /**

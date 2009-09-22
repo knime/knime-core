@@ -128,7 +128,8 @@ public class DialogComponentTime extends DialogComponent {
     protected void updateComponent() {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         Calendar calendar = model.getCalendar();
-        if (model.useTime()) {
+//        if (model.useTime()) 
+        {
             m_hourUI.setText(Integer.toString(calendar.get(
                     Calendar.HOUR_OF_DAY)));
             m_minuteUI.setText(Integer.toString(calendar.get(
