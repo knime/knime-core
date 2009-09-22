@@ -33,7 +33,12 @@ import javax.swing.Icon;
  * Value interface of data cells holding day/time information.
  * 
  * @author M. Berthold, University of Konstanz
+ * @deprecated Date and time in KNIME is represented by 
+ * {@link org.knime.core.data.date.DateAndTimeValue} and
+ * {@link org.knime.core.data.date.DateAndTimeCell}. This interface will be 
+ * removed in future versions of KNIME.
  */
+@Deprecated
 public interface TimestampValue extends DataValue {
     
     /** Meta information to <code>TimestampValue</code>.

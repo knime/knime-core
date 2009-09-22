@@ -40,7 +40,12 @@ import org.knime.core.data.TimestampValue;
  * information as {@link Date}.
  * 
  * @author M. Berthold, University of Konstanz
+ * @deprecated Date and time in KNIME is represented by 
+ * {@link org.knime.core.data.date.DateAndTimeValue} and
+ * {@link org.knime.core.data.date.DateAndTimeCell}. This class will be removed
+ * in future versions of KNIME.
  */
+@Deprecated
 public class TimestampCell extends DataCell implements TimestampValue {
 
     /** Convenience access member for 
