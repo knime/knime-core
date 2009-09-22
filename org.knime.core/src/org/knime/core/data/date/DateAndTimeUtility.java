@@ -30,8 +30,8 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
 /**
- * The {@link UtilityFactory} for the {@link DateAndTimeValue} providing access to
- * the icon, the renderer and the comparator.
+ * The {@link UtilityFactory} for the {@link DateAndTimeValue} providing access
+ * to the icon, the renderer and the comparator.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */

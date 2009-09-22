@@ -28,13 +28,12 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 
 /**
- * Serializes a {@link DateAndTimeCell} by writing the long representing the UTC 
+ * Serializes a {@link DateAndTimeCell} by writing the long representing the UTC
  * time and the booleans whether date, time, or milliseconds are available.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class DateAndTimeCellSerializer implements
-        DataCellSerializer<DateAndTimeCell> {
+class DateAndTimeCellSerializer implements DataCellSerializer<DateAndTimeCell> {
 
     /**
      * {@inheritDoc}

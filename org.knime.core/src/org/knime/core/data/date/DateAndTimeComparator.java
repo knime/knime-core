@@ -21,29 +21,32 @@
  */
 package org.knime.core.data.date;
 
+import java.util.Calendar;
+
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 
 /**
- * Comapres to {@link DateAndTimeValue}s by comparing their UTC time.
+ * Compares to {@link DateAndTimeValue}s by comparing their UTC time.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class DateAndTimeComparator extends DataValueComparator {
+class DateAndTimeComparator extends DataValueComparator {
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected int compareDataValues(final DataValue v1, final DataValue v2) {
-        if ((v1 instanceof DateAndTimeCell) && (v2 instanceof DateAndTimeCell)) {
-            return ((DateAndTimeCell)v1).getInternalUTCCalendarMember().
-            compareTo(((DateAndTimeCell)v2).getInternalUTCCalendarMember());
+        Calendar c1;
+        Calendar c2;
+        if (v1 instanceof DateAndTimeCell && v2 instanceof DateAndTimeCell) {
+            c1 = ((DateAndTimeCell)v1).getInternalUTCCalendarMember();
+            c2 = ((DateAndTimeCell)v2).getInternalUTCCalendarMember();
+        } else {
+            // not native implementation: compare via public methods:
+            c1 = ((DateAndTimeValue)v1).getUTCCalendarClone();
+            c2 = ((DateAndTimeValue)v2).getUTCCalendarClone();
         }
-        // not native implementation: compare via public methods:
-        DateAndTimeValue t1 = (DateAndTimeValue)v1;
-        DateAndTimeValue t2 = (DateAndTimeValue)v2;
-        return t1.getUTCCalendarClone().compareTo(t2.getUTCCalendarClone());
+        return c1.compareTo(c2);
     }
 
 }

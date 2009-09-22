@@ -28,7 +28,8 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public abstract class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
+public abstract class DateAndTimeValueRenderer 
+    extends DefaultDataValueRenderer {
     
     /**
      * Renders the timestamp as yyyy/dd/mm and hh:mm:ss.S am/pm.
@@ -48,7 +49,8 @@ public abstract class DateAndTimeValueRenderer extends DefaultDataValueRenderer 
         protected String getTimeString(final DateAndTimeValue value) {
             String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay() % 12) + ":" 
-                    + DateAndTimeRenderUtil.getStringForDateField(value.getMinute())
+                    + DateAndTimeRenderUtil.getStringForDateField(
+                            value.getMinute())
                     + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {
@@ -77,7 +79,8 @@ public abstract class DateAndTimeValueRenderer extends DefaultDataValueRenderer 
 
         @Override
         protected String getDateString(final DateAndTimeValue value) {
-            return DateAndTimeRenderUtil.getStringForDateField(value.getDayOfMonth()) 
+            return DateAndTimeRenderUtil.getStringForDateField(
+                    value.getDayOfMonth()) 
                 + "." + DateAndTimeRenderUtil.getStringForDateField(
                         value.getMonth()) + "." 
                 + DateAndTimeRenderUtil.getStringForDateField(value.getYear());
@@ -87,7 +90,8 @@ public abstract class DateAndTimeValueRenderer extends DefaultDataValueRenderer 
         protected String getTimeString(final DateAndTimeValue value) {
             String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay()) + ":" 
-                    + DateAndTimeRenderUtil.getStringForDateField(value.getMinute())
+                    + DateAndTimeRenderUtil.getStringForDateField(
+                            value.getMinute())
                     + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {

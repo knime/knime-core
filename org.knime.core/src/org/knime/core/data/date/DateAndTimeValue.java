@@ -38,7 +38,7 @@ public interface DateAndTimeValue extends DataValue {
     
     /**
      * @return the year of this date
-     * @see {@link Calendar#YEAR}
+     * @see Calendar#YEAR
      */
     public int getYear();
     

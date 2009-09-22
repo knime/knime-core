@@ -94,7 +94,7 @@ public class DateAndTimeCell extends DataCell
     /** {@link DataType} of this cell. */
     public static final DataType TYPE = DataType.getType(DateAndTimeCell.class);
     
-    private static final DataCellSerializer<DateAndTimeCell>SERIALIZER 
+    private static final DataCellSerializer<DateAndTimeCell> SERIALIZER 
             = new DateAndTimeCellSerializer();
     
     /**
@@ -103,7 +103,8 @@ public class DateAndTimeCell extends DataCell
      * @see DataCellSerializer
      * @see DataCell
      */
-    public static final DataCellSerializer<DateAndTimeCell> getCellSerializer() {
+    public static final DataCellSerializer<DateAndTimeCell> 
+        getCellSerializer() {
         return SERIALIZER;
     }
     
@@ -170,8 +171,9 @@ public class DateAndTimeCell extends DataCell
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
      */
-    public DateAndTimeCell(final int year, final int month, final int dayOfMonth,
-            final int hourOfDay, final int minute, final int second) {
+    public DateAndTimeCell(final int year, final int month, 
+            final int dayOfMonth, final int hourOfDay, final int minute, 
+            final int second) {
         this(year, month, dayOfMonth, hourOfDay, minute, second, -1);
     }
 
@@ -186,9 +188,9 @@ public class DateAndTimeCell extends DataCell
      * @param millisecond milliseconds {@link Calendar#MILLISECOND}
      *    (or <0 if they should not be set)
      */
-    public DateAndTimeCell(final int year, final int month, final int dayOfMonth,
-            final int hourOfDay, final int minute, final int second, 
-            final int millisecond) {
+    public DateAndTimeCell(final int year, final int month, 
+            final int dayOfMonth, final int hourOfDay, final int minute, 
+            final int second, final int millisecond) {
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.clear();
         m_utcCalendar.set(year, month, dayOfMonth, hourOfDay, minute, second);
