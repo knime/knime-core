@@ -135,11 +135,16 @@ public class DialogComponentChoiceConfig extends DialogComponent {
                     m_qualityLabel
                             .setEnabled(m_dimensionSelection.isSelected());
                     final int dim =
+                            m_dimensionSelection.isSelected() ? (Integer)m_dimSpinner
+                                    .getValue()
+                                    : ((SettingsModelPCADimensions)getModel())
+                                            .getNeededDimensions(-1);
+
+                    final String currentDimensions =
                             ((SettingsModelPCADimensions)getModel())
-                                    .getNeededDimensions(-1);
-                    m_qualityLabel.setText(" ("
-                            + ((SettingsModelPCADimensions)getModel())
-                                    .getInformationPreservation(dim) + ")");
+                                    .getInformationPreservation(dim);
+
+                    m_qualityLabel.setText(" (" + currentDimensions + ")");
                 }
             }
 
