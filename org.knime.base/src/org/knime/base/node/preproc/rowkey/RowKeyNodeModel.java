@@ -23,15 +23,6 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -52,6 +43,16 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -155,38 +156,45 @@ public class RowKeyNodeModel extends NodeModel {
         // we have one data in and one data out port
         super(1, 1);
         //initialise the settings models
-        m_replaceKey = new SettingsModelBoolean(
-                RowKeyNodeModel.REPLACE_ROWKEY, true);
-        m_newRowKeyColumn = new SettingsModelString(
-                RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null);
+        m_replaceKey = new SettingsModelBoolean(REPLACE_ROWKEY, true);
+        m_newRowKeyColumn = new SettingsModelString(SELECTED_NEW_ROWKEY_COL,
+                (String)null);
         m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
+        final boolean enableReplaceOptions = enableReplaceOptions();
         m_removeRowKeyCol = new SettingsModelBoolean(
-                RowKeyNodeModel.REMOVE_ROW_KEY_COLUM, false);
-        m_removeRowKeyCol.setEnabled(m_replaceKey.getBooleanValue());
-        m_ensureUniqueness = new SettingsModelBoolean(
-                RowKeyNodeModel.ENSURE_UNIQUNESS, false);
-        m_ensureUniqueness.setEnabled(m_replaceKey.getBooleanValue());
-        m_handleMissingVals = new SettingsModelBoolean(
-                RowKeyNodeModel.HANDLE_MISSING_VALS, false);
-        m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
+                REMOVE_ROW_KEY_COLUM, false);
+        m_removeRowKeyCol.setEnabled(enableReplaceOptions);
+        m_ensureUniqueness = new SettingsModelBoolean(ENSURE_UNIQUNESS, false);
+        m_ensureUniqueness.setEnabled(enableReplaceOptions);
+        m_handleMissingVals = new SettingsModelBoolean(HANDLE_MISSING_VALS,
+                false);
+        m_handleMissingVals.setEnabled(enableReplaceOptions);
         m_enableHilite = new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
         m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
 
-        m_appendRowKey = new SettingsModelBoolean(
-                RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
-        m_newColumnName = new SettingsModelString(
-                RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null);
+        m_appendRowKey = new SettingsModelBoolean(APPEND_ROWKEY_COLUMN, false);
+        m_newColumnName = new SettingsModelString(NEW_COL_NAME_4_ROWKEY_VALS,
+                (String)null);
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
-
 
         m_replaceKey.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final boolean b = m_replaceKey.getBooleanValue();
-                m_newRowKeyColumn.setEnabled(b);
+                final boolean b = enableReplaceOptions();
+                m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
                 m_removeRowKeyCol.setEnabled(b);
                 m_ensureUniqueness.setEnabled(b);
                 m_handleMissingVals.setEnabled(b);
-                m_enableHilite.setEnabled(b);
+                m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
+            }
+        });
+
+        m_newRowKeyColumn.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                final boolean b = enableReplaceOptions();
+                m_removeRowKeyCol.setEnabled(b);
+                m_ensureUniqueness.setEnabled(b);
+                m_handleMissingVals.setEnabled(b);
             }
         });
         m_appendRowKey.addChangeListener(new ChangeListener() {
@@ -194,6 +202,14 @@ public class RowKeyNodeModel extends NodeModel {
                 m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
             }
         });
+    }
+
+    /**
+     * @return <code>true</code> if the replace options should be enabled
+     */
+    protected boolean enableReplaceOptions() {
+        return m_replaceKey.getBooleanValue()
+            && m_newRowKeyColumn.getStringValue() != null;
     }
 
     /**
@@ -214,16 +230,18 @@ public class RowKeyNodeModel extends NodeModel {
         if (m_replaceKey.getBooleanValue()) {
             LOGGER.debug("The user wants to replace the row ID with the"
                     + " column " + m_newColumnName.getStringValue()
-                    + " optional appended column name" + m_newColumnName);
-            // the user wants a new column as rowkey column
-            final int colIdx = data.getDataTableSpec().findColumnIndex(
-                    m_newRowKeyColumn.getStringValue());
-            if (colIdx < 0) {
-                throw new InvalidSettingsException("No column with name: "
-                        + m_newColumnName.getStringValue()
-                        + " exists. Please select a valid column name.");
+                    + " optional appended column name"
+                    + m_appendRowKey.getBooleanValue());
+            if (m_newRowKeyColumn.getStringValue() != null) {
+                // the user wants a new column as rowkey column
+                final int colIdx = data.getDataTableSpec().findColumnIndex(
+                        m_newRowKeyColumn.getStringValue());
+                if (colIdx < 0) {
+                    throw new InvalidSettingsException("No column with name: "
+                            + m_newColumnName.getStringValue()
+                            + " exists. Please select a valid column name.");
+                }
             }
-
             DataColumnSpec newColSpec = null;
             if (m_appendRowKey.getBooleanValue()) {
                 final String newColName = m_newColumnName.getStringValue();
@@ -303,11 +321,12 @@ public class RowKeyNodeModel extends NodeModel {
                     "Please select at least on option.");
         }
         if (replaceKey) {
-            if (newRowKeyCol == null || newRowKeyCol.trim().length() < 1) {
-                throw new InvalidSettingsException(
-                        "Please select the new row ID column.");
-            }
-            if (origSpec != null && !origSpec.containsName(newRowKeyCol)) {
+//            if (newRowKeyCol == null || newRowKeyCol.trim().length() < 1) {
+//                throw new InvalidSettingsException(
+//                        "Please select the new row ID column.");
+//            }
+            if (newRowKeyCol != null && origSpec != null
+                    && !origSpec.containsName(newRowKeyCol)) {
                 throw new InvalidSettingsException(
                 "Selected column: '" + newRowKeyCol
                 + "' not found in input table.");
@@ -393,7 +412,10 @@ public class RowKeyNodeModel extends NodeModel {
         if (m_replaceKey.getBooleanValue()) {
             final String selRowKey =
                 m_newRowKeyColumn.getStringValue();
-            if (m_removeRowKeyCol.getBooleanValue()) {
+            if (selRowKey == null) {
+                setWarningMessage(
+                        "No row key coulmn selected generate a new one");
+            } else if (m_removeRowKeyCol.getBooleanValue()) {
                 spec = RowKeyUtil.createTableSpec(spec, selRowKey);
             }
         }

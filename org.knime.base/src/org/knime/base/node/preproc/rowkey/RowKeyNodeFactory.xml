@@ -11,23 +11,26 @@
 	<fullDescription>
 		<intro>		
 		<p>This node can be used to replace the RowID of the input data with 
-		the values of another column (by converting the values to a string). The 
-		user has additional options to ensure uniqueness and to handle 
+		the values of another column (by converting the values to a string) or
+		a generated row id of the format: Row1, Row2. 
+		The user has additional options to ensure uniqueness and to handle 
 		missing values.</p>
 		<p>
 		It can also be used to create a new column, which contains the RowID
 		as a value.</p>
 		<p>If both options are selected the node appends a new column
 		with the values of the current RowID to the table and replaces the 
-		current RowID with the values of the selected column.</p>
+		current RowID with the values of the selected column or the 
+		generated row id.</p>
 		<p><b>Note: Highlighting does not work across this node.</b></p>
 		</intro>
 		<option name="Replace RowID with selected column values">
 		    If selected the node replaces each RowID with the corresponding
-		    string value of the selected column.
+		    string value of the selected column or with a generated key.
 	    </option>
 		<option name="New RowID column: ">
-			The column to replace the current RowID.
+			The column to replace the current RowID. If none is selected a
+			row id is generated with the format: Row1, Row2, ...
 	    </option>
 		<option name="Ensure uniqueness">
 			If checked the node ensures uniqueness by appending a counter (x) 

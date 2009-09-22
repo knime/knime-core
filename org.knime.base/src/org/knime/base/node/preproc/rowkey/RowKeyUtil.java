@@ -118,7 +118,7 @@ public class RowKeyUtil {
      * @param exec the {@link ExecutionContext} to check for cancel and to
      * provide status messages
      * @param selRowKeyColName the name of the column which should replace
-     * the row key
+     * the row key or <code>null</code> if a new one should be created
      * @param appendColumn <code>true</code> if a new column should be created
      * @param newColSpec the {@link DataColumnSpec} of the new column or
      * <code>null</code>  if no column should be created at all
@@ -159,9 +159,14 @@ public class RowKeyUtil {
         final BufferedDataContainer newContainer =
             exec.createDataContainer(outSpec, false);
         final int noOfCols = outSpec.getNumColumns();
-        final int newRowKeyColIdx = inSpec.findColumnIndex(selRowKeyColName);
-        if (newRowKeyColIdx < 0) {
-            throw new InvalidSettingsException("Column name not found.");
+        final int newRowKeyColIdx;
+        if (selRowKeyColName != null) {
+            newRowKeyColIdx = inSpec.findColumnIndex(selRowKeyColName);
+            if (newRowKeyColIdx < 0) {
+                throw new InvalidSettingsException("Column name not found.");
+            }
+        } else {
+            newRowKeyColIdx = -1;
         }
         final int totalNoOfRows = inData.getRowCount();
         if (hiliteMap) {
@@ -189,54 +194,60 @@ public class RowKeyUtil {
             if (appendColumn) {
                 cells[noOfCols - 1] = new StringCell(row.getKey().getString());
             }
-            final DataCell keyCell = row.getCell(newRowKeyColIdx);
-            String key = null;
-            if (keyCell.isMissing()) {
-                if (replaceMissingVals) {
-                    key = MISSING_VALUE_REPLACEMENT;
-                    m_missingValueCounter++;
-                } else {
-                    throw new InvalidSettingsException(
-                            "Missing value found in row " + rowCounter);
-                }
-            } else {
-                key = keyCell.toString();
-            }
-            if (vals.containsKey(key)) {
-                if (!keyCell.isMissing()) {
-                    m_duplicatesCounter++;
-                }
-                if (ensureUniqueness) {
-                    StringBuilder uniqueKey = new StringBuilder(key);
-                    final MutableInteger index = vals.get(uniqueKey.toString());
-                    while (vals.containsKey(uniqueKey.toString())) {
-                        index.inc();
-                        uniqueKey = new StringBuilder(key);
-                        uniqueKey.append("(");
-                        uniqueKey.append(index.toString());
-                        uniqueKey.append(")");
+            final RowKey newKeyVal;
+            if (newRowKeyColIdx >= 0) {
+                final DataCell keyCell = row.getCell(newRowKeyColIdx);
+                String key = null;
+                if (keyCell.isMissing()) {
+                    if (replaceMissingVals) {
+                        key = MISSING_VALUE_REPLACEMENT;
+                        m_missingValueCounter++;
+                    } else {
+                        throw new InvalidSettingsException(
+                                "Missing value found in row " + rowCounter);
                     }
-                    key = uniqueKey.toString();
                 } else {
-                    if (keyCell.isMissing()) {
+                    key = keyCell.toString();
+                }
+                if (vals.containsKey(key)) {
+                    if (!keyCell.isMissing()) {
+                        m_duplicatesCounter++;
+                    }
+                    if (ensureUniqueness) {
+                        StringBuilder uniqueKey = new StringBuilder(key);
+                        final MutableInteger index = vals.get(uniqueKey.toString());
+                        while (vals.containsKey(uniqueKey.toString())) {
+                            index.inc();
+                            uniqueKey = new StringBuilder(key);
+                            uniqueKey.append("(");
+                            uniqueKey.append(index.toString());
+                            uniqueKey.append(")");
+                        }
+                        key = uniqueKey.toString();
+                    } else {
+                        if (keyCell.isMissing()) {
+                            throw new InvalidSettingsException(
+                                    "Error in row " + rowCounter + ": "
+                                    + "Multiple missing values found. Check the '"
+                                    + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
+                                    + "' option to handle multiple occurrences.");
+                        }
                         throw new InvalidSettingsException(
                                 "Error in row " + rowCounter + ": "
-                                + "Multiple missing values found. Check the '"
+                                + "Duplicate value: " + key
+                                + " already exists. Check the '"
                                 + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
-                                + "' option to handle multiple occurrences.");
+                                + "' option to handle duplicates.");
                     }
-                    throw new InvalidSettingsException(
-                            "Error in row " + rowCounter + ": "
-                            + "Duplicate value: " + key
-                            + " already exists. Check the '"
-                            + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
-                            + "' option to handle duplicates.");
                 }
+                //put the current key which is new into the values map
+                final MutableInteger index = new MutableInteger(0);
+                vals.put(key, index);
+                newKeyVal = new RowKey(key);
+            } else {
+                newKeyVal = RowKey.createRowKey(rowCounter);
             }
-            //put the current key which is new into the values map
-            final MutableInteger index = new MutableInteger(0);
-            vals.put(key, index);
-            final RowKey newKeyVal = new RowKey(key);
+
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);
             newContainer.addRowToTable(newRow);
             if (hiliteMap) {

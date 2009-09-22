@@ -57,7 +57,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     /**The label of the replace row id select box which enables/disables
      * the replacing options.*/
     private static final String REPLACE_ROW_BOX_LABEL =
-        "Replace RowID with selected column values";
+        "Replace RowID with selected column values or create a new one";
 
     /**The label of the new row key column select box.*/
     private static final String NEW_ROW_KEY_COLUMN_LABEL =
@@ -132,18 +132,19 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         m_newRowKeyColumn = new SettingsModelString(
                 RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null);
         m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
+        final boolean enableReplaceOptions = enableReplaceOptions();
         m_removeRowKeyCol = new SettingsModelBoolean(
                 RowKeyNodeModel.REMOVE_ROW_KEY_COLUM, false);
-        m_removeRowKeyCol.setEnabled(m_replaceKey.getBooleanValue());
+        m_removeRowKeyCol.setEnabled(enableReplaceOptions);
         m_ensureUniqueness = new SettingsModelBoolean(
                 RowKeyNodeModel.ENSURE_UNIQUNESS, false);
-        m_ensureUniqueness.setEnabled(m_replaceKey.getBooleanValue());
+        m_ensureUniqueness.setEnabled(enableReplaceOptions);
         m_handleMissingVals = new SettingsModelBoolean(
                 RowKeyNodeModel.HANDLE_MISSING_VALS, false);
-        m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
+        m_handleMissingVals.setEnabled(enableReplaceOptions);
         m_enableHilite = new SettingsModelBoolean(
                 RowKeyNodeModel.CFG_ENABLE_HILITE, false);
-        m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
+        m_enableHilite.setEnabled(enableReplaceOptions);
 
         m_appendRowKey = new SettingsModelBoolean(
                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
@@ -153,14 +154,22 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
 
         m_replaceKey.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final boolean b = m_replaceKey.getBooleanValue();
-                m_newRowKeyColumn.setEnabled(b);
+                final boolean b = enableReplaceOptions();
+                m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
                 m_removeRowKeyCol.setEnabled(b);
                 m_ensureUniqueness.setEnabled(b);
                 m_handleMissingVals.setEnabled(b);
-                m_enableHilite.setEnabled(b);
+                m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
             }
         });
+
+        m_newRowKeyColumn.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                rowKeyColChanged();
+            }
+        });
+
         m_appendRowKey.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
@@ -175,7 +184,8 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         final DialogComponent newRowKeyCol =
             new DialogComponentColumnNameSelection(m_newRowKeyColumn,
                     NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel.DATA_IN_PORT,
-                    DataValue.class);
+                    false, true, DataValue.class);
+        newRowKeyCol.setToolTipText("Select <none> to generate a new row key");
         addDialogComponent(newRowKeyCol);
 
         final DialogComponent removeRowKeyCol = new DialogComponentBoolean(
@@ -209,6 +219,21 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
+     * @return <code>true</code> if the replace options should be enabled
+     */
+    protected boolean enableReplaceOptions() {
+        return m_replaceKey.getBooleanValue()
+            && m_newRowKeyColumn.getStringValue() != null;
+    }
+
+    private void rowKeyColChanged() {
+        final boolean b = enableReplaceOptions();
+        m_removeRowKeyCol.setEnabled(b);
+        m_ensureUniqueness.setEnabled(b);
+        m_handleMissingVals.setEnabled(b);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -216,6 +241,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
         m_tableSpec = specs[0];
+        rowKeyColChanged();
     }
 
     /**
