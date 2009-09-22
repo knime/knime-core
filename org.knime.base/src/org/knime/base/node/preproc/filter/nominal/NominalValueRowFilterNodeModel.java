@@ -123,6 +123,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
                         + " not found in in spec!");
             }
             // all values included?
+            boolean validAttrVal = false;
             if (inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
                     .hasValues()) {
                 if (inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
@@ -130,14 +131,13 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
                     setWarningMessage("All values are included! Input will be "
                             + "mirrored at out-port 0 (included)");
                 }
-            }
-            // if attribute values isn't found in domain also throw exception
-            boolean validAttrVal = false;
-            for (DataCell dc : inSpecs[0].getColumnSpec(m_selectedColIdx)
-                    .getDomain().getValues()) {
-                if (m_selectedAttr.contains(dc.toString())) {
-                    validAttrVal = true;
-                    break;
+                // if attribute value isn't found in domain also throw exception
+                for (DataCell dc : inSpecs[0].getColumnSpec(m_selectedColIdx)
+                        .getDomain().getValues()) {
+                    if (m_selectedAttr.contains(dc.toString())) {
+                        validAttrVal = true;
+                        break;
+                    }
                 }
             }
             if (!validAttrVal && m_selectedAttr.size() > 0) {
