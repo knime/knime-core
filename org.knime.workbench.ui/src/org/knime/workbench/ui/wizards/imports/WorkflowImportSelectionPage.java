@@ -463,6 +463,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 if (m_importRoot != null) {
                     m_workflowListUI.expandAll();
                     m_workflowListUI.setAllChecked(true);
+                    validateWorkflows();
                 }
             }
         });
@@ -480,6 +481,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
                 if (m_importRoot != null) {
                     m_workflowListUI.expandAll();
                     m_workflowListUI.setAllChecked(false);
+                    validateWorkflows();
                 }
             }
         });
@@ -943,6 +945,40 @@ public class WorkflowImportSelectionPage extends WizardPage {
     }
 
     /**
+     * Collects those elements which have to be renamed (not their children) and
+     * those which have been renamed in order to let the user change the name
+     * again.
+     *
+     * @param renameElements list to collect the elements which have to be
+     *  renamed or were renamed
+     * @param node element to check
+     */
+    protected void collectRenameElements(
+            final Collection<IWorkflowImportElement> renameElements,
+            final IWorkflowImportElement node) {
+        if (m_workflowListUI.getChecked(node)) {
+            if (node.isInvalid()) {
+                // only add top elements to rename
+                // a resource within an invalid folder is valid if the folder
+                // is successfully renamed
+                if (node.getParent().equals(m_importRoot)) {
+                    renameElements.add(node);
+                } else if (!node.getParent().isInvalid()) {
+                    renameElements.add(node);
+                }
+            }
+            // and we also want to be able to change the name of a renamed
+            // element again
+            if (!node.getOriginalName().equals(node.getName())) {
+                renameElements.add(node);
+            }
+        }
+        for (IWorkflowImportElement child : node.getChildren()) {
+            collectRenameElements(renameElements, child);
+        }
+    }
+
+    /**
      * Updates the wizard for the current selected import and target location.
      */
     public void validateWorkflows() {
@@ -960,14 +996,6 @@ public class WorkflowImportSelectionPage extends WizardPage {
         // traverse over all items in the tree
         isValidImport(destination, m_importRoot);
         collectInvalidAndCheckedImports();
-        if (containsInvalidAndCheckedImports()) {
-            m_renamePage = new RenameWorkflowImportPage(this,
-                    m_invalidAndCheckedImports);
-            m_renamePage.setWizard(getWizard());
-            m_renamePage.setPreviousPage(this);
-        } else {
-            m_renamePage = null;
-        }
         setPageComplete(!containsInvalidAndCheckedImports());
         updateMessages();
         // call can finish in order to update the buttons
@@ -1118,7 +1146,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
      */
     public boolean canFinish() {
         // check if we have checked and valid imports
-        if (!isCurrentPage()) {
+         if (!isCurrentPage()) {
             return m_renamePage != null && m_renamePage.canFinish();
         }
         return isPageComplete() && m_validAndCheckedImports.size() > 0
@@ -1140,7 +1168,17 @@ public class WorkflowImportSelectionPage extends WizardPage {
      */
     @Override
     public boolean canFlipToNextPage() {
-        return containsInvalidAndCheckedImports() || m_renamePage != null;
+        return !getRenameElements().isEmpty();
+    }
+
+    private Collection<IWorkflowImportElement> getRenameElements() {
+        Collection<IWorkflowImportElement> rename
+            = new ArrayList<IWorkflowImportElement>();
+        if (m_importRoot == null) {
+            return rename;
+        }
+        collectRenameElements(rename, m_importRoot);
+        return rename;
     }
 
     /**
@@ -1151,9 +1189,25 @@ public class WorkflowImportSelectionPage extends WizardPage {
     public IWizardPage getNextPage() {
         if (canFlipToNextPage()) {
             setMessage(null);
-            return m_renamePage;
         }
-        return null;
+        m_renamePage = createRenamePage();
+        return m_renamePage;
+    }
+
+    /**
+     *
+     * @return the rename page populated with the top level elements which have
+     * to be renamed or which were renamed
+     */
+    private RenameWorkflowImportPage createRenamePage() {
+        RenameWorkflowImportPage renamePage = null;
+        Collection<IWorkflowImportElement> rename = getRenameElements();
+        if (!rename.isEmpty()) {
+            renamePage = new RenameWorkflowImportPage(this, rename);
+            renamePage.setWizard(getWizard());
+            renamePage.setPreviousPage(this);
+        }
+        return renamePage;
     }
 
     /**
