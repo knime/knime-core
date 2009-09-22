@@ -273,8 +273,6 @@ public class WorkflowExportWizard extends ExportWizard
         // i.e. the "intern" folder and "*.zip" files are excluded
         final List<IResource> resourceList = new ArrayList<IResource>();
         // also add .project or .metainfo files to export
-        addResourcesFor(m_workflowsToExport, resourceList, container,
-                m_excludeData);
         for (IContainer child : m_workflowsToExport) {
             addResourcesFor(m_workflowsToExport, resourceList, child,
                     m_excludeData);
