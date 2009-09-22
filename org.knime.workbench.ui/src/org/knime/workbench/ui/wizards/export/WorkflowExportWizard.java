@@ -214,8 +214,10 @@ public class WorkflowExportWizard extends ExportWizard
      * "*.zip" files are excluded.
      *
      * @param resource the resource to check
+     * @return true if the given resource should be excluded, false if it
+     * should be included
      */
-    private boolean excludeResource(final IResource resource) {
+    protected static boolean excludeResource(final IResource resource) {
         String name = resource.getName();
         if (name.equals("internal")) {
             return true;
@@ -271,9 +273,11 @@ public class WorkflowExportWizard extends ExportWizard
         // i.e. the "intern" folder and "*.zip" files are excluded
         final List<IResource> resourceList = new ArrayList<IResource>();
         // also add .project or .metainfo files to export
-        addResourcesFor(resourceList, container, m_excludeData);
+        addResourcesFor(m_workflowsToExport, resourceList, container,
+                m_excludeData);
         for (IContainer child : m_workflowsToExport) {
-            addResourcesFor(resourceList, child, m_excludeData);
+            addResourcesFor(m_workflowsToExport, resourceList, child,
+                    m_excludeData);
         }
         monitor.worked(1);
         try {
@@ -325,7 +329,16 @@ public class WorkflowExportWizard extends ExportWizard
         return offset;
     }
 
-    private void addResourcesFor(final List<IResource> resourceList,
+    /**
+     *
+     * @param selectedWorkflows list of selected workflow export elements
+     * @param resourceList list of resources to export
+     * @param resource the resource to check
+     * @param excludeData true if KNIME data files should be excluded
+     */
+    public static void addResourcesFor(
+            final Collection<IContainer> selectedWorkflows,
+            final List<IResource> resourceList,
             final IResource resource, final boolean excludeData) {
         // if this resource must be excluded do not add to resource list and
         // return
@@ -354,7 +367,7 @@ public class WorkflowExportWizard extends ExportWizard
          */
         if (KnimeResourceUtil.isWorkflow(resource)
                 || KnimeResourceUtil.isWorkflowGroup(resource)) {
-            if (!m_workflowsToExport.contains(resource)) {
+            if (!selectedWorkflows.contains(resource)) {
                 // abort recursion
                 return;
             }
@@ -369,7 +382,8 @@ public class WorkflowExportWizard extends ExportWizard
         }
         // else vistit all child resources
         for (IResource currentResource : resources) {
-            addResourcesFor(resourceList, currentResource, excludeData);
+            addResourcesFor(selectedWorkflows, resourceList, currentResource,
+                    excludeData);
         }
     }
 
