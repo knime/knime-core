@@ -73,7 +73,7 @@ public class ROCNodeDialog extends NodeDialogPane {
 
     @SuppressWarnings("unchecked")
     private final ColumnFilterPanel m_sortColumns =
-            new ColumnFilterPanel(DoubleValue.class);
+            new ColumnFilterPanel(false, DoubleValue.class);
 
     private final JLabel m_warningLabel = new JLabel();
 
