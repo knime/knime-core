@@ -48,12 +48,12 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * 
- * 
+ *
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class OutPortView extends JFrame {
-    
+
     /** Keeps track if view has been opened before. */
     private boolean m_wasOpened = false;
 
@@ -64,15 +64,15 @@ public class OutPortView extends JFrame {
     static final int INIT_HEIGHT = 400;
 
     private final JTabbedPane m_tabbedPane;
-    
+
     private final LoadingPanel m_loadingPanel = new LoadingPanel();
-    
-    private static final ExecutorService UPDATE_EXECUTOR = 
+
+    private static final ExecutorService UPDATE_EXECUTOR =
         Executors.newCachedThreadPool(new ThreadFactory() {
         private final AtomicInteger m_counter = new AtomicInteger();
         @Override
         public Thread newThread(final Runnable r) {
-            Thread t = new Thread(r, "OutPortView-Updater-" 
+            Thread t = new Thread(r, "OutPortView-Updater-"
                     + m_counter.incrementAndGet());
             t.setDaemon(true);
             return t;
@@ -117,12 +117,19 @@ public class OutPortView extends JFrame {
      * shows this view and brings it to front.
      */
     void openView() {
-        if (!m_wasOpened) { 
+        if (!m_wasOpened) {
             m_wasOpened = true;
             updatePortView();
             setLocation();
         }
         // if the view was already visible
+        /* bug1922: if the portview is minimized and then opened again (from the
+         * context menu) it stays behind the KNIME main window.
+         * fix: this strange sequence of calls. It seems to work on Win, Linux,
+         * and MacOS.
+         */
+        setVisible(false);
+        setExtendedState(NORMAL);
         setVisible(true);
         toFront();
     }
@@ -135,7 +142,7 @@ public class OutPortView extends JFrame {
         validate();
         repaint();
     }
-    
+
 
     /**
      * Sets this frame in the center of the screen observing the current screen
@@ -155,13 +162,13 @@ public class OutPortView extends JFrame {
      * @param portObjectSpec data table spec or model content spec or other spec
      * @param stack The {@link FlowObjectStack} of the node.
      */
-    void update(final PortObject portObject, 
+    void update(final PortObject portObject,
             final PortObjectSpec portObjectSpec,
             final FlowObjectStack stack) {
-        // TODO: maybe store the objects, compare them 
+        // TODO: maybe store the objects, compare them
         // and only remove and add them if they are different...
         // add all port object tabs
-        final Map<String, JComponent> views 
+        final Map<String, JComponent> views
             = new LinkedHashMap<String, JComponent>();
         UPDATE_EXECUTOR.execute(new Runnable() {
             @Override
@@ -185,7 +192,7 @@ public class OutPortView extends JFrame {
                     noDataPanel.setName("No Table");
                     views.put("No Table", noDataPanel);
                 }
-                JComponent[] posViews = portObjectSpec == null 
+                JComponent[] posViews = portObjectSpec == null
                     ? new JComponent[0] : portObjectSpec.getViews();
                 if (posViews != null) {
                     for (JComponent comp : posViews) {
@@ -201,9 +208,9 @@ public class OutPortView extends JFrame {
                     @Override
                     public void run() {
                         m_tabbedPane.removeAll();
-                        for (Map.Entry<String, JComponent>entry 
+                        for (Map.Entry<String, JComponent>entry
                                     : views.entrySet()) {
-                            m_tabbedPane.addTab(entry.getKey(), 
+                            m_tabbedPane.addTab(entry.getKey(),
                                     entry.getValue());
                         }
                         remove(m_loadingPanel);
