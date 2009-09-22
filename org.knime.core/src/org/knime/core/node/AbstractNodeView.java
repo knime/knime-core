@@ -149,8 +149,8 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     
     /** Closes the view and disposes all allocated resources. The view is not
      * meant to be opened again. This method is the counterpart to 
-     * {@link #openView(String)} and should be final, though the 
-     * {@link NodeView#closeView()} method is currently public. */
+     * {@link #openView(String)}. (Core) Sub-classes may widen the scope of this
+     * method. */
     void closeView() {
         synchronized (m_nodeModel) {
             m_nodeModel.unregisterView(this);

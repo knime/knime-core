@@ -44,22 +44,34 @@ public abstract class ExternalApplicationNodeView<T extends NodeModel>
     /** {@inheritDoc} */
     @Override
     void callCloseView() {
-        close();
+        onClose();
     }
 
     /** {@inheritDoc} */
     @Override
     void callOpenView(final String title) {
-        open(title);
+        onOpen(title);
+    }
+    
+    /** To be called by client code when the external view is closed. This will
+     * initiate the usual closing procedure, i.e. unregistering this view from 
+     * its model and also calling {@link #onClose()}.  
+     * {@inheritDoc} */
+    @Override
+    public final void closeView() {
+        super.closeView();
     }
     
     /**
      * Open the external application.  
      * @param title The desired title of the application, possibly ignored.
      */
-    protected abstract void open(final String title);
+    protected abstract void onOpen(final String title);
     
-    /** Close the view. This method is called when the node is deleted, e.g. */
-    protected abstract void close();
+    /** Close the view. This method is called when the node is deleted or
+     * {@link #closeView()} is called. This method should not be used if the
+     * external application initiates the close operation. Clients should call
+     * {@link #closeView()} instead. */
+    protected abstract void onClose();
 
 }
