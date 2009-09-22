@@ -214,7 +214,7 @@ public class TimestampCell extends DataCell
             final boolean hasTime, final boolean hasMillis) {
         if (hasMillis & !hasTime) {
             throw new IllegalArgumentException("Timestamp with Millis but "
-            		+ " without time not allowed!");
+                    + " without time not allowed!");
         }
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.setTimeInMillis(utcTime);
