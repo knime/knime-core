@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.ZipFile;
 
@@ -1172,8 +1173,11 @@ public class WorkflowImportSelectionPage extends WizardPage {
     }
 
     private Collection<IWorkflowImportElement> getRenameElements() {
+        // use a set in order to ensure that each element is only added once
+        // use the LinkedHashSet in order to achieve that the order is the same
+        // when switching back and forth
         Collection<IWorkflowImportElement> rename
-            = new ArrayList<IWorkflowImportElement>();
+            = new LinkedHashSet<IWorkflowImportElement>();
         if (m_importRoot == null) {
             return rename;
         }
