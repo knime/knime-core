@@ -114,12 +114,11 @@ public class SettingsModelCalendar extends SettingsModel {
      * @param calendar the time and/or date
      */
     public void setCalendar(final Calendar calendar) {
+        m_value = (Calendar)(calendar.clone());
         if (useTime() && !useDate()) {
-            m_value = TimestampCell.resetDateFields(calendar);
+            TimestampCell.resetDateFields(m_value);
         } else if (!useTime() && useDate()) {
-            m_value = TimestampCell.resetTimeFields(calendar);
-        } else {
-            m_value = calendar;
+            TimestampCell.resetTimeFields(m_value);
         }
     }
     
@@ -138,7 +137,7 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setUseDate(final boolean useDate) {
         m_useDate = useDate;
         if (!useDate) {
-            m_value = TimestampCell.resetDateFields(m_value);
+            TimestampCell.resetDateFields(m_value);
         }
     }
     
@@ -157,7 +156,7 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setUseTime(final boolean useTime) {
         m_useTime = useTime;
         if (!useTime) {
-            m_value = TimestampCell.resetTimeFields(m_value); 
+            TimestampCell.resetTimeFields(m_value); 
         }
     }
     

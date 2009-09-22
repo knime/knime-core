@@ -92,9 +92,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
             @Override
             public DataCell getCell(final DataRow row) {
                 long first = ((TimestampValue)row.getCell(m_col1Idx))
-                    .getUTCTime();
+                    .getUTCTimeInMillis();
                 long last = ((TimestampValue)row.getCell(m_col2Idx))
-                    .getUTCTime();
+                    .getUTCTimeInMillis();
                 double diffTime = (last - first) / g.getFactor();
                 BigDecimal bd = new BigDecimal(diffTime);
                 bd = bd.setScale(m_rounding.getIntValue(),

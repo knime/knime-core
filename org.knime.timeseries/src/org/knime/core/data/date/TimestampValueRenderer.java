@@ -128,9 +128,13 @@ public abstract class TimestampValueRenderer extends DefaultDataValueRenderer {
         }
         if (value.hasTime()) {
             if (value.hasDate()) {
-                timestamp += " ";
+                // separate date from time using "T", see ISO 8601
+                timestamp += "T";
             }
             timestamp += getTimeString(value);
+        }
+        if (value.hasMillis()) {
+            timestamp += "." + value.getMillis();
         }
         return timestamp;
     }

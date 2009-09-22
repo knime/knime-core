@@ -27,7 +27,7 @@ import org.knime.core.data.DataValue;
 
 /**
  * Interface supporting the representation of time and date independent of the
- * user's time zone and location.  
+ * user's time zone and location. Times in KNIME are always UTC times!
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
@@ -44,7 +44,7 @@ public interface TimestampValue extends DataValue {
     
     /**
      * 
-     * @return the month of the year, starting with 1 for the first month
+     * @return the month of the year, **STARTING WITH 0** for the first month
      * @see Calendar#MONTH
      */
     public int getMonth();
@@ -110,7 +110,7 @@ public interface TimestampValue extends DataValue {
      * @return the milliseconds in UTC time
      * @see Calendar#getTimeInMillis()
      */
-    public long getUTCTime();
+    public long getUTCTimeInMillis();
     
     
     /**

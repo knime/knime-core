@@ -64,7 +64,7 @@ public class OneSampleperDayDialog extends DefaultNodeSettingsPane {
     
     static SettingsModelCalendar createTimeModel() {
         Calendar cal = TimestampCell.getUTCCalendar();
-        cal = TimestampCell.resetDateFields(cal);
+        TimestampCell.resetDateFields(cal);
         return new SettingsModelCalendar("OneSamplePerDay.time", cal, false, 
                 true);
     }

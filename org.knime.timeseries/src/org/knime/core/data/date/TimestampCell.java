@@ -21,6 +21,7 @@
  */
 package org.knime.core.data.date;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -49,47 +50,44 @@ public class TimestampCell extends DataCell
     
     /**
      * 
-     * @param time the calendar containing time fields and for which the date 
+     * @param cal the calendar containing time fields and for which the date 
      *  fields should be reset
-     * @return a calendar with the same time fields but with clear date fields 
      *  {@link Calendar#YEAR}, {@link Calendar#MONTH}, 
      *  {@link Calendar#DAY_OF_MONTH}
      */
-    public static Calendar resetDateFields(final Calendar time) {
-        int hour = time.get(Calendar.HOUR_OF_DAY);
-        int minute = time.get(Calendar.MINUTE);
-        int second = time.get(Calendar.SECOND);
-        int millis = time.get(Calendar.MILLISECOND);
+    public static void resetDateFields(final Calendar cal) {
         // do it the hard way, since resetting single fields does not work
-        time.clear();
-        time.setTimeZone(UTC_TIMEZONE);
-        time.set(Calendar.HOUR_OF_DAY, hour);
-        time.set(Calendar.MINUTE, minute);
-        time.set(Calendar.SECOND, second);
-        time.set(Calendar.MILLISECOND, millis);
-        return time;
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+        int millis = cal.get(Calendar.MILLISECOND);
+        cal.clear();
+        cal.setTimeZone(UTC_TIMEZONE);
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millis);
     }
     
     /**
      * 
-     * @param date the calendar containing date fields and for which the time 
+     * @param cal the calendar containing date fields and for which the time 
      *  fields should be reset
-     * @return a calendar with the same date fields but with clear time fields 
      *  {@link Calendar#HOUR}, {@link Calendar#HOUR_OF_DAY}, 
      *  {@link Calendar#MINUTE}, {@link Calendar#SECOND}, 
      *  {@link Calendar#MILLISECOND}
      */
-    public static Calendar resetTimeFields(final Calendar date) {
-        // before resetting the time fields we have to set it to 12 o clock
+    public static void resetTimeFields(final Calendar cal) {
+        // do it the hard way, since resetting single fields does not work
+        // before resetting the time fields we have to set it to 12 o'clock
         // otherwise we might get a date switch...
-        int year = date.get(Calendar.YEAR);
-        int month = date.get(Calendar.MONTH);
-        int dayOfMonth = date.get(Calendar.DAY_OF_MONTH);
-        date.clear();
-        date.set(Calendar.YEAR, year);
-        date.set(Calendar.MONTH, month);
-        date.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-        return date;
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+        cal.clear();
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, month);
+        cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
     }
     
     
@@ -131,11 +129,11 @@ public class TimestampCell extends DataCell
     public TimestampCell(final int year, final int month, 
             final int dayOfMonth) {
         m_utcCalendar = getUTCCalendar();
+        m_utcCalendar.clear();
         m_utcCalendar.set(year, month, dayOfMonth);
         m_hasDate = true;
         m_hasTime = false;
         m_hasMillis = false;
-        resetTimeFields(m_utcCalendar);
     }
     
     /**
@@ -144,11 +142,12 @@ public class TimestampCell extends DataCell
      * @param hourOfDay the hour of the day
      * @param minute the minute
      * @param second the second
-     * @param milliseconds the milliseconds (or -1 if they should not be set) 
+     * @param milliseconds the milliseconds (or <0 if they should not be set) 
      */
     public TimestampCell(final int hourOfDay, final int minute, 
             final int second, final int milliseconds) {
         m_utcCalendar = getUTCCalendar();
+        m_utcCalendar.clear();
         m_utcCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
         m_utcCalendar.set(Calendar.MINUTE, minute);
         m_utcCalendar.set(Calendar.SECOND, second);
@@ -160,7 +159,6 @@ public class TimestampCell extends DataCell
         }
         m_hasDate = false;
         m_hasTime = true;
-        resetDateFields(m_utcCalendar);
     }
    
     /**
@@ -174,11 +172,7 @@ public class TimestampCell extends DataCell
      */
     public TimestampCell(final int year, final int month, final int dayOfMonth,
             final int hourOfDay, final int minute, final int second) {
-        m_utcCalendar = getUTCCalendar();
-        m_utcCalendar.set(year, month, dayOfMonth, hourOfDay, minute, second);
-        m_hasDate = true;
-        m_hasTime = true;        
-        m_hasMillis = false;            
+        this(year, month, dayOfMonth, hourOfDay, minute, second, -1);
     }
 
     /**
@@ -190,16 +184,22 @@ public class TimestampCell extends DataCell
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
      * @param millisecond milliseconds {@link Calendar#MILLISECOND}
+     *    (or <0 if they should not be set)
      */
     public TimestampCell(final int year, final int month, final int dayOfMonth,
             final int hourOfDay, final int minute, final int second, 
             final int millisecond) {
         m_utcCalendar = getUTCCalendar();
+        m_utcCalendar.clear();
         m_utcCalendar.set(year, month, dayOfMonth, hourOfDay, minute, second);
-        m_utcCalendar.set(Calendar.MILLISECOND, millisecond);
         m_hasDate = true;
         m_hasTime = true;
-        m_hasMillis = true;   
+        if (millisecond >= 0) {
+            m_utcCalendar.set(Calendar.MILLISECOND, millisecond);
+            m_hasMillis = true;   
+        } else {
+            m_hasMillis = false;
+        }
     }
     
     /**
@@ -212,6 +212,10 @@ public class TimestampCell extends DataCell
      */
     public TimestampCell(final long utcTime, final boolean hasDate, 
             final boolean hasTime, final boolean hasMillis) {
+        if (hasMillis & !hasTime) {
+            throw new IllegalArgumentException("Timestamp with Millis but "
+            		+ " without time not allowed!");
+        }
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.setTimeInMillis(utcTime);
         m_hasDate = hasDate;
@@ -248,8 +252,7 @@ public class TimestampCell extends DataCell
         if (!checkDateFieldAccess("Month")) {
             return -1;
         }
-        // the month fields is stored in [0,11] -> we convert it to [1,12]
-        return m_utcCalendar.get(Calendar.MONTH) + 1;
+        return m_utcCalendar.get(Calendar.MONTH);
     }
     
     /**
@@ -306,7 +309,6 @@ public class TimestampCell extends DataCell
      */
     @Override
     public int getMillis() {
-        checkTimeFieldAccess("Milliseconds");
         if (!m_hasMillis) {
             LOGGER.warn(
                     "Milliseconds are not supported by this instance!");
@@ -321,11 +323,12 @@ public class TimestampCell extends DataCell
     // ***************************************************************
     
     /**
-     * @return a calendar where the time zone is set to UTC (as it us used in 
-     * the timestamp cell)
+     * @return an emptycalendar where the time zone is set to UTC (as it
+     * us used in the timestamp cell) and all fields are empty.
      */
     public static final Calendar getUTCCalendar() { 
         Calendar cal = Calendar.getInstance(UTC_TIMEZONE);
+        cal.clear();
         return cal;
     }
     
@@ -360,11 +363,20 @@ public class TimestampCell extends DataCell
         return newCal;
     }
 
+    /** Convenience method to access member UTC Calendar (for faster
+     * comparisons/equal tests).
+     * 
+     * @return underlying UTC calendar
+     */
+    Calendar getInternalUTCCalendarMember() {
+        return m_utcCalendar;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public long getUTCTime() {
+    public long getUTCTimeInMillis() {
         return m_utcCalendar.getTimeInMillis();
     }
 
@@ -380,18 +392,18 @@ public class TimestampCell extends DataCell
      * {@inheritDoc}
      */
     @Override
-    public boolean hasMillis() {
-        return m_hasMillis;
+    public boolean hasTime() {
+        return m_hasTime;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasTime() {
-        return m_hasTime;
+    public boolean hasMillis() {
+        return m_hasMillis;
     }
-    
+
     // ***************************************************************
     // **************         DataCell      **************************
     // ***************************************************************
@@ -403,8 +415,13 @@ public class TimestampCell extends DataCell
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         if (dc != null && dc.getType().isCompatible(TimestampValue.class)) {
-            return ((TimestampValue)dc).getUTCTime() 
-                == m_utcCalendar.getTimeInMillis();
+            TimestampValue tv = (TimestampValue)dc;
+            boolean isEqual = (tv.getUTCTimeInMillis() 
+                == m_utcCalendar.getTimeInMillis());
+            isEqual &= (this.m_hasDate == tv.hasDate());
+            isEqual &= (this.m_hasTime == tv.hasTime());
+            isEqual &= (this.m_hasMillis == tv.hasMillis());
+            return isEqual;
         }
         return false;
     }
@@ -416,10 +433,27 @@ public class TimestampCell extends DataCell
     @Override
     public int hashCode() {
         // based on the recommendations of Joshua Bloch 
-        // how to generate a hashCode for longs 
+        // how to generate a hashCode for longs. 
+        // Note: ignores flags!
         return (int)(m_utcCalendar.getTimeInMillis() 
                 ^ (m_utcCalendar.getTimeInMillis() >>> 32));
     }
+
+    /** a date formatter. */
+    static final SimpleDateFormat DATEONLYFORMAT =
+        new SimpleDateFormat("dd.MMM.yyyy");
+    /** a date formatter. */
+    static final SimpleDateFormat TIMEONLYFORMAT =
+        new SimpleDateFormat("hh:mm:ss");
+    /** a date formatter. */
+    static final SimpleDateFormat TIMEANDMILLISONLYFORMAT =
+        new SimpleDateFormat("hh:mm:ss.SSS");
+    /** a date formatter. */
+    static final SimpleDateFormat DATEANDTIMEFORMAT =
+        new SimpleDateFormat("dd.MMM.yyyy hh:mm:ss");
+    /** a date formatter. */
+    static final SimpleDateFormat DATEANDTIMEANDMILLISFORMAT =
+        new SimpleDateFormat("dd.MMM.yyyy hh:mm:ss.SSS");
 
     /**
      * 
@@ -427,22 +461,30 @@ public class TimestampCell extends DataCell
      */
     @Override
     public String toString() {
-        String result = "";
-        if (m_hasDate) {
-         result = TimeRenderUtil.getStringForDateField(getYear()) 
-             + "-" + TimeRenderUtil.getStringForDateField(getMonth()) 
-             + "-" + TimeRenderUtil.getStringForDateField(getDayOfMonth()) 
-             + " ";
-        } 
-        if (m_hasTime) {
-            result += TimeRenderUtil.getStringForDateField(getHourOfDay())
-                + ":" + TimeRenderUtil.getStringForDateField(getMinute())
-                + ":" + TimeRenderUtil.getStringForDateField(getSecond());
-            if (m_hasMillis) {
-                result += "." + getMillis();
+        SimpleDateFormat sdf = null;
+        if (hasDate()) {
+            if (hasTime()) {
+                if (hasMillis()) {
+                    sdf = DATEANDTIMEANDMILLISFORMAT;
+                } else {
+                    sdf = DATEANDTIMEFORMAT;
+                }
+            } else {
+                sdf = DATEONLYFORMAT;
+            }
+        } else {
+            if (hasTime()) {
+                if (hasMillis()) {
+                    sdf = TIMEANDMILLISONLYFORMAT;
+                } else {
+                    sdf = TIMEONLYFORMAT;
+                }
+            } else {
+                return "n/a";
             }
         }
-        return result;
+        assert sdf != null;
+        return sdf.format(m_utcCalendar.getTime());
     }
 
 }

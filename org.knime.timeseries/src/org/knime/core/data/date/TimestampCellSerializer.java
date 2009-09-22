@@ -42,16 +42,10 @@ public class TimestampCellSerializer implements
     @Override
     public TimestampCell deserialize(final DataCellDataInput input)
             throws IOException {
-        // read
-        // long
         long utcTime = input.readLong();
-        // has date
         boolean hasDate = input.readBoolean();
-        // has time
         boolean hasTime = input.readBoolean();
-        // has millis
         boolean hasMillis = input.readBoolean();
-
         TimestampCell cell = new TimestampCell(utcTime, hasDate, hasTime, 
                 hasMillis);
         return cell;
@@ -64,14 +58,9 @@ public class TimestampCellSerializer implements
     public void serialize(final TimestampCell cell, 
             final DataCellDataOutput output)
             throws IOException {
-        // write 
-        // long utc time
-        output.writeLong(cell.getUTCTime());
-        // boolean has date
+        output.writeLong(cell.getUTCTimeInMillis());
         output.writeBoolean(cell.hasDate());
-        // boolean has time
         output.writeBoolean(cell.hasTime());
-        // boolean has milliseconds
         output.writeBoolean(cell.hasMillis());
     }
 

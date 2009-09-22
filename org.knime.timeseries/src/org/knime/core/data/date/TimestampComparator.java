@@ -36,6 +36,11 @@ public class TimestampComparator extends DataValueComparator {
      */
     @Override
     protected int compareDataValues(final DataValue v1, final DataValue v2) {
+        if ((v1 instanceof TimestampCell) && (v2 instanceof TimestampCell)) {
+            return ((TimestampCell)v1).getInternalUTCCalendarMember().
+            compareTo(((TimestampCell)v2).getInternalUTCCalendarMember());
+        }
+        // not native implementation: compare via public methods:
         TimestampValue t1 = (TimestampValue)v1;
         TimestampValue t2 = (TimestampValue)v2;
         return t1.getUTCCalendarClone().compareTo(t2.getUTCCalendarClone());
