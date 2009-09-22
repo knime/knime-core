@@ -3,10 +3,6 @@
 <plugin>
    <extension
          point="org.knime.workbench.repository.nodes">
-         <node
-            category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"
-            id="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"/>
        <node
             category-path="/timeseries"
             factory-class="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"
