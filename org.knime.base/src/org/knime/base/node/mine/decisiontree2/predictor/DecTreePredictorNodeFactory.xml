@@ -18,6 +18,9 @@
 		Determines the maximum number of patterns the tree will store to
 		support HiLiting.
 		</option>		
+		<option name="Append columns with normalized class distribution">
+        Shows the normalized class distribution for each prediction.
+        </option>       
 	</fullDescription>
 	
     <ports>

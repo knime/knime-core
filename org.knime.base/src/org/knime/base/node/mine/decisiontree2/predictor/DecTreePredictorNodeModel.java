@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -43,7 +42,6 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
-import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -51,8 +49,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.renderer.DataValueRenderer;
-import org.knime.core.data.renderer.DoubleBarRenderer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -331,10 +327,10 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
         /* Set bar renderer and domain [0,1] as default for the double cells
          * containing the distribution */
-        DataColumnProperties propsRendering = new DataColumnProperties(
-                Collections.singletonMap(
-                        DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
-                        DoubleBarRenderer.DESCRIPTION));
+//        DataColumnProperties propsRendering = new DataColumnProperties(
+//                Collections.singletonMap(
+//                        DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+//                        DoubleBarRenderer.DESCRIPTION));
         DataColumnDomain domain = new DataColumnDomainCreator(
                 new DoubleCell(0.0), new DoubleCell(1.0))
                 .createDomain();
@@ -343,7 +339,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
         for (int i = 0; i < numCols - 1; i++) {
             DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(
                     predValues.get(i).toString(), DoubleCell.TYPE);
-            colSpecCreator.setProperties(propsRendering);
+//            colSpecCreator.setProperties(propsRendering);
             colSpecCreator.setDomain(domain);
             newCols[i] = colSpecCreator.createSpec();
         }

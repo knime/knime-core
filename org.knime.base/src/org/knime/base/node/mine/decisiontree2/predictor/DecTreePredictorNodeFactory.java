@@ -92,7 +92,7 @@ public class DecTreePredictorNodeFactory
                         new SettingsModelBoolean(
                              DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
                              false),
-                     "Show class distribution"));
+                     "Append columns with normalized class distribution"));
             }
         };
     }
