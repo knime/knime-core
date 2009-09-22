@@ -32,6 +32,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -42,6 +43,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
+import org.eclipse.ui.dialogs.ContainerGenerator;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileManipulations;
 import org.eclipse.ui.internal.wizards.datatransfer.ILeveledImportStructureProvider;
@@ -176,9 +178,16 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
         // get project
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
         IProject project = workspace.getRoot().getProject(projectName);
+        if (!project.exists()) {
+            // if project not exists then the import element is a workflow or
+            // workflow group somewhere down the hierarchy -> cannot set a
+            // project description for it
+            assert importElement.getRenamedPath().segmentCount() > 1;
+            return;
+        }
         IProjectDescription description = project.getDescription();
         if (description == null) {
-            workspace.newProjectDescription(projectName);
+            description = workspace.newProjectDescription(projectName);
         }
         String natureId = KNIMEWorkflowSetProjectNature.ID;
         // check whether workflow or workflow group
@@ -322,9 +331,13 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
 
 
 
-    private void createMetaInfo() {
+    private void createMetaInfo() throws Exception {
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         for (IPath p : m_missingMetaInfoLocations) {
-            p = ResourcesPlugin.getWorkspace().getRoot().getLocation()
+            // to be sure that target location indeed exists -> create it
+            ContainerGenerator generator = new ContainerGenerator(p);
+            generator.generateContainer(new NullProgressMonitor());
+            p = root.getLocation()
                 // append the workspace relative path to the workspace path
                 .append(p);
             File parent = p.toFile();
