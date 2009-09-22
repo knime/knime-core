@@ -24,19 +24,9 @@
  */
 package org.knime.workbench.help.intro;
 
-import java.net.URL;
-
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog;
 import org.eclipse.jface.action.Action;
-import org.eclipse.update.internal.search.SiteSearchCategory;
-import org.eclipse.update.internal.ui.UpdateUI;
-import org.eclipse.update.internal.ui.UpdateUIMessages;
-import org.eclipse.update.internal.ui.wizards.InstallWizardOperation;
-import org.eclipse.update.search.BackLevelFilter;
-import org.eclipse.update.search.EnvironmentFilter;
-import org.eclipse.update.search.UpdateSearchRequest;
-import org.eclipse.update.search.UpdateSearchScope;
-import org.eclipse.update.ui.UpdateJob;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * Custom action to open the install wizard.
@@ -45,6 +35,9 @@ import org.eclipse.update.ui.UpdateJob;
  */
 public class InvokeInstallSiteAction extends Action {
     private static final String ID = "INVOKE_INSTALL_SITE_ACTION";
+
+    /** P2 profile id. */
+    public static final String KNIME_PROFILE_ID = "KNIMEProfile";
 
     /**
      * Constructor.
@@ -58,45 +51,12 @@ public class InvokeInstallSiteAction extends Action {
      */
     @Override
     public void run() {
-        openInstaller();
+        UpdateAndInstallDialog dialog = new UpdateAndInstallDialog(
+                Display.getDefault().getActiveShell(), KNIME_PROFILE_ID);
+        dialog.open();
     }
 
-    private InstallWizardOperation getOperation() {
-        return new InstallWizardOperation();
-    }
 
-    private void openInstaller() {
-
-        try {
-            SiteSearchCategory category = new SiteSearchCategory();
-            category.setId("org.eclipse.update.core.unified-search");
-            category.setLiteFeaturesAreOK(true);
-
-            UpdateSearchScope scope = new UpdateSearchScope();
-            scope.setFeatureProvidedSitesEnabled(true);
-            scope.addSearchSite("KNIME",
-                    new URL("http://www.knime.org/update_2.x"), new String[0]);
-
-            UpdateSearchRequest searchRequest =
-                    new UpdateSearchRequest(category, scope);
-            searchRequest.addFilter(new BackLevelFilter());
-            searchRequest.addFilter(new EnvironmentFilter());
-            UpdateJob job =
-                    new UpdateJob(UpdateUIMessages.InstallWizard_jobName,
-                            searchRequest);
-            job.setUser(true);
-            job.setPriority(Job.INTERACTIVE);
-
-            getOperation().run(UpdateUI.getActiveWorkbenchShell(), job);
-
-            // OLD WAY: Started to early (user had to select update or install)
-            // InstallWizardAction installWizardAction = new
-            // InstallWizardAction();
-            // installWizardAction.run();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * {@inheritDoc}

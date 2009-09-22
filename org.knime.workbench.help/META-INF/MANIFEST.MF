@@ -13,11 +13,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.intro,
  org.knime.workbench.ui,
  org.eclipse.ui.ide,
- org.eclipse.update.configurator,
- org.eclipse.update.core,
- org.eclipse.update.scheduler,
- org.eclipse.update.ui,
- org.eclipse.help.ui
+ org.eclipse.help.ui,
+ org.eclipse.equinox.p2.ui.sdk
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.help.intro
 Bundle-ActivationPolicy: lazy
