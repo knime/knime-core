@@ -388,7 +388,7 @@ public class NaiveBayesModel {
     }
 
     /**
-     * @return a <code>String</code> <code>Enumeration</code> with all class
+     * @return a <code>String</code> <code>Collection</code> with all class
      * values
      */
     private Collection<String> getClassValues() {
@@ -455,7 +455,7 @@ public class NaiveBayesModel {
 
     /**
      * @param classValue the value of the class we want the probability for
-     * @return the probability for the given class
+     * @return the prior probability for the given class
      */
     public double getClassPriorProbability(final String classValue) {
         if (classValue == null) {
@@ -486,12 +486,15 @@ public class NaiveBayesModel {
      * @param classValues the class values to calculate the probability for
      * @param normalize set to <code>true</code> if the probability values
      * should be normalized
-     * @return the normalized probability values in the same order like the
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
+     * @return the probability values in the same order like the
      * class values
      */
     public double[] getClassPobabilites(
             final String[] attributeNames, final DataRow row,
-            final List<String> classValues, final boolean normalize) {
+            final List<String> classValues, final boolean normalize,
+            final double laplaceCorrector) {
         if (row == null) {
             throw new NullPointerException("Row must not be null");
         }
@@ -510,7 +513,7 @@ public class NaiveBayesModel {
         double sum = 0;
         for (int i = 0, length = classValues.size(); i < length; i++) {
             probs[i] = getClassProbability(attributeNames, row,
-                    classValues.get(i));
+                    classValues.get(i), laplaceCorrector);
             sum += probs[i];
         }
         if (sum == 0) {
@@ -695,11 +698,13 @@ public class NaiveBayesModel {
      * they appear in the given data row
      * @param row the row with the attributes in the same order like in the
      * training data table
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
      * @return the class attribute with the highest probability for the given
      * attribute values.
      */
     public String getMostLikelyClass(final String[] attrNames,
-            final DataRow row) {
+            final DataRow row, final double laplaceCorrector) {
         if (row == null) {
             throw new NullPointerException("Row must not be null");
         }
@@ -714,8 +719,8 @@ public class NaiveBayesModel {
         String mostLikelyClass = null;
         final Collection<String> classValues = getClassValues();
         for (final String classValue : classValues) {
-            final double classProbability =
-                getClassProbability(attrNames, row, classValue);
+            final double classProbability = getClassProbability(attrNames,
+                    row, classValue, laplaceCorrector);
             if (classProbability >= maxProbability) {
                 maxProbability = classProbability;
                 mostLikelyClass = classValue;
@@ -749,10 +754,13 @@ public class NaiveBayesModel {
      * @param row the row with the value per attribute in the same order
      * like the attribute names
      * @param classValue the class value to compute the probability for
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
      * @return the probability of this row to belong to the given class value
      */
     private double getClassProbability(final String[] attrNames,
-            final DataRow row, final String classValue) {
+            final DataRow row, final String classValue,
+            final double laplaceCorrector) {
         double combinedProbability = getClassPriorProbability(classValue);
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
             final String attrName = attrNames[i];
@@ -766,7 +774,8 @@ public class NaiveBayesModel {
                 continue;
             }
             final DataCell cell = row.getCell(i);
-            final Double probability = model.getProbability(classValue, cell);
+            final Double probability =
+                model.getProbability(classValue, cell, laplaceCorrector);
             if (probability != null) {
                 combinedProbability *= probability.doubleValue();
             }

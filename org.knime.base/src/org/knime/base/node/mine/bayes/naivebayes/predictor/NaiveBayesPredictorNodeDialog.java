@@ -26,7 +26,10 @@ package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 
 /**
  * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
@@ -41,14 +44,24 @@ public class NaiveBayesPredictorNodeDialog extends DefaultNodeSettingsPane {
     /**
      * New pane for configuring BayesianClassifier node dialog.
      */
-    @SuppressWarnings("unchecked")
     public NaiveBayesPredictorNodeDialog() {
         super();
         final SettingsModelBoolean inclProbValsModel = new SettingsModelBoolean(
                 NaiveBayesPredictorNodeModel.CFG_INCL_PROBABILITYVALS_KEY,
                 false);
-        final DialogComponentBoolean inclprobValsCompnent =
+        final DialogComponentBoolean inclprobValsComponent =
             new DialogComponentBoolean(inclProbValsModel, INCL_PROB_VALS_LABEL);
-         addDialogComponent(inclprobValsCompnent);
+         final SettingsModelDouble laplaceCorrectorModel =
+             new SettingsModelDoubleBounded(
+                     NaiveBayesPredictorNodeModel.CFG_LAPLACE_CORRECTOR_KEY,
+                     0.0, 0.0, Double.MAX_VALUE);
+         final DialogComponentNumber laplaceCorrectorComponent =
+             new DialogComponentNumber(laplaceCorrectorModel,
+                     "Laplace corrector: ", new Double(0.1), 5);
+         laplaceCorrectorComponent.setToolTipText(
+                 "Set to zero for no correction");
+
+         addDialogComponent(inclprobValsComponent);
+         addDialogComponent(laplaceCorrectorComponent);
     }
 }

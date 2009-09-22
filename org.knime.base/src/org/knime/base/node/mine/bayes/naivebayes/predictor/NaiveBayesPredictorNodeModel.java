@@ -30,12 +30,14 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -71,6 +73,14 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_inclProbVals =
         new SettingsModelBoolean(CFG_INCL_PROBABILITYVALS_KEY, false);
+
+    /**The settings key for the laplace corrector.*/
+    protected static final String CFG_LAPLACE_CORRECTOR_KEY =
+        "laplaceCorrector";
+
+    private final SettingsModelDouble m_laplaceCorrector =
+        new SettingsModelDoubleBounded(CFG_LAPLACE_CORRECTOR_KEY, 0.0, 0.0,
+                Double.MAX_VALUE);
 
     /**Constructor for class NaiveBayesPredictorNodeModel.
      */
@@ -110,20 +120,15 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             throw new Exception("Node not properly configured. "
                     + "No Naive Bayes Model available.");
         }
-
+        final double laplaceCorrector = m_laplaceCorrector.getDoubleValue();
         final NaiveBayesCellFactory appender =
             new NaiveBayesCellFactory(model, data.getDataTableSpec(),
-                    m_inclProbVals.getBooleanValue());
+                    m_inclProbVals.getBooleanValue(), laplaceCorrector);
         final ColumnRearranger rearranger =
             new ColumnRearranger(data.getDataTableSpec());
         rearranger.append(appender);
         final BufferedDataTable returnVal =
             exec.createColumnRearrangeTable(data, rearranger, exec);
-//        final DataColumnSpec[] colSpecs = appender.getResultColumnsSpec();
-//        final AppendedColumnTable appTable =
-//            new AppendedColumnTable(data, appender, colSpecs);
-//        final BufferedDataTable returnVal =
-//            exec.createBufferedDataTable(appTable, exec);
         LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "NaiveBayesPredictorNodeModel.");
         return new PortObject[] {returnVal};
@@ -262,6 +267,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_inclProbVals.saveSettingsTo(settings);
+        m_laplaceCorrector.saveSettingsTo(settings);
     }
 
     /**
@@ -271,14 +277,26 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         m_inclProbVals.loadSettingsFrom(settings);
+        try {
+            m_laplaceCorrector.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            //parameter has been introduced in version 2.1
+            //set the value to 0 to simulate the old behaviour
+            m_laplaceCorrector.setDoubleValue(0.0);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) {
-        //no settings to check
+    protected void validateSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        if (settings.containsKey(m_laplaceCorrector.getKey())) {
+            //parameter has been introduced in version 2.1
+            //set the value to 0 to simulate the old behaviour
+            m_laplaceCorrector.validateSettings(settings);
+        }
     }
 
 

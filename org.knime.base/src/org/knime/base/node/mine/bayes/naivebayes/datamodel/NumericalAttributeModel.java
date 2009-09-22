@@ -25,17 +25,17 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -437,7 +437,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue) {
+            final DataCell attributeValue, final double laplaceCorrector) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;

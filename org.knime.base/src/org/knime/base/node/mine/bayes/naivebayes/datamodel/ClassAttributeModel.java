@@ -25,16 +25,16 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -210,7 +210,7 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue) {
+            final DataCell attributeValue, final double laplaceCorrector) {
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException(
                     "Missing value not allowed as class value");

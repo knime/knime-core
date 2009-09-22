@@ -24,6 +24,10 @@
 		    If selected a column is appended for each class instance with the
 		    normalized probability of this row being member of this class.
 	    </option>
+	    <option name="Laplace corrector">
+            Initial count for nominal attributes to overcome zero counts.
+            Set to zero for no correction.
+        </option>
 	</fullDescription>
 	
 	<ports>

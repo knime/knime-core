@@ -192,21 +192,26 @@ class NominalAttributeModel extends AttributeModel {
         /**
          * @param attrVal the attribute value to calculate the probability
          * for
+         * @param laplaceCorrector the Laplace corrector to use.
+         * A value greater 0 overcomes zero counts.
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attrVal) {
+        double getProbability(final DataCell attrVal,
+                final double laplaceCorrector) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 throw new IllegalStateException("Model for attribute "
                         + getAttributeName() + " contains no rows for class "
                         + m_classValue);
             }
+            double noOfRows = laplaceCorrector;
             final MutableInteger noOfRows4Attr =
                 getNoOfRows4AttributeValue(attrVal);
-            if (noOfRows4Attr == null) {
-                return 0;
+            if (noOfRows4Attr != null) {
+                noOfRows += noOfRows4Attr.intValue();
             }
-            return (double) noOfRows4Attr.intValue() / noOfRows4Class;
+            return noOfRows / (noOfRows4Class
+                    + m_classValues.size() * laplaceCorrector);
         }
         /**
          * @return the missingValueRecs
@@ -388,12 +393,12 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue) {
+            final DataCell attributeValue, final double laplaceCorrector) {
         final NominalClassValue classVal = m_classValues.get(classValue);
         if (classVal == null) {
             return 0;
         }
-        return classVal.getProbability(attributeValue);
+        return classVal.getProbability(attributeValue, laplaceCorrector);
     }
 
     /**

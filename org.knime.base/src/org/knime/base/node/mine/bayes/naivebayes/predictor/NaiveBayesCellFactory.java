@@ -24,11 +24,6 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.knime.base.data.append.column.AppendedCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -39,7 +34,13 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
+
+import org.knime.base.data.append.column.AppendedCellFactory;
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
@@ -65,6 +66,8 @@ CellFactory {
 
     private final boolean m_inclClassProbVals;
 
+    private final double m_laplaceCorrector;
+
     /**Constructor for class NaiveBayesAlgorithm.
      * @param model the <code>NaiveBayesModel</code> which holds all necessary
      * information to calculate the probability for new records.
@@ -74,6 +77,20 @@ CellFactory {
      */
     public NaiveBayesCellFactory(final NaiveBayesModel model,
             final DataTableSpec tableSpec, final boolean inclClassProbVals) {
+        this(model, tableSpec, inclClassProbVals, 0.0);
+    }
+    /**Constructor for class NaiveBayesAlgorithm.
+     * @param model the <code>NaiveBayesModel</code> which holds all necessary
+     * information to calculate the probability for new records.
+     * @param tableSpec the basic table specification
+     * @param inclClassProbVals if the probability per class instance should
+     * be appended as columns
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
+     */
+    public NaiveBayesCellFactory(final NaiveBayesModel model,
+            final DataTableSpec tableSpec, final boolean inclClassProbVals,
+            final double laplaceCorrector) {
         if (model == null) {
            throw new NullPointerException("Model must not be null.");
         }
@@ -88,6 +105,11 @@ CellFactory {
         for (int i = 0, length = tableSpec.getNumColumns(); i < length; i++) {
             m_attributeNames[i] = tableSpec.getColumnSpec(i).getName();
         }
+        if (laplaceCorrector < 0) {
+            throw new IllegalArgumentException(
+                    "Laplace corrector should be positive");
+        }
+        m_laplaceCorrector = laplaceCorrector;
     }
 
     /**
@@ -180,7 +202,8 @@ CellFactory {
      */
     public DataCell[] getCells(final DataRow row) {
         final String mostLikelyClass =
-            m_model.getMostLikelyClass(m_attributeNames, row);
+            m_model.getMostLikelyClass(m_attributeNames, row,
+                    m_laplaceCorrector);
         if (mostLikelyClass == null) {
             throw new IllegalStateException("No class found for value");
         }
@@ -193,7 +216,8 @@ CellFactory {
         //add the class cell first
         resultCells.add(classCell);
         final double[] classProbs = m_model.getClassPobabilites(
-                m_attributeNames, row, m_sortedClassVals, true);
+                m_attributeNames, row, m_sortedClassVals, true,
+                m_laplaceCorrector);
         //add the probability per class
         for (final double classVal : classProbs) {
             resultCells.add(new DoubleCell(classVal));
