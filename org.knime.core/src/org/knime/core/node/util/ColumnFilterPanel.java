@@ -149,9 +149,9 @@ public class ColumnFilterPanel extends JPanel {
          */
         private final Class<? extends DataValue>[] m_filterClasses;
         /**
-         * Creates a new value class filter.
+         * Creates a new value class filter
          * @param filterValueClasses all classes that are compatible with
-         *        the type allowed in {@link #isValidColumn(DataColumnSoec)}.
+         *        the type allowed in {@link #includeColumn(DataColumnSpec)}
          */
         public ValueClassFilter(
                 final Class<? extends DataValue>... filterValueClasses) {
@@ -185,7 +185,7 @@ public class ColumnFilterPanel extends JPanel {
         public String allFilteredMsg() {
             return "No columns compatible with the specific column types.";
         }
-    };
+    }
 
     /** The filter used to filter out/in valid column types. */
     private final ColumnFilter m_filter;
@@ -216,10 +216,31 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String[])
+     *
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean)}
+     * instead
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public ColumnFilterPanel() {
         this(DataValue.class);
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter.
+     *
+     * @param showKeepAllBox <code>true</code>, if an check box to keep all
+     * columns is shown
+     *
+     * @see #update(DataTableSpec, boolean, Collection)
+     * @see #update(DataTableSpec, boolean, String[])
+     */
+    @SuppressWarnings("unchecked")
+    public ColumnFilterPanel(final boolean showKeepAllBox) {
+        this(showKeepAllBox, DataValue.class);
     }
 
     /**
@@ -251,7 +272,11 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
+     *
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, Class...)}
+     * instead
      */
+    @Deprecated
     public ColumnFilterPanel(
             final Class<? extends DataValue>... filterValueClasses) {
         this(new ValueClassFilter(filterValueClasses));
@@ -267,7 +292,11 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
+     *
+     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, ColumnFilter)}
+     * instead
      */
+    @Deprecated
     public ColumnFilterPanel(final ColumnFilter filter) {
         this(false, filter);
     }

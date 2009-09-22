@@ -65,12 +65,33 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered.
      *
+     * @deprecated Use the constructor @{link {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean)}
+     * instead.
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex) {
         this(model, inPortIndex, DataValue.class);
     }
+
+    /**
+     * Creates a new filter column panel with three components which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The settings model will hold the names of the columns
+     * to be in- or excluded.
+     *
+     * @param model a string array model that stores the value
+     * @param inPortIndex the index of the port whose table is filtered
+     * @param showKeepAllBox if the keep-all check box should be visible
+     *
+     */
+    @SuppressWarnings("unchecked")
+    public DialogComponentColumnFilter(final SettingsModelFilterString model,
+            final int inPortIndex, final boolean showKeepAllBox) {
+        this(model, inPortIndex, showKeepAllBox, DataValue.class);
+    }
+
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -83,7 +104,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param inPortIndex the index of the port whose table is filtered.
      * @param allowedTypes filter for the columns all column not compatible with
      *            any of the allowed types are not displayed.
+     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean, Class...)}
+     * instead
      */
+    @Deprecated
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex,
             final Class<? extends DataValue>... allowedTypes) {
@@ -122,7 +146,11 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param inPortIndex the index of the port whose table is filtered.
      * @param filter for the columns, all column not compatible with
      *            any of the allowed types are not displayed.
+     *
+     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean, ColumnFilter)}
+     * instead
      */
+    @Deprecated
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex, final ColumnFilter filter) {
         this(model, inPortIndex, false, filter);
