@@ -25,10 +25,12 @@
 package org.knime.workbench.help.intro;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.URL;
 
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.equinox.internal.provisional.p2.ui.operations.AddColocatedRepositoryOperation;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
@@ -55,10 +57,18 @@ public class InvokeInstallSiteAction extends Action {
         // then this hack becomes obsolete
         String urlString = "http://merkur02.inf.uni-konstanz.de/knime/trunk/2009-09-22/update/www.knime.org/update_2.x/";
         try {
+            // very similar to run() we use reflection to overcome compile errors
+            // eclipse 3.5
             URL url = new URL(urlString);
-            AddColocatedRepositoryOperation op 
-                = new AddColocatedRepositoryOperation("KNIME", url);
-            op.execute(new NullProgressMonitor(), null);
+            Class<?> class34 = Class.forName("org.eclipse.equinox.internal.provisional.p2.ui.operations.AddColocatedRepositoryOperation");
+            Constructor<?> constructor = class34.getConstructor(String.class, URL.class);
+            Object instance = constructor.newInstance("KNIME", url);
+            Method m = class34.getMethod("execute", IProgressMonitor.class, IAdaptable.class);
+            m.setAccessible(true);
+            m.invoke(instance, new NullProgressMonitor(), null);
+            // AddColocatedRepositoryOperation op 
+            //   = new AddColocatedRepositoryOperation("KNIME", url);
+            // op.execute(new NullProgressMonitor(), null);
         } catch (Exception e) {
             NodeLogger.getLogger(getClass()).warn("Unable to add " 
                     + "KNIME update site (" + urlString + " to repository," 
@@ -85,7 +95,6 @@ public class InvokeInstallSiteAction extends Action {
             Constructor<?> constructor = class34.getConstructor(Shell.class, String.class);
             Dialog dialog = (Dialog)constructor.newInstance(Display.getDefault().getActiveShell(), KNIME_PROFILE_ID);
             dialog.open();
-            return;
         } catch (Exception e) {
             NodeLogger.getLogger(getClass()).warn("Unable to invoke update " 
                     + "action, could not instantiate dialog class " 
