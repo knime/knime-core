@@ -53,8 +53,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
@@ -155,9 +155,15 @@ public class WrappedNodeDialog extends Dialog {
                         m_dialogPane.saveSettingsTo(new FileOutputStream(file));
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
+                        // SWT-AWT-Bridge doesn't properly
+                        // repaint after dialog disappears
+                        m_dialogPane.getPanel().repaint();
                     } catch (InvalidSettingsException ise) {
                         showErrorMessage("Invalid Settings\n"
                                 + ise.getMessage());
+                        // SWT-AWT-Bridge doesn't properly
+                        // repaint after dialog disappears
+                        m_dialogPane.getPanel().repaint();
                     }
                 }
             }
@@ -186,7 +192,7 @@ public class WrappedNodeDialog extends Dialog {
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
         getShell().setText("Dialog - " + m_nodeContainer.getDisplayLabel());
-        
+
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -329,14 +335,19 @@ public class WrappedNodeDialog extends Dialog {
         } catch (InvalidSettingsException ise) {
             LOGGER.warn("failed to apply settings: " + ise.getMessage(),  ise);
             showWarningMessage("Invalid settings:\n" + ise.getMessage());
-
+            // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
+            m_dialogPane.getPanel().repaint();
         } catch (IllegalStateException ex) {
             LOGGER.warn("failed to apply settings: " + ex.getMessage(), ex);
             showWarningMessage("Invalid node state:\n" + ex.getMessage());
+            // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
+            m_dialogPane.getPanel().repaint();
         } catch (Throwable t) {
             LOGGER.error("failed to apply settings: " + t.getMessage(), t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
+            // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
+            m_dialogPane.getPanel().repaint();
         }
         e.doit = false;
         return false;
