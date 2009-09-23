@@ -91,7 +91,7 @@ public class DatabaseConnectionSettings {
                 }
             } catch (NumberFormatException nfe) {
                 LOGGER.warn("Database login timeout not valid '" + tout
-                        + "', using default '" + LOGIN_TIMEOUT + "'.");
+                        + "', using default '5'.");
             }
         }
         LOGGER.info("Database login timeout: " + LOGIN_TIMEOUT + " sec.");
@@ -108,18 +108,10 @@ public class DatabaseConnectionSettings {
                 KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
         if (fsize != null) {
             try {
-                int fetchsize = Integer.parseInt(fsize);
-                if (fetchsize >= 0) {
-                    LOGGER.info("Database fetch size: "
-                        + FETCH_SIZE + " rows.");
-                    return fetchsize;
-                } else {
-                    LOGGER.warn("Database fetch size not valid (<0) '" + fsize
-                            + "', using default '" + FETCH_SIZE + "'.");
-                }
+                return Integer.parseInt(fsize);
             } catch (NumberFormatException nfe) {
                 LOGGER.warn("Database fetch size not valid '" + fsize
-                        + "', using default '" + FETCH_SIZE + "'.");
+                        + "', no fetch size will be set.");
             }
         }
         return null;
