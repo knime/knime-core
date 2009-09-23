@@ -487,11 +487,11 @@ public class NaiveBayesModel {
      * @param normalize set to <code>true</code> if the probability values
      * should be normalized
      * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     * overcomes zero counts
+     *   tolerates zero counts (i.e. does not produce 0 probabilities)
      * @return the probability values in the same order like the
      * class values
      */
-    public double[] getClassPobabilites(
+    public double[] getClassProbabilities(
             final String[] attributeNames, final DataRow row,
             final List<String> classValues, final boolean normalize,
             final double laplaceCorrector) {
