@@ -265,7 +265,7 @@ terms of this License.
    </license>
 
    <url>
-      <update label="KNIME Update Site" url="http://www.knime.org/update_2.x"/>
+      <update label="KNIME Update Site" url="http://www.knime.org/update/2.1"/>
       <discovery label="KNIME" url="http://www.knime.org/update_2.x"/>
    </url>
 
