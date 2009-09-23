@@ -47,21 +47,21 @@ public abstract class DateAndTimeValueRenderer
 
         @Override
         protected String getTimeString(final DateAndTimeValue value) {
-            String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
+            String t = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay() % 12) + ":" 
                     + DateAndTimeRenderUtil.getStringForDateField(
                             value.getMinute())
                     + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {
-                withoutMillis += "." + value.getMillis();
+                t += "." + value.getMillis();
             }
             if (value.getHourOfDay() > 12) {
-                withoutMillis += " pm";
+                t += " pm";
             } else {
-                withoutMillis += " am";
+                t += " am";
             }
-            return withoutMillis;
+            return t;
         }
         
         @Override
@@ -88,16 +88,16 @@ public abstract class DateAndTimeValueRenderer
 
         @Override
         protected String getTimeString(final DateAndTimeValue value) {
-            String withoutMillis = DateAndTimeRenderUtil.getStringForDateField(
+            String t = DateAndTimeRenderUtil.getStringForDateField(
                     value.getHourOfDay()) + ":" 
                     + DateAndTimeRenderUtil.getStringForDateField(
                             value.getMinute())
                     + ":" + DateAndTimeRenderUtil.getStringForDateField(
                             value.getSecond());
             if (value.hasMillis()) {
-                withoutMillis += "." + value.getMillis();
+                t += "." + value.getMillis();
             }
-            return withoutMillis;
+            return t;
         }
         
         @Override
@@ -132,13 +132,11 @@ public abstract class DateAndTimeValueRenderer
         }
         if (value.hasTime()) {
             if (value.hasDate()) {
-                // separate date from time using "T", see ISO 8601
-                timestamp += "T";
+                // separate date from time using " "
+                // although it should be a "T", see ISO 8601
+                timestamp += " ";
             }
             timestamp += getTimeString(value);
-        }
-        if (value.hasMillis()) {
-            timestamp += "." + value.getMillis();
         }
         return timestamp;
     }
