@@ -24,11 +24,7 @@
  */
 package org.knime.workbench.help.intro;
 
-import java.net.URL;
-
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog;
-import org.eclipse.equinox.internal.provisional.p2.ui.operations.AddColocatedRepositoryOperation;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.widgets.Display;
 
@@ -43,25 +39,6 @@ public class InvokeInstallSiteAction extends Action {
     /** P2 profile id. */
     public static final String KNIME_PROFILE_ID = "KNIMEProfile";
 
-    /**
-     * Constructor.
-     */
-    public InvokeInstallSiteAction() {
-        // TODO: define KNIME Update Site URL somewhere statically
-        // FIXME: update this hardcoded update site!!!
-        // FIXME: as of Eclipse 3.5 the update sites defined in the features
-        // should be added automatically to the p2 update/install dialog
-        // then this hack becomes obsolete
-        try {
-//        	URL url = new URL("http://www.knime.org/update_2.x/");
-        	URL url = new URL("http://merkur02.inf.uni-konstanz.de/knime/trunk/2009-09-22/update/www.knime.org/update_2.x/");
-            AddColocatedRepositoryOperation op 
-            	= new AddColocatedRepositoryOperation("KNIME", url);
-            op.execute(new NullProgressMonitor(), null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * {@inheritDoc}
