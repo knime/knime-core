@@ -36,6 +36,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -272,9 +273,9 @@ public class WorkflowExportWizard extends ExportWizard
         // iterate over the resources and add only the wanted stuff
         // i.e. the "intern" folder and "*.zip" files are excluded
         final List<IResource> resourceList = new ArrayList<IResource>();
-        // also add .project or .metainfo files to export
         for (IContainer child : m_workflowsToExport) {
-            addResourcesFor(m_workflowsToExport, resourceList, child,
+            // add all files within the workflow
+            addResourcesFor(resourceList, child,
                     m_excludeData);
         }
         monitor.worked(1);
@@ -329,15 +330,20 @@ public class WorkflowExportWizard extends ExportWizard
 
     /**
      *
-     * @param selectedWorkflows list of selected workflow export elements
      * @param resourceList list of resources to export
-     * @param resource the resource to check
+     * @param resource the resource representing the workflow directory 
      * @param excludeData true if KNIME data files should be excluded
      */
     public static void addResourcesFor(
-            final Collection<IContainer> selectedWorkflows,
             final List<IResource> resourceList,
             final IResource resource, final boolean excludeData) {
+        if (resource instanceof IWorkspaceRoot) {
+            // ignore the workspace root in order to avoid adding all workflows
+            // method should be called for every workflow that should be 
+            // exported
+            return;
+        }
+        
         // if this resource must be excluded do not add to resource list and
         // return
         if (excludeData && excludeResource(resource)) {
@@ -359,18 +365,6 @@ public class WorkflowExportWizard extends ExportWizard
             resourceList.add(resource);
             return;
         }
-        /*
-         * This test is still necessary for workflow groups which are no
-         * projects but might contain unchecked workflows
-         */
-        if (KnimeResourceUtil.isWorkflow(resource)
-                || KnimeResourceUtil.isWorkflowGroup(resource)) {
-            if (!selectedWorkflows.contains(resource)) {
-                // abort recursion
-                return;
-            }
-        }
-
         IResource[] resources;
         try {
             resources = ((IContainer)resource).members();
@@ -378,9 +372,9 @@ public class WorkflowExportWizard extends ExportWizard
             throw new IllegalStateException("Members of folder "
                     + resource.getName() + " could not be retrieved.");
         }
-        // else vistit all child resources
+        // else visit all child resources
         for (IResource currentResource : resources) {
-            addResourcesFor(selectedWorkflows, resourceList, currentResource,
+            addResourcesFor(resourceList, currentResource,
                     excludeData);
         }
     }
