@@ -24,9 +24,9 @@
  */
 package org.knime.workbench.help.intro;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog;
 import org.eclipse.equinox.internal.provisional.p2.ui.operations.AddColocatedRepositoryOperation;
 import org.eclipse.jface.action.Action;
@@ -53,11 +53,12 @@ public class InvokeInstallSiteAction extends Action {
         // should be added automatically to the p2 update/install dialog
         // then this hack becomes obsolete
         try {
-            AddColocatedRepositoryOperation op
-                = new AddColocatedRepositoryOperation("KNIME",
-                        new URL("http://www.knime.org/update_2.x/"));
-            op.runInBackground();
-        } catch (MalformedURLException e) {
+//        	URL url = new URL("http://www.knime.org/update_2.x/");
+        	URL url = new URL("http://merkur02.inf.uni-konstanz.de/knime/trunk/2009-09-22/update/www.knime.org/update_2.x/");
+            AddColocatedRepositoryOperation op 
+            	= new AddColocatedRepositoryOperation("KNIME", url);
+            op.execute(new NullProgressMonitor(), null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
