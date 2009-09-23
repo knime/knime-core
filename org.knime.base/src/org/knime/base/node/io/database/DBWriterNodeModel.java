@@ -74,7 +74,7 @@ final class DBWriterNodeModel extends NodeModel {
     static final String SQL_TYPE_DOUBLE = "numeric(30,10)";
 
     /** Default SQL-type for Date. */
-    static final String SQL_TYPE_DATEANDTIME = "date";
+    static final String SQL_TYPE_DATEANDTIME = "datetime";
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
