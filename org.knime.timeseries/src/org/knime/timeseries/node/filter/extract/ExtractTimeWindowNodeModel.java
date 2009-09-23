@@ -51,19 +51,19 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  *
  * @author Rosaria Silipo
  */
-public class ExtractFromToNodeModel extends NodeModel {
+public class ExtractTimeWindowNodeModel extends NodeModel {
 
     private final SettingsModelString m_columnName
-    = ExtractFromToDialog.createColumnNameModel();
+    = ExtractTimeWindowNodeDialog.createColumnNameModel();
 
     private final SettingsModelCalendar m_fromDate
-        = ExtractFromToDialog.createFromModel();
+        = ExtractTimeWindowNodeDialog.createFromModel();
 
     private final SettingsModelCalendar m_toDate
-        = ExtractFromToDialog.createToModel();
+        = ExtractTimeWindowNodeDialog.createToModel();
 
         /** Inits node, 1 input, 1 output. */
-    public ExtractFromToNodeModel() {
+    public ExtractTimeWindowNodeModel() {
         super(1, 1);
     }
 

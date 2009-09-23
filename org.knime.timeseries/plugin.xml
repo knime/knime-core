@@ -9,7 +9,7 @@
             id="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"/>
        <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"
+            factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"
             id="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"/>
       <node
             category-path="/timeseries"

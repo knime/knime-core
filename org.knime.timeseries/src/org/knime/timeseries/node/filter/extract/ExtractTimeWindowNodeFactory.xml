@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="time_from_to.png">
-    <name>Extract From To</name>
-    <shortDescription>Extracts data from Timestamp1 to Timestamp2 from input table.
+<knimeNode type="Manipulator" icon="extract_time_window.png">
+    <name>Extract Time Window</name>
+    <shortDescription>Extracts all rows with a time stamp within the specified
+      time window.
     </shortDescription>
     <fullDescription>
         <intro>
@@ -10,17 +11,16 @@
             between TimeStamp1 and Timestamp2.
         </intro>
         <option name="Columns containing Timestamp">
-        Select the input column containing timestamp cells.</option>
+        Select the input column containing timestamps.</option>
         <option name="From: Timestamp">
-        First Timestamp boundary of the extraction interval.</option>
+        Start date/time of the time window.</option>
         <option name="To: Timestamp">
-        Second Timestamp boundary of the extraction interval.</option>
+        End date/time of the time window.</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Input column">
         Table containing timestamp cells.</inPort>
         <outPort index="0" name="Wrapped output">
-        Sub-Table containing only data between "From: Timestamp" and 
-        "To: Timestamp".</outPort>
+        Sub-Table containing only data within time window.</outPort>
     </ports>
 </knimeNode>

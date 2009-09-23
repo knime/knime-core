@@ -42,7 +42,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class ExtractFromToDialog extends DefaultNodeSettingsPane {
+public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
 
     private final SettingsModelString m_colName;
     private final SettingsModelCalendar m_from;
@@ -50,7 +50,7 @@ public class ExtractFromToDialog extends DefaultNodeSettingsPane {
     
     /** Constructor adding three components. */
     @SuppressWarnings("unchecked")
-    public ExtractFromToDialog() {
+    public ExtractTimeWindowNodeDialog() {
         m_colName = createColumnNameModel();
         m_from = createFromModel();
         m_to = createToModel();

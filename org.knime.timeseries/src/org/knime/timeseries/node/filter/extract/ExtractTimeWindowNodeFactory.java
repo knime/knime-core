@@ -35,14 +35,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class ExtractFromToNodeFactory extends NodeFactory {
+public class ExtractTimeWindowNodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ExtractFromToDialog();
+        return new ExtractTimeWindowNodeDialog();
     }
 
     /**
@@ -50,7 +50,7 @@ public class ExtractFromToNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ExtractFromToNodeModel();
+        return new ExtractTimeWindowNodeModel();
     }
 
     /**
