@@ -215,7 +215,7 @@ CellFactory {
             new ArrayList<DataCell>(m_sortedClassVals.size() + 1);
         //add the class cell first
         resultCells.add(classCell);
-        final double[] classProbs = m_model.getClassPobabilites(
+        final double[] classProbs = m_model.getClassProbabilities(
                 m_attributeNames, row, m_sortedClassVals, true,
                 m_laplaceCorrector);
         //add the probability per class
