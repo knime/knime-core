@@ -24,6 +24,16 @@
  */
 package org.knime.product.rcp;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
@@ -37,12 +47,15 @@ import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDEActionFactory;
+import org.eclipse.ui.views.IViewDescriptor;
+import org.eclipse.ui.views.IViewRegistry;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
@@ -66,7 +79,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IAction m_importPrefAction;
 
-//     private IWorkbenchAction m_introAction;
+    // private IWorkbenchAction m_introAction;
 
     private IWorkbenchAction m_aboutAction;
 
@@ -98,20 +111,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_changeWorkspaceAction;
 
-
     private IAction m_updateKnimeAction;
-
-    // private IAction m_openOutlineViewAction;
-    //
-    // private IAction m_openNavigatorViewAction;
-    //
-    // private IAction m_openRepositoryViewAction;
-    //
-    // private IAction m_openRepositoryHelpViewAction;
-    //
-    // private IAction m_openConsoleViewAction;
-    //
-    // private IAction m_openProgressViewAction;
 
     private IAction m_exportWorkflowAction;
 
@@ -119,9 +119,11 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IContributionItem m_showViewShortlistContributionItem;
 
+    private List<IAction> m_multiInstanceViews;
+
     /**
-     * Creates a new action bar advisor to configure a workbench
-     * window's action bars via the given action bar configurer.
+     * Creates a new action bar advisor to configure a workbench window's action
+     * bars via the given action bar configurer.
      *
      * @param configurer the action bar configurer
      */
@@ -188,28 +190,22 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_closeAllAction);
 
         // View Actions
-        // m_openOutlineViewAction = new OpenOutlineViewAction();
-        // m_openConsoleViewAction = new OpenConsoleViewAction();
-        // m_openNavigatorViewAction = new OpenNavigatorViewAction();
-        // m_openProgressViewAction = new OpenProgressViewAction();
-        // m_openRepositoryHelpViewAction = new OpenRepositoryHelpViewAction();
-        // m_openRepositoryViewAction = new OpenRepositoryViewAction();
 
-        // Don't need this actions, as the following contribution item creates
-        // them all
-        // for us (downside: don't know how to control ordering)
-        // Contribution item for view shortlist
-        m_showViewShortlistContributionItem = ContributionItemFactory.VIEWS_SHORTLIST
-                .create(window);
+        // Use Eclipse view short cuts
+        // (downside: don't know how to control ordering, instantiates views
+        // only once at a time)
+        m_showViewShortlistContributionItem =
+                ContributionItemFactory.VIEWS_SHORTLIST.create(window);
+        // create actions for views that register with the mult_inst_view point
+        m_multiInstanceViews = createMultiInstanceViewActions();
 
         // temporarily disable due to eclipse bug
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=211184
         // (Code will be enabled if bug is closed, corresponding task #1453)
         // Help Actions
         /*
-         m_introAction = ActionFactory.INTRO.create(window);
-         m_introAction.setText("Show &Intro page");
-         register(m_introAction);
+         * m_introAction = ActionFactory.INTRO.create(window);
+         * m_introAction.setText("Show &Intro page"); register(m_introAction);
          */
 
         m_helpAction = ActionFactory.HELP_CONTENTS.create(window);
@@ -222,8 +218,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_aboutAction);
 
         // Toolbar actions
-        m_newWizardDropdownAction = ActionFactory.NEW_WIZARD_DROP_DOWN
-                .create(window);
+        m_newWizardDropdownAction =
+                ActionFactory.NEW_WIZARD_DROP_DOWN.create(window);
         register(m_newWizardDropdownAction);
 
         m_exportWorkflowAction = new ExportKnimeWorkflowAction(window);
@@ -239,15 +235,13 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
 
-
-
         MenuManager fileMenu = new MenuManager("&File");
-        MenuManager editMenu = new MenuManager("&Edit",
-                IWorkbenchActionConstants.M_EDIT);
-        MenuManager viewMenu = new MenuManager("&View",
-                IWorkbenchActionConstants.M_VIEW);
-        MenuManager helpMenu = new MenuManager("&Help",
-                IWorkbenchActionConstants.M_HELP);
+        MenuManager editMenu =
+                new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
+        MenuManager viewMenu =
+                new MenuManager("&View", IWorkbenchActionConstants.M_VIEW);
+        MenuManager helpMenu =
+                new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
 
         // 1. File menu
         menuBar.add(fileMenu);
@@ -290,25 +284,16 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(m_undoAction);
         editMenu.add(m_redoAction);
 
-        // View menu (contribution item contributes all views registered via
-        // "perspectiveExtension" in ui plugin
-
-        // viewMenu.add(m_openOutlineViewAction);
-        // viewMenu.add(m_openConsoleViewAction);
-        // viewMenu.add(m_openNavigatorViewAction);
-        // viewMenu.add(m_openProgressViewAction);
-        // viewMenu.add(m_openRepositoryHelpViewAction);
-        // viewMenu.add(m_openRepositoryViewAction);
-        // viewMenu.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+        // View menu
+        addMultiViewsToMenu(viewMenu);
         viewMenu.add(m_showViewShortlistContributionItem);
 
         // Help menu
         // helpMenu.add(m_introAction);
         helpMenu.add(m_helpAction);
         helpMenu.add(m_helpSearchAction);
-//        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        // menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
-
 
     }
 
@@ -327,4 +312,79 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         toolbar.add(m_saveAction);
         toolbar.add(m_saveAllAction);
     }
+
+    private List<IAction> createMultiInstanceViewActions() {
+
+        List<IAction> result = new LinkedList<IAction>();
+
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point =
+                registry.getExtensionPoint(
+                        "org.knime.workbench.ui.multipleInstanceViews");
+        if (point == null) {
+            return result;
+        }
+
+        IExtension[] ext = point.getExtensions();
+        if (ext == null) {
+            return result;
+        }
+
+        for (IExtension extension : ext) {
+            IConfigurationElement[] conf = extension.getConfigurationElements();
+            if (conf == null) {
+                continue;
+            }
+            for (IConfigurationElement c : conf) {
+                String viewId = c.getAttribute("id");
+                if (viewId == null || viewId.isEmpty()) {
+                    continue;
+                }
+                IAction viewAction = createViewAction(viewId);
+                if (viewAction == null) {
+                    continue;
+                }
+                result.add(viewAction);
+            }
+        }
+
+        // sort actions by view name
+        Collections.sort(result, new Comparator<IAction>() {
+            public int compare(final IAction o1, final IAction o2) {
+                if (o1 == null) {
+                    return -1;
+                }
+                if (o2 == null) {
+                    return 1;
+                }
+                return o1.getText().compareTo(o2.getText());
+            }
+        });
+
+        return result;
+    }
+
+    private void addMultiViewsToMenu(final MenuManager viewMenu) {
+        for (IAction a : m_multiInstanceViews) {
+            viewMenu.add(a);
+        }
+    }
+
+    private OpenKnimeViewAction createViewAction(final String viewId) {
+        IViewRegistry viewReg = PlatformUI.getWorkbench().getViewRegistry();
+        IViewDescriptor vDesc = viewReg.find(viewId);
+        if (vDesc == null) {
+            return null;
+        }
+        if (!vDesc.getAllowMultiple()) {
+            // views that can not be instantiated multiple times are ignored
+            return null;
+        }
+
+        OpenKnimeViewAction result = new OpenKnimeViewAction(viewId);
+        result.setText(vDesc.getLabel());
+        result.setImageDescriptor(vDesc.getImageDescriptor());
+        return result;
+    }
+
 }
