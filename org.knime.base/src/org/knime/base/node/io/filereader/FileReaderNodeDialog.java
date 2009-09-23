@@ -96,8 +96,9 @@ import org.knime.core.util.MutableBoolean;
  *
  * @author Peter Ohl, University of Konstanz
  *
- * Implements the {@link java.awt.event.ItemListener} for the file location
- * ComboBox (because we need to remove it and add it again from time to time.
+ *         Implements the {@link java.awt.event.ItemListener} for the file
+ *         location ComboBox (because we need to remove it and add it again from
+ *         time to time.
  */
 class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
@@ -326,7 +327,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                                 .toString(), false);
                 if (newFile != null) {
                     m_urlCombo.setSelectedItem(newFile);
-//                    fileLocationChanged();
+                    // fileLocationChanged();
                 }
             }
         });
@@ -397,9 +398,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private JPanel createAnalysisPanel() {
 
         m_analyzeCancel = new JButton("Quick Scan");
-        m_analyzeCancel.setToolTipText(
-                "Analyze the first " + FileAnalyzer.NUMOFLINES
-                + " lines only.");
+        m_analyzeCancel.setToolTipText("Analyze the first "
+                + FileAnalyzer.NUMOFLINES + " lines only.");
         m_analyzeCancel.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_analyzeCancel.setEnabled(false);
@@ -606,6 +606,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 delimSettingsChanged();
             }
         });
+
         m_ignoreWS.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 ignoreWSChanged();
@@ -616,9 +617,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
+
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
+
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -833,18 +836,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_insideDelimChange = true;
 
-        m_frSettings.setDelimiterUserSet(true);
-
         // to avoid unnecessary re-analyzing of the file, find out if the
         // delimiter actually changed.
         String newDelim = null;
-        if (m_delimField.getSelectedIndex() > -1) {
-            newDelim =
-                    ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
+
+        Object o = m_delimField.getEditor().getItem();
+        if (o instanceof Delimiter) {
+            newDelim = ((Delimiter)o).getDelimiter();
         } else {
-            newDelim =
-                    FileTokenizerSettings.unescapeString((String)m_delimField
-                            .getSelectedItem());
+            newDelim = FileTokenizerSettings.unescapeString((String)o);
         }
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (delim.getDelimiter().equals(newDelim)) {
@@ -853,6 +853,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 return;
             }
         }
+
+        m_frSettings.setDelimiterUserSet(true);
 
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
@@ -866,15 +868,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // now set the selected one
 
         // index 0 is the <none> placeholder
-        if (m_delimField.getSelectedIndex() != 0) {
+        if (o != DEFAULT_DELIMS[0]) {
 
             String delimStr = null;
-            if (m_delimField.getSelectedIndex() > -1) {
+            if (o instanceof Delimiter) {
                 // user selected one from the list (didn't edit a new one)
                 try {
                     // add that delimiter:
-                    Delimiter selDelim =
-                            (Delimiter)m_delimField.getSelectedItem();
+                    Delimiter selDelim = (Delimiter)o;
                     delimStr = selDelim.getDelimiter();
                     m_frSettings.addDelimiterPattern(delimStr, selDelim
                             .combineConsecutiveDelims(), selDelim
@@ -886,7 +887,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 }
 
             } else {
-                delimStr = (String)m_delimField.getSelectedItem();
+                delimStr = (String)o;
                 delimStr = FileTokenizerSettings.unescapeString(delimStr);
 
                 if ((delimStr != null) && (!delimStr.equals(""))) {
@@ -1183,13 +1184,36 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
          * TODO: We need to synchronize the NodeSettings object
          */
 
+        // make sure the delimiter is committed in case user entered a new one
+        // and didn't hit enter - starts an analysis if things changed
+        delimSettingsChanged();
+
         // if no valid settings exist, we need to analyze the file.
         if (m_frSettings.getNumberOfColumns() < 0) {
-            setErrorLabelText("Waiting for file analysis to finish..."
-                    + "Click \"Quick Scan\" to cut it short.");
+            synchronized (m_analysisRunning) {
+                // start analysis only, if it is not already running
+                if (!m_analysisRunning.booleanValue()) {
+                    // the analysis thread should override the error label
+                    setErrorLabelText("Waiting for file analysis to finish..."
+                            + "Click \"Quick Scan\" to cut it short.");
+                    analyzeAction();
+                }
+            }
+        }
 
-            waitForAnalyzeAction();
-            // the analysis thread should override the error label
+        FileReaderNodeSettings settingsToSave;
+
+        // don't close dialog if analysis is running
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                throw new InvalidSettingsException(
+                        "File analysis currently running. Please wait for it to"
+                                + " finish, check the settings, and "
+                                + "click OK or Apply again");
+            } else {
+                // while we have the lock, clone the settings
+                settingsToSave = new FileReaderNodeSettings(m_frSettings);
+            }
         }
 
         String errLabel = getErrorLabelText();
@@ -1202,39 +1226,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
-        }
-
-        FileReaderNodeSettings settingsToSave = m_frSettings;
-
-        /*
-         * if an analysis is currently running we ask the user what to do
-         */
-        synchronized (m_analysisRunning) {
-            if (m_analysisRunning.booleanValue()) {
-                // quickly create a clone of the current settings before it
-                // finishes
-                FileReaderNodeSettings clone =
-                        new FileReaderNodeSettings(m_frSettings);
-                if (JOptionPane.showOptionDialog(getPanel(),
-                        "A file analysis is currently running. "
-                                + "Do you want to wait for it to "
-                                + "finish or use the " + "current settings?",
-                        "File Analysis Running", JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.QUESTION_MESSAGE, null, new String[]{
-                                "Use current settings, cancel analysis",
-                                "Wait for analysis to finish"},
-                        "Wait for analysis to finish") == 1) {
-                    throw new InvalidSettingsException(
-                            "Please check the settings"
-                                    + "after analysis finishes and "
-                                    + "click OK or Apply again");
-                }
-                // stop it.
-                m_analysisExecMonitor.setExecuteInterrupted();
-
-                settingsToSave = clone;
-            }
-
         }
 
         // transfers the URL from the textfield into the setting object
@@ -1659,7 +1650,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         // set this - even before displaying it
         m_previewTable = table;
-
 
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             @Override
