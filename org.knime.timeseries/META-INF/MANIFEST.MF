@@ -11,7 +11,6 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)";visibili
 Bundle-ClassPath: knime-timeseries-patches.jar,
  knime-timeseries.jar
 Export-Package: org.knime.timeseries,
- org.knime.timeseries.node.aggregate,
  org.knime.timeseries.node.diff,
  org.knime.timeseries.node.filter.extract,
  org.knime.timeseries.node.filter.sample,
