@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,13 +18,21 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.append.row;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.append.row.AppendedRowsIterator;
 import org.knime.base.data.append.row.AppendedRowsTable;
@@ -33,6 +41,7 @@ import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -40,15 +49,18 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteManager;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * {@link org.knime.core.node.NodeModel} that concatenates its two input
  * table to one output table.
- * 
+ *
  * @see AppendedRowsTable
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -62,6 +74,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** NodeSettings key: suffix to append. */
     static final String CFG_SUFFIX = "suffix";
 
+    /** NodeSettings key: enable hiliting. */
+    static final String CFG_HILITING = "enable_hiliting";
+
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
@@ -71,8 +86,15 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     private boolean m_isIntersection;
 
+    private boolean m_enableHiliting;
+
+    /** Hilite manager that summarizes both input handlers into one. */
     private final HiLiteManager m_hiliteManager = new HiLiteManager();
-    
+    /** Hilite translator for duplicate row keys. */
+    private final HiLiteTranslator m_hiliteTranslator = new HiLiteTranslator();
+    /** Default hilite handler used if hilite translation is disabled. */
+    private final HiLiteHandler m_dftHiliteHandler = new HiLiteHandler();
+
     /**
      * Creates new node model with two inputs and one output.
      */
@@ -109,7 +131,7 @@ public class AppendedRowsNodeModel extends NodeModel {
                 (m_isAppendSuffix ? m_suffix : null), corrected);
         // note, this iterator throws runtime exceptions when canceled.
         AppendedRowsIterator it = out.iterator(exec, totalRowCount);
-        BufferedDataContainer c = 
+        BufferedDataContainer c =
             exec.createDataContainer(out.getDataTableSpec());
         try {
             while (it.hasNext()) {
@@ -122,8 +144,33 @@ public class AppendedRowsNodeModel extends NodeModel {
             c.close();
         }
         if (it.getNrRowsSkipped() > 0) {
-            setWarningMessage("Filtered out " + it.getNrRowsSkipped() 
+            setWarningMessage("Filtered out " + it.getNrRowsSkipped()
                     + " duplicate row(s).");
+        }
+        if (m_enableHiliting) {
+            // create hilite translation
+            Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
+            // set of all keys in the resulting table
+            Set<RowKey> dupHash = it.getDuplicateHash();
+            for (RowKey key : dupHash) {
+                Set<RowKey> set = new HashSet<RowKey>(1);
+                // if a duplicate key
+                if (key.getString().endsWith(m_suffix)) {
+                    String str = key.getString();
+                    str = str.substring(0, str.lastIndexOf(m_suffix));
+                    set.add(new RowKey(str));
+                    // put duplicate key and original key into map
+                    map.put(key, set);
+                } else {
+                    // skip duplicate keys
+                    if (!dupHash.contains(new RowKey(
+                            key.getString() + m_suffix))) {
+                        set.add(key);
+                        map.put(key, set);
+                    }
+                }
+            }
+            m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
         }
         return new BufferedDataTable[]{c.getTable()};
     }
@@ -152,7 +199,7 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     /**
      * Determines the names of columns that appear in all specs.
-     * 
+     *
      * @param specs specs to check
      * @return column names that appear in all columns
      */
@@ -182,6 +229,7 @@ public class AppendedRowsNodeModel extends NodeModel {
         if (m_suffix != null) {
             settings.addString(CFG_SUFFIX, m_suffix);
         }
+        settings.addBoolean(CFG_HILITING, m_enableHiliting);
     }
 
     /**
@@ -214,6 +262,7 @@ public class AppendedRowsNodeModel extends NodeModel {
             // may be in there, but must not necessarily
             m_suffix = settings.getString(CFG_SUFFIX, m_suffix);
         }
+        m_enableHiliting = settings.getBoolean(CFG_HILITING, false);
     }
 
     /**
@@ -222,10 +271,11 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_hiliteManager.removeAllToHiliteHandlers();
-        for (int i = 0; i < getNrInPorts(); i++) {
-            HiLiteHandler hdl = getInHiLiteHandler(i);
-            m_hiliteManager.addToHiLiteHandler(hdl);
-        }
+        m_hiliteManager.addToHiLiteHandler(
+                m_hiliteTranslator.getFromHiLiteHandler());
+        m_hiliteManager.addToHiLiteHandler(getInHiLiteHandler(0));
+        m_hiliteTranslator.removeAllToHiliteHandlers();
+        m_hiliteTranslator.addToHiLiteHandler(getInHiLiteHandler(1));
     }
 
     /**
@@ -235,7 +285,16 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        if (m_enableHiliting) {
+            final NodeSettingsRO config = NodeSettings.loadFromXML(
+                    new GZIPInputStream(new FileInputStream(
+                    new File(nodeInternDir, "hilite_mapping.xml.gz"))));
+            try {
+                m_hiliteTranslator.setMapper(DefaultHiLiteMapper.load(config));
+            } catch (final InvalidSettingsException ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
     }
 
     /**
@@ -245,24 +304,41 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        if (m_enableHiliting) {
+            final NodeSettings config = new NodeSettings("hilite_mapping");
+            ((DefaultHiLiteMapper) m_hiliteTranslator.getMapper()).save(config);
+            config.saveToXML(new GZIPOutputStream(new FileOutputStream(new File(
+                    nodeInternDir, "hilite_mapping.xml.gz"))));
+        }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
-        m_hiliteManager.addToHiLiteHandler(hiLiteHdl);
+        if (inIndex == 0) {
+            m_hiliteManager.removeAllToHiliteHandlers();
+            m_hiliteManager.addToHiLiteHandler(
+                    m_hiliteTranslator.getFromHiLiteHandler());
+            m_hiliteManager.addToHiLiteHandler(hiLiteHdl);
+        } else if (inIndex == 1) {
+            m_hiliteTranslator.removeAllToHiliteHandlers();
+            m_hiliteTranslator.addToHiLiteHandler(hiLiteHdl);
+        }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        return m_hiliteManager.getFromHiLiteHandler();
+        if (m_enableHiliting) {
+            return m_hiliteManager.getFromHiLiteHandler();
+        } else {
+            return m_dftHiliteHandler;
+        }
     }
 }

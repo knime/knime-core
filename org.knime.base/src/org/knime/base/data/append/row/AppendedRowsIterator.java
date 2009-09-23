@@ -18,13 +18,16 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.append.row;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
+import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -38,12 +41,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-
 /**
  * Iterator over an
  * {@link AppendedRowsTable}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsIterator extends RowIterator {
@@ -53,7 +54,7 @@ public class AppendedRowsIterator extends RowIterator {
 
     /**
      * The spec of the underlying table.
-     * 
+     *
      * @see AppendedRowsTable#getDataTableSpec()
      */
     private final DataTableSpec m_spec;
@@ -99,19 +100,19 @@ public class AppendedRowsIterator extends RowIterator {
 
     /** The total number of rows, double for floating point operation. */
     private final double m_totalRowCount;
-    
+
     /** The number of rows skipped so far, just for user statistics. */
     private int m_nrRowsSkipped;
-    
+
     /**
      * Creates new iterator of <code>tables</code> following <code>spec</code>.
-     * 
+     *
      * @param tables to iterate over
      * @param spec table spec of underlying table (used to determine missing
      *            columns and order)
      * @param suffix the suffix to append to duplicate rows or <code>null</code>
      *            to skip duplicates in this iterator (prints warning)
-     * 
+     *
      */
     AppendedRowsIterator(final DataTable[] tables, final DataTableSpec spec,
             final String suffix) {
@@ -121,13 +122,13 @@ public class AppendedRowsIterator extends RowIterator {
     /**
      * Creates new iterator of <code>tables</code> following <code>spec</code>.
      * The iterator may throw an exception in next.
-     * 
+     *
      * @param tables to iterate over
      * @param spec table spec of underlying table (used to determine missing
      *            columns and order)
      * @param suffix the suffix to append to duplicate rows or <code>null</code>
      *            to skip duplicates in this iterator (prints warning)
-     * 
+     *
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      */
@@ -168,10 +169,10 @@ public class AppendedRowsIterator extends RowIterator {
         initNextRow();
         return next;
     }
-    
+
     /**
      * Get the number of rows that have been skipped due to duplicate row
-     * keys. 
+     * keys.
      * @return Number of rows skipped.
      */
     public int getNrRowsSkipped() {
@@ -268,7 +269,7 @@ public class AppendedRowsIterator extends RowIterator {
             }
         }
         DataRow nextRow;
-        if (m_curMissingCells != null) { 
+        if (m_curMissingCells != null) {
             // no missing cells implies the base row is complete
             assert (m_curMissingCells.length + baseRow.getNumCells()
                 == m_spec.getNumColumns());
@@ -326,6 +327,14 @@ public class AppendedRowsIterator extends RowIterator {
     }
 
     /**
+     * Returns the set of all keys used in the resulting table.
+     * @return unmodifiable set of all keys
+     */
+    public Set<RowKey> getDuplicateHash() {
+    	return Collections.unmodifiableSet(m_duplicateHash);
+    }
+
+    /**
      * Runtime exception that's thrown when the execution monitor's
      * {@link ExecutionMonitor#checkCanceled()} method throws a
      * {@link CanceledExecutionException}.
@@ -335,7 +344,7 @@ public class AppendedRowsIterator extends RowIterator {
 
         /**
          * Inits object.
-         * 
+         *
          * @param cee The exception to wrap.
          */
         private RuntimeCanceledExecutionException(
@@ -345,7 +354,7 @@ public class AppendedRowsIterator extends RowIterator {
 
         /**
          * Get reference to causing exception.
-         * 
+         *
          * {@inheritDoc}
          */
         @Override

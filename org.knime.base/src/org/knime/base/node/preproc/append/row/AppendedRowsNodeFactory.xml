@@ -26,6 +26,10 @@
         	Use all columns available in the input tables. Fill rows with 
         	missing values if they miss cells for some columns.
         </option>
+        <option name="Enable hiliting">
+            Enables hilting between both inputs and the concatenated output
+            table.
+        </option>
 		</fullDescription>
     <ports>
         <inPort index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</inPort>

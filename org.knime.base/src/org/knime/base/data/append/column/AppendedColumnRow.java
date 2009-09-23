@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.append.column;
 
@@ -33,7 +33,7 @@ import org.knime.core.data.def.DefaultCellIterator;
 /**
  * A {@link org.knime.core.data.DataRow} that is extended by one or more
  * cells.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedColumnRow implements DataRow {
@@ -41,9 +41,9 @@ public class AppendedColumnRow implements DataRow {
     private final DataRow m_baseRow;
 
     private final DataCell[] m_appendCell;
-    
+
     private final RowKey m_rowKey;
-    
+
     /**
      * Creates new Row with <code>baseRow</code> providing the first cells and
      * <code>appendCell</code> as last cells.
@@ -80,7 +80,7 @@ public class AppendedColumnRow implements DataRow {
      * @param appendColumn array with entries set to <code>true</code>, if the
      * corresponding cells from the second row should be added
      */
-    public AppendedColumnRow(final DataRow baseRow, 
+    public AppendedColumnRow(final DataRow baseRow,
     		final DataRow appendedRow, final boolean[] appendColumn) {
     	this(baseRow.getKey(), baseRow, appendedRow, appendColumn);
     }
@@ -97,7 +97,7 @@ public class AppendedColumnRow implements DataRow {
      * @param appendColumn array with entries set to <code>true</code>, if the
      * corresponding cells from the second row should be added
      */
-    public AppendedColumnRow(final RowKey rowKey, final DataRow baseRow, 
+    public AppendedColumnRow(final RowKey rowKey, final DataRow baseRow,
     		final DataRow appendedRow, final boolean[] appendColumn) {
         if (appendColumn.length != appendedRow.getNumCells()) {
             throw new IllegalArgumentException("Number of columns to append "
@@ -109,7 +109,7 @@ public class AppendedColumnRow implements DataRow {
         for (int i = 0; i < appendColumn.length; i++) {
             if (appendColumn[i]) { k++; }
         }
-        
+
         m_appendCell = new DataCell[k];
         k = 0;
         for (int i = 0; i < appendColumn.length; i++) {
@@ -117,10 +117,26 @@ public class AppendedColumnRow implements DataRow {
                 m_appendCell[k++] = appendedRow.getCell(i);
             }
         }
-        
+
         m_rowKey = rowKey;
     }
-    
+    /**
+     * Create a new row with the <code>baseRow</code> providing the first cells
+     * and <code>appendedRow</code> providing the following cells.
+     * @param rowKey new row key for the resulting appended row
+     * @param baseRow row with the first cells
+     * @param appendedRow row with the cells to append
+     */
+    public AppendedColumnRow(final RowKey rowKey, final DataRow baseRow,
+    		final DataRow appendedRow) {
+        m_baseRow = baseRow;
+        m_appendCell = new DataCell[appendedRow.getNumCells()];
+        for (int i = 0; i < m_appendCell.length; i++) {
+            m_appendCell[i] = appendedRow.getCell(i);
+        }
+        m_rowKey = rowKey;
+    }
+
     /**
      * {@inheritDoc}
      */

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,12 +18,13 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.08.2005 (bernd): created
  */
 package org.knime.base.node.preproc.append.row;
 
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -31,6 +32,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -46,7 +48,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Dialog that allows for treatment of duplicate row keys. Possible options are:
  * (1) skip duplicate rows, (2) append suffix to key.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsNodeDialog extends NodeDialogPane {
@@ -60,6 +62,8 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     private final JRadioButton m_useInterSectionButton;
 
     private final JRadioButton m_useUnionButton;
+
+    private final JCheckBox m_enableHiliting;
 
     /**
      * Constructor to init the gui and set a title.
@@ -112,6 +116,13 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         unionButPanel.add(m_useUnionButton);
         intersectPanel.add(unionButPanel);
         panel.add(intersectPanel);
+
+        JPanel hilitePanel = new JPanel(new BorderLayout());
+        hilitePanel.setBorder(BorderFactory
+                .createTitledBorder("Hiliting"));
+        m_enableHiliting = new JCheckBox("Enable hiliting");
+        hilitePanel.add(m_enableHiliting);
+        panel.add(hilitePanel, BorderLayout.CENTER);
         addTab("Settings", panel);
     }
 
@@ -139,6 +150,8 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         } else {
             m_useUnionButton.doClick();
         }
+        m_enableHiliting.setSelected(settings.getBoolean(
+                AppendedRowsNodeModel.CFG_HILITING, false));
     }
 
     /**
@@ -154,5 +167,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         settings.addString(AppendedRowsNodeModel.CFG_SUFFIX, suffix);
         settings.addBoolean(AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS,
                 isIntersection);
+        settings.addBoolean(AppendedRowsNodeModel.CFG_HILITING,
+                m_enableHiliting.isSelected());
     }
 }
