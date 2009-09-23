@@ -27,57 +27,57 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class UnpivotNodeFactory extends NodeFactory<UnpivotNodeModel> {
 
-	/**
-	 * Default constructor.
-	 */
-	public UnpivotNodeFactory() {
-		super();
-	}
+    /**
+     * Default constructor.
+     */
+    public UnpivotNodeFactory() {
+        super();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected NodeDialogPane createNodeDialogPane() {
-		return new UnpivotNodeDialogPane();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new UnpivotNodeDialogPane();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public UnpivotNodeModel createNodeModel() {
-		return new UnpivotNodeModel();
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UnpivotNodeModel createNodeModel() {
+        return new UnpivotNodeModel();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public AbstractNodeView<UnpivotNodeModel> createNodeView(
-			final int viewIndex, final UnpivotNodeModel nodeModel) {
-		return null;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AbstractNodeView<UnpivotNodeModel> createNodeView(
+            final int viewIndex, final UnpivotNodeModel nodeModel) {
+        return null;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected int getNrNodeViews() {
-		return 0;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected boolean hasDialog() {
-		return true;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
 
 }

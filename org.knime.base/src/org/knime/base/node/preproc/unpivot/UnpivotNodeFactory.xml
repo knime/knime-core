@@ -15,7 +15,7 @@
     	single column.
     	one single column.
         </option>
-        <option name="Order columns">Select columns to be duplicated by the 
+        <option name="Retained columns">Select columns to be duplicated by the 
         number of selected value columns.
         </option>
         <option name="Enable hiliting">
@@ -27,7 +27,7 @@
         column for the unpivoting operation.
         </inPort>
         <outPort index="0" name="Unpivoting table">Unpivoting table with 
-        duplicated order columns together with one rotated value column and 
+        duplicated columns together with one rotated value column and 
         their corresponding column names.
 		</outPort>
     </ports>

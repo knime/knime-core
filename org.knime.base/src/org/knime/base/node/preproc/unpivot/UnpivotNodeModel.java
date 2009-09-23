@@ -42,6 +42,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -61,176 +62,185 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * Unpivoting node model which performs the UNPIVOTing operation based on
- * a number of selected order and value columns.
- * 
+ * a number of selected retained and value columns.
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class UnpivotNodeModel extends NodeModel {
-	
-	private final SettingsModelFilterString m_orderColumns =
-		UnpivotNodeDialogPane.createColumnFilter_OrderColumns();
-	
-	private final SettingsModelFilterString m_valueColumns =
-		UnpivotNodeDialogPane.createColumnFilter_ValueColumns();
-	
-	private final SettingsModelBoolean m_enableHilite =
-		UnpivotNodeDialogPane.createHiLiteModel();
-	
-	private HiLiteTranslator m_trans = null;
-	private final HiLiteHandler m_hilite = new HiLiteHandler();
-	
-	private static final String VALUE_COLUMN_VALUES = "ColumnValues";
-	private static final String VALUE_COLUMN_NAMES = "ColumnNames";
 
-	/**
-	 * Constructor that creates one data in- and one data out-port. 
-	 */
-	public UnpivotNodeModel() {
-		super(1, 1);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-			throws InvalidSettingsException {
-		List<String> valueColumns = m_valueColumns.getIncludeList();
-		if (valueColumns.isEmpty()) {
-			throw new InvalidSettingsException(
-					"No column 'value' defined for unpivoting operation.");
-		}
-		for (int i = 0; i < valueColumns.size(); i++) {
-			if (!inSpecs[0].containsName(valueColumns.get(i))) {
-				throw new InvalidSettingsException(
-						"Some columns ('values') are not in input, "
-						+ "node needs to be re-configured...");
-			}
-		}
-		List<String> orderColumns = m_orderColumns.getIncludeList();
-		for (int i = 0; i < orderColumns.size(); i++) {
-			if (!inSpecs[0].containsName(orderColumns.get(i))) {
-				throw new InvalidSettingsException(
-						"Some columns ('orders') are not in input, "
-						+ "node needs to be re-configured...");
-			}
-		}
-		return new DataTableSpec[]{createOutSpec(inSpecs[0])};
-	}
-	
-	private DataTableSpec createOutSpec(final DataTableSpec spec) {
-		List<String> valueColumns = m_valueColumns.getIncludeList();
-		List<String> orderColumns = m_orderColumns.getIncludeList();
-		DataColumnSpec[] outSpecs = new DataColumnSpec[orderColumns.size() + 2];
-		for (int i = 0; i < orderColumns.size(); i++) {
-			outSpecs[i] = spec.getColumnSpec(orderColumns.get(i));
-		}
-		DataType type = null;
-		for (int i = 0; i < valueColumns.size(); i++) {
-			DataType ctype = spec.getColumnSpec(valueColumns.get(i)).getType();
-			if (type == null) {
-				type = ctype;
-			} else {
-				type = DataType.getCommonSuperType(type, ctype);
-			}
-		}
-		int idx = 0;
-		String colName = VALUE_COLUMN_NAMES;
-		while (spec.containsName(colName)) {
-			colName = VALUE_COLUMN_NAMES + "(" + (idx++) + ")";
-		}
-		outSpecs[outSpecs.length - 2] = new DataColumnSpecCreator(
-				colName, StringCell.TYPE).createSpec();
-		idx = 0;
-		colName = VALUE_COLUMN_VALUES;
-		while (spec.containsName(colName)) {
-			colName = VALUE_COLUMN_VALUES + "(" + (idx++) + ")";
-		}
-		outSpecs[outSpecs.length - 1] = new DataColumnSpecCreator(
-				colName, type).createSpec();
-		return new DataTableSpec(outSpecs);
+    private final SettingsModelFilterString m_orderColumns =
+        UnpivotNodeDialogPane.createColumnFilterOrderColumns();
+
+    private final SettingsModelFilterString m_valueColumns =
+        UnpivotNodeDialogPane.createColumnFilterValueColumns();
+
+    private final SettingsModelBoolean m_enableHilite =
+        UnpivotNodeDialogPane.createHiLiteModel();
+
+    private HiLiteTranslator m_trans = null;
+    private final HiLiteHandler m_hilite = new HiLiteHandler();
+
+    private static final String VALUE_COLUMN_VALUES = "ColumnValues";
+    private static final String VALUE_COLUMN_NAMES = "ColumnNames";
+    private static final String ROWID_COLUMN = "RowIDs";
+
+    /**
+     * Constructor that creates one data in- and one data out-port.
+     */
+    public UnpivotNodeModel() {
+        super(1, 1);
     }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-			ExecutionContext exec) throws Exception {
-		DataTableSpec inSpec = inData[0].getSpec();
-		List<String> orderColumns = m_orderColumns.getIncludeList();
-		List<String> valueColumns = m_valueColumns.getIncludeList();
-		int[] orderColumnIdx = new int[orderColumns.size()];
-		for (int i = 0; i < orderColumnIdx.length; i++) {
-			orderColumnIdx[i] = inSpec.findColumnIndex(orderColumns.get(i));
-		}
-		final double newRowCnt = inData[0].getRowCount() * valueColumns.size();
-		final boolean enableHilite = m_enableHilite.getBooleanValue();
-		LinkedHashMap<RowKey, Set<RowKey>> map = 
-			new LinkedHashMap<RowKey, Set<RowKey>>();
-		DataTableSpec outSpec = createOutSpec(inSpec);
-		BufferedDataContainer buf = exec.createDataContainer(outSpec);
-		for (DataRow row : inData[0]) {
-			LinkedHashSet<RowKey> set = new LinkedHashSet<RowKey>();
-			FilterColumnRow crow = new FilterColumnRow(row, orderColumnIdx);
-			for (int i = 0; i < valueColumns.size(); i++) {
-				String colName = valueColumns.get(i);
-				DataCell acell = row.getCell(inSpec.findColumnIndex(colName));
-				RowKey rowKey = RowKey.createRowKey(buf.size());
-				if (enableHilite) {
-					set.add(rowKey);
-				}
-				buf.addRowToTable(new AppendedColumnRow(
-						rowKey, crow, new StringCell(colName), acell));
-				exec.checkCanceled();
-				exec.setProgress(buf.size() / newRowCnt);
-			}
-			if (enableHilite) {
-				map.put(crow.getKey(), set);
-			}
-		}
-		buf.close();
-		if (enableHilite) {
-			m_trans.setMapper(new DefaultHiLiteMapper(map));
-		} else {
-			m_trans.setMapper(null);
-		}
-		return new BufferedDataTable[]{buf.getTable()};
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-		if (m_trans != null) {
-			m_trans.setMapper(null);
-		}
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void setInHiLiteHandler(final int inIndex, 
-			final HiLiteHandler hiLiteHdl) {
-		if (m_trans == null) {
-			m_trans = new HiLiteTranslator(hiLiteHdl);
-			m_trans.addToHiLiteHandler(m_hilite);
-		} else if (m_trans.getFromHiLiteHandler() != hiLiteHdl) {
-			m_trans.removeAllToHiliteHandlers();
-			m_trans.setMapper(null);
-			m_trans.addToHiLiteHandler(m_hilite);
-		}
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-		return m_hilite;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+        List<String> valueColumns = m_valueColumns.getIncludeList();
+        if (valueColumns.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "No column 'value' defined for unpivoting operation.");
+        }
+        for (int i = 0; i < valueColumns.size(); i++) {
+            if (!inSpecs[0].containsName(valueColumns.get(i))) {
+                throw new InvalidSettingsException(
+                        "Some columns ('values') are not in input, "
+                        + "node needs to be re-configured...");
+            }
+        }
+        List<String> orderColumns = m_orderColumns.getIncludeList();
+        for (int i = 0; i < orderColumns.size(); i++) {
+            if (!inSpecs[0].containsName(orderColumns.get(i))) {
+                throw new InvalidSettingsException(
+                        "Some columns ('orders') are not in input, "
+                        + "node needs to be re-configured...");
+            }
+        }
+        return new DataTableSpec[]{createOutSpec(inSpecs[0])};
+    }
+
+    private DataTableSpec createOutSpec(final DataTableSpec spec) {
+        List<String> valueColumns = m_valueColumns.getIncludeList();
+        List<String> orderColumns = m_orderColumns.getIncludeList();
+        DataColumnSpec[] outSpecs = new DataColumnSpec[orderColumns.size() + 3];
+        for (int i = 0; i < orderColumns.size(); i++) {
+            outSpecs[i + 3] = spec.getColumnSpec(orderColumns.get(i));
+        }
+        DataType type = null;
+        for (int i = 0; i < valueColumns.size(); i++) {
+            DataType ctype = spec.getColumnSpec(valueColumns.get(i)).getType();
+            if (type == null) {
+                type = ctype;
+            } else {
+                type = DataType.getCommonSuperType(type, ctype);
+            }
+        }
+        int idx = 0;
+        String colName = ROWID_COLUMN;
+        while (spec.containsName(colName)) {
+            colName = ROWID_COLUMN + "(" + (idx++) + ")";
+        }
+        outSpecs[0] = new DataColumnSpecCreator(colName,
+                StringCell.TYPE).createSpec();
+        idx = 0;
+        colName = VALUE_COLUMN_NAMES;
+        while (spec.containsName(colName)) {
+            colName = VALUE_COLUMN_NAMES + "(" + (idx++) + ")";
+        }
+        outSpecs[1] = new DataColumnSpecCreator(
+                colName, StringCell.TYPE).createSpec();
+        idx = 0;
+        colName = VALUE_COLUMN_VALUES;
+        while (spec.containsName(colName)) {
+            colName = VALUE_COLUMN_VALUES + "(" + (idx++) + ")";
+        }
+        outSpecs[2] = new DataColumnSpecCreator(colName, type).createSpec();
+        return new DataTableSpec(outSpecs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+        DataTableSpec inSpec = inData[0].getSpec();
+        List<String> orderColumns = m_orderColumns.getIncludeList();
+        List<String> valueColumns = m_valueColumns.getIncludeList();
+        int[] orderColumnIdx = new int[orderColumns.size()];
+        for (int i = 0; i < orderColumnIdx.length; i++) {
+            orderColumnIdx[i] = inSpec.findColumnIndex(orderColumns.get(i));
+        }
+        final double newRowCnt = inData[0].getRowCount() * valueColumns.size();
+        final boolean enableHilite = m_enableHilite.getBooleanValue();
+        LinkedHashMap<RowKey, Set<RowKey>> map =
+            new LinkedHashMap<RowKey, Set<RowKey>>();
+        DataTableSpec outSpec = createOutSpec(inSpec);
+        BufferedDataContainer buf = exec.createDataContainer(outSpec);
+        for (DataRow row : inData[0]) {
+            LinkedHashSet<RowKey> set = new LinkedHashSet<RowKey>();
+            FilterColumnRow crow = new FilterColumnRow(row, orderColumnIdx);
+            for (int i = 0; i < valueColumns.size(); i++) {
+                String colName = valueColumns.get(i);
+                DataCell acell = row.getCell(inSpec.findColumnIndex(colName));
+                RowKey rowKey = RowKey.createRowKey(buf.size());
+                if (enableHilite) {
+                    set.add(rowKey);
+                }
+                DefaultRow drow = new DefaultRow(rowKey,
+                        new StringCell(row.getKey().getString()),
+                        new StringCell(colName), acell);
+                buf.addRowToTable(new AppendedColumnRow(rowKey, drow, crow));
+                exec.checkCanceled();
+                exec.setProgress(buf.size() / newRowCnt);
+            }
+            if (enableHilite) {
+                map.put(crow.getKey(), set);
+            }
+        }
+        buf.close();
+        if (enableHilite) {
+            m_trans.setMapper(new DefaultHiLiteMapper(map));
+        } else {
+            m_trans.setMapper(null);
+        }
+        return new BufferedDataTable[]{buf.getTable()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        if (m_trans != null) {
+            m_trans.setMapper(null);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex,
+            final HiLiteHandler hiLiteHdl) {
+        if (m_trans == null) {
+            m_trans = new HiLiteTranslator(hiLiteHdl);
+            m_trans.addToHiLiteHandler(m_hilite);
+        } else if (m_trans.getFromHiLiteHandler() != hiLiteHdl) {
+            m_trans.removeAllToHiliteHandlers();
+            m_trans.setMapper(null);
+            m_trans.addToHiLiteHandler(m_hilite);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_hilite;
+    }
 
     /**
      * {@inheritDoc}
@@ -265,37 +275,37 @@ public class UnpivotNodeModel extends NodeModel {
             }
         }
     }
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		m_orderColumns.loadSettingsFrom(settings);
-		m_valueColumns.loadSettingsFrom(settings);
-		m_enableHilite.loadSettingsFrom(settings);
-	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		m_orderColumns.saveSettingsTo(settings);
-		m_valueColumns.saveSettingsTo(settings);
-		m_enableHilite.saveSettingsTo(settings);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		m_orderColumns.validateSettings(settings);
-		m_valueColumns.validateSettings(settings);
-		m_enableHilite.validateSettings(settings);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_orderColumns.loadSettingsFrom(settings);
+        m_valueColumns.loadSettingsFrom(settings);
+        m_enableHilite.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_orderColumns.saveSettingsTo(settings);
+        m_valueColumns.saveSettingsTo(settings);
+        m_enableHilite.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_orderColumns.validateSettings(settings);
+        m_valueColumns.validateSettings(settings);
+        m_enableHilite.validateSettings(settings);
+    }
 
 }

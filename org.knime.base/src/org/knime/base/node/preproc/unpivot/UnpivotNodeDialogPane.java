@@ -29,37 +29,49 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class UnpivotNodeDialogPane extends DefaultNodeSettingsPane {
 
-	/**
-	 * 
-	 */
-	public UnpivotNodeDialogPane() {
-		createNewGroup(" Order columns ");
-		addDialogComponent(new DialogComponentColumnFilter(
-				createColumnFilter_OrderColumns(), 0));
-		createNewGroup(" Value columns ");
-		addDialogComponent(new DialogComponentColumnFilter(
-				createColumnFilter_ValueColumns(), 0));
-		createNewGroup(" Options ");
-		addDialogComponent(new DialogComponentBoolean(
-				createHiLiteModel(), "Enable hiliting"));
+    /**
+     * Create new unpivoting node dialog.
+     */
+    public UnpivotNodeDialogPane() {
+        createNewGroup(" Value columns ");
+        addDialogComponent(new DialogComponentColumnFilter(
+                createColumnFilterValueColumns(), 0, false));
+        createNewGroup(" Retained columns ");
+        addDialogComponent(new DialogComponentColumnFilter(
+                createColumnFilterOrderColumns(), 0, false));
+        createNewGroup(" Options ");
+        addDialogComponent(new DialogComponentBoolean(
+                createHiLiteModel(), "Enable hiliting"));
 
-	}
-	
-	static SettingsModelFilterString createColumnFilter_OrderColumns() {
-		return new SettingsModelFilterString("order_columns");
-	}
-	
-	static SettingsModelFilterString createColumnFilter_ValueColumns() {
-		return new SettingsModelFilterString("value_columns");
-	}
-	
-	static SettingsModelBoolean createHiLiteModel() {
-		return new SettingsModelBoolean("enable-hiliting", false);
-	}
+    }
+
+    /**
+     * Return settings model for retained output columns.
+     * @return settings model for retained columns
+     */
+    static SettingsModelFilterString createColumnFilterOrderColumns() {
+        return new SettingsModelFilterString("order_columns");
+    }
+
+    /**
+     * Return settings model for value columns.
+     * @return settings model for retained columns
+     */
+    static SettingsModelFilterString createColumnFilterValueColumns() {
+        return new SettingsModelFilterString("value_columns");
+    }
+
+    /**
+     * Create model to enable/disable hiliting.
+     * @return settings model for hiliting
+     */
+    static SettingsModelBoolean createHiLiteModel() {
+        return new SettingsModelBoolean("enable-hiliting", false);
+    }
 
 }
