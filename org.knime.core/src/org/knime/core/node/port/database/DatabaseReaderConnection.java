@@ -127,10 +127,6 @@ public final class DatabaseReaderConnection {
                 try {
                     // try to see if prepared statements are supported
                     m_stmt = conn.prepareStatement(pQuery);
-                    if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                        m_stmt.setFetchSize(
-                                DatabaseConnectionSettings.FETCH_SIZE);
-                    }
                     ((PreparedStatement) m_stmt).execute();
                     m_spec = createTableSpec(
                             ((PreparedStatement) m_stmt).getMetaData());
@@ -139,10 +135,6 @@ public final class DatabaseReaderConnection {
                             + e.getMessage(), e);
                     // otherwise use standard statement
                     m_stmt = conn.createStatement();
-                    if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                        m_stmt.setFetchSize(
-                                DatabaseConnectionSettings.FETCH_SIZE);
-                    }
                     result = m_stmt.executeQuery(pQuery);
                     m_spec = createTableSpec(result.getMetaData());
                 } finally {
@@ -152,10 +144,6 @@ public final class DatabaseReaderConnection {
                     // ensure we have a non-prepared statement to access data
                     if (m_stmt != null && m_stmt instanceof PreparedStatement) {
                         m_stmt = conn.createStatement();
-                        if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                            m_stmt.setFetchSize(
-                                    DatabaseConnectionSettings.FETCH_SIZE);
-                        }
                     }
                 }
             } catch (SQLException sql) {
@@ -186,6 +174,10 @@ public final class DatabaseReaderConnection {
             throws CanceledExecutionException, SQLException {
         try {
             final DataTableSpec spec = getDataTableSpec();
+            if (DatabaseConnectionSettings.FETCH_SIZE != null) {
+                m_stmt.setFetchSize(
+                        DatabaseConnectionSettings.FETCH_SIZE);
+            }
             final ResultSet result = m_stmt.executeQuery(m_conn.getQuery());
             return exec.createBufferedDataTable(new DataTable() {
                 /**
@@ -223,6 +215,10 @@ public final class DatabaseReaderConnection {
             final String query;
             if (cachedNoRows < 0) {
                 query = m_conn.getQuery();
+                if (DatabaseConnectionSettings.FETCH_SIZE != null) {
+                    m_stmt.setFetchSize(
+                            DatabaseConnectionSettings.FETCH_SIZE);
+                }
             } else {
                 final int hashAlias = System.identityHashCode(this);
                 query = "SELECT * FROM (" + m_conn.getQuery()
@@ -470,8 +466,7 @@ public final class DatabaseReaderConnection {
             try {
                 rowId = m_result.getRow();
             } catch (SQLException sqle) {
-                 handlerException(
-                         "SQL Exception while retrieving row id: ", sqle);
+                 // ignored
             }
             m_rowCounter++;
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
