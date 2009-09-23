@@ -107,12 +107,12 @@ public class String2DateDialog extends DefaultNodeSettingsPane {
         
         // configure how often the execute method may fail until 
         // cancels execution
-        createNewGroup("Cancel execution");
+        createNewGroup("Abort execution");
         setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentBoolean(m_cancelOnFailModel, 
-                "Cancel execution"));
+                "Abort execution..."));
         addDialogComponent(new DialogComponentNumber(m_failNoModel, 
-                " on this number of unresolved rows", 10));
+                "...after this number of unresolved rows", 10));
     }
     
     private void initializeModels() {
