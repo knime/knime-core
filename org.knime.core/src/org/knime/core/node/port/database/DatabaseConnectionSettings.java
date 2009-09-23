@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  */
 package org.knime.core.node.port.database;
 
@@ -51,76 +51,78 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabaseConnectionSettings {
-    
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DatabaseConnectionSettings.class);
-    
+
     /** Config for SQL statement. */
     public static final String CFG_STATEMENT = "statement";
-    
+
     /** Keeps the history of all loaded driver and its order. */
     public static final StringHistory DRIVER_ORDER = StringHistory.getInstance(
             "database_drivers");
-      
+
     /** Keeps the history of all database URLs. */
     public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
-    
-    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR = 
+
+    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
         Executors.newCachedThreadPool();
-    
-    /** 
+
+    /**
      * DriverManager login timeout for database connection; not implemented/
      * used by all databases.
      */
-    private static int LOGIN_TIMEOUT = 5;
-    static {
-    	String tout = System.getProperty(
-    			KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
-    	if (tout != null) {
-    		try {
-    			int timeout = Integer.parseInt(tout);
-    			if (timeout > 0) {
-    				LOGIN_TIMEOUT = timeout;
-    			} else {
-    				LOGGER.warn("Database login timeout not valid (<=0) '" 
-    					+ tout + "', using default '" + LOGIN_TIMEOUT + "'.");
-    			}
-    		} catch (NumberFormatException nfe) {
-				LOGGER.warn("Database login timeout not valid '" + tout 
-						+ "', using default '" + LOGIN_TIMEOUT + "'.");
-			}
-    	}
-    	LOGGER.info("Database login timeout: " + LOGIN_TIMEOUT + " sec.");
-    	DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
+    private static final int LOGIN_TIMEOUT = initLoginTimeout();
+    private static int initLoginTimeout() {
+        String tout = System.getProperty(
+                KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
+        int timeout = 5;
+        if (tout != null) {
+            try {
+                timeout = Integer.parseInt(tout);
+                if (timeout <= 0) {
+                    LOGGER.warn("Database login timeout not valid (<=0) '"
+                        + tout + "', using default '" + LOGIN_TIMEOUT + "'.");
+                }
+            } catch (NumberFormatException nfe) {
+                LOGGER.warn("Database login timeout not valid '" + tout
+                        + "', using default '" + LOGIN_TIMEOUT + "'.");
+            }
+        }
+        LOGGER.info("Database login timeout: " + LOGIN_TIMEOUT + " sec.");
+        DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
+        return timeout;
     }
-    
-    /** 
+
+    /**
      * DriverManager fetch size to chunk specified number of rows.
      */
-    private static Integer FETCH_SIZE = null;
-    static {
-    	String fsize = System.getProperty(
-    			KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
-    	if (fsize != null) {
-    		try {
-    			int fetchsize = Integer.parseInt(fsize);
-    			if (fetchsize >= 0) {
-    				FETCH_SIZE = fetchsize;
-    			} else {
-    				LOGGER.warn("Database fetch size not valid (<0) '" + fsize 
-    						+ "', using default '" + FETCH_SIZE + "'.");
-    			}
-    		} catch (NumberFormatException nfe) {
-				LOGGER.warn("Database fetch size not valid '" + fsize 
-						+ "', using default '" + FETCH_SIZE + "'.");
-			}
-    		LOGGER.info("Database fetch size: " + FETCH_SIZE + " rows.");
-    	}
+    public static final Integer FETCH_SIZE = initFetchSize();
+    private static Integer initFetchSize() {
+        String fsize = System.getProperty(
+                KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
+        if (fsize != null) {
+            try {
+                int fetchsize = Integer.parseInt(fsize);
+                if (fetchsize >= 0) {
+                    LOGGER.info("Database fetch size: "
+                        + FETCH_SIZE + " rows.");
+                    return fetchsize;
+                } else {
+                    LOGGER.warn("Database fetch size not valid (<0) '" + fsize
+                            + "', using default '" + FETCH_SIZE + "'.");
+                }
+            } catch (NumberFormatException nfe) {
+                LOGGER.warn("Database fetch size not valid '" + fsize
+                        + "', using default '" + FETCH_SIZE + "'.");
+            }
+        }
+        return null;
     }
 
     private String m_driver;
@@ -143,7 +145,7 @@ public class DatabaseConnectionSettings {
         // create database name from driver class
         m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
     }
-    
+
     /**
      * Creates a new <code>DBConnection</code> based on the given connection
      * object.
@@ -156,7 +158,7 @@ public class DatabaseConnectionSettings {
         m_user   = conn.m_user;
         m_pass   = conn.m_pass;
     }
-    
+
     /**
      * Create a database connection based on this settings.
      * @return a new database connection object.
@@ -167,7 +169,7 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    public Connection createConnection() 
+    public Connection createConnection()
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
@@ -178,19 +180,19 @@ public class DatabaseConnectionSettings {
         }
         Driver d = DatabaseDriverLoader.registerDriver(m_driver);
         if (!d.acceptsURL(m_dbName)) {
-            throw new InvalidSettingsException("Driver \"" + d 
+            throw new InvalidSettingsException("Driver \"" + d
                     + "\" does not accept URL: " + m_dbName);
         }
-        
+
         final String password = KnimeEncryption.decrypt(m_pass);
         final String user = m_user;
         final String dbName = m_dbName;
-        
+
         Callable<Connection> callable = new Callable<Connection>() {
             /** {@inheritDoc} */
             @Override
             public Connection call() throws Exception {
-                LOGGER.debug("Opening database connection to \"" 
+                LOGGER.debug("Opening database connection to \""
                         + dbName + "\"...");
                 return DriverManager.getConnection(dbName, user, password);
             }
@@ -204,7 +206,7 @@ public class DatabaseConnectionSettings {
             throw new SQLException(ie);
         }
     }
-    
+
     /**
      * Save settings.
      * @param settings connection settings
@@ -214,7 +216,7 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
-        final File driverFile = 
+        final File driverFile =
             DatabaseDriverLoader.getDriverFileForDriverClass(m_driver);
         settings.addString("loaded_driver",
                 (driverFile == null ? null : driverFile.getAbsolutePath()));
@@ -243,7 +245,7 @@ public class DatabaseConnectionSettings {
         return loadConnection(settings, true);
     }
 
-    private boolean loadConnection(final ConfigRO settings, 
+    private boolean loadConnection(final ConfigRO settings,
             final boolean write) throws InvalidSettingsException {
         if (settings == null) {
             throw new InvalidSettingsException(
@@ -259,7 +261,7 @@ public class DatabaseConnectionSettings {
             m_driver = driver;
             DRIVER_ORDER.add(m_driver);
             boolean changed = false;
-            if (m_user != null && m_dbName != null && m_pass != null) { 
+            if (m_user != null && m_dbName != null && m_pass != null) {
                 if (!user.equals(m_user) || !database.equals(m_dbName)
                         || !password.equals(m_pass)) {
                     changed = true;
@@ -275,7 +277,7 @@ public class DatabaseConnectionSettings {
                 try {
                     DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
-                    LOGGER.info("Could not load driver from file \"" 
+                    LOGGER.info("Could not load driver from file \""
                             + loadedDriver + "\".", t);
                 }
             }
@@ -283,7 +285,7 @@ public class DatabaseConnectionSettings {
         }
         return false;
     }
-    
+
     /**
      * Execute statement on current database connection.
      * @param statement to be executed
@@ -303,9 +305,6 @@ public class DatabaseConnectionSettings {
         try {
             conn = createConnection();
             stmt = conn.createStatement();
-            if (FETCH_SIZE != null) {
-            	stmt.setFetchSize(FETCH_SIZE);
-            }
             stmt.execute(statement);
         } finally {
             if (stmt != null) {
@@ -318,7 +317,7 @@ public class DatabaseConnectionSettings {
             }
         }
     }
-    
+
     /**
      * Create connection model with all settings used to create a database
      * connection.
@@ -328,5 +327,5 @@ public class DatabaseConnectionSettings {
         ModelContent cont = new ModelContent("database_connection_model");
         saveConnection(cont);
         return cont;
-    } 
+    }
 }

@@ -38,6 +38,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -46,18 +47,18 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
 /**
  * Creates a connection to write to database.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBWriterConnection {
-    
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterConnection.class);
-    
+
     private DBWriterConnection() {
-        
+
     }
-    
+
     /**
      * Create connection to write into database.
      * @param dbConn a database connection object
@@ -65,13 +66,13 @@ final class DBWriterConnection {
      * @param table name of table to write
      * @param appendData if checked the data is appended to an existing table
      * @param exec Used the cancel writing.
-     * @param sqlTypes A mapping from column name to SQL-type. 
+     * @param sqlTypes A mapping from column name to SQL-type.
      * @return error string or null, if non
      * @throws Exception if connection could not be established
      */
     static final String writeData(final DatabaseConnectionSettings dbConn,
-            final String table, final BufferedDataTable data, 
-            final boolean appendData, final ExecutionMonitor exec, 
+            final String table, final BufferedDataTable data,
+            final boolean appendData, final ExecutionMonitor exec,
             final Map<String, String> sqlTypes) throws Exception {
         final Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();
@@ -85,17 +86,17 @@ final class DBWriterConnection {
                 rs = conn.createStatement().executeQuery(
                         "SELECT * FROM " + table);
             } catch (SQLException sqle) {
-                LOGGER.info("Table \"" + table 
+                LOGGER.info("Table \"" + table
                         + "\" does not exist in database, "
                         + "will create new table.");
                 // and create new table
-                conn.createStatement().execute("CREATE TABLE " + table + " " 
+                conn.createStatement().execute("CREATE TABLE " + table + " "
                         + createStmt(spec, sqlTypes));
             }
             // if table exists
             if (rs != null) {
                 ResultSetMetaData rsmd = rs.getMetaData();
-                final Map<String, Integer> columnNames = 
+                final Map<String, Integer> columnNames =
                     new LinkedHashMap<String, Integer>();
                 for (int i = 0; i < spec.getNumColumns(); i++) {
                     String colName = replaceColumnName(
@@ -113,7 +114,7 @@ final class DBWriterConnection {
                 }
                 if (columnNotInSpec.size() > 0) {
                     throw new RuntimeException("No. of columns in input table"
-                            + " > in database; not existing columns: " 
+                            + " > in database; not existing columns: "
                             + columnNotInSpec.toString());
                 }
                 mapping = new int[rsmd.getColumnCount()];
@@ -127,16 +128,13 @@ final class DBWriterConnection {
                     DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                     int type = rsmd.getColumnType(i + 1);
                     switch (type) {
-                        // check all int compatible types 
+                        // check all int compatible types
+                        case Types.TINYINT:
+                        case Types.SMALLINT:
                         case Types.INTEGER:
                         case Types.BIT:
-                        case Types.BINARY:
                         case Types.BOOLEAN:
-                        case Types.VARBINARY:
-                        case Types.SMALLINT:
-                        case Types.TINYINT:
-                        case Types.BIGINT:
-                        // check all double compatible types
+                            // those types must be compatible to IntValue
                             if (!cspec.getType().isCompatible(IntValue.class)) {
                                 throw new RuntimeException("Column \"" + name
                                         + "\" of type \"" + cspec.getType()
@@ -145,13 +143,15 @@ final class DBWriterConnection {
                                         + "\" in database at position " + i);
                             }
                             break;
+                        // check all double compatible types
                         case Types.FLOAT:
                         case Types.DOUBLE:
                         case Types.NUMERIC:
                         case Types.DECIMAL:
                         case Types.REAL:
-                            if (!cspec.getType().isCompatible(
-                                    DoubleValue.class)) {
+                        case Types.BIGINT:
+                            // those types must also be compatible to IntValue
+                            if (!cspec.getType().isCompatible(IntValue.class)) {
                                 throw new RuntimeException("Column \"" + name
                                         + "\" of type \"" + cspec.getType()
                                         + "\" from input does not match type "
@@ -159,7 +159,21 @@ final class DBWriterConnection {
                                         + "\" in database at position " + i);
                             }
                             break;
-                        // all other cases are fine for string-type columns
+                        // check for data compatible types
+                        case Types.DATE:
+                        case Types.TIME:
+                        case Types.TIMESTAMP:
+                            // those types must also be compatible to DataValue
+                            if (!cspec.getType().isCompatible(
+                                    DateAndTimeValue.class)) {
+                                throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
+                            }
+                            break;
+                        // all other cases are defined as StringValue types
                     }
                 }
                 rs.close();
@@ -178,16 +192,16 @@ final class DBWriterConnection {
                 // remove existing table (if any)
                 conn.createStatement().execute("DROP TABLE " + table);
             } catch (Throwable t) {
-                LOGGER.info("Can't drop table \"" + table 
+                LOGGER.info("Can't drop table \"" + table
                         + "\", will create new table.");
             }
             // and create new table
-            conn.createStatement().execute("CREATE TABLE " + table + " " 
+            conn.createStatement().execute("CREATE TABLE " + table + " "
                     + createStmt(spec, sqlTypes));
         }
-        
+
         // creates the wild card string based on the number of columns
-        // this string it used everytime an new row is inserted into the db 
+        // this string it used everytime an new row is inserted into the db
         final StringBuilder wildcard = new StringBuilder("(");
         for (int i = 0; i < mapping.length; i++) {
             if (i > 0) {
@@ -197,8 +211,8 @@ final class DBWriterConnection {
             }
         }
         wildcard.append(")");
-        
-        // problems writing more than 13 columns. the prepare statement 
+
+        // problems writing more than 13 columns. the prepare statement
         // ensures that we can set the columns directly row-by-row, the database
         // will handle the commit
         int rowCount = data.getRowCount();
@@ -207,7 +221,7 @@ final class DBWriterConnection {
         int allErrors = 0;
 
         // create table meta data with empty column information
-        final PreparedStatement stmt = conn.prepareStatement("INSERT INTO " 
+        final PreparedStatement stmt = conn.prepareStatement("INSERT INTO "
                 + table + " VALUES " + wildcard.toString());
         try {
             conn.setAutoCommit(false);
@@ -233,14 +247,24 @@ final class DBWriterConnection {
                     } else if (cspec.getType().isCompatible(
                             DoubleValue.class)) {
                         if (cell.isMissing()) {
-                            stmt.setNull(dbIdx, Types.NUMERIC);
+                            stmt.setNull(dbIdx, Types.DOUBLE);
                         } else {
                             double dbl = ((DoubleValue) cell).getDoubleValue();
                             if (Double.isNaN(dbl)) {
-                                stmt.setNull(dbIdx, Types.NUMERIC);
+                                stmt.setNull(dbIdx, Types.DOUBLE);
                             } else {
                                 stmt.setDouble(dbIdx, dbl);
                             }
+                        }
+                    } else if (cspec.getType().isCompatible(
+                            DateAndTimeValue.class)) {
+                        if (cell.isMissing()) {
+                            stmt.setNull(dbIdx, Types.DATE);
+                        } else {
+                            long longTime =
+                                ((DateAndTimeValue) cell).getUTCTimeInMillis();
+                            java.sql.Date date = new java.sql.Date(longTime);
+                            stmt.setDate(dbIdx, date);
                         }
                     } else {
                         if (cell.isMissing()) {
@@ -255,7 +279,7 @@ final class DBWriterConnection {
                 } catch (Throwable t) {
                     allErrors++;
                     if (errorCnt > -1) {
-                        String errorMsg = "Error in row #" + cnt + ": " 
+                        String errorMsg = "Error in row #" + cnt + ": "
                             + row.getKey() + ", " + t.getMessage();
                         exec.setMessage(errorMsg);
                         if (errorCnt++ < 10) {
@@ -272,7 +296,7 @@ final class DBWriterConnection {
             if (allErrors == 0) {
                 return null;
             } else {
-                return "Errors \"" + allErrors + "\" writing " 
+                return "Errors \"" + allErrors + "\" writing "
                     + rowCount + " rows.";
             }
         } finally {
@@ -280,8 +304,8 @@ final class DBWriterConnection {
             conn.close();
         }
     }
-    
-    private static String createStmt(final DataTableSpec spec, 
+
+    private static String createStmt(final DataTableSpec spec,
             final Map<String, String> sqlTypes) {
         StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
@@ -296,7 +320,7 @@ final class DBWriterConnection {
         buf.append(")");
         return buf.toString();
     }
-    
+
     private static String replaceColumnName(final String oldName) {
         return oldName.replaceAll("[^a-zA-Z0-9]", "_");
     }
