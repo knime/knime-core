@@ -24,9 +24,13 @@
  */
 package org.knime.workbench.help.intro;
 
-import org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog;
+import java.lang.reflect.Constructor;
+
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Custom action to open the install wizard.
@@ -45,12 +49,38 @@ public class InvokeInstallSiteAction extends Action {
      */
     @Override
     public void run() {
-        UpdateAndInstallDialog dialog = new UpdateAndInstallDialog(
-                Display.getDefault().getActiveShell(), KNIME_PROFILE_ID);
-        dialog.open();
+        try {
+            /* the following code does not compile on eclipse 3.5, we try to use
+             * reflection here to overcome the compile errors. The 
+             * UpdateAndInstallDialog class has been removed; replaced by
+             * UpdateWizard class.
+             * http://wiki.eclipse.org/Equinox/p2/Adding_Self-Update_to_an_RCP_Application 
+             */
+//            UpdateAndInstallDialog dialog = new UpdateAndInstallDialog(
+//                    Display.getDefault().getActiveShell(), KNIME_PROFILE_ID);
+//            dialog.open();
+            Class<?> class34 = Class.forName("org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog");
+            Constructor<?> constructor = class34.getConstructor(Shell.class, String.class);
+            Dialog dialog = (Dialog)constructor.newInstance(Display.getDefault().getActiveShell(), KNIME_PROFILE_ID);
+            dialog.open();
+            return;
+        } catch (Exception e) {
+            NodeLogger.getLogger(getClass()).warn("Unable to invoke update " 
+                    + "action, could not instantiate dialog class " 
+                    + "(3.4/3.5 problem?)", e);
+        }
     }
 
-
+    /** {@inheritDoc} */
+    @Override
+    public boolean isEnabled() {
+        try {
+            Class.forName("org.eclipse.equinox.internal.p2.ui.sdk.UpdateAndInstallDialog");
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+        return super.isEnabled();
+    }
 
     /**
      * {@inheritDoc}
