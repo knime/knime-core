@@ -17,6 +17,12 @@ import org.knime.timeseries.util.TimeLevelNames;
  */
 public class Granularity {
     
+    /** Millisecond. */
+    public static final Granularity MILLISECOND = new Granularity(
+            TimeLevelNames.MILLISECOND, 1);
+    /** Second. */
+    public static final Granularity SECOND = new Granularity(
+            TimeLevelNames.SECOND, 1000);
     /** Minute. */
     public static final Granularity MINUTE = new Granularity(
             TimeLevelNames.MINUTE, 1000 * 60);
@@ -52,6 +58,8 @@ public class Granularity {
         names.add(DAY.getName());
         names.add(HOUR.getName());
         names.add(MINUTE.getName());
+        names.add(SECOND.getName());
+        names.add(MILLISECOND.getName());
         return names;
     }
     
@@ -94,7 +102,7 @@ public class Granularity {
     
     /**
      * 
-     * @param name name of the granularity (usually one of 
+     * @param name of the granularity (usually one of 
      *  {@link TimeLevelNames})
      * @return the referring granularity or <code>null</code>
      */
@@ -113,6 +121,10 @@ public class Granularity {
             return HOUR;
         } else if (TimeLevelNames.MINUTE.equals(name)) {
             return MINUTE;
+        } else if (TimeLevelNames.SECOND.equals(name)) {
+            return SECOND;
+        } else if (TimeLevelNames.MILLISECOND.equals(name)) {
+            return MILLISECOND;
         } else {
             return null;
         }

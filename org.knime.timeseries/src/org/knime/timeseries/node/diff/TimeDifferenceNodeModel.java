@@ -9,6 +9,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeValue;
@@ -91,10 +92,13 @@ public class TimeDifferenceNodeModel extends NodeModel {
              */
             @Override
             public DataCell getCell(final DataRow row) {
-                long first = ((DateAndTimeValue)row.getCell(m_col1Idx))
-                    .getUTCTimeInMillis();
-                long last = ((DateAndTimeValue)row.getCell(m_col2Idx))
-                    .getUTCTimeInMillis();
+                DataCell cell1 = row.getCell(m_col1Idx);
+                DataCell cell2 = row.getCell(m_col2Idx);
+                if ((cell1.isMissing()) || (cell2.isMissing())) {
+                    return DataType.getMissingCell();
+                }
+                long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
+                long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
                 double diffTime = (last - first) / g.getFactor();
                 BigDecimal bd = new BigDecimal(diffTime);
                 bd = bd.setScale(m_rounding.getIntValue(),

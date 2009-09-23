@@ -52,7 +52,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
                         .getDefaultGranularityNames()));
         // fraction digits for rounding
         addDialogComponent(new DialogComponentNumber(createRoundingModel(),
-                "Rounding mode", 1));
+                "Rounding to .. digits", 1));
         // new column name
         addDialogComponent(new DialogComponentString(createNewColNameModel(),
                 "Appended column name:"));
@@ -72,7 +72,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     }
 
     static SettingsModelString createNewColNameModel() {
-        return new SettingsModelString(CFG_NEW_COL_NAME, "TIME_DIFFERENCE");
+        return new SettingsModelString(CFG_NEW_COL_NAME, "time diff");
     }
 
     static SettingsModelString createGranularityModel() {
