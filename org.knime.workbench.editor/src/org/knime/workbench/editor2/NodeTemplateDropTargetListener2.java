@@ -35,8 +35,8 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.NodeUsageRegistry;
@@ -109,6 +109,12 @@ public class NodeTemplateDropTargetListener2 implements
                     m_viewer.getControl()
                     .toControl(event.x, event.y).y);
         LOGGER.debug("to control: " + p);
+        // subtract this amount in order to have the node more or less centered
+        // at the cursor location
+        // more or less because the nodes are still of different width depending
+        // on their name
+        p.x -= 40;
+        p.y -= 40;
         return p;
     }
 
