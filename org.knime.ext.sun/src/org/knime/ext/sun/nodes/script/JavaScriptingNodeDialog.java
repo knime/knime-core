@@ -230,7 +230,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_returnTypeButtonGroup.add(intReturnRadio);
         m_returnTypeButtonGroup.add(doubleReturnRadio);
         m_returnTypeButtonGroup.add(stringReturnRadio);
-        m_returnTypeButtonGroup.add(dateReturnRadio);
+        /* disabled due to pending discussion on core data type. */
+        // m_returnTypeButtonGroup.add(dateReturnRadio);
 
         m_isArrayReturnChecker = new JCheckBox("Array Return");
 
