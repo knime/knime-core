@@ -7,11 +7,12 @@
     </shortDescription>
     <fullDescription>
         <intro>
-            Extracts from input table a sub-table with data 
-            between TimeStamp1 and Timestamp2.
+            Extracts all rows within a given time windows from the input
+            data table. The time window is specified by a start and end
+            date (and time).
         </intro>
         <option name="Columns containing Timestamp">
-        Select the input column containing timestamps.</option>
+        Select the input column containing date/time stamps.</option>
         <option name="From: Timestamp">
         Start date/time of the time window.</option>
         <option name="To: Timestamp">
@@ -20,7 +21,7 @@
     <ports>
         <inPort index="0" name="Input column">
         Table containing timestamp cells.</inPort>
-        <outPort index="0" name="Wrapped output">
+        <outPort index="0" name="Filtered (time window) output">
         Sub-Table containing only data within time window.</outPort>
     </ports>
 </knimeNode>
