@@ -157,6 +157,16 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             throwCoreException("Resource \"" + workflowPath.toString()
                     + "\" does already exist.", null);
         }
+        // check if there is a folder with the same name on the file system
+        // see bug (http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=1912)
+        IPath rootLocation = root.getLocation();
+        if (rootLocation != null) {
+            IPath absolutePath = rootLocation.append(workflowPath);
+            if (absolutePath.toFile().exists()) {
+                throwCoreException(
+                        "Resource " + workflowPath + " already exists!", null);
+            }
+        }
         ContainerGenerator generator = new ContainerGenerator(workflowPath);
         IContainer containerResult = generator.generateContainer(monitor);
         if (containerResult instanceof IProject) {
