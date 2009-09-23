@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -30,6 +30,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -44,7 +45,7 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 /**
  * Database writer model which creates a new table and adds the entire table to
  * it.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBWriterNodeModel extends NodeModel {
@@ -53,14 +54,14 @@ final class DBWriterNodeModel extends NodeModel {
      * TODO not yet supported Double.MAX_VALUE, Double.NEGATIVE_INFINITY, and
      * DOUBLE.POSITIVE_INFINITY
      */
-    
+
     private final DatabaseConnectionSettings m_conn;
 
     private String m_table = null;
-    
+
     private boolean m_append = false;
 
-    private final Map<String, String> m_types = 
+    private final Map<String, String> m_types =
         new LinkedHashMap<String, String>();
 
     /** Default SQL-type for Strings. */
@@ -72,9 +73,12 @@ final class DBWriterNodeModel extends NodeModel {
     /** Default SQL-type for Doubles. */
     static final String SQL_TYPE_DOUBLE = "numeric(30,10)";
 
+    /** Default SQL-type for Date. */
+    static final String SQL_TYPE_DATEANDTIME = "date";
+
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
-    
+
     /**
      * Creates a new model with one data input.
      */
@@ -119,7 +123,7 @@ final class DBWriterNodeModel extends NodeModel {
     }
 
     private void loadSettings(
-            final NodeSettingsRO settings, final boolean write) 
+            final NodeSettingsRO settings, final boolean write)
             throws InvalidSettingsException {
         boolean append = settings.getBoolean("append_data", false);
         String table = settings.getString("table");
@@ -135,7 +139,7 @@ final class DBWriterNodeModel extends NodeModel {
             // load SQL type for each column
             m_types.clear();
             try {
-                NodeSettingsRO typeSett = 
+                NodeSettingsRO typeSett =
                     settings.getNodeSettings(CFG_SQL_TYPES);
                 for (String key : typeSett.keySet()) {
                     m_types.put(key, typeSett.getString(key));
@@ -210,6 +214,8 @@ final class DBWriterNodeModel extends NodeModel {
                     sqlType = DBWriterNodeModel.SQL_TYPE_INTEGER;
                 } else if (type.isCompatible(DoubleValue.class)) {
                     sqlType = DBWriterNodeModel.SQL_TYPE_DOUBLE;
+                } else if (type.isCompatible(DateAndTimeValue.class)) {
+                    sqlType = DBWriterNodeModel.SQL_TYPE_DATEANDTIME;
                 } else {
                     sqlType = DBWriterNodeModel.SQL_TYPE_STRING;
                 }
@@ -218,17 +224,17 @@ final class DBWriterNodeModel extends NodeModel {
         }
         m_types.clear();
         m_types.putAll(map);
-        
+
         // throw exception if no data provided
         if (inSpecs[0].getNumColumns() == 0) {
             throw new InvalidSettingsException("No columns in input data.");
         }
-        
+
         if (!m_append && m_table != null) {
-            super.setWarningMessage("Existing table \"" 
+            super.setWarningMessage("Existing table \""
                     + m_table + "\" will be dropped!");
         }
-        
+
         return new DataTableSpec[0];
     }
 }

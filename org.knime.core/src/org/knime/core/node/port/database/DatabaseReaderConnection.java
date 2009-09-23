@@ -280,6 +280,7 @@ public final class DatabaseReaderConnection {
                 case Types.DATE:
                 case Types.TIMESTAMP:
                     newType = DateAndTimeCell.TYPE;
+                    break;
                 default:
                     newType = StringCell.TYPE;
             }
@@ -609,7 +610,7 @@ public final class DatabaseReaderConnection {
             if (wasNull() || date == null) {
                 return null;
             } else {
-                return new DateAndTimeCell(date.getTime(), true, true, true);
+                return new DateAndTimeCell(date.getTime(), true, false, false);
             }
         }
 
@@ -628,7 +629,7 @@ public final class DatabaseReaderConnection {
                 return null;
             } else {
                 return new DateAndTimeCell(
-                        timestamp.getTime(), false, false, true);
+                        timestamp.getTime(), true, true, true);
             }
         }
 

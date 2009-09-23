@@ -261,10 +261,20 @@ final class DBWriterConnection {
                         if (cell.isMissing()) {
                             stmt.setNull(dbIdx, Types.DATE);
                         } else {
-                            long longTime =
-                                ((DateAndTimeValue) cell).getUTCTimeInMillis();
-                            java.sql.Date date = new java.sql.Date(longTime);
-                            stmt.setDate(dbIdx, date);
+                        	DateAndTimeValue dateCell = (DateAndTimeValue) cell;
+                        	if (!dateCell.hasTime() && !dateCell.hasMillis()) {
+                        		java.sql.Date date = new java.sql.Date(
+                        				dateCell.getUTCTimeInMillis());
+                        		stmt.setDate(dbIdx, date);
+                        	} else if (!dateCell.hasDate()) {
+                        		java.sql.Time time = new java.sql.Time(
+                        				dateCell.getUTCTimeInMillis());
+                        		stmt.setTime(dbIdx, time);
+                        	} else {
+                        		java.sql.Timestamp timestamp = new java.sql.Timestamp(
+                        				dateCell.getUTCTimeInMillis());
+                        		stmt.setTimestamp(dbIdx, timestamp);
+                        	}
                         }
                     } else {
                         if (cell.isMissing()) {

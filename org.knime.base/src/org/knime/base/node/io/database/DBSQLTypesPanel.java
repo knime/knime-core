@@ -35,16 +35,17 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Panel which allows to specify an SQL type for each column.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBSQLTypesPanel extends JPanel {
-    
+
     /** Keep column name from spec to text field which contains the SQL type. */
     private final Map<String, JTextField> m_map;
 
@@ -55,7 +56,7 @@ final class DBSQLTypesPanel extends JPanel {
         super(new GridLayout(0, 1));
         m_map = new LinkedHashMap<String, JTextField>();
     }
-    
+
     /**
      * Reads settings and inits the panel with column name to SQL-type
      * mapping read from spec and settings object. If no type is available
@@ -92,6 +93,8 @@ final class DBSQLTypesPanel extends JPanel {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_INTEGER);
             } else if (cspec.getType().isCompatible(DoubleValue.class)) {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_DOUBLE);
+            } else if (cspec.getType().isCompatible(DateAndTimeValue.class)) {
+                textFld.setText(DBWriterNodeModel.SQL_TYPE_DATEANDTIME);
             } else {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_STRING);
             }
@@ -101,15 +104,15 @@ final class DBSQLTypesPanel extends JPanel {
             m_map.put(colName, textFld);
         }
     }
-    
+
     /**
-     * Saves SQL types by column name. 
+     * Saves SQL types by column name.
      * @param settings Save column to SQL mapping to.
      */
     void saveSettingsTo(final NodeSettingsWO settings) {
         for (Map.Entry<String, JTextField> e : m_map.entrySet()) {
             String type = e.getValue().getText().trim();
             settings.addString(e.getKey(), type);
-        }   
+        }
     }
 }
