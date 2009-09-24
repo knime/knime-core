@@ -5,10 +5,6 @@
          point="org.knime.workbench.repository.nodes">
        <node
             category-path="/timeseries"
-            factory-class="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"
-            id="org.knime.timeseries.node.filter.sample.OneSampleperDayNodeFactory"/>
-       <node
-            category-path="/timeseries"
             factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"
             id="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"/>
       <node
@@ -25,12 +21,6 @@
             expert-flag="false"
             factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory"
             id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
-      </node>
-      <node
-            category-path="/timeseries"
-            expert-flag="false"
-            factory-class="org.knime.timeseries.node.aggregate.TimeAggregatorNodeFactory"
-            id="org.knime.timeseries.node.aggregate.TimeAggregatorNodeFactory">
       </node>
       <node
             category-path="timeseries"
