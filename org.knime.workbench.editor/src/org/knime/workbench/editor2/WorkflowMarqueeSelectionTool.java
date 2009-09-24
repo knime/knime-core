@@ -66,7 +66,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * This behaviour selects nodes completely encompassed by the marquee
      * rectangle. This is the default behaviour for this tool.
-     * 
+     *
      * @since 3.1
      */
     public static final int BEHAVIOR_NODES_CONTAINED =
@@ -74,7 +74,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
 
     /**
      * This behaviour selects connections that intersect the marquee rectangle.
-     * 
+     *
      * @since 3.1
      */
     public static final int BEHAVIOR_CONNECTIONS_TOUCHED =
@@ -83,7 +83,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * This behaviour selects nodes completely encompassed by the marquee
      * rectangle, and all connections between those nodes.
-     * 
+     *
      * @since 3.1
      */
     public static final int BEHAVIOR_NODES_AND_CONNECTIONS =
@@ -92,7 +92,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * This behaviour selects nodes completely encompassed by the marquee
      * rectangle, and all connections between those nodes.
-     * 
+     *
      * @since KNIME development (knime 1.2.2)
      */
     public static final int BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED =
@@ -136,7 +136,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * @see org.eclipse.gef.tools.AbstractTool#applyProperty(java.lang.Object,
      *      java.lang.Object)
      */
-    protected void applyProperty(Object key, Object value) {
+    @Override
+    protected void applyProperty(final Object key, final Object value) {
         if (PROPERTY_MARQUEE_BEHAVIOR.equals(key)) {
             if (value instanceof Integer)
                 setMarqueeBehavior(((Integer)value).intValue());
@@ -145,8 +146,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         super.applyProperty(key, value);
     }
 
-    private void calculateConnections(Collection newSelections,
-            Collection deselections) {
+    private void calculateConnections(final Collection newSelections,
+            final Collection deselections) {
         // determine the currently selected nodes minus the ones that are to be
         // deselected
         Collection currentNodes = new HashSet();
@@ -204,8 +205,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         deselections.addAll(connections);
     }
 
-    private void calculateNewSelection(Collection newSelections,
-            Collection deselections) {
+    private void calculateNewSelection(final Collection newSelections,
+            final Collection deselections) {
         Rectangle marqueeRect = getMarqueeSelectionRectangle();
         for (Iterator itr = getAllChildren().iterator(); itr.hasNext();) {
             GraphicalEditPart child = (GraphicalEditPart)itr.next();
@@ -215,7 +216,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                     || !isFigureVisible(figure) || !figure.isShowing())
                 continue;
             if (!(child instanceof NodeContainerEditPart
-                    || child instanceof ConnectionContainerEditPart 
+                    || child instanceof ConnectionContainerEditPart
                     || child instanceof AbstractWorkflowPortBarEditPart)) {
                 continue;
             }
@@ -272,7 +273,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             calculateConnections(newSelections, deselections);
     }
 
-    private boolean wasSelected(EditPart part) {
+    private boolean wasSelected(final EditPart part) {
         for (Object o : alreadySelectedEditParts) {
             if (o == part) {
                 return true;
@@ -288,6 +289,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * Erases feedback if necessary and puts the tool into the terminal state.
      */
+    @Override
     public void deactivate() {
         if (isInState(STATE_DRAG_IN_PROGRESS)) {
             eraseMarqueeFeedback();
@@ -321,7 +323,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         return allChildren;
     }
 
-    private void getAllChildren(EditPart editPart, Set allChildren) {
+    private void getAllChildren(final EditPart editPart, final Set allChildren) {
         List children = editPart.getChildren();
         for (int i = 0; i < children.size(); i++) {
             GraphicalEditPart child = (GraphicalEditPart)children.get(i);
@@ -341,6 +343,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#getCommandName()
      */
+    @Override
     protected String getCommandName() {
         return REQ_SELECTION;
     }
@@ -348,6 +351,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#getDebugName()
      */
+    @Override
     protected String getDebugName() {
         return "Marquee Tool: " + marqueeBehavior;//$NON-NLS-1$
     }
@@ -377,7 +381,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#handleButtonDown(int)
      */
-    protected boolean handleButtonDown(int button) {
+    @Override
+    protected boolean handleButtonDown(final int button) {
         if (!isGraphicalViewer())
             return true;
         if (button != 1) {
@@ -402,7 +407,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#handleButtonUp(int)
      */
-    protected boolean handleButtonUp(int button) {
+    @Override
+    protected boolean handleButtonUp(final int button) {
         if (stateTransition(STATE_DRAG_IN_PROGRESS, STATE_TERMINAL)) {
             eraseTargetFeedback();
             eraseMarqueeFeedback();
@@ -412,13 +418,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         return true;
     }
 
-    static void printCollection(Collection c) {
+    static void printCollection(final Collection c) {
         for (Object o : c) {
             System.out.println("in list: " + o);
         }
     }
 
-    boolean nodesAndConnectionsEqual(Collection c1, Collection c2) {
+    boolean nodesAndConnectionsEqual(final Collection c1, final Collection c2) {
         if (c1.size() != c2.size()) {
             return false;
         }
@@ -450,6 +456,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#handleDragInProgress()
      */
+    @Override
     protected boolean handleDragInProgress() {
         if (isInState(STATE_DRAG | STATE_DRAG_IN_PROGRESS)) {
             showMarqueeFeedback();
@@ -494,6 +501,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * @see org.eclipse.gef.tools.AbstractTool#handleFocusLost()
      */
+    @Override
     protected boolean handleFocusLost() {
         if (isInState(STATE_DRAG | STATE_DRAG_IN_PROGRESS)) {
             handleFinished();
@@ -505,9 +513,10 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * This method is called when mouse or keyboard input is invalid and erases
      * the feedback.
-     * 
+     *
      * @return <code>true</code>
      */
+    @Override
     protected boolean handleInvalidInput() {
         eraseTargetFeedback();
         eraseMarqueeFeedback();
@@ -518,10 +527,11 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * Handles high-level processing of a key down event. KeyEvents are
      * forwarded to the current viewer's {@link KeyHandler}, via
      * {@link KeyHandler#keyPressed(KeyEvent)}.
-     * 
+     *
      * @see AbstractTool#handleKeyDown(KeyEvent)
      */
-    protected boolean handleKeyDown(KeyEvent e) {
+    @Override
+    protected boolean handleKeyDown(final KeyEvent e) {
         if (super.handleKeyDown(e))
             return true;
         if (getCurrentViewer().getKeyHandler() != null)
@@ -529,7 +539,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         return false;
     }
 
-    private boolean isFigureVisible(IFigure fig) {
+    private boolean isFigureVisible(final IFigure fig) {
         Rectangle figBounds = fig.getBounds().getCopy();
         IFigure walker = fig.getParent();
         while (!figBounds.isEmpty() && walker != null) {
@@ -547,10 +557,11 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * MarqueeSelectionTool is only interested in GraphicalViewers, not
      * TreeViewers.
-     * 
+     *
      * @see org.eclipse.gef.tools.AbstractTool#isViewerImportant(org.eclipse.gef.EditPartViewer)
      */
-    protected boolean isViewerImportant(EditPartViewer viewer) {
+    @Override
+    protected boolean isViewerImportant(final EditPartViewer viewer) {
         return viewer instanceof GraphicalViewer;
     }
 
@@ -569,13 +580,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     /**
      * Sets the type of parts that this tool will select. This method should
      * only be invoked once: when the tool is being initialized.
-     * 
+     *
      * @param type {@link #BEHAVIOR_CONNECTIONS_TOUCHED} or
      *            {@link #BEHAVIOR_NODES_CONTAINED} or
      *            {@link #BEHAVIOR_NODES_AND_CONNECTIONS}
      * @since 3.1
      */
-    public void setMarqueeBehavior(int type) {
+    public void setMarqueeBehavior(final int type) {
         if (type != BEHAVIOR_CONNECTIONS_TOUCHED
                 && type != BEHAVIOR_NODES_CONTAINED
                 && type != BEHAVIOR_NODES_AND_CONNECTIONS)
@@ -584,14 +595,15 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         marqueeBehavior = type;
     }
 
-    private void setSelectionMode(int mode) {
+    private void setSelectionMode(final int mode) {
         this.mode = mode;
     }
 
     /**
      * @see org.eclipse.gef.Tool#setViewer(org.eclipse.gef.EditPartViewer)
      */
-    public void setViewer(EditPartViewer viewer) {
+    @Override
+    public void setViewer(final EditPartViewer viewer) {
         if (viewer == getCurrentViewer())
             return;
         super.setViewer(viewer);
@@ -631,13 +643,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         /**
          * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
          */
-        protected void paintFigure(Graphics graphics) {
+        @Override
+        protected void paintFigure(final Graphics graphics) {
             Rectangle bounds = getBounds().getCopy();
             graphics.translate(getLocation());
 
-            graphics.setXORMode(true);
-            graphics.setForegroundColor(ColorConstants.white);
-            graphics.setBackgroundColor(ColorConstants.black);
+            graphics.setForegroundColor(ColorConstants.gray);
+            graphics.setBackgroundColor(ColorConstants.white);
 
             graphics.setLineStyle(Graphics.LINE_DOT);
 
@@ -685,6 +697,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * Called when the mouse button is released. Overridden to do nothing, since
      * a drag tracker does not need to unload when finished.
      */
+    @Override
     protected void handleFinished() {
     }
 }
