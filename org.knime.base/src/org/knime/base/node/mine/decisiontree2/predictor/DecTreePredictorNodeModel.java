@@ -163,14 +163,13 @@ public class DecTreePredictorNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inPorts,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        LOGGER.info("Decision Tree Predictor: Loading predictor...");
+        exec.setMessage("Decision Tree Predictor: Loading predictor...");
         m_decTree = ((PMMLDecisionTreePortObject)
                 inPorts[INMODELPORT]).getTree();
         m_decTree.resetColorInformation();
-        LOGGER.info("Decision Tree Predictor: Loading predictor successful.");
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         assert m_decTree != null;
-        LOGGER.info("Decision Tree Predictor: start execution.");
+        exec.setMessage("Decision Tree Predictor: start execution.");
         PortObjectSpec[] inSpecs = new PortObjectSpec[] {
                 inPorts[0].getSpec(), inPorts[1].getSpec() };
         DataTableSpec outSpec = createOutTableSpec(inSpecs);
@@ -240,7 +239,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
                     + nrPattern + ") rows for HiLiting!");
         }
         outData.close();
-        LOGGER.info("Decision Tree Predictor: end execution.");
+        exec.setMessage("Decision Tree Predictor: end execution.");
         return new BufferedDataTable[]{outData.getTable()};
     }
 

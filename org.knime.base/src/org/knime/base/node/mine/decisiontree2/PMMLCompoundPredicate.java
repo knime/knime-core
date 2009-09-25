@@ -29,7 +29,6 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -39,9 +38,6 @@ import org.xml.sax.helpers.AttributesImpl;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLCompoundPredicate extends PMMLPredicate {
-    /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(PMMLCompoundPredicate.class);
 
     /** The string representation of the predicate's XML-element. */
     public static final String NAME = "CompoundPredicate";
@@ -175,8 +171,8 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
             return super.getSplitAttribute();
         } else {
             if (m_predicates == null) {
-                LOGGER.error("Split attribute cannot be access before "
-                        + "predicate is initialized.");
+                throw new IllegalAccessError("Split attribute cannot be access "
+                        + "before predicate is initialized.");
             } else {
                 /* Compare the split attributes of all contained predicates. If
                  * they are all the same return the common attribute, otherwise

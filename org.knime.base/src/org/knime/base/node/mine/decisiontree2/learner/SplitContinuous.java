@@ -26,17 +26,12 @@ package org.knime.base.node.mine.decisiontree2.learner;
 
 import java.util.Iterator;
 
-import org.knime.core.node.NodeLogger;
-
 /**
  * This class determines the best split for a numeric attribute.
  *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitContinuous extends Split {
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SplitContinuous.class);
 
     private static final int BELOW_INDEX = 0;
 
@@ -97,12 +92,6 @@ public class SplitContinuous extends Split {
             final boolean averageSplitpoint, final double minObjectsCount) {
 
         assert !table.isNominal(attributeIndex);
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER
-                    .debug("Attribute: "
-                            + table.getAttributeName(attributeIndex));
-        }
 
         // default value is the worst one
         setBestQualityMeasure(splitQualityMeasure.getWorstValue());

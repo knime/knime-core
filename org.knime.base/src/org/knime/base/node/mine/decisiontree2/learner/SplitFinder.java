@@ -73,11 +73,6 @@ public class SplitFinder {
 
         // create the best splits for each attribute
         List<Split> splitCandidates = new ArrayList<Split>();
-        long time = 0;
-        if (LOGGER.isInfoEnabled()) {
-            time = System.currentTimeMillis();
-            LOGGER.debug("Find best split for all attributes...");
-        }
 
         for (int i = 0; i < table.getNumAttributes(); i++) {
             // check if the attribute should be considered
@@ -100,21 +95,12 @@ public class SplitFinder {
             }
         }
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Split points for #rows<" + table.getNumberDataRows()
-                    + "> found in: " + (System.currentTimeMillis() - time));
-        }
-
         // get the best split
         Split bestSplit = null;
         double bestQualityMeasure = splitQualityMeasure.getWorstValue();
         int bestIndex = -1;
         int index = 0;
         for (Split splitCandidate : splitCandidates) {
-            LOGGER.debug("Split candidate: "
-                    + splitCandidate.getSplitAttributeName()
-                    + " best measure: "
-                    + splitCandidate.getBestQualityMeasure());
             if (splitCandidate.isValidSplit()
                     && splitQualityMeasure.isBetterOrEqual(splitCandidate
                             .getBestQualityMeasure(), bestQualityMeasure)) {
@@ -127,17 +113,6 @@ public class SplitFinder {
 
         m_splitAttributeIndex = bestIndex;
         m_split = bestSplit;
-        if (LOGGER.isDebugEnabled()) {
-            if (m_split == null) {
-                LOGGER.debug("No split could be evaluated.");
-            } else {
-                LOGGER
-                        .debug("Best split: " + m_split.getSplitAttributeName()
-                                + " best measure: "
-                                + m_split.getBestQualityMeasure());
-            }
-        }
-
     }
 
     /**

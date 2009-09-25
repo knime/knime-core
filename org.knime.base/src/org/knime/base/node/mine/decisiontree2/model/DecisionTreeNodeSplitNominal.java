@@ -155,7 +155,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
-            final DataRow row, final DataTableSpec spec) throws Exception {
+            final DataRow row, final DataTableSpec spec) {
         for (int i = 0; i < m_splitValues.length; i++) {
             if (m_splitValues[i].equals(cell)) {
                 return super.getChildNodeAt(i).getClassCounts(row, spec);
