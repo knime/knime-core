@@ -27,7 +27,6 @@ package org.knime.base.node.mine.decisiontree2.learner;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.node.NodeLogger;
 
 /**
  * Finds the best split for a given {@link InMemoryTable}. The results can be
@@ -36,11 +35,6 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitFinder {
-
-    /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SplitFinder.class);
-
     private int m_splitAttributeIndex;
 
     private Split m_split;
