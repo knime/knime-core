@@ -138,6 +138,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private JComboBox m_delimField;
 
+    /*
+     * to determine whether the entered delimiter was applied we store the last
+     * delim (problem: we don't get focus lost events (or similar events).
+     */
+    private String m_delimApplied;
+
     private JCheckBox m_cStyleComment;
 
     private JTextField m_singleLineComment;
@@ -846,15 +852,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         } else {
             newDelim = FileTokenizerSettings.unescapeString((String)o);
         }
-        for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (delim.getDelimiter().equals(newDelim)) {
-                // the entered pattern is already a delimiter. Nothing changed.
-                m_insideDelimChange = false;
-                return;
-            }
+        if (newDelim.equals(m_delimApplied)) {
+            // m_delimApplied is the delimiter stored in the settings or <none>
+            // if none is selected.
+            m_insideDelimChange = false;
+            return;
         }
 
         m_frSettings.setDelimiterUserSet(true);
+        m_delimApplied = null; // clear it in case things go wrong
 
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
@@ -880,6 +886,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     m_frSettings.addDelimiterPattern(delimStr, selDelim
                             .combineConsecutiveDelims(), selDelim
                             .returnAsToken(), selDelim.includeInToken());
+                    m_delimApplied = delimStr;
                 } catch (IllegalArgumentException iae) {
                     setErrorLabelText(iae.getMessage());
                     m_insideDelimChange = false;
@@ -894,6 +901,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     try {
                         m_frSettings.addDelimiterPattern(delimStr, false,
                                 false, false);
+                        m_delimApplied = delimStr;
                     } catch (IllegalArgumentException iae) {
                         setErrorLabelText(iae.getMessage());
                         m_insideDelimChange = false;
@@ -913,12 +921,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 }
             }
 
+        } else {
+            m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
         }
 
         // make sure \n is always a row delimiter
         if (!m_frSettings.isRowDelimiter("\n")) {
             m_frSettings.addRowDelimiter("\n", true);
         }
+
         analyzeDataFileAndUpdatePreview(true); // force re-analyze
         m_insideDelimChange = false;
     }
@@ -939,6 +950,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_delimField.setModel(new DefaultComboBoxModel(DEFAULT_DELIMS));
         // the above selects the first in the list - which is the <none>.
+        m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
+
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
                 continue;
@@ -950,6 +963,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 m_delimField.addItem(delim);
             }
             m_delimField.setSelectedItem(delim);
+            m_delimApplied = delim.getDelimiter();
 
         }
         m_insideLoadDelim = false;
