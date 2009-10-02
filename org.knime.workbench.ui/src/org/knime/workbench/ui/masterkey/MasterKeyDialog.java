@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Shell;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class MasterKeyDialog extends Dialog {
+public final class MasterKeyDialog extends Dialog {
 
     private MasterKeyPreferencePage m_prefPage;
 
@@ -42,7 +42,16 @@ public class MasterKeyDialog extends Dialog {
     private MasterKeyDialog(final Shell parentShell) {
         super(parentShell);
     }
-    
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean canHandleShellCloseEvent() {
+        return false;
+    }
+
+    /**
+     * Opens a this dialog in  the currently active shell.
+     */
     static void openDialogAndReadKey() {
         Shell shell = Display.getDefault().getActiveShell();
         if (shell == null) {
@@ -63,17 +72,17 @@ public class MasterKeyDialog extends Dialog {
     }
 
     /**
-     *
      * {@inheritDoc}
      */
     @Override
     protected Control createDialogArea(final Composite parent) {
         Composite composite = (Composite)super.createDialogArea(parent);
         composite.setSize(400, 600);
-        m_prefPage = new MasterKeyPreferencePage();
+        m_prefPage = new MasterKeyPreferencePage(true);
         m_prefPage.initPrefStore();
         m_prefPage.createControl(composite);
         m_prefPage.initialize();
+        m_prefPage.enableMasterKey();
         composite.getShell().setText("Master Key");
         return composite;
     }
