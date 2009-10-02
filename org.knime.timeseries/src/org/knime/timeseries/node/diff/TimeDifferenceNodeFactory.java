@@ -2,7 +2,6 @@ package org.knime.timeseries.node.diff;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -11,13 +10,14 @@ import org.knime.core.node.NodeView;
  *
  * @author KNIME GmbH
  */
-public class TimeDifferenceNodeFactory extends NodeFactory {
+public class TimeDifferenceNodeFactory 
+    extends NodeFactory<TimeDifferenceNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public TimeDifferenceNodeModel createNodeModel() {
         return new TimeDifferenceNodeModel();
     }
 
@@ -33,10 +33,11 @@ public class TimeDifferenceNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-    	throw new IllegalArgumentException(
-    			"TimeDifference node has no view!");
+    public NodeView<TimeDifferenceNodeModel> createNodeView(
+            final int viewIndex,
+            final TimeDifferenceNodeModel nodeModel) {
+        throw new IllegalArgumentException(
+            "TimeDifference node has no view!");
     }
 
     /**

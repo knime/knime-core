@@ -24,9 +24,9 @@
  */
 package org.knime.timeseries.node.stringtotimestamp;
 
+import org.knime.core.data.StringValue;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -35,21 +35,22 @@ import org.knime.core.node.NodeView;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class String2DateNodeFactory extends NodeFactory {
+public class String2DateNodeFactory extends NodeFactory<String2DateNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new String2DateDialog();
+        return new String2DateDialog(StringValue.class, 
+                String2DateNodeModel.DEFAUL_COLUMN_NAME_SUFFIX, true);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public String2DateNodeModel createNodeModel() {
         return new String2DateNodeModel();
     }
 
@@ -57,8 +58,8 @@ public class String2DateNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public NodeView<String2DateNodeModel> createNodeView(
+            final int viewIndex, final String2DateNodeModel nodeModel) {
         return null;
     }
 

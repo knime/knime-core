@@ -56,7 +56,8 @@ public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
         m_to = createToModel();
         DialogComponent columnChooser =
             new DialogComponentColumnNameSelection(m_colName,
-                    "Columns containing Timestamp: ", 0, DateAndTimeValue.class);
+                    "Columns containing Timestamp: ", 0, 
+                    DateAndTimeValue.class);
         addDialogComponent(columnChooser);
         addDialogComponent(new DialogComponentCalendar(m_from, 
                 "Select starting point:"));

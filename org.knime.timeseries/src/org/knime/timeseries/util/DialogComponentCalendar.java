@@ -20,7 +20,6 @@ package org.knime.timeseries.util;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Calendar;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -34,7 +33,14 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Dialog component to configure a date, a time or both.
+ * Dialog component to configure a date, a time or both. This is a convenience 
+ * class consisting of  {@link DialogComponentDate} and 
+ * {@link DialogComponentTime} handling the loading and saving of the 
+ * settings for both of them with one single model.
+ * 
+ * @see DialogComponentDate
+ * @see DialogComponentTime
+ * @see SettingsModelCalendar
  * 
  * @author Fabian Dill, KNIME.com GmbH
  * 
@@ -48,8 +54,6 @@ public class DialogComponentCalendar extends DialogComponent {
     private JCheckBox m_useDateUI;
 
     private JCheckBox m_useTimeUI;
-
-
 
     /**
      * 
@@ -76,15 +80,14 @@ public class DialogComponentCalendar extends DialogComponent {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         Box useDateBox = Box.createHorizontalBox();
-        m_useDateUI = new JCheckBox("Use date", true);
+        m_useDateUI = new JCheckBox("Use date", false);
         m_useDateUI.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 boolean enable = m_useDateUI.isSelected();
                 // only dis-/enable UI since they all share one model 
                 m_date.setEnabledComponents(enable);
-                ((SettingsModelCalendar)getModel()).setUseDate(enable);
-                m_date.getModel().setEnabled(enable);
+                ((SettingsModelCalendar)getModel()).setUseDate(enable); 
             }
         });
         useDateBox.add(m_useDateUI);
@@ -108,7 +111,6 @@ public class DialogComponentCalendar extends DialogComponent {
                 // only dis-/enable UI since they all share one model
                 m_time.setEnabledComponents(enable);
                 ((SettingsModelCalendar)getModel()).setUseTime(enable);
-                m_time.getModel().setEnabled(enable);
             }
         });
         useTimeBox.add(m_useTimeUI);
@@ -165,21 +167,16 @@ public class DialogComponentCalendar extends DialogComponent {
     @Override
     protected void validateSettingsBeforeSave() 
         throws InvalidSettingsException {
-            SettingsModelCalendar model = (SettingsModelCalendar)getModel();
-            Calendar calendar = model.getCalendar();
-            model.setUseDate(m_useDateUI.isSelected());
-            model.setUseTime(m_useTimeUI.isSelected());
             if (!m_useDateUI.isSelected() && !m_useTimeUI.isSelected()) {
                 throw new InvalidSettingsException(
                         "Either date or time or both must be selected!");
             }
             if (m_useDateUI.isSelected()) {                
                 m_date.validateSettingsBeforeSave();
-            }
+            } 
             if (m_useTimeUI.isSelected()) {
                 m_time.validateSettingsBeforeSave();
             }
-            model.setCalendar(calendar);
     }
 
 }

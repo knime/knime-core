@@ -102,9 +102,12 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
                 DataCell lower = colSpec.getDomain().getLowerBound();
                 DataCell upper = colSpec.getDomain().getUpperBound();
                 if (lower != null && upper != null
-                        && lower.getType().isCompatible(DateAndTimeValue.class)
-                        && upper.getType().isCompatible(DateAndTimeValue.class)) {
-                    Calendar c = ((DateAndTimeValue)lower).getUTCCalendarClone();
+                        && lower.getType().isCompatible(
+                                DateAndTimeValue.class)
+                        && upper.getType().isCompatible(
+                                DateAndTimeValue.class)) {
+                    Calendar c = ((DateAndTimeValue)lower)
+                        .getUTCCalendarClone();
                     m_fromDate.setCalendar(c);
                     c = ((DateAndTimeValue)upper).getUTCCalendarClone();
                     m_toDate.setCalendar(c);

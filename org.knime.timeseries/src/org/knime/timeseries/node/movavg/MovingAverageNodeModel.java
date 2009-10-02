@@ -26,6 +26,8 @@ package org.knime.timeseries.node.movavg;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -83,11 +85,23 @@ public class MovingAverageNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec inSpec = inSpecs[0];
         // define column name on which to apply MA
         if ((m_columnNames.getIncludeList().size() == 0)
                 && (m_columnNames.getExcludeList().size() == 0)) {
-            throw new InvalidSettingsException(
-                  "No double columns available.");
+            // auto-configure
+            List<String>autoConfiguredInclList = new ArrayList<String>();
+            for (DataColumnSpec colSpec : inSpec) {
+                if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                    autoConfiguredInclList.add(colSpec.getName());
+                }
+            }
+            m_columnNames.setIncludeList(autoConfiguredInclList);
+            setWarningMessage("Auto-configure: selected all double columns!");
+        }
+        if (m_columnNames.getIncludeList().isEmpty()) {
+            setWarningMessage("No double columns selected: " 
+                    + "input will be same as output!");
         }
         // check for the existence of the selected columns
         for (String colName : m_columnNames.getIncludeList()) {
@@ -171,7 +185,7 @@ public class MovingAverageNodeModel extends NodeModel {
         } else {
             throw new Exception(
                     "Number of total samples in time series smaller than "
-                    + "moving Average window length ");
+                    + "moving average window length!");
         }
     }
 

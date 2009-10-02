@@ -21,6 +21,10 @@
  */
 package org.knime.timeseries.util;
 
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Calendar;
 
 import javax.swing.BorderFactory;
@@ -30,12 +34,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
+ * Dialog component to enter a date with year, month and day. 
+ * @see DialogComponentCalendar
+ * @see SettingsModelCalendar
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
@@ -72,17 +80,58 @@ public class DialogComponentDate extends DialogComponent {
         JPanel datePanel = new JPanel();
         // one text input field (year)
         m_yearUI = new JTextField(4);
+        m_yearUI.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent e) {
+                m_yearUI.selectAll();
+            }
+        });
+        m_yearUI.getDocument().addDocumentListener(
+                new AbstractValidateDocumentListener() {
+            @Override
+            protected void validate() {
+                try {
+                    // if it is an integer it is a valid year
+                    updateModel();
+                } catch (Exception e) {
+                    // else show error
+                    showError(m_yearUI);
+                }
+            }
+        });
         datePanel.add(new JLabel("Year:"));
         datePanel.add(m_yearUI);
         // select boxes month
         m_monthUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                 11, 12});
+        m_monthUI.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                try {
+                    updateModel();
+                } catch (Exception ex) {
+                    // year may be invalid -> month is anyway a select box
+                }
+            }
+            
+        });
         datePanel.add(new JLabel("Month:"));
         datePanel.add(m_monthUI);
         // select box day
         m_dayUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                 27, 28, 29, 30, 31});
+        m_dayUI.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                try {
+                    updateModel();
+                } catch (Exception ex) {
+                    // year may be invalid -> day is anyway a select box
+                }
+            }
+        });
         datePanel.add(new JLabel("Day:"));
         datePanel.add(m_dayUI);
 
@@ -124,14 +173,54 @@ public class DialogComponentDate extends DialogComponent {
     @Override
     protected void updateComponent() {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
-        Calendar calendar = model.getCalendar();
-        // TODO: throw exception if model has no date
+        Calendar calendar = null;
         if (model.useDate()) {
-            m_yearUI.setText("" + calendar.get(Calendar.YEAR));
-            // setting the index is perfectly fine, since Calendar represents
-            // months as zero-based indices (but not day of month)
-            m_monthUI.setSelectedIndex(calendar.get(Calendar.MONTH));
-            m_dayUI.setSelectedIndex(calendar.get(Calendar.DAY_OF_MONTH) - 1);
+            // set the fields from the model's calendar
+            calendar = model.getCalendar();
+        } else {
+            // do not set the fields of the model's calendar: they are not set, 
+            // i.e. 1.1.1970.
+            // for user friendliness use current date
+            calendar = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
+        }
+        m_yearUI.setText("" + calendar.get(Calendar.YEAR));
+        // setting the index is perfectly fine, since Calendar represents
+        // months as zero-based indices (but not day of month)
+        m_monthUI.setSelectedIndex(calendar.get(Calendar.MONTH));
+        m_dayUI.setSelectedIndex(calendar.get(Calendar.DAY_OF_MONTH) - 1);
+        setEnabledComponents(model.useDate());
+    }
+    
+    /**
+     * Writes the values immediately into the model. 
+     *  
+     * @throws InvalidSettingsException if the year is not an integer
+     */
+    protected void updateModel() throws InvalidSettingsException {
+        SettingsModelCalendar model = (SettingsModelCalendar)getModel();
+        if (!model.useDate()) {
+            // do not update/validate if date is not used by the model
+            return;
+        }
+        Calendar calendar = model.getCalendar();
+        // taking the index is perfectly fine, since Calendar 
+        // represents months as zero-based indices 
+        // (but not day of month)
+        int month = m_monthUI.getSelectedIndex();
+        int day = m_dayUI.getSelectedIndex() + 1;
+        // First set month and day -> unlikely that an error occurs
+        calendar.set(Calendar.MONTH, month);
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+        model.setCalendar(calendar);
+        try {
+            // check whether the year contains only numbers
+            int year = Integer.parseInt(m_yearUI.getText());
+            calendar.set(Calendar.YEAR, year);
+            model.setCalendar(calendar);
+        } catch (NumberFormatException nfe) {
+            throw new InvalidSettingsException("Not a valid year: "
+                    + m_yearUI.getText() + "! "
+                    + "Please use only integer numbers");
         }
     }
 
@@ -141,26 +230,7 @@ public class DialogComponentDate extends DialogComponent {
     @Override
     protected void validateSettingsBeforeSave() 
         throws InvalidSettingsException {
-            SettingsModelCalendar model = (SettingsModelCalendar)getModel();
-            Calendar calendar = model.getCalendar();
-            model.setUseDate(true);
-            try {
-                // check whether the year contains only numbers
-                int year = Integer.parseInt(m_yearUI.getText());
-                // taking the index is perfectly fine, since Calendar 
-                // represents months as zero-based indices 
-                // (but not day of month)
-                int month = m_monthUI.getSelectedIndex();
-                int day = m_dayUI.getSelectedIndex() + 1;
-                calendar.set(Calendar.YEAR, year);
-                calendar.set(Calendar.MONTH, month);
-                calendar.set(Calendar.DAY_OF_MONTH, day);
-            } catch (NumberFormatException nfe) {
-                throw new InvalidSettingsException("Not a valid year: "
-                        + m_yearUI.getText() + "! "
-                        + "Please use only integer numbers");
-            }
-            model.setCalendar(calendar);
+        updateModel();
     }
 
 }

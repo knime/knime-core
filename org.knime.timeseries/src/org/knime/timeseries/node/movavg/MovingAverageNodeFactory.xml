@@ -23,7 +23,7 @@
     <ports>
         <inPort index="0" name="Input column">
         Table containing time series.</inPort>
-        <outPort index="0" name="Wrapped output">
+        <outPort index="0" name="Moving average values">
         Table with appended column holding moving average values.</outPort>
     </ports>
 </knimeNode>

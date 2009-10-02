@@ -63,23 +63,42 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
      * Models...
      */
 
+    /**
+     * @return settings model for the first time column
+     */
     static SettingsModelString createColmn1Model() {
         return new SettingsModelString(CFG_COL1, "");
     }
 
+    /**
+     * 
+     * @return settings model for the second time column
+     */
     static SettingsModelString createColumn2Model() {
         return new SettingsModelString(CFG_COL2, "");
     }
 
+    /**
+     * 
+     * @return settings model for the new column name
+     */
     static SettingsModelString createNewColNameModel() {
         return new SettingsModelString(CFG_NEW_COL_NAME, "time diff");
     }
 
+    /**
+     * 
+     * @return settings model for the granularity
+     */
     static SettingsModelString createGranularityModel() {
         return new SettingsModelString(CFG_GRANULARITY, 
                 Granularity.DAY.getName());
     }
 
+    /**
+     * 
+     * @return settings model for the rounding model
+     */
     static SettingsModelInteger createRoundingModel() {
         return new SettingsModelInteger(CFG_ROUND, 0);
     }

@@ -64,6 +64,12 @@ import org.knime.core.node.util.StringHistory;
  */
 public class String2DateNodeModel extends NodeModel {
     
+    /** 
+     * Suffix to be appended to the selected column name to create a proposed 
+     * new column name. 
+     */
+    static final String DEFAUL_COLUMN_NAME_SUFFIX = "time";
+    
     private final SettingsModelString m_selectedColModel
         = String2DateDialog.createColumnSelectionModel();
     private final SettingsModelString m_newColNameModel 
@@ -84,10 +90,12 @@ public class String2DateNodeModel extends NodeModel {
     private boolean m_useTime;
     
     private boolean m_useMillis;
-
+    
     /** Inits node, 1 input, 1 output. */
     public String2DateNodeModel() {
         super(1, 1);
+        String2DateDialog.addColSelectionListener(m_selectedColModel, 
+                m_newColNameModel, DEFAUL_COLUMN_NAME_SUFFIX);
     }
 
     /**
@@ -100,13 +108,14 @@ public class String2DateNodeModel extends NodeModel {
             throw new InvalidSettingsException("No format selected.");
         }
         m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
-        m_dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        m_dateFormat.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
         if (m_dateFormat == null) {
             throw new InvalidSettingsException("Invalid format: "
                     + m_formatModel.getStringValue());
         }
 
-        if (m_selectedColModel.getStringValue() == null) {
+        if (m_selectedColModel.getStringValue() == null 
+                || m_selectedColModel.getStringValue().isEmpty()) {
             // try to find first String compatible one and auto-guess it
             for (DataColumnSpec cs : inSpecs[0]) {
                 if (cs.getType().isCompatible(StringValue.class)) {
@@ -117,24 +126,24 @@ public class String2DateNodeModel extends NodeModel {
                     break;
                 }
             }
-            // if still null -> no String compatible column at all
-            if (m_selectedColModel.getStringValue() == null) {
-                throw new InvalidSettingsException(
-                        "No String compatible column found!");
-            }
-            int colIndex = inSpecs[0]
-                    .findColumnIndex(m_selectedColModel.getStringValue());
-            if (colIndex < 0) {
-                throw new InvalidSettingsException("No such column: "
-                        + m_selectedColModel.getStringValue());
-            }
-            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-            if (!colSpec.getType().isCompatible(StringValue.class)) {
-                throw new InvalidSettingsException("Column \"" 
-                        + m_selectedColModel 
-                        + "\" does not contain string values: "
-                        + colSpec.getType().toString());
-            }
+        }
+        String selectedCol = m_selectedColModel.getStringValue();
+        // if still null -> no String compatible column at all
+        if (selectedCol == null || selectedCol.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "No String compatible column found!");
+        }
+        int colIndex = inSpecs[0]
+                .findColumnIndex(selectedCol);
+        if (colIndex < 0) {
+            throw new InvalidSettingsException("No such column: " 
+                    + selectedCol);
+        }
+        DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
+        if (!colSpec.getType().isCompatible(StringValue.class)) {
+            throw new InvalidSettingsException("Column \"" 
+                    + selectedCol + "\" does not contain string values: "
+                    + colSpec.getType().toString());
         }
         ColumnRearranger c = createColRearranger(inSpecs[0]);
         return new DataTableSpec[]{c.createSpec()};
@@ -146,6 +155,8 @@ public class String2DateNodeModel extends NodeModel {
                 .findColumnIndex(m_selectedColModel.getStringValue());
         String uniqueColName = m_selectedColModel.getStringValue();
         if (!m_replace.getBooleanValue()) {
+            // if we do not have a default new column name yet
+            // create one as done in 
             // check whether the new column name is unique...
             uniqueColName = DataTableSpec.getUniqueColumnName(spec,
                     m_newColNameModel.getStringValue());

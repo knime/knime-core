@@ -40,7 +40,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
- * @author Fabian Dill
+ * Generates equidistant times.
+ * 
+ * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  *
  */
 public class DateGeneratorNodeModel extends NodeModel {
@@ -56,6 +58,8 @@ public class DateGeneratorNodeModel extends NodeModel {
     
     private boolean m_useTime;
 
+    private boolean m_useMillis;
+    
     /**
      *
      */
@@ -78,8 +82,16 @@ public class DateGeneratorNodeModel extends NodeModel {
 
     private DataTableSpec createOutSpec() {
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                "Timestamp", DateAndTimeCell.TYPE);
+                "Date and time", DateAndTimeCell.TYPE);
         return new DataTableSpec(creator.createSpec());
+    }
+    
+    private static long calculateOffset(final Calendar from, final Calendar to, 
+            final int noOfRows) {
+        // if offset is smaller than a second milliseconds 
+        // might be of interest
+        return (to.getTimeInMillis() - from.getTimeInMillis())
+                / (noOfRows - 1);
     }
 
     /**
@@ -99,24 +111,40 @@ public class DateGeneratorNodeModel extends NodeModel {
             DateAndTimeCell.resetDateFields(from);
             DateAndTimeCell.resetDateFields(to);
         }
-        long offset = (to.getTimeInMillis() - from.getTimeInMillis())
-                / m_noOfRows.getIntValue();
         BufferedDataContainer container = exec.createDataContainer(
                 createOutSpec());
+        int nrRows = m_noOfRows.getIntValue(); 
+        // in case number of rows is 1
+        long offset = 0;
+        boolean needsMillis = false;
+        if (nrRows > 1) {
+            // if offset is smaller than a second milliseconds 
+            // might be of interest
+            offset = calculateOffset(from, to, nrRows);
+            needsMillis = offset < 1000;
+        }
         // offset is shorter than a day -> so we need the time fields
-        boolean needsTimeFields = offset < 86400000; // <- one day
-        // if offset is smaller than a minute milliseconds might be of interest
-        boolean needsMillis = offset < 60000;
+        /* Decided to return only the date because the user only selected date
+         * If date and time was desired it can easily achieved by selecting 
+         * the time checkbox as well. 
+         */
+//        boolean needsTimeFields = offset < 86400000; // <- one day
         long currentTime = from.getTimeInMillis();
         Calendar test = DateAndTimeCell.getUTCCalendar();
         test.setTimeInMillis(currentTime);
-        for (int i = 0; i < m_noOfRows.getIntValue(); i++) {
+        int currentRow = 0;
+        for (int i = 0; i < nrRows; i++) {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
             DateAndTimeCell cell = new DateAndTimeCell(currentTime, 
-                    m_useDate, m_useTime || needsTimeFields, needsMillis);
+                    m_useDate, m_useTime /*|| needsTimeFields*/, 
+                    m_useMillis || (needsMillis && m_useTime));
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;
+            currentRow++;
+            exec.setProgress(currentRow / (double)nrRows, "Generating row #" 
+                    + currentRow);
+            exec.checkCanceled();
         }
         container.close();
         return new BufferedDataTable[] {
@@ -130,7 +158,6 @@ public class DateGeneratorNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // TODO Auto-generated method stub
-
     }
 
     /**
@@ -152,6 +179,8 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.validateSettings(settings);
         m_to.validateSettings(settings);
         m_noOfRows.validateSettings(settings);
+        SettingsModelInteger noRowsModel = m_noOfRows
+            .createCloneWithValidatedValue(settings);
         SettingsModelCalendar from = m_from.createCloneWithValidatedValue(
                 settings);
         SettingsModelCalendar to = m_to.createCloneWithValidatedValue(settings);
@@ -164,10 +193,19 @@ public class DateGeneratorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Timestamp must consists of date or time!");
         }
+        
+        long offset = calculateOffset(from.getCalendar(), to.getCalendar(), 
+                noRowsModel.getIntValue());
+        if (offset <= 0) {
+            throw new InvalidSettingsException(
+                    "Number of rows too large for entered time period! " 
+                    + "Steps are smaller than a millisecond. " 
+                    + "Please reduce number of rows.");
+        }
         validateDates(from, to);
     }
 
-    private void validateDates(final SettingsModelCalendar start, 
+    private static void validateDates(final SettingsModelCalendar start, 
             final SettingsModelCalendar end)
         throws InvalidSettingsException {
         if (end.getCalendar().before(start.getCalendar())
@@ -201,6 +239,11 @@ public class DateGeneratorNodeModel extends NodeModel {
         if (m_from.useTime() || m_to.useTime()) {
             // only time
             m_useTime = true;
+        }
+        if (m_from.useMilliseconds() || m_to.useMilliseconds()) {
+            m_useMillis = true; 
+        } else {
+            m_useMillis = false;
         }
     }
 

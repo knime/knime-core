@@ -20,6 +20,7 @@ package org.knime.timeseries.node.generator;
 
 import java.util.Calendar;
 
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -37,11 +38,13 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
      * 
      */
     public DateGeneratorNodeDialog() {
-       addDialogComponent(new DialogComponentNumber(
+        createNewGroup("Generated rows:");
+        addDialogComponent(new DialogComponentNumber(
                createNumberOfRowsModel(), "Number of rows:", 10));
-       addDialogComponent(new DialogComponentCalendar(
+        closeCurrentGroup();
+        addDialogComponent(new DialogComponentCalendar(
                createStartingPointModel(), "Starting point:"));
-       addDialogComponent(new DialogComponentCalendar(
+        addDialogComponent(new DialogComponentCalendar(
                createEndPointModel(), "End point:"));
     }
     
@@ -61,7 +64,7 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
      * @return the calendar model for the starting point
      */
     static SettingsModelCalendar createStartingPointModel() {
-        Calendar c = Calendar.getInstance();
+        Calendar c = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
         c.roll(Calendar.YEAR, false);
         return new SettingsModelCalendar("starting-point", c);
     }

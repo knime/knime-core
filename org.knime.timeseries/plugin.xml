@@ -27,6 +27,30 @@
             factory-class="org.knime.timeseries.node.generator.DateGeneratorNodeFactory"
             id="org.knime.timeseries.node.generator.DateGeneratorNodeFactory">
       </node>
+            <node
+            category-path="timeseries"
+            expert-flag="false"
+            factory-class="org.knime.timeseries.node.extract.TimeFieldExtractorNodeFactory"
+            id="org.knime.timeseries.node.extract.TimeFieldExtractorNodeFactory">
+      </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
+                  id="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
+            </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
+                  id="org.knime.timeseries.node.preset.TimePresetNodeFactory">
+            </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory"
+                  id="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
+            </node>
    </extension>
 
    <extension

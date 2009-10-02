@@ -37,10 +37,10 @@ public class Granularity {
             TimeLevelNames.WEEK, 1000 * 60 * 60 * 24 * 7);
     /** Month. */
     public static final Granularity MONTH = new Granularity(
-            TimeLevelNames.MONTH, 1000 * 60 * 60 * 24 * 365.25/12);
+            TimeLevelNames.MONTH, 1000 * 60 * 60 * 24 * 365.25 / 12);
     /** Quarter (=three months). */
     public static final Granularity QUARTER = new Granularity(
-            TimeLevelNames.QUARTER, 1000 * 60 * 60 * 24 * 365.25/4);
+            TimeLevelNames.QUARTER, 1000 * 60 * 60 * 24 * 365.25 / 4);
     /** Year. */
     public static final Granularity YEAR = new Granularity(
             TimeLevelNames.YEAR, 1000 * 60 * 60 * 24 * 365.25);

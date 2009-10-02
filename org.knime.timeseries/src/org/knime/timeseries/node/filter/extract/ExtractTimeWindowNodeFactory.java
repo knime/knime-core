@@ -26,7 +26,6 @@ package org.knime.timeseries.node.filter.extract;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -35,7 +34,8 @@ import org.knime.core.node.NodeView;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class ExtractTimeWindowNodeFactory extends NodeFactory {
+public class ExtractTimeWindowNodeFactory 
+    extends NodeFactory<ExtractTimeWindowNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -49,7 +49,7 @@ public class ExtractTimeWindowNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public ExtractTimeWindowNodeModel createNodeModel() {
         return new ExtractTimeWindowNodeModel();
     }
 
@@ -57,8 +57,8 @@ public class ExtractTimeWindowNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public NodeView<ExtractTimeWindowNodeModel> createNodeView(
+            final int viewIndex, final ExtractTimeWindowNodeModel nodeModel) {
         return null;
     }
 

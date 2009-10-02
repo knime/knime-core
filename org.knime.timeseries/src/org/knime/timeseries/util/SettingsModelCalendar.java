@@ -20,8 +20,8 @@ package org.knime.timeseries.util;
 
 import java.util.Calendar;
 
-import org.knime.core.data.date.DateAndTimeRenderUtil;
 import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeRenderUtil;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -32,17 +32,17 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Settings model that stores a {@link Calendar} in order to store either a 
- * date, a time or both. 
+ * date or a time with and without milliseconds. 
  * 
  * @author Fabian Dill, KNIME.com GmbH
  *
  */
 public class SettingsModelCalendar extends SettingsModel {
     
-    private static final String KEY_TIMEZONE = "timezone";
     private static final String KEY_TIME = "time";
     private static final String KEY_USE_DATE = "useDate";
     private static final String KEY_USE_TIME = "useTime";
+    private static final String KEY_USE_MILLIS = "useMillis";
     
     private final String m_key;
     
@@ -50,6 +50,7 @@ public class SettingsModelCalendar extends SettingsModel {
     
     private boolean m_useDate;
     private boolean m_useTime;
+    private boolean m_useMillis;
     
     /**
      * Creates a new object holding a calendar value.
@@ -63,15 +64,22 @@ public class SettingsModelCalendar extends SettingsModel {
      *  @param useTime true if only the time (hour, minutes, etc.) is relevant, 
      *      false if only the date is of interest (Note: use either time, or 
      *      date or both)
+     *  @param useMillis <code>true</code> if milliseconds are relevant, false 
+     *      if milliseconds are not of interest
+     *      @throws IllegalArgumentException if useDate and useTime are false!
      */
     public SettingsModelCalendar(final String configKey, 
             final Calendar defaultValue, final boolean useDate, 
-            final boolean useTime) {
+            final boolean useTime, final boolean useMillis) {
         if (!useDate && !useTime) {
             throw new IllegalArgumentException(
                     "Use at least one of time or date!");
-        }        
-        if ((configKey == null) || (configKey == "")) {
+        }
+        if (!useTime && useMillis) {
+            throw new IllegalArgumentException(
+                    "Milliseconds can only be used if time is used as well!"); 
+        }
+        if ((configKey == null) || configKey.isEmpty()) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }
@@ -79,10 +87,41 @@ public class SettingsModelCalendar extends SettingsModel {
         if (defaultValue != null) {
             m_value = defaultValue;
         } else {
-            m_value = Calendar.getInstance();
+            m_value = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
         }
         m_useDate = useDate;
         m_useTime = useTime;
+        m_useMillis = useMillis;
+        // clear calendar fields appropriately
+        if (!m_useDate) {
+            DateAndTimeCell.resetDateFields(m_value);
+        }
+        if (!m_useTime) {
+            DateAndTimeCell.resetTimeFields(m_value);
+        }
+        if (!m_useMillis) {
+            m_value.clear(Calendar.MILLISECOND);
+        }
+    }
+    
+    /**
+     * Creates a new object holding a calendar value.
+     *
+     * @param configKey the identifier the value is stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     * @param defaultValue the initial value, if <code>null</code> the current 
+     *  time is used 
+     *  @param useDate true if year, month, day is relevant, false if only the 
+     *      time is of interest (Note: use either time, or date or both)
+     *  @param useTime true if only the time (hour, minutes, etc.) is relevant, 
+     *      false if only the date is of interest (Note: use either time, or 
+     *      date or both)
+     *      @throws IllegalArgumentException if useDate and useTime are false!
+     */
+    public SettingsModelCalendar(final String configKey, 
+            final Calendar defaultValue, final boolean useDate, 
+            final boolean useTime) {
+        this(configKey, defaultValue, useDate, useTime, false);
     }
 
     /**
@@ -103,10 +142,10 @@ public class SettingsModelCalendar extends SettingsModel {
     
     /**
      * 
-     * @return the represented time and/or date
+     * @return a clone(!) of the represented time and/or date
      */
     public Calendar getCalendar() {
-        return m_value;
+        return (Calendar)m_value.clone();
     }
     
     /**
@@ -115,10 +154,14 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     public void setCalendar(final Calendar calendar) {
         m_value = (Calendar)(calendar.clone());
-        if (useTime() && !useDate()) {
+        if (!useDate()) {
             DateAndTimeCell.resetDateFields(m_value);
-        } else if (!useTime() && useDate()) {
+        }
+        if (!useTime()) {
             DateAndTimeCell.resetTimeFields(m_value);
+        }
+        if (!useMilliseconds()) {
+            m_value.clear(Calendar.MILLISECOND);
         }
     }
     
@@ -128,6 +171,14 @@ public class SettingsModelCalendar extends SettingsModel {
      */
     public boolean useDate() {
         return m_useDate;
+    }
+    
+    /**
+     * 
+     * @return <code>true</code> if milliseconds are of interest
+     */
+    public boolean useMilliseconds() {
+        return m_useMillis;
     }
     
     /**
@@ -156,11 +207,23 @@ public class SettingsModelCalendar extends SettingsModel {
     public void setUseTime(final boolean useTime) {
         m_useTime = useTime;
         if (!useTime) {
-            DateAndTimeCell.resetTimeFields(m_value); 
+            DateAndTimeCell.resetTimeFields(m_value);
+            // if we do not use the time we also do not use the milliseconds
+            setUseMilliseconds(false);
         }
     }
     
-    
+    /**
+     * 
+     * @param useMilliseconds <code>true</code> if milliseconds are of interest,
+     * <code>false</code> otherwise
+     */
+    public void setUseMilliseconds(final boolean useMilliseconds) {
+        m_useMillis = useMilliseconds;
+        if (!m_useMillis) {
+            m_value.clear(Calendar.MILLISECOND);
+        }
+    }
     
 
     /**
@@ -169,7 +232,8 @@ public class SettingsModelCalendar extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelCalendar createClone() {
-        return new SettingsModelCalendar(m_key, m_value, m_useDate, m_useTime);
+        return new SettingsModelCalendar(m_key, m_value, m_useDate, m_useTime, 
+                m_useMillis);
     }
 
     /**
@@ -199,7 +263,7 @@ public class SettingsModelCalendar extends SettingsModel {
             loadFromInternals(internals);
         } catch (InvalidSettingsException ise) {
             // load current time
-            m_value = Calendar.getInstance();
+            m_value = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
         }
     }
     
@@ -213,6 +277,7 @@ public class SettingsModelCalendar extends SettingsModel {
         m_value = tmpTime;
         m_useDate = internals.getBoolean(KEY_USE_DATE, true);
         m_useTime = internals.getBoolean(KEY_USE_TIME, false);
+        m_useMillis = internals.getBoolean(KEY_USE_MILLIS, false);
     }
     
     /**
@@ -236,15 +301,11 @@ public class SettingsModelCalendar extends SettingsModel {
     
     private void saveSettings(final NodeSettingsWO settings) {
         Config internals = settings.addConfig(m_key);
-        // timezone
-        internals.addString(KEY_TIMEZONE, m_value.getTimeZone().getID());
         // time (as long)
         internals.addLong(KEY_TIME, m_value.getTimeInMillis());
-        // we ignore the locale since I don't know how to access it from 
-        // calendar...
-        // TODO: do we need the locale???
         internals.addBoolean(KEY_USE_DATE, m_useDate);
         internals.addBoolean(KEY_USE_TIME, m_useTime);
+        internals.addBoolean(KEY_USE_MILLIS, m_useMillis);
     }
     
     
@@ -265,7 +326,8 @@ public class SettingsModelCalendar extends SettingsModel {
         if (m_useDate) {
             result = "Date: ";
             result += 
-                DateAndTimeRenderUtil.getStringForDateField(m_value.get(Calendar.YEAR))
+                DateAndTimeRenderUtil.getStringForDateField(
+                        m_value.get(Calendar.YEAR))
                 + "-" + DateAndTimeRenderUtil.getStringForDateField(
                         m_value.get(Calendar.MONTH)) + "-" 
                 + DateAndTimeRenderUtil.getStringForDateField(
@@ -280,8 +342,11 @@ public class SettingsModelCalendar extends SettingsModel {
                + DateAndTimeRenderUtil.getStringForDateField(
                        m_value.get(Calendar.MINUTE)) + ":" 
                + DateAndTimeRenderUtil.getStringForDateField(
-                       m_value.get(Calendar.SECOND)) + "." 
-               + m_value.get(Calendar.MILLISECOND); 
+                       m_value.get(Calendar.SECOND)); 
+           if (m_useMillis) {
+               result += "." + m_value.get(Calendar.MILLISECOND);
+           }
+                
         }
         return result;
     }
@@ -300,9 +365,7 @@ public class SettingsModelCalendar extends SettingsModel {
         if (!useDate && !useTime) {
             throw new InvalidSettingsException("Must use date, time or both!");
         }
-        if (internals.getString(KEY_TIMEZONE) == null) {
-            throw new InvalidSettingsException("No value for timezone defined");
-        }
+        internals.getBoolean(KEY_USE_MILLIS);
         // this probably throws an exception if there is no value for the key
         // since every possible long is a valid one (even negatives = in order 
         // to be able to store dates before 1970) 

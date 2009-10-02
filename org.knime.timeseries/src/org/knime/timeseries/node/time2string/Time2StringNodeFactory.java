@@ -1,12 +1,9 @@
-/* 
- * -------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2009
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
+ * Copyright, 2008 - 2009
+ * KNIME.com, Zurich, Switzerland
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -15,50 +12,51 @@
  * as specified in the license file distributed with this product.
  *
  * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
- * -------------------------------------------------------------------
+ * website: www.knime.com
+ * email: contact@knime.com
+ * ---------------------------------------------------------------------
  * 
  * History
- *   Aug 4, 2006 (rs): created
+ *   28.09.2009 (Fabian Dill): created
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.node.time2string;
 
+import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
 
 /**
- * This factory creates all necessary objects for the String->SLN converter
- * node.
  * 
- * @author M. Berthold, University of Konstanz
+ * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class MovingAverageNodeFactory 
-    extends NodeFactory<MovingAverageNodeModel> {
+public class Time2StringNodeFactory extends NodeFactory<Time2StringNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+        return new String2DateDialog(DateAndTimeValue.class, 
+                Time2StringNodeModel.COL_NAME_SUFFIX, false);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    public Time2StringNodeModel createNodeModel() {
+        return new Time2StringNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
+    public AbstractNodeView<Time2StringNodeModel> createNodeView(
+            final int viewIndex,
+            final Time2StringNodeModel nodeModel) {
         return null;
     }
 

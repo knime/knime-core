@@ -125,6 +125,44 @@ public class TimeDifferenceNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check for at least two date columns and auto configure
+        String firstColName = m_col1.getStringValue();
+        String secondColName = m_col2.getStringValue();
+        boolean autoConfigure = (firstColName == null || firstColName.isEmpty())
+            && (secondColName == null || secondColName.isEmpty());
+        if (autoConfigure) {
+            // avoid NullPointer
+            m_col1.setStringValue("");
+            m_col2.setStringValue("");
+        }
+        DataTableSpec inSpec = inSpecs[0];
+        int nrDateCols = 0;
+        for (DataColumnSpec colSpec : inSpec) {
+            if (colSpec.getType().isCompatible(DateAndTimeValue.class)) {
+                nrDateCols++;
+                if (nrDateCols >= 2 && !autoConfigure) {
+                    break;
+                }
+                // if autoconfigure -> set first column
+                if (autoConfigure && m_col1.getStringValue().isEmpty()) {
+                    m_col1.setStringValue(colSpec.getName());
+                } else if (autoConfigure 
+                        // if autoconfigure=true first column was null/empty
+                        // if not empty anymore autoconfigure second column
+                        && !m_col1.getStringValue().isEmpty()) {
+                    m_col2.setStringValue(colSpec.getName());
+                    setWarningMessage("Auto-configure: first column = \""
+                            + m_col1.getStringValue() + "\", second column = \""
+                            + m_col2.getStringValue() + "\"");
+                }
+            }
+        }
+        if (nrDateCols < 2) {
+            m_col1.setStringValue("");
+            m_col2.setStringValue("");
+            throw new InvalidSettingsException(
+                    "Input must contain at least two date/time columns!");
+        }
         m_col1Idx = inSpecs[0].findColumnIndex(m_col1.getStringValue());
         m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
         // check for first date column in input spec

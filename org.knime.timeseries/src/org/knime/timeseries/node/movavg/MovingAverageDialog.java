@@ -76,7 +76,7 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
                 createReplaceColumnModel(), "Replace columns"));
 
         addDialogComponent(new DialogComponentColumnFilter(
-                createColumnNamesModel(), 0, DoubleValue.class));
+                createColumnNamesModel(), 0, false, DoubleValue.class));
     }
 
     /**
