@@ -70,7 +70,9 @@ public class DateAndTimeUtility extends UtilityFactory {
     protected DataValueRendererFamily getRendererFamily(
             final DataColumnSpec spec) {
         return new DefaultDataValueRendererFamily(
-                DateAndTimeValueRenderer.EU, DateAndTimeValueRenderer.US);
+                DateAndTimeValueRenderer.DEFAULT,
+                DateAndTimeValueRenderer.ISO8061,
+                DateAndTimeValueRenderer.US);
     }
 
 }

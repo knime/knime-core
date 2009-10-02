@@ -21,7 +21,6 @@
  */
 package org.knime.core.data.date;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -441,52 +440,14 @@ public class DateAndTimeCell extends DataCell
                 ^ (m_utcCalendar.getTimeInMillis() >>> 32));
     }
 
-    /** a date formatter. */
-    static final SimpleDateFormat DATEONLYFORMAT =
-        new SimpleDateFormat("dd.MMM.yyyy");
-    /** a date formatter. */
-    static final SimpleDateFormat TIMEONLYFORMAT =
-        new SimpleDateFormat("hh:mm:ss");
-    /** a date formatter. */
-    static final SimpleDateFormat TIMEANDMILLISONLYFORMAT =
-        new SimpleDateFormat("hh:mm:ss.SSS");
-    /** a date formatter. */
-    static final SimpleDateFormat DATEANDTIMEFORMAT =
-        new SimpleDateFormat("dd.MMM.yyyy hh:mm:ss");
-    /** a date formatter. */
-    static final SimpleDateFormat DATEANDTIMEANDMILLISFORMAT =
-        new SimpleDateFormat("dd.MMM.yyyy hh:mm:ss.SSS");
-
     /**
      * 
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-        SimpleDateFormat sdf = null;
-        if (hasDate()) {
-            if (hasTime()) {
-                if (hasMillis()) {
-                    sdf = DATEANDTIMEANDMILLISFORMAT;
-                } else {
-                    sdf = DATEANDTIMEFORMAT;
-                }
-            } else {
-                sdf = DATEONLYFORMAT;
-            }
-        } else {
-            if (hasTime()) {
-                if (hasMillis()) {
-                    sdf = TIMEANDMILLISONLYFORMAT;
-                } else {
-                    sdf = TIMEONLYFORMAT;
-                }
-            } else {
-                return "n/a";
-            }
-        }
-        assert sdf != null;
-        return sdf.format(m_utcCalendar.getTime());
+        return DateAndTimeValueRenderer.DEFAULT.getStringRepresentationFor(
+                this);
     }
 
 }
