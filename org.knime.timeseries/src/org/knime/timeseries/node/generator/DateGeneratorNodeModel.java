@@ -54,12 +54,6 @@ public class DateGeneratorNodeModel extends NodeModel {
     private final SettingsModelInteger m_noOfRows = DateGeneratorNodeDialog
         .createNumberOfRowsModel();
     
-    private boolean m_useDate;
-    
-    private boolean m_useTime;
-
-    private boolean m_useMillis;
-    
     /**
      *
      */
@@ -88,6 +82,9 @@ public class DateGeneratorNodeModel extends NodeModel {
     
     private static long calculateOffset(final Calendar from, final Calendar to, 
             final int noOfRows) {
+        if (noOfRows <= 1) {
+            return 0;
+        }
         // if offset is smaller than a second milliseconds 
         // might be of interest
         return (to.getTimeInMillis() - from.getTimeInMillis())
@@ -104,31 +101,24 @@ public class DateGeneratorNodeModel extends NodeModel {
         // prepare the calendars
         Calendar from = m_from.getCalendar();
         Calendar to = m_to.getCalendar();
-        if (m_useDate && !m_useTime) {
+        boolean useDate = m_from.useDate() || m_to.useDate();
+        boolean useTime = m_from.useTime() || m_to.useTime();
+        boolean useMillis = m_from.useMilliseconds() || m_to.useMilliseconds();
+        if (useDate && !useTime) {
             DateAndTimeCell.resetTimeFields(from);
             DateAndTimeCell.resetTimeFields(to);
-        } else if (m_useTime && !m_useDate) {
+        } else if (useTime && !useDate) {
             DateAndTimeCell.resetDateFields(from);
             DateAndTimeCell.resetDateFields(to);
+        }
+        if (!useMillis) {
+            from.clear(Calendar.MILLISECOND);
+            to.clear(Calendar.MILLISECOND);
         }
         BufferedDataContainer container = exec.createDataContainer(
                 createOutSpec());
         int nrRows = m_noOfRows.getIntValue(); 
-        // in case number of rows is 1
-        long offset = 0;
-        boolean needsMillis = false;
-        if (nrRows > 1) {
-            // if offset is smaller than a second milliseconds 
-            // might be of interest
-            offset = calculateOffset(from, to, nrRows);
-            needsMillis = offset < 1000;
-        }
-        // offset is shorter than a day -> so we need the time fields
-        /* Decided to return only the date because the user only selected date
-         * If date and time was desired it can easily achieved by selecting 
-         * the time checkbox as well. 
-         */
-//        boolean needsTimeFields = offset < 86400000; // <- one day
+        long offset = calculateOffset(from, to, nrRows);
         long currentTime = from.getTimeInMillis();
         Calendar test = DateAndTimeCell.getUTCCalendar();
         test.setTimeInMillis(currentTime);
@@ -137,8 +127,7 @@ public class DateGeneratorNodeModel extends NodeModel {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
             DateAndTimeCell cell = new DateAndTimeCell(currentTime, 
-                    m_useDate, m_useTime /*|| needsTimeFields*/, 
-                    m_useMillis || (needsMillis && m_useTime));
+                    useDate, useTime, useMillis);
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;
             currentRow++;
@@ -157,7 +146,7 @@ public class DateGeneratorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
+        // nothing to do here
     }
 
     /**
@@ -184,30 +173,32 @@ public class DateGeneratorNodeModel extends NodeModel {
         SettingsModelCalendar from = m_from.createCloneWithValidatedValue(
                 settings);
         SettingsModelCalendar to = m_to.createCloneWithValidatedValue(settings);
-        // check for !useDate and !useTime
-        if (!from.useDate() && !from.useTime()) {
-            throw new InvalidSettingsException(
-                    "Timestamp must consists of date or time!");
-        }
-        if (!to.useDate() && !to.useTime()) {
-            throw new InvalidSettingsException(
-                    "Timestamp must consists of date or time!");
-        }
-        
+        validateDates(from, to);
+        int noRows = noRowsModel.getIntValue();
         long offset = calculateOffset(from.getCalendar(), to.getCalendar(), 
-                noRowsModel.getIntValue());
-        if (offset <= 0) {
+                noRows);
+        // if no of row = 1 we simply return the start date
+        if (offset <= 0 && noRows > 1) {
             throw new InvalidSettingsException(
                     "Number of rows too large for entered time period! " 
                     + "Steps are smaller than a millisecond. " 
                     + "Please reduce number of rows.");
         }
-        validateDates(from, to);
     }
 
     private static void validateDates(final SettingsModelCalendar start, 
             final SettingsModelCalendar end)
         throws InvalidSettingsException {
+        // check for !useDate and !useTime
+        if (!start.useDate() && !start.useTime()) {
+            throw new InvalidSettingsException(
+                    "Timestamp must consists of date or time!");
+        }
+        if (!end.useDate() && !end.useTime()) {
+            throw new InvalidSettingsException(
+                    "Timestamp must consists of date or time!");
+        }
+        
         if (end.getCalendar().before(start.getCalendar())
                 || end.getCalendar().getTimeInMillis() == start.getCalendar()
                 .getTimeInMillis()) {
@@ -228,23 +219,6 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.loadSettingsFrom(settings);
         m_to.loadSettingsFrom(settings);
         m_noOfRows.loadSettingsFrom(settings);
-        m_useDate = false;
-        m_useTime = false;
-        // check data type
-        // 1. only date?
-        if (m_from.useDate() || m_to.useDate()) {
-            // only date
-            m_useDate = true;
-        } 
-        if (m_from.useTime() || m_to.useTime()) {
-            // only time
-            m_useTime = true;
-        }
-        if (m_from.useMilliseconds() || m_to.useMilliseconds()) {
-            m_useMillis = true; 
-        } else {
-            m_useMillis = false;
-        }
     }
 
 
