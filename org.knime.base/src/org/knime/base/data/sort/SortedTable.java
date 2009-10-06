@@ -104,7 +104,9 @@ public class SortedTable implements DataTable {
             throws CanceledExecutionException {
         m_rowComparator = rowComparator;
         m_spec = dataTable.getDataTableSpec();
-        if (sortInMemory) {
+        if (dataTable.getRowCount() < 2) {
+            m_sortedTable = dataTable;
+        } else if (sortInMemory) {
             sortInMemory(dataTable, exec);
         } else {
             sortOnDisk(dataTable, exec);
@@ -192,7 +194,7 @@ public class SortedTable implements DataTable {
             m_indices[i] = pos;
         }
 
-        if (dataTable.getRowCount() == 0) {
+        if (dataTable.getRowCount() < 2) {
             m_sortedTable = dataTable;
         } else if (sortInMemory) {
             sortInMemory(dataTable, exec);
