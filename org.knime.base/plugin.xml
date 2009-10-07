@@ -559,7 +559,7 @@
             factory-class="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
             id="org.knime.base.node.preproc.groupby.GroupByNodeFactory"/>
       <node
-            category-path="/manipulation/column/column-transform"
+            category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.pivot.PivotNodeFactory"
             id="org.knime.base.node.preproc.pivot.PivotNodeFactory"/>
       <node
@@ -928,7 +928,7 @@
 
       <node
             after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
-            category-path="/manipulation/column/column-transform"
+            category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory"
             id="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory">
       </node>
