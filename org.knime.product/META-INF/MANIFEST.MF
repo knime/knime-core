@@ -23,7 +23,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.workbench,
  org.eclipse.ui.intro,
  org.eclipse.core.net,
- org.eclipse.ui.net
+ org.eclipse.ui.net,
+ org.eclipse.ui.console
 Eclipse-LazyStart: false
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.product,

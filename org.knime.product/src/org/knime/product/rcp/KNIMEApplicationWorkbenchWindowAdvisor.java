@@ -24,10 +24,14 @@
  */
 package org.knime.product.rcp;
 
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchListener;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.internal.ide.model.WorkbenchAdapterBuilder;
 
 /**
@@ -88,4 +92,36 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
         // Resources)
         WorkbenchAdapterBuilder.registerAdapters();
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void postWindowOpen() {
+        PlatformUI.getWorkbench().addWorkbenchListener(
+                new IWorkbenchListener() {
+            @Override
+            public void postShutdown(final IWorkbench workbench) {
+                // do nothing
+            }
+            @Override
+            public boolean preShutdown(final IWorkbench workbench, 
+                    final boolean forced) {
+                // Remove consoles manually in time. Otherwise they are removed,
+                // when the display is already disposed and this causes 
+                // exceptions
+                // this is a workaround for bug 
+                // https://bugs.eclipse.org/bugs/show_bug.cgi?id=257970
+                // reported here:
+                // http://dev.eclipse.org/newslists/news.eclipse.platform.rcp/msg35729.html
+
+                ConsolePlugin.getDefault().getConsoleManager().removeConsoles(
+                        ConsolePlugin.getDefault().getConsoleManager()
+                        .getConsoles());
+                return true;
+            }
+        });
+    }
+    
 }
