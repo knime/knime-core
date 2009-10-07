@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   19.06.2007 (gabriel): created
  */
@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -54,43 +55,40 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
-    
-    private final SettingsModelString m_columnModel 
+
+    private final SettingsModelString m_columnModel
         = DatabaseLoopingNodeDialogPane.createColumnModel();
-    
+
     private final SettingsModelBoolean m_aggByRow
         = DatabaseLoopingNodeDialogPane.createAggregateModel();
-    
+
     private final SettingsModelBoolean m_appendGridColumn
         = DatabaseLoopingNodeDialogPane.createGridColumnModel();
-    
+
     private final SettingsModelIntegerBounded m_noValues
         = DatabaseLoopingNodeDialogPane.createNoValuesModel();
-    
+
     private final HiLiteHandler m_hilite = new HiLiteHandler();
-    
+
     /** Place holder for table name. */
     private static final String TABLE_NAME_PLACE_HOLDER = "<table_name>";
     /** Place holder for table column name. */
     private static final String TABLE_COLUMN_PLACE_HOLDER = "<table_column>";
     /** Place holder for the possible values. */
     private static final String IN_PLACE_HOLDER = "#PLACE_HOLDER_DO_NOT_EDIT#";
-    /** Complete place holder for the where statement. */
-    private static final String WHERE_PLACE_HOLDER 
-        = " WHERE " + TABLE_COLUMN_PLACE_HOLDER 
-        + " IN ('" + IN_PLACE_HOLDER + "')";
-    
+
     /**
      *
      */
     DatabaseLoopingNodeModel() {
         super(1, 1);
-        setQuery("SELECT * FROM " + TABLE_NAME_PLACE_HOLDER 
-                + WHERE_PLACE_HOLDER);
+        setQuery("SELECT * FROM " + TABLE_NAME_PLACE_HOLDER
+                + " WHERE " + TABLE_COLUMN_PLACE_HOLDER
+                + " IN ('" + IN_PLACE_HOLDER + "')");
     }
 
     /**
@@ -107,12 +105,13 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         final String oQuery = getQuery();
         DataTableSpec spec = null;
         try {
-            setQuery(oQuery.replace(WHERE_PLACE_HOLDER, "WHERE 0 = 1"));
+            String newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
+            setQuery(newQuery);
             spec = super.configure(inSpecs)[0];
         } finally {
             setQuery(oQuery);
         }
-        return new DataTableSpec[]{createSpec(spec, 
+        return new DataTableSpec[]{createSpec(spec,
                 inSpecs[0].getColumnSpec(column))};
     }
 
@@ -153,8 +152,8 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     String newQuery = oQuery.replaceAll(
                             IN_PLACE_HOLDER, queryValues.toString());
                     setQuery(newQuery);
-                    exec.setProgress(values.size() * (double) noValues 
-                            / (double)inData[0].getRowCount(),
+                    exec.setProgress(values.size() * (double) noValues
+                            / inData[0].getRowCount(),
                             "Selecting all values \"" + queryValues + "\"...");
                     BufferedDataTable table = super.execute(inData, exec)[0];
                     if (buf == null) {
@@ -163,7 +162,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                                 spec.getColumnSpec(column)));
                     }
                     if (m_aggByRow.getBooleanValue()) {
-                        aggregate(table, rowCnt, buf, 
+                        aggregate(table, rowCnt, buf,
                                 CollectionCellFactory.createListCell(curSet));
                     } else {
                         notAggregate(table, rowCnt, buf,
@@ -180,14 +179,14 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         }
         return new BufferedDataTable[]{buf.getTable()};
     }
-    
+
     private DataTableSpec createSpec(final DataTableSpec spec,
             final DataColumnSpec gridSpec) {
         int nrCols = spec.getNumColumns();
         DataColumnSpec[] cspecs;
         if (m_appendGridColumn.getBooleanValue()) {
             cspecs = new DataColumnSpec[nrCols + 1];
-            DataColumnSpecCreator crSpec = 
+            DataColumnSpecCreator crSpec =
                 new DataColumnSpecCreator(gridSpec);
             crSpec.setType(ListCell.getCollectionType(StringCell.TYPE));
             if (spec.containsName(gridSpec.getName())) {
@@ -200,18 +199,18 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         for (int i = 0; i < nrCols; i++) {
             DataColumnSpec cspec = spec.getColumnSpec(i);
             if (m_aggByRow.getBooleanValue()) {
-                cspec = new DataColumnSpecCreator(cspec.getName(), 
+                cspec = new DataColumnSpecCreator(cspec.getName(),
                     StringCell.TYPE).createSpec();
             }
             cspecs[i] = cspec;
         }
         return new DataTableSpec(cspecs);
     }
-    
-    private void aggregate(final DataTable table, final MutableInteger rowCnt, 
+
+    private void aggregate(final DataTable table, final MutableInteger rowCnt,
             final BufferedDataContainer buf, final DataCell gridValue) {
-        LinkedHashSet<DataCell>[] values = 
-            new LinkedHashSet[table.getDataTableSpec().getNumColumns()]; 
+        final DataTableSpec spec = table.getDataTableSpec();
+        Set<DataCell>[] values = new LinkedHashSet[spec.getNumColumns()];
         for (final DataRow resRow : table) {
             for (int i = 0; i < values.length; i++) {
                 if (values[i] == null) {
@@ -245,20 +244,20 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         final RowKey rowKey = RowKey.createRowKey(rowCnt.intValue());
         buf.addRowToTable(new DefaultRow(rowKey, cells));
     }
-        
-    private void notAggregate(final DataTable table, 
-            final MutableInteger rowCnt, 
+
+    private void notAggregate(final DataTable table,
+            final MutableInteger rowCnt,
             final BufferedDataContainer buf, final DataCell gridValue) {
         for (final DataRow resRow : table) {
             rowCnt.inc();
             final RowKey rowKey = RowKey.createRowKey(rowCnt.intValue());
             // override data row to replace row key
             buf.addRowToTable(new DataRow() {
-                private final int m_nrCells = 
-                    (m_appendGridColumn.getBooleanValue() 
+                private final int m_nrCells =
+                    (m_appendGridColumn.getBooleanValue()
                             ? resRow.getNumCells() + 1 : resRow.getNumCells());
                 public DataCell getCell(final int index) {
-                    if (m_appendGridColumn.getBooleanValue() 
+                    if (m_appendGridColumn.getBooleanValue()
                             && index == resRow.getNumCells()) {
                         return gridValue;
                     } else {
@@ -330,7 +329,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
