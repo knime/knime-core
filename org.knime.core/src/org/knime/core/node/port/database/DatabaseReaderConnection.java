@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -352,106 +353,94 @@ public final class DatabaseReaderConnection {
             for (int i = 0; i < cells.length; i++) {
                 DataType type = m_spec.getColumnSpec(i).getType();
                 int dbType = Types.NULL;
+                final DataCell cell;
                 try {
                     dbType = m_result.getMetaData().getColumnType(i + 1);
                     if (type.isCompatible(IntValue.class)) {
-                        int integer;
                         switch (dbType) {
                             // all types that can be interpreted as integer
                             case Types.TINYINT:
-                                integer = m_result.getByte(i + 1);
+                                cell = readByte(i);
                                 break;
                             case Types.SMALLINT:
-                                integer = m_result.getShort(i + 1);
+                                cell = readShort(i);
                                 break;
                             case Types.INTEGER:
-                                integer = m_result.getInt(i + 1);
+                                cell = readInt(i);
                                 break;
                             case Types.BIT:
                             case Types.BOOLEAN:
-                                integer = m_result.getBoolean(i + 1) ? 1 : 0;
+                                cell = readBoolean(i);
                                 break;
-                                default: integer = m_result.getInt(i + 1);
-                        }
-                        if (wasNull()) {
-                            cells[i] = DataType.getMissingCell();
-                        } else {
-                            cells[i] = new IntCell(integer);
+                            default: cell = readInt(i);
                         }
                     } else if (type.isCompatible(DoubleValue.class)) {
-                        double dbl;
                         switch (dbType) {
                             // all types that can be interpreted as double
                             case Types.REAL:
-                                dbl = m_result.getFloat(i + 1);
+                                cell = readFloat(i);
                                 break;
                             case Types.FLOAT:
                             case Types.DOUBLE:
-                                dbl = m_result.getDouble(i + 1);
+                                cell = readDouble(i);
                                 break;
                             case Types.DECIMAL:
                             case Types.NUMERIC:
-                                dbl =
-                                    m_result.getBigDecimal(i + 1).doubleValue();
+                                cell = readBigDecimal(i);
                                 break;
                             case Types.BIGINT:
-                                dbl = m_result.getLong(i + 1);
+                                cell = readLong(i);
                                 break;
-                                default: dbl = m_result.getDouble(i + 1);
-                        }
-                        if (wasNull()) {
-                            cells[i] = DataType.getMissingCell();
-                        } else {
-                            cells[i] = new DoubleCell(dbl);
+                            default: cell = readDouble(i);
                         }
                     } else if (type.isCompatible(DateAndTimeValue.class)) {
-                        DateAndTimeCell date;
                         switch (dbType) {
-                            case Types.DATE: date = readDate(i); break;
-                            case Types.TIME: date = readTime(i); break;
+                            case Types.DATE:
+                                cell = readDate(i); break;
+                            case Types.TIME:
+                                cell = readTime(i); break;
                             case Types.TIMESTAMP:
-                                date = readTimestamp(i); break;
-                                default: date = null;
-                        }
-                        if (date == null) {
-                            cells[i] = DataType.getMissingCell();
-                        } else {
-                            cells[i] = date;
+                                cell = readTimestamp(i); break;
+                            default: cell = readString(i);
                         }
                     } else {
-                        String s;
                         switch (dbType) {
-                            case Types.CLOB: s = readClob(i); break;
-                            case Types.BLOB: s = readBlob(i); break;
-                            case Types.ARRAY: s = readArray(i); break;
+                            case Types.CLOB:
+                                cell = readClob(i); break;
+                            case Types.BLOB:
+                                cell = readBlob(i); break;
+                            case Types.ARRAY:
+                                cell = readArray(i); break;
                             case Types.CHAR:
                             case Types.VARCHAR:
-                                s = readString(i); break;
+                                cell = readString(i); break;
                             case Types.LONGVARCHAR:
-                                s = readAsciiStream(i); break;
+                                cell = readAsciiStream(i); break;
                             case Types.BINARY:
                             case Types.VARBINARY:
-                                s = readBytes(i); break;
+                                cell = readBytes(i); break;
                             case Types.LONGVARBINARY:
-                                s = readBinaryStream(i); break;
-                            case Types.REF: s = readRef(i); break;
+                                cell = readBinaryStream(i); break;
+                            case Types.REF:
+                                cell = readRef(i); break;
                             case Types.NCHAR:
                             case Types.NVARCHAR:
-                            case Types.LONGNVARCHAR: s = readNString(i); break;
-                            case Types.NCLOB: s = readNClob(i); break;
-                            case Types.DATALINK: s = readURL(i); break;
+                            case Types.LONGNVARCHAR:
+                                cell = readNString(i); break;
+                            case Types.NCLOB:
+                                cell = readNClob(i); break;
+                            case Types.DATALINK:
+                                cell = readURL(i); break;
                             case Types.STRUCT:
                             case Types.JAVA_OBJECT:
-                                s = readObject(i); break;
-                                default: s = readObject(i); break;
+                                cell = readObject(i); break;
+                            default:
+                                cell = readObject(i); break;
 
                         }
-                        if (s == null) {
-                            cells[i] = DataType.getMissingCell();
-                        } else {
-                            cells[i] = new StringCell(s);
-                        }
                     }
+                    // finally set the new cell into the array of cells
+                    cells[i] = cell;
                 } catch (SQLException sqle) {
                     handlerException(
                             "SQL Exception reading Object of type \""
@@ -472,41 +461,41 @@ public final class DatabaseReaderConnection {
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
         }
 
-        private String readClob(final int i)
+        private DataCell readClob(final int i)
                 throws IOException, SQLException {
             Clob clob = m_result.getClob(i + 1);
             if (wasNull() || clob == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
                 Reader reader = clob.getCharacterStream();
                 StringWriter writer = new StringWriter();
                 FileUtil.copy(reader, writer);
                 reader.close();
                 writer.close();
-                return writer.toString();
+                return new StringCell(writer.toString());
             }
         }
 
-        private String readNClob(final int i)
+        private DataCell readNClob(final int i)
                 throws IOException, SQLException {
             NClob nclob = m_result.getNClob(i + 1);
             if (wasNull() || nclob == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
                 Reader reader = nclob.getCharacterStream();
                 StringWriter writer = new StringWriter();
                 FileUtil.copy(reader, writer);
                 reader.close();
                 writer.close();
-                return writer.toString();
+                return new StringCell(writer.toString());
             }
         }
 
-        private String readBlob(final int i)
+        private DataCell readBlob(final int i)
                 throws IOException, SQLException {
            Blob blob = m_result.getBlob(i + 1);
            if (wasNull() || blob == null) {
-               return null;
+               return DataType.getMissingCell();
            } else {
                InputStreamReader reader =
                    // TODO: using default encoding
@@ -515,11 +504,11 @@ public final class DatabaseReaderConnection {
                FileUtil.copy(reader, writer);
                reader.close();
                writer.close();
-               return writer.toString();
+               return new StringCell(writer.toString());
            }
         }
 
-        private String readAsciiStream(final int i)
+        private DataCell readAsciiStream(final int i)
                 throws IOException, SQLException {
             if (m_streamException[i]) {
                 return readString(i);
@@ -527,7 +516,7 @@ public final class DatabaseReaderConnection {
             try {
                 InputStream is = m_result.getAsciiStream(i + 1);
                 if (wasNull() || is == null) {
-                    return null;
+                    return DataType.getMissingCell();
                 } else {
                     InputStreamReader reader =
                     // TODO: using default encoding
@@ -536,7 +525,7 @@ public final class DatabaseReaderConnection {
                     FileUtil.copy(reader, writer);
                     reader.close();
                     writer.close();
-                    return writer.toString();
+                    return new StringCell(writer.toString());
                 }
             } catch (SQLException sql) {
                 m_streamException[i] = true;
@@ -546,25 +535,98 @@ public final class DatabaseReaderConnection {
             }
         }
 
-        private String readString(final int i) throws SQLException {
+        private DataCell readByte(final int i) throws SQLException {
+            byte b = m_result.getByte(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new IntCell(b);
+            }
+        }
+
+        private DataCell readShort(final int i) throws SQLException {
+            short s = m_result.getShort(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new IntCell(s);
+            }
+        }
+
+        private DataCell readInt(final int i) throws SQLException {
+            int integer = m_result.getInt(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new IntCell(integer);
+            }
+        }
+
+        private DataCell readBoolean(final int i) throws SQLException {
+            boolean b = m_result.getBoolean(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new IntCell(b ? 1 : 0);
+            }
+        }
+
+        private DataCell readDouble(final int i) throws SQLException {
+            double d = m_result.getDouble(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new DoubleCell(d);
+            }
+        }
+
+        private DataCell readFloat(final int i) throws SQLException {
+            float f = m_result.getFloat(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new DoubleCell(f);
+            }
+        }
+
+        private DataCell readLong(final int i) throws SQLException {
+            long l = m_result.getLong(i + 1);
+            if (wasNull()) {
+                return DataType.getMissingCell();
+            } else {
+                return new DoubleCell(l);
+            }
+        }
+
+        private DataCell readString(final int i) throws SQLException {
             String s = m_result.getString(i + 1);
             if (wasNull() || s == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return s;
+                return new StringCell(s);
             }
         }
 
-        private String readBytes(final int i) throws SQLException {
+        private DataCell readBytes(final int i) throws SQLException {
             byte[] bytes = m_result.getBytes(i + 1);
             if (wasNull() || bytes == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return new String(bytes);
+                return new StringCell(new String(bytes));
             }
         }
 
-        private String readBinaryStream(final int i)
+        private DataCell readBigDecimal(final int i) throws SQLException {
+            BigDecimal bc = m_result.getBigDecimal(i + 1);
+            if (wasNull() || bc == null) {
+                return DataType.getMissingCell();
+            } else {
+                return new DoubleCell(bc.doubleValue());
+            }
+
+        }
+
+        private DataCell readBinaryStream(final int i)
                 throws IOException, SQLException {
             if (m_streamException[i]) {
                 return readString(i);
@@ -572,7 +634,7 @@ public final class DatabaseReaderConnection {
             try {
                 InputStream is = m_result.getBinaryStream(i + 1);
                 if (wasNull() || is == null) {
-                    return null;
+                    return DataType.getMissingCell();
                 } else {
                     InputStreamReader reader =
                     // TODO: using default encoding
@@ -581,7 +643,7 @@ public final class DatabaseReaderConnection {
                     FileUtil.copy(reader, writer);
                     reader.close();
                     writer.close();
-                    return writer.toString();
+                    return new StringCell(writer.toString());
                 }
             } catch (SQLException sql) {
                 m_streamException[i] = true;
@@ -591,76 +653,76 @@ public final class DatabaseReaderConnection {
             }
         }
 
-        private String readNString(final int i) throws SQLException {
+        private DataCell readNString(final int i) throws SQLException {
             String str = m_result.getNString(i + 1);
             if (wasNull() || str == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return str;
+                return new StringCell(str);
             }
         }
 
-        private DateAndTimeCell readDate(final int i) throws SQLException {
+        private DataCell readDate(final int i) throws SQLException {
             Date date = m_result.getDate(i + 1);
             if (wasNull() || date == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
                 return new DateAndTimeCell(date.getTime(), true, false, false);
             }
         }
 
-        private DateAndTimeCell readTime(final int i) throws SQLException {
+        private DataCell readTime(final int i) throws SQLException {
             Time time = m_result.getTime(i + 1);
             if (wasNull() || time == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
                 return new DateAndTimeCell(time.getTime(), false, true, true);
             }
         }
 
-        private DateAndTimeCell readTimestamp(final int i) throws SQLException {
+        private DataCell readTimestamp(final int i) throws SQLException {
             Timestamp timestamp = m_result.getTimestamp(i + 1);
             if (wasNull() || timestamp == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
                 return new DateAndTimeCell(
                         timestamp.getTime(), true, true, true);
             }
         }
 
-        private String readArray(final int i) throws SQLException {
+        private DataCell readArray(final int i) throws SQLException {
             Array array = m_result.getArray(i + 1);
             if (wasNull() || array == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return array.getArray().toString();
+                return new StringCell(array.getArray().toString());
             }
         }
 
-        private String readRef(final int i) throws SQLException {
+        private DataCell readRef(final int i) throws SQLException {
             Ref ref = m_result.getRef(i + 1);
             if (wasNull() || ref == null) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return ref.getObject().toString();
+                return new StringCell(ref.getObject().toString());
             }
         }
 
-        private String readURL(final int i) throws SQLException {
+        private DataCell readURL(final int i) throws SQLException {
             URL url = m_result.getURL(i + 1);
             if (url == null || wasNull()) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return url.toString();
+                return new StringCell(url.toString());
             }
         }
 
-        private String readObject(final int i) throws SQLException {
+        private DataCell readObject(final int i) throws SQLException {
             Object o = m_result.getObject(i + 1);
             if (o == null || wasNull()) {
-                return null;
+                return DataType.getMissingCell();
             } else {
-                return o.toString();
+                return new StringCell(o.toString());
             }
         }
 
