@@ -114,7 +114,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     MasterKeyPreferencePage(final boolean flag) {
         super(GRID);
-        Composite parent = super.getFieldEditorParent();
         if (SUPPLIER.m_wasSet) {
             setDescription(NEW_DESCRIPTION + DESCRIPTION);
         } else {
