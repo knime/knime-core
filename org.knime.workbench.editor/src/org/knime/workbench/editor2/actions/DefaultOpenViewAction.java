@@ -109,7 +109,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
 
-        NodeContainerEditPart[] parts = getAllNodeParts();
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
 
         // enable if we have at least one executing or queued node in our
         // selection
@@ -133,7 +133,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating open default view job for " + nodeParts.length
                 + " node(s)...");
-        NodeContainerEditPart[] parts = getAllNodeParts();
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
             if (cont.getState().equals(NodeContainer.State.EXECUTED)
