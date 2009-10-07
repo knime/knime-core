@@ -17,9 +17,9 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   24.09.2009 (Fabian Dill): created
+ *   05.10.2009 (Fabian Dill): created
  */
-package org.knime.timeseries.node.extract;
+package org.knime.timeseries.node.extract.date;
 
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
@@ -29,8 +29,8 @@ import org.knime.core.node.NodeFactory;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimeFieldExtractorNodeFactory 
-    extends NodeFactory<TimeFieldExtractorNodeModel> {
+public class DateFieldExtractorNodeFactory 
+    extends NodeFactory<DateFieldExtractorNodeModel> {
 
     /**
      * 
@@ -38,7 +38,7 @@ public class TimeFieldExtractorNodeFactory
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new TimeFieldExtractorNodeDialog();
+        return new DateFieldExtractorNodeDialog();
     }
 
     /**
@@ -46,8 +46,8 @@ public class TimeFieldExtractorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public TimeFieldExtractorNodeModel createNodeModel() {
-        return new TimeFieldExtractorNodeModel();
+    public DateFieldExtractorNodeModel createNodeModel() {
+        return new DateFieldExtractorNodeModel();
     }
 
     /**
@@ -55,8 +55,8 @@ public class TimeFieldExtractorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<TimeFieldExtractorNodeModel> createNodeView(
-            final int viewIndex, final TimeFieldExtractorNodeModel nodeModel) {
+    public AbstractNodeView<DateFieldExtractorNodeModel> createNodeView(
+            final int viewIndex, final DateFieldExtractorNodeModel nodeModel) {
         return null;
     }
 

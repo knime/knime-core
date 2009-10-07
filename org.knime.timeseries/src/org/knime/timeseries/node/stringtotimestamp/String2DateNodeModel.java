@@ -108,11 +108,11 @@ public class String2DateNodeModel extends NodeModel {
             throw new InvalidSettingsException("No format selected.");
         }
         m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
-        m_dateFormat.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
         if (m_dateFormat == null) {
             throw new InvalidSettingsException("Invalid format: "
                     + m_formatModel.getStringValue());
         }
+        m_dateFormat.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
 
         if (m_selectedColModel.getStringValue() == null 
                 || m_selectedColModel.getStringValue().isEmpty()) {

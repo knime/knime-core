@@ -17,58 +17,63 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   25.09.2009 (Fabian Dill): created
+ *   06.10.2009 (Fabian Dill): created
  */
 package org.knime.timeseries.node.extract;
 
-import java.util.Calendar;
-import java.util.Locale;
-
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.IntCell;
 
 /**
- * Extracts the month name (in English) from the passed {@link DateAndTimeValue}
- * and returns it as a string.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class MonthStringExtractorCellFactory extends SingleCellFactory {
+public abstract class AbstractTimeExtractorIntCellFactory extends
+        AbstractTimeExtractorCellFactory {
 
-    private final int m_colIdx;
+    /**
+     * 
+     * @param colIdx index of the column to extract the value from
+     * @param colName new column name
+     * @param checkTime <code>true</code> if the time should be checked, 
+     * <code>false</code> if the date should be checked 
+     */
+    public AbstractTimeExtractorIntCellFactory(
+            final String colName, final int colIdx, final boolean checkTime) {
+        super(colName, colIdx, IntCell.TYPE, checkTime);
+    }
     
     /**
      * 
-     * @param colName name of the column containing the names of the months
-     * @param columnIndex index of the column containing the 
-     *  {@link DateAndTimeValue}
+     * @param value the time value which has already been tested to be not 
+     *  missing and to have time fields set
+     * @return the value of the referring time field
      */
-    public MonthStringExtractorCellFactory(final String colName, 
-            final int columnIndex) {
-        super(new DataColumnSpecCreator(colName, StringCell.TYPE).createSpec());
-        m_colIdx = columnIndex;
-    }
+    protected abstract int extractTimeField(final DateAndTimeValue value);
     
     /**
      * {@inheritDoc}
      */
     @Override
     public DataCell getCell(final DataRow row) {
-        DataCell cell = row.getCell(m_colIdx);
+        DataCell cell = row.getCell(getColumnIndex());
         if (cell.isMissing()) {
             return DataType.getMissingCell();
         }
         DateAndTimeValue value = (DateAndTimeValue)cell;
-        if (value.hasDate()) {
-            return new StringCell(value.getUTCCalendarClone().getDisplayName(
-                    Calendar.MONTH, Calendar.LONG, Locale.ENGLISH));
+        if (checkTime() && value.hasTime()) {
+            producedValidValue();
+            return new IntCell(extractTimeField(value));
+        }
+        if (checkDate() && value.hasDate()) {
+            producedValidValue();
+            return new IntCell(extractTimeField(value));
         }
         // no date set
+        increaseMissingValueCount();
         return DataType.getMissingCell();
     }
 

@@ -119,15 +119,7 @@ public class Time2StringNodeModel extends NodeModel {
                     break;
                 }
             }
-        }
-        // make new column name unique
-        if (!m_replaceCol.getBooleanValue()) {
-            String uniqueColName = DataTableSpec.getUniqueColumnName(inSpec, 
-                m_newColName.getStringValue());
-            // and set it into the column name model
-            m_newColName.setStringValue(uniqueColName);
-        }
-        
+        }        
         // create output spec
         ColumnRearranger colRearranger = createColumnRearranger(inSpec);
         return new DataTableSpec[] {colRearranger.createSpec()};
@@ -140,7 +132,8 @@ public class Time2StringNodeModel extends NodeModel {
         final boolean replace = m_replaceCol.getBooleanValue();
         String colName = m_newColName.getStringValue();
         if (replace) {
-            colName = m_selectedCol.getStringValue();
+            colName = DataTableSpec.getUniqueColumnName(inSpec, 
+                    m_selectedCol.getStringValue());
         }
         DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
                 colName, StringCell.TYPE);

@@ -17,53 +17,82 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   24.09.2009 (Fabian Dill): created
+ *   05.10.2009 (Fabian Dill): created
  */
 package org.knime.timeseries.node.extract;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * Node dialog for the time extractor node that configures which of the time 
- * fields (year, month, day, hour, minute, second, millisecond) should be 
- * appended as an int column.
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
+public class AbstractFieldExtractorNodeDialog 
+    extends DefaultNodeSettingsPane {
 
-    /** Year name. */
-    static final String YEAR = "Year";
-    /** Quarter name.*/
-    static final String QUARTER = "Quarter";
-    /** Month name. */
-    static final String MONTH = "Month";
-    /** Day name. */
-    static final String DAY = "Day";
-    /** Hour name. */
-    static final String HOUR = "Hour";
-    /** Minute name. */
-    static final String MINUTE = "Minute";
-    /** Second name. */
-    static final String SECOND = "Second";
-    /** Millisecond. */
-    static final String MILLISECOND = "Millisecond";
+    /** Warning message that no field is selected. */
+    public static final String NOTHING_SELECTED_MESSAGE = 
+        "No field selected. Output table will be same as input table!";
+    
+    // general helper methods
+    
+    /**
+     * 
+     * @param settings settings to read from
+     * @param enabledModel the check box model in order to validate only active
+     * column name models
+     * @param colNameModel the column name model for which the value should be 
+     * validated
+     * @return true if the name is enabled and valid, falsei f the name is not 
+     * enabled 
+     * @throws InvalidSettingsException if the string value of the column model
+     * is either <code>null</code> or empty 
+     */
+    public static boolean validateColumnName(final NodeSettingsRO settings,
+            final SettingsModelBoolean enabledModel,
+            final SettingsModelString colNameModel) 
+    throws InvalidSettingsException {
+        SettingsModelBoolean isEnabled = enabledModel
+            .createCloneWithValidatedValue(settings);
+        if (!isEnabled.getBooleanValue()) {
+            return false;
+        }
+        SettingsModelString colNameClone = colNameModel
+                .createCloneWithValidatedValue(settings);
+        String colName = colNameClone.getStringValue();
+        if (colName == null || colName.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "A column name must not be empty!");
+        }
+        return true;
+    }    
     
     /** Constant to return the month as a string. */ 
-    static final String MONTH_AS_STRING = "Text";
+    public static final String AS_STRING = "Text";
     /** Constant to return the month as an int. */
-    static final String MONTH_AS_INT = "Number";
+    public static final String AS_INT = "Number";
+    
+    /**
+     * @param timeField name of the time field the representation is for
+     * @return settings model for the representation model (either as text or 
+     * as number) for a specific time field (month, day of week)
+     */
+    public static SettingsModelString createRepresentationModelFor(
+            final String timeField) {
+        return new SettingsModelString(timeField + ".representation", 
+                AS_STRING);
+    }
     
     /**
      * 
@@ -71,7 +100,7 @@ public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
      * @return the settings model for the checkbox whether the time field 
      * should be extracted
      */
-    static SettingsModelBoolean createUseTimeFieldModel(
+    public static SettingsModelBoolean createUseTimeFieldModel(
             final String timeFieldName) {
         return new SettingsModelBoolean("include." + timeFieldName, true);
     }
@@ -81,7 +110,7 @@ public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
      * @param timeFieldName name of the time field (one of the static fields)
      * @return the settings model for the text field for the new column name
      */
-    static SettingsModelString createTimeFieldColumnNameModel(
+    public static SettingsModelString createTimeFieldColumnNameModel(
             final String timeFieldName) {
         return new SettingsModelString(timeFieldName + ".column.name", 
                 timeFieldName);
@@ -91,17 +120,8 @@ public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
      * 
      * @return settings model for the timestamp column selection
      */
-    static SettingsModelString createColumnSelectionModel() {
+    public static SettingsModelString createColumnSelectionModel() {
         return new SettingsModelString("selected.timestamp.column", "");
-    }
-    
-    /**
-     * 
-     * @return settings model for the month representation (either as text or 
-     * as number)
-     */
-    static SettingsModelString createMonthRepresentationModel() {
-        return new SettingsModelString("month.representation", MONTH_AS_STRING);
     }
 
     /**
@@ -113,7 +133,7 @@ public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
      * @param columnNameModel text field for the new column name that should be
      * enabled or disabled
      */
-    static void addListener(final SettingsModelBoolean checkBoxModel,
+    public static void addListener(final SettingsModelBoolean checkBoxModel,
             final SettingsModelString columnNameModel) {
         checkBoxModel.addChangeListener(new ChangeListener() {
             @Override
@@ -123,59 +143,49 @@ public class TimeFieldExtractorNodeDialog extends DefaultNodeSettingsPane {
         });
     }
     
-    /**
-     * 
-     */
-    public TimeFieldExtractorNodeDialog() {
-        // create the UI components
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                createColumnSelectionModel(), 
-                "Column to extract time fields from:", 0, 
-                DateAndTimeValue.class));
-        createUIComponentFor(YEAR);
-        createUIComponentFor(QUARTER);
-        // the month UI component looks differently because of 
-        // the string or int radio buttons
-        createMonthUIComponent();
-        createUIComponentFor(DAY);
-        createUIComponentFor(HOUR);
-        createUIComponentFor(MINUTE);
-        createUIComponentFor(SECOND);
-        createUIComponentFor(MILLISECOND);
-    }
     
     /**
      * Creates the necessary {@link SettingsModel}s, adds the listener to the
      * checkbox and creates the UI component with a horizontally oriented group 
      * containing the checkbox and text field for the new column name. 
-     * Then closes the group. For the month 
+     * Then closes the group. 
+     * 
+     * @param timeField name of the time field for which a checkbox, 
+     * a text field and a format selection (int or string) should be created
+     * 
      */
-    private void createMonthUIComponent() {
+    protected void createUIComponentWithFormatSelection(
+            final String timeField) {
         // create the settings models and add listener
-        SettingsModelBoolean checkBoxModel = createUseTimeFieldModel(MONTH);
+        SettingsModelBoolean checkBoxModel = createUseTimeFieldModel(timeField);
         SettingsModelString colNameModel = createTimeFieldColumnNameModel(
-                MONTH);
+                timeField);
+        SettingsModelString formatModel = createRepresentationModelFor(
+                timeField);
         addListener(checkBoxModel, colNameModel);
+        addListener(checkBoxModel, formatModel);
         createNewGroup("");
         setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentBoolean(checkBoxModel, 
-                MONTH));
+                timeField));
         // add radio buttons for string or int representation
         addDialogComponent(new DialogComponentButtonGroup(
-                createMonthRepresentationModel(), true, "Month as",
-                MONTH_AS_STRING, MONTH_AS_INT));
+                formatModel, true, "Value as", AS_STRING, AS_INT));
         addDialogComponent(new DialogComponentString(colNameModel, 
                 "Column name:", true, 20));
         closeCurrentGroup();
         setHorizontalPlacement(false);        
     }
     
+    
     /**
      * Creates the necessary {@link SettingsModel}s, adds the listener to the
      * checkbox and creates the UI component with a horizontally oriented group 
      * containing the checkbox and text field. Then closes the group.
+     * @param timeField name of the time field for which the ui component 
+     * should be created
      */
-    private void createUIComponentFor(final String timeField) {
+    protected void createUIComponentFor(final String timeField) {
         // create the settings models and add listener
         SettingsModelBoolean checkBoxModel = createUseTimeFieldModel(timeField);
         SettingsModelString colNameModel = createTimeFieldColumnNameModel(
