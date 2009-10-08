@@ -228,6 +228,13 @@ public class String2DateNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_selectedColModel.validateSettings(settings);
         m_newColNameModel.validateSettings(settings);
+        SettingsModelString newColNameModel = m_newColNameModel
+            .createCloneWithValidatedValue(settings);
+        String newColName = newColNameModel.getStringValue();
+        if (newColName == null || newColName.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "Name for the new column must not be empty!");
+        }
         m_replace.validateSettings(settings);
         m_formatModel.validateSettings(settings);
         SettingsModelString formatClone = m_formatModel
