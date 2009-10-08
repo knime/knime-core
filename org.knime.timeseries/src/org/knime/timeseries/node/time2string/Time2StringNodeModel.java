@@ -130,10 +130,10 @@ public class Time2StringNodeModel extends NodeModel {
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         // if replace -> use original column name
         final boolean replace = m_replaceCol.getBooleanValue();
-        String colName = m_newColName.getStringValue();
+        String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+                m_newColName.getStringValue());
         if (replace) {
-            colName = DataTableSpec.getUniqueColumnName(inSpec, 
-                    m_selectedCol.getStringValue());
+            colName = m_selectedCol.getStringValue();
         }
         DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
                 colName, StringCell.TYPE);
@@ -161,7 +161,7 @@ public class Time2StringNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     }
         };
-        if (!m_replaceCol.getBooleanValue()) {
+        if (!replace) {
             rearranger.append(factory);
         } else {
             rearranger.replace(factory, m_selectedCol.getStringValue());
