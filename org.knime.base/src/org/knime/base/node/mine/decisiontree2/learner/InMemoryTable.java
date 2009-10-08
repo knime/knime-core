@@ -168,7 +168,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Creates an empty table from a given template table. The new empty table
-     * recieves the mappers, the remarks whether to considere certain
+     * receives the mappers, the remarks whether to consider certain
      * attributes, the minimum number rows per tree node and the nominal
      * attribute indices array.
      *
