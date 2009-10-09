@@ -22,7 +22,7 @@
  * History
  *   29.11.2004 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -58,7 +58,7 @@ public class Quote {
      * Creates a new Quote object. Only constructed by the
      * <code>FileTokenizerSettings</code> class.
      * 
-     * @see FileTokenizerSettings
+     * @see TokenizerSettings
      * @param left the left quote pattern
      * @param right the right quote pattern
      * @param escape the escape character for these quotes.
@@ -77,7 +77,7 @@ public class Quote {
      * Creates a new Quote object. The quotes will be removed from the token.
      * Only constructed by the <code>FileTokenizerSettings</code> class.
      * 
-     * @see FileTokenizerSettings
+     * @see TokenizerSettings
      * @param left the left quote pattern
      * @param right the right quote pattern
      * @param escape the escape character for these quotes.

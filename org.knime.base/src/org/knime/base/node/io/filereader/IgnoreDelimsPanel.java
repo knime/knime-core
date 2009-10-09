@@ -32,7 +32,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.knime.base.node.io.filetokenizer.Delimiter;
+import org.knime.core.util.tokenizer.Delimiter;
 
 /**
  * Dialog panel for the expert dialog of the filereader. Panel for the flag

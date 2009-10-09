@@ -22,7 +22,7 @@
  * History
  *   29.11.2004 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import java.util.Iterator;
 import java.util.Vector;
@@ -46,14 +46,14 @@ import org.knime.core.node.NodeSettingsWO;
  * get-methods. While new user settings will be implanted from the
  * out-of-package world with the set-methods.
  *
- * @see FileTokenizer
+ * @see Tokenizer
  * @author ohl, University of Konstanz
  */
-public class FileTokenizerSettings {
+public class TokenizerSettings {
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileTokenizerSettings.class);
+            NodeLogger.getLogger(TokenizerSettings.class);
 
     /* the column delimiters we handle */
     private final Vector<Delimiter> m_delimPatterns;
@@ -95,9 +95,9 @@ public class FileTokenizerSettings {
     /**
      * Creates a new Settings for FileTokenizer object with default settings.
      *
-     * @see FileTokenizer#resetToDefault() for description of default settings.
+     * @see Tokenizer#resetToDefault() for description of default settings.
      */
-    public FileTokenizerSettings() {
+    public TokenizerSettings() {
 
         m_delimPatterns = new Vector<Delimiter>();
         m_quotePatterns = new Vector<Quote>();
@@ -113,7 +113,7 @@ public class FileTokenizerSettings {
      *
      * @param clonee the object to read the settings from.
      */
-    public FileTokenizerSettings(final FileTokenizerSettings clonee) {
+    public TokenizerSettings(final TokenizerSettings clonee) {
         m_delimPatterns = new Vector<Delimiter>(clonee.m_delimPatterns);
         m_quotePatterns = new Vector<Quote>(clonee.m_quotePatterns);
         m_commentPatterns = new Vector<Comment>(clonee.m_commentPatterns);
@@ -134,7 +134,7 @@ public class FileTokenizerSettings {
      *            settings will be created.
      * @throws InvalidSettingsException if the config is not valid
      */
-    public FileTokenizerSettings(final NodeSettingsRO settings)
+    public TokenizerSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         this();
@@ -536,7 +536,7 @@ public class FileTokenizerSettings {
         if ((quote.getLeft() == null) || (quote.getLeft().length() < 1)) {
             errMsg += "Left quote pattern must be a non-empty string\n";
         } else {
-            if (quote.getLeft().charAt(0) > FileTokenizer.MAX_CHAR) {
+            if (quote.getLeft().charAt(0) > Tokenizer.MAX_CHAR) {
                 errMsg +=
                         "The left quote must begin with a plain ASCII "
                                 + "character (ascii code < 127) \n";
@@ -662,7 +662,7 @@ public class FileTokenizerSettings {
                 || (delimiter.getDelimiter().length() < 1)) {
             errMsg += "Delimiter pattern must be a non-empty string\n";
         } else {
-            if (delimiter.getDelimiter().charAt(0) > FileTokenizer.MAX_CHAR) {
+            if (delimiter.getDelimiter().charAt(0) > Tokenizer.MAX_CHAR) {
                 errMsg +=
                         "The delimiter must begin with a plain ASCII "
                                 + "character (ascii code < 127) \n";
@@ -721,7 +721,7 @@ public class FileTokenizerSettings {
                             + "'includeInToken'. "
                             + "They are mutually exclusive!\n";
         }
-        if (delimiter.charAt(0) > FileTokenizer.MAX_CHAR) {
+        if (delimiter.charAt(0) > Tokenizer.MAX_CHAR) {
             errMsg +=
                     "The delimiter must begin with a plain ASCII "
                             + "character (ascii code < 127) \n";
@@ -935,7 +935,7 @@ public class FileTokenizerSettings {
          * stream.
          */
 
-        addCommentPattern(new Comment(commentBegin, FileTokenizer.LF_STR,
+        addCommentPattern(new Comment(commentBegin, Tokenizer.LF_STR,
                 returnAsSeparateToken, includeInToken));
     }
 
@@ -971,7 +971,7 @@ public class FileTokenizerSettings {
         if ((comment.getBegin() == null) || (comment.getBegin().length() < 1)) {
             errMsg += "The comment begin pattern must be a non-empty string.\n";
         } else {
-            if (comment.getBegin().charAt(0) > FileTokenizer.MAX_CHAR) {
+            if (comment.getBegin().charAt(0) > Tokenizer.MAX_CHAR) {
                 errMsg +=
                         "The comment pattern must begin with a plain ASCII "
                                 + "character (ascii code < 127) \n";
@@ -1027,7 +1027,7 @@ public class FileTokenizerSettings {
         if (ws.length() != 1) {
             errMsg += "Please specify a one-character string as whitespace.\n";
         }
-        if (ws.charAt(0) > FileTokenizer.MAX_CHAR) {
+        if (ws.charAt(0) > Tokenizer.MAX_CHAR) {
             errMsg +=
                     "The whitespace must begin with a plain ASCII "
                             + "character (ascii code < 127) \n";

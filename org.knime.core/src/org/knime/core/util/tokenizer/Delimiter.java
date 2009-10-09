@@ -22,7 +22,7 @@
  * History
  *   29.11.2004 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -56,7 +56,7 @@ public class Delimiter {
      * Creates a new delimiter object. Only constructed by the
      * <code>FileTokenizerSettings</code> class.
      * 
-     * @see FileTokenizerSettings
+     * @see TokenizerSettings
      * @param pattern the delimiter patter
      * @param combineConsecutive boolean flag
      * @param returnAsSeparateToken boolean flag
@@ -186,7 +186,7 @@ public class Delimiter {
      */
     @Override
     public String toString() {
-        return FileTokenizerSettings.printableStr(getDelimiter());
+        return TokenizerSettings.printableStr(getDelimiter());
     }
 
     /*

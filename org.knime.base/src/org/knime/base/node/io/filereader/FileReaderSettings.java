@@ -33,15 +33,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.TokenizerSettings;
+import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author ohl, University of Konstanz
  */
-public class FileReaderSettings extends FileTokenizerSettings {
+public class FileReaderSettings extends TokenizerSettings {
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =

@@ -22,7 +22,7 @@
  * History
  *   02.12.2004 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import java.util.Vector;
 

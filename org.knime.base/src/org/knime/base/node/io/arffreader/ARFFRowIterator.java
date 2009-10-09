@@ -31,8 +31,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.NoSuchElementException;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -43,6 +41,8 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  *
@@ -59,7 +59,7 @@ public class ARFFRowIterator extends RowIterator {
 
     private final String m_rowPrefix;
 
-    private final FileTokenizer m_tokenizer;
+    private final Tokenizer m_tokenizer;
 
     private int m_rowNo; // we count the rows read so far
 
@@ -116,9 +116,9 @@ public class ARFFRowIterator extends RowIterator {
         }
 
         // setup the tokenizer to read the file
-        m_tokenizer = new FileTokenizer(fReader);
+        m_tokenizer = new Tokenizer(fReader);
         // create settings for the tokenizer
-        FileTokenizerSettings settings = new FileTokenizerSettings();
+        TokenizerSettings settings = new TokenizerSettings();
         // add the ARFF single line comment
         settings.addSingleLineCommentPattern("%", false, false);
         // LF is a row seperator - add it as delimiter

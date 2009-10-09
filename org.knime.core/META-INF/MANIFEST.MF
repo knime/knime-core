@@ -6,7 +6,6 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
  knime-core.jar
 Export-Package: log4j,
- org.knime.base.node.io.filetokenizer,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.collection,
@@ -39,6 +38,7 @@ Export-Package: log4j,
  org.knime.core.node.workflow,
  org.knime.core.node.workflow.execresult,
  org.knime.core.util,
+ org.knime.core.util.tokenizer,
  org.knime.core.xml
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,

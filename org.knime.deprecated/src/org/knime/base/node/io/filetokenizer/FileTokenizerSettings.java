@@ -27,13 +27,14 @@ package org.knime.base.node.io.filetokenizer;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.knime.base.node.io.filereader.SettingsStatus;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * @deprecated use org.knime.core.util.tokenizer.FileTokenizerSettings instead
+ * @deprecated use org.knime.core.util.tokenizer.TokenizerSettings instead
  */
 @Deprecated
 public class FileTokenizerSettings {

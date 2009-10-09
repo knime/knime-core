@@ -29,8 +29,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -49,6 +47,8 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  * Creates the data cells for the new columns of the cell splitter.
@@ -65,7 +65,7 @@ class CellSplitterCellFactory implements CellFactory {
 
     private final int m_colIdx;
 
-    private final FileTokenizerSettings m_tokenizerSettings;
+    private final TokenizerSettings m_tokenizerSettings;
 
     private static final StringCell EMPTY_STRINGCELL = new StringCell("");
 
@@ -90,7 +90,7 @@ class CellSplitterCellFactory implements CellFactory {
                 CellSplitterCellFactory.createTokenizerSettings(m_settings);
     }
 
-    private static FileTokenizerSettings createTokenizerSettings(
+    private static TokenizerSettings createTokenizerSettings(
             final CellSplitterUserSettings userSettings) {
 
         if (userSettings == null) {
@@ -101,7 +101,7 @@ class CellSplitterCellFactory implements CellFactory {
             return null;
         }
 
-        FileTokenizerSettings result = new FileTokenizerSettings();
+        TokenizerSettings result = new TokenizerSettings();
 
         result.addDelimiterPattern(userSettings.getDelimiter(),
         /* combineConsecutive */false,
@@ -175,7 +175,7 @@ class CellSplitterCellFactory implements CellFactory {
         // the reader is no good if it doesn't support the mark operation
         assert inputReader.markSupported();
 
-        FileTokenizer tokenizer = new FileTokenizer(inputReader);
+        Tokenizer tokenizer = new Tokenizer(inputReader);
         tokenizer.setSettings(m_tokenizerSettings);
 
         // tokenize the column value and create new output cells
@@ -460,7 +460,7 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException(
                     "Input table doesn't contain selected column");
         }
-        FileTokenizerSettings tokenizerSettings =
+        TokenizerSettings tokenizerSettings =
                 createTokenizerSettings(userSettings);
         if (tokenizerSettings == null) {
             throw new IllegalStateException("Incorrect user settings");
@@ -491,7 +491,7 @@ class CellSplitterCellFactory implements CellFactory {
             // the reader is no good if it doesn't support the mark operation
             assert inputReader.markSupported();
 
-            FileTokenizer tokenizer = new FileTokenizer(inputReader);
+            Tokenizer tokenizer = new Tokenizer(inputReader);
             tokenizer.setSettings(tokenizerSettings);
             int addedColIdx = -1;
 

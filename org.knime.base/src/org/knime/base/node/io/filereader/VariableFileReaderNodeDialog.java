@@ -65,11 +65,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.base.node.io.filetokenizer.Comment;
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -88,6 +83,11 @@ import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.MutableBoolean;
+import org.knime.core.util.tokenizer.Comment;
+import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.TokenizerException;
+import org.knime.core.util.tokenizer.TokenizerSettings;
+import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  *
@@ -807,7 +807,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                     ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
         } else {
             newDelim =
-                    FileTokenizerSettings.unescapeString((String)m_delimField
+                    TokenizerSettings.unescapeString((String)m_delimField
                             .getSelectedItem());
         }
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
@@ -851,7 +851,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
             } else {
                 delimStr = (String)m_delimField.getSelectedItem();
-                delimStr = FileTokenizerSettings.unescapeString(delimStr);
+                delimStr = TokenizerSettings.unescapeString(delimStr);
 
                 if ((delimStr != null) && (!delimStr.equals(""))) {
                     try {
@@ -1556,7 +1556,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                     updatePreview();
                     setAnalWarningText("I/O Error while analyzing file: ");
                     return;
-                } catch (FileTokenizerException fte) {
+                } catch (TokenizerException fte) {
                     updatePreview();
                     String msg = fte.getMessage();
                     if ((msg == null) || (msg.length() == 0)) {

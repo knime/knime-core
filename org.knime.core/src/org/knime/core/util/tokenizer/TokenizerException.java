@@ -22,7 +22,7 @@
  * History
  *   21.12.2005 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 /**
  * The exception the Filetokenizer throws if something goes wrong. 
@@ -31,14 +31,14 @@ package org.knime.base.node.io.filetokenizer;
  * 
  * @author ohl, University of Konstanz
  */
-public class FileTokenizerException extends RuntimeException {
+public class TokenizerException extends RuntimeException {
     
     /**
      * Always provide a good user message why things go wrong.
      * 
      * @param msg the message to store in the exception.
      */
-    FileTokenizerException(final String msg) {
+    TokenizerException(final String msg) {
         super(msg);
     }
 }

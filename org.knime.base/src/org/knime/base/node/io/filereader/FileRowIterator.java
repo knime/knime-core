@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -37,6 +35,8 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerException;
 
 /**
  * Row iterator for the {@link FileTable}.
@@ -50,7 +50,7 @@ import org.knime.core.util.MutableInteger;
 class FileRowIterator extends RowIterator {
 
     /* The tokenizer reads the next token from the input stream. */
-    private final FileTokenizer m_tokenizer;
+    private final Tokenizer m_tokenizer;
 
     private final BufferedFileReader m_source;
 
@@ -138,7 +138,7 @@ class FileRowIterator extends RowIterator {
         m_lastReport = 0;
 
         m_source = m_frSettings.createNewInputReader();
-        m_tokenizer = new FileTokenizer(m_source);
+        m_tokenizer = new Tokenizer(m_source);
 
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
@@ -301,7 +301,7 @@ class FileRowIterator extends RowIterator {
         // This will also read it from file, if supposed to.
         try {
             rowHeader = createRowHeader(m_rowNumber - 1);
-        } catch (FileTokenizerException fte) {
+        } catch (TokenizerException fte) {
             throw prepareForException(fte.getMessage() + " (line: "
                     + m_tokenizer.getLineNumber() + " source: '"
                     + m_frSettings.getDataFileLocation() + "')", m_tokenizer
@@ -314,7 +314,7 @@ class FileRowIterator extends RowIterator {
 
             try {
                 token = m_tokenizer.nextToken();
-            } catch (FileTokenizerException fte) {
+            } catch (TokenizerException fte) {
                 throw prepareForException(fte.getMessage() + " (line: "
                         + m_tokenizer.getLineNumber() + " (" + rowHeader
                         + ") source: '" + m_frSettings.getDataFileLocation()
@@ -386,7 +386,7 @@ class FileRowIterator extends RowIterator {
                 && (!m_tokenizer.lastTokenWasQuoted())) {
             try {
                 token = m_tokenizer.nextToken();
-            } catch (FileTokenizerException fte) {
+            } catch (TokenizerException fte) {
                 throw prepareForException(fte.getMessage() + "(line: " + lineNr
                         + " (" + rowHeader + "), source: '"
                         + m_frSettings.getDataFileLocation() + "')", lineNr,

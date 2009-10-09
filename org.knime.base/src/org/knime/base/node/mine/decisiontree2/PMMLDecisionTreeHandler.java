@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -40,6 +38,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -213,10 +213,10 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         if (name.equals("Array")
                 && m_elementStack.peek().equals("SimpleSetPredicate")) {
             // remove optional quotes and split on whitespace
-            FileTokenizer tokenizer = new FileTokenizer(new StringReader(
+            Tokenizer tokenizer = new Tokenizer(new StringReader(
                     m_buffer.toString().trim()));
             //create settings for the tokenizer
-            FileTokenizerSettings settings = new FileTokenizerSettings();
+            TokenizerSettings settings = new TokenizerSettings();
             settings.addDelimiterPattern(" ",
                     /* combine multiple= */true,
                     /* return as token= */ false,

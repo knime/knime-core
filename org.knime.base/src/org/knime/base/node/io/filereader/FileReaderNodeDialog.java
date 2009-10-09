@@ -70,11 +70,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
-import org.knime.base.node.io.filetokenizer.Comment;
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -92,6 +87,11 @@ import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.FileReaderFileFilter;
 import org.knime.core.util.MutableBoolean;
+import org.knime.core.util.tokenizer.Comment;
+import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.TokenizerException;
+import org.knime.core.util.tokenizer.TokenizerSettings;
+import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  *
@@ -851,7 +851,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (o instanceof Delimiter) {
             newDelim = ((Delimiter)o).getDelimiter();
         } else {
-            newDelim = FileTokenizerSettings.unescapeString((String)o);
+            newDelim = TokenizerSettings.unescapeString((String)o);
         }
         if (newDelim.equals(m_delimApplied)) {
             // m_delimApplied is the delimiter stored in the settings or <none>
@@ -896,7 +896,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
             } else {
                 delimStr = (String)o;
-                delimStr = FileTokenizerSettings.unescapeString(delimStr);
+                delimStr = TokenizerSettings.unescapeString(delimStr);
 
                 if ((delimStr != null) && (!delimStr.equals(""))) {
                     try {
@@ -1576,7 +1576,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     updatePreview();
                     setAnalWarningText("I/O Error while analyzing file: ");
                     return;
-                } catch (FileTokenizerException fte) {
+                } catch (TokenizerException fte) {
                     updatePreview();
                     String msg = fte.getMessage();
                     if ((msg == null) || (msg.length() == 0)) {

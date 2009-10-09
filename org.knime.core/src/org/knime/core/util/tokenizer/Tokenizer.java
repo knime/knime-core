@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -56,7 +56,7 @@ import java.util.Vector;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public class FileTokenizer {
+public class Tokenizer {
 
     /* the source we read from */
     private final Reader m_source;
@@ -175,7 +175,7 @@ public class FileTokenizer {
      * 
      * @see #resetToDefault() for what's the default behaviour.
      */
-    public FileTokenizer(final Reader source) {
+    public Tokenizer(final Reader source) {
 
         m_source = source;
         m_readBuffer = new int[BUFFER_LENGTH];
@@ -247,9 +247,9 @@ public class FileTokenizer {
      * <code>null</code> if no more token can be read.
      * 
      * @return The next token from the stream or null at the EOF.
-     * @throws FileTokenizerException if something goes wrong during tokenizing.
+     * @throws TokenizerException if something goes wrong during tokenizing.
      */
-    public String nextToken() throws FileTokenizerException {
+    public String nextToken() throws TokenizerException {
 
         m_settingsLocked = true;
 
@@ -358,7 +358,7 @@ public class FileTokenizer {
                     // a quoted string actually started here.
                     try {
                         m_newToken.append(readQuotedString(quotePattern));
-                    } catch (FileTokenizerException fte) {
+                    } catch (TokenizerException fte) {
                         // seems we are missing the closing quotes...
                         m_lastDelimiter = null;
                         m_lastQuotes = null;
@@ -873,7 +873,7 @@ public class FileTokenizer {
      * begin and quote end pattern.
      */
     private String readQuotedString(final Quote quote) 
-            throws FileTokenizerException {
+            throws TokenizerException {
         StringBuilder result = new StringBuilder();
         int patternLength;
         String endPattern = quote.getRight();
@@ -921,7 +921,7 @@ public class FileTokenizer {
             }
             if (nextChar == LF) {
                 // read a LF within quotes: that is illegal!
-                throw new FileTokenizerException("New line in quoted string"
+                throw new TokenizerException("New line in quoted string"
                          + " (or closing quote missing).");
             }
             if ((nextChar == escChar) && quote.hasEscapeChar()) {
@@ -1083,7 +1083,7 @@ public class FileTokenizer {
      * 
      * @param ftSettings the settings object containing new settings.
      */
-    public void setSettings(final FileTokenizerSettings ftSettings) {
+    public void setSettings(final TokenizerSettings ftSettings) {
 
         if (m_settingsLocked) {
             throw new IllegalStateException("Don't change tokenizer settings"
@@ -1144,9 +1144,9 @@ public class FileTokenizer {
     /**
      * @return an object containing the current settings of the tokenizer
      */
-    public FileTokenizerSettings getSettings() {
+    public TokenizerSettings getSettings() {
 
-        FileTokenizerSettings result = new FileTokenizerSettings();
+        TokenizerSettings result = new TokenizerSettings();
 
         //add all currently set quote patterns
         result.setQuotes(m_quotePatterns);

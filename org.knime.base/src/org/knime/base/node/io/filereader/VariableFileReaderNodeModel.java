@@ -28,7 +28,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
@@ -47,6 +46,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.DuplicateKeyException;
+import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  *

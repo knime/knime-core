@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -41,6 +40,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  * Implements a {@link DataTable} that reads data from an ASCII file.

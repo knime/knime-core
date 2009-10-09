@@ -32,8 +32,6 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.Vector;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -49,6 +47,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  *
@@ -124,7 +124,7 @@ public class ARFFTable implements DataTable {
         // create a tokenizer to read the header
         InputStream inStream = fileLoc.openStream();
 
-        FileTokenizer tokenizer = new FileTokenizer(new BufferedReader(
+        Tokenizer tokenizer = new Tokenizer(new BufferedReader(
                 new InputStreamReader(inStream)));
         // create tokenizer settings that will deliver us the attributes and
         // arguments as tokens.
@@ -281,8 +281,8 @@ public class ARFFTable implements DataTable {
     /*
      * returns a settings object used to read the ARFF file header.
      */
-    private static FileTokenizerSettings getTokenizerHeaderSettings() {
-        FileTokenizerSettings settings = new FileTokenizerSettings();
+    private static TokenizerSettings getTokenizerHeaderSettings() {
+        TokenizerSettings settings = new TokenizerSettings();
         // add the ARFF single line comment
         settings.addSingleLineCommentPattern("%", false, false);
         // LF is a row seperator - add it as delimiter
@@ -320,8 +320,8 @@ public class ARFFTable implements DataTable {
 
         // we must support quotes and stuff - let's use another tokenizer.
         StringReader strReader = new StringReader(valList);
-        FileTokenizer tokizer = new FileTokenizer(strReader);
-        FileTokenizerSettings tokSets = new FileTokenizerSettings();
+        Tokenizer tokizer = new Tokenizer(strReader);
+        TokenizerSettings tokSets = new TokenizerSettings();
         tokSets.addDelimiterPattern(",", false, false, false);
         tokSets.addQuotePattern("'", "'");
         tokSets.addQuotePattern("\"", "\"");
@@ -357,7 +357,7 @@ public class ARFFTable implements DataTable {
      * a flag to indicate that we are not really expecting anything and this
      * method will print a warning if the first token it reads is NOT the EOL.
      */
-    private static void readUntilEOL(final FileTokenizer tizer,
+    private static void readUntilEOL(final Tokenizer tizer,
             final String filename) {
         boolean msgPrinted = false;
         String token = tizer.nextToken();

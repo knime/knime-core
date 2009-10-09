@@ -45,7 +45,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.base.node.io.filetokenizer.Quote;
+import org.knime.core.util.tokenizer.Quote;
 
 /**
  * Dialog for the expert settings of the file reader dialog.

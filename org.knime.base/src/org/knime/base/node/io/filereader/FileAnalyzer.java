@@ -32,10 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.knime.base.node.io.filetokenizer.Comment;
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.Quote;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -50,6 +46,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.tableview.TableContentModel;
+import org.knime.core.util.tokenizer.Comment;
+import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.Quote;
 
 /**
  * Provides functionality for analyzing an ASCII data file to create default
@@ -358,7 +358,7 @@ public final class FileAnalyzer {
         String[] columnHeaders = new String[result.getNumberOfColumns()];
 
         BufferedReader reader = result.createNewInputReader();
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         tokenizer.setSettings(result);
 
         exec.setProgress("Guessing column headers");
@@ -534,7 +534,7 @@ public final class FileAnalyzer {
 
         exec.setProgress("Guessing row IDs");
 
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         tokenizer.setSettings(settings);
         String token;
 
@@ -788,7 +788,7 @@ public final class FileAnalyzer {
             gotValue[t] = false;
         }
 
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         tokenizer.setSettings(result);
         int linesRead = 0;
         int colIdx = -1;
@@ -1067,7 +1067,7 @@ public final class FileAnalyzer {
         assert settings.getAllDelimiters().size() == 0;
 
         BufferedFileReader reader = settings.createNewInputReader();
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         double fileSize = reader.getFileSize();
         exec.setProgress("Guessing quotes");
 
@@ -1385,10 +1385,10 @@ public final class FileAnalyzer {
             throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         long fileSize = reader.getFileSize();
 
-        tokenizer = new FileTokenizer(reader);
+        tokenizer = new Tokenizer(reader);
 
         tokenizer.setSettings(settings);
 
@@ -1527,7 +1527,7 @@ public final class FileAnalyzer {
             throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
-        FileTokenizer tokenizer = new FileTokenizer(reader);
+        Tokenizer tokenizer = new Tokenizer(reader);
         tokenizer.setSettings(settings);
         double fileSize = reader.getFileSize();
 

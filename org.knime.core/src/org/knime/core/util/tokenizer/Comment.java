@@ -22,7 +22,7 @@
  * History
  *   29.11.2004 (ohl): created
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -56,7 +56,7 @@ public class Comment {
      * Creates a new Comment object. Only created by the
      * <code>FileTokenizerSettings</code> class.
      * 
-     * @see FileTokenizerSettings
+     * @see TokenizerSettings
      * @param left The comment start pattern.
      * @param right The comment end pattern.
      * @param returnAsToken boolean flag.
@@ -187,7 +187,7 @@ public class Comment {
         boolean closeParan = false;
         
         result.append(getBegin());
-        if ((getEnd() != null) && (getEnd().equals(FileTokenizer.LF_STR))) {
+        if ((getEnd() != null) && (getEnd().equals(Tokenizer.LF_STR))) {
             result.append(" (SL");
             closeParan = true;
         } else {
