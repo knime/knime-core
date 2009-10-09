@@ -35,6 +35,7 @@ import java.util.Vector;
 
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
+import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;

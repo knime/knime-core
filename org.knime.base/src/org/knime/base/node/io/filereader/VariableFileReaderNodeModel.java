@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;

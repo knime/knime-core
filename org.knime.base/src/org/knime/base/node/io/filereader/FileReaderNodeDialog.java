@@ -74,6 +74,7 @@ import org.knime.base.node.io.filetokenizer.Comment;
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
+import org.knime.base.node.io.filetokenizer.SettingsStatus;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;

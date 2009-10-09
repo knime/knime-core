@@ -32,26 +32,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
- * Defines the object holding the configuration for the FileTokenizer. <br>
- * Use an instance of this class to set all parameters and pass it to a
- * <code>FileTokenizer</code>. This object is used as a transport vehicle to
- * first try setting new user configurations and, if everything went fine (i.e.
- * without any exception), transporting them into the file tokenizer. This class
- * is used in both directions - to get current tokenizer settings, and to set a
- * new configuration in the tokenizer. The methods with default permissions are
- * only used by the file tokenizer to set its current settings in this object -
- * any object user outside the package will retrieve them then through the
- * get-methods. While new user settings will be implanted from the
- * out-of-package world with the set-methods.
- *
- * @see FileTokenizer
- * @author ohl, University of Konstanz
+ * @deprecated use org.knime.core.util.tokenizer.FileTokenizerSettings instead
  */
+@Deprecated
 public class FileTokenizerSettings {
 
-    /** The node logger for this class. */
+    /** The node logger fot this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(FileTokenizerSettings.class);
 
