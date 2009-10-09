@@ -34,8 +34,11 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.KnimeEncryption;
@@ -100,9 +103,41 @@ public final class DialogComponentPasswordField extends DialogComponent {
                 if (m_containsDefaultValue) {
                     m_containsDefaultValue = false;
                     m_pwField.setText("");
+                    // this triggers the master key dialog.
+                    // Otherwise it shows after the first char is entered
+                    try {
+                        encrypt("foo".toCharArray());
+                    } catch (Exception e1) {
+                        // ignore
+                    }
                 }
             }
 
+        });
+        m_pwField.getDocument().addDocumentListener(new DocumentListener() {
+            public void removeUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (final InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
+
+            public void insertUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (final InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
+
+            public void changedUpdate(final DocumentEvent e) {
+                try {
+                    updateModel();
+                } catch (final InvalidSettingsException ise) {
+                    // Ignore it here.
+                }
+            }
         });
 
         // password fields will not notify model listeners when the password
@@ -118,7 +153,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
         getComponentPanel().add(m_pwField);
         m_containsDefaultValue = true;
 
-        //call this method to be in sync with the settings model
+        // call this method to be in sync with the settings model
         updateComponent();
     }
 
@@ -150,12 +185,45 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
         clearError(m_pwField);
 
-        final String str = ((SettingsModelString)getModel()).getStringValue();
-        m_pwField.setText(str);
-        m_containsDefaultValue = true;
+        if (m_containsDefaultValue) {
+            // if this is the loaded/unchanged password, put the encrypted
+            // password in, to not show the user the length of the set password
+            String pw = ((SettingsModelString)getModel())
+                    .getStringValue();
+            if (!new String(m_pwField.getPassword()).equals(pw)) {
+                m_pwField.setText(pw);
+            }
+            // update the enable status too
+            setEnabledComponents(getModel().isEnabled());
+            return;
+        }
 
-        // update the enable status too
-        setEnabledComponents(getModel().isEnabled());
+        char[] componentPw = new char[0];
+        char[] modelPw = new char[0];
+
+        try {
+            // keep the decrypted password in the component!
+            componentPw = m_pwField.getPassword();
+            final String str =
+                    ((SettingsModelString)getModel()).getStringValue();
+            if (str != null && !str.isEmpty()) {
+                modelPw = decrypt(str).toCharArray();
+            }
+            if (!Arrays.equals(componentPw, modelPw)) {
+                // only update component if values are different
+                m_pwField.setText(decrypt(str));
+            }
+
+            // update the enable status too
+            setEnabledComponents(getModel().isEnabled());
+        } catch (Throwable t) {
+            NodeLogger.getLogger(DialogComponentPasswordField.class).debug(
+                    "Couldn't update password component.", t);
+            // no update then...
+        } finally {
+            Arrays.fill(componentPw, '\0');
+            Arrays.fill(modelPw, '\0');
+        }
     }
 
     /**
@@ -170,7 +238,13 @@ public final class DialogComponentPasswordField extends DialogComponent {
             // ...only if user changed it
             final char[] pw = m_pwField.getPassword();
             try {
-                ((SettingsModelString)getModel()).setStringValue(encrypt(pw));
+                if (pw.length == 0) {
+                    // don't encrypt an empty password
+                    ((SettingsModelString)getModel()).setStringValue("");
+                } else {
+                    ((SettingsModelString)getModel())
+                            .setStringValue(encrypt(pw));
+                }
             } catch (final Exception e) {
                 showError(m_pwField);
                 throw new InvalidSettingsException(
@@ -187,7 +261,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
     @Override
     protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
-        updateModel();
+        // passwords are always valid
     }
 
     /**
@@ -196,7 +270,8 @@ public final class DialogComponentPasswordField extends DialogComponent {
     @Override
     protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
-        // we are always good.
+        // called before a new value is loaded (when the dialog opens)
+        m_containsDefaultValue = true;
     }
 
     /**
