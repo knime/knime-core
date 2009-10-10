@@ -19,14 +19,14 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.io.filetokenizer;
+package org.knime.core.util.tokenizer;
 
 import java.io.StringReader;
 
 import junit.framework.TestCase;
 
 /**
- * JUnit test for the <code>FileTokenizer</code>.
+ * JUnit test for the <code>Tokenizer</code>.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -34,7 +34,7 @@ public final class FileTokenizerTest extends TestCase {
 
     /**
      * System entry point calls the
-     * <code>junit.textui.TestRunner.run(FileTokenizerTest.class)</code> to
+     * <code>junit.textui.TestRunner.run(TokenizerTest.class)</code> to
      * start this <code>TestCase</code>.
      * 
      * @param args Command line parameter(s).
@@ -45,23 +45,23 @@ public final class FileTokenizerTest extends TestCase {
 
     /**
      * Tests the constructor.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testFileTokenizer() throws FileTokenizerException {
-        // create a default FileTokenizer and see if the default behaviour
+    public void testTokenizer() throws TokenizerException {
+        // create a default Tokenizer and see if the default behaviour
         // is as documented.
         // The default doesn't support any comment, delimiter, or quotes.
         // So, this string should come back in one piece.
         String token;
         final String inputString = 
             "123,234,\",,3 4 5\n,'456'\n\na�?#~\\,,\n\n";
-        FileTokenizer ft = new FileTokenizer(new StringReader(inputString));
+        Tokenizer ft = new Tokenizer(new StringReader(inputString));
 
         token = ft.nextToken();
         assertEquals(token, "123,234,\",,3 4 5\n,'456'\n\na�?#~\\,,\n\n");
         token = ft.nextToken();
         assertNull(token);
-        System.out.println("FileTokenizer constructor: Done.");
+        System.out.println("Tokenizer constructor: Done.");
     }
 
     /**
@@ -70,9 +70,9 @@ public final class FileTokenizerTest extends TestCase {
      * setSettings
      */
     public void testSetSettings() {
-        FileTokenizerSettings fts = new FileTokenizerSettings();
+        TokenizerSettings fts = new TokenizerSettings();
         final String inputString = "";
-        FileTokenizer ft = new FileTokenizer(new StringReader(inputString));
+        Tokenizer ft = new Tokenizer(new StringReader(inputString));
         fts.addBlockCommentPattern("/*", "*/", false, false);
         fts.addQuotePattern("'", "'");
         fts.addDelimiterPattern("\n", false, false, false);
@@ -88,7 +88,7 @@ public final class FileTokenizerTest extends TestCase {
         // once more
         ft.setSettings(ft.getSettings());
         assertEquals(ftsFirst, ft.getSettings().toString());
-        System.out.println("FileTokenizer SetSettings: Done.");
+        System.out.println("Tokenizer SetSettings: Done.");
 
     }
 
@@ -97,15 +97,15 @@ public final class FileTokenizerTest extends TestCase {
      * QuotePattern, and DelimiterPatterns (makes sure the input is cut in
      * peaces as expected) then resets to default and tests that all previously
      * defined patterns are not effective anymore.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testResetToDefault() throws FileTokenizerException {
+    public void testResetToDefault() throws TokenizerException {
         // setup some custom behaviour and check default behaviour after reset.
         String token;
         final String inputString = "123 234\n/*f \noo */'8 9' , end\n";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
 
         fts.addBlockCommentPattern("/*", "*/", false, false);
         fts.addQuotePattern("'", "'");
@@ -145,7 +145,7 @@ public final class FileTokenizerTest extends TestCase {
             // ending up here is fine.
         }
 
-        System.out.println("FileTokenizer ResetToDefault: Done.");
+        System.out.println("Tokenizer ResetToDefault: Done.");
 
     } // testResetToDefault()
 
@@ -154,15 +154,15 @@ public final class FileTokenizerTest extends TestCase {
      * stumble over umlauts and other weird characters. The normal cases are
      * covered by all other tests. Also, it tries tenthousandtimes to get behind
      * the EOF...
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testNextToken() throws FileTokenizerException {
+    public void testNextToken() throws TokenizerException {
         String token;
         final String inputString = 
             "1,2\n\n\n\n3\t����,4\b\r\"�^�`'#";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
 
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("\n", false, false, false);
@@ -192,7 +192,7 @@ public final class FileTokenizerTest extends TestCase {
             token = ft.nextToken();
             assertNull(token);
         }
-        System.out.println("FileTokenizer NextToken: Done.");
+        System.out.println("Tokenizer NextToken: Done.");
 
     }
 
@@ -200,14 +200,14 @@ public final class FileTokenizerTest extends TestCase {
      * Test for <code>pushBack()</code> method. Pushs back a "normal" token
      * and expects it back. Pushs back same token 7 times. Pushs back
      * <code>null</code>.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testPushBack() throws FileTokenizerException {
+    public void testPushBack() throws TokenizerException {
         String token;
         final String inputString = "123\n234\n345\n";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         fts.addDelimiterPattern("\n", false, false, false);
         ft.setSettings(fts);
 
@@ -237,21 +237,21 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        System.out.println("FileTokenizer PushBack: Done.");
+        System.out.println("Tokenizer PushBack: Done.");
     } // testPushBack()
 
     /**
      * Tests with no quotes defined ('"' and ''' will not act as quotes). And,
      * with '"', ''', and "quote" defined as quote patterns only the defined
      * patterns will cause the flag to return <code>true</code>.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testLastTokenWasQuoted() throws FileTokenizerException {
+    public void testLastTokenWasQuoted() throws TokenizerException {
         String token;
         final String inputString = "\"123\"\n'234'\n<quote>345</quote>\n";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         fts.addDelimiterPattern("\n", false, false, false);
         ft.setSettings(fts);
 
@@ -277,8 +277,8 @@ public final class FileTokenizerTest extends TestCase {
         // reset stream
         strReader = new StringReader(inputString);
         
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern("\n", false, false, false);
         fts.addQuotePattern("\"", "\"");
         ft.setSettings(fts);
@@ -304,8 +304,8 @@ public final class FileTokenizerTest extends TestCase {
         // reset stream
         strReader = new StringReader(inputString);
 
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern("\n", false, false, false);
         fts.addQuotePattern("'", "'");
         ft.setSettings(fts);
@@ -349,8 +349,8 @@ public final class FileTokenizerTest extends TestCase {
         // reset stream
         strReader = new StringReader(inputString);
 
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern("\n", false, false, false);
         fts.addQuotePattern("<quote>", "</quote>");
         ft.setSettings(fts);
@@ -375,7 +375,7 @@ public final class FileTokenizerTest extends TestCase {
         assertNull(ft.getLastQuoteBeginPattern());
         assertNull(ft.getLastQuoteEndPattern());
 
-        System.out.println("FileTokenizer LastTokenWasQuoted: Done.");
+        System.out.println("Tokenizer LastTokenWasQuoted: Done.");
 
     } // testLastTokenWasQuoted()
 
@@ -385,22 +385,22 @@ public final class FileTokenizerTest extends TestCase {
      * then it tests the normal case: defines double quotes, no escape char.
      * Next, double quotes with escape character. Finally, a multicharacter
      * quote pattern is tested.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testAddQuotePattern() throws FileTokenizerException {
+    public void testAddQuotePattern() throws TokenizerException {
 
         // catch the abnormal first
         String token;
         String inputString;
         inputString = "123";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizer ft = new FileTokenizer(strReader);
+        Tokenizer ft = new Tokenizer(strReader);
 
         // test some normal double quote stuff with escape character.
         inputString = "123,\"23,4\"\"3,4\\\",5\",\"45,6\",\"\",\"3";
         strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         fts.addQuotePattern("\"", "\"", '\\');
         ft.setSettings(fts);
@@ -425,8 +425,8 @@ public final class FileTokenizerTest extends TestCase {
         // reset stream
         /* "123,\"23,4\"\"3,4\\\",5\",\"45,6\",\"\",\"3" */
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         // make sure quotes stay in the token
         fts.addQuotePattern("\"", "\"", '\\', true);
@@ -451,8 +451,8 @@ public final class FileTokenizerTest extends TestCase {
 
         // reset stream
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
         fts.addQuotePattern("\"", "\"");
         ft.setSettings(fts);
@@ -474,8 +474,8 @@ public final class FileTokenizerTest extends TestCase {
         // lets use a loooong quote pattern.
         inputString = "123, quotebeginpattern2, 3, 4quoteendpattern, 345";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addQuotePattern("quotebeginpattern", "quoteendpattern");
         fts.addDelimiterPattern(", ", false, false, false);
         ft.setSettings(fts);
@@ -492,7 +492,7 @@ public final class FileTokenizerTest extends TestCase {
         assertNull(token);
         assertFalse(ft.lastTokenWasQuoted());
 
-        System.out.println("FileTokenizer AddQuotePattern: Done.");
+        System.out.println("Tokenizer AddQuotePattern: Done.");
 
     } // testAddQuotePattern()
 
@@ -502,20 +502,20 @@ public final class FileTokenizerTest extends TestCase {
      * delimiter/quote combinations, with all kinds of flags set: delimiter
      * inside quotes, consecutive delimiters - empty tokens inbetween or not -
      * included in the token, combined, or returned as separate token.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testAddDelimiterPattern1() throws FileTokenizerException {
+    public void testAddDelimiterPattern1() throws TokenizerException {
         String token;
         String inputString;
         // catch the abnormal first, tests illegal arguments
         inputString = "123";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         inputString = "123, 234,\t345,\n456,567, \"one, token\",\t678, , 789, "
                 + "890,\t,\t901, the end";
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
+        ft = new Tokenizer(strReader);
         // two delimiters, one will be returned as separate token.
         // delimiter pattern inside quotes should not start a new token.
         fts.addDelimiterPattern(", ", false, false, false);
@@ -547,8 +547,8 @@ public final class FileTokenizerTest extends TestCase {
 
         inputString = "123, 234, , , , 456,,567, 678, , 789, end";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         // tests combine consecutive delimiters
         fts.addDelimiterPattern(", ", true, false, false);
         ft.setSettings(fts);
@@ -571,8 +571,8 @@ public final class FileTokenizerTest extends TestCase {
         // = "123, 234, , , , 456,,567, 678, , 789, end"
         // reset stream
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern(", ", false, true, false);
         ft.setSettings(fts);
         token = ft.nextToken();
@@ -620,15 +620,15 @@ public final class FileTokenizerTest extends TestCase {
 
     /**
      * separating this into two functions to avoid warnings.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testAddDelimiterPattern2() throws FileTokenizerException {
+    public void testAddDelimiterPattern2() throws TokenizerException {
 
         // all kinds of parameter combinations.
         String inputString = "123,++---234-,2+-,,6,,7**+**8**";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         /*                       (combine, return, include)*/
         fts.addDelimiterPattern(",", false, false, true);
         fts.addDelimiterPattern("+", false, true, false);
@@ -686,8 +686,8 @@ public final class FileTokenizerTest extends TestCase {
 
         inputString = "123\n\n\n2,3,4\n2\n6,,7\n\n\n8,7";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         /* ( combine, return, include */
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("\n", true, true, false);
@@ -726,8 +726,8 @@ public final class FileTokenizerTest extends TestCase {
         // ensure line continuation chars between tokens don't break combining 
         inputString = "123---234-345--\\\n-243";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         /*                       (combine, return, include) */
         fts.addDelimiterPattern("-", true, true, false);
         ft.setSettings(fts);
@@ -753,7 +753,7 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
         
-        System.out.println("FileTokenizer AddDelimiterPattern: Done.");
+        System.out.println("Tokenizer AddDelimiterPattern: Done.");
     } // testAddDelimiterPatter()
 
     /**
@@ -761,22 +761,22 @@ public final class FileTokenizerTest extends TestCase {
      * abnormal illegal argument situation. Then defines C-style comments
      * (ignoring them), afterwards defines the block comments testing include in
      * token and return as separate token parameters.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testAddCommentPattern() throws FileTokenizerException {
+    public void testAddCommentPattern() throws TokenizerException {
         String inputString;
         String token;
 
         inputString = "123";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
 
         // define C-style comments
         inputString = "123,234/*comment*/345//line comment, foo\nend";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("\n", false, false, false);
         fts.addBlockCommentPattern("/*", "*/", false, false);
@@ -794,8 +794,8 @@ public final class FileTokenizerTest extends TestCase {
         // block comments,
         inputString = "123,234/*comment*/345";
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
         fts.addBlockCommentPattern("/*", "*/", false, false);
         ft.setSettings(fts);
@@ -808,8 +808,8 @@ public final class FileTokenizerTest extends TestCase {
         // returning them as separate token, and
         inputString = "123,234/*comment*/345";
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
         fts.addBlockCommentPattern("/*", "*/", true, false);
         ft.setSettings(fts);
@@ -826,8 +826,8 @@ public final class FileTokenizerTest extends TestCase {
         // including them in the token.
         inputString = "123,234/*comment*/345";
         strReader = new StringReader(inputString);
-        ft = new FileTokenizer(strReader);
-        fts = new FileTokenizerSettings();
+        ft = new Tokenizer(strReader);
+        fts = new TokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
         fts.addBlockCommentPattern("/*", "*/", false, true);
         ft.setSettings(fts);
@@ -838,7 +838,7 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        System.out.println("FileTokenizer AddCommentPattern: Done.");
+        System.out.println("Tokenizer AddCommentPattern: Done.");
 
     } // testAddCommentPattern()
 
@@ -857,7 +857,7 @@ public final class FileTokenizerTest extends TestCase {
      */
     public void testPatternCombinations() {
 
-        FileTokenizerSettings fts = new FileTokenizerSettings();
+        TokenizerSettings fts = new TokenizerSettings();
 
         /* do some checking across different pattern groups */
         fts.addBlockCommentPattern("LANG", "KURZ", false, false);
@@ -902,7 +902,7 @@ public final class FileTokenizerTest extends TestCase {
             // we should end up here.
         }
 
-        System.out.println("FileTokenizerSettings PatternCombinations: Done.");
+        System.out.println("TokenizerSettings PatternCombinations: Done.");
 
     } // testPatternCombinations()
 
@@ -911,7 +911,7 @@ public final class FileTokenizerTest extends TestCase {
      * pattern, empty end pattern, null begin, null end pattern, and both null.
      */
     public void testWeirdQuotePatterns() {
-        FileTokenizerSettings fts = new FileTokenizerSettings();
+        TokenizerSettings fts = new TokenizerSettings();
         fts.addQuotePattern("left", "right");
         fts.addQuotePattern("tfel", "right"); // same right quote is okay
         try {
@@ -957,7 +957,7 @@ public final class FileTokenizerTest extends TestCase {
      * pattern, empty end pattern, null begin, null end pattern, and both null.
      */
     public void testWeirdCommentPatterns() {
-        FileTokenizerSettings fts = new FileTokenizerSettings();
+        TokenizerSettings fts = new TokenizerSettings();
 
         /* ( return, include */
         fts.addBlockCommentPattern("CB", "CE", false, false);
@@ -1013,7 +1013,7 @@ public final class FileTokenizerTest extends TestCase {
      * pattern, empty end pattern, null begin, null end pattern, and both null.
      */
     public void weirdDelimiterPatterns() {
-        FileTokenizerSettings fts = new FileTokenizerSettings();
+        TokenizerSettings fts = new TokenizerSettings();
 
         /* combine, return, include */
         fts.addDelimiterPattern("foo", false, false, false);
@@ -1053,23 +1053,23 @@ public final class FileTokenizerTest extends TestCase {
         } catch (IllegalArgumentException iae) {
             // ending up here is just fine.
         }
-    } // weirdDelimiterPatterns(FileTokenizer)
+    } // weirdDelimiterPatterns(Tokenizer)
 
     /**
      * Tests the line continuation character: sets the '\' as line cont char,
      * adds a delimiter that starts with it and checks if the tokenizer can
      * handle it. Also tests if a change of the cont character has an effect.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
     public void testSetLineContinuationCharacter() 
-            throws FileTokenizerException {
+            throws TokenizerException {
         String token;
         String inputString;
         inputString = "123,234,foo\\\n \t  poo,moo\\dpoo,goo\\blah,"
                 + "one\\\n  two\\\n\\\n   four,'quote\\\n   \\\n  cont',end";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
 
         fts.addQuotePattern("'", "'");
         fts.addDelimiterPattern(",", false, false, false);
@@ -1103,8 +1103,8 @@ public final class FileTokenizerTest extends TestCase {
         inputString = "123,234,foo\\\n \t  poo,moo\\dpoo,goo\\blah,"
                 + "one\\\n  two\\\n\\\n   four,'quote\\\n   \\\n  cont',end";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addQuotePattern("'", "'");
         fts.addDelimiterPattern(",", false, false, false);
         // set a delimiter that starts with the line cont char.
@@ -1139,8 +1139,8 @@ public final class FileTokenizerTest extends TestCase {
         inputString = "123,234,foo\\\n \t  poo,moo+dpoo,goo+blah,"
                 + "one+\n  two+\n+\n   four\\\nfve,'quote\\\n   +\n  cont',end";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addQuotePattern("'", "'");
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("+d", false, false, false);
@@ -1163,21 +1163,21 @@ public final class FileTokenizerTest extends TestCase {
             // ending up here is gooood.
         }
 
-        System.out.println("FileTokenizer SetLineContinuationCharacter: Done.");
+        System.out.println("Tokenizer SetLineContinuationCharacter: Done.");
 
     } // testSetLineContinuationCharacter()
 
     /**
      * Tests if we get the line continuation character back that was set before.
      * Also, after EOF, and after changing it - and always.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
     public void testGetLineContinuationCharacter() 
-            throws FileTokenizerException {
+            throws TokenizerException {
         String inputString = "123";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
 
         fts.setLineContinuationCharacter('\0');
         assertEquals(fts.getLineContinuationCharacter(), "\0");
@@ -1202,7 +1202,7 @@ public final class FileTokenizerTest extends TestCase {
         fts = ft.getSettings();
         assertEquals(fts.getLineContinuationCharacter(), "g");
 
-        System.out.println("FileTokenizer GetLineContinuationCharacter: Done.");
+        System.out.println("Tokenizer GetLineContinuationCharacter: Done.");
 
     }
 
@@ -1210,15 +1210,15 @@ public final class FileTokenizerTest extends TestCase {
      * tests if multiple different, but consecutive, delimiters are combined
      * correctly - and ensures that they are still included/returned in/as
      * token, if set so.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testCombineMultipleDelimiters() throws FileTokenizerException {
+    public void testCombineMultipleDelimiters() throws TokenizerException {
 
         String token;
         String inputString = "123 \t 234   345, 567";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         // we want whitespaces and comma to be a seperator. Also combinations.
         fts.addDelimiterPattern(" ", true, false, false);
         fts.addDelimiterPattern("\t", true, false, false);
@@ -1240,8 +1240,8 @@ public final class FileTokenizerTest extends TestCase {
 
         // same thing. This time we want the comma returned.
         strReader = new StringReader(inputString); /* "123 \t 234 345, 567" */
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         // we want whitespaces and comma to be a seperator. Also combinations.
         fts.addDelimiterPattern(" ", true, false, false);
         fts.addDelimiterPattern("\t", true, false, false);
@@ -1265,8 +1265,8 @@ public final class FileTokenizerTest extends TestCase {
 
         // same thing. But the comma is to be included in the token.
         strReader = new StringReader(inputString); /* "123 \t 234 345, 567" */
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         // we want whitespaces and comma to be a seperator. Also combinations.
         fts.addDelimiterPattern(" ", true, false, false);
         fts.addDelimiterPattern("\t", true, false, false);
@@ -1289,8 +1289,8 @@ public final class FileTokenizerTest extends TestCase {
         // now make sure we don't combine too many delimiters.
         inputString = "123 \t 234   345, \t,  567";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         // we want whitespaces and comma to be a seperator. Also combinations.
         fts.addDelimiterPattern(" ", true, false, false);
         fts.addDelimiterPattern("\t", true, false, false);
@@ -1316,8 +1316,8 @@ public final class FileTokenizerTest extends TestCase {
         // lets see what happens if we ust return two different delimiters
         inputString = "123 \t 234   345, \t;  567";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         // we want whitespaces and comma to be a seperator. Also combinations.
         fts.addDelimiterPattern(" ", true, false, false);
         fts.addDelimiterPattern("\t", true, false, false);
@@ -1346,22 +1346,22 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
         
-        System.out.println("FileTokenizer CombineMultipleDelimiters: Done.");
+        System.out.println("Tokenizer CombineMultipleDelimiters: Done.");
 
     }
 
     /**
      * ensures correct white space character support. Defined WS chars will be
      * ignored - if not inside quotes. Any character can be defined as WS.
-     * @throws FileTokenizerException if somethings goes wrong.
+     * @throws TokenizerException if somethings goes wrong.
      */
-    public void testAddWhiteSpaceCharacter() throws FileTokenizerException {
+    public void testAddWhiteSpaceCharacter() throws TokenizerException {
 
         String token;
         String inputString = "123 \t 234   345, 567";
         StringReader strReader = new StringReader(inputString);
-        FileTokenizerSettings fts = new FileTokenizerSettings();
-        FileTokenizer ft = new FileTokenizer(strReader);
+        TokenizerSettings fts = new TokenizerSettings();
+        Tokenizer ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         fts.addWhiteSpaceCharacter(' ');
         fts.addWhiteSpaceCharacter('\t');
@@ -1378,8 +1378,8 @@ public final class FileTokenizerTest extends TestCase {
         // no ws chars - all spaces should appear
         inputString = "123 \t 234   345, 567";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("\t", false, false, false);
         ft.setSettings(fts);
@@ -1396,8 +1396,8 @@ public final class FileTokenizerTest extends TestCase {
         // space is a whitespace AND delimiter. Delimiter should win.
         inputString = "123  234 345";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(" ", false, false, false);
         fts.addWhiteSpaceCharacter(' ');
         ft.setSettings(fts);
@@ -1417,8 +1417,8 @@ public final class FileTokenizerTest extends TestCase {
         inputString = "=123=  _234_ =345= ---------------" 
                 + " ------1_2_3_4_5-------";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(" ", false, false, false);
         fts.addWhiteSpaceCharacter('_');
         fts.addWhiteSpaceCharacter('=');
@@ -1443,8 +1443,8 @@ public final class FileTokenizerTest extends TestCase {
         // make sure whitespaces are not swallowed if quoted
         inputString = "\"123 \", \" 234\" ,  34 5 , \" 5 6 7 \"  , \"987 \" ";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(",", false, false, false);
         fts.addQuotePattern("\"", "\"");
         fts.addWhiteSpaceCharacter(' ');
@@ -1466,8 +1466,8 @@ public final class FileTokenizerTest extends TestCase {
         // test a delimiter that starts with a whitespace
         inputString = "123 -  234 -  34 - 5 - 5 6 7 -   ";
         strReader = new StringReader(inputString);
-        fts = new FileTokenizerSettings();
-        ft = new FileTokenizer(strReader);
+        fts = new TokenizerSettings();
+        ft = new Tokenizer(strReader);
         fts.addDelimiterPattern(" - ", false, false, false);
         fts.addWhiteSpaceCharacter(' ');
         ft.setSettings(fts);
@@ -1485,7 +1485,7 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        System.out.println("FileTokenizer AddWhiteSpaceCharacter: Done.");
+        System.out.println("Tokenizer AddWhiteSpaceCharacter: Done.");
 
     }
-} // FileTokenizerTest
+} // TokenizerTest

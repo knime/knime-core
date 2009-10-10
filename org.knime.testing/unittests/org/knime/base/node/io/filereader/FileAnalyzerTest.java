@@ -35,7 +35,7 @@ import java.util.Vector;
 import junit.framework.TestCase;
 
 import org.knime.base.node.io.filereader.FileAnalyzer.HeaderHelper;
-import org.knime.base.node.io.filetokenizer.Quote;
+import org.knime.core.util.tokenizer.Quote;
 
 /**
  *
