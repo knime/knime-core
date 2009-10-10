@@ -30,7 +30,7 @@ import junit.framework.TestCase;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public final class FileTokenizerTest extends TestCase {
+public final class TokenizerTest extends TestCase {
 
     /**
      * System entry point calls the
@@ -40,7 +40,7 @@ public final class FileTokenizerTest extends TestCase {
      * @param args Command line parameter(s).
      */
     public static void main(final String[] args) {
-        junit.textui.TestRunner.run(FileTokenizerTest.class);
+        junit.textui.TestRunner.run(TokenizerTest.class);
     }
 
     /**
