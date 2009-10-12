@@ -134,15 +134,19 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         for (Image img : m_images) {
             maxWidth = Math.max(maxWidth, img.getBounds().width + 3);
         }
-
-        int maxColumnCount = getUsableSplashScreenWidth() / maxWidth;
+        
+        final int horizontalSpacing = 10;
+        // each item requires space "(maxWidth + horizontalSpacing)", except
+        // for the very last image
+        int maxColumnCount = (getUsableSplashScreenWidth() + horizontalSpacing)
+            / (maxWidth + horizontalSpacing);
         // Limit size to the maximum number of columns if the number of images
         // exceed this amount; otherwise, use the exact number of columns
         // required.
         int actualColumnCount = Math.min(m_images.size(), maxColumnCount);
         // Configure the layout
         GridLayout layout = new GridLayout(actualColumnCount, true);
-        layout.horizontalSpacing = 10;
+        layout.horizontalSpacing = horizontalSpacing;
         layout.verticalSpacing = 0;
         layout.marginHeight = 0;
         layout.marginWidth = 0;
