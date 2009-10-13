@@ -7,7 +7,6 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Fragment-Host: org.knime.base;bundle-version="2.0.0"
 Require-Bundle: org.knime.core
 Export-Package: org.knime.base.node.io.filereader,
- org.knime.base.node.io.filetokenizer,
  org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.mds,
  org.knime.base.node.mine.scorer,
