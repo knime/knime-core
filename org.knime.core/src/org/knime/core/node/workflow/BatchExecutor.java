@@ -32,6 +32,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -56,6 +57,8 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.MutableBoolean;
+import org.knime.core.util.tokenizer.Tokenizer;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  * Simple utility class that takes a workflow, either in a directory or zipped
@@ -65,7 +68,7 @@ import org.knime.core.util.MutableBoolean;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
-	
+    
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(BatchExecutor.class);
     
@@ -92,7 +95,7 @@ public final class BatchExecutor {
             m_type = type;
         }
     }
-
+    
     private BatchExecutor() { /**/
     }
 
@@ -111,6 +114,9 @@ public final class BatchExecutor {
             + "                  if omitted the workflow is only saved in place\n"
             + " -destDir=... => directory where the executed workflow is saved to\n"
             + "                  if omitted the workflow is only saved in place\n"
+            + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
+            + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
+            + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
             + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
             + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
             + "                  'type' can be any of the primitive Java types, \"String\"\n"
@@ -169,6 +175,7 @@ public final class BatchExecutor {
         File preferenceFile = null;
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
+        List<FlowVariable> wkfVars = new ArrayList<FlowVariable>();
 
         for (String s : args) {
             String[] parts = s.split("=", 2);
@@ -240,6 +247,22 @@ public final class BatchExecutor {
                 }
                 output = new File(parts[1]);
                 outputZip = false;
+            } else if ("-workflow.variable".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println("Couldn't parse -workflow.variable " 
+                            + "argument: " + s);
+                    return 1;
+                }
+                String[] parts2 = splitWorkflowVariableArg(parts[1]);
+                FlowVariable var = null;
+                try {
+                    var = createWorkflowVariable(parts2);
+                } catch (Exception e) {
+                    System.err.println("Couldn't parse -workflow.variable "
+                            + "argument: " + s + ": " + e.getMessage());
+                    System.exit(1);
+                }
+                wkfVars.add(var);
             } else if ("-option".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println(
@@ -302,6 +325,10 @@ public final class BatchExecutor {
                 workflowDir, new ExecutionMonitor());
         final WorkflowManager wfm = loadResult.getWorkflowManager();
 
+        if (!wkfVars.isEmpty()) {
+            applyWorkflowVariables(wfm, reset, wkfVars);
+        }
+        
         if (reset) {
             wfm.resetAll();
             LOGGER.debug("Workflow reset done.");
@@ -315,67 +342,68 @@ public final class BatchExecutor {
         boolean successful = true;
         final MutableBoolean executionCanceled = new MutableBoolean(false);
         if (!noExecute) {
-        	// get workspace dir
-        	IWorkspace ws = ResourcesPlugin.getWorkspace();
-        	URI uri = ws.getRoot().getLocationURI();
-        	// if exists check for ".cancel" file
-        	if (uri != null) {
-        		File wsFile = new File(uri);
-        		// file to be checked for
-      			final File cancelFile = new File(wsFile, ".cancel");
-      			// create new timer task
-      			KNIMETimer.getInstance().schedule(new TimerTask() {
-      				/** {@inheritDoc} */
-      				public void run() {
-   						if (cancelFile.exists()) {
-   							// CANCEL workflow manager
-  					    	wfm.cancelExecution();
-  					    	// delete cancel file
-  					    	cancelFile.delete();
-  					    	executionCanceled.setValue(true);
-  					    	// cancel this timer
-  					    	this.cancel();
-  						}
-      				}
-      			}, 1000, Long.MAX_VALUE);
-        	}
-        	successful = wfm.executeAllAndWaitUntilDone();
-	    }
+            // get workspace dir
+            IWorkspace ws = ResourcesPlugin.getWorkspace();
+            URI uri = ws.getRoot().getLocationURI();
+            // if exists check for ".cancel" file
+            if (uri != null) {
+                File wsFile = new File(uri);
+                // file to be checked for
+                  final File cancelFile = new File(wsFile, ".cancel");
+                  // create new timer task
+                  KNIMETimer.getInstance().schedule(new TimerTask() {
+                      /** {@inheritDoc} */
+                      @Override
+                      public void run() {
+                           if (cancelFile.exists()) {
+                               // CANCEL workflow manager
+                              wfm.cancelExecution();
+                              // delete cancel file
+                              cancelFile.delete();
+                              executionCanceled.setValue(true);
+                              // cancel this timer
+                              this.cancel();
+                          }
+                      }
+                  }, 1000, Long.MAX_VALUE);
+            }
+            successful = wfm.executeAllAndWaitUntilDone();
+        }
         
         // only save when execution has not been canceled
         if (!executionCanceled.booleanValue()) {
-	        if (!noSave) { // save workflow
-	        	// save // in place when no output (file or dir) given
-	        	if (output == null) { 
-	        		wfm.save(workflowDir, new ExecutionMonitor(), true);
-	        		LOGGER.debug("Workflow saved: " 
-	        				+ workflowDir.getAbsolutePath());
-	        		if (input.isFile()) {
-	        			// if input is a Zip file, overwrite input flow (Zip)
-	        			// workflow dir contains temp workflow directory 
-	            		FileUtil.zipDir(input, workflowDir, 9);
-	            		LOGGER.info("Saved workflow availabe at: "
-	            				+ input.getAbsolutePath());
-	        		}
-	        	} else { 
-	            	if (outputZip) { // save as Zip
-	            		File outputTempDir = 
-	            			FileUtil.createTempDir("BatchExecutorOutput");
-	            		wfm.save(outputTempDir, new ExecutionMonitor(), true);
-		        		LOGGER.debug("Workflow saved: " 
-		        				+ outputTempDir.getAbsolutePath());
-	            		// to be saved into new output zip file
-	            		FileUtil.zipDir(output, outputTempDir, 9);
-	            		LOGGER.info("Saved workflow availabe at: "
-	            				+ output.getAbsolutePath());
-	            	} else { // save into dir
-	            		// copy current workflow dir
-	            		wfm.save(output, new ExecutionMonitor(), true);
-	            		LOGGER.info("Saved workflow availabe at: "
-	            				+ output.getAbsolutePath());
-	            	}
-	            }
-	        }
+            if (!noSave) { // save workflow
+                // save // in place when no output (file or dir) given
+                if (output == null) { 
+                    wfm.save(workflowDir, new ExecutionMonitor(), true);
+                    LOGGER.debug("Workflow saved: " 
+                            + workflowDir.getAbsolutePath());
+                    if (input.isFile()) {
+                        // if input is a Zip file, overwrite input flow (Zip)
+                        // workflow dir contains temp workflow directory 
+                        FileUtil.zipDir(input, workflowDir, 9);
+                        LOGGER.info("Saved workflow availabe at: "
+                                + input.getAbsolutePath());
+                    }
+                } else { 
+                    if (outputZip) { // save as Zip
+                        File outputTempDir = 
+                            FileUtil.createTempDir("BatchExecutorOutput");
+                        wfm.save(outputTempDir, new ExecutionMonitor(), true);
+                        LOGGER.debug("Workflow saved: " 
+                                + outputTempDir.getAbsolutePath());
+                        // to be saved into new output zip file
+                        FileUtil.zipDir(output, outputTempDir, 9);
+                        LOGGER.info("Saved workflow availabe at: "
+                                + output.getAbsolutePath());
+                    } else { // save into dir
+                        // copy current workflow dir
+                        wfm.save(output, new ExecutionMonitor(), true);
+                        LOGGER.info("Saved workflow availabe at: "
+                                + output.getAbsolutePath());
+                    }
+                }
+            }
         }
         // get elapsed time in milliseconds
         long elapsedTimeMillis = System.currentTimeMillis() - t;
@@ -384,11 +412,11 @@ public final class BatchExecutor {
                 + " (" + elapsedTimeMillis + "ms)");
         System.out.println(timeString);
         if (executionCanceled.booleanValue()) {
-        	LOGGER.debug("Workflow execution canceled after " + timeString);
-   	        LOGGER.debug("Status of workflow after cancelation:");
+            LOGGER.debug("Workflow execution canceled after " + timeString);
+            LOGGER.debug("Status of workflow after cancelation:");
         } else {
-	        LOGGER.debug("Workflow execution done " + timeString);
-	        LOGGER.debug("Status of workflow after execution:");
+            LOGGER.debug("Workflow execution done " + timeString);
+            LOGGER.debug("Status of workflow after execution:");
         }
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
@@ -531,6 +559,85 @@ public final class BatchExecutor {
         return res;
     }
     
+    /** Splits the argument to -workflow.variable into its sub-components
+     * (name, value, type) and returns it as array.
+     * @param arg The string to split
+     * @return The components of the string, no validation is done.
+     */
+    private static String[] splitWorkflowVariableArg(final String arg) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(arg));
+        TokenizerSettings settings = new TokenizerSettings();
+        settings.addQuotePattern("\"", "\"", '\\');
+        settings.addQuotePattern("'", "'", '\\');
+        settings.addDelimiterPattern(",",
+                /* combine multiple= */false,
+                /* return as token= */ false,
+                /* include in token= */false);
+        tokenizer.setSettings(settings);
+        ArrayList<String> tokenList = new ArrayList<String>();
+        String token;
+        while ((token = tokenizer.nextToken()) != null) {
+            tokenList.add(token);
+        }
+        return tokenList.toArray(new String[tokenList.size()]);
+    }
+    
+    /** Creates a new flow variable from the sub-components of the 
+     * -workflow.variables commandline argument. If the string array does not
+     * meet the requirements (e.g. length = 3), an exception is thrown.
+     * @param args The arguments for the variable.
+     * @return A new flow variable.
+     */
+    private static FlowVariable createWorkflowVariable(final String[] args) {
+        if (args.length != 3) {
+            throw new IndexOutOfBoundsException("Invalid argument list");
+        }
+        String name = args[0];
+        String value = args[1];
+        String type = args[2];
+        if ("String".equals(type)) {
+            return new FlowVariable(name, value);
+        } else if ("int".equals(type)) {
+            return new FlowVariable(name, Integer.parseInt(value));
+        } else if ("double".equals(type)) {
+            return new FlowVariable(name, Double.parseDouble(value));
+        } else {
+            throw new IllegalArgumentException("Invalid type: " + type);
+        }
+    }
+    
+    /** Injects the workflow variables provided in the last argument into the
+     * workflow. 
+     * @param wfm The workflow, where to inject the variables
+     * @param reset Whether to reset the workflow 
+     * {@link WorkflowManager#addWorkflowVariables(boolean, FlowVariable...)}
+     * @param wkfVars The flow variables.
+     */
+    private static void applyWorkflowVariables(final WorkflowManager wfm, 
+            final boolean reset, final List<FlowVariable> wkfVars) {
+        HashSet<FlowVariable> unknown = new HashSet<FlowVariable>(wkfVars);
+        unknown.removeAll(wfm.getWorkflowVariables());
+        if (!unknown.isEmpty()) {
+            StringBuilder str = new StringBuilder("The workflow variable");
+            str.append(unknown.size() == 1 ? " is" : "s are");
+            str.append(" potentially unused (not defined in workflow):");
+            boolean first = true;
+            for (FlowVariable f : unknown) {
+                str.append(first ? " " : ", ");
+                first = false;
+                str.append("\"").append(f.getName()).append("\" (");
+                str.append(f.getType()).append(")");
+            }
+            LOGGER.warn(str);
+            System.out.println(str);
+        }
+        for (FlowVariable f : wkfVars) {
+            LOGGER.debug("Setting workflow variable " + f);
+        }
+        wfm.addWorkflowVariables(
+                !reset, wkfVars.toArray(new FlowVariable[wkfVars.size()]));
+    }
+        
     private static void dumpWorkflowToDebugLog(final WorkflowManager wfm) {
         String str = wfm.printNodeSummary(wfm.getID(), 0);
         BufferedReader reader = new BufferedReader(new StringReader(str));
