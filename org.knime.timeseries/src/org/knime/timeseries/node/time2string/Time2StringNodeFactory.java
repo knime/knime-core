@@ -22,9 +22,9 @@
 package org.knime.timeseries.node.time2string;
 
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
 
 /**
@@ -54,7 +54,7 @@ public class Time2StringNodeFactory extends NodeFactory<Time2StringNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<Time2StringNodeModel> createNodeView(
+    public NodeView<Time2StringNodeModel> createNodeView(
             final int viewIndex,
             final Time2StringNodeModel nodeModel) {
         return null;

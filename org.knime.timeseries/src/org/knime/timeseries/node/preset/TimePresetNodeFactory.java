@@ -21,9 +21,9 @@
  */
 package org.knime.timeseries.node.preset;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
@@ -54,7 +54,7 @@ public class TimePresetNodeFactory extends NodeFactory<TimePresetNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<TimePresetNodeModel> createNodeView(
+    public NodeView<TimePresetNodeModel> createNodeView(
             final int viewIndex,
             final TimePresetNodeModel nodeModel) {
         return null;

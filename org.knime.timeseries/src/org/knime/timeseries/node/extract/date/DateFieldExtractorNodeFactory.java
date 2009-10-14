@@ -21,9 +21,9 @@
  */
 package org.knime.timeseries.node.extract.date;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
@@ -55,7 +55,7 @@ public class DateFieldExtractorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<DateFieldExtractorNodeModel> createNodeView(
+    public NodeView<DateFieldExtractorNodeModel> createNodeView(
             final int viewIndex, final DateFieldExtractorNodeModel nodeModel) {
         return null;
     }

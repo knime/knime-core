@@ -22,9 +22,9 @@
  */
 package org.knime.base.node.preproc.unpivot;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
@@ -59,7 +59,7 @@ public class UnpivotNodeFactory extends NodeFactory<UnpivotNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<UnpivotNodeModel> createNodeView(
+    public NodeView<UnpivotNodeModel> createNodeView(
             final int viewIndex, final UnpivotNodeModel nodeModel) {
         return null;
     }

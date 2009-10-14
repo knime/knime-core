@@ -21,9 +21,9 @@
  */
 package org.knime.timeseries.node.mask;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
@@ -54,7 +54,7 @@ public class MaskTimeNodeFactory extends NodeFactory<MaskTimeNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<MaskTimeNodeModel> createNodeView(
+    public NodeView<MaskTimeNodeModel> createNodeView(
             final int viewIndex,
             final MaskTimeNodeModel nodeModel) {
         return null;

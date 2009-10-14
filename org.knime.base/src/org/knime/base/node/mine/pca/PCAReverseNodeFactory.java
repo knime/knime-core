@@ -22,9 +22,9 @@
  */
 package org.knime.base.node.mine.pca;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * factory for pca inversion node.
@@ -54,7 +54,7 @@ public class PCAReverseNodeFactory extends NodeFactory<PCAReverseNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<PCAReverseNodeModel> createNodeView(
+    public NodeView<PCAReverseNodeModel> createNodeView(
             final int viewIndex, final PCAReverseNodeModel nodeModel) {
         return null;
     }

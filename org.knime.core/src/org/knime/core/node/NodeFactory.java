@@ -641,9 +641,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Creates and returns a new node view for the given index. Implementations 
-     * will typically inherit from {@link NodeView} instead of 
-     * {@link AbstractNodeView}.
+     * Creates and returns a new node view for the given index. 
      *
      * @param viewIndex The index for the view to create.
      * @param nodeModel the underlying model
@@ -653,8 +651,32 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
-    public abstract AbstractNodeView<T> createNodeView(final int viewIndex,
+    public abstract NodeView<T> createNodeView(final int viewIndex, 
             final T nodeModel);
+    
+    /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
+     * creation of a more flexible {@link AbstractNodeView}. Implementations 
+     * will typically overwrite the {@link #createNodeView(int, NodeModel)} 
+     * method unless they wish to return, e.g. an 
+     * {@link ExternalApplicationNodeView}. 
+     * 
+     * <p><strong>Note:</strong>This method is going to be removed in KNIME  
+     * v3.0, whereby the return type of the 
+     * {@link #createNodeView(int, NodeModel)} will be changed 
+     * to {@link AbstractNodeView}. (This change is postponed to v3.0 in order 
+     * to ensure binary compatibility of 2.0.x plugins with the 2.x series).
+     * @param viewIndex The index for the view to create
+     * @param nodeModel the underlying model
+     * @return a new node view for the given index
+     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is
+     *         smaller 0 or greater or equal to the values returned by
+     *         {@link #getNrNodeViews()}
+     * @since 2.1
+     */
+    public AbstractNodeView<T> createAbstractNodeView(final int viewIndex,
+            final T nodeModel) {
+        return createNodeView(viewIndex, nodeModel);
+    }
 
     /**
      * Returns <code>true</code> if this node provides a dialog to adjust

@@ -22,9 +22,9 @@
  */
 package org.knime.base.node.mine.pca;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * Factory class for PCA predictor.
@@ -54,7 +54,7 @@ public class PCAApplyNodeFactory extends NodeFactory<PCAApplyNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<PCAApplyNodeModel> createNodeView(
+    public NodeView<PCAApplyNodeModel> createNodeView(
             final int viewIndex, final PCAApplyNodeModel nodeModel) {
         return null;
     }

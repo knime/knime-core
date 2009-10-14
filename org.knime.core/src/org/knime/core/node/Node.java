@@ -1284,7 +1284,7 @@ public final class Node implements NodeModelWarningListener {
     public AbstractNodeView<?> getView(
             final int viewIndex, final String title) {
         try {
-            return m_factory.createNodeView(viewIndex, m_model);
+            return m_factory.createAbstractNodeView(viewIndex, m_model);
         } catch (Throwable e) {
             String errorMsg = "View instantiation failed: " + e.getMessage();
             m_logger.error(errorMsg, e);

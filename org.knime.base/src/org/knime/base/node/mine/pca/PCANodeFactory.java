@@ -22,9 +22,9 @@
  */
 package org.knime.base.node.mine.pca;
 
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * Factory class for the PCA Node.
@@ -52,7 +52,7 @@ public class PCANodeFactory extends NodeFactory<PCANodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public AbstractNodeView<PCANodeModel> createNodeView(final int viewIndex,
+    public NodeView<PCANodeModel> createNodeView(final int viewIndex,
             final PCANodeModel nodeModel) {
         return null;
     }
