@@ -210,7 +210,6 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     int newsize = Integer.parseInt(temp);
                     for (int n = oldsize; n < oldsize + newsize; n++) {
                         newlist.add(NOSORT.getName());
-                        newlist.add(ROWKEY.getName());
                     }
                     boolean[] oldbool = new boolean[oldsize];
                     boolean[] newbool = new boolean[oldsize + newsize];
