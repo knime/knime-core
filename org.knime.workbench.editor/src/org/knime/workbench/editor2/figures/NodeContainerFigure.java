@@ -178,7 +178,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * An optional custom description.
      */
     private String m_description;
-    
+
     private Image m_jobExec;
 
     /**
@@ -263,7 +263,7 @@ public class NodeContainerFigure extends RectangleFigure {
     public StatusFigure getStatusFigure() {
         return m_statusFigure;
     }
-    
+
     /**
      * Sets the icon.
      *
@@ -282,7 +282,7 @@ public class NodeContainerFigure extends RectangleFigure {
         m_contentFigure.setType(type);
 
     }
-    
+
     public void setJobExecutorIcon(final Image jobExecIcon) {
         m_jobExec = jobExecIcon;
         m_contentFigure.refreshJobManagerIcon();
@@ -471,7 +471,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * 
+     *
      * @param state new state of underlying node
      */
     public void setState(final NodeContainer.State state) {
@@ -502,9 +502,9 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         m_statusFigure.repaint();
     }
-    
+
     /**
-     * 
+     *
      * @param msg the node message
      */
     public void setMessage(final NodeMessage msg) {
@@ -527,7 +527,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         m_statusFigure.repaint();
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -544,25 +544,25 @@ public class NodeContainerFigure extends RectangleFigure {
     public Dimension getPreferredSize(final int wHint, final int hHint) {
         // TODO: rewrite. We have to take into account:
         /*
-         * WIDTH: max of 
+         * WIDTH: max of
          * m_contentFigure
          * m_heading
          * m_status figure
          * m_name
-         * 
+         *
          * HEIGHT:
          * m_contentFigure
          * m_infoWarnErrorPanel constant height?
          * m_statusFigure
          * m_name
-         * 
+         *
          */
-        
+
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
-        // add some offset, that the selection border is not directly at 
+        // add some offset, that the selection border is not directly at
         // the label
         prefWidth += 10;
-        
+
         int prefHeight = m_heading.getPreferredSize().height
                         + m_contentFigure.getPreferredSize().height
                         //+ m_infoWarnErrorPanel.getPreferredSize().height
@@ -572,9 +572,9 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_name.getPreferredSize().height
                         // plus a fixed size for the info error warn panel
                         + 20;
-                        
+
         return new Dimension(prefWidth, prefHeight);
-        
+
         /*
         Rectangle parentBounds = getBounds();
         int prefWidth = Math.max(WIDTH, m_heading.getPreferredSize().width);
@@ -684,11 +684,11 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private static final String BACKGROUND_UNKNOWN =
                 "icons/node/" + "background_unknown.png";
-        
-        private static final String BACKGROUND_LOOPER_START = 
+
+        private static final String BACKGROUND_LOOPER_START =
                 "icons/node/background_looper_start.png";
-        
-        private static final String BACKGROUND_LOOPER_END = 
+
+        private static final String BACKGROUND_LOOPER_END =
             "icons/node/background_looper_end.png";
 
         private final Label m_backgroundIcon;
@@ -699,7 +699,7 @@ public class NodeContainerFigure extends RectangleFigure {
          * Is used once the overlay has to be undone
          */
         private Image m_baseIcon;
-        
+
         private Label m_jobExecutorLabel;
 
         /**
@@ -733,14 +733,14 @@ public class NodeContainerFigure extends RectangleFigure {
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new DelegatingLayout());
             m_backgroundIcon.add(m_iconFigure);
-            m_backgroundIcon.setConstraint(m_iconFigure, 
+            m_backgroundIcon.setConstraint(m_iconFigure,
                     new RelativeLocator(m_backgroundIcon, 0.5, 0.5));
 
-            setConstraint(m_backgroundIcon, 
+            setConstraint(m_backgroundIcon,
                     new RelativeLocator(this, 0.5, 0.5));
         }
 
-        
+
         protected void refreshJobManagerIcon() {
             // do we have to remove it?
             if (m_jobExecutorLabel != null && m_jobExec == null) {
@@ -752,18 +752,18 @@ public class NodeContainerFigure extends RectangleFigure {
                     m_jobExecutorLabel.setOpaque(false);
                     m_backgroundIcon.add(m_jobExecutorLabel);
                     m_backgroundIcon.setConstraint(m_jobExecutorLabel,
-                            new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
+                            new RelativeLocator(m_backgroundIcon, 0.73, 0.73));
                 }
                 m_jobExecutorLabel.setIcon(m_jobExec);
                 repaint();
             }
         }
-        
-        
+
+
         /**
          * This determines the background image according to the "type" of the
          * node as stored in the repository model.
-         * 
+         *
          * @param type The Type
          * @return Image that should be uses as background for this node
          */
@@ -856,8 +856,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
             m_iconFigure.revalidate();
         }
-        
-        void setBackgroundIcon(Image icon) {
+
+        void setBackgroundIcon(final Image icon) {
             m_backgroundIcon.setIcon(icon);
         }
 
@@ -1035,7 +1035,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public StatusFigure() {
             // status figure must have exact same dimensions as progress bar
-            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH, 
+            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
             ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
@@ -1237,7 +1237,7 @@ public class NodeContainerFigure extends RectangleFigure {
     public void mark() {
         m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon);
         m_contentFigure.m_backgroundIcon.setConstraint(
-                m_contentFigure.m_deleteIcon, 
+                m_contentFigure.m_deleteIcon,
                 new RelativeLocator(m_contentFigure.m_backgroundIcon,
                         0.5, 0.5));
     }
