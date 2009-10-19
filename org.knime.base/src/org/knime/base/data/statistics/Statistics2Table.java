@@ -194,31 +194,34 @@ public class Statistics2Table {
                 } else {
                     m_missingValueCnt[c]++;
                 }
-                if (nominalValueColumns.contains(cspec.getName())
-                		&& (nominalValues[colIdx] == null 
-                				|| (nominalValues[colIdx] != null 
-                				&& nominalValues[colIdx].size() > 0))) {
-                    if (nominalValues[colIdx] == null) {
-                        nominalValues[colIdx] =
-                            new LinkedHashMap<DataCell, MutableInteger>();
-                    }
-                    MutableInteger cnt = nominalValues[colIdx].get(cell);
-                    if (cnt == null) {
-                        nominalValues[colIdx].put(cell, new MutableInteger(1));
-                    } else {
-                        cnt.inc();
-                    }
-                    if (nominalValues[colIdx].size() == numNomValuesOutput) {
-                    	if (warn.length() == 0) {
-                    		warn.append("Maximum number of unique possible "
-                    				+ "values (" + numNomValuesOutput 
-                    				+ ") exceeds for column(s): ");
-                    	} else {
-                    		warn.append(",");
-                    	}
-                        warn.append("\"" + 
-                        		m_spec.getColumnSpec(colIdx).getName() + "\"");
-                        nominalValues[colIdx].clear();
+                if (nominalValueColumns.contains(cspec.getName())) {
+                    if(nominalValues[colIdx] == null 
+                				|| (nominalValues[colIdx] != null
+                				// list is only empty, when the number of poss.
+                				// values exceeded the maximum
+                				&& nominalValues[colIdx].size() > 0)) {
+                        if (nominalValues[colIdx] == null) {
+                            nominalValues[colIdx] =
+                                new LinkedHashMap<DataCell, MutableInteger>();
+                        }
+                        MutableInteger cnt = nominalValues[colIdx].get(cell);
+                        if (cnt == null) {
+                            nominalValues[colIdx].put(cell, new MutableInteger(1));
+                        } else {
+                            cnt.inc();
+                        }
+                        if (nominalValues[colIdx].size() == numNomValuesOutput + 1) {
+                        	if (warn.length() == 0) {
+                        		warn.append("Maximum number of unique possible "
+                        				+ "values (" + numNomValuesOutput 
+                        				+ ") exceeds for column(s): ");
+                        	} else {
+                        		warn.append(",");
+                        	}
+                            warn.append("\"" + 
+                            		m_spec.getColumnSpec(c).getName() + "\"");
+                            nominalValues[colIdx].clear();
+                        }
                     }
                     colIdx++;
                 }

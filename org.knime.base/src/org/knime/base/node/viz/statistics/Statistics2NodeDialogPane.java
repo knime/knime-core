@@ -46,7 +46,8 @@ public class Statistics2NodeDialogPane extends DefaultNodeSettingsPane {
                 "Calculate median values (computationally expensive)"));
         createNewGroup("Nominal values");
         m_filterModel = createNominalFilterModel();
-        addDialogComponent(new DialogComponentColumnFilter(m_filterModel, 0));
+        addDialogComponent(new DialogComponentColumnFilter(
+                m_filterModel, 0, false));
         DialogComponentNumber numNomValueComp = 
             new DialogComponentNumber(createNominalValuesModel(), 
              "Max no. of most frequent and infrequent values (in view): ", 5);

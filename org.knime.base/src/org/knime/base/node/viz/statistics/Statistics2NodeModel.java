@@ -28,10 +28,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.knime.base.data.statistics.Statistics2Table;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -87,10 +89,21 @@ public class Statistics2NodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[]{
-                Statistics2Table.createOutSpecNumeric(inSpecs[0]),
-                Statistics2Table.createOutSpecNominal(inSpecs[0], 
-                		m_nominalFilter.getIncludeList())};
+        DataTableSpec numericSpec =
+            Statistics2Table.createOutSpecNumeric(inSpecs[0]);
+        ArrayList<String> nominalValues = new ArrayList<String>(
+                m_nominalFilter.getIncludeList());
+        if (nominalValues.isEmpty() 
+                && m_nominalFilter.getExcludeList().isEmpty()) {
+            for (DataColumnSpec cspec : inSpecs[0]) {
+                nominalValues.add(cspec.getName());
+            }
+            m_nominalFilter.setIncludeList(nominalValues);
+        }
+        DataTableSpec nominalSpec = Statistics2Table.createOutSpecNominal(
+                inSpecs[0], nominalValues);
+        return new DataTableSpec[]{numericSpec, nominalSpec};
+                
     }
 
     /**
