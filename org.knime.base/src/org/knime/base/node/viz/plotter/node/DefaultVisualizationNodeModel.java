@@ -225,7 +225,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         // or possibleValues.size() > m_maxNominalValues
         findCompatibleColumns(inData[0].getDataTableSpec(), false);
         DataTable filter = new FilterColumnTable(inData[0], false, 
-                m_excludedColumns);
+                getExcludedColumns());
         m_input = new DefaultDataArray(
                 filter, 1, m_maxRows.getIntValue(), exec);
         if (m_maxRows.getIntValue() < inData[0].getRowCount()) {
