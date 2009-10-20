@@ -259,6 +259,10 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
     
     private static class ColorRender extends DoubleGrayValueRenderer {
         
+        /** Name of the renderer. */
+        @SuppressWarnings("hiding")
+        public static final String DESCRIPTION = "Correlation Coloring";
+        
         /** Passes argument to super constructor.
          * @param spec The spec for the column.
          */
@@ -276,7 +280,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         /** {@inheritDoc} */
         @Override
         public String getDescription() {
-            return "Correlation Coloring";
+            return DESCRIPTION;
         }
         
         /** {@inheritDoc} */
