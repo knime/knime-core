@@ -312,7 +312,7 @@ public class NewJoinerNodeModel extends NodeModel {
                     }
                     rrow = rit.next();
                     rkey = getRightJoinKey(rrow);
-                    key = lkey.toString() + "_" + i;
+                    key = lkey.toString() + m_settings.keySuffix() + i;
                 }
             } else if (lofj) {
                 // no matching row from right table => fill with missing values

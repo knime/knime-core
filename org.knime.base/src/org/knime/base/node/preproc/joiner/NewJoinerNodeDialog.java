@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.07.2007 (thor): created
  */
@@ -61,6 +61,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -76,7 +77,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * This is the dialog for the joiner node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class NewJoinerNodeDialog extends NodeDialogPane {
@@ -101,6 +102,8 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
 
     private final JTextField m_suffix = new JTextField();
 
+    private final JTextField m_keySuffix = new JTextField();
+
     private final NewJoinerSettings m_settings = new NewJoinerSettings();
 
     /**
@@ -115,14 +118,14 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
         c.insets = new Insets(2, 2, 2, 2);
         c.gridx = 0;
         c.gridy = 0;
-        p.add(new JLabel("Join column from second table   ", JLabel.RIGHT), c);
+        p.add(new JLabel("Join column from second table   ", SwingConstants.RIGHT), c);
         c.gridx++;
         p.add(m_secondTableColumn, c);
         m_secondTableColumn.setRenderer(new ColumnSpecListRenderer());
 
         c.gridx = 0;
         c.gridy++;
-        p.add(new JLabel("Duplicate column handling   ", JLabel.RIGHT), c);
+        p.add(new JLabel("Duplicate column handling   ", SwingConstants.RIGHT), c);
         c.gridx++;
         p.add(m_filterDuplicates, c);
 
@@ -136,7 +139,7 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy++;
-        p.add(new JLabel("Join mode  ", JLabel.RIGHT), c);
+        p.add(new JLabel("Join mode  ", SwingConstants.RIGHT), c);
         c.gridx++;
         p.add(m_joinMode, c);
 
@@ -150,6 +153,13 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
                 m_suffix.setEnabled(m_appendSuffix.isSelected());
             }
         });
+
+        c.gridx = 0;
+        c.gridy++;
+        p.add(new JLabel("Multiple-match row ID suffix   ", SwingConstants.RIGHT), c);
+        c.gridx++;
+        p.add(m_keySuffix, c);
+
 
         addTab("Standard Settings", p);
     }
@@ -184,6 +194,8 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
         m_suffix.setText(m_settings.suffix());
         m_suffix.setEnabled(m_settings.duplicateHandling().equals(
                 DuplicateHandling.AppendSuffix));
+
+        m_keySuffix.setText(m_settings.keySuffix());
     }
 
     /**
@@ -208,6 +220,8 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
             m_settings.duplicateHandling(DuplicateHandling.AppendSuffix);
             m_settings.suffix(m_suffix.getText());
         }
+
+        m_settings.keySuffix(m_keySuffix.getText());
 
         m_settings.saveSettings(settings);
     }

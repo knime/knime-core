@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.07.2007 (thor): created
  */
@@ -56,14 +56,14 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class hold the settings for the joiner node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class NewJoinerSettings {
     /**
      * This enum holds all ways of handling duplicate column names in the two
      * input tables.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     public enum DuplicateHandling {
@@ -77,7 +77,7 @@ public class NewJoinerSettings {
 
     /**
      * This enum holds all ways of joining the two tables.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     public enum JoinMode {
@@ -104,7 +104,7 @@ public class NewJoinerSettings {
             return m_text;
         }
     }
-    
+
     /** Name of the row key column in the dialog. */
     static final String ROW_KEY_COL_NAME = "Row ID";
     /** Internally used row key identifier. */
@@ -117,11 +117,13 @@ public class NewJoinerSettings {
 
     private String m_suffix = "";
 
+    private String m_keySuffix = "_";
+
     private JoinMode m_joinMode = JoinMode.InnerJoin;
 
     /**
      * Returns the join column's name from the second table.
-     * 
+     *
      * @return the column's name
      */
     public String secondTableColumn() {
@@ -130,7 +132,7 @@ public class NewJoinerSettings {
 
     /**
      * Sets the join column's name from the second table.
-     * 
+     *
      * @param secondTableColumn the column's name
      */
     public void secondTableColumn(final String secondTableColumn) {
@@ -139,7 +141,7 @@ public class NewJoinerSettings {
 
     /**
      * Returns how duplicate column names should be handled.
-     * 
+     *
      * @return the duplicate handling method
      */
     public DuplicateHandling duplicateHandling() {
@@ -148,7 +150,7 @@ public class NewJoinerSettings {
 
     /**
      * Sets how duplicate column names should be handled.
-     * 
+     *
      * @param duplicateHandling the duplicate handling method
      */
     public void duplicateHandling(final DuplicateHandling duplicateHandling) {
@@ -157,7 +159,7 @@ public class NewJoinerSettings {
 
     /**
      * Returns the mode how the two tables should be joined.
-     * 
+     *
      * @return the join mode
      */
     public JoinMode joinMode() {
@@ -166,7 +168,7 @@ public class NewJoinerSettings {
 
     /**
      * Sets the mode how the two tables should be joined.
-     * 
+     *
      * @param joinMode the join mode
      */
     public void joinMode(final JoinMode joinMode) {
@@ -177,7 +179,7 @@ public class NewJoinerSettings {
      * Returns the suffix that is appended to duplicate columns from the second
      * table if the duplicate handling method is
      * <code>JoinMode.AppendSuffix</code>.
-     * 
+     *
      * @return the suffix
      */
     public String suffix() {
@@ -188,7 +190,7 @@ public class NewJoinerSettings {
      * Sets the suffix that is appended to duplicate columns from the second
      * table if the duplicate handling method is
      * <code>JoinMode.AppendSuffix</code>.
-     * 
+     *
      * @param suffix the suffix
      */
     public void suffix(final String suffix) {
@@ -196,8 +198,28 @@ public class NewJoinerSettings {
     }
 
     /**
+     * Returns the suffix that is appended to row keys from the first
+     * table if multiple rows from the second table match.
+     *
+     * @return the suffix
+     */
+    public String keySuffix() {
+        return m_keySuffix;
+    }
+
+    /**
+     * Sets the suffix that is appended to row keys from the first
+     * table if multiple rows from the second table match.
+     *
+     * @param suffix the suffix
+     */
+    public void keySuffix(final String suffix) {
+        m_keySuffix = suffix;
+    }
+
+    /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings a node settings object
      * @throws InvalidSettingsException if some settings are missing
      */
@@ -209,12 +231,14 @@ public class NewJoinerSettings {
         m_joinMode = JoinMode.valueOf(settings.getString("joinMode"));
         m_secondTableColumn = settings.getString("secondTableColumn");
         m_suffix = settings.getString("suffix");
+        // since 2.1
+        m_keySuffix = settings.getString("keySuffix", "_");
     }
 
     /**
      * Loads the settings from the node settings object using default values if
      * some settings are missing.
-     * 
+     *
      * @param settings a node settings object
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
@@ -226,14 +250,15 @@ public class NewJoinerSettings {
                 JoinMode.valueOf(settings.getString("joinMode",
                         JoinMode.InnerJoin.toString()));
         m_secondTableColumn =
-                settings.getString("secondTableColumn", 
+                settings.getString("secondTableColumn",
                         NewJoinerSettings.ROW_KEY_IDENTIFIER);
         m_suffix = settings.getString("suffix", "");
+        m_keySuffix = settings.getString("keySuffix", "_");
     }
 
     /**
      * Saves the settings into the node settings object.
-     * 
+     *
      * @param settings a node settings object
      */
     public void saveSettings(final NodeSettingsWO settings) {
@@ -241,5 +266,6 @@ public class NewJoinerSettings {
         settings.addString("joinMode", m_joinMode.name());
         settings.addString("secondTableColumn", m_secondTableColumn);
         settings.addString("suffix", m_suffix);
+        settings.addString("keySuffix", m_keySuffix);
     }
 }

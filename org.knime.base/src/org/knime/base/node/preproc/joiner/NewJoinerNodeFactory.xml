@@ -38,6 +38,12 @@
             <b>Full Outer Join</b>
             will fill up columns from both the first and second table with missing values if a row cannot be joined.
         </option>
+        <option name="Multiple-match row ID suffix">
+            If several rows from the second table match to one row from the first table, the
+            row ID from the first table's row is extended by this suffix and a number.
+            In some cases it is necessary to manually change the suffix if the extended row ID
+            is equal to an existing row ID (which causes DuplicateRowKeyExceptions). 
+        </option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Left table">Table contributing to the left part of the output table</inPort>
