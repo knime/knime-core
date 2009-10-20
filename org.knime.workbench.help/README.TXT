@@ -24,11 +24,3 @@ docbook source into the different output formats.
 Note that this makes heavy use of the libs/xslt that reside
 inside the "lib" folder.
  
-
-Extension-Points
-----------------
-
-
-TODO
-----------------
-- Check, how diagrams etc. ... can be provided to the user.
