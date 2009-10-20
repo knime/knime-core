@@ -233,7 +233,6 @@ public class PCAComputeNodeModel extends NodeModel {
                                 .findColumnIndex(colName);
                 m_inputColumnNames[colIndex] = colName;
                 colIndex++;
-
             }
         }
 
@@ -251,7 +250,7 @@ public class PCAComputeNodeModel extends NodeModel {
         m_inputColumnNames = new String[m_inputColumnIndices.length];
         for (int i = 0; i < m_inputColumnIndices.length; i++) {
             m_inputColumnNames[i] =
-                    ((DataTableSpec)inSpecs[DATA_INPORT]).getColumnSpec(i)
+                    ((DataTableSpec)inSpecs[DATA_INPORT]).getColumnSpec(m_inputColumnIndices[i])
                             .getName();
         }
     }
