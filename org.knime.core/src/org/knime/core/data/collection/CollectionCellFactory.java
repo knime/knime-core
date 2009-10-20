@@ -56,7 +56,8 @@ public final class CollectionCellFactory {
      * @throws NullPointerException If the argument is null or contains null
      *             values.
      */
-    public static ListCell createListCell(final Collection<DataCell> coll) {
+    public static ListCell createListCell(
+            final Collection<? extends DataCell> coll) {
         BlobSupportDataCellList l = BlobSupportDataCellList.create(coll);
         return new ListCell(l);
     }
@@ -90,7 +91,8 @@ public final class CollectionCellFactory {
      * @throws NullPointerException If the argument is null or contains null
      *             values.
      */
-    public static SetCell createSetCell(final Collection<DataCell> coll) {
+    public static SetCell createSetCell(
+            final Collection<? extends DataCell> coll) {
         BlobSupportDataCellSet l = BlobSupportDataCellSet.create(coll);
         return new SetCell(l);
     }

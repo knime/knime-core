@@ -66,7 +66,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      *             elements.
      */
     public static BlobSupportDataCellSet create(
-            final Collection<DataCell> coll) {
+            final Collection<? extends DataCell> coll) {
         return new BlobSupportDataCellSet(coll);
     }
 
@@ -102,7 +102,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      * @param cells to be stored in the new set.
      *
      */
-    BlobSupportDataCellSet(final Collection<DataCell> cells) {
+    BlobSupportDataCellSet(final Collection<? extends DataCell> cells) {
         LinkedHashSet<Wrapper> cellSet = new LinkedHashSet<Wrapper>();
         DataType commonType = null;
         for (DataCell c : cells) {

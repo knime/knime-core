@@ -64,7 +64,8 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
      *            {@link BlobDataCell} in this collection will be handled with
      *            care.
      */
-    protected BlobSupportDataCellList(final Collection<DataCell> coll) {
+    protected BlobSupportDataCellList(
+            final Collection<? extends DataCell> coll) {
         ArrayList<DataCell> cellList = new ArrayList<DataCell>(coll.size());
         DataType commonType = null;
         for (DataCell c : coll) {
@@ -236,7 +237,7 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
      *             values.
      */
     public static BlobSupportDataCellList create(
-            final Collection<DataCell> coll) {
+            final Collection<? extends DataCell> coll) {
         return new BlobSupportDataCellList(coll);
     }
 
