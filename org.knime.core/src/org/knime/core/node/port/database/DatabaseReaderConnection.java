@@ -204,6 +204,17 @@ public final class DatabaseReaderConnection {
             if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                 m_stmt.setFetchSize(
                         DatabaseConnectionSettings.FETCH_SIZE);
+            } else {
+                // fix 2040: mySQL databases read everything into one, big
+                // ResultSet leading to an heap space error
+                // Integer.MIN_VALUE is an indicator in order to enable
+                // streaming results
+                if (m_stmt.getClass().getCanonicalName().equals(
+                        "com.mysql.jdbc.Statement")) {
+                    m_stmt.setFetchSize(Integer.MIN_VALUE);
+                    LOGGER.info("Database fetchsize for mySQL database set to "
+                            + "\"" + Integer.MIN_VALUE + "\".");
+                }
             }
             final ResultSet result = m_stmt.executeQuery(m_conn.getQuery());
             return exec.createBufferedDataTable(new DataTable() {
@@ -245,6 +256,17 @@ public final class DatabaseReaderConnection {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                     m_stmt.setFetchSize(
                             DatabaseConnectionSettings.FETCH_SIZE);
+                } else {
+                    // fix 2040: mySQL databases read everything into one, big
+                    // ResultSet leading to an heap space error
+                    // Integer.MIN_VALUE is an indicator in order to enable
+                    // streaming results
+                    if (m_stmt.getClass().getCanonicalName().equals(
+                            "com.mysql.jdbc.Statement")) {
+                        m_stmt.setFetchSize(Integer.MIN_VALUE);
+                        LOGGER.info("Database fetchsize for mySQL database "
+                                + "set to \"" + Integer.MIN_VALUE + "\".");
+            }
                 }
             } else {
                 final int hashAlias = System.identityHashCode(this);
