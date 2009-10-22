@@ -435,7 +435,7 @@ public class KNIMEApplication implements IApplication {
      * @return An url to the file or null if the version file does not exist or
      *         could not be created.
      */
-    private static File getVersionFile(final URL workspaceUrl, boolean create) {
+    private static File getVersionFile(final URL workspaceUrl, final boolean create) {
         if (workspaceUrl == null) {
             return null;
         }
@@ -502,6 +502,7 @@ public class KNIMEApplication implements IApplication {
                     new File(System.getenv("MOZILLA_FIVE_HOME"));
         }
 
+        File xul191Location = null;
         File xul19Location = null;
         File xul18Location = null;
 
@@ -535,8 +536,13 @@ public class KNIMEApplication implements IApplication {
                     byte[] buf = new byte[4096];
                     int r = p.getInputStream().read(buf);
                     if (r >= 0) {
-                        String version = new String(buf, 0, r);
-                        if (version.indexOf(" 1.9") >= 0) {
+                        // remove "\n"
+                        String version = new String(buf, 0, r).trim();
+                        // xul 1.9.1 causes problems: 
+                        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194
+                        if (version.matches(".* 1\\.9\\.[1-9].*")) {
+                            xul191Location = dir;
+                        } else if (version.matches(".* 1\\.9\\.0.*")) {
                             xul19Location = dir;
                         } else {
                             xul18Location = dir;
@@ -550,6 +556,12 @@ public class KNIMEApplication implements IApplication {
             }
         }
 
+        if (xul191Location != null) {
+            System.out.println("Rejecting xulrunner '" 
+                    + xul191Location.getAbsolutePath() + "' as internal web " 
+                    + "browser due to version incompatibility (see bug " 
+                    + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194)");
+        }
         if (xul19Location != null) {
             System.setProperty(XUL, xul19Location.getAbsolutePath());
             System.out.println("Using xulrunner at '"
