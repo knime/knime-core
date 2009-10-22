@@ -256,6 +256,8 @@ public class DateAndTimeCell extends DataCell
         }
         if (!m_hasTime) {
             resetTimeFields(m_utcCalendar);
+        } else if (!m_hasMillis) {
+        	m_utcCalendar.clear(Calendar.MILLISECOND);
         }
     }
     
