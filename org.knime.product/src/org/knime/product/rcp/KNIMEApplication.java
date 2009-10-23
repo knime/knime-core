@@ -556,12 +556,6 @@ public class KNIMEApplication implements IApplication {
             }
         }
 
-        if (xul191Location != null) {
-            System.out.println("Rejecting xulrunner '" 
-                    + xul191Location.getAbsolutePath() + "' as internal web " 
-                    + "browser due to version incompatibility (see bug " 
-                    + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194)");
-        }
         if (xul19Location != null) {
             System.setProperty(XUL, xul19Location.getAbsolutePath());
             System.out.println("Using xulrunner at '"
@@ -574,6 +568,14 @@ public class KNIMEApplication implements IApplication {
                     + xul18Location.getAbsolutePath()
                     + "' as internal web browser. If you want to change this,"
                     + " add '-D" + XUL + "=...' to knime.ini");
+        } else if (xul191Location != null) {
+            System.setProperty(XUL, "");
+            System.out.println("Rejecting xulrunner '" 
+                    + xul191Location.getAbsolutePath() + "' as internal web " 
+                    + "browser due to version incompatibility (see bug " 
+                    + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194 )."
+                    + " Node description window may not work, consider to "
+                    + "install xulrunner [version 1.8.x - 1.9.0].");
         } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
             System.out.println("Using xulrunner at '"
                     + System.getenv("MOZILLA_FIVE_HOME")
