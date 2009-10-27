@@ -12,7 +12,7 @@
    <extension id="KNIME_PRODUCT" name="KNIME Workbench - Standalone Version" point="org.eclipse.core.runtime.products">
       <product application="org.knime.product.KNIME_APPLICATION" description="An Integrated and Extensible Data Analysis Workbench" name="KNIME">
          <property name="windowImage" value="icons/gif/knime16.gif"/>
-         <property name="aboutText" value="Welcome to KNIME 2.1.0.0021700&#10;the Konstanz Information Miner&#10;Copyright, 2003 - 2009&#10;email: contact@knime.org&#10;&#10;This version of KNIME is licensed under the GNU General Public License, Version 3.&#10;Please see the license file in the installation directory and &#10;contact us if you cannot locate it. More details can be found at&#10;http://www.knime.org&#10;&#10;Based on Eclipse, www.eclipse.org &#10;Uses: Java, GEF, Log4J&#10;&#10;KNIME is a registered trademark of KNIME GmbH, Germany.&#10;All other trademarks are the property of their respective owners."/>
+         <property name="aboutText" value="Welcome to KNIME 2.1.0.0023374&#10;the Konstanz Information Miner&#10;Copyright, 2003 - 2009&#10;email: contact@knime.org&#10;&#10;This version of KNIME is licensed under the GNU General Public License, Version 3.&#10;Please see the license file in the installation directory and &#10;contact us if you cannot locate it. More details can be found at&#10;http://www.knime.org&#10;&#10;Based on Eclipse, www.eclipse.org &#10;Uses: Java, GEF, Log4J&#10;&#10;KNIME is a registered trademark of KNIME GmbH, Germany.&#10;All other trademarks are the property of their respective owners."/>
          <property name="aboutImage" value="icons/gif/knime128.gif"/>
          <property name="appName" value="KNIME">
          </property>
