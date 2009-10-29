@@ -18,6 +18,8 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -61,6 +63,20 @@ public final class ProjectWorkflowMap {
     private ProjectWorkflowMap() {
         // Utility class
     }
+    
+    /**
+     * A map which keeps track of the number of registered clients to the 
+     * referring workflow. Registration is done by local path - since this is
+     * the key used in the project workflow map and the workflow manager 
+     * instance might be replaced. Registered clients in this map prevent the 
+     * workflow from being removed from the {@link #PROJECTS} map with 
+     * {@link #remove(IPath)}, only if there are no registered clients for this
+     * workflow, {@link #remove(IPath)} will actually remove the workflow from 
+     * {@link #PROJECTS}.
+     * 
+     */
+    private static final Map<IPath, Set<Object>>WORKFLOW_CLIENTS 
+        = new HashMap<IPath, Set<Object>>();
 
     /*
      * Map with name of workflow path and referring workflow manager
@@ -94,7 +110,54 @@ public final class ProjectWorkflowMap {
             return old;
         };
     };
-
+    
+    /**
+     * 
+     * @param workflow the path to the workflow which is used by the client
+     * @param client any object which uses the workflow
+     *  
+     * @see #unregisterClientFrom(IPath, Object)
+     */
+    public static final void registerClientTo(final IPath workflow, 
+            final Object client) {
+        Set<Object> callers = WORKFLOW_CLIENTS.get(workflow);
+        if (callers == null) {            
+            callers = new HashSet<Object>();
+        }
+        callers.add(client);
+        WORKFLOW_CLIENTS.put(workflow, callers);
+        LOGGER.debug("registering " + client + " to " + workflow
+                + ". " + callers.size() + " registered clients now.");
+    }
+    
+    /**
+     * 
+     * @param workflow path to the workflow which is not used anymore by this 
+     * client (has no effect if the client was not yet registered for this 
+     * workflow path)
+     * @param client the client which has registered before with the 
+     * {@link #registerClientTo(IPath, Object)} method
+     * @see #registerClientTo(IPath, Object)
+     */
+    public static final void unregisterClientFrom(final IPath workflow, 
+            final Object client) {
+        if (workflow == null) {
+            return;
+        }
+        if (!WORKFLOW_CLIENTS.containsKey(workflow)) {
+            return;
+        }
+        Set<Object> callers = WORKFLOW_CLIENTS.get(workflow);
+        callers.remove(client);
+        if (callers.isEmpty()) {
+            WORKFLOW_CLIENTS.remove(workflow);
+        } else {            
+            WORKFLOW_CLIENTS.put(workflow, callers); 
+        }
+        LOGGER.debug("unregistering " + client + " from " + workflow
+                + ". " + callers.size() + " left.");
+    }
+    
     /*
      * All registered workflow listeners (KnimeResourceNavigator) which reflect
      * changes on opened workflows (display new nodes).
@@ -219,7 +282,8 @@ public final class ProjectWorkflowMap {
      */
     public static void remove(final IPath path) {
         WorkflowManager manager = (WorkflowManager)PROJECTS.get(path);
-        if (manager != null) {
+        // workflow is only in client map if there is at least one client
+        if (manager != null && !WORKFLOW_CLIENTS.containsKey(path)) {
             PROJECTS.remove(path);
             WF_LISTENER.workflowChanged(new WorkflowEvent(
                     WorkflowEvent.Type.NODE_REMOVED, manager.getID(),
@@ -240,6 +304,15 @@ public final class ProjectWorkflowMap {
      */
     public static void putWorkflow(final IPath path,
             final WorkflowManager manager) {
+        // in case the manager is replaced 
+        // -> unregister listeners from the old one
+        NodeContainer oldOne = PROJECTS.get(path);
+        if (oldOne != null) {
+            oldOne.removeNodeStateChangeListener(NSC_LISTENER);
+            ((WorkflowManager)oldOne).removeListener(WF_LISTENER);
+            oldOne.removeNodeMessageListener(MSG_LISTENER);
+            oldOne.removeJobManagerChangedListener(JOB_MGR_LISTENER);
+        }
         PROJECTS.put(path, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
@@ -344,7 +417,7 @@ public final class ProjectWorkflowMap {
     }
 
     /**
-     * w@param l
+     * @param l the job manager listener to remove
      */
     public static void removeJobManagerChangedListener(
             final JobManagerChangedListener l) {

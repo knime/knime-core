@@ -344,8 +344,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void dispose() {
-        if (m_fileResource != null) {
-            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath());
+        if (m_fileResource != null && m_manager != null) {
+            IPath path = m_fileResource.getParent().getFullPath();
+            ProjectWorkflowMap.unregisterClientFrom(path, this);
+            ProjectWorkflowMap.remove(path);
         }
 
         // remember that this editor has been closed
@@ -370,7 +372,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
 
-        // TODO: we only have to do it on the parent
+        // we only have to do it on the parent
         if (m_parentEditor == null) {
             // bugfix 799: not possible to stop closing earlier if user
             // decides to NOT save it. Thus we have at least to try to
@@ -614,7 +616,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else {
-
         // register listener to check whether the underlying knime file (input)
         // has been deleted or renamed
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
@@ -623,7 +624,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         setDefaultInput(input);
         // we only support file inputs
 
-        // TODO: input should also be possible from WFM
 
         m_fileResource = ((IFileEditorInput)input).getFile();
 
@@ -644,40 +644,51 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.fatal("Repository Manager Instance must not be null!");
             }
             assert m_manager == null;
-
-            IWorkbench wb = PlatformUI.getWorkbench();
-            IProgressService ps = wb.getProgressService();
-            // this one sets the workflow manager in the editor
-            LoadWorkflowRunnable loadWorflowRunnable =
-                    new LoadWorkflowRunnable(this, file);
-            ps.busyCursorWhile(loadWorflowRunnable);
-            // check if the editor should be disposed
-            if (m_manager == null) {
-                if (m_loadingCanceled) {
-                    Display.getDefault().asyncExec(new Runnable() {
-                        public void run() {
-                            getEditorSite().getPage().closeEditor(
-                                    WorkflowEditor.this, false);
-                            MessageBox mb =
-                                    new MessageBox(Display.getDefault()
-                                            .getActiveShell(),
-                                            SWT.ICON_INFORMATION | SWT.OK);
-                            mb.setText("Editor could not be opened");
-                            mb.setMessage(m_loadingCanceledMessage);
-                            mb.open();
-                        }
-                    });
-                    throw new OperationCanceledException(
-                            m_loadingCanceledMessage);
-                } else if (loadWorflowRunnable.getThrowable() != null) {
-                    throw new RuntimeException(
-                            loadWorflowRunnable.getThrowable());
+            
+            IPath localPath = m_fileResource.getParent().getFullPath();
+            m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
+                    localPath);
+            if (m_manager != null) {
+                // in case the workflow manager was edited somewhere else ...
+                if (m_manager.isDirty()) {
+                    // ... make sure to inform the user about it
+                    markDirty();
                 }
+            } else {
+                IWorkbench wb = PlatformUI.getWorkbench();
+                IProgressService ps = wb.getProgressService();
+                // this one sets the workflow manager in the editor
+                LoadWorkflowRunnable loadWorflowRunnable =
+                        new LoadWorkflowRunnable(this, file);
+                ps.busyCursorWhile(loadWorflowRunnable);
+                // check if the editor should be disposed
+                if (m_manager == null) {
+                    if (m_loadingCanceled) {
+                        Display.getDefault().asyncExec(new Runnable() {
+                            public void run() {
+                                getEditorSite().getPage().closeEditor(
+                                        WorkflowEditor.this, false);
+                                MessageBox mb =
+                                        new MessageBox(Display.getDefault()
+                                                .getActiveShell(),
+                                                SWT.ICON_INFORMATION | SWT.OK);
+                                mb.setText("Editor could not be opened");
+                                mb.setMessage(m_loadingCanceledMessage);
+                                mb.open();
+                            }
+                        });
+                        throw new OperationCanceledException(
+                                m_loadingCanceledMessage);
+                    } else if (loadWorflowRunnable.getThrowable() != null) {
+                        throw new RuntimeException(
+                                loadWorflowRunnable.getThrowable());
+                    }
+                }
+                ProjectWorkflowMap.putWorkflow(localPath, m_manager);
             }
-            ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getParent().getFullPath(),
-//                    m_fileResource.getParent().getName(),
-                    m_manager);
+            // in any case register as client (also if the workflow was already 
+            // loaded by another client 
+            ProjectWorkflowMap.registerClientTo(localPath, this);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
         } catch (InterruptedException ie) {
