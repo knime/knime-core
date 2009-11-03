@@ -49,6 +49,7 @@ package org.knime.workbench.ui.database;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -74,8 +75,8 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 	 * 
 	 */
 	public DatabasePreferencePage() {
-        super(GRID);
-        setDescription("Load additional database driver files from Jar or Zip"
+        super("Load Database Driver File (Jar or Zip)", null, GRID);
+        setDescription("Load additional database driver from Jar or Zip"
         		+ " archive.");
 	}
 
@@ -86,26 +87,41 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 	protected void createFieldEditors() {
 		final Shell shell = Display.getDefault().getActiveShell();
         addField(new ListEditor(HeadlessPreferencesConstants.P_DATABASE_DRIVERS,
-        		"List of database driver files:", getFieldEditorParent()) {
+        		"List of loaded database driver files:", 
+        		getFieldEditorParent()) {
  			@Override
 			protected String[] parseString(final String string) {
+ 			    ArrayList<String> result = new ArrayList<String>();
+ 			    ArrayList<String> failed = new ArrayList<String>();
 				String[] strings = string.split(";");
 				for (String str : strings) {
 					try {
-						DatabaseDriverLoader.loadDriver(new File(str));
+					    if (str != null && !str.trim().isEmpty()) {
+    						DatabaseDriverLoader.loadDriver(new File(str));
+    						result.add(str);
+					    }
 					} catch (IOException ioe) {
+					    failed.add(str);
 					}
 				}
-				return strings;
+				if (!failed.isEmpty()) {
+				    setErrorMessage(
+				        "Some driver file(s) are not available anymore: " +
+				        failed.toString());
+				}
+				return result.toArray(new String[0]);
 			}
 			
 			@Override
 			protected String getNewInputObject() {
-				String fileName = new FileDialog(shell).open();
+			    FileDialog dialog = new FileDialog(shell);
+			    dialog.setFilterExtensions(new String[]{"*.jar", "*.zip"});
+				String fileName = dialog.open();
 				try {
 					DatabaseDriverLoader.loadDriver(new File(fileName));
 					return fileName;
 				} catch (IOException ioe) {
+				    setErrorMessage(ioe.getMessage());
 					return null;
 				}
 			}
