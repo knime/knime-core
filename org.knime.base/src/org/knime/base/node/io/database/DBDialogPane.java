@@ -55,11 +55,14 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -105,10 +108,12 @@ final class DBDialogPane extends JPanel {
         m_driver.setEditable(false);
         m_driver.setFont(FONT);
         m_driver.setPreferredSize(new Dimension(400, 20));
-        JPanel driverPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel driverPanel = new JPanel(new BorderLayout());
         driverPanel.setBorder(BorderFactory
                 .createTitledBorder(" Database driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
+        driverPanel.add(new JLabel(" (Additional Database Drivers can be loaded"
+                + " in the KNIME preference page.) "), BorderLayout.SOUTH);
         super.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dbPanel.setBorder(BorderFactory.createTitledBorder(
@@ -116,6 +121,14 @@ final class DBDialogPane extends JPanel {
         m_db.setFont(FONT);
         m_db.setPreferredSize(new Dimension(400, 20));
         m_db.setEditable(true);
+        m_driver.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent ie) {
+                String url = 
+                    DatabaseDriverLoader.getURLForDriver((String) ie.getItem());
+                m_db.setSelectedItem(url);
+            }
+        });
         dbPanel.add(m_db);
         super.add(dbPanel);
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -160,14 +173,23 @@ final class DBDialogPane extends JPanel {
             final PortObjectSpec[] specs) {
         // database driver and name
         m_driver.removeAllItems();
+        // update list of registered driver
+        updateDriver();
+        String select = settings.getString("driver", 
+                m_driver.getSelectedItem().toString());
+        m_driver.setSelectedItem(select);
+        // update list of urls
         m_db.removeAllItems();
         for (String databaseURL 
                 : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
             m_db.addItem(databaseURL);   
         }
         String dbName = settings.getString("database", null);
-        m_db.setSelectedItem(
-                dbName == null ? "jdbc:odbc:<database_name>" : dbName);
+        if (dbName == null) {
+            m_db.setSelectedItem("jdbc:odbc:<database_name>");
+        } else {
+            m_db.setSelectedItem(dbName);
+        }
         // user
         String user = settings.getString("user", null);
         m_user.setText(user == null ? "" : user);
@@ -175,11 +197,6 @@ final class DBDialogPane extends JPanel {
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);
         m_passwordChanged = false;
-        // update list of registered driver
-        updateDriver();
-        String select = settings.getString("driver", 
-                m_driver.getSelectedItem().toString());
-        m_driver.setSelectedItem(select);
     }
 
     private void updateDriver() {
