@@ -102,7 +102,9 @@ public final class DatabaseDriverLoader {
         DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
         DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
         DRIVER_TO_URL.put(
-                "oracle.jdbc.driver.OracleDriver", "jdbc:mysql:thin:");
+                "oracle.jdbc.OracleDriver", "jdbc:oracle:thin:");
+        DRIVER_TO_URL.put(
+                "oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:");
         DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
         DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver",
                 "jdbc:sqlserver:");
@@ -204,18 +206,23 @@ public final class DatabaseDriverLoader {
      * @throws IOException {@link IOException}
      */
     public static final void loadDriver(final File file) throws IOException {
+        if (file == null || !file.exists()) {
+            throw new IOException("File \"" + file + "\" does not exist.");
+        }
         if (file.isDirectory()) {
-            // not yet supported
-            return;
+            throw new IOException("File \"" + file 
+                    + "\" can't be a directory.");
+        }
+        final String fileName = file.getAbsolutePath();
+        if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
+            throw new IOException("Unsupported file \"" + file + "\","
+            		+ " only zip and jar files are allowed.");
         }
         if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
             return;
         }
-        final String fileName = file.getAbsolutePath();
-        if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
-            readZip(file, new JarFile(file));
-            DRIVER_LIBRARY_HISTORY.add(fileName);
-        }
+        readZip(file, new JarFile(file));
+        DRIVER_LIBRARY_HISTORY.add(fileName);
     }
 
     private static void readZip(final File file, final ZipFile zipFile)
@@ -230,7 +237,7 @@ public final class DatabaseDriverLoader {
             }
             String name = e.getName();
             if (name.endsWith(".class")) {
-                try {
+                   try {
                     Class<?> c = loadClass(cl, name);
                     if (Driver.class.isAssignableFrom(c)) {
                         WrappedDriver d = new WrappedDriver(
@@ -257,7 +264,7 @@ public final class DatabaseDriverLoader {
      * Get driver for name.
      * @param driverName The driver name.
      * @return The <code>WrappedDriver</code> for the given driver name.
-     */
+     */    
     public static WrappedDriver getWrappedDriver(final String driverName) {
         return DRIVER_MAP.get(driverName);
     }
@@ -266,6 +273,14 @@ public final class DatabaseDriverLoader {
             throws ClassNotFoundException {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
+        try {
+            Class<?> c = Class.forName(className);
+            if (c != null) {
+                return c;
+            }
+        } catch (ClassNotFoundException cnfe) {
+            // ignored: try to load if from given driver file
+        }
         return cl.loadClass(className);
     }
 
