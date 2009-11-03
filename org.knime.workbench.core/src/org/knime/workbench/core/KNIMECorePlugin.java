@@ -207,6 +207,10 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                             return;
                         }
                         setLogLevel(newName);
+                    } else if (HeadlessPreferencesConstants.P_DATABASE_DRIVERS.
+                            equals(event.getProperty())) {
+                        String dbDrivers = (String) event.getNewValue();
+                        initDatabaseDriver(dbDrivers);
                     }
                 }
             });
@@ -237,20 +241,24 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             // load database driver files from core preference page
             String dbDrivers = pStore.getString(
                     HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
-            if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
-                for (String d : dbDrivers.split(";")) {
-                    try {
-                        DatabaseDriverLoader.loadDriver(new File(d));
-                    } catch (IOException ioe) {
-                        LOGGER.info("Can't load driver file \"" + d + "\"");
-                    }
-                }
-            }
+            initDatabaseDriver(dbDrivers);
+            
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         }
-
+    }
+    
+    private void initDatabaseDriver(final String dbDrivers) {
+        if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
+            for (String d : dbDrivers.split(";")) {
+                try {
+                    DatabaseDriverLoader.loadDriver(new File(d));
+                } catch (IOException ioe) {
+                    LOGGER.warn("Can't load driver file \"" + d + "\"");
+                }
+            }
+        }
     }
 
     private void initMaxThreadCountProperty() {
