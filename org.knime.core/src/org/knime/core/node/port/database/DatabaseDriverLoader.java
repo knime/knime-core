@@ -134,12 +134,6 @@ public final class DatabaseDriverLoader {
         = new HashMap<String, WrappedDriver>();
 
     /**
-     * Keeps history of loaded driver libraries.
-     */
-    private static final StringHistory DRIVER_LIBRARY_HISTORY =
-        StringHistory.getInstance("database_library_files");
-
-    /**
      * Register Java's jdbc-odbc bridge.
      */
     static {
@@ -159,8 +153,9 @@ public final class DatabaseDriverLoader {
      * Init driver history on start-up.
      */
     static {
-        // load all drivers from history file
-        for (String hist : DRIVER_LIBRARY_HISTORY.getHistory()) {
+        // load all drivers from history file, before KNIME 2.1.1 only
+        StringHistory hi = StringHistory.getInstance("database_library_files");
+        for (String hist : hi.getHistory()) {
             try {
                 File histFile = new File(hist);
                 loadDriver(histFile);
@@ -222,7 +217,6 @@ public final class DatabaseDriverLoader {
             return;
         }
         readZip(file, new JarFile(file));
-        DRIVER_LIBRARY_HISTORY.add(fileName);
     }
 
     private static void readZip(final File file, final ZipFile zipFile)
