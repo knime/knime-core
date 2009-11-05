@@ -192,7 +192,8 @@ public class Statistics2NodeModel extends NodeModel {
         if (m_statTable == null) {
             return null;
         }
-        return m_nominalFilter.getIncludeList().toArray(new String[0]);
+        return m_statTable.extractNominalColumns(
+                m_nominalFilter.getIncludeList());
     }
 
     /**

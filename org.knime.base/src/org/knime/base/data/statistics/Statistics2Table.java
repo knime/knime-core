@@ -402,8 +402,8 @@ public class Statistics2Table {
      * their occurrences.
      * @return nominal value output table
      */
-    public DataTable createNominalValueTable(final List<String> nominalValues) {
-        DataTableSpec outSpec = createOutSpecNominal(m_spec, nominalValues);
+    public DataTable createNominalValueTable(final List<String> nominal) {
+        DataTableSpec outSpec = createOutSpecNominal(m_spec, nominal);
         Iterator[] it = new Iterator[outSpec.getNumColumns() / 2];
         int idx = 0;
         for (int i = 0; i < m_nominalValues.length; i++) {
@@ -496,6 +496,23 @@ public class Statistics2Table {
             }
         }
         return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
+    }
+    
+    /**
+     * Returns an array of valid columns.
+     * @return an array of string column which are valid in 
+     *         in conjunction with the current data spec
+     */
+    public final String[] extractNominalColumns(
+            final List<String> nominalValues) {
+        ArrayList<String> columns = new ArrayList<String>();
+        for (int i = 0; i < m_spec.getNumColumns(); i++) {
+            DataColumnSpec cspec = m_spec.getColumnSpec(i);
+            if (nominalValues.contains(cspec.getName())) {
+                columns.add(cspec.getName());
+            }
+        }
+        return columns.toArray(new String[0]); 
     }
     
     /**
