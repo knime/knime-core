@@ -128,6 +128,23 @@ public class WrappedNodeDialog extends Dialog {
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
         LOGGER = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void handleShellCloseEvent() {
+        // send cancel&close action to underlying dialog pane
+        m_dialogPane.onCancel();
+        m_dialogPane.onClose();
+        super.handleShellCloseEvent();
+    }
+    
+    @Override
+    public int open() {
+        m_dialogPane.onOpen();
+        return super.open();
+    }
 
     /**
      * Configure shell, create top level menu.
@@ -301,13 +318,17 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     private void doCancel(final SelectionEvent e) {
+        // delegate cancel&close event to underlying dialog pane
         m_dialogPane.onCancel();
+        m_dialogPane.onClose();
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
 
     private void doOK(final SelectionEvent e) {
         // simulate doApply
         if (doApply(e)) {
+            // send close action to underlying dialog pane
+            m_dialogPane.onClose();
             buttonPressed(IDialogConstants.OK_ID);
         }
     }
