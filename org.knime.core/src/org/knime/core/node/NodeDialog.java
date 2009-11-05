@@ -362,6 +362,7 @@ public final class NodeDialog {
      */
     protected void onCancel(final AWTEvent event) {
         assert (event != null);
+        // send cancel action to underlying dialog pane
         m_dialogPane.onCancel();
         closeDialog();
     }
@@ -374,6 +375,8 @@ public final class NodeDialog {
      */
     protected void onClose(final AWTEvent event) {
         assert (event != null);
+        // send close action to underlying dialog pane
+        m_dialogPane.onClose();
     }
 
     /**
@@ -384,6 +387,8 @@ public final class NodeDialog {
      */
     protected void onOpen(final AWTEvent event) {
         assert (event != null);
+        // send cancel action to underlying dialog pane
+        m_dialogPane.onOpen();
     }
 
     /**
@@ -395,7 +400,7 @@ public final class NodeDialog {
      */
     protected void onOK(final AWTEvent event) {
         if (onApply(event)) {
-            // if no errors occured, i.e. apply() was succesful
+            // if no errors occurred, i.e. apply() was successful
             closeDialog();
         }
     }

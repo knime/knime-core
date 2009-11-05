@@ -452,7 +452,23 @@ public abstract class NodeDialogPane {
     public void onCancel() {
         // default implementation does nothing.
     }
+    
+    /**
+     * Override this method in order to react on events if the surrounding 
+     * dialog is supposed to be closed.
+     */
+    public void onClose() {
+        // default implementation does nothing.
+    }
 
+    /**
+     * Override this method in order to react on events if the surrounding 
+     * dialog is supposed to be opened.
+     */
+    public void onOpen() {
+        // default implementation does nothing.
+    }
+    
     /**
      * Invoked when the settings need to be applied. The implementation should
      * write the current user settings from its components into the passed
