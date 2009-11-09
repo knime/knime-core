@@ -147,6 +147,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private List<IAction> m_multiInstanceViews;
 
+    private IAction m_resetPerspective;
+
     /**
      * Creates a new action bar advisor to configure a workbench window's action
      * bars via the given action bar configurer.
@@ -224,6 +226,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
                 ContributionItemFactory.VIEWS_SHORTLIST.create(window);
         // create actions for views that register with the mult_inst_view point
         m_multiInstanceViews = createMultiInstanceViewActions();
+
+        m_resetPerspective = ActionFactory.RESET_PERSPECTIVE.create(window);
+        register(m_resetPerspective);
 
         // temporarily disable due to eclipse bug
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=211184
@@ -313,6 +318,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // View menu
         addMultiViewsToMenu(viewMenu);
         viewMenu.add(m_showViewShortlistContributionItem);
+        viewMenu.add(m_resetPerspective);
 
         // Help menu
         // helpMenu.add(m_introAction);
