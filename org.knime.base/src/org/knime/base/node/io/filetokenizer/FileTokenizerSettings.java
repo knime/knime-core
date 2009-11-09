@@ -1,50 +1,24 @@
 /*
- * ------------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
  *
- *  Copyright (C) 2003 - 2009
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ * Copyright, 2003 - 2009
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License, Version 3, as
- *  published by the Free Software Foundation.
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, see <http://www.gnu.org/licenses>.
- *
- *  Additional permission under GNU GPL version 3 section 7:
- *
- *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
- *  Hence, KNIME and ECLIPSE are both independent programs and are not
- *  derived from each other. Should, however, the interpretation of the
- *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
- *  you the additional permission to use and propagate KNIME together with
- *  ECLIPSE with only the license terms in place for ECLIPSE applying to
- *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
- *  license terms of ECLIPSE themselves allow for the respective use and
- *  propagation of ECLIPSE together with KNIME.
- *
- *  Additional permission relating to nodes for KNIME that extend the Node
- *  Extension (and in particular that are based on subclasses of NodeModel,
- *  NodeDialog, and NodeView) and that only interoperate with KNIME through
- *  standard APIs ("Nodes"):
- *  Nodes are deemed to be separate and independent programs and to not be
- *  covered works.  Notwithstanding anything to the contrary in the
- *  License, the License does not apply to Nodes, you are not required to
- *  license Nodes under the License, and you are granted a license to
- *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
- *  may freely choose the license terms applicable to such Node, including
- *  when such Node is propagated with or for interoperation with KNIME.
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
  * -------------------------------------------------------------------
- *
+ * 
  * History
  *   29.11.2004 (ohl): created
  */
@@ -53,17 +27,29 @@ package org.knime.base.node.io.filetokenizer;
 import java.util.Iterator;
 import java.util.Vector;
 
-import org.knime.base.node.io.filereader.SettingsStatus;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
+import org.knime.base.node.io.filereader.SettingsStatus;
+
 /**
- * @deprecated use {@link org.knime.core.util.tokenizer.TokenizerSettings}
- *             instead. Will be removed in Ver3.0.
+ * Defines the object holding the configuration for the FileTokenizer. <br>
+ * Use an instance of this class to set all parameters and pass it to a
+ * <code>FileTokenizer</code>. This object is used as a transport vehicle to
+ * first try setting new user configurations and, if everything went fine (i.e.
+ * without any exception), transporting them into the file tokenizer. This class
+ * is used in both directions - to get current tokenizer settings, and to set a
+ * new configuration in the tokenizer. The methods with default permissions are
+ * only used by the file tokenizer to set its current settings in this object -
+ * any object user outside the package will retrieve them then through the
+ * get-methods. While new user settings will be implanted from the
+ * out-of-package world with the set-methods.
+ * 
+ * @see FileTokenizer
+ * @author ohl, University of Konstanz
  */
-@Deprecated
 public class FileTokenizerSettings {
 
     /** The node logger fot this class. */
@@ -109,7 +95,7 @@ public class FileTokenizerSettings {
 
     /**
      * Creates a new Settings for FileTokenizer object with default settings.
-     *
+     * 
      * @see FileTokenizer#resetToDefault() for description of default settings.
      */
     public FileTokenizerSettings() {
@@ -125,7 +111,7 @@ public class FileTokenizerSettings {
 
     /**
      * Creates a clone of the passed object.
-     *
+     * 
      * @param clonee the object to read the settings from.
      */
     public FileTokenizerSettings(final FileTokenizerSettings clonee) {
@@ -141,10 +127,10 @@ public class FileTokenizerSettings {
 
     /**
      * Creates a new <code>FileTokenizerSettings</code> object and sets its
-     * parameters from the <code>config</code> object. If config doesn't contain
-     * all necessary parameters or contains inconsistent settings it will throw
-     * an InvalidArguments exception
-     *
+     * parameters from the <code>config</code> object. If config doesn't
+     * contain all necessary parameters or contains inconsistent settings it
+     * will throw an InvalidArguments exception
+     * 
      * @param settings an object the parameters are read from, if null default
      *            settings will be created.
      * @throws InvalidSettingsException if the config is not valid
@@ -197,10 +183,10 @@ public class FileTokenizerSettings {
     }
 
     /**
-     * Saves all settings into a <code>NodeSettings</code> object. Using the cfg
-     * object to construct a new FileTokenizerSettings object should lead to an
-     * object identical to this.
-     *
+     * Saves all settings into a <code>NodeSettings</code> object. Using the
+     * cfg object to construct a new FileTokenizerSettings object should lead to
+     * an object identical to this.
+     * 
      * @param cfg the config object the settings are stored into.
      */
     public void saveToConfiguration(final NodeSettingsWO cfg) {
@@ -242,7 +228,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
+    private void addDelimitersFromConfiguration(
+            final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -357,7 +344,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
+    private void addCommentsFromConfiguration(
+            final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -445,11 +433,11 @@ public class FileTokenizerSettings {
     /**
      * Adds support for the specified quote patterns and escape character. The
      * tokenizer will treat any string within the specified
-     * <code>leftQuote</code> and <code>rightQuote</code> as quoted string, i.e.
-     * any token delimiter will not end the token but will be included in the
-     * string and no comment will be recognized inside a quoted string. With the
-     * escape character it is possible to include special characters (like new
-     * line e.g.) or even the right quote pattern in the string. The esc
+     * <code>leftQuote</code> and <code>rightQuote</code> as quoted string,
+     * i.e. any token delimiter will not end the token but will be included in
+     * the string and no comment will be recognized inside a quoted string. With
+     * the escape character it is possible to include special characters (like
+     * new line e.g.) or even the right quote pattern in the string. The esc
      * character and the immediate next char will be translated into one new
      * character: %EscChar%+'t' becomes '\t' (Tab), +'n' translates int '\n'
      * (Newline), EscChar+any other char becomes this other character. The
@@ -460,7 +448,7 @@ public class FileTokenizerSettings {
      * escape character '\'. If you don't want an escape character, use the next
      * function. The Quote patterns get removed from the token by default. There
      * are methods that take a flag, if you want them to remain in the token.
-     *
+     * 
      * @param leftQuote A string containing the left quote pattern.
      * @param rightQuote A string containing the right quote pattern.
      * @param escapeChar The escape character.
@@ -488,10 +476,11 @@ public class FileTokenizerSettings {
     /**
      * @param leftQuote The left quot char.
      * @param rightQuote The right quot char.
-     *
+     * 
      * @see #addQuotePattern(String, String, char)
      */
-    public void addQuotePattern(final String leftQuote, final String rightQuote) {
+    public void addQuotePattern(
+            final String leftQuote, final String rightQuote) {
 
         addQuotePattern(new Quote(leftQuote, rightQuote));
     }
@@ -570,7 +559,7 @@ public class FileTokenizerSettings {
      * Removes the Quote object with the specified patterns from the list of
      * defined quotes. Returns the removed quote object, if it existed or null
      * if the patterns didn't match any.
-     *
+     * 
      * @param begin the quote begin pattern to match
      * @param end the quote end pattern to match
      * @return the quote object removed, or null if no quote with the specified
@@ -601,31 +590,31 @@ public class FileTokenizerSettings {
      * will be either appended to the current token (
      * <code>includeInToken</code> set <code>true</code>), returned in a
      * separate token (<code> returnAsSeparateToken</code> set <code>true
-     * </code>) or
-     * discarded (both set <code>false</code>). If you set both parameters
+     * </code>)
+     * or discarded (both set <code>false</code>). If you set both parameters
      * <code>true</code>, it will throw an <code>
      * IllegalArgumentException</code>.
      * Another parameter (<code>
-     * combineConsecutiveDelimis</code>) will determine
-     * whether delimiters of the same kind immediately following will be ignored
-     * (set to <code>true
-     * </code>) or will cause empty tokens to be returned (set
-     * <code>false
-     * </code>). The delimiter specified must not prefix any existing delimiter,
-     * left quote or comment begin pattern.
-     *
+     * combineConsecutiveDelimis</code>) will
+     * determine whether delimiters of the same kind immediately following will
+     * be ignored (set to <code>true
+     * </code>) or will cause empty tokens to be
+     * returned (set <code>false
+     * </code>). The delimiter specified must not
+     * prefix any existing delimiter, left quote or comment begin pattern.
+     * 
      * @param delimiter A string containing the delimiter.
      * @param combineConsecutiveDelims Pass in <code>true</code>, if you want
      *            multiple consecutive delimiters to be treated as one, or
-     *            <code>false</code> if empty tokens should be returned between
-     *            them.
+     *            <code>false</code> if empty tokens should be returned
+     *            between them.
      * @param returnAsSeparateToken Set to <code>true</code> to get delimiters
      *            returned as tokens, or <code>false</code> if they should be
      *            discarded (or included in the tokens - see next parameter).
      *            Mutually exclusive with <code>includeInToken</code>.
-     * @param includeInToken Set to <code>true</code> if you want the delimiter
-     *            returned at the end of the token. Otherwise it will be
-     *            discarded (or returned as separate token, see parameter
+     * @param includeInToken Set to <code>true</code> if you want the
+     *            delimiter returned at the end of the token. Otherwise it will
+     *            be discarded (or returned as separate token, see parameter
      *            above). Mutually exclusive with <code>returnAsSeparateToken
      *            </code>.
      */
@@ -640,7 +629,7 @@ public class FileTokenizerSettings {
     /**
      * Adds a new delimiter pattern expecting a Delimiter object. Does all kinds
      * of checkings and throws IllegalArgument exceptions.
-     *
+     * 
      * @param delimiter the delimiter to add.
      */
     protected void addDelimiterPattern(final Delimiter delimiter) {
@@ -694,7 +683,8 @@ public class FileTokenizerSettings {
         // make sure no other delim/comment/quote begin pattern is a prefix to
         // this delimiter - and vice versa.
         errMsg =
-                checkPrefixing(delimiter.getDelimiter(), "delimiter", delimiter);
+                checkPrefixing(delimiter.getDelimiter(), "delimiter", 
+                        delimiter);
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -704,16 +694,17 @@ public class FileTokenizerSettings {
     /**
      * Replaces the delimiter with the same delimiter pattern overriding the
      * values for <code>combineConsecutiveDelims</code>,
-     * <code>returnAsSeparateToken</code>, and <code>includeInToken</code>. It
-     * will return <code>true</code>, if everything works fine -
-     * <code>false</code>, if it couldn't find a matching delimiter to replace.
-     *
+     * <code>returnAsSeparateToken</code>, and <code>includeInToken</code>.
+     * It will return <code>true</code>, if everything works fine -
+     * <code>false</code>, if it couldn't find a matching delimiter to
+     * replace.
+     * 
      * @param delimiter The pattern matching the delimiter to replace.
      * @param combineConsecutiveDelims New value for this parameter.
      * @param returnAsSeparateToken New value for this parameter.
      * @param includeInToken New value for this parameter.
-     * @return <code>true</code> if it replaced the delimiter or false if it was
-     *         added.
+     * @return <code>true</code> if it replaced the delimiter or false if it
+     *         was added.
      */
     public boolean addOrReplaceDelimiterPattern(final String delimiter,
             final boolean combineConsecutiveDelims,
@@ -766,7 +757,7 @@ public class FileTokenizerSettings {
     /**
      * Returns the Delimiter object stored for the delimiter with the pattern
      * specified.
-     *
+     * 
      * @param delimPattern the string pattern of the delimiter to look for.
      * @return the Delimiter object of the specified delimiter pattern, if
      *         defined, otherwise null.
@@ -785,7 +776,7 @@ public class FileTokenizerSettings {
      * Removes the Delimiter object with the specified pattern from the list of
      * defined delimiters. Returns the removed delimiter object, if it existed
      * or null if the pattern didn't exist.
-     *
+     * 
      * @param pattern the delimiter to remove
      * @return the delimiter object removed, or null if no delimiter with the
      *         specified pattern existed.
@@ -812,7 +803,7 @@ public class FileTokenizerSettings {
      * begin, left quote, or delimiter pattern. If so, it returns a message
      * telling which pattern prefixes the other. If not, it returns an empty
      * string.
-     *
+     * 
      * @param newPattern String to check against all existing patterns.
      * @param patternName Name that will be printed in the errormessage to name
      *            the new pattern.
@@ -887,11 +878,11 @@ public class FileTokenizerSettings {
      * comment begin pattern and the comment end pattern will be ignored, and
      * either returned as separate token (if <code>returnAsSeparateToken</code>
      * is set <code>true</code>), included in the token (if
-     * <code>includeInToken</code> is <code>true</code>), or discarded (if both
-     * parameters are set <code>false</code>). (If you specify both parameters
-     * <code>true</code> it will throw an <code>IllegalArgumentException</code>
-     * .)
-     *
+     * <code>includeInToken</code> is <code>true</code>), or discarded (if
+     * both parameters are set <code>false</code>). (If you specify both
+     * parameters <code>true</code> it will throw an
+     * <code>IllegalArgumentException</code>.)
+     * 
      * @param commentBegin The string containing a pattern that starts a
      *            comment.
      * @param commentEnd The string containing the end pattern of the comment.
@@ -919,11 +910,11 @@ public class FileTokenizerSettings {
      * the comment begin pattern and the next line feed will be ignored, and
      * either returned as separate token (if <code>returnAsSeparateToken</code>
      * is set <code>true</code>), included in the token (if
-     * <code>includeInToken</code> is <code>true</code>), or discarded (if both
-     * parameters are set <code>false</code>). (If you specify both parameters
-     * <code>true</code> it will throw an <code>IllegalArgumentException</code>
-     * .)
-     *
+     * <code>includeInToken</code> is <code>true</code>), or discarded (if
+     * both parameters are set <code>false</code>). (If you specify both
+     * parameters <code>true</code> it will throw an
+     * <code>IllegalArgumentException</code>.)
+     * 
      * @param commentBegin The string containing a pattern that starts a single
      *            line comment.
      * @param returnAsSeparateToken Set to <code>true</code> if the comment
@@ -1026,7 +1017,7 @@ public class FileTokenizerSettings {
      * i.e., e.g. if the same character is defined as linecontinuation char it
      * will be treated as such, the whitespace definition of this char will be
      * (silently) ignored.
-     *
+     * 
      * @param ws a one character string containing the new whitespace character
      */
     public void addWhiteSpaceCharacter(final String ws) {
@@ -1053,9 +1044,9 @@ public class FileTokenizerSettings {
     /**
      * This is a convenience method. Whitespace characters are handled as
      * one-character strings.
-     *
+     * 
      * @see #addWhiteSpaceCharacter(String)
-     *
+     * 
      * @param w character containing the new whitespace character
      */
     public void addWhiteSpaceCharacter(final char w) {
@@ -1080,7 +1071,7 @@ public class FileTokenizerSettings {
      * <b>The following two quoted strings are equivalent if '\' is set as line
      * cont. char: "this is \<br>
      * considered one line" and "this is considered one line". </b>
-     *
+     * 
      * @param c The new line continuation character.
      */
     public void setLineContinuationCharacter(final char c) {
@@ -1090,7 +1081,7 @@ public class FileTokenizerSettings {
     /**
      * Returns a string with one character containing the line continuation
      * character that is currently set - or null if none is set.
-     *
+     * 
      * @return A one-char long string containing the line cont. char, or
      *         <code>null</code> if none is set.
      */
@@ -1101,7 +1092,7 @@ public class FileTokenizerSettings {
     /**
      * if set true multiple different (but consecutive) delimiters are combined,
      * that is ignored (unless they are supposed to be returned).
-     *
+     * 
      * @param value set true to combine multiple different consecutive
      *            delimiters, of false to handle each as seperate delimiter.
      */
@@ -1118,9 +1109,10 @@ public class FileTokenizerSettings {
     }
 
     /**
-     * @return a new vector, with items of type <code>Comment</code>, containing
-     *         all currently defined comment patterns. Could be emtpy, but never
-     *         null. The vector is your's if you want it to change.
+     * @return a new vector, with items of type <code>Comment</code>,
+     *         containing all currently defined comment patterns. Could be
+     *         emtpy, but never null. The vector is your's if you want it to
+     *         change.
      * @see Comment
      */
     public Vector<Comment> getAllComments() {
@@ -1128,9 +1120,9 @@ public class FileTokenizerSettings {
     }
 
     /**
-     * @return a new vector, with items of type <code>Quote</code>, containing
-     *         all currently defined quote patterns. Could be emtpy, but never
-     *         null. The vector is your's if you want it to change.
+     * @return a new vector, with items of type <code>Quote</code>,
+     *         containing all currently defined quote patterns. Could be emtpy,
+     *         but never null. The vector is your's if you want it to change.
      * @see Quote
      */
     public Vector<Quote> getAllQuotes() {
@@ -1164,7 +1156,7 @@ public class FileTokenizerSettings {
     /**
      * sets comment objects to the settings structure. No consistency checks
      * will be performed.
-     *
+     * 
      * @param comments a Vector of Comment objects to add. Must not be null.
      */
     void setComments(final Vector<Comment> comments) {
@@ -1176,7 +1168,7 @@ public class FileTokenizerSettings {
     /**
      * sets quote objects to the settings structure. No consistency checks will
      * be performed.
-     *
+     * 
      * @param quotes a vector of Quote objects to add. Must not be null.
      */
     void setQuotes(final Vector<Quote> quotes) {
@@ -1188,7 +1180,7 @@ public class FileTokenizerSettings {
     /**
      * sets delimiter objects to the settings structure. No consitency checks
      * will be performed.
-     *
+     * 
      * @param delimiters a Vector of delimiter objects to add. Must not be null.
      */
     void setDelimiters(final Vector<Delimiter> delimiters) {
@@ -1200,7 +1192,7 @@ public class FileTokenizerSettings {
     /**
      * sets whitespaces to the settings structure. No consistency checks will be
      * performed. Existing whitespaces will be cleared before.
-     *
+     * 
      * @param whites a Vector of one-character strings to set. Must not be null.
      */
     void setWhiteSpaces(final Vector<String> whites) {
@@ -1235,7 +1227,8 @@ public class FileTokenizerSettings {
         }
         // at last add the quote definitions
         result.append("Quotes:\n");
-        for (Iterator<Quote> qIter = getAllQuotes().iterator(); qIter.hasNext();) {
+        for (Iterator<Quote> qIter = getAllQuotes().iterator(); 
+                qIter.hasNext();) {
             Quote quote = qIter.next();
             assert quote != null;
             result.append("    " + quote.toString());
@@ -1273,7 +1266,7 @@ public class FileTokenizerSettings {
     /**
      * Checks the completeness and consistency of all settings and adds
      * informational messages, warnings, and errors, if something is suspicious.
-     *
+     * 
      * @param status an object this methods adds its messages to.
      */
 
@@ -1324,7 +1317,7 @@ public class FileTokenizerSettings {
      * Method to check consistency and completeness of the current settings. It
      * will return a <code>SettingsStatus</code> object which contains info,
      * warning and error messages, if something is fishy with the settings.
-     *
+     * 
      * @return a SettingsStatus object containing info, warning and error
      *         messages - or not if all settings are good.
      */
@@ -1341,7 +1334,7 @@ public class FileTokenizerSettings {
      * takes a string that could contain "\t", or "\n", or "\\", and returns a
      * corresponding string with these patterns replaced by the characters '\t',
      * '\n', '\'.
-     *
+     * 
      * @param str a string with escape sequences in
      * @return a string with all sequences translated. If there are no esc
      *         sequences in the specified string the exact same reference will

@@ -83,7 +83,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
-    private HashSet<RowKey> m_coveredPattern = 
+    private HashSet<RowKey> m_coveredPattern =
         new HashSet<RowKey>();
 
     private boolean m_pureEnough = false;
@@ -148,7 +148,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec) {
         return getClassCounts();
     }
 
@@ -264,7 +264,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * {@inheritDoc}
      */
     @Override
-    public TreeNode getChildAt(final int pos) {
+    public DecisionTreeNode getChildAt(final int pos) {
         return null;
     }
 

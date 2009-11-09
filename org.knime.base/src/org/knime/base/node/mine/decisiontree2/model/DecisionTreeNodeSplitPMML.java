@@ -229,7 +229,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec) {
         assert (spec != null);
         DecisionTreeNode matchingChild = getMatchingChild(row, spec);
         if (matchingChild == this) {
@@ -266,14 +266,10 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
                     case NONE:
                         /* missing counts as false
                         -> continue with next predicate */
-                        LOGGER.debug("Applying 'none' strategy. Missing value "
-                                + "is evaluated to false.");
                         break;
                     case DEFAULT_CHILD:
-                        LOGGER.debug("Applying 'default child' strategy.");
                         return getDefaultChild();
                     case LAST_PREDICTION:
-                        LOGGER.debug("Applying 'last prediction' strategy.");
                         return this;
                     default:
                         throw new UnsupportedOperationException(
@@ -299,7 +295,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
-            final DataRow row, final DataTableSpec spec) throws Exception {
+            final DataRow row, final DataTableSpec spec) {
         return getClassCounts(null, row, spec);
     }
 
@@ -314,7 +310,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         if (matchingChild != null && matchingChild != this) {
             matchingChild.addCoveredPattern(row, spec, weight);
         } else {
-            LOGGER.info("Decision Tree HiLiteAdder failed."
+            LOGGER.debug("Decision Tree HiLiteAdder failed."
                     + " Could not find branch for value '" + cell.toString()
                     + "' for attribute '" + getSplitAttr() + "'."
                     + "Ignoring pattern.");
@@ -336,7 +332,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
             Color col = spec.getRowColor(row).getColor();
             addColorToMap(col, weight);
         } else {
-            LOGGER.info("Decision Tree HiLiteAdder failed."
+            LOGGER.debug("Decision Tree HiLiteAdder failed."
                     + " Could not find branch for value '" + cell.toString()
                     + "' for attribute '" + getSplitAttr().toString() + "'."
                     + "Ignoring pattern.");

@@ -229,7 +229,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
-            final DataRow row, final DataTableSpec spec) throws Exception {
+            final DataRow row, final DataTableSpec spec) {
         int childIndex = getIndexOfChild(cell);
         if (childIndex >= 0) {
             return super.getChildNodeAt(childIndex).getClassCounts(row, spec);

@@ -235,11 +235,11 @@ public class RowKeyUtil {
                 } else {
                     key = keyCell.toString();
                 }
-                if (ensureUniqueness) {
-                    if (vals.containsKey(key)) {
-                        if (!keyCell.isMissing()) {
-                            m_duplicatesCounter++;
-                        }
+                if (vals.containsKey(key)) {
+                    if (!keyCell.isMissing()) {
+                        m_duplicatesCounter++;
+                    }
+                    if (ensureUniqueness) {
                         StringBuilder uniqueKey = new StringBuilder(key);
                         final MutableInteger index = vals.get(uniqueKey.toString());
                         while (vals.containsKey(uniqueKey.toString())) {
@@ -250,11 +250,25 @@ public class RowKeyUtil {
                             uniqueKey.append(")");
                         }
                         key = uniqueKey.toString();
+                    } else {
+                        if (keyCell.isMissing()) {
+                            throw new InvalidSettingsException(
+                                    "Error in row " + rowCounter + ": "
+                                    + "Multiple missing values found. Check the '"
+                                    + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
+                                    + "' option to handle multiple occurrences.");
+                        }
+                        throw new InvalidSettingsException(
+                                "Error in row " + rowCounter + ": "
+                                + "Duplicate value: " + key
+                                + " already exists. Check the '"
+                                + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
+                                + "' option to handle duplicates.");
                     }
-                    //put the current key which is new into the values map
-                    final MutableInteger index = new MutableInteger(0);
-                    vals.put(key, index);
-                } 
+                }
+                //put the current key which is new into the values map
+                final MutableInteger index = new MutableInteger(0);
+                vals.put(key, index);
                 newKeyVal = new RowKey(key);
             } else {
                 newKeyVal = RowKey.createRowKey(rowCounter);
@@ -276,6 +290,8 @@ public class RowKeyUtil {
         }
         exec.setProgress(1.0, "Finished");
         newContainer.close();
+        LOGGER.debug("Exiting changeRowKey(inData, exec, selRowKeyColName, "
+                + "newColName) of class RowKeyUtil.");
         return newContainer.getTable();
     }
 

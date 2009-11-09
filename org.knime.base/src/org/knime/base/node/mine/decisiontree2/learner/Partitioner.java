@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.decisiontree2.learner;
 
-import org.knime.core.node.NodeLogger;
 
 /**
  * Partitions a table according to a given split.
@@ -58,9 +57,6 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public class Partitioner {
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(Partitioner.class);
 
     /**
      * This field holds the resulting partitioning, i.e. the tables resulting
@@ -98,7 +94,6 @@ public class Partitioner {
      */
     public Partitioner(final InMemoryTable table, final Split split,
             final double minNumExamples) {
-        LOGGER.debug("Perform partitioning.");
 
         // create the new partition data tables
         boolean useSplitAttributeFurther = split.canBeFurtherUsed();

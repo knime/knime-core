@@ -61,7 +61,6 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Creates an in memory representation of the given {@link BufferedDataTable}.
@@ -71,9 +70,6 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public class InMemoryTableCreator {
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(InMemoryTableCreator.class);
 
     private BufferedDataTable m_table;
 
@@ -113,7 +109,6 @@ public class InMemoryTableCreator {
             throws CanceledExecutionException {
         exec.checkCanceled();
         exec.setMessage("Prepare In-Memory table creation...");
-        LOGGER.info("Start creation of In-Memory table from the input table");
 
         // reset to 0
         m_removedRowsDueToMissingClassValue = 0;
@@ -210,11 +205,11 @@ public class InMemoryTableCreator {
             }
             // create a weighted row from the class value and the double
             // array; the initial weight is 1.0 (i.e. 100%)
-            resultTable.addRow(new DataRowWeighted(new ClassValueDataRow(attributeValues,
-                    classMapping), 1.0));
+            resultTable.addRow(new DataRowWeighted(new ClassValueDataRow(
+                    attributeValues, classMapping), 1.0));
         }
 
-        LOGGER.info("Finished creation of In-Memory table");
+        exec.setMessage("Finished creation of In-Memory table");
         resultTable.pack();
         return resultTable;
     }
