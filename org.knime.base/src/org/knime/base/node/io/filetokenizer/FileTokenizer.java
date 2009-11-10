@@ -1,22 +1,48 @@
 /*
- * ------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
+ * ------------------------------------------------------------------------
  *
- * Copyright, 2003 - 2009
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
+ *  Copyright (C) 2003 - 2009
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
  *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
  */
 package org.knime.base.node.io.filetokenizer;
@@ -26,36 +52,10 @@ import java.io.Reader;
 import java.util.Vector;
 
 /**
- * This class reads tokens from a stream and returns them as strings. <br>
- * You can specify token delimiters, comments and quotes. <br>
- * The tokenizer can be configured to include delimiters or to return them as
- * separate tokens, to discard, include, or return comments, to allow line
- * continuations, and to combine consecutive delimiters.
- * <p>
- * It always returns tokens as strings.
- * <p>
- * It returns <code>null</code> if it read EOF before any other character.
- * (EOF is always a token delimiter.)
- * <p>
- * It will always ignore a '\r' if it immediately is followed by a '\n'.
- * <p>
- * You can set multiple delimiter patterns. <br>
- * You can specify multiple block comment begin/end pair patterns. <br>
- * You can specify multiple line comment begin patterns. <br>
- * And you can specify multiple quote begin/end pair patterns - and an escape
- * character with each pair. <br>
- * A pattern is a (multi or single character) string. <br>
- * The discard/return/include option can be specified for each delimiter and
- * comment pattern separately.
- * <p>
- * You can specify a line continuation character. This character immediately
- * followed by a newline and any space or tab character will be ignored then
- * inside a token or quoted string.
- * <p>
- * You can push back one (the last) token.
- * 
- * @author Peter Ohl, University of Konstanz
+ * @deprecated use {@link org.knime.core.util.tokenizer.Tokenizer} instead. Will
+ *             be removed in Ver3.0.
  */
+@Deprecated
 public class FileTokenizer {
 
     /* the source we read from */
@@ -77,7 +77,7 @@ public class FileTokenizer {
     private boolean m_combineMultipleDelimiters;
 
     /**
-     * The maximum ASCII code for the first character of patterns (like 
+     * The maximum ASCII code for the first character of patterns (like
      * delimiter, comment, and quote patterns.
      */
     public static final int MAX_CHAR = 0xFF;
@@ -134,7 +134,7 @@ public class FileTokenizer {
 
     /* the token returned by the last call to next() */
     private String m_lastToken;
-    
+
     /* flag to remember which quotes we've seen with the last token */
     private Quote m_lastQuotes;
 
@@ -146,7 +146,7 @@ public class FileTokenizer {
 
     /* the current line number (not accurate if token got pushed back) */
     private int m_lineNo;
-    
+
     /* the number of bytes read so far */
     private long m_readBytes;
 
@@ -160,19 +160,19 @@ public class FileTokenizer {
     private static final char LF = '\n';
 
     /** String containing only the LF char. Used internally for line comment */
-    static final String LF_STR = new String(new char[] {LF});
+    static final String LF_STR = new String(new char[]{LF});
 
     /* the end-of-file flag */
     private static final int EOF = -1;
-    
+
     /* the flag which identifies if the last token is a delimiter or not */
     private boolean m_tokenWasDelimiter = false;
 
     /**
      * Creates a new tokenizer with the default behaviour.
-     * 
+     *
      * @param source A reader the tokens are read from.
-     * 
+     *
      * @see #resetToDefault() for what's the default behaviour.
      */
     public FileTokenizer(final Reader source) {
@@ -235,17 +235,16 @@ public class FileTokenizer {
     }
 
     /**
-     * @return Returns true if last token is a delimiter token, 
-     * otherwise false.
+     * @return Returns true if last token is a delimiter token, otherwise false.
      */
     public boolean lastTokenWasDelimiter() {
         return m_tokenWasDelimiter;
     }
-    
+
     /**
      * Reads the next token from the stream and returns it as string. Or
      * <code>null</code> if no more token can be read.
-     * 
+     *
      * @return The next token from the stream or null at the EOF.
      * @throws FileTokenizerException if something goes wrong during tokenizing.
      */
@@ -271,7 +270,7 @@ public class FileTokenizer {
         m_newToken.setLength(0);
         m_lastQuotes = null;
         m_tokenWasDelimiter = false;
-        
+
         int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         int c = getNextChar();
         while (c != EOF) {
@@ -394,7 +393,7 @@ public class FileTokenizer {
                 m_source.close();
             } catch (IOException ioe) {
                 // empty.
-            }     
+            }
             // also strip off whitespaces if the last token ended through EOF
             cutOffWhiteSpaces(m_newToken, lastEndQuoteIdx);
         }
@@ -410,7 +409,7 @@ public class FileTokenizer {
      * Reads the next character either from the readBuffer or the stream. <p> A
      * CR character immediately followed by a LF character will be ignored and
      * only the LF will be returned (only if read from the stream!).
-     * 
+     *
      * @return The next character. Or -1 if EOF was seen.
      */
     private int getNextChar() {
@@ -422,7 +421,7 @@ public class FileTokenizer {
                 if ((m_readBuffer[m_currIdx] = m_source.read()) == -1) {
                     // seen the EOF. Any further read will cause IOException.
                     m_source.close();
-                } 
+                }
                 m_readBytes++;
                 if (m_readBuffer[m_currIdx] == CR) {
                     // read the next char to see if we need to swallow the CR
@@ -481,7 +480,7 @@ public class FileTokenizer {
     private void clearReadBuffer() {
         m_currIdx = m_eobIdx;
     }
-    
+
     /*
      * This function reads from the stream (or buffer) as long as it gets spaces
      * or tabs. It returns the number of chars read. @return The number of
@@ -512,16 +511,16 @@ public class FileTokenizer {
         return false;
     }
 
-    /**            
-     * strips off whitespaces from the end of the string (not from the 
-     * beginning!). It will not change anything in the string before or at the 
+    /**
+     * strips off whitespaces from the end of the string (not from the
+     * beginning!). It will not change anything in the string before or at the
      * specified index (this is for leaving quoted parts untouched).
-     * 
+     *
      * @param str the stringbuffer to modify
-     * @param index the lowest index we may modify 
+     * @param index the lowest index we may modify
      */
     private void cutOffWhiteSpaces(final StringBuffer str, final int index) {
-        
+
         if (str.length() == 0) {
             return;
         }
@@ -529,7 +528,7 @@ public class FileTokenizer {
         if (stopIdx < -1) {
             stopIdx = -1;
         }
-        
+
         int cIdx;
         for (cIdx = str.length() - 1; cIdx > index; cIdx--) {
             if (!isWhiteSpace(str.charAt(cIdx))) {
@@ -542,7 +541,7 @@ public class FileTokenizer {
             str.delete(cIdx + 1, str.length());
         }
     }
-    
+
     /*
      * Checks if the next characters in the stream are a "comment begin"
      * pattern, without modifying the stream. It reads character by character
@@ -690,8 +689,7 @@ public class FileTokenizer {
         patternLength = comment.getBegin().length();
         for (int i = 0; i < patternLength; i++) {
             nextChar = getNextChar();
-            if ((nextChar == EOF) 
-                    || (nextChar != comment.getBegin().charAt(i))) {
+            if ((nextChar == EOF) || (nextChar != comment.getBegin().charAt(i))) {
                 assert false : "Call only with a comment begin in the stream";
                 return "";
             }
@@ -729,9 +727,10 @@ public class FileTokenizer {
                     .length() - 1);
         }
 
-        /* Now, if the token so far is empty, we have read in only comment.
-         * If the next character in the stream is a LF, we should consider it 
-         * part of the comment, as is was added only for better readability. 
+        /*
+         * Now, if the token so far is empty, we have read in only comment. If
+         * the next character in the stream is a LF, we should consider it part
+         * of the comment, as is was added only for better readability.
          * (Otherwise this LF causes an unexpected empty line most of the time.)
          */
         if (m_newToken.length() == 0) {
@@ -740,7 +739,7 @@ public class FileTokenizer {
                 putBackChar(c);
             }
         }
-        
+
         return result.toString();
     } // readComment(string)
 
@@ -796,7 +795,7 @@ public class FileTokenizer {
             assert m_lastDelimiter == null;
 
             if (delim.returnAsToken()) {
-                // store it to return it with the next call to 'nextToken()' 
+                // store it to return it with the next call to 'nextToken()'
                 m_lastDelimiter = delim.getDelimiter();
                 return "";
             } else {
@@ -852,7 +851,7 @@ public class FileTokenizer {
                     return returnDel.getDelimiter();
                 } else {
                     assert returnDel.returnAsToken();
-                        // we must store it for the next call to 'nextToken()'
+                    // we must store it for the next call to 'nextToken()'
                     m_lastDelimiter = returnDel.getDelimiter();
                     return "";
                 }
@@ -869,10 +868,11 @@ public class FileTokenizer {
      * included in the result). The first characters in the stream MUST be the
      * quote begin pattern. An EOF ends a quoted string. A newline character
      * does not. @param quote An object defining the quote patterns to come.
+     *
      * @return The characters from the stream that were read between the quote
      * begin and quote end pattern.
      */
-    private String readQuotedString(final Quote quote) 
+    private String readQuotedString(final Quote quote)
             throws FileTokenizerException {
         StringBuilder result = new StringBuilder();
         int patternLength;
@@ -893,7 +893,7 @@ public class FileTokenizer {
                 return "";
             }
         }
-        
+
         // end pattern idx always points to result.length()-endPattern.length()
         endPatternIdx = -endPattern.length();
         // the index where we start searching in the result for the endPattern
@@ -906,8 +906,8 @@ public class FileTokenizer {
             if (nextChar == EOF) {
                 break;
             }
-            if ((nextChar <= MAX_CHAR) 
-                && ((m_charType[nextChar] & LINECONT) != 0)) {
+            if ((nextChar <= MAX_CHAR)
+                    && ((m_charType[nextChar] & LINECONT) != 0)) {
                 // we support line continuations within quoted strings.
                 int tmp = getNextChar();
                 if (tmp == LF) {
@@ -922,7 +922,7 @@ public class FileTokenizer {
             if (nextChar == LF) {
                 // read a LF within quotes: that is illegal!
                 throw new FileTokenizerException("New line in quoted string"
-                         + " (or closing quote missing).");
+                        + " (or closing quote missing).");
             }
             if ((nextChar == escChar) && quote.hasEscapeChar()) {
                 nextChar = translateEscChar(nextChar);
@@ -943,7 +943,7 @@ public class FileTokenizer {
         }
 
         if (!quote.getDontRemoveFlag() && (nextChar != EOF)) {
-            // remove the end pattern from the token 
+            // remove the end pattern from the token
             assert result.indexOf(endPattern, endPatternIdx) > -1;
             return result.substring(0, result.length()
                     - quote.getRight().length());
@@ -979,7 +979,7 @@ public class FileTokenizer {
      * the <code>nextToken()</code> function will be returned once again with
      * the next call the the <code>nextToken()</code> function. Pushing back a
      * token does <b>not </b> decrease the line number accordingly.
-     * 
+     *
      * @see #nextToken
      */
     public void pushBack() {
@@ -994,9 +994,9 @@ public class FileTokenizer {
      * The first, third, and fifth tokens are specified - but empty. The second
      * and fourth are not specified causing an empty token to be returned. With
      * this function you can figure out the difference.
-     * 
-     * @return <code>true</code> if the last token had quotes which were
-     *         removed by the tokenizer.
+     *
+     * @return <code>true</code> if the last token had quotes which were removed
+     *         by the tokenizer.
      */
     public boolean lastTokenWasQuoted() {
         return (m_lastQuotes != null);
@@ -1009,7 +1009,7 @@ public class FileTokenizer {
      * For example, if the tokenized stream contains ...,"foo"poo'loo',... with
      * comma separated tokens and single and double quotes - the last quote
      * begin pattern would be the single quote (').
-     * 
+     *
      * @return the left quote pattern of the quotes in the last token. Or null
      *         if it wasn't quoted.
      */
@@ -1028,7 +1028,7 @@ public class FileTokenizer {
      * For example, if the tokenized stream contains ...,"foo"poo'loo',... with
      * comma separated tokens and single and double quotes - the last quote
      * begin pattern would be the single quote (').
-     * 
+     *
      * @return the right quote pattern of the quotes in the last token. Or null
      *         if it wasn't quoted.
      */
@@ -1046,12 +1046,12 @@ public class FileTokenizer {
     public int getLineNumber() {
         return m_lineNo;
     }
-    
+
     /**
      * Returns the number of bytes returned so far. Due to the buffering the
      * number of bytes read from the disk and the number of bytes returned by
      * this tokenizer can differ.
-     * 
+     *
      * @return the number of bytes returned so far by this tokenizer
      */
     public long getReadBytes() {
@@ -1062,11 +1062,11 @@ public class FileTokenizer {
      * Closes the stream the tokenizer reads from. After the tokenizer read the
      * EOF from the stream it closes it automatically. If it's required to close
      * the stream before the end is read, you can call this method. A call to
-     * <code>nextToken()</code> after a call to this token will return 
+     * <code>nextToken()</code> after a call to this token will return
      * <code>null</code> (indicating the end of the file).
      */
     public void closeSourceStream() {
-        // discard any characters pushed back. 
+        // discard any characters pushed back.
         clearReadBuffer();
         try {
             m_source.close();
@@ -1074,13 +1074,13 @@ public class FileTokenizer {
             // okay, then don't close it.
         }
     }
-    
+
     /**
      * Set new user settings in this tokenizer. The only way to configure this
      * tokenizer is to create an instance of the
-     * <code>FileTokenizerSettings</code>, add all parameters there and pass
-     * the settings object through this method.
-     * 
+     * <code>FileTokenizerSettings</code>, add all parameters there and pass the
+     * settings object through this method.
+     *
      * @param ftSettings the settings object containing new settings.
      */
     public void setSettings(final FileTokenizerSettings ftSettings) {
@@ -1104,13 +1104,13 @@ public class FileTokenizer {
         // Fill our own data structures for comment, quotes, delimiters and
         // line contin. char. Don't forget to set the character type
         // accordingly.
-        for (Comment comment : ftSettings.getAllComments()) { 
+        for (Comment comment : ftSettings.getAllComments()) {
             assert comment != null;
             m_commentPatterns.add(comment);
             char c = comment.getFirstCharOfBegin();
             m_charType[c] |= COMMENT;
         }
-        for (Delimiter delim : ftSettings.getAllDelimiters()) { 
+        for (Delimiter delim : ftSettings.getAllDelimiters()) {
             assert delim != null;
             m_delimPatterns.add(delim);
             char c = delim.getFirstChar();
@@ -1148,7 +1148,7 @@ public class FileTokenizer {
 
         FileTokenizerSettings result = new FileTokenizerSettings();
 
-        //add all currently set quote patterns
+        // add all currently set quote patterns
         result.setQuotes(m_quotePatterns);
         // add all comments
         result.setComments(m_commentPatterns);

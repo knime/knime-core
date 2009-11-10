@@ -1,24 +1,50 @@
 /*
- * ------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
+ * ------------------------------------------------------------------------
  *
- * Copyright, 2003 - 2009
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
+ *  Copyright (C) 2003 - 2009
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
  *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.11.2004 (ohl): created
  */
@@ -29,11 +55,10 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Created for each quote pattern in the <code>FileTokenizer</code> keeping
- * its specifics.
- * 
- * @author Peter Ohl, University of Konstanz
+ * @deprecated use {@link org.knime.core.util.tokenizer.Quote} instead. Will be
+ *             removed in Ver3.0.
  */
+@Deprecated
 public class Quote {
     private final String m_left;
 
@@ -42,7 +67,7 @@ public class Quote {
     private final char m_escape;
 
     private final boolean m_hasEscape;
-    
+
     private final boolean m_dontRemove;
 
     /* keys used to store parameters in a config object */
@@ -51,13 +76,13 @@ public class Quote {
     private static final String CFGKEY_RIGHT = "right";
 
     private static final String CFGKEY_ESC = "EscChar";
-    
+
     private static final String CFGKEY_DONTREM = "DontRem";
 
     /**
      * Creates a new Quote object. Only constructed by the
      * <code>FileTokenizerSettings</code> class.
-     * 
+     *
      * @see FileTokenizerSettings
      * @param left the left quote pattern
      * @param right the right quote pattern
@@ -65,7 +90,7 @@ public class Quote {
      * @param dontRemove if set true the quote patterns will not be removed
      *            from, but returned in the token.
      */
-    public Quote(final String left, final String right, final char escape, 
+    public Quote(final String left, final String right, final char escape,
             final boolean dontRemove) {
         m_left = left;
         m_right = right;
@@ -76,7 +101,7 @@ public class Quote {
     /**
      * Creates a new Quote object. The quotes will be removed from the token.
      * Only constructed by the <code>FileTokenizerSettings</code> class.
-     * 
+     *
      * @see FileTokenizerSettings
      * @param left the left quote pattern
      * @param right the right quote pattern
@@ -87,26 +112,26 @@ public class Quote {
     }
 
     /**
-     * Creates a new Quote object, without escape character, quotes being 
+     * Creates a new Quote object, without escape character, quotes being
      * removed from the token.
-     * 
+     *
      * @param left The left quote pattern.
      * @param right The right quote pattern.
      * @param dontRemove if set true quote patterns don't get removed but be
      *            returned in the token.
      */
-    public Quote(final String left, final String right, 
+    public Quote(final String left, final String right,
             final boolean dontRemove) {
         m_left = left;
         m_right = right;
         m_escape = '\0';
         m_hasEscape = false;
         m_dontRemove = dontRemove;
-    } 
+    }
     /**
-     * Creates a new Quote object, without escape character, quotes being 
+     * Creates a new Quote object, without escape character, quotes being
      * removed from the token.
-     * 
+     *
      * @param left The left quote pattern.
      * @param right The right quote pattern.
      */
@@ -119,7 +144,7 @@ public class Quote {
      * the <code>config</code> object. If config doesn't contain all necessary
      * parameters or contains inconsistent settings it will throw an
      * IllegalArgument exception
-     * 
+     *
      * @param settings an object the parameters are read from.
      * @throws InvalidSettingsException when the config stinks.
      */
@@ -149,7 +174,7 @@ public class Quote {
                     + "quote (must not specify mult char string as escape"
                     + "character)! Settings incomplete!");
         }
-        
+
         // optional for backward compatibility
         m_dontRemove = settings.getBoolean(CFGKEY_DONTREM, false);
     }
@@ -158,7 +183,7 @@ public class Quote {
      * Writes the object into a <code>NodeSettings</code> object. If this
      * config object is then used to construct a new <code>Delimiter</code>
      * this and the new object should be identical.
-     * 
+     *
      * @param cfg a config object the internal values of this object will be
      *            stored into.
      */
@@ -214,7 +239,7 @@ public class Quote {
     public boolean getDontRemoveFlag() {
         return m_dontRemove;
     }
-    
+
     /**
      * @return The first character of the left quote pattern.
      */
@@ -225,7 +250,7 @@ public class Quote {
     /**
      * Returns "[left]...[right], '[esc]'", with ", [esc]" only printed when an
      * escape char is defined.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -271,7 +296,7 @@ public class Quote {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -279,5 +304,5 @@ public class Quote {
     public int hashCode() {
         return getLeft().hashCode() ^ getRight().hashCode();
     }
-    
+
 }
