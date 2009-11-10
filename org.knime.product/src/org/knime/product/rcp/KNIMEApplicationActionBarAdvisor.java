@@ -105,6 +105,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IAction m_importPrefAction;
 
+    private IAction m_print;
+
     // private IWorkbenchAction m_introAction;
 
     private IWorkbenchAction m_aboutAction;
@@ -199,6 +201,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_importPrefAction = new ImportPreferencesAction(window);
         register(m_importPrefAction);
 
+        m_print = ActionFactory.PRINT.create(window);
+        register(m_print);
+
         // Edit Actions
         m_cutAction = ActionFactory.CUT.create(window);
         register(m_cutAction);
@@ -291,6 +296,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_saveAllAction);
         fileMenu.add(m_closeAllAction);
 
+        fileMenu.add(m_print);
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
         fileMenu.add(new Separator());
