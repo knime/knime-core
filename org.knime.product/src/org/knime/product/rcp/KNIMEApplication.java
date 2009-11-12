@@ -44,6 +44,7 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.osgi.framework.Bundle;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -129,8 +130,8 @@ public class KNIMEApplication implements IApplication {
             }
         }
     }
-    
-    
+
+
     protected WorkbenchAdvisor getWorkbenchAdvisor() {
         return new KNIMEApplicationWorkbenchAdvisor();
     }
@@ -538,7 +539,7 @@ public class KNIMEApplication implements IApplication {
                     if (r >= 0) {
                         // remove "\n"
                         String version = new String(buf, 0, r).trim();
-                        // xul 1.9.1 causes problems: 
+                        // xul 1.9.1 causes problems:
                         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194
                         if (version.matches(".* 1\\.9\\.[1-9].*")) {
                             xul191Location = dir;
@@ -569,13 +570,23 @@ public class KNIMEApplication implements IApplication {
                     + "' as internal web browser. If you want to change this,"
                     + " add '-D" + XUL + "=...' to knime.ini");
         } else if (xul191Location != null) {
-            System.setProperty(XUL, "");
-            System.out.println("Rejecting xulrunner '" 
-                    + xul191Location.getAbsolutePath() + "' as internal web " 
-                    + "browser due to version incompatibility (see bug " 
-                    + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194 )."
-                    + " Node description window may not work, consider to "
-                    + "install xulrunner [version 1.8.x - 1.9.0].");
+            Bundle eclipseCore = Platform.getBundle("org.eclipse.core.runtime");
+            if ((eclipseCore.getVersion().getMajor() == 3)
+                && (eclipseCore.getVersion().getMinor() < 5)) {
+                System.setProperty(XUL, "");
+                System.out.println("Rejecting xulrunner '"
+                        + xul191Location.getAbsolutePath() + "' as internal web "
+                        + "browser due to version incompatibility (see bug "
+                        + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194 )."
+                        + " Node description window may not work, consider to "
+                        + "install xulrunner [version 1.8.x - 1.9.0].");
+            } else {
+                System.setProperty(XUL, xul191Location.getAbsolutePath());
+                System.out.println("Using xulrunner at '"
+                        + xul191Location.getAbsolutePath()
+                        + "' as internal web browser. If you want to change this,"
+                        + " add '-D" + XUL + "=...' to knime.ini");
+            }
         } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
             System.out.println("Using xulrunner at '"
                     + System.getenv("MOZILLA_FIVE_HOME")
