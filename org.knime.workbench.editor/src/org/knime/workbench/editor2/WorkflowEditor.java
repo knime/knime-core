@@ -330,6 +330,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IEditorPart editor = p.findEditor(in);
                     if (editor != null) {
                         editors.add(editor);
+                        if (editor instanceof WorkflowEditor) {
+                            /* Recursively get all subeditors. This is necessary
+                             *  for meta nodes in meta nodes. */
+                            editors.addAll(
+                                    ((WorkflowEditor)editor).getSubEditors());
+                        }
                     }
                 }
             }
@@ -644,7 +650,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.fatal("Repository Manager Instance must not be null!");
             }
             assert m_manager == null;
-            
+
             IPath localPath = m_fileResource.getParent().getFullPath();
             m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
                     localPath);
@@ -686,8 +692,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
                 ProjectWorkflowMap.putWorkflow(localPath, m_manager);
             }
-            // in any case register as client (also if the workflow was already 
-            // loaded by another client 
+            // in any case register as client (also if the workflow was already
+            // loaded by another client
             ProjectWorkflowMap.registerClientTo(localPath, this);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
@@ -1351,7 +1357,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (m_fileResource.equals(delta.getResource())) {
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     // remove workflow.knime from moved to path
-                    IPath newDirPath = 
+                    IPath newDirPath =
                         delta.getMovedToPath().removeLastSegments(1);
                     // directory name (without workflow groups)
                     final String newName = newDirPath.lastSegment();
