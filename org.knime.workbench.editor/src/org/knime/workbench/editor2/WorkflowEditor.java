@@ -355,47 +355,22 @@ public class WorkflowEditor extends GraphicalEditor implements
             ProjectWorkflowMap.unregisterClientFrom(path, this);
             ProjectWorkflowMap.remove(path);
         }
-
         // remember that this editor has been closed
         m_closed = true;
-
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
-
-
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
         }
-
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
-
         m_manager.removeNodeStateChangeListener(this);
-
         // remove resource listener..
         if (m_fileResource != null) {
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
-
-        // we only have to do it on the parent
-        if (m_parentEditor == null) {
-            // bugfix 799: not possible to stop closing earlier if user
-            // decides to NOT save it. Thus we have at least to try to
-            // cancel all running nodes
-            try {
-                m_manager.shutdown();
-            } catch (Throwable t) {
-                // at least we have tried it
-                LOGGER.error(
-                        "Could not cancel workflow manager for project "
-                        + m_fileResource.getProject().getName(), t);
-            }
-            WorkflowManager.ROOT.removeProject(m_manager.getID());
-        }
-
         getCommandStack().removeCommandStackListener(this);
-
         super.dispose();
     }
 

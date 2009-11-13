@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2009
@@ -45,7 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
 
- * 
+ *
  * History
  *   Dec 19, 2006 (sieb): created
  */
@@ -64,20 +64,21 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  * This model provider is registered in the plugin.xml and checks if a KNIIME
  * workflow project is intended to be renamed. The reason is, that at the moment
  * the KNIME core saves an absolute path for storage reasons. If renamed save
  * actions would fail.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class MoveModelProvider extends ModelProvider {
 
     /**
      * Returns the id of this provider.
-     * 
+     *
      * @return the id of this provider
      */
     public String getModelProviderId() {
@@ -88,11 +89,12 @@ public class MoveModelProvider extends ModelProvider {
      * Checks if a KNIIME workflow project is intended to be renamed. The reason
      * is, that at the moment the KNIME core saves an absolute path for storage
      * reasons. If renamed save actions would fail.
-     * 
+     *
      * @see org.eclipse.core.resources.mapping.ModelProvider#
      *      validateChange(org.eclipse.core.resources.IResourceDelta,
      *      org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override
     public IStatus validateChange(final IResourceDelta delta,
             final IProgressMonitor monitor) {
 
@@ -106,7 +108,8 @@ public class MoveModelProvider extends ModelProvider {
             IFile workflowFile = null;
             for (IResourceDelta affectedChild : delta.getAffectedChildren()) {
                 project = affectedChild.getResource().getProject();
-                workflowFile = project.getFile("workflow.knime");
+                workflowFile = project.getFile(
+                        WorkflowPersistor.WORKFLOW_FILE);
 
                 // break if we found the project with a knime workflow
                 if (workflowFile.exists()) {
