@@ -311,15 +311,15 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_exitAction);
 
         // Edit menu
+        editMenu.add(m_undoAction);
+        editMenu.add(m_redoAction);
+        editMenu.add(new Separator());
         editMenu.add(m_cutAction);
         editMenu.add(m_copyAction);
         editMenu.add(m_pasteAction);
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
-        editMenu.add(new Separator());
-        editMenu.add(m_undoAction);
-        editMenu.add(m_redoAction);
 
         // View menu
         addMultiViewsToMenu(viewMenu);

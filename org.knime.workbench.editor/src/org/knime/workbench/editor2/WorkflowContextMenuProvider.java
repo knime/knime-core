@@ -138,13 +138,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
 
-//        action = m_actionRegistry.getAction("undo");
-//        manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
-//        ((UpdateAction)action).update();
-//
-//        action = m_actionRegistry.getAction("redo");
-//        manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
-//        ((UpdateAction)action).update();
+        action = m_actionRegistry.getAction("undo");
+        manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
+        ((UpdateAction)action).update();
+
+        action = m_actionRegistry.getAction("redo");
+        manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
+        ((UpdateAction)action).update();
 
         action = m_actionRegistry.getAction("delete");
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
