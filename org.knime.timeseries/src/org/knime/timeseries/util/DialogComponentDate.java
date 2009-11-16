@@ -62,6 +62,8 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.InvalidSettingsException;
@@ -99,6 +101,12 @@ public class DialogComponentDate extends DialogComponent {
         overall.setBorder(BorderFactory.createTitledBorder(label));
         overall.add(createDatePanel());
         getComponentPanel().add(overall);
+        
+        getModel().addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                updateComponent();
+            }
+        });
     }
 
     private JPanel createDatePanel() {
@@ -217,7 +225,7 @@ public class DialogComponentDate extends DialogComponent {
         // months as zero-based indices (but not day of month)
         m_monthUI.setSelectedIndex(calendar.get(Calendar.MONTH));
         m_dayUI.setSelectedIndex(calendar.get(Calendar.DAY_OF_MONTH) - 1);
-        setEnabledComponents(model.useDate());
+        setEnabledComponents(model.useDate() && model.isEnabled());
     }
     
     /**

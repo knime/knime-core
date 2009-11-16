@@ -63,6 +63,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
@@ -104,6 +106,12 @@ public class DialogComponentTime extends DialogComponent {
         overall.setBorder(BorderFactory.createTitledBorder(label));
         overall.add(createTimePanel());
         getComponentPanel().add(overall);
+        
+        getModel().addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                updateComponent();
+            }
+        });
     }
 
     private JPanel createTimePanel() {
@@ -315,7 +323,7 @@ public class DialogComponentTime extends DialogComponent {
         m_milliUI.setText(Integer.toString(calendar.get(
                 Calendar.MILLISECOND)));
         m_useMillis.setSelected(model.useMilliseconds());
-        setEnabledComponents(model.useTime());
+        setEnabledComponents(model.useTime() && model.isEnabled());
     }
     
     /**
