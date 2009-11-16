@@ -289,9 +289,9 @@ public class DateFieldExtractorNodeModel extends NodeModel {
                     @Override
                     protected String extractTimeField(
                             final DateAndTimeValue value) {
-                        return value.getUTCCalendarClone()
-                            .getDisplayName(Calendar.MONTH, 
-                                    Calendar.LONG, Locale.ENGLISH);
+                        return value.getUTCCalendarClone().getDisplayName(
+                                Calendar.MONTH, Calendar.LONG, 
+                                Locale.getDefault());
                     }
                 };
             }
@@ -338,7 +338,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
                             final DateAndTimeValue value) {
                         return value.getUTCCalendarClone()
                             .getDisplayName(Calendar.DAY_OF_WEEK, 
-                                    Calendar.LONG, Locale.ENGLISH);
+                                    Calendar.LONG, Locale.getDefault());
                     }
                 };
                 // extract the display name of the day of week
