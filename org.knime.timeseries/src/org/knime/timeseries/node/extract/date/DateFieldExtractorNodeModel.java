@@ -109,6 +109,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
     private final SettingsModelString m_monthRepresentation
         = DateFieldExtractorNodeDialog.createRepresentationModelFor(
                 DateFieldExtractorNodeDialog.MONTH);
+
     // day of week
     private final SettingsModelBoolean m_useDayOfWeek 
         = DateFieldExtractorNodeDialog.createUseTimeFieldModel(
@@ -119,6 +120,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
     private final SettingsModelString m_dayOfWeekRepresentationModel 
         = DateFieldExtractorNodeDialog.createRepresentationModelFor(
                 DateFieldExtractorNodeDialog.DAY_OF_WEEK);
+    
     // day of month
     private final SettingsModelBoolean m_useDay = TimeFieldExtractorNodeDialog
         .createUseTimeFieldModel(DateFieldExtractorNodeDialog.DAY_OF_MONTH); 
@@ -126,8 +128,15 @@ public class DateFieldExtractorNodeModel extends NodeModel {
     DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
             DateFieldExtractorNodeDialog.DAY_OF_MONTH);    
     
+    //day of year
+    private final SettingsModelBoolean m_useDayOfYear 
+    = DateFieldExtractorNodeDialog.createUseTimeFieldModel(
+            DateFieldExtractorNodeDialog.DAY_OF_YEAR);   
+    private final SettingsModelString m_dayOfYearColName 
+        = DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+                DateFieldExtractorNodeDialog.DAY_OF_YEAR);
     
-    /**
+     /**
      * One in port containing {@link DateAndTimeValue}s, one out port with the 
      * extracted date fields appended.
      */
@@ -138,6 +147,8 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         DateFieldExtractorNodeDialog.addListener(m_useDay, m_dayColName);
         DateFieldExtractorNodeDialog.addListener(m_useDayOfWeek, 
                 m_dayOfWeekColName);
+        DateFieldExtractorNodeDialog.addListener(m_useDayOfYear, 
+                m_dayOfYearColName);
     }
     
     
@@ -287,7 +298,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             rearranger.append(monthFactory);
             cellFactories.add(monthFactory);
         }
-        // day
+        // day of month
         if (m_useDay.getBooleanValue()) {
             String colName = DataTableSpec.getUniqueColumnName(inSpec, 
                     m_dayColName.getStringValue());
@@ -335,6 +346,23 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             rearranger.append(dayOfWeekFactory);
             cellFactories.add(dayOfWeekFactory);
         }
+        // day of year
+        if (m_useDayOfYear.getBooleanValue()) {
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+                    m_dayOfYearColName.getStringValue());
+            AbstractTimeExtractorCellFactory dayofYearFactory 
+                = new AbstractTimeExtractorIntCellFactory(
+                    colName, colIdx, false) {
+                @Override
+                protected int extractTimeField(
+                        final DateAndTimeValue value) {
+                    return value.getUTCCalendarClone().get(
+                            Calendar.DAY_OF_YEAR);
+                }
+            };
+            rearranger.append(dayofYearFactory);
+            cellFactories.add(dayofYearFactory);
+        }
         return new SingleCellFactoryCompound(rearranger, cellFactories);
     }
 
@@ -353,6 +381,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         atLeastOneSelected |= m_useMonth.getBooleanValue();
         atLeastOneSelected |= m_useDay.getBooleanValue();
         atLeastOneSelected |= m_useDayOfWeek.getBooleanValue();
+        atLeastOneSelected |= m_useDayOfYear.getBooleanValue();
         return atLeastOneSelected;
     }
 
@@ -373,13 +402,16 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         m_useMonth.loadSettingsFrom(settings);
         m_monthColName.loadSettingsFrom(settings);
         m_monthRepresentation.loadSettingsFrom(settings);
-        // day
-        m_useDay.loadSettingsFrom(settings);
-        m_dayColName.loadSettingsFrom(settings);
         // day of week
         m_useDayOfWeek.loadSettingsFrom(settings);
         m_dayOfWeekColName.loadSettingsFrom(settings);
         m_dayOfWeekRepresentationModel.loadSettingsFrom(settings);
+        // day of month
+        m_useDay.loadSettingsFrom(settings);
+        m_dayColName.loadSettingsFrom(settings);
+        // day of year
+        m_useDayOfYear.loadSettingsFrom(settings);
+        m_dayOfYearColName.loadSettingsFrom(settings);
     }
     
     /**
@@ -410,13 +442,16 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         // month
         m_useMonth.validateSettings(settings);
         m_monthColName.validateSettings(settings);
-        // day
-        m_useDay.validateSettings(settings);
-        m_dayColName.validateSettings(settings);
         // day of week
         m_useDayOfWeek.validateSettings(settings);
         m_dayOfWeekColName.validateSettings(settings);
-        m_dayOfWeekRepresentationModel.validateSettings(settings);
+        m_dayOfWeekRepresentationModel.validateSettings(settings);   
+        // day of month
+        m_useDay.validateSettings(settings);
+        m_dayColName.validateSettings(settings);
+        // day of year
+        m_useDayOfYear.validateSettings(settings);
+        m_dayOfYearColName.validateSettings(settings);
         boolean atLeastOneChecked = false;
         atLeastOneChecked |= AbstractFieldExtractorNodeDialog
             .validateColumnName(settings, m_useYear, m_yearColName);
@@ -428,6 +463,8 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             .validateColumnName(settings, m_useDay, m_dayColName);
         atLeastOneChecked |= AbstractFieldExtractorNodeDialog
             .validateColumnName(settings, m_useDayOfWeek, m_dayOfWeekColName);
+        atLeastOneChecked |= AbstractFieldExtractorNodeDialog
+            .validateColumnName(settings, m_useDayOfYear, m_dayOfYearColName);
         // all unchecked?
         if (!atLeastOneChecked) {
             setWarningMessage("No time field selected. " 
@@ -451,13 +488,16 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         m_monthColName.saveSettingsTo(settings);
         m_useMonth.saveSettingsTo(settings);
         m_monthRepresentation.saveSettingsTo(settings);
-        // day
-        m_dayColName.saveSettingsTo(settings);
-        m_useDay.saveSettingsTo(settings);
         // day of week 
         m_dayOfWeekColName.saveSettingsTo(settings);
         m_useDayOfWeek.saveSettingsTo(settings);
         m_dayOfWeekRepresentationModel.saveSettingsTo(settings);
+        // day of month
+        m_dayColName.saveSettingsTo(settings);
+        m_useDay.saveSettingsTo(settings);
+        // day of year 
+        m_dayOfYearColName.saveSettingsTo(settings);
+        m_useDayOfYear.saveSettingsTo(settings);
     }
 
 
