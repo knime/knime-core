@@ -71,6 +71,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * Appends the difference between two dates with a selected granularity (year,
@@ -105,6 +106,14 @@ public class TimeDifferenceNodeModel extends NodeModel {
     // number of fraction digits for rounding
     private final SettingsModelInteger m_rounding = TimeDifferenceNodeDialog
             .createRoundingModel();
+    
+    private final SettingsModelString m_typeofreference
+                = TimeDifferenceNodeDialog.getReferenceTypeModel();
+    
+    private final SettingsModelCalendar m_timemodel
+                = TimeDifferenceNodeDialog.getCalendarModel();
+
+    private long m_time = 0;
 
     /**
      * Constructor for the node model with one in and one out port.
@@ -125,34 +134,77 @@ public class TimeDifferenceNodeModel extends NodeModel {
         // create rearranger
         ColumnRearranger rearranger = new ColumnRearranger(inData[0]
                 .getDataTableSpec());
-        // append the new column with single cell factory
-        rearranger.append(new SingleCellFactory(createOutputColumnSpec(
-                inData[0].getDataTableSpec(), m_newColName.getStringValue())) {
-            /**
-             * Value for the new column is based on the values of two column of
-             * the row (first and second date column), the selected granularity,
-             * and the fraction digits for rounding.
-             * 
-             * @param row the current row
-             * @return the difference between the two date values with the given
-             *         granularity and rounding
-             */
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell cell1 = row.getCell(m_col1Idx);
-                DataCell cell2 = row.getCell(m_col2Idx);
-                if ((cell1.isMissing()) || (cell2.isMissing())) {
-                    return DataType.getMissingCell();
+        
+        String typeofref = m_typeofreference.getStringValue();
+        if (typeofref.equals(TimeDifferenceNodeDialog.CFG_COLUMN)) {
+            // append the new column with single cell factory
+            rearranger.append(new SingleCellFactory(
+                    createOutputColumnSpec(inData[0].getDataTableSpec(),
+                            m_newColName.getStringValue())) {
+                /**
+                 * Value for the new column is based on the values of two column
+                 * of the row (first and second date column), the selected
+                 * granularity, and the fraction digits for rounding.
+                 * 
+                 * @param row the current row
+                 * @return the difference between the two date values with the
+                 *         given granularity and rounding
+                 */
+                @Override
+                public DataCell getCell(final DataRow row) {
+                    DataCell cell1 = row.getCell(m_col1Idx);
+                    DataCell cell2 = row.getCell(m_col2Idx);
+                    if ((cell1.isMissing()) || (cell2.isMissing())) {
+                        return DataType.getMissingCell();
+                    }
+                    long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
+                    long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
+                    double diffTime = (last - first) / g.getFactor();
+                    BigDecimal bd = new BigDecimal(diffTime);
+                    bd =
+                            bd.setScale(m_rounding.getIntValue(),
+                                    BigDecimal.ROUND_CEILING);
+                    return new DoubleCell(bd.doubleValue());
                 }
-                long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
-                long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
-                double diffTime = (last - first) / g.getFactor();
-                BigDecimal bd = new BigDecimal(diffTime);
-                bd = bd.setScale(m_rounding.getIntValue(),
-                        BigDecimal.ROUND_CEILING);
-                return new DoubleCell(bd.doubleValue());
+            });
+        } else {
+            if (typeofref.equals(TimeDifferenceNodeDialog.CFG_FIXDATE)) {
+                m_time = m_timemodel.getCalendar().getTimeInMillis();
+            } else {
+                m_time  = System.currentTimeMillis();
             }
-        });
+            
+            // append the new column with single cell factory
+            rearranger.append(new SingleCellFactory(
+                    createOutputColumnSpec(inData[0].getDataTableSpec(),
+                            m_newColName.getStringValue())) {
+
+                /**
+                 * Value for the new column is based on the values of two column
+                 * of the row (first and second date column), the selected
+                 * granularity, and the fraction digits for rounding.
+                 * 
+                 * @param row the current row
+                 * @return the difference between the two date values with the
+                 *         given granularity and rounding
+                 */
+                @Override
+                public DataCell getCell(final DataRow row) {
+                    DataCell cell1 = row.getCell(m_col1Idx);
+                    if ((cell1.isMissing())) {
+                        return DataType.getMissingCell();
+                    }
+                    long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
+                    double diffTime = (m_time - first) / g.getFactor();
+                    BigDecimal bd = new BigDecimal(diffTime);
+                    bd =
+                            bd.setScale(m_rounding.getIntValue(),
+                                    BigDecimal.ROUND_CEILING);
+                    return new DoubleCell(bd.doubleValue());
+                }
+            });
+            
+        }
         BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
                 rearranger, exec);
         return new BufferedDataTable[]{out};
@@ -172,7 +224,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check for at least two date columns and auto configure
+        // check for at least one date columns and auto configure
         String firstColName = m_col1.getStringValue();
         String secondColName = m_col2.getStringValue();
         boolean autoConfigure = (firstColName == null || firstColName.isEmpty())
@@ -204,24 +256,26 @@ public class TimeDifferenceNodeModel extends NodeModel {
                 }
             }
         }
-        if (nrDateCols < 2) {
+        if (nrDateCols < 1) {
             m_col1.setStringValue("");
-            m_col2.setStringValue("");
             throw new InvalidSettingsException(
-                    "Input must contain at least two date/time columns!");
+                    "Input must contain at least one date/time columns!");
         }
         m_col1Idx = inSpecs[0].findColumnIndex(m_col1.getStringValue());
-        m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
+        if(nrDateCols >1){
+        	m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
+        }
         // check for first date column in input spec
         if (m_col1Idx < 0) {
             throw new InvalidSettingsException("Column "
                     + m_col1.getStringValue() + " not found in input table");
         }
-        // check for second date column in input spec
-        if (m_col2Idx < 0) {
-            throw new InvalidSettingsException("Column "
-                    + m_col2.getStringValue() + " not found in input table");
-        }
+        // we don't need a second column
+//        // check for second date column in input spec
+//        if (m_col2Idx < 0) {
+//            throw new InvalidSettingsException("Column "
+//                    + m_col2.getStringValue() + " not found in input table");
+//        }
         // return new spec with appended column
         // (time and chosen new column name)
         return new DataTableSpec[]{new DataTableSpec(inSpecs[0],
@@ -250,6 +304,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.saveSettingsTo(settings);
         m_granularity.saveSettingsTo(settings);
         m_rounding.saveSettingsTo(settings);
+        
+        m_typeofreference.saveSettingsTo(settings);
+        m_timemodel.saveSettingsTo(settings);
     }
 
     /**
@@ -263,6 +320,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.loadSettingsFrom(settings);
         m_granularity.loadSettingsFrom(settings);
         m_rounding.loadSettingsFrom(settings);
+        
+        m_typeofreference.loadSettingsFrom(settings);
+        m_timemodel.loadSettingsFrom(settings);
     }
 
     /**
@@ -276,6 +336,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.validateSettings(settings);
         m_granularity.validateSettings(settings);
         m_rounding.validateSettings(settings);
+        
+        m_typeofreference.validateSettings(settings);
+        m_timemodel.validateSettings(settings);
     }
 
     /**
