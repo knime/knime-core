@@ -235,7 +235,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         DataColumnSpecCreator creator;
         int index = 0;
         for (String value : values) {
-            creator = new DataColumnSpecCreator(value, DoubleCell.TYPE);
+            creator = new DataColumnSpecCreator(replaceSpaces(value),
+                    DoubleCell.TYPE);
             colSpec[index++] = creator.createSpec();
         }
         return colSpec;
@@ -311,7 +312,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     continue;
                 }
             }
-            String nominal = r.getCell(nominalIndex).toString();
+            String nominal = replaceSpaces(r.getCell(nominalIndex).toString());
             if (r.getCell(numericIndex).isMissing()) {
                 // ignore missing cells in numeric column
                 continue;
@@ -410,6 +411,24 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                 createOutputTable(inData[0].getDataTableSpec(), colSpecs)
                         .getTable(), exec)};
 
+    }
+
+    /**
+     * Put the string in parentheses if it contains leading or trailing spaces.
+     *
+     * @param string the string to be modified
+     * @return the string starting and ending with parentheses and the appended
+     *          modification string if applicable
+     */
+    private String replaceSpaces(final String string) {
+        StringBuffer sb = new StringBuffer(string);
+        if (string.startsWith(" ")  || string.endsWith(" ")) {
+            // replace the first leading space
+            sb = sb.insert(0, '(');
+            sb = sb.append(')');
+            sb.append("#with_blanks");
+        }
+        return sb.toString();
     }
 
     private double[] calculateStatistic(final Map<Double, Set<RowKey>> map,
