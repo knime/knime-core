@@ -622,7 +622,7 @@ public class PCANodeModel extends NodeModel {
      * @param numericIndices indices of columns to use
      * @param failOnMissingValues if true, throw exception if missing values are
      *            encountered
-     * @param executionContext
+     * @param exec execution context
      * @return vector of column mean values
      * @throws CanceledExecutionException
      */

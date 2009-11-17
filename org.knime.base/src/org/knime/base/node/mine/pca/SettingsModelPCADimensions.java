@@ -335,7 +335,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
     }
 
     /**
-     * @return labels for quality slider
+     * @param spinner spinner component to be updated
      */
     public void configureQualitySlider(final JSpinner spinner) {
 

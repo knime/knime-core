@@ -67,6 +67,7 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
  */
 class DBNodeModel extends NodeModel {
     
+    /** The logger instance used for this and all derived classes. */
     NodeLogger LOGGER = NodeLogger.getLogger(DBNodeModel.class);
     
     /**
@@ -135,7 +136,6 @@ class DBNodeModel extends NodeModel {
      * is, either create a new table or wrap the SQL statement.
      * @param spec the database connection
      * @param newQuery the new query to execute
-     * @param createTable true, if table should be created (e.g. during execute)
      * @return a database connection object
      * @throws InvalidSettingsException if the query to create the new table 
      *         inside the database could not be executed
