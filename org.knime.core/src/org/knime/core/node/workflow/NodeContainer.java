@@ -1232,8 +1232,9 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** Saves all internals that are necessary to mimic the computed result
      * into a new execution result object. This method is called on node
      * instances, which are, e.g. executed on a server and later on read back
-     * into a true KNIME instance (upon which {@link #loadExecutionResult(
-     * NodeContainerExecutionResult, ExecutionMonitor, LoadResult) is called).
+     * into a true KNIME instance (upon which 
+     * {@link #loadExecutionResult(NodeContainerExecutionResult, ExecutionMonitor, LoadResult)}
+     * is called).
      * @param exec For progress information (this method will copy port
      *        objects).
      * @return A new execution result instance.
