@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import javax.swing.SwingUtilities;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -122,7 +124,7 @@ public class OpenViewAction extends Action {
         try {
             final String title = m_nodeContainer.getViewName(m_index) + " - " 
                 + m_nodeContainer.getDisplayLabel();            
-            Display.getDefault().asyncExec(new Runnable() {
+            SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     Node.invokeOpenView(
