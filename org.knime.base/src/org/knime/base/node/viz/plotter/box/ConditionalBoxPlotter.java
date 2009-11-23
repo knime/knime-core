@@ -1,4 +1,5 @@
 /*
+ *
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2009
@@ -43,69 +44,59 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   Feb 25, 2008 (sellien): created
+ *   Nov 23, 2009 (morent): created
  */
-package org.knime.base.node.viz.condbox;
+package org.knime.base.node.viz.plotter.box;
 
-import org.knime.base.node.viz.plotter.box.ConditionalBoxPlotter;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeModel;
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
 
 /**
- * Class for a view of the conditional box plot.
  *
- * @author Stephan Sellien, University of Konstanz
- *
+ * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
-public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
+public class ConditionalBoxPlotter extends BoxPlotter {
 
-    private final ConditionalBoxPlotter m_plotter = new ConditionalBoxPlotter();
-
-    /**
-     * Creates a view for the conditional box plot.
-     *
-     * @param nodeModel the model
-     */
-    protected ConditionalBoxPlotNodeView(
-            final ConditionalBoxPlotNodeModel nodeModel) {
-        super(nodeModel);
-        m_plotter.setDataProvider(nodeModel);
-        getJMenuBar().add(m_plotter.getHiLiteMenu());
-        setComponent(m_plotter);
+    public ConditionalBoxPlotter() {
+        super(new BoxPlotterProperties(true));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void modelChanged() {
-        NodeModel model = getNodeModel();
-        if (model != null && model instanceof ConditionalBoxPlotNodeModel) {
-            ConditionalBoxPlotNodeModel nodemodel =
-                    (ConditionalBoxPlotNodeModel)model;
-            m_plotter.reset();
-            m_plotter.setHiLiteHandler(nodemodel.getInHiLiteHandler(0));
-            m_plotter.setAntialiasing(true);
-            m_plotter.setDataProvider(nodemodel);
-            m_plotter.updatePaintModel();
-            m_plotter.fitToScreen();
+    protected void createNormalizedCoordinates(
+            final Map<DataColumnSpec, double[]> statistics) {
+        // create y-axis that consider the input domain
+        ConditionalBoxPlotNodeModel model =
+            (ConditionalBoxPlotNodeModel)getDataProvider();
+        DataColumnSpec numColSpec = model.getInSpec().getColumnSpec(
+                model.getSettings().numericColumn());
+
+        Map<DataColumnSpec, Coordinate> coordinates =
+                new LinkedHashMap<DataColumnSpec, Coordinate>();
+        for (DataColumnSpec colSpec : statistics.keySet()) {
+            /* Pass the input domain's min and max values of the numerical
+             * column to all box plots by providing the column spec of the
+             * numerical column to all box plots. In this way they all use
+             * the same scale and the whole domain range is displayed. */
+            coordinates.put(colSpec,
+                    Coordinate.createCoordinate(numColSpec));
         }
-    }
+        setCoordinates(coordinates);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onOpen() {
+        DataColumnDomain domain = numColSpec.getDomain();
+        double min = ((DoubleValue)domain.getLowerBound()).getDoubleValue();
+        double max = ((DoubleValue)domain.getUpperBound()).getDoubleValue();
+        createYCoordinate(min, max);
     }
 }

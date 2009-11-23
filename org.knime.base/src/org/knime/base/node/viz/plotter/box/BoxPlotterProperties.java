@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.09.2006 (Fabian Dill): created
  */
@@ -58,31 +58,36 @@ import org.knime.core.data.DoubleValue;
 
 /**
  * Tab to select whether to normalize the drawing or not.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BoxPlotterProperties extends MultiColumnPlotterProperties {
-    
+
     private final BoxPlotAppearanceTab m_normalizeTab;
-    
+
     /**
-     * 
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public BoxPlotterProperties() {
+       this(false);
+    }
+
+    /**
+     * @param normalize The initial value for the normalization.
+     */
+    @SuppressWarnings("unchecked")
+    public BoxPlotterProperties(final boolean normalize) {
         super(DoubleValue.class);
-        m_normalizeTab = new BoxPlotAppearanceTab();
+        m_normalizeTab = new BoxPlotAppearanceTab(normalize);
         addTab(m_normalizeTab.getDefaultName(), m_normalizeTab);
     }
-    
+
     /**
-     * 
+     *
      * @return the checkbox to force normalized presentation.
      */
     public JCheckBox getNormalizeCheckBox() {
         return m_normalizeTab.getNormalizeCheckBox();
     }
-    
-
 }

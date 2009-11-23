@@ -116,6 +116,10 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
 
     private HiLiteHandler m_hiLiteHandler = new HiLiteHandler();
 
+    /** The input table spec. Necessary for passing the input table domain to
+     * the view to allow a normalized visualization respecting the domain. */
+    private DataTableSpec m_inSpec;
+
     /**
      * Creates a conditional box plot node model.
      */
@@ -195,6 +199,10 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         if (warning.length() > 0) {
             setWarningMessage(warning.trim());
         }
+        /* Save inSpec to provide the view a way to consider the input domain
+         * for normalization. */
+        m_inSpec= inSpecs[0];
+
         return new DataTableSpec[]{createOutputSpec(inSpecs[0])};
     }
 
@@ -728,5 +736,19 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
      */
     public DataArray getDataArray(final int index) {
         return m_dataArray;
+    }
+
+    /**
+     * @return the inSpec
+     */
+    public DataTableSpec getInSpec() {
+        return m_inSpec;
+    }
+
+    /**
+     * @return the settings
+     */
+    public ConditionalBoxPlotSettings getSettings() {
+        return m_settings;
     }
 }

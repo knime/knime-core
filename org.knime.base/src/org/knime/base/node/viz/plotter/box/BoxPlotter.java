@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.09.2006 (Fabian Dill): created
  */
@@ -81,39 +81,46 @@ import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * The <code>BoxPlotter</code> calculates, based on the statistical 
- * parameters determined by the 
- * {@link org.knime.base.node.viz.plotter.box.BoxPlotNodeModel}, the 
- * {@link org.knime.base.node.viz.plotter.box.Box}es to 
- * draw in the <code>updateSize</code> method. The drawable box is represented 
- * by a {@link org.knime.base.node.viz.plotter.box.Box} which 
- * holds the mapped value for each statistcal parameter and its x position. The 
- * mild and extreme outliers are set as a 
- * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} used from the 
+ * The <code>BoxPlotter</code> calculates, based on the statistical
+ * parameters determined by the
+ * {@link org.knime.base.node.viz.plotter.box.BoxPlotNodeModel}, the
+ * {@link org.knime.base.node.viz.plotter.box.Box}es to
+ * draw in the <code>updateSize</code> method. The drawable box is represented
+ * by a {@link org.knime.base.node.viz.plotter.box.Box} which
+ * holds the mapped value for each statistcal parameter and its x position. The
+ * mild and extreme outliers are set as a
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} used from the
  * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter}.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BoxPlotter extends BasicPlotter {
-    
-    
+
+
     /** Constant for the space at top and bottom. */
     public static final int OFFSET = 30;
-    
+
     private boolean m_normalize;
-    
-    private Map<DataColumnSpec, Coordinate>m_coordinates;
-    
+
+    private Map<DataColumnSpec, Coordinate> m_coordinates;
+
     private Set<String> m_selectedColumns;
-    
+
     /**
-     * 
      *
      */
     public BoxPlotter() {
-        super(new BoxPlotDrawingPane(), new BoxPlotterProperties());
+        this(new BoxPlotterProperties());
+    }
+
+    /**
+     * @param properties the box plotter properties to be used
+     */
+    public BoxPlotter(final BoxPlotterProperties properties) {
+        super(new BoxPlotDrawingPane(), properties);
         final JCheckBox box = ((BoxPlotterProperties)getProperties())
             .getNormalizeCheckBox();
+        m_normalize = box.isSelected();
         box.addItemListener(new ItemListener() {
             /**
              * {@inheritDoc}
@@ -136,7 +143,7 @@ public class BoxPlotter extends BasicPlotter {
                     getDrawingPane().repaint();
                 }
             });
-        if (getDataProvider() != null 
+        if (getDataProvider() != null
                 && getDataProvider().getDataArray(getDataArrayIdx()) != null
                 && getDataProvider().getDataArray(getDataArrayIdx())
                 .getDataTableSpec() != null) {
@@ -145,8 +152,8 @@ public class BoxPlotter extends BasicPlotter {
                 .getDataTableSpec(), true, m_selectedColumns);
         }
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -163,7 +170,7 @@ public class BoxPlotter extends BasicPlotter {
      */
     @Override
     public void updatePaintModel() {
-        if (getDataProvider() == null 
+        if (getDataProvider() == null
                 || ((BoxPlotDataProvider)getDataProvider())
                     .getStatistics() == null) {
             m_selectedColumns = null;
@@ -189,7 +196,7 @@ public class BoxPlotter extends BasicPlotter {
         for (String colName : m_selectedColumns) {
             int colIdx = tableSpec.findColumnIndex(colName);
             if (colIdx >= 0) {
-                columns.add(new StringCell(colName));                
+                columns.add(new StringCell(colName));
             }
         }
         createNominalXCoordinate(columns);
@@ -210,16 +217,10 @@ public class BoxPlotter extends BasicPlotter {
                 createYCoordinate(min, max);
             } else {
                 // hack to achieve an empty y axis
-                createNominalYCoordinate(new LinkedHashSet<DataCell>()); 
+                createNominalYCoordinate(new LinkedHashSet<DataCell>());
             }
         } else {
-            m_coordinates = new LinkedHashMap<DataColumnSpec, Coordinate>();
-            for (DataColumnSpec colSpec : statistics.keySet()) {
-                m_coordinates.put(colSpec, 
-                        Coordinate.createCoordinate(colSpec));
-            }
-            // hack to achieve an empty y axis
-            createNominalYCoordinate(new LinkedHashSet<DataCell>());
+            createNormalizedCoordinates(statistics);
         }
         ((BoxPlotterProperties)getProperties()).getColumnFilter().update(
                 getDataProvider().getDataArray(getDataArrayIdx())
@@ -227,12 +228,29 @@ public class BoxPlotter extends BasicPlotter {
         updateSize();
     }
 
+
+    /**
+     * @param statistics
+     *
+     */
+    protected void createNormalizedCoordinates(
+            final Map<DataColumnSpec, double[]> statistics) {
+        m_coordinates = new LinkedHashMap<DataColumnSpec, Coordinate>();
+        for (DataColumnSpec colSpec : statistics.keySet()) {
+            m_coordinates.put(colSpec,
+                    Coordinate.createCoordinate(colSpec));
+        }
+        // hack to achieve an empty y axis
+        createNominalYCoordinate(new LinkedHashSet<DataCell>());
+    }
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void updateSize() {
-        if (getDataProvider() == null 
+        if (getDataProvider() == null
                 || ((BoxPlotDataProvider)getDataProvider())
                     .getStatistics() == null) {
             return;
@@ -266,23 +284,23 @@ public class BoxPlotter extends BasicPlotter {
             int height = getDrawingPaneDimension().height - OFFSET;
             int yMin = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.MIN]), height)); 
+                    new DoubleCell(stats[BoxPlotNodeModel.MIN]), height));
             int yLowQuart = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.LOWER_QUARTILE]), 
+                    new DoubleCell(stats[BoxPlotNodeModel.LOWER_QUARTILE]),
                     height));
             int yMed = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
                     new DoubleCell(stats[BoxPlotNodeModel.MEDIAN]), height));
             int yUppQuart = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.UPPER_QUARTILE]), 
+                    new DoubleCell(stats[BoxPlotNodeModel.UPPER_QUARTILE]),
                     height));
             int yMax = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
                     new DoubleCell(stats[BoxPlotNodeModel.MAX]), height));
-            Box box = new Box(x, yMin - (OFFSET / 2), yLowQuart - (OFFSET / 2), 
-                    yMed - (OFFSET / 2), yUppQuart - (OFFSET / 2), 
+            Box box = new Box(x, yMin - (OFFSET / 2), yLowQuart - (OFFSET / 2),
+                    yMed - (OFFSET / 2), yUppQuart - (OFFSET / 2),
                     yMax - (OFFSET / 2), stats);
             box.setColumnName(entry.getKey().getName());
             // whiskers
@@ -304,7 +322,7 @@ public class BoxPlotter extends BasicPlotter {
         outliers.toArray(dots);
         ((BoxPlotDrawingPane)getDrawingPane()).setDotInfoArray(
                 new DotInfoArray(dots));
-        
+
         if (getXAxis() != null && getXAxis().getCoordinate() != null) {
             int boxWidth = (int)getXAxis().getCoordinate()
             .getUnusedDistBetweenTicks(getDrawingPaneDimension().width);
@@ -313,7 +331,7 @@ public class BoxPlotter extends BasicPlotter {
         }
         getDrawingPane().repaint();
     }
-    
+
     /**
      * Sets the outliers as dotinfo to the scatterplotter drawing pane to
      * make them selectable and hilite-able.
@@ -321,17 +339,17 @@ public class BoxPlotter extends BasicPlotter {
      * @param box the box (column).
      * @return the mapped outliers for this column.
      */
-    protected List<DotInfo> updateOutliers(final Coordinate yCoordinate, 
+    protected List<DotInfo> updateOutliers(final Coordinate yCoordinate,
             final Box box) {
         int height = getDrawingPaneDimension().height - OFFSET;
         List<DotInfo> dotList = new ArrayList<DotInfo>();
             int x = box.getX();
             String colName = box.getColumnName();
             // the mild outliers
-            Map<Double, Set<RowKey>> mildOutliers 
+            Map<Double, Set<RowKey>> mildOutliers
                 = ((BoxPlotDataProvider)getDataProvider()).getMildOutliers()
                 .get(colName);
-            for (Map.Entry<Double, Set<RowKey>> entry 
+            for (Map.Entry<Double, Set<RowKey>> entry
                         : mildOutliers.entrySet()) {
                 double value = entry.getKey();
                 for (RowKey key : entry.getValue()) {
@@ -339,8 +357,8 @@ public class BoxPlotter extends BasicPlotter {
                             yCoordinate.calculateMappedValue(
                                     new DoubleCell(value),
                                     height)) - (OFFSET / 2);
-                    DotInfo dot = new DotInfo(x, y, key, 
-                            delegateIsHiLit(key), 
+                    DotInfo dot = new DotInfo(x, y, key,
+                            delegateIsHiLit(key),
                             ColorAttr.DEFAULT, 1, 0);
                     dot.setXDomainValue(new StringCell(colName));
                     dot.setYDomainValue(new DoubleCell(value));
@@ -349,10 +367,10 @@ public class BoxPlotter extends BasicPlotter {
                 }
             }
             // the extreme outliers
-            Map<Double, Set<RowKey>> extremeOutliers 
+            Map<Double, Set<RowKey>> extremeOutliers
                 = ((BoxPlotDataProvider)getDataProvider()).getExtremeOutliers()
                 .get(colName);
-            for (Map.Entry<Double, Set<RowKey>> entry 
+            for (Map.Entry<Double, Set<RowKey>> entry
                         : extremeOutliers.entrySet()) {
                 double value = entry.getKey();
                 for (RowKey key : entry.getValue()) {
@@ -360,8 +378,8 @@ public class BoxPlotter extends BasicPlotter {
                             yCoordinate.calculateMappedValue(
                                     new DoubleCell(value),
                                     height)) - (OFFSET / 2);
-                    DotInfo dot = new DotInfo(x, y, key, 
-                            delegateIsHiLit(key), ColorAttr.DEFAULT, 1, 
+                    DotInfo dot = new DotInfo(x, y, key,
+                            delegateIsHiLit(key), ColorAttr.DEFAULT, 1,
                             0);
                     dot.setShape(ShapeFactory.getShape(ShapeFactory.CROSS));
                     dot.setXDomainValue(new StringCell(colName));
@@ -371,7 +389,7 @@ public class BoxPlotter extends BasicPlotter {
             }
             return dotList;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -386,7 +404,7 @@ public class BoxPlotter extends BasicPlotter {
     @Override
     public void hiLite(final KeyEvent event) {
         // the hilite handler holds the keys
-        // in the update outliers the hilite handler is asked directly if a 
+        // in the update outliers the hilite handler is asked directly if a
         // dot is hilited or not -> update paint model is enough.
         updatePaintModel();
     }
@@ -426,7 +444,7 @@ public class BoxPlotter extends BasicPlotter {
     @Override
     public void unHiLite(final KeyEvent event) {
         // the hilite handler holds the keys
-        // in the update outliers the hilite handler is asked directly if a 
+        // in the update outliers the hilite handler is asked directly if a
         // dot is hilited or not -> update paint model is enough.
         updatePaintModel();
     }
@@ -439,13 +457,36 @@ public class BoxPlotter extends BasicPlotter {
         delegateUnHiLite(((BoxPlotDrawingPane)getDrawingPane())
                 .getSelectedDots());
         updatePaintModel();
-    }    
+    }
 
     /**
      * {@inheritDoc}
      */
     public void unHiLiteAll(final KeyEvent event) {
         updatePaintModel();
+    }
+
+    /**
+     * @return the selectedColumns
+     */
+    protected Set<String> getSelectedColumns() {
+        return m_selectedColumns;
+    }
+
+    /**
+     * @return the coordinates
+     */
+    protected Map<DataColumnSpec, Coordinate> getCoordinates() {
+        return m_coordinates;
+    }
+
+
+    /**
+     * @param coordinates the coordinates to set
+     */
+    protected void setCoordinates(
+            final Map<DataColumnSpec, Coordinate> coordinates) {
+        m_coordinates = coordinates;
     }
 
 }
