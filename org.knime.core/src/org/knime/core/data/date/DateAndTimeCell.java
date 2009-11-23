@@ -60,8 +60,12 @@ import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * Cell storing a time and/or date. Time is represented by a {@link Calendar} 
@@ -79,6 +83,14 @@ public class DateAndTimeCell extends DataCell
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DateAndTimeCell.class);
+    
+    
+    /** Static method indicating preferred value class as required by 
+     * DataCell API.
+     * @return DateAndTimeValue.class */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return DateAndTimeValue.class;
+    }
     
     /**
      * 
@@ -488,6 +500,38 @@ public class DateAndTimeCell extends DataCell
     @Override
     public boolean hasMillis() {
         return m_hasMillis;
+    }
+    
+    private static final String CFG_HAS_DATE = "hasDate";
+    private static final String CFG_HAS_TIME = "hasTime";
+    private static final String CFG_HAS_MILLIS = "hasMillis";
+    private static final String CFG_TIME_IN_MILLIS = "timeInMillis";
+    
+    /** Save this cell to the argument config. This method writes directly
+     * into the config object, no sub-config is created.
+     * @param config To save to.
+     * @see #load(ConfigRO)
+     */
+    public void save(final ConfigWO config) {
+        config.addBoolean(CFG_HAS_DATE, m_hasDate);
+        config.addBoolean(CFG_HAS_TIME, m_hasTime);
+        config.addBoolean(CFG_HAS_MILLIS, m_hasMillis);
+        config.addLong(CFG_TIME_IN_MILLIS, m_utcCalendar.getTimeInMillis());
+    }
+    
+    /** Load a data cell that was previously written with the 
+     * {@link #save(ConfigWO)} method.
+     * @param config To load from.
+     * @return A new cell loaded from the argument.
+     * @throws InvalidSettingsException If the config is incomplete or invalid.
+     */
+    public static DateAndTimeCell load(final ConfigRO config) 
+        throws InvalidSettingsException {
+        boolean hasDate = config.getBoolean(CFG_HAS_DATE);
+        boolean hasTime = config.getBoolean(CFG_HAS_TIME);
+        boolean hasMillis = config.getBoolean(CFG_HAS_MILLIS);
+        long timeInMillis = config.getLong(CFG_TIME_IN_MILLIS);
+        return new DateAndTimeCell(timeInMillis, hasDate, hasTime, hasMillis);
     }
 
     // ***************************************************************
