@@ -76,7 +76,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     private static final String CFGKEY_EXCL = "ExclList";
 
-    private static final String CFGKEY_ENFORCE = "keep_all_columns_selected";
+    private static final String CFGKEY_KEEPALL = "keep_all_columns_selected";
 
     private final String m_configName;
 
@@ -84,7 +84,7 @@ public class SettingsModelFilterString extends SettingsModel {
 
     private final List<String> m_exclList;
 
-    private boolean m_enforceInclusion = false;
+    private boolean m_keepAll = false;
 
     /**
      * Creates a new object holding a list of strings in an exclude list and a
@@ -109,13 +109,12 @@ public class SettingsModelFilterString extends SettingsModel {
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
      * @param defaultExclList the initial value for the exclude list.
-     * @param enforceInclusion true, if enforce inclusion list is on, otherwise
-     *        exclusion list
+     * @param keepAll true, if all column should be kept selected
      */
     public SettingsModelFilterString(final String configName,
             final Collection<String> defaultInclList,
             final Collection<String> defaultExclList,
-            final boolean enforceInclusion) {
+            final boolean keepAll) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
@@ -147,7 +146,7 @@ public class SettingsModelFilterString extends SettingsModel {
                 }
             }
         }
-        m_enforceInclusion = enforceInclusion;
+        m_keepAll = keepAll;
     }
 
     /**
@@ -173,38 +172,37 @@ public class SettingsModelFilterString extends SettingsModel {
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultInclList the initial value for the include list
      * @param defaultExclList the initial value for the exclude list.
-     * @param enforceInclusion true, if enforce inclusion list, otherwise
-     *        exclusion list
+     * @param keepAll true, if all column should be kept selected
      */
     public SettingsModelFilterString(final String configName,
             final String[] defaultInclList, final String[] defaultExclList,
-            final boolean enforceInclusion) {
+            final boolean keepAll) {
         this(configName, Arrays.asList(defaultInclList),
-                Arrays.asList(defaultExclList), enforceInclusion);
+                Arrays.asList(defaultExclList), keepAll);
     }
 
     /**
-     * Returns the status of the enforce inclusion / exclusion option.
-     * @return true, if the inclusion list is forced to stay the same
+     * Returns the status of the keep-all columns selection box.
+     * @return true, if all column should be kept selected
      */
-    public boolean isEnforceInclusion() {
-        return m_enforceInclusion;
+    public boolean isKeepAllSelected() {
+        return m_keepAll;
     }
 
     /**
-     * Set a enforce inclusion / exclusion state.
-     * @param inclusion true, if enforce inclusion is on, otherwise exclusion
+     * Set a new keep all selection state.
+     * @param selected if keep all box is selected or not
      */
-    public void setEnforceInclusion(final boolean inclusion) {
-    	boolean notify = setEnforceInclusionNO(inclusion);
+    public void setKeepAllSelected(final boolean selected) {
+    	boolean notify = setKeepAllSelectedNO(selected);
     	if (notify) {
     		notifyChangeListeners();
     	}
     }
 
-    private boolean setEnforceInclusionNO(final boolean inclusion) {
-    	boolean notify = (m_enforceInclusion != inclusion);
-    	m_enforceInclusion = inclusion;
+    private boolean setKeepAllSelectedNO(final boolean selected) {
+    	boolean notify = (m_keepAll != selected);
+    	m_keepAll = selected;
     	return notify;
     }
 
@@ -226,7 +224,7 @@ public class SettingsModelFilterString extends SettingsModel {
     protected SettingsModelFilterString createClone() {
         return new SettingsModelFilterString(m_configName,
                 new LinkedList<String>(m_inclList), new LinkedList<String>(
-                        m_exclList), m_enforceInclusion);
+                        m_exclList), m_keepAll);
     }
 
     /**
@@ -253,11 +251,11 @@ public class SettingsModelFilterString extends SettingsModel {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             Config lists = settings.getConfig(m_configName);
-            // the way we do this, partially correct settings will be partially
+            // the way we do this, partially correct settings will be parially
             // transferred into the dialog. Which is okay, I guess.
             setIncludeList(lists.getStringArray(CFGKEY_INCL, (String[])null));
             setExcludeList(lists.getStringArray(CFGKEY_EXCL, (String[])null));
-            setEnforceInclusion(lists.getBoolean(CFGKEY_ENFORCE, false));
+            setKeepAllSelected(lists.getBoolean(CFGKEY_KEEPALL, false));
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
         } catch (InvalidSettingsException ise) {
@@ -318,16 +316,9 @@ public class SettingsModelFilterString extends SettingsModel {
         return notify;
     }
 
-    /**
-     * Applies a new list of include and exclude values.
-     * @param incl list of values to include
-     * @param excl list of values to exclude
-     * @param forceInclude true, if all new values should be put into the
-     *        include list, otherwise false - exclude list
-     */
     public final void setNewValues(final Collection<String> incl,
-    		final Collection<String> excl, final boolean forceInclude) {
-    	boolean notify = setEnforceInclusionNO(forceInclude);
+    		final Collection<String> excl, final boolean keepAll) {
+    	boolean notify = setKeepAllSelectedNO(keepAll);
     	notify |= setIncludeListNO(incl);
     	notify |= setExcludeListNO(excl);
     	if (notify) {
@@ -404,8 +395,8 @@ public class SettingsModelFilterString extends SettingsModel {
             String[] excl = lists.getStringArray(CFGKEY_EXCL);
             setIncludeList(incl);
             setExcludeList(excl);
-            boolean enforceIncl = lists.getBoolean(CFGKEY_ENFORCE, false);
-            setEnforceInclusion(enforceIncl);
+            boolean keepAll = lists.getBoolean(CFGKEY_KEEPALL, false);
+            setKeepAllSelected(keepAll);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
         }
@@ -421,7 +412,7 @@ public class SettingsModelFilterString extends SettingsModel {
                 new String[0]));
         lists.addStringArray(CFGKEY_EXCL, getExcludeList().toArray(
                 new String[0]));
-        lists.addBoolean(CFGKEY_ENFORCE, m_enforceInclusion);
+        lists.addBoolean(CFGKEY_KEEPALL, m_keepAll);
     }
 
     /**

@@ -109,14 +109,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered
-     * @param enforceInclusionExclusion true, if inclusion / exclusion options
-     *        are shown
+     * @param showKeepAllBox if the keep-all check box should be visible
      *
      */
     @SuppressWarnings("unchecked")
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
-            final int inPortIndex, final boolean enforceInclusionExclusion) {
-        this(model, inPortIndex, enforceInclusionExclusion, DataValue.class);
+            final int inPortIndex, final boolean showKeepAllBox) {
+        this(model, inPortIndex, showKeepAllBox, DataValue.class);
     }
 
 
@@ -151,15 +150,14 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered
-     * @param enforceInclusionExclusion true, if the inclusion / exclusion 
-     *        options are available
+     * @param showKeepAllBox if the keep-all check box should be visible
      * @param allowedTypes filter for the columns all column not compatible with
      *            any of the allowed types are not displayed
      */
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
-            final int inPortIndex, final boolean enforceInclusionExclusion,
+            final int inPortIndex, final boolean showKeepAllBox,
             final Class<? extends DataValue>... allowedTypes) {
-        this(model, inPortIndex, enforceInclusionExclusion,
+        this(model, inPortIndex, showKeepAllBox,
                 new ColumnFilterPanel.ValueClassFilter(allowedTypes));
     }
 
@@ -193,21 +191,19 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered
-     * @param enforceInclusionExclusion true, if the inclusion / exclusion
-     *        options are available
+     * @param showKeepAllBox if the keep-all check box should be visible
      * @param filter for the columns, all column not compatible with
      *            any of the allowed types are not displayed
      */
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
-            final int inPortIndex, final boolean enforceInclusionExclusion,
+            final int inPortIndex, final boolean showKeepAllBox,
             final ColumnFilter filter) {
         super(model);
 
         m_inPortIndex = inPortIndex;
         m_specInFilter = null;
 
-        m_columnFilter = new ColumnFilterPanel(
-                enforceInclusionExclusion, filter);
+        m_columnFilter = new ColumnFilterPanel(showKeepAllBox, filter);
         getComponentPanel().add(m_columnFilter);
 
         // when the user input changes we need to update the model.
@@ -236,15 +232,15 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 (SettingsModelFilterString)getModel();
         final Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
         final Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
-        final boolean compEnforceIncl = m_columnFilter.isEnforceInclusion();
+        final boolean compKeepAll = m_columnFilter.isKeepAllSelected();
         final List<String> modelIncl = filterModel.getIncludeList();
         final List<String> modelExcl = filterModel.getExcludeList();
-        final boolean modelEnforceIncl = filterModel.isEnforceInclusion();
+        final boolean modelKeepAll = filterModel.isKeepAllSelected();
 
         boolean update =
                 (compIncl.size() != modelIncl.size())
                         || (compExcl.size() != modelExcl.size()
-                        		|| compEnforceIncl != modelEnforceIncl);
+                        		|| compKeepAll != modelKeepAll);
 
         if (!update) {
             // update if the current spec and the spec we last updated with
@@ -272,16 +268,12 @@ public class DialogComponentColumnFilter extends DialogComponent {
         if (update) {
             m_specInFilter = (DataTableSpec)getLastTableSpec(m_inPortIndex);
             if (m_specInFilter == null) {
-                // the component doesn't take a null spec. create an empty one
+                // the component doesn't take a null spec. Create an empty one
                 m_specInFilter = new DataTableSpec();
             }
-            m_columnFilter.setEnforceIncludeExclude(modelEnforceIncl);
-            if (modelEnforceIncl) {
-                m_columnFilter.update(m_specInFilter, modelIncl);
-            } else {
-                m_columnFilter.update(m_specInFilter, modelExcl);
-            }
-                
+            m_columnFilter.update(m_specInFilter, true, filterModel
+                    .getExcludeList());
+            m_columnFilter.setKeepAllSelected(modelKeepAll);
         }
 
         // also update the enable status
@@ -292,13 +284,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * transfers the settings from the component into the settings model.
      */
     private void updateModel() {
-    	final boolean enforceIncl = m_columnFilter.isEnforceInclusion();
+    	final boolean keepAll = m_columnFilter.isKeepAllSelected();
     	final SettingsModelFilterString filterModel =
     		(SettingsModelFilterString)getModel();
     	final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
         final Set<String> exclList = m_columnFilter.getExcludedColumnSet();
 
-        filterModel.setNewValues(inclList, exclList, enforceIncl);
+        filterModel.setNewValues(inclList, exclList, keepAll);
     }
 
     /**

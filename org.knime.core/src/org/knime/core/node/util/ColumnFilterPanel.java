@@ -50,9 +50,12 @@ package org.knime.core.node.util;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -67,14 +70,12 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
@@ -89,7 +90,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -127,11 +127,8 @@ public class ColumnFilterPanel extends JPanel {
     /** Highlight all search hits in the exclude model. */
     private final JCheckBox m_markAllHitsExcl;
 
-    /** Radio button for the exclusion option. */
-    private final JRadioButton m_enforceExclusion;
-    
-    /** Radio button for the inclusion option. */
-    private final JRadioButton m_enforceInclusion;
+    /** Checkbox that enabled to keep all column in include list. */
+    private final JCheckBox m_keepAllBox;
 
     /** Remove all button. */
     private final JButton m_remAllButton;
@@ -261,16 +258,15 @@ public class ColumnFilterPanel extends JPanel {
      * the exclude list. The include list then will contain all values to
      * filter.
      *
-     * @param enforceInclusionExclusion true, if the enforce 
-     *        inclusion / exclusion options are available
+     * @param showKeepAllBox <code>true</code>, if an check box to keep all
      * columns is shown
      *
-     * @see #update(DataTableSpec, Collection)
-     * @see #update(DataTableSpec, String[])
+     * @see #update(DataTableSpec, boolean, Collection)
+     * @see #update(DataTableSpec, boolean, String[])
      */
     @SuppressWarnings("unchecked")
-    public ColumnFilterPanel(final boolean enforceInclusionExclusion) {
-        this(enforceInclusionExclusion, DataValue.class);
+    public ColumnFilterPanel(final boolean showKeepAllBox) {
+        this(showKeepAllBox, DataValue.class);
     }
 
     /**
@@ -281,16 +277,14 @@ public class ColumnFilterPanel extends JPanel {
      *
      * @param filterValueClasses an array of type {@link DataValue} classes only
      *            allowed for selection. Will be check during update
-     * @param enforceInclusionExclusion true, if the enforce inclusion / 
-     *        exclusion options are available
-     *        
-     * @see #update(DataTableSpec, Collection)
-     * @see #update(DataTableSpec, String...)
+     * @param showKeepAllBox true, if an check box to keep all columns is shown
+     *
+     * @see #update(DataTableSpec, boolean, Collection)
+     * @see #update(DataTableSpec, boolean, String...)
      */
-    public ColumnFilterPanel(final boolean enforceInclusionExclusion,
+    public ColumnFilterPanel(final boolean showKeepAllBox,
             final Class<? extends DataValue>... filterValueClasses) {
-        this(enforceInclusionExclusion, 
-                new ValueClassFilter(filterValueClasses));
+        this(showKeepAllBox, new ValueClassFilter(filterValueClasses));
     }
 
     /**
@@ -338,14 +332,13 @@ public class ColumnFilterPanel extends JPanel {
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
-     * @param showForceButtons true, if the inclusion and exclusion toggles 
-     *        are visible
+     * @param showKeepAllBox true, if an check box to keep all columns is shown
      * @param filter specifies valid column values. Will be check during update
      *
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      */
-    public ColumnFilterPanel(final boolean showForceButtons,
+    public ColumnFilterPanel(final boolean showKeepAllBox,
             final ColumnFilter filter) {
         m_filter = filter;
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
@@ -501,27 +494,24 @@ public class ColumnFilterPanel extends JPanel {
         buttonPan2.setBorder(border);
         buttonPan2.add(buttonPan);
 
-        // add force incl/excl buttons
-        final ButtonGroup forceGroup;
-        if (showForceButtons) {
-            forceGroup = new ButtonGroup();
-            m_enforceInclusion = new JRadioButton("Enforce inclusion");
-            m_enforceInclusion.setToolTipText(
-                    "If the set of input columns changes, "
-                    + "additional columns are excluded.");
-            forceGroup.add(m_enforceInclusion);
-            includePanel.add(m_enforceInclusion, BorderLayout.SOUTH);
-            m_enforceExclusion = new JRadioButton("Enforce exclusion");
-            m_enforceExclusion.setToolTipText(
-                    "If the set of input columns changes, "
-                    + "additional columns are included.");
-            forceGroup.add(m_enforceExclusion);
-            m_enforceExclusion.doClick();
-            excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
+        // add 'keep all' checkbox
+        if (showKeepAllBox) {
+            m_keepAllBox = new JCheckBox("Always include all columns");
+            m_keepAllBox.setToolTipText("If the set of input columns changes, "
+                    + "all columns stay included.");
+            m_keepAllBox.addItemListener(new ItemListener() {
+                /** {@inheritDoc} */
+                @Override
+                public void itemStateChanged(final ItemEvent ie) {
+                    boolean keepAll = m_keepAllBox.isSelected();
+                    if (keepAll) {
+                        onAddAll();
+                    }
+                    enabledComponents(!keepAll);
+                }
+            });
         } else {
-            forceGroup = null;
-            m_enforceInclusion = null;
-            m_enforceExclusion = null;
+            m_keepAllBox = null;
         }
 
         // adds include, button, exclude component
@@ -530,8 +520,17 @@ public class ColumnFilterPanel extends JPanel {
         center.add(excludePanel);
         center.add(buttonPan2);
         center.add(includePanel);
+        JPanel all = new JPanel();
+        all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
+        all.add(center);
+        if (m_keepAllBox != null) {
+            JPanel keepAllPanel = new JPanel(
+                    new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            keepAllPanel.add(m_keepAllBox);
+            all.add(keepAllPanel);
+        }
         super.setLayout(new GridLayout(1, 1));
-        super.add(center);
+        super.add(all);
     }
 
     /**
@@ -540,24 +539,27 @@ public class ColumnFilterPanel extends JPanel {
      */
     @Override
     public void setEnabled(final boolean enabled) {
-        m_searchFieldIncl.setEnabled(enabled);
-        m_searchButtonIncl.setEnabled(enabled);
-        m_searchFieldExcl.setEnabled(enabled);
-        m_searchButtonExcl.setEnabled(enabled);
-        m_inclList.setEnabled(enabled);
-        m_exclList.setEnabled(enabled);
-        m_markAllHitsIncl.setEnabled(enabled);
-        m_markAllHitsExcl.setEnabled(enabled);
-        m_remAllButton.setEnabled(enabled);
-        m_remButton.setEnabled(enabled);
-        m_addAllButton.setEnabled(enabled);
-        m_addButton.setEnabled(enabled);
-        if (m_enforceInclusion != null) {
-            m_enforceInclusion.setEnabled(enabled);
+        super.setEnabled(enabled);
+        if (m_keepAllBox != null) {
+            m_keepAllBox.setEnabled(enabled);
         }
-        if (m_enforceExclusion != null) {
-            m_enforceExclusion.setEnabled(enabled);
-        }
+        boolean newEnabled = enabled && !isKeepAllSelected();
+        enabledComponents(newEnabled);
+    }
+
+    private void enabledComponents(final boolean newEnabled) {
+        m_searchFieldIncl.setEnabled(newEnabled);
+        m_searchButtonIncl.setEnabled(newEnabled);
+        m_searchFieldExcl.setEnabled(newEnabled);
+        m_searchButtonExcl.setEnabled(newEnabled);
+        m_inclList.setEnabled(newEnabled);
+        m_exclList.setEnabled(newEnabled);
+        m_markAllHitsIncl.setEnabled(newEnabled);
+        m_markAllHitsExcl.setEnabled(newEnabled);
+        m_remAllButton.setEnabled(newEnabled);
+        m_remButton.setEnabled(newEnabled);
+        m_addAllButton.setEnabled(newEnabled);
+        m_addButton.setEnabled(newEnabled);
     }
 
     /**
@@ -600,39 +602,21 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Return true if the inclusion option is selected, otherwise false.
-     * Method can only be called when the inclusion/exclusion option
-     * has been enabled through the constructor.
-     * @return true, if inclusion option is selected, otherwise false
+     * If the keep all box is visible and is selected.
+     * @return true, if keep all columns check box is selected, otherwise false
      */
-    public final boolean isEnforceInclusion() {
-        if (m_enforceInclusion == null || m_enforceExclusion == null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Method #isEnforcedInclusion() should not be called, "
-                + "when the enforce inclusion/exclusion option is turned off.");
-        }
-        return m_enforceInclusion != null && m_enforceInclusion.isSelected();
+    public final boolean isKeepAllSelected() {
+        return m_keepAllBox != null && m_keepAllBox.isSelected();
     }
 
     /**
-     * Set the inclusion (true) or exclusion option. Method can only be called 
-     * when the inclusion/exclusion option has been enabled through the 
-     * constructor.
-     * @param inclusion the (new) inclusion state or false for exclusion
+     * Sets a new selection for the keep all columns box.
+     * @param select true, if the box should be selected
      */
-    public final void setEnforceIncludeExclude(final boolean inclusion) {
-        if (m_enforceInclusion == null || m_enforceExclusion == null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Method #setEnforceInclusionExclusion(boolean) "
-                + "should not be called, when enforce inclusion/"
-                + "exclusion option is turned off.");
-        }
-        if (m_enforceInclusion != null && m_enforceExclusion != null) {
-            if (inclusion) {
-                m_enforceInclusion.doClick();
-            } else {
-                m_enforceExclusion.doClick();
-            }                
+    public final void setKeepAllSelected(final boolean select) {
+        if (m_keepAllBox != null) {
+            m_keepAllBox.setSelected(select);
+            enabledComponents(m_keepAllBox.isEnabled() && !select);
         }
     }
 
@@ -658,6 +642,7 @@ public class ColumnFilterPanel extends JPanel {
                 m_exclMdl.addElement(c);
             }
         }
+        setKeepAllSelected(false);
         if (changed) {
             fireFilteringChangedEvent();
         }
@@ -678,6 +663,7 @@ public class ColumnFilterPanel extends JPanel {
                 m_exclMdl.addElement(c);
             }
         }
+        setKeepAllSelected(false);
         if (changed) {
             fireFilteringChangedEvent();
         }
@@ -727,40 +713,6 @@ public class ColumnFilterPanel extends JPanel {
             fireFilteringChangedEvent();
         }
     }
-    
-    /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contain all column names
-     * from the spec afterwards. Method can only be called when the 
-     * inclusion/exclusion option has been enabled through the constructor.
-     *
-     * @param spec the spec to retrieve the column names from
-     * @param cells an array of data cells to either in- or exclude depending
-     *        on the inclusion/exclusion option that need to be set before
-     */
-    public void update(final DataTableSpec spec, final String... cells) {
-        update(spec, isEnforceInclusion(), Arrays.asList(cells));
-    }
-
-    /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
-     * from the spec afterwards. Method can only be called when the 
-     * inclusion/exclusion option has been enabled through the constructor.
-     *
-     * @param spec the spec to retrieve the column names from
-     * @param list the list of columns to exclude or include depending on the
-     *        inclusion/exclusion option that need to be set before
-     */
-    public void update(final DataTableSpec spec, 
-            final Collection<String> list) {
-        if (m_enforceExclusion == null || m_enforceInclusion == null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpec,boolean,...) when " +
-                "enforcing inclusion/exclusion option is turned off.");
-        }
-        updateLists(spec, !isEnforceInclusion(), list);
-    }
 
     /**
      * Updates this filter panel by removing all current selections from the
@@ -770,12 +722,11 @@ public class ColumnFilterPanel extends JPanel {
      * @param spec the spec to retrieve the column names from
      * @param exclude the flag if <code>cells</code> contains the columns to
      *            exclude (otherwise include).
-     * @param cells an array of data cells to either in- or exclude depending
-     *        on the <code>exclude</code> flag
+     * @param cells an array of data cells to either in- or exclude.
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final String... cells) {
-        update(spec, exclude, Arrays.asList(cells));
+        this.update(spec, exclude, Arrays.asList(cells));
     }
 
     /**
@@ -786,20 +737,9 @@ public class ColumnFilterPanel extends JPanel {
      * @param spec the spec to retrieve the column names from
      * @param exclude the flag if <code>list</code> contains the columns to
      *            exclude otherwise include
-     * @param list the list of columns to exclude or include depending on
-     *        the <code>exclude</code> flag
+     * @param list the list of columns to exclude or include
      */
     public void update(final DataTableSpec spec, final boolean exclude,
-            final Collection<String> list) {
-        if (m_enforceExclusion != null || m_enforceInclusion != null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpec,...) when "
-                +  "enforcing inclusion/exclusion option in your dialog.");
-        }
-        updateLists(spec, exclude, list);
-    }
-
-    private void updateLists(final DataTableSpec spec, final boolean exclude,
             final Collection<String> list) {
         assert (spec != null && list != null);
         m_order.clear();
@@ -813,23 +753,27 @@ public class ColumnFilterPanel extends JPanel {
             }
             final String c = cSpec.getName();
             m_order.add(cSpec);
-            if (exclude) {
-                if (list.contains(c)) {
-                    m_exclMdl.addElement(cSpec);
-                } else {
-                    m_inclMdl.addElement(cSpec);
-                }
+            if (isKeepAllSelected()) {
+                m_inclMdl.addElement(cSpec);
             } else {
-                if (list.contains(c)) {
-                    m_inclMdl.addElement(cSpec);
+                if (exclude) {
+                    if (list.contains(c)) {
+                        m_exclMdl.addElement(cSpec);
+                    } else {
+                        m_inclMdl.addElement(cSpec);
+                    }
                 } else {
-                    m_exclMdl.addElement(cSpec);
+                    if (list.contains(c)) {
+                        m_inclMdl.addElement(cSpec);
+                    } else {
+                        m_exclMdl.addElement(cSpec);
+                    }
                 }
             }
         }
         repaint();
     }
-    
+
     /**
      * Returns all columns from the exclude list.
      *
