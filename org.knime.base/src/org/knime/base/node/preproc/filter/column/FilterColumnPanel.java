@@ -546,10 +546,9 @@ class FilterColumnPanel extends JPanel {
     /**
      * Updates this filter panel by removing all current selections from the
      * include and exclude list. The include list will contains all column names
-     * from the spec afterwards. Method can only be called when the 
-     * inclusion/exclusion option has been enabled through the constructor.
-     *
+     * from the spec afterwards.
      * @param spec the spec to retrieve the column names from
+     * @param selOption selection option {@link SelectionOption}
      * @param list the list of columns to exclude or include depending on the
      *        inclusion/exclusion option that need to be set before
      */
