@@ -52,9 +52,10 @@ package org.knime.base.node.preproc.colconvert.numbertostring;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
+import org.knime.base.node.preproc.colconvert.ColConvertNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -72,6 +73,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -85,14 +87,18 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
  */
 public class NumberToStringNodeModel extends NodeModel {
 
+    /* Node Logger of this class. */
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(ColConvertNodeModel.class);
+
     /**
      * Key for the included columns in the NodeSettings.
      */
-    public static final String CFG_COLUMNS = "include";
+    public static final String CFG_INCLUDED_COLUMNS = "include";
 
     /** The included columns. */
-    private final SettingsModelFilterString m_columns =
-            new SettingsModelFilterString(CFG_COLUMNS);
+    private final SettingsModelFilterString m_inclCols =
+            new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
 
     /**
      * Constructor with one inport and one outport.
@@ -107,7 +113,12 @@ public class NumberToStringNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger colre = findColumnIndices(inSpecs[0]);
+        // find indices to work on
+        int[] indices = findColumnIndices(inSpecs[0]);
+        ConverterFactory converterFac =
+                new ConverterFactory(indices, inSpecs[0]);
+        ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
+        colre.replace(converterFac, indices);
         DataTableSpec newspec = colre.createSpec();
         return new DataTableSpec[]{newspec};
     }
@@ -118,70 +129,75 @@ public class NumberToStringNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        StringBuilder warnings = new StringBuilder();
+        // find indices to work on.
         DataTableSpec inspec = inData[0].getDataTableSpec();
-        ColumnRearranger colre = findColumnIndices(inspec);
+        List<String> inclcols = m_inclCols.getIncludeList();
+        if (inclcols.size() == 0) {
+            // nothing to convert, let's return the input table.
+            setWarningMessage("No columns selected,"
+                    + " returning input DataTable.");
+            return new BufferedDataTable[]{inData[0]};
+        }
+        int[] indices = findColumnIndices(inData[0].getSpec());
+        ConverterFactory converterFac = new ConverterFactory(indices, inspec);
+        ColumnRearranger colre = new ColumnRearranger(inspec);
+        colre.replace(converterFac, indices);
+
         BufferedDataTable resultTable =
                 exec.createColumnRearrangeTable(inData[0], colre, exec);
+        String errorMessage = converterFac.getErrorMessage();
+
+        if (errorMessage.length() > 0) {
+            warnings.append("Problems occurred, see Console messages.\n");
+        }
+        if (warnings.length() > 0) {
+            LOGGER.warn(errorMessage);
+            setWarningMessage(warnings.toString());
+        }
         return new BufferedDataTable[]{resultTable};
     }
 
-    private ColumnRearranger findColumnIndices(final DataTableSpec spec) {
-        final List<String> columnList;
-        if (m_columns.isEnforceInclusion()) {
-            columnList = m_columns.getIncludeList();
+    private int[] findColumnIndices(final DataTableSpec spec)
+            throws InvalidSettingsException {
+        List<String> inclcols = m_inclCols.getIncludeList();
+        StringBuilder warnings = new StringBuilder();
+        if (inclcols.size() == 0) {
+            warnings.append("No columns selected");
+        }
+        Vector<Integer> indicesvec = new Vector<Integer>();
+        if (m_inclCols.isKeepAllSelected()) {
+            for (DataColumnSpec cspec : spec) {
+                if (cspec.getType().isCompatible(DoubleValue.class)) {
+                    indicesvec.add(spec.findColumnIndex(cspec.getName()));
+                }
+            }
         } else {
-            columnList = m_columns.getExcludeList();
-        }
-
-        // compose list of included column indices
-        final ArrayList<Integer> columns = new ArrayList<Integer>(); 
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            DataType type = spec.getColumnSpec(i).getType();
-            if (!type.isCompatible(DoubleValue.class)) {
-                continue;
-            }
-            String colName = spec.getColumnSpec(i).getName();
-            if (m_columns.isEnforceInclusion()) {
-                // if include column list does contain the column
-                if (columnList.contains(colName)) {
-                    columns.add(i);
-                }
-            } else {
-                // if exclude column list does not contain the column
-                if (!columnList.contains(colName)) {
-                    columns.add(i);
+            for (int i = 0; i < inclcols.size(); i++) {
+                int colIndex = spec.findColumnIndex(inclcols.get(i));
+                if (colIndex >= 0) {
+                    DataType type = spec.getColumnSpec(colIndex).getType();
+                    if (type.isCompatible(DoubleValue.class)) {
+                        indicesvec.add(colIndex);
+                    } else {
+                        warnings.append("Ignoring column \""
+                                        + spec.getColumnSpec(colIndex).getName()
+                                        + "\"\n");
+                    }
+                } else {
+                    throw new InvalidSettingsException("Column \""
+                            + inclcols.get(i) + "\" not found.");
                 }
             }
         }
-        
-        if (columns.isEmpty()) {
-            setWarningMessage("No columns selected,"
-                    + " returning input DataTable.");
-        }           
-        
-        // generated warning message
-        StringBuilder warning = new StringBuilder();
-        // check if all specified columns exist in the input spec
-        for (String name : columnList) {
-            if (!spec.containsName(name)) {
-                if (warning.length() > 0) {
-                    warning.append(',');
-                } 
-                warning.append(name);
-            }
+        if (warnings.length() > 0) {
+            setWarningMessage(warnings.toString());
         }
-        if (warning.length() > 0) {
-            setWarningMessage("Some columns are not available: " 
-                    + warning.toString());
-        }
-        
-        int[] indices = new int[columns.size()];
+        int[] indices = new int[indicesvec.size()];
         for (int i = 0; i < indices.length; i++) {
-            indices[i] = columns.get(i);
+            indices[i] = indicesvec.get(i);
         }
-        ColumnRearranger colre = new ColumnRearranger(spec);
-        colre.replace(new ConverterFactory(indices, spec), indices);
-        return colre;
+        return indices;
     }
 
     /**
@@ -197,7 +213,7 @@ public class NumberToStringNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columns.loadSettingsFrom(settings);
+        m_inclCols.loadSettingsFrom(settings);
     }
 
     /**
@@ -205,7 +221,7 @@ public class NumberToStringNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columns.saveSettingsTo(settings);
+        m_inclCols.saveSettingsTo(settings);
     }
 
     /**
@@ -214,7 +230,7 @@ public class NumberToStringNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columns.validateSettings(settings);
+        m_inclCols.validateSettings(settings);
     }
 
     /**
@@ -252,6 +268,11 @@ public class NumberToStringNodeModel extends NodeModel {
          */
         private DataTableSpec m_spec;
 
+        /*
+         * Error messages.
+         */
+        private StringBuilder m_error;
+
         /**
          *
          * @param colindices the column indices to use.
@@ -260,6 +281,7 @@ public class NumberToStringNodeModel extends NodeModel {
         ConverterFactory(final int[] colindices, final DataTableSpec spec) {
             m_colindices = colindices;
             m_spec = spec;
+            m_error = new StringBuilder();
         }
 
         /**
@@ -307,6 +329,16 @@ public class NumberToStringNodeModel extends NodeModel {
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
+        }
+
+        /**
+         * Error messages that occur during execution , i.e.
+         * NumberFormatException.
+         *
+         * @return error message
+         */
+        public String getErrorMessage() {
+            return m_error.toString();
         }
 
     } // end ConverterFactory

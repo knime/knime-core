@@ -52,8 +52,8 @@ package org.knime.base.node.preproc.colconvert.stringtonumber;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.knime.core.data.DataCell;
@@ -96,8 +96,10 @@ public class StringToNumberNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(StringToNumberNodeModel.class);
 
-    /** Key for the included columns in the NodeSettings. */
-    public static final String CFG_COLUMNS = "include";
+    /**
+     * Key for the included columns in the NodeSettings.
+     */
+    public static final String CFG_INCLUDED_COLUMNS = "include";
 
     /**
      * Key for the decimal separator in the NodeSettings.
@@ -124,9 +126,11 @@ public class StringToNumberNodeModel extends NodeModel {
      */
     public static final String DEFAULT_THOUSANDS_SEPARATOR = "";
 
-    /** The column settings. */
-    private SettingsModelFilterString m_columns =
-            new SettingsModelFilterString(CFG_COLUMNS);
+    /*
+     * The included columns.
+     */
+    private SettingsModelFilterString m_inclCols =
+            new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
 
     /*
      * The decimal separator
@@ -153,7 +157,12 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger colre = findColumnIndices(inSpecs[0]);
+        // find indices to work on
+        int[] indices = findColumnIndices(inSpecs[0]);
+        ConverterFactory converterFac =
+                new ConverterFactory(indices, inSpecs[0], m_parseType);
+        ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
+        colre.replace(converterFac, indices);
         DataTableSpec newspec = colre.createSpec();
         return new DataTableSpec[]{newspec};
     }
@@ -164,83 +173,77 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        StringBuilder warnings = new StringBuilder();
+        // find indices to work on.
         DataTableSpec inspec = inData[0].getDataTableSpec();
-        ColumnRearranger colre = findColumnIndices(inspec);
-        BufferedDataTable resultTable =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
-        return new BufferedDataTable[]{resultTable};
-    }
-
-    private ColumnRearranger findColumnIndices(final DataTableSpec spec) {
-            final List<String> columnList;
-        if (m_columns.isEnforceInclusion()) {
-            columnList = m_columns.getIncludeList();
-        } else {
-            columnList = m_columns.getExcludeList();
-        }
-
-        // compose list of included column indices
-        final ArrayList<Integer> columns = new ArrayList<Integer>(); 
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            DataType type = spec.getColumnSpec(i).getType();
-            if (!type.isCompatible(StringValue.class)) {
-                continue;
-            }
-            String colName = spec.getColumnSpec(i).getName();
-            if (m_columns.isEnforceInclusion()) {
-                // if include column list does contain the column
-                if (columnList.contains(colName)) {
-                    columns.add(i);
-                }
-            } else {
-                // if exclude column list does not contain the column
-                if (!columnList.contains(colName)) {
-                    columns.add(i);
-                }
-            }
-        }
-        
-        if (columns.isEmpty()) {
+        List<String> inclcols = m_inclCols.getIncludeList();
+        if (inclcols.size() == 0) {
+            // nothing to convert, let's return the input table.
             setWarningMessage("No columns selected,"
                     + " returning input DataTable.");
+            return new BufferedDataTable[]{inData[0]};
         }
-        
-        // generated warning message
-        StringBuilder warning = new StringBuilder();
-        // check if all specified columns exist in the input spec
-        for (String name : columnList) {
-            if (!spec.containsName(name)) {
-                if (warning.length() > 0) {
-                    warning.append(',');
-                } 
-                warning.append(name);
-            }
-        }
-        
-        int[] indices = new int[columns.size()];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = columns.get(i);
-        }
-        
+        int[] indices = findColumnIndices(inData[0].getSpec());
         ConverterFactory converterFac = new ConverterFactory(
-                indices, spec, m_parseType);
+        		indices, inspec, m_parseType);
+        ColumnRearranger colre = new ColumnRearranger(inspec);
+        colre.replace(converterFac, indices);
+
+        BufferedDataTable resultTable =
+                exec.createColumnRearrangeTable(inData[0], colre, exec);
         String errorMessage = converterFac.getErrorMessage();
 
         if (errorMessage.length() > 0) {
-            if (warning.length() > 0) { 
-                warning.append("\n");
-            }
-            warning.append("Problems occurred, see Console messages.");
+            warnings.append("Problems occurred, see Console messages.\n");
         }
-        if (warning.length() > 0) {
+        if (warnings.length() > 0) {
             LOGGER.warn(errorMessage);
-            setWarningMessage(warning.toString());
+            setWarningMessage(warnings.toString());
         }
-        
-        ColumnRearranger colre = new ColumnRearranger(spec);
-        colre.replace(converterFac, indices);
-        return colre;
+        return new BufferedDataTable[]{resultTable};
     }
+
+	private int[] findColumnIndices(final DataTableSpec spec)
+			throws InvalidSettingsException {
+		List<String> inclcols = m_inclCols.getIncludeList();
+		StringBuilder warnings = new StringBuilder();
+		if (inclcols.size() == 0) {
+			warnings.append("No columns selected");
+		}
+		Vector<Integer> indicesvec = new Vector<Integer>();
+		if (m_inclCols.isKeepAllSelected()) {
+			for (DataColumnSpec cspec : spec) {
+				if (cspec.getType().isCompatible(StringValue.class)) {
+					indicesvec.add(spec.findColumnIndex(cspec.getName()));
+				}
+			}
+		} else {
+			for (int i = 0; i < inclcols.size(); i++) {
+				int colIndex = spec.findColumnIndex(inclcols.get(i));
+				if (colIndex >= 0) {
+					DataType type = spec.getColumnSpec(colIndex).getType();
+					if (type.isCompatible(StringValue.class)) {
+						indicesvec.add(colIndex);
+					} else {
+						warnings.append("Ignoring column \""
+								+ spec.getColumnSpec(colIndex).getName()
+								+ "\"\n");
+					}
+				} else {
+					throw new InvalidSettingsException("Column \""
+							+ inclcols.get(i) + "\" not found.");
+				}
+			}
+		}
+		if (warnings.length() > 0) {
+			setWarningMessage(warnings.toString());
+		}
+		int[] indices = new int[indicesvec.size()];
+		for (int i = 0; i < indices.length; i++) {
+			indices[i] = indicesvec.get(i);
+		}
+		return indices;
+	}
 
     /**
      * {@inheritDoc}
@@ -256,7 +259,7 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columns.loadSettingsFrom(settings);
+        m_inclCols.loadSettingsFrom(settings);
         m_decimalSep =
                 settings.getString(CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
         m_thousandsSep =
@@ -270,7 +273,7 @@ public class StringToNumberNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columns.saveSettingsTo(settings);
+        m_inclCols.saveSettingsTo(settings);
         settings.addString(CFG_DECIMALSEP, m_decimalSep);
         settings.addString(CFG_THOUSANDSSEP, m_thousandsSep);
         settings.addDataType(CFG_PARSETYPE, m_parseType);
@@ -282,7 +285,7 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columns.validateSettings(settings);
+        m_inclCols.validateSettings(settings);
         String decimalsep =
                 settings.getString(CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
         String thousandssep =

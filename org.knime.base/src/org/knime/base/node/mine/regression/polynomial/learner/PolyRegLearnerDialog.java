@@ -167,16 +167,17 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
                     defSelected.add(s.getName());
                 }
             }
-            m_settings.setColumns(defSelected);
+            m_settings.setSelectedColumns(defSelected);
             // for the rest: ignore it, defaults are used instead
         }
         m_targetColumn.update(specs[0], m_settings.getTargetColumn());
         m_degree.getModel().setValue(m_settings.getDegree());
         m_viewRows.getModel().setValue(m_settings.getMaxRowsForView());
-        m_colSelectionPanel.setEnforceIncludeExclude(m_settings.isEnforceInclusion());
-        m_colSelectionPanel.update(specs[0], m_settings.getColumns());
+        m_colSelectionPanel
+                .update(specs[0], false, m_settings.getSelectedColumns());
         m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
                 .getSelectedItem());
+        m_colSelectionPanel.setKeepAllSelected(m_settings.isIncludeAll());
     }
 
     /**
@@ -188,13 +189,9 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_settings.setTargetColumn(m_targetColumn.getSelectedColumn());
         m_settings.setDegree((Integer)m_degree.getModel().getValue());
         m_settings.setMaxRowsForView((Integer)m_viewRows.getModel().getValue());
-        m_settings.setEnforceInclusionExclsuion(
-                m_colSelectionPanel.isEnforceInclusion());
-        if (m_colSelectionPanel.isEnforceInclusion()) {
-            m_settings.setColumns(m_colSelectionPanel.getIncludedColumnSet());
-        } else {
-            m_settings.setColumns(m_colSelectionPanel.getExcludedColumnSet());
-        }
+        m_settings.setIncludeAll(m_colSelectionPanel.isKeepAllSelected());
+        m_settings.setSelectedColumns(
+                m_colSelectionPanel.getIncludedColumnSet());
         m_settings.saveSettingsTo(settings);
     }
 }

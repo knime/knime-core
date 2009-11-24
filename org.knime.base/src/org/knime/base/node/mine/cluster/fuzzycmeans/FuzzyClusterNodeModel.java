@@ -86,6 +86,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
+
 public class FuzzyClusterNodeModel extends NodeModel {
 
     /**
@@ -114,9 +115,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
     public static final String FUZZIFIER_KEY = "fuzzifier";
 
     /**
-     * Key to store the include or excluded column list in the settings.
+     * Key to store the excluded column list in the settings.
      */
-    public static final String KEY_COLUMNS = "exclude";
+    public static final String INCLUDELIST_KEY = "exclude";
 
     /**
      * Key to store wheher a noise cluster is induced.
@@ -144,13 +145,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     public static final String MEASURES_KEY = "measures";
 
-    /** Config key to enforce inclusion / exclusion option. */
-    public static final String CFGKEY_ENFORCE = "keep_all_columns";
+    /** Config key to keep all columns in include list. */
+    public static final String CFGKEY_KEEPALL = "keep_all_columns";
 
-    /** List contains the columns to include or exclude. */
-    private final ArrayList<String> m_list = new ArrayList<String>();
+    /** List contains the columns to include. */
+    private ArrayList<String> m_list;
 
-    private boolean m_enforceInclude = false;
+    private boolean m_keepAll = false;
 
     /**
      * The input port used here.
@@ -376,7 +377,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
             if (m_fcmAlgo instanceof FCMAlgorithmMemory) {
                 data = ((FCMAlgorithmMemory)m_fcmAlgo).getConvertedData();
             } else {
-                data = new double[nrRows][m_fcmAlgo.getDimension()];
+                data =
+                        new double[nrRows][m_fcmAlgo.getDimension()];
                 int curRow = 0;
                 for (DataRow dRow : filteredtable) {
                     for (int j = 0; j < dRow.getNumCells(); j++) {
@@ -443,11 +445,15 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addBoolean(CFGKEY_ENFORCE, m_enforceInclude);
+        settings.addBoolean(CFGKEY_KEEPALL, m_keepAll);
         settings.addInt(NRCLUSTERS_KEY, m_nrClusters);
         settings.addInt(MAXITERATIONS_KEY, m_maxNrIterations);
         settings.addDouble(FUZZIFIER_KEY, m_fuzzifier);
-        settings.addStringArray(KEY_COLUMNS, m_list.toArray(new String[0]));
+        if (m_list != null) {
+            String[] templist = new String[m_list.size()];
+            templist = m_list.toArray(templist);
+            settings.addStringArray(INCLUDELIST_KEY, templist);
+        }
         settings.addBoolean(NOISE_KEY, m_noise);
         if (!m_calculateDelta) {
             settings.addDouble(DELTAVALUE_KEY, m_delta);
@@ -487,6 +493,15 @@ public class FuzzyClusterNodeModel extends NodeModel {
             throw new InvalidSettingsException("Value out of range "
                     + "for fuzzifier, must be in " + "[>1,10]");
         }
+        if (settings.containsKey(INCLUDELIST_KEY)) {
+            // get list of included columns
+            String[] columns = settings.getStringArray(INCLUDELIST_KEY);
+            if (columns.length < 1) {
+                throw new InvalidSettingsException("No attributes set to work"
+                      + " on. Please check the second tab "
+                          + "\'Used Attributes\' in the dialog");
+            }
+        }
     }
 
     /**
@@ -521,22 +536,23 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 }
             }
         }
-
-        // clear column list
-        m_list.clear();
-        // get list of columns
-        String[] columns = settings.getStringArray(KEY_COLUMNS, new String[0]);
-        for (int i = 0; i < columns.length; i++) {
-            m_list.add(columns[i]);
+        if (settings.containsKey(INCLUDELIST_KEY)) {
+            // clear include column list
+            m_list = new ArrayList<String>();
+            // get list of included columns
+            String[] columns = settings.getStringArray(INCLUDELIST_KEY, m_list
+                    .toArray(new String[0]));
+            for (int i = 0; i < columns.length; i++) {
+                m_list.add(columns[i]);
+            }
         }
-
         if (settings.containsKey(MEMORY_KEY)) {
             m_memory = settings.getBoolean(MEMORY_KEY);
         }
         if (settings.containsKey(MEASURES_KEY)) {
             m_measures = settings.getBoolean(MEASURES_KEY);
         }
-        m_enforceInclude = settings.getBoolean(CFGKEY_ENFORCE, false);
+        m_keepAll = settings.getBoolean(CFGKEY_KEEPALL, false);
     }
 
     /**
@@ -547,31 +563,32 @@ public class FuzzyClusterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec inspec = (DataTableSpec) inSpecs[0];
+        if (m_keepAll || m_list == null) {
+            m_list = new ArrayList<String>();
+            for (DataColumnSpec colspec : inspec) {
+                if (colspec.getType().isCompatible(DoubleValue.class)) {
+                    m_list.add(colspec.getName());
+                }
+            }
+            if (!m_keepAll) {
+            	setWarningMessage("List of columns to use has been set"
+                    + " automatically, please check it in the dialog.");
+            }
+        }
         List<String> learningCols = new LinkedList<String>();
         List<String> ignoreCols = new LinkedList<String>();
         List<String> targetCols = new LinkedList<String>();
-        
-        DataTableSpec inspec = (DataTableSpec) inSpecs[0];
+        // counter for included columns
         for (int i = 0; i < inspec.getNumColumns(); i++) {
-            // if column list does contain current column name
-            String colName = inspec.getColumnSpec(i).getName();
-            if (m_enforceInclude) {
-                // if include column list does contain current column name
-                if (m_list.contains(colName)) {
-                    learningCols.add(colName);
-                } else {
-                    ignoreCols.add(colName);
-                }
+            // if include does contain current column name
+            String colname = inspec.getColumnSpec(i).getName();
+            if (m_list.contains(colname)) {
+                learningCols.add(colname);
             } else {
-                // if exclude column list does not contain current column name
-                if (!m_list.contains(colName)) {
-                    learningCols.add(colName);
-                } else {
-                    ignoreCols.add(colName);
-                }
+                ignoreCols.add(colname);
             }
         }
-        
         PMMLPortObjectSpec pmmlspec =
                 new PMMLPortObjectSpec(inspec, learningCols, ignoreCols,
                         targetCols);

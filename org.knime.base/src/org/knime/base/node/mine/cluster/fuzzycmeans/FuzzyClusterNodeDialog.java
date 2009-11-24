@@ -190,7 +190,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         fvm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                FlowVariableModel fvm = (FlowVariableModel)(evt.getSource());
+                FlowVariableModel fvm =
+                    (FlowVariableModel)(evt.getSource());
                 m_nrClustersSpinner.setEnabled(
                         !fvm.isVariableReplacementEnabled());
             }
@@ -409,19 +410,23 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
             return;
         }
         ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB2);
-        p.setEnforceIncludeExclude(settings.getBoolean(
-                FuzzyClusterNodeModel.CFGKEY_ENFORCE, false));
-        String[] columns = settings.getStringArray(
-                FuzzyClusterNodeModel.KEY_COLUMNS, new String[0]);
-        HashSet<String> list = new HashSet<String>();
-        for (int i = 0; i < columns.length; i++) {
-            if (specs[FuzzyClusterNodeModel.INPORT]
-                    .containsName(columns[i])) {
-                list.add(columns[i]);
+        if (settings.containsKey(FuzzyClusterNodeModel.INCLUDELIST_KEY)) {
+            String[] columns = settings.getStringArray(
+                    FuzzyClusterNodeModel.INCLUDELIST_KEY, new String[0]);
+            HashSet<String> list = new HashSet<String>();
+            for (int i = 0; i < columns.length; i++) {
+                if (specs[FuzzyClusterNodeModel.INPORT]
+                        .containsName(columns[i])) {
+                    list.add(columns[i]);
+                }
             }
+            // set include list on the panel
+            p.update(specs[FuzzyClusterNodeModel.INPORT], false, list);
+        } else {
+            p.update(specs[FuzzyClusterNodeModel.INPORT], true, new String[]{});
         }
-        // set include or exclusion list on the panel
-        p.update(specs[FuzzyClusterNodeModel.INPORT], list);
+        p.setKeepAllSelected(settings.getBoolean(
+                FuzzyClusterNodeModel.CFGKEY_KEEPALL, false));
 
         if (settings.containsKey(FuzzyClusterNodeModel.MEMORY_KEY)) {
             try {
@@ -482,17 +487,11 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                     + "for fuzzifier, must be in " + "[>1,10]");
         }
         m_filterpanel = (ColumnFilterPanel)getTab(TAB2);
-        if (m_filterpanel.isEnforceInclusion()) {
-            Set<String> list = m_filterpanel.getIncludedColumnSet();
-            settings.addStringArray(FuzzyClusterNodeModel.KEY_COLUMNS, list
+        Set<String> list = m_filterpanel.getIncludedColumnSet();
+        settings.addStringArray(FuzzyClusterNodeModel.INCLUDELIST_KEY, list
                 .toArray(new String[0]));
-        } else {
-            Set<String> list = m_filterpanel.getExcludedColumnSet();
-            settings.addStringArray(FuzzyClusterNodeModel.KEY_COLUMNS, list
-                .toArray(new String[0]));
-        }
-        settings.addBoolean(FuzzyClusterNodeModel.CFGKEY_ENFORCE,
-                m_filterpanel.isEnforceInclusion());
+        settings.addBoolean(FuzzyClusterNodeModel.CFGKEY_KEEPALL,
+                m_filterpanel.isKeepAllSelected());
         settings.addBoolean(FuzzyClusterNodeModel.NOISE_KEY, m_noisecheck
                 .isSelected());
         if (m_providedeltaRB.isSelected()) {

@@ -67,7 +67,9 @@ import org.knime.core.node.util.ColumnFilterPanel;
  */
 final class FilterColumnNodeDialog extends NodeDialogPane {
 
-    /** The tab's name. */
+    /*
+     * The tab's name.
+     */
     private static final String TAB = "Column Filter";
 
     /**
@@ -76,7 +78,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      */
     FilterColumnNodeDialog() {
         super();
-        super.addTab(TAB, new ColumnFilterPanel(true));
+        super.addTab(TAB, new ColumnFilterPanel());
     }
 
     /**
@@ -97,21 +99,17 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
             throw new NotConfigurableException("No columns available for "
                     + "selection.");
         }
-        String[] columns = settings.getStringArray(
-                FilterColumnNodeModel.CFG_KEY_COLUMNS, new String[0]);
+        String[] columns = settings.getStringArray(FilterColumnNodeModel.KEY,
+                new String[0]);
         HashSet<String> list = new HashSet<String>();
         for (int i = 0; i < columns.length; i++) {
             if (specs[FilterColumnNodeModel.INPORT].containsName(columns[i])) {
                 list.add(columns[i]);
             }
         }
-        // get force inclusion flag
-        boolean forceIncl = settings.getBoolean(
-                FilterColumnNodeModel.CFG_KEY_FORCE_INCLUSION, false);
         // set exclusion list on the panel
         ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
-        p.setEnforceIncludeExclude(forceIncl);
-        p.update(specs[FilterColumnNodeModel.INPORT], list);
+        p.update(specs[FilterColumnNodeModel.INPORT], true, list);
     }
 
     /**
@@ -125,20 +123,8 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
-        if (p.isEnforceInclusion()) {
-            Set<String> list = p.getIncludedColumnSet();
-            settings.addStringArray(
-                FilterColumnNodeModel.CFG_KEY_COLUMNS, 
-                list.toArray(new String[0]));
-            settings.addBoolean(FilterColumnNodeModel.CFG_KEY_FORCE_INCLUSION, 
-                true);
-        } else {
-            Set<String> list = p.getExcludedColumnSet();
-            settings.addStringArray(
-                FilterColumnNodeModel.CFG_KEY_COLUMNS, 
-                list.toArray(new String[0]));
-            settings.addBoolean(FilterColumnNodeModel.CFG_KEY_FORCE_INCLUSION, 
-                false);
-        }
+        Set<String> list = p.getExcludedColumnSet();
+        settings.addStringArray(FilterColumnNodeModel.KEY, list
+                .toArray(new String[0]));
     }
 }

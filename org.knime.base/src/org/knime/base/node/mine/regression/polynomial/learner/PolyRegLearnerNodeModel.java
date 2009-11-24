@@ -514,37 +514,30 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * @throws InvalidSettingsException If no valid columns are in the spec. 
      */
     private String[] computeSelectedColumns(final DataTableSpec spec) 
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
+        String[] includes;
         String target = m_settings.getTargetColumn();
-        List<String> columns;
-        if (m_columnNames == null) {
-            columns = null;
-        } else {
-            columns = Arrays.asList(m_columnNames);
-        }
-        List<String> includeList = new ArrayList<String>();
-        for (DataColumnSpec s : spec) {
-            if (s.getType().isCompatible(DoubleValue.class)) {
-                String name = s.getName();
-                if (!name.equals(target)) {
-                    if (m_settings.isEnforceInclusion()) {
-                        // if include column list contains the column
-                        if (columns == null || columns.contains(name)) {
-                            includeList.add(name);
-                        }
-                    } else {
-                        // if exclude column list does not contain the column
-                        if (columns == null || !columns.contains(name)) {
-                            includeList.add(name);
-                        }
+        if (m_settings.isIncludeAll()) {
+            List<String> includeList = new ArrayList<String>();
+            for (DataColumnSpec s : spec) {
+                if (s.getType().isCompatible(DoubleValue.class)) {
+                    String name = s.getName();
+                    if (!name.equals(target)) {
+                        includeList.add(name);
                     }
                 }
             }
-        }
-        String[] includes = includeList.toArray(new String[includeList.size()]);
-        if (includes.length == 0) {
-            throw new InvalidSettingsException("No double-compatible " 
-                    + "variables (learning columns) in input table");
+            includes = includeList.toArray(new String[includeList.size()]);
+            if (includes.length == 0) {
+                throw new InvalidSettingsException("No double-compatible " 
+                        + "variables (learning columns) in input table");
+            }
+        } else {
+            Set<String> selSettings = m_settings.getSelectedColumns();
+            if (selSettings == null || selSettings.isEmpty()) {
+                throw new InvalidSettingsException("No settings available");
+            }
+            includes = selSettings.toArray(new String[selSettings.size()]);
         }
         return includes;
     }
