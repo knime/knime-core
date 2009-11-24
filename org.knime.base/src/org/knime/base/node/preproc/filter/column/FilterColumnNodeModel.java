@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.knime.base.node.preproc.filter.column.FilterColumnPanel.SelectionOption;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -87,6 +88,15 @@ final class FilterColumnNodeModel extends NodeModel {
      * the excluded settings.
      */
     static final String KEY = "exclude";
+    
+    /** Config for the force include/exclude flag. */
+    static final String CFG_KEY_SELECTIONOPTION = "selectionOption";
+    
+    /** Enforce inclusion/exclusion flag. */
+    private SelectionOption m_selectionOption = 
+        SelectionOption.EnforceExclusion;
+
+
 
     /** Contains all column names to exclude. */
     private final ArrayList<String> m_list;
@@ -163,35 +173,66 @@ final class FilterColumnNodeModel extends NodeModel {
      * Throws an InvalidSettingsException if columns are specified that don't
      * exist in the input table spec.
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec)
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
             throws InvalidSettingsException {
-        if (m_list.isEmpty()) {
-            super.setWarningMessage("All columns retained.");
-            return new ColumnRearranger(inSpec);
+        boolean allRetained = true;
+        // compose list of included column names
+        final ArrayList<String> columns = new ArrayList<String>(); 
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            String colName = spec.getColumnSpec(i).getName();
+            switch (m_selectionOption) {
+            case EnforceInclusion:
+                // if (include) column list contains current column name
+                if (m_list.contains(colName)) {
+                    columns.add(colName);
+                } else {
+                    allRetained = false;
+                }
+                break;
+            case EnforceExclusion:
+                // if (exclude) column list does not contain current column name
+                if (!m_list.contains(colName)) {
+                    columns.add(colName);
+                } else {
+                    allRetained = false;
+                }
+                break;
+            default:
+                throw new InvalidSettingsException("Unknown selection option: "
+                        + m_selectionOption);
+            }
         }
+        
+        // generated warning message
+        StringBuilder warning = new StringBuilder();
         // check if all specified columns exist in the input spec
         for (String name : m_list) {
-            if (!inSpec.containsName(name)) {
-                throw new InvalidSettingsException("Column '" + name
-                        + "' not found.");
+            if (!spec.containsName(name)) {
+                if (warning.length() > 0) {
+                    warning.append(',');
+                } 
+                warning.append(name);
             }
         }
-        // counter for included columns
-        int j = 0;
-        // compose list of included column indices
-        // which are the original minus the excluded ones
-        final int[] columns = new int[inSpec.getNumColumns() - m_list.size()];
-        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-            // if exclude does not contain current column name
-            if (!m_list.contains(inSpec.getColumnSpec(i).getName())) {
-                columns[j] = i;
-                j++;
+
+        if (warning.length() > 0) {
+            setWarningMessage("Some columns are not available: " 
+                    + warning.toString());
+        } else if (columns.isEmpty()) {
+            if (spec.getNumColumns() > 0) {
+                setWarningMessage("All columns removed.");
             }
-        }
-        assert (j == columns.length);
-        // return the new spec
-        ColumnRearranger c = new ColumnRearranger(inSpec);
-        c.keepOnly(columns);
+            return new ColumnRearranger(new DataTableSpec(spec.getName()));
+        } else {
+            if (allRetained) {
+                setWarningMessage("All columns retained.");
+                return new ColumnRearranger(spec);
+            }
+        }        
+        
+        // create column rearranger
+        ColumnRearranger c = new ColumnRearranger(spec);
+        c.keepOnly(columns.toArray(new String[0]));
         return c;
     }
 
@@ -203,6 +244,8 @@ final class FilterColumnNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        settings.addString(
+                CFG_KEY_SELECTIONOPTION, m_selectionOption.toString());
         settings.addStringArray(KEY, m_list.toArray(new String[0]));
     }
 
@@ -216,11 +259,14 @@ final class FilterColumnNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_selectionOption = SelectionOption.parse(
+                settings.getString(CFG_KEY_SELECTIONOPTION, 
+                SelectionOption.EnforceExclusion.toString()));
         // clear exclude column list
         m_list.clear();
         // get list of excluded columns
-        String[] columns = settings.getStringArray(KEY, m_list
-                .toArray(new String[0]));
+        String[] columns = settings.getStringArray(
+                KEY, m_list.toArray(new String[0]));
         for (int i = 0; i < columns.length; i++) {
             m_list.add(columns[i]);
         }
@@ -232,6 +278,8 @@ final class FilterColumnNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        SelectionOption.parse(settings.getString(CFG_KEY_SELECTIONOPTION, 
+                SelectionOption.EnforceExclusion.toString()));
         // true because the filter model does not care if there are columns to
         // exclude are available
     }

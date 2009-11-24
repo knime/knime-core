@@ -50,12 +50,13 @@ package org.knime.base.node.preproc.filter.column;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.base.node.preproc.filter.column.FilterColumnPanel.SelectionOption;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnFilterPanel;
 
 
 /**
@@ -78,7 +79,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      */
     FilterColumnNodeDialog() {
         super();
-        super.addTab(TAB, new ColumnFilterPanel());
+        super.addTab(TAB, new FilterColumnPanel());
     }
 
     /**
@@ -107,9 +108,15 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
                 list.add(columns[i]);
             }
         }
+        String selOptionS = settings.getString(
+                FilterColumnNodeModel.CFG_KEY_SELECTIONOPTION, 
+                SelectionOption.EnforceExclusion.toString());
+        SelectionOption selectionOption = SelectionOption.parse(
+                selOptionS, SelectionOption.EnforceExclusion);
+        
         // set exclusion list on the panel
-        ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
-        p.update(specs[FilterColumnNodeModel.INPORT], true, list);
+        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
+        p.update(specs[FilterColumnNodeModel.INPORT], selectionOption, list);
     }
 
     /**
@@ -121,10 +128,24 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        ColumnFilterPanel p = (ColumnFilterPanel)getTab(TAB);
-        Set<String> list = p.getExcludedColumnSet();
-        settings.addStringArray(FilterColumnNodeModel.KEY, list
-                .toArray(new String[0]));
+    protected void saveSettingsTo(final NodeSettingsWO settings) 
+        throws InvalidSettingsException {
+        FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
+        SelectionOption selOption = p.getSelectionOption();
+        Set<String> list;
+        switch (selOption) {
+        case EnforceExclusion:
+            list = p.getExcludedColumnSet();
+            break;
+        case EnforceInclusion:
+            list = p.getIncludedColumnSet();
+            break;
+        default:
+            throw new InvalidSettingsException("No selection option chosen.");
+        }
+        settings.addString(FilterColumnNodeModel.CFG_KEY_SELECTIONOPTION,
+                selOption.toString());
+        settings.addStringArray(FilterColumnNodeModel.KEY, 
+                list.toArray(new String[0]));
     }
 }
