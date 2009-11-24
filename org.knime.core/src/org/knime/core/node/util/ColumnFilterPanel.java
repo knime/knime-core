@@ -338,7 +338,8 @@ public class ColumnFilterPanel extends JPanel {
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
-     * @param showForceButtons true, if an check box to keep all columns is shown
+     * @param showForceButtons true, if the inclusion and exclusion toggles 
+     *        are visible
      * @param filter specifies valid column values. Will be check during update
      *
      * @see #update(DataTableSpec, boolean, Collection)
@@ -515,6 +516,7 @@ public class ColumnFilterPanel extends JPanel {
                     "If the set of input columns changes, "
                     + "additional columns are included.");
             forceGroup.add(m_enforceExclusion);
+            m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
         } else {
             forceGroup = null;
@@ -550,8 +552,12 @@ public class ColumnFilterPanel extends JPanel {
         m_remButton.setEnabled(enabled);
         m_addAllButton.setEnabled(enabled);
         m_addButton.setEnabled(enabled);
-        m_enforceInclusion.setEnabled(enabled);
-        m_enforceExclusion.setEnabled(enabled);
+        if (m_enforceInclusion != null) {
+            m_enforceInclusion.setEnabled(enabled);
+        }
+        if (m_enforceExclusion != null) {
+            m_enforceExclusion.setEnabled(enabled);
+        }
     }
 
     /**
@@ -622,8 +628,11 @@ public class ColumnFilterPanel extends JPanel {
                 + "exclusion option is turned off.");
         }
         if (m_enforceInclusion != null && m_enforceExclusion != null) {
-            m_enforceInclusion.setSelected(inclusion);
-            m_enforceExclusion.setSelected(!inclusion);
+            if (inclusion) {
+                m_enforceInclusion.doClick();
+            } else {
+                m_enforceExclusion.doClick();
+            }                
         }
     }
 
@@ -730,12 +739,7 @@ public class ColumnFilterPanel extends JPanel {
      *        on the inclusion/exclusion option that need to be set before
      */
     public void update(final DataTableSpec spec, final String... cells) {
-        if (m_enforceExclusion == null || m_enforceInclusion == null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpce,boolean,String...) when " +
-                "enforcing inclusion/exclusion option is turned off.");
-        }
-        updateLists(spec, !isEnforceInclusion(), Arrays.asList(cells));
+        update(spec, isEnforceInclusion(), Arrays.asList(cells));
     }
 
     /**
@@ -752,7 +756,7 @@ public class ColumnFilterPanel extends JPanel {
             final Collection<String> list) {
         if (m_enforceExclusion == null || m_enforceInclusion == null) {
             NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpce,boolean,Collection) when " +
+                "Use #update(DataTableSpec,boolean,...) when " +
                 "enforcing inclusion/exclusion option is turned off.");
         }
         updateLists(spec, !isEnforceInclusion(), list);
@@ -771,12 +775,7 @@ public class ColumnFilterPanel extends JPanel {
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final String... cells) {
-        if (m_enforceExclusion != null || m_enforceInclusion != null) {
-            NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpce,String...) when "
-                + "enforcing inclusion/exclusion option in your dialog.");
-        }
-        updateLists(spec, exclude, Arrays.asList(cells));
+        update(spec, exclude, Arrays.asList(cells));
     }
 
     /**
@@ -794,7 +793,7 @@ public class ColumnFilterPanel extends JPanel {
             final Collection<String> list) {
         if (m_enforceExclusion != null || m_enforceInclusion != null) {
             NodeLogger.getLogger(ColumnFilterPanel.class).coding(
-                "Use #update(DataTableSpce,Collection) when "
+                "Use #update(DataTableSpec,...) when "
                 +  "enforcing inclusion/exclusion option in your dialog.");
         }
         updateLists(spec, exclude, list);
