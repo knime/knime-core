@@ -78,6 +78,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
@@ -94,10 +95,10 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
-    
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(BatchExecutor.class);
-    
+
     private static class Option {
         private final int[] m_nodeIDs;
 
@@ -121,7 +122,7 @@ public final class BatchExecutor {
             m_type = type;
         }
     }
-    
+
     private BatchExecutor() { /**/
     }
 
@@ -198,6 +199,7 @@ public final class BatchExecutor {
         boolean reset = false;
         boolean isPromptForPassword = false;
         boolean outputZip = false;
+        boolean failOnLoadError = false;
         File preferenceFile = null;
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
@@ -211,6 +213,8 @@ public final class BatchExecutor {
                 reset = true;
             } else if ("-noexecute".equals(parts[0])) {
                 noExecute = true;
+            } else if ("-failonloaderror".equals(parts[0])) {
+                failOnLoadError = true;
             } else if ("-masterkey".equals(parts[0])) {
                 if (parts.length > 1) {
                     if (parts[1].length() == 0) {
@@ -229,7 +233,7 @@ public final class BatchExecutor {
                 }
                 preferenceFile = new File(parts[1]);
                 if (!preferenceFile.isFile()) {
-                    System.err.println("Preference File '" 
+                    System.err.println("Preference File '"
                             + parts[1] + "' is not a file.");
                     return 1;
                 }
@@ -275,7 +279,7 @@ public final class BatchExecutor {
                 outputZip = false;
             } else if ("-workflow.variable".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println("Couldn't parse -workflow.variable " 
+                    System.err.println("Couldn't parse -workflow.variable "
                             + "argument: " + s);
                     return 1;
                 }
@@ -339,29 +343,36 @@ public final class BatchExecutor {
         } else {
             workflowDir = input;
         }
-        
-        // the workflow may be contained in a sub-directory 
+
+        // the workflow may be contained in a sub-directory
         // if run on a archived workflow (typical scenario if workflow is
         // exported to a zip using the wizard)
         if (!new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE).exists()) {
             workflowDir = workflowDir.listFiles()[0];
         }
-        
+
         WorkflowLoadResult loadResult = WorkflowManager.loadProject(
                 workflowDir, new ExecutionMonitor());
+        if (failOnLoadError && loadResult.hasErrors()) {
+            System.err.println("Error(s) during workflow loading. "
+                    + "Check log file for details.");
+            LOGGER.error(
+                    loadResult.getFilteredError("", LoadResultEntryType.Error));
+            return 1;
+        }
         final WorkflowManager wfm = loadResult.getWorkflowManager();
 
         if (!wkfVars.isEmpty()) {
             applyWorkflowVariables(wfm, reset, wkfVars);
         }
-        
+
         if (reset) {
             wfm.resetAll();
             LOGGER.debug("Workflow reset done.");
         }
 
         setNodeOptions(options, wfm);
-        
+
         LOGGER.debug("Status of workflow before execution:");
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
@@ -395,28 +406,28 @@ public final class BatchExecutor {
             }
             successful = wfm.executeAllAndWaitUntilDone();
         }
-        
+
         // only save when execution has not been canceled
         if (!executionCanceled.booleanValue()) {
             if (!noSave) { // save workflow
                 // save // in place when no output (file or dir) given
-                if (output == null) { 
+                if (output == null) {
                     wfm.save(workflowDir, new ExecutionMonitor(), true);
-                    LOGGER.debug("Workflow saved: " 
+                    LOGGER.debug("Workflow saved: "
                             + workflowDir.getAbsolutePath());
                     if (input.isFile()) {
                         // if input is a Zip file, overwrite input flow (Zip)
-                        // workflow dir contains temp workflow directory 
+                        // workflow dir contains temp workflow directory
                         FileUtil.zipDir(input, workflowDir, 9);
                         LOGGER.info("Saved workflow availabe at: "
                                 + input.getAbsolutePath());
                     }
-                } else { 
+                } else {
                     if (outputZip) { // save as Zip
-                        File outputTempDir = 
+                        File outputTempDir =
                             FileUtil.createTempDir("BatchExecutorOutput");
                         wfm.save(outputTempDir, new ExecutionMonitor(), true);
-                        LOGGER.debug("Workflow saved: " 
+                        LOGGER.debug("Workflow saved: "
                                 + outputTempDir.getAbsolutePath());
                         // to be saved into new output zip file
                         FileUtil.zipDir(output, outputTempDir, 9);
@@ -513,7 +524,7 @@ public final class BatchExecutor {
         }
     }
 
-    private static void setPreferences(final File preferenceFile) 
+    private static void setPreferences(final File preferenceFile)
         throws IOException, CoreException {
         InputStream in = new BufferedInputStream(
                 new FileInputStream(preferenceFile));
@@ -523,7 +534,7 @@ public final class BatchExecutor {
             LOGGER.error("Importing preferences was canceled");
             break;
         case IStatus.WARNING:
-            LOGGER.warn("Importing preferences raised warning: " 
+            LOGGER.warn("Importing preferences raised warning: "
                     + status.getMessage(), status.getException());
             break;
         case IStatus.INFO:
@@ -532,7 +543,7 @@ public final class BatchExecutor {
         case IStatus.OK:
             break;
         default:
-            LOGGER.warn("Unknown return status from preference import: " 
+            LOGGER.warn("Unknown return status from preference import: "
                     + status.getSeverity());
         }
     }
@@ -584,7 +595,7 @@ public final class BatchExecutor {
 
         return res;
     }
-    
+
     /** Splits the argument to -workflow.variable into its sub-components
      * (name, value, type) and returns it as array.
      * @param arg The string to split
@@ -607,8 +618,8 @@ public final class BatchExecutor {
         }
         return tokenList.toArray(new String[tokenList.size()]);
     }
-    
-    /** Creates a new flow variable from the sub-components of the 
+
+    /** Creates a new flow variable from the sub-components of the
      * -workflow.variables commandline argument. If the string array does not
      * meet the requirements (e.g. length = 3), an exception is thrown.
      * @param args The arguments for the variable.
@@ -631,15 +642,15 @@ public final class BatchExecutor {
             throw new IllegalArgumentException("Invalid type: " + type);
         }
     }
-    
+
     /** Injects the workflow variables provided in the last argument into the
-     * workflow. 
+     * workflow.
      * @param wfm The workflow, where to inject the variables
-     * @param reset Whether to reset the workflow 
+     * @param reset Whether to reset the workflow
      * {@link WorkflowManager#addWorkflowVariables(boolean, FlowVariable...)}
      * @param wkfVars The flow variables.
      */
-    private static void applyWorkflowVariables(final WorkflowManager wfm, 
+    private static void applyWorkflowVariables(final WorkflowManager wfm,
             final boolean reset, final List<FlowVariable> wkfVars) {
         HashSet<FlowVariable> unknown = new HashSet<FlowVariable>(wkfVars);
         unknown.removeAll(wfm.getWorkflowVariables());
@@ -663,7 +674,7 @@ public final class BatchExecutor {
         wfm.addWorkflowVariables(
                 !reset, wkfVars.toArray(new FlowVariable[wkfVars.size()]));
     }
-        
+
     private static void dumpWorkflowToDebugLog(final WorkflowManager wfm) {
         String str = wfm.printNodeSummary(wfm.getID(), 0);
         BufferedReader reader = new BufferedReader(new StringReader(str));
