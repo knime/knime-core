@@ -61,19 +61,17 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLearnerSettings {
+    
     private int m_degree = 2;
 
     private int m_maxRowsForView = 10000;
 
     private String m_targetColumn;
 
-    private final Set<String> m_selectedColumnNames = 
+    private final Set<String> m_columnNames = 
         new LinkedHashSet<String>();
     
-    private boolean m_includeAll = false;
-
-    private final Set<String> m_unmodSelectedColumnNames = Collections
-            .unmodifiableSet(m_selectedColumnNames);
+    private boolean m_enforceInclusion = false;
 
     /**
      * Returns the maximum degree that polynomial used for regression should
@@ -106,12 +104,10 @@ public class PolyRegLearnerSettings {
         m_degree = settings.getInt("degree");
         m_targetColumn = settings.getString("targetColumn");
         m_maxRowsForView = settings.getInt("maxViewRows");
-        m_includeAll = settings.getBoolean("includeAll", false); // added v2.1
-        m_selectedColumnNames.clear();
-        if (!m_includeAll) {
-            for (String s : settings.getStringArray("selectedColumns")) {
-                m_selectedColumnNames.add(s);
-            }
+        m_enforceInclusion = settings.getBoolean("includeAll", false); // added v2.1
+        m_columnNames.clear();
+        for (String s : settings.getStringArray("selectedColumns", new String[0])) {
+            m_columnNames.add(s);
         }
     }
 
@@ -125,11 +121,9 @@ public class PolyRegLearnerSettings {
             settings.addInt("degree", m_degree);
             settings.addString("targetColumn", m_targetColumn);
             settings.addInt("maxViewRows", m_maxRowsForView);
-            settings.addBoolean("includeAll", m_includeAll);
-            if (!m_includeAll) {
-                settings.addStringArray("selectedColumns", m_selectedColumnNames
-                        .toArray(new String[m_selectedColumnNames.size()]));
-            }
+            settings.addBoolean("includeAll", m_enforceInclusion);
+            settings.addStringArray("selectedColumns", m_columnNames
+                    .toArray(new String[m_columnNames.size()]));
         }
     }
 
@@ -175,33 +169,33 @@ public class PolyRegLearnerSettings {
      * 
      * @param columnNames a set with the selected column names
      */
-    public void setSelectedColumns(final Set<String> columnNames) {
-        m_selectedColumnNames.clear();
+    public void setColumns(final Set<String> columnNames) {
+        m_columnNames.clear();
         for (String s : columnNames) {
-            m_selectedColumnNames.add(s);
+            m_columnNames.add(s);
         }
     }
 
     /**
      * Returns an (unmodifieable) set of the select column names.
      * 
-     * @return a set with the selectec column names
+     * @return a set with the selected column names
      */
-    public Set<String> getSelectedColumns() {
-        return m_unmodSelectedColumnNames;
+    public Set<String> getColumns() {
+        return Collections.unmodifiableSet(m_columnNames);
     }
     
     /**
-     * @return the includeAll
+     * @return enforce inclusion, true - otherwise enforce exclusion
      */
-    public boolean isIncludeAll() {
-        return m_includeAll;
+    public boolean isEnforceInclusion() {
+        return m_enforceInclusion;
     }
     
     /**
-     * @param includeAll the includeAll to set
+     * @param enforceInclusion the includeAll to set
      */
-    public void setIncludeAll(final boolean includeAll) {
-        m_includeAll = includeAll;
+    public void setEnforceInclusionExclsuion(final boolean enforceInclusion) {
+        m_enforceInclusion = enforceInclusion;
     }
 }

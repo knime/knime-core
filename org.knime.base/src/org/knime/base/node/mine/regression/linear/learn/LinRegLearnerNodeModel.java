@@ -117,7 +117,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     static final String CFG_VARIATES = "included_columns";
 
     /** Key for whether to include all appropriate columns by default. */
-    static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
+    static final String CFG_VARIATES_ENFORCE = "included_columns_use_all";
     
     /** Key for the target column, used for dialog settings. */
     static final String CFG_TARGET = "target";
@@ -125,15 +125,15 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /** Key for flag if to compute error on training data. */
     static final String CFG_CALC_ERROR = "calc_error";
 
-    /** The column names to include. */
-    private String[] m_includes;
+    /** The column names. */
+    private String[] m_columns;
     
     /** Whether to include all appropriate columns by default, overwrites
      * {@link #m_includes}. (added in v2.1) */
-    private boolean m_includeAll;
+    private boolean m_enforceInclusion;
     
-    /** Names of the columns that were actually used. If {@link #m_includeAll}
-     * is false, this is identical to {@link #m_includes}. */
+    /** Names of the columns that were actually used. If 
+     * {@link #m_enforceInclusion} is false. */
     private String[] m_actualUsedColumns;
 
     /** The response column. */
@@ -173,11 +173,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_target != null) {
-            if (m_includeAll) {
-                settings.addBoolean(CFG_VARIATES_USE_ALL, true);
-            } else {
-                settings.addStringArray(CFG_VARIATES, m_includes);
-            }
+            settings.addBoolean(CFG_VARIATES_ENFORCE, m_enforceInclusion);
+            settings.addStringArray(CFG_VARIATES, m_columns);
             settings.addString(CFG_TARGET, m_target);
             settings.addBoolean(CFG_CALC_ERROR, m_isCalcError);
             settings.addInt(CFG_FROMROW, m_firstRowPaint);
@@ -196,25 +193,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             throw new InvalidSettingsException("No target set.");
         }
         // we check for null in the line below, improved error message
-        String[] includes =
-            settings.getStringArray(CFG_VARIATES, (String[])null);
+        settings.getStringArray(CFG_VARIATES, new String[0]);
         // added in v2.1
-        boolean includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, false);
-        if (!includeAll) {
-            if (includes == null || includes.length == 0) {
-                throw new InvalidSettingsException(
-                        "No columns for regression have been set.");
-            }
-            List<String> asList = Arrays.asList(includes);
-            if (asList.contains(null)) {
-                throw new InvalidSettingsException("Included columns "
-                        + "must not contain null values");
-            }
-            if (asList.contains(target)) {
-                throw new InvalidSettingsException("Included columns "
-                        + "must not contain target value: " + target);
-            }
-        }
+        settings.getBoolean(CFG_VARIATES_ENFORCE, false);
         settings.getBoolean(CFG_CALC_ERROR);
 
         // the row indices to paint
@@ -234,13 +215,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // field added in v2.1
-        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, false);
-        if (m_includeAll) {
-            m_includes = new String[0];
-        } else {
-            m_includes = settings.getStringArray(CFG_VARIATES);
-        }
+        m_enforceInclusion = settings.getBoolean(CFG_VARIATES_ENFORCE, false);
+        m_columns = settings.getStringArray(CFG_VARIATES, new String[0]);
         m_target = settings.getString(CFG_TARGET);
         m_isCalcError = settings.getBoolean(CFG_CALC_ERROR);
         m_firstRowPaint = settings.getInt(CFG_FROMROW);
@@ -527,28 +503,31 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      * exist in the input table.
      */
     private String[] computeIncludes(final DataTableSpec in) 
-        throws InvalidSettingsException {
-        String[] includes;
-        if (m_includeAll) {
-            List<String> includeList = new ArrayList<String>();
-            for (DataColumnSpec s : in) {
-                if (s.getType().isCompatible(DoubleValue.class)) {
-                    String name = s.getName();
-                    if (!name.equals(m_target)) {
-                        includeList.add(name);
+            throws InvalidSettingsException {
+        List<String> columns = Arrays.asList(m_columns);
+        final List<String> includeList = new ArrayList<String>();
+        for (DataColumnSpec s : in) {
+            if (s.getType().isCompatible(DoubleValue.class)) {
+                String name = s.getName();
+                if (!name.equals(m_target)) {
+                    if (m_enforceInclusion) {
+                        // if include column list does contain the column
+                        if (columns.contains(name)) {
+                            includeList.add(name);
+                        }
+                    } else {
+                        // if exclude column list does not contain the column
+                        if (!columns.contains(name)) {
+                            includeList.add(name);
+                        }
                     }
                 }
             }
-            includes = includeList.toArray(new String[includeList.size()]);
-            if (includes.length == 0) {
-                throw new InvalidSettingsException("No double-compatible " 
-                        + "variables (learning columns) in input table");
-            }
-        } else {
-            if (m_includes == null) {
-                throw new InvalidSettingsException("No settings available");
-            }
-            includes = m_includes.clone();
+        }
+        String[] includes = includeList.toArray(new String[includeList.size()]);
+        if (includes.length == 0) {
+            throw new InvalidSettingsException("No double-compatible " 
+                    + "variables (learning columns) in input table");
         }
         return includes;
     }

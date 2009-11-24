@@ -171,20 +171,20 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
             throw new NotConfigurableException("Too few numeric columns "
                     + "(need at least 2): " + numColsCount);
         }
-        boolean includeAll = settings.getBoolean(
-                LinRegLearnerNodeModel.CFG_VARIATES_USE_ALL, false);
-        String[] includes = settings.getStringArray(
-                LinRegLearnerNodeModel.CFG_VARIATES, new String[0]);
         String target = settings.getString(LinRegLearnerNodeModel.CFG_TARGET,
                 null);
+        m_selectionPanel.update(specs[0], target);
         boolean isCalcError = settings.getBoolean(
                 LinRegLearnerNodeModel.CFG_CALC_ERROR, true);
         int first = settings.getInt(LinRegLearnerNodeModel.CFG_FROMROW, 1);
         int count = settings.getInt(LinRegLearnerNodeModel.CFG_ROWCNT, 10000);
-        m_selectionPanel.update(specs[0], target);
-        m_filterPanel.setKeepAllSelected(includeAll);
+        boolean enforceInclusion = settings.getBoolean(
+                LinRegLearnerNodeModel.CFG_VARIATES_ENFORCE, false);
+        m_filterPanel.setEnforceIncludeExclude(enforceInclusion);
         // if includes list is empty, put everything into the include list
-        m_filterPanel.update(specs[0], includes.length == 0, includes);
+        String[] columns = settings.getStringArray(
+                LinRegLearnerNodeModel.CFG_VARIATES, new String[0]);
+        m_filterPanel.update(specs[0], columns);
         // must hide the target from filter panel
         // updating m_filterPanel first does not work as the first
         // element in the spec will always be in the exclude list.
@@ -205,20 +205,24 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        String[] includes = m_filterPanel.getIncludedColumnSet().toArray(
-                new String[0]);
         String target = m_selectionPanel.getSelectedColumn();
         boolean isCalcError = m_isCalcErrorChecker.isSelected();
         int first = (Integer)m_firstSpinner.getValue();
         int count = (Integer)m_countSpinner.getValue();
-        boolean includeAll = m_filterPanel.isKeepAllSelected();
-        if (includeAll) {
-            settings.addBoolean(
-                    LinRegLearnerNodeModel.CFG_VARIATES_USE_ALL, true);
-        } else {
+        boolean enforceInclusion = m_filterPanel.isEnforceInclusion();
+        if (enforceInclusion) {
+            String[] includes = m_filterPanel.getIncludedColumnSet().toArray(
+                    new String[0]);
             settings.addStringArray(
                     LinRegLearnerNodeModel.CFG_VARIATES, includes);
+        } else {
+            String[] excludes = m_filterPanel.getExcludedColumnSet().toArray(
+                    new String[0]);
+            settings.addStringArray(
+                    LinRegLearnerNodeModel.CFG_VARIATES, excludes);
         }
+        settings.addBoolean(LinRegLearnerNodeModel.CFG_VARIATES_ENFORCE, 
+                m_filterPanel.isEnforceInclusion());
         settings.addString(LinRegLearnerNodeModel.CFG_TARGET, target);
         settings.addBoolean(LinRegLearnerNodeModel.CFG_CALC_ERROR, isCalcError);
         settings.addInt(LinRegLearnerNodeModel.CFG_FROMROW, first);

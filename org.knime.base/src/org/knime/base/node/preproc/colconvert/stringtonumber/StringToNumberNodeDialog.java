@@ -84,7 +84,7 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private DialogComponentColumnFilter m_filtercomp =
             new DialogComponentColumnFilter(new SettingsModelFilterString(
-                    StringToNumberNodeModel.CFG_INCLUDED_COLUMNS), 0, true,
+                    StringToNumberNodeModel.CFG_COLUMNS), 0, true,
                     new Class[]{StringValue.class});
 
     private JTextField m_decimalSeparator = new JTextField(".", 1);

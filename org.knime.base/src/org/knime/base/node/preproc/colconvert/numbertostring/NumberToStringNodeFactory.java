@@ -44,15 +44,12 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------
- * 
- * History
- *   03.07.2007 (cebron): created
+ *
  */
 package org.knime.base.node.preproc.colconvert.numbertostring;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -61,7 +58,8 @@ import org.knime.core.node.NodeView;
  * 
  * @author cebron, University of Konstanz
  */
-public class NumberToStringNodeFactory extends NodeFactory {
+public class NumberToStringNodeFactory 
+        extends NodeFactory<NumberToStringNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -75,7 +73,7 @@ public class NumberToStringNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public NumberToStringNodeModel createNodeModel() {
         return new NumberToStringNodeModel();
     }
 
@@ -83,8 +81,8 @@ public class NumberToStringNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<NumberToStringNodeModel> createNodeView(final int viewIndex,
+            final NumberToStringNodeModel nodeModel) {
         return null;
     }
 

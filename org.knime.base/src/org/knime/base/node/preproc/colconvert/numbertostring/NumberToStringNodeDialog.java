@@ -65,13 +65,12 @@ public class NumberToStringNodeDialog extends DefaultNodeSettingsPane {
 
     /**
      * Constructor.
-     *
      */
     @SuppressWarnings("unchecked")
     public NumberToStringNodeDialog() {
         addDialogComponent(new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
-                        NumberToStringNodeModel.CFG_INCLUDED_COLUMNS), 0, true,
+                        NumberToStringNodeModel.CFG_COLUMNS), 0, true,
                 new Class[]{DoubleValue.class}));
     }
 }

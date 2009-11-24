@@ -73,30 +73,30 @@ import org.knime.core.node.NodeSettingsWO;
  */
 final class FilterColumnNodeModel extends NodeModel {
 
-    /**
-     * The input port used here.
-     */
+    /** The input port used here. */
     static final int INPORT = 0;
 
-    /**
-     * The output port used here.
-     */
+    /** The output port used here. */
     static final int OUTPORT = 0;
 
-    /**
-     * the excluded settings.
-     */
-    static final String KEY = "exclude";
+    /** Config key for the list of include/excluded columns. */
+    static final String CFG_KEY_COLUMNS = "exclude";
+    
+    /** Contains all columns to include and/or exclude depending on the
+     * enforce inclusion flag. */
+    private final ArrayList<String> m_columnList = new ArrayList<String>();
 
-    /** Contains all column names to exclude. */
-    private final ArrayList<String> m_list;
+    /** Config for the force include/exclude flag. */
+    static final String CFG_KEY_FORCE_INCLUSION = "enforce_inclusion";
+    
+    /** Enforce inclusion/exclusion flag. */
+    private boolean m_enforceInclusion = false;
 
     /**
      * Creates a new filter model with one and in- and output.
      */
     FilterColumnNodeModel() {
         super(1, 1);
-        m_list = new ArrayList<String>();
     }
 
     /**
@@ -162,36 +162,62 @@ final class FilterColumnNodeModel extends NodeModel {
      * Creates the output data table spec according to the current settings.
      * Throws an InvalidSettingsException if columns are specified that don't
      * exist in the input table spec.
+     * @param spec the input table spec
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec)
-            throws InvalidSettingsException {
-        if (m_list.isEmpty()) {
-            super.setWarningMessage("All columns retained.");
-            return new ColumnRearranger(inSpec);
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
+        boolean allRetained = true;
+        // compose list of included column names
+        final ArrayList<String> columns = new ArrayList<String>(); 
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            String colName = spec.getColumnSpec(i).getName();
+            if (m_enforceInclusion) {
+                // if (include) column list does not contain current column name
+                if (m_columnList.contains(colName)) {
+                    columns.add(colName);
+                } else {
+                    allRetained = false;
+                }
+            } else {
+                // if (include) column list does not contain current column name
+                if (!m_columnList.contains(colName)) {
+                    columns.add(colName);
+                } else {
+                    allRetained = false;
+                }
+            }
         }
+        
+        if (columns.isEmpty()) {
+            if (spec.getNumColumns() > 0) {
+                setWarningMessage("All columns removed.");
+            }
+            return new ColumnRearranger(new DataTableSpec(spec.getName()));
+        } else {
+            if (allRetained) {
+                setWarningMessage("All columns retained.");
+                return new ColumnRearranger(spec);
+            }
+        }
+        
+        // generated warning message
+        StringBuilder warning = new StringBuilder();
         // check if all specified columns exist in the input spec
-        for (String name : m_list) {
-            if (!inSpec.containsName(name)) {
-                throw new InvalidSettingsException("Column '" + name
-                        + "' not found.");
+        for (String name : m_columnList) {
+            if (!spec.containsName(name)) {
+                if (warning.length() > 0) {
+                    warning.append(',');
+                } 
+                warning.append(name);
             }
         }
-        // counter for included columns
-        int j = 0;
-        // compose list of included column indices
-        // which are the original minus the excluded ones
-        final int[] columns = new int[inSpec.getNumColumns() - m_list.size()];
-        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-            // if exclude does not contain current column name
-            if (!m_list.contains(inSpec.getColumnSpec(i).getName())) {
-                columns[j] = i;
-                j++;
-            }
+        if (warning.length() > 0) {
+            setWarningMessage("Some columns are not available: " 
+                    + warning.toString());
         }
-        assert (j == columns.length);
-        // return the new spec
-        ColumnRearranger c = new ColumnRearranger(inSpec);
-        c.keepOnly(columns);
+        
+        // create column rearranger
+        ColumnRearranger c = new ColumnRearranger(spec);
+        c.keepOnly(columns.toArray(new String[0]));
         return c;
     }
 
@@ -203,7 +229,9 @@ final class FilterColumnNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addStringArray(KEY, m_list.toArray(new String[0]));
+        settings.addStringArray(CFG_KEY_COLUMNS, 
+                m_columnList.toArray(new String[0]));
+        settings.addBoolean(CFG_KEY_FORCE_INCLUSION, m_enforceInclusion);
     }
 
     /**
@@ -217,13 +245,16 @@ final class FilterColumnNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // clear exclude column list
-        m_list.clear();
+        m_columnList.clear();
         // get list of excluded columns
-        String[] columns = settings.getStringArray(KEY, m_list
-                .toArray(new String[0]));
+        String[] columns = settings.getStringArray(CFG_KEY_COLUMNS,
+                m_columnList.toArray(new String[0]));
         for (int i = 0; i < columns.length; i++) {
-            m_list.add(columns[i]);
+            m_columnList.add(columns[i]);
         }
+        // enforce inclusion flag
+        m_enforceInclusion = settings.getBoolean(CFG_KEY_FORCE_INCLUSION, 
+                m_enforceInclusion);
     }
 
     /**
