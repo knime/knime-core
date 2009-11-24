@@ -222,7 +222,6 @@ final class FilterColumnNodeModel extends NodeModel {
             if (spec.getNumColumns() > 0) {
                 setWarningMessage("All columns removed.");
             }
-            return new ColumnRearranger(new DataTableSpec(spec.getName()));
         } else {
             if (allRetained) {
                 setWarningMessage("All columns retained.");
