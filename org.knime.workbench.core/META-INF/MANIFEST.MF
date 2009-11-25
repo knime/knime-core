@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Core
 Bundle-SymbolicName: org.knime.workbench.core;singleton:=true
-Bundle-Version: 2.1.0.0022922
+Bundle-Version: 2.1.1.0023899
 Bundle-ClassPath: workbench-core-patches.jar,
  workbench-core.jar
 Bundle-Activator: org.knime.workbench.core.KNIMECorePlugin
