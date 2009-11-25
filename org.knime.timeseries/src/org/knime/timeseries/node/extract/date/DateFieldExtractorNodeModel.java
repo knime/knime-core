@@ -410,8 +410,13 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         m_useDay.loadSettingsFrom(settings);
         m_dayColName.loadSettingsFrom(settings);
         // day of year
-        m_useDayOfYear.loadSettingsFrom(settings);
-        m_dayOfYearColName.loadSettingsFrom(settings);
+        try {
+            m_useDayOfYear.loadSettingsFrom(settings);
+            m_dayOfYearColName.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_useDayOfYear.setBooleanValue(false);
+            m_dayOfYearColName.setEnabled(false);
+        }
     }
     
     /**
@@ -449,9 +454,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         // day of month
         m_useDay.validateSettings(settings);
         m_dayColName.validateSettings(settings);
-        // day of year
-        m_useDayOfYear.validateSettings(settings);
-        m_dayOfYearColName.validateSettings(settings);
+        
         boolean atLeastOneChecked = false;
         atLeastOneChecked |= AbstractFieldExtractorNodeDialog
             .validateColumnName(settings, m_useYear, m_yearColName);
@@ -463,8 +466,14 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             .validateColumnName(settings, m_useDay, m_dayColName);
         atLeastOneChecked |= AbstractFieldExtractorNodeDialog
             .validateColumnName(settings, m_useDayOfWeek, m_dayOfWeekColName);
-        atLeastOneChecked |= AbstractFieldExtractorNodeDialog
-            .validateColumnName(settings, m_useDayOfYear, m_dayOfYearColName);
+        try {
+            // day of year
+            m_useDayOfYear.validateSettings(settings);
+            m_dayOfYearColName.validateSettings(settings);
+            atLeastOneChecked |= AbstractFieldExtractorNodeDialog
+                .validateColumnName(settings, m_useDayOfYear, m_dayOfYearColName);
+        } catch (InvalidSettingsException ise) {
+        }
         // all unchecked?
         if (!atLeastOneChecked) {
             setWarningMessage("No time field selected. " 

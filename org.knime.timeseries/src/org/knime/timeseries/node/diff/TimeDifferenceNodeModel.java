@@ -320,9 +320,14 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.loadSettingsFrom(settings);
         m_granularity.loadSettingsFrom(settings);
         m_rounding.loadSettingsFrom(settings);
-        
-        m_typeofreference.loadSettingsFrom(settings);
-        m_timemodel.loadSettingsFrom(settings);
+        try {
+            m_typeofreference.loadSettingsFrom(settings);
+            m_timemodel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_typeofreference.setStringValue(
+                    TimeDifferenceNodeDialog.CFG_COLUMN);
+            m_timemodel.setEnabled(false);
+        }
     }
 
     /**
@@ -336,9 +341,9 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.validateSettings(settings);
         m_granularity.validateSettings(settings);
         m_rounding.validateSettings(settings);
-        
-        m_typeofreference.validateSettings(settings);
-        m_timemodel.validateSettings(settings);
+        // new with 2.1.1
+        // m_typeofreference.validateSettings(settings);
+        // m_timemodel.validateSettings(settings);
     }
 
     /**
