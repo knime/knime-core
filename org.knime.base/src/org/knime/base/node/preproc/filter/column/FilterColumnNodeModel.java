@@ -218,7 +218,9 @@ final class FilterColumnNodeModel extends NodeModel {
         if (warning.length() > 0) {
             setWarningMessage("Some columns are not available: " 
                     + warning.toString());
-        } else if (columns.isEmpty()) {
+        }
+        
+        if (columns.isEmpty()) {
             if (spec.getNumColumns() > 0) {
                 setWarningMessage("All columns removed.");
             }
