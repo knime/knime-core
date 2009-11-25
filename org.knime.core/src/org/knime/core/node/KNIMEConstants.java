@@ -81,7 +81,7 @@ public final class KNIMEConstants {
         + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "June 20, 2008";
+    public static final String BUILD_DATE = "November 25, 2009";
 
     /** Java property name that is used to identify whether KNIME is started 
      * in expert mode or not (e.g. whether to show loop nodes or not).
