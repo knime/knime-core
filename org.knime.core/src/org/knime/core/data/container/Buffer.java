@@ -209,8 +209,9 @@ class Buffer implements KNIMEStreamConstants {
      * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4722539): Temp files
      * are not deleted on windows when there are open streams.
      */
-    private static final HashSet<WeakReference<Buffer>>
-        OPENBUFFERS = new HashSet<WeakReference<Buffer>>();
+    private static final Set<WeakReference<Buffer>>
+        OPENBUFFERS = Collections.synchronizedSet(
+                new HashSet<WeakReference<Buffer>>());
 
     /** Number of dirs/files per directory when blobs are saved. */
     private static final int BLOB_ENTRIES_PER_DIRECTORY = 1000;
