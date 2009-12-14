@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="masktime.png">
+    <name>Mask Date/Time</name>
+    <shortDescription>Masks (removes) date or time fields from existing date/time.
+    </shortDescription>
+    <fullDescription>
+        <intro>
+            Masks (removes) date or time or milliseconds from existing date/time, 
+            where this information is available.    
+        </intro>
+        <option name="Column containing date/time">
+        Select the input column containing date/time that should be masked.</option>
+        <option name="date">Select if the date fields (year, month, day) should be masked.
+        </option>
+        <option name="time">Select if the time fields (hour, minute, second and 
+        millisecond) should be masked.</option>
+        <option name="milliseconds">Select if only the milliseconds should be masked.</option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Input column">
+        Table containing date/time cells.</inPort>
+        <outPort index="0" name="Masked times">
+        Table containing the masked date/time.</outPort>
+    </ports>
+</knimeNode>

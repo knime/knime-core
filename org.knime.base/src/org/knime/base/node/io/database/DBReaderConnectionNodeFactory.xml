@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source" icon="./db_connector.png">
+	<name>Database Connector</name>
+	
+	<shortDescription>
+	    Creates a database connection.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Creates a database connection and cached the first number of specified rows.
+	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional drivers from Zip or Jar.
+		</intro>
+		
+	<option name="Database Driver: ">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		Additional driver can be registered via KNIME's preference page
+        (Database drivers).
+	</option>
+	<option name="Database Name: ">
+        Enter the database name here, for example 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="User Name: ">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password: ">
+        Your log-in password for the database. Note, the password is
+        de- and encryted everytime before handling it internally.
+	</option>
+	<option name="SQL Statement: ">
+        Enter the SQL-like query here, for example SELECT * FROM table
+	</option>
+	</fullDescription>
+	
+	<ports>
+		<outPort index="0" name="Database Connection">Database connection object</outPort>
+	</ports>	
+</knimeNode>

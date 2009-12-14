@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://www.knime.org/2008/09/XMLConfig"
+    targetNamespace="http://www.knime.org/2008/09/XMLConfig"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="config" type="config" />
+
+    <xs:complexType name="config">
+        <xs:sequence>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="entry" type="entry" />
+                <xs:element name="config" type="config" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="key" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="entry">
+        <xs:attribute name="key" type="xs:string" use="required" />
+        <xs:attribute name="value" type="xs:string" use="required" />
+        <xs:attribute name="type" type="entry-type" use="required" />
+        <xs:attribute name="isnull" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+
+    <xs:simpleType name="entry-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="xstring" />
+            <xs:enumeration value="xint" />
+            <xs:enumeration value="xdouble" />
+            <xs:enumeration value="xfloat" />
+            <xs:enumeration value="xboolean" />
+            <xs:enumeration value="xbyte" />
+            <xs:enumeration value="xchar" />
+            <xs:enumeration value="xlong" />
+            <xs:enumeration value="xshort" />
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

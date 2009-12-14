@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Sink" icon="./arffwriter.ico">
+	<name>ARFF Writer</name>
+	
+	<shortDescription>
+		Writes data into a file in ARFF format.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+ 		This node saves data to a file in ARFF format. In the configuration dialog,
+		specify a valid destination file. When executed, the node writes the 
+		data, coming through its input port, into the specified location.
+		At this point in time, it only writes not-sparse ARFF files (i.e. it 
+		always writes out all data, even if its value is zero).
+		</intro>
+        <option name="File Chooser">
+            Choose the file to write to.
+        </option>
+        <option name="Overwrite OK">
+            If unchecked, the node refuses to execute when the output 
+            file exists (prevent unintentional overwrite).
+        </option>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Input table">The datatable to be written to the file</inPort>
+	</ports>	
+</knimeNode>

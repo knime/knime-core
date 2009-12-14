@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Sink" icon="./db_writer.png">
+	<name>Database Writer</name>
+	
+	<shortDescription>
+	    Establishes and opens a database access connection to which data can 
+	    be written.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Establishes and opens a database access connection to which the entire 
+	     input data can be written. Make sure you have your personal database 
+	     driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional 
+	     drivers from Zip or Jar archives.
+		</intro>
+		
+	<option name="Database driver: ">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		Additional driver can be registered via KNIME's preference page
+        (Database drivers).
+	</option>
+	<option name="Database name: ">
+        Enter the database name here, for example: 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="User name: ">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password: ">
+        Your log-in password for the database. Note, the password is
+        de- and encryted everytime before handling it internally and is not 
+        stored inside the settings.
+	</option>
+	<option name="Table name: ">
+        Enter the name of the table to which data should be written. Note, if 
+        this table exists, the table is dropped before writing.
+	</option>
+	<option name="SQL types: ">
+		Enter the SQL types here to write integer-, double-, or string-valued 
+		columns to the database. By default integers are defined as type 
+		"integer", doubles as "numeric(10,30)", and all other columns, including
+		strings are written as "varchar(255)". Some databases such as MS Access
+		and Firebird do not allow this numeric precision, therefore you must
+		select "numeric" as the SQL type. If your database allows strings 
+		longer than 255 chars, you can change this value in order to write 
+		long strings such as SLNs or Smiles.
+	</option>
+	<option name="Append data: ">
+		Check this to append the input data to an existing table with the same
+		data structure. If the table does not exist a new one will be created. 
+		<b>Note, if this box is unchecked an existing table is dropped before 
+		execution of this node.</b>
+	</option>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data to Database">
+			Table with data to write into database
+		</inPort>
+	</ports>	
+</knimeNode>

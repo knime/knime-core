@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="extractvariable_db.png" type="Other">
+    <name>Extract Variables (Database)</name>
+    
+    <shortDescription>
+        Extracts Variables from a Database connection.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This node extracts variables from a given database connection
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Database connection">
+          Port object holding database connection (and variables).</inPort>
+        <outPort index="0" name="Variable port">The variable values.</outPort>
+    </ports>
+</knimeNode>

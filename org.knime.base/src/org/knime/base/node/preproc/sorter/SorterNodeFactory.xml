@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./sorter.png" type = "Manipulator">
+	<name>Sorter</name>
+	<shortDescription>Sorts the rows according to user-defined criteria.</shortDescription>
+    <fullDescription>
+        <intro>
+			This node sorts the rows according to user-defined criteria. In the dialog, select 
+		    the columns according to which the data should be sorted. Also select
+		    whether it should be sorted in ascending or descending order.
+		</intro>
+		<option name="Add columns">If you want to extend the sorting criteria
+		to a higher number of columns as displayed, set the number of columns at
+		the bottom and click 'new columns' to add them to the dialog.</option>
+		</fullDescription>
+		<ports>
+    <inPort index="0" name = "Input Table">Table to be sorted.</inPort>
+    <outPort index="0" name = "Sorted Table">A sorted table.</outPort>
+    </ports>
+    </knimeNode>

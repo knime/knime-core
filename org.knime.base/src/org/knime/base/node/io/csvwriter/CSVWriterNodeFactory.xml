@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Sink" icon="./csvwriter.ico">
+	<name>CSV Writer</name>
+	
+	<shortDescription>
+		Saves a datatable into an ASCII file.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+ 		This node writes out the datatable coming through its input port
+ 		into a file. The node provides many options to customize the output
+ 		format (see below). But there is no checking done on the settings, so 
+ 		it is possible to write out the data in a format that makes it 
+ 		impossible to read it in again (e. g. if you specify no data separator).
+ 		</intro>
+ 		<option name="Output file location">Enter a valid file name. 
+			You can also choose a previously selected file from the drop-down list,
+			or select a file from the &quot;Browse...&quot; dialog.
+			</option>		
+ 		<option name="Write column header">If checked, the column names will be
+ 			written out in the first line of the output file.
+			</option>		
+ 		<option name="Don&apos;t write column headers if file exists">
+ 			If checked, the column headers will not be written when the output
+ 			is appended to the already existing output file. 
+ 			This is particularly useful when the csv writer is
+ 			used in a LOOPER node to report results. This option is ignored
+ 			when the column header is not written anyway or the file append option
+ 			is unchecked (see below).
+			</option>		
+ 		<option name="Write row ID">If checked, the row IDs will be
+ 			added to the output, as first item in each line.
+			</option>		
+ 		<option name="If file exists...">Specify the behavior of the node in 
+ 		    case the output file already exists. <i>Overwrite</i> will replace any 
+ 		    existing file, <i>Append</i> will append the input table to the end
+ 		    of the file (possibly skipping the column header) and <i>Abort</i>
+ 		    will issue an error during the node's execution (to prevent
+ 		    unintentional overwrite).</option>		
+        <option name="Data Separator">In the Advanced tab, you can specify the
+            character(s) that will be written out between the data items. You can
+            use &quot;\t&quot; for a tab or &quot;\n&quot; for a new line character (and must use
+            &quot;\\&quot; for a backslash) in any character sequence.
+            </option>
+ 		<option name="Missing Value Pattern">In the Advanced tab, enter a pattern 
+ 			that will be written out for missing data values. Note, the missing
+ 			value pattern will never be put into quotes (see below).
+			</option>
+		<option name="Quote Pattern">In the Quotes tab, you can enter a left
+		    and right quotation mark pattern. Also, select a mode, which determines
+		    when quotation marks should be placed around the data item. When quotes
+		    are used (in every mode other than &quot;never&quot;) you must also specify a 
+		    replacement pattern for the right quote. If it appears in the data
+		    item, it must be replaced (so it won&apos;t be confused with the actual
+		    closing quote). 
+		    </option>
+		<option name="Quote Mode: always">Every data item written out is
+		    placed between quotation marks. (The missing value pattern is not
+		    quoted though.)
+			</option>
+		<option name="Quote Mode: if needed">Quotes are only placed around a 
+		    data item that contains the data separator (specified in the Advanced
+		    tab) or if it equals the missing value pattern. The right quote pattern
+		    will be replaced if it appears in a quoted data item.
+			</option>
+		<option name="Quote Mode: non-numerical only">Integer and floating point 
+		    numbers are not quoted, all other data items are. (Selecting the decimal
+		    point as data separator will lead to an output that can&apos;t be read in 
+		    again.) The right quote is replaced in quoted items.
+			</option>
+		<option name="Quote Mode: never">No data item is placed between quotation
+		    marks. You should specify a replacement pattern for the data separator,
+		    if it occurs in the data item.
+			</option>
+		<option name="Comment Header">In the Comment Header tab you can add a 
+		    comment header to the beginning of the output. Either specify your 
+		    own comment line(s) or choose from the predefined items. 
+		    If you check one of the options you must also enter a comment begin 
+		    and comment end pattern.
+			</option>
+		<option name="Header Content: the current creation time">If checked, a
+		    comment line with the current time and date is added.
+			</option>
+		<option name="Header Content: the user account name">If checked, the login
+		    name of the user that created the file (probably you!) is inserted.
+			</option>
+		<option name="Header Content: the input table name">If checked, a comment
+		    line is added showing the name of the table the data was read from.
+			</option>
+		<option name="Header Content: this text">If you check this, you can enter
+		    any text, that will be added then to the comment header. Use &quot;\n&quot; to
+		    start a new line, and &quot;\t&quot; to insert a tab character (and &quot;\\&quot; to
+		    produce a backslash).
+			</option>
+		<option name="Comment Pattern">
+		    If you have checked at least one of the content options, you must
+		    provide comment begin and end patterns that are placed around the
+		    comment header then. If you omit the end pattern the begin pattern
+		    is placed at the beginning of each comment line (assuming single
+		    line comments, in contrast to block comment if you specify both
+		    patterns).
+			</option>
+		<option name="Decimal Separator">
+		    In the tab "decimal separator" you can enter a character that is used as 
+		    decimal separator for floating point numbers. It replaces the default 
+		    character '.' then.
+		    </option>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Input table">The Datatable to write out.</inPort>
+	</ports>	
+</knimeNode>
+
+

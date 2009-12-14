@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./sota_predictor.png" type="Predictor">
+	<name>SOTA Predictor</name>
+	
+	<shortDescription>
+		Predicts classes for rows using the input SOTA model.
+	</shortDescription>
+	
+	<fullDescription>
+	<intro>		
+		Predicts a class for each row of the input data table. The class value
+		is a string and the values to predict the class for have to be double
+		values. The SOTA Predictor can only be used with an input SOTA model,
+		that used the class column during the training phase.
+	</intro>
+	</fullDescription>
+		
+	<ports>
+		<inPort index="0" name="The model of the trained SOTA">
+			The model of the trained SOTA.
+		</inPort>
+		<inPort name="Any input table" index="1">
+			Datatable containing the data to predict its classes.
+		</inPort>
+		<outPort name="Input table with classes" index="0">
+			Datatable containing the input data and the predicted classes.
+		</outPort>
+	</ports>	
+</knimeNode>
+

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="inject_variables_db.png" type="Other">
+    <name>Inject Variables (Database)</name>
+    
+    <shortDescription>
+        Merges Variables from one connection into the database connection. The
+        database is simply handed through.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This node merges Variables from one connection into the database
+        connection.
+        The database is simply handed through.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Passed through Database connection">
+          Port object being passed on to output port.</inPort>
+        <inPort index="1" name="Variable port">The variable values.</inPort>
+        <outPort index="0" name="Passed through DB connection">
+            The unaltered database input, whereby the connection carries 
+            the variables defined in second input port.</outPort>
+    </ports>
+</knimeNode>

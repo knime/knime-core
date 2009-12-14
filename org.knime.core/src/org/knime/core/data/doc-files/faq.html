@@ -1,0 +1,136 @@
+<!--
+===================================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2009
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+===================================================================================
+-->
+<html>
+<body>
+<ol>
+  <li><strong>What's a DataCell?</strong><br>
+  A <a href="../DataCell.html">DataCell</a> is a container for a single entity.
+  There are many different implementations of <a href="../DataCell.html">DataCell</a>,
+  for instance <a href="../def/StringCell.html">StringCell</a>, 
+  <a href="../def/DoubleCell.html">DoubleCell</a>, <a href="../def/IntCell.html">IntCell</a>.
+  <a href="../DataCell.html">DataCell</a>s are contained in a <a href="../DataRow.html">DataRow</a>
+  and DataRows are contained in a <a href="../DataTable.html">DataTable</a>. 
+  DataCells implement different <a href="../DataValue.html">DataValue</a> interfaces and are associated to a
+  DataType (see both descriptions below).</li>
+  <li><strong>What's a DataValue?</strong><br>
+  A <a href="../DataValue.html">DataValue</a> is an interface describing the
+  content of a <a href="../DataCell.html">DataCell</a>. (For example, how to
+  access the double value from a DoubleCell.) It also brings along meta information
+  such as renderers, icon and a comparator which is accessed statically using
+  reflection through a singleton called <a
+    href="../DataValue.UtilityFactory.html">UTILITY</a>.</li>
+  <li><strong>What's a DataType?</strong><br>
+  A <a href="../DataType.html">DataType</a> comprises the meta-information to a
+  <a href="../DataCell.html">DataCell</a> implementation such as a compatibility
+  list (to what <a href="../DataValue.html">DataValue</a>s the cells can be casted to), 
+  available renderers, comparators and icon. The DataType is a property of
+  a <a href="../DataColumnSpec.html">DataColumnSpec</a>. 
+  </li>
+  <li>
+  <strong>How do I determine the DataType of a DataCell
+  implementation?</strong><br>
+  Use <a href="../DataCell.html#getType()">DataCell#getType()</a>. It is a
+  shortcut for <a href="../DataType.html#getType(java.lang.Class)">DataType.getType(SomeDataCell.class)</a>.
+  Note that a DataCell instance does not carry a reference to its DataType but
+  rather it determines the type through its runtime class (realized by a HashMap
+  in DataType which maps DataCell classes to DataType).
+  </li>
+  <li>
+ <strong>I want to create a new column for a DataTable and need
+  to set the column's DataType. How do I do this?</strong><br>
+  You need to know what DataCell instances you add to the column. For instance,
+  if you only add DoubleCell objects, set the type as
+  <code>DataType.getType(DoubleCell.class)</code>. (All default cell implementations
+  provide a singleton for exactly this purpose, e.g. 
+  <a href="../def/DoubleCell.html#TYPE">DoubleCell.TYPE</a>). 
+  </li>
+  <li>
+ <strong>I don't know what cells I'm going to add to the new
+  column. How do I set the DataType of the column?</strong><br>
+  This should be a really rare case! One possible example is, when a
+  table is transposed and the most general type for all cells in
+  a table's row has to be determined. 
+  You need to scan all cells and compute their most general DataType.
+  This type may not be associated with any real DataCell implementation, but it
+  will be valid for all DataCells that are contained in the column. Use the
+  static method <code>DataType#getCommonSuperType(DataType, DataType)</code> in the class
+  DataType. You need to call this method iteratively, for instance:
+  <pre>                
+	DataCell[] allCells = ...;
+	DataType type = allCells[0].getType()
+	for (int i = 1; i &lt; allCells.length; i++) {
+		type = DataType.getCommonSuperType(type, allCells[i].getType());
+	}
+	// &quot;type&quot; will be the most specific super type of all found types.
+	</pre>
+  </li>
+  <li>
+  <strong>How about missing cells?</strong><br>
+  The term "missing cell" does not really mean that there is no cell but simply
+  that the cell at hand represents an unknown value. As a missing cell does not
+  have any content, there is a singleton to use in case you want to represent
+  such a missing entity. It is available through 
+  <a href="../DataType.html#getMissingCell()">DataType.getMissingCell()</a>. This
+  singleton's type is a special type, which is compatible to all DataValue
+  interfaces you can think of. If you invoke 
+  <a href="../DataType.html#isCompatible(java.lang.Class)">isCompatible(...)</a>
+  on this type, it will always return true. However, trying to cast this missing
+  cell to any DataValue will fail. Be advised to always check a cell's
+  <code>isMissing()</code> method before typecasting it.
+  </li>
+  
+  <li>
+  <p><strong>When can I safely typecast a DataCell to a specific
+  DataValue.</strong><br>
+  There are two constraints: 
+  <ol> 
+  <li>The cell must not represent a missing value,
+  i.e. <a href="../DataCell.html#isMissing()">cell.isMissing()</a> has to evaluate to
+  false and
+  </li> 
+  <li>the cell's type allows you to do so, i.e. 
+  <a href="../DataType.html#isCompatible(java.lang.Class)">type.isCompatible(SomeDataValue.class)</a>
+  returns true. The second constraint also holds for the DataColumnSpec's type in which
+  the cell is contained in. </li>
+  </ol>
+  <p>
+  Thus, you need to check once if the DataType as
+  given by the DataColumnSpec is compatible to the DataValue interface of
+  interest and if so, you can safely cast any DataCell from that column to the
+  given DataValue unless it represents a missing value.</p>
+  </li>
+  <li>
+  <p><strong>Are all cells in a data table column of the same type?</strong>
+  <br>
+  Not necessarily. All you can assume is that each DataValue interface for which
+  the DataColumnSpec's type returns true on isCompatible(SomeDataValue.class), is
+  implemented by all of the cells in the column unless they represent a missing
+  value.</p>
+  </li>
+  <li>
+  <p><strong>How do I implement support for a completely new kind
+  of data type?</strong><br>
+  See our <a href="newtypes.html#newtypes">manual</a> for that.</p>
+  </li>
+</ol>
+</body>
+</html>

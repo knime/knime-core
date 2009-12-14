@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+       <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"
+            id="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"/>
+      <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"
+            id="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"/>
+      <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
+            id="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory">
+      </node>
+      <node
+            category-path="/timeseries"
+            expert-flag="false"
+            factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory"
+            id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
+      </node>
+      <node
+            category-path="timeseries"
+            factory-class="org.knime.timeseries.node.generator.DateGeneratorNodeFactory"
+            id="org.knime.timeseries.node.generator.DateGeneratorNodeFactory">
+      </node>
+            <node
+                  after="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
+                  category-path="timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeFactory"
+                  id="org.knime.timeseries.node.extract.TimeFieldExtractorNodeFactory">
+      </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
+                  id="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
+            </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
+                  id="org.knime.timeseries.node.preset.TimePresetNodeFactory">
+            </node>
+            <node
+                  category-path="/timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory"
+                  id="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
+            </node>
+            <node
+                  category-path="timeseries"
+                  expert-flag="false"
+                  factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
+                  id="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
+            </node>
+   </extension>
+
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            after="meta"
+            description="Time Series Utilities"
+            icon="icons/category_time.png"
+            level-id="timeseries"
+            name="Time Series"
+            path="/"/>
+   </extension>
+   
+</plugin>

@@ -1,0 +1,193 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.workbench.repository">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.workbench.repository" id="metanode" name="MetaNode"/>
+      </appInfo>
+      <documentation>
+         This description point allows to provide meta node templates in the node repository. In order to create a meta node template do the following:
+&lt;ol&gt;
+&lt;li&gt;Create a meta node within KNIME&lt;/li&gt;
+&lt;li&gt;Copy the referring directory from the runtime workspace&lt;/li&gt;
+&lt;li&gt;Paste it into your plug-in directory&lt;/li&gt;
+&lt;li&gt;Add the extension &quot;org.knime.workbench.repository.metanode&quot;&lt;/li&gt;
+&lt;li&gt;Fill out the attributes:
+&lt;dl&gt;
+&lt;dt&gt;workflowDir:&lt;/dt&gt;
+&lt;dd&gt;point to the directory containing the meta node (make sure to add the directory also to the binary build in &lt;code&gt;build.properties&lt;/code&gt;&lt;/dd&gt;
+&lt;dt&gt;name:&lt;/dt&gt;
+&lt;dd&gt;The name is displayed as the name for your meta node template in the node repository&lt;/dd&gt;
+&lt;dt&gt;id:&lt;/dt&gt;
+&lt;dd&gt;For internal maintainance&lt;/dd&gt;
+&lt;dt&gt;category-path:&lt;/dt&gt;
+&lt;dd&gt;The path to the category where it is placed within the node repository&lt;/dd&gt;
+&lt;dt&gt;after:&lt;/dt&gt;
+&lt;dt&gt;Optionally specifiy a node after which the meta node template should appear&lt;/dd&gt;
+&lt;dt&gt;icon:&lt;/dt&gt;
+&lt;dd&gt;The icon is displayed in the node repository&lt;/dd&gt;
+&lt;dt&gt;description:&lt;/dt&gt;
+&lt;dd&gt;describe what your node template does. It is displayed in the node description, when your meta node template is selected&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="PersistedMetaNode"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="PersistedMetaNode">
+      <annotation>
+         <appInfo>
+            <meta.element labelAttribute="name" icon="icon"/>
+         </appInfo>
+      </annotation>
+      <complexType>
+         <attribute name="workflowDir" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="resource"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="category-path" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="after" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="icon" type="string" use="default" value="default.png">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="resource"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="description" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="expert-flag" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Set &lt;i&gt;true&lt;/i&gt; if the meta node should only appear in the node repository if the expert flag is set (changable in preference page). If unsure, leave empty as it defaults to &lt;i&gt;false&lt;/i&gt;.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         2.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension point=&quot;org.knime.workbench.repository.metanode&quot;&gt;
+ &lt;PersistedMetaNode
+             icon=&quot;icons/meta_nodes/cross_validation.png&quot;
+             id=&quot;cross_validation&quot;
+             name=&quot;CrossValidation&quot;
+             workflowDir=&quot;metanode_templates/Cross Validation/&quot;&gt;
+    &lt;/PersistedMetaNode&gt;
+&lt;/extension&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiInfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         
+      </documentation>
+   </annotation>
+
+</schema>

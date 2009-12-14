@@ -1,0 +1,36 @@
+Manifest-Version: 1.0
+Bundle-Name: KNIME Workbench UI
+Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
+Bundle-Version: 2.1.0.0022922
+Bundle-ClassPath: workbench-ui-patches.jar,
+ workbench-ui.jar
+Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide;bundle-version="3.4.2",
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.eclipse.ui.forms
+Bundle-ManifestVersion: 2
+Export-Package: com.swtdesigner,
+ org.knime.workbench.ui.metainfo.editor,
+ org.knime.workbench.ui,
+ org.knime.workbench.ui.builder,
+ org.knime.workbench.ui.favorites,
+ org.knime.workbench.ui.favorites.actions,
+ org.knime.workbench.ui.masterkey,
+ org.knime.workbench.ui.metainfo.editor,
+ org.knime.workbench.ui.metainfo.model,
+ org.knime.workbench.ui.metanodes,
+ org.knime.workbench.ui.nature,
+ org.knime.workbench.ui.navigator,
+ org.knime.workbench.ui.navigator.actions,
+ org.knime.workbench.ui.perspective,
+ org.knime.workbench.ui.preferences,
+ org.knime.workbench.ui.wizards.export,
+ org.knime.workbench.ui.wizards.imports,
+ org.knime.workbench.ui.wizards.project,
+ org.knime.workbench.ui.wrapper
+Bundle-ActivationPolicy: lazy

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode icon="unpivot.png" type="Manipulator">
+    <name>Unpivoting</name>
+    <shortDescription>Node rotates a number of selected value columns into one
+        single column and at the same time duplicates each single row by
+        the number of selected value columns.
+    </shortDescription>
+    <fullDescription>
+    	<intro>Node rotates a number of selected value columns into one
+        single column and at the same time duplicates each single row by
+        the number of selected value columns.
+    	</intro>
+    	<option name="Value columns">Select columns to be rotated into one
+    	single column.
+    	one single column.
+        </option>
+        <option name="Retained columns">Select columns to be duplicated by the 
+        number of selected value columns.
+        </option>
+        <option name="Enable hiliting">
+        Select, if hiliting is enabled between input and output data.
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Data table">Input table with at least on value
+        column for the unpivoting operation.
+        </inPort>
+        <outPort index="0" name="Unpivoting table">Unpivoting table with 
+        duplicated columns together with one rotated value column and 
+        their corresponding column names.
+		</outPort>
+    </ports>
+</knimeNode>

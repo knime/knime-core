@@ -16,7 +16,7 @@
                  
             <link label="Get additional nodes" url="http://org.eclipse.ui.intro/launchUpdateWizard" 
                 id="update">
-                <text>Unfortunately, updates are not yet supported for the Mac OS X version of KNIME. </text>
+                <text>Launches the install wizard to get additional KNIME features (Weka, R, Chemistry...). </text>
             </link>
             
             

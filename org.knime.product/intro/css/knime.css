@@ -37,15 +37,14 @@ a .text {
 	}
 	
 #update {
-	background: url(img/update_mac.png) no-repeat 5px center;
+	background: url(img/update.png) no-repeat 5px center;
     height: 64px;
-    color: gray;
-    font-weight: bold;
+
 	}
-	
 #update:hover {
-	cursor: default;
-	}
+    background: #eee url(img/update_hover.png) no-repeat 5px center;
+    height: 64px; 
+    }
 
 #launch {
 	background: url(img/launch.png) no-repeat 5px center;
