@@ -150,6 +150,25 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository) {
+        this(progMon, node, policy, tableRepository, 
+                new HashMap<Integer, ContainerTable>());
+    }
+    
+    /** Creates execution context with all required arguments. It's used
+     * internally to also provided the execution context local table repository.
+     * 
+     * @param progMon see other constructor.
+     * @param node see other constructor.
+     * @param policy see other constructor.
+     * @param tableRepository see other constructor.
+     * @param localTableRepository execution context local table. This argument
+     * is non-null only if this is a sub execution context (inheriting table
+     * repository from parent).
+     */
+    private ExecutionContext(final NodeProgressMonitor progMon, final Node node,
+            final MemoryPolicy policy,
+            final HashMap<Integer, ContainerTable> tableRepository,
+            final HashMap<Integer, ContainerTable> localTableRepository) {
         super(progMon);
         if (node == null || tableRepository == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -157,7 +176,7 @@ public class ExecutionContext extends ExecutionMonitor {
         m_node = node;
         m_memoryPolicy = policy;
         m_globalTableRepository = tableRepository;
-        m_localTableRepository = new HashMap<Integer, ContainerTable>();
+        m_localTableRepository = localTableRepository;
     }
 
     /**
@@ -450,7 +469,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository);
+                m_globalTableRepository, m_localTableRepository);
     }
 
     /**
@@ -472,7 +491,7 @@ public class ExecutionContext extends ExecutionMonitor {
         NodeProgressMonitor subProgress =
             createSilentSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository);
+                m_globalTableRepository, m_localTableRepository);
     }
 
     /**
