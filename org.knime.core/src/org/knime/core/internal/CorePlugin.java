@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2009
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 13, 2006 (wiswedel): created
  */
@@ -61,16 +61,20 @@ import org.knime.core.node.NodeLogger;
  * @author wiswedel, University of Konstanz
  */
 public class CorePlugin extends org.eclipse.core.runtime.Plugin {
+    private static CorePlugin instance;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void start(final org.osgi.framework.BundleContext context) 
+    public void start(final org.osgi.framework.BundleContext context)
         throws Exception {
         super.start(context);
+
+        instance = this;
+
         try {
-            URL workspaceURL = 
+            URL workspaceURL =
                org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
             if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
                 // we can create our home only in local workspaces
@@ -92,5 +96,14 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
             NodeLogger.getLogger(getClass()).warn(
                     "Can't init knime home dir to workspace path.", e);
         }
+    }
+
+    /**
+     * Returns the singleton instance of this plugin.
+     *
+     * @return the plugin
+     */
+    public static CorePlugin getInstance() {
+        return instance;
     }
 }
