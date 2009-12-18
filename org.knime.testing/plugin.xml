@@ -59,6 +59,15 @@
          <run class="org.knime.testing.core.KNIMETestingApplication"/>
       </application>
    </extension>
+   <extension
+         id="KNIME_PRINT_NODES_STDOUT_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="org.knime.testing.core.KNIMEPrintNodesStdOutApplication">
+         </run>
+      </application>
+   </extension>
    
 
 </plugin>
