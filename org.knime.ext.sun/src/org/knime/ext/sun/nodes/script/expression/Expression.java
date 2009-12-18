@@ -529,9 +529,19 @@ public final class Expression {
                                         "Empty variable identifier in line " 
                                         + t.lineno());
                             }
-                            expFieldName = "variable_" + (variableIndex++);
                             inputFieldName = var;
                             inputFieldType = FieldType.Variable;
+                            // bug fix 2128 (handle multiple occurrences of var)
+                            InputField tempField = 
+                                new InputField(inputFieldName, inputFieldType);
+                            ExpressionField oldExpressionField = 
+                                nameValueMap.get(tempField);
+                            if (oldExpressionField != null) {
+                                expFieldName = 
+                                    oldExpressionField.getExpressionFieldName();
+                            } else {
+                                expFieldName = "variable_" + (variableIndex++);
+                            }
                         } else {
                             throw new InvalidSettingsException(
                                     "Invalid special identifier: " + s
@@ -765,6 +775,11 @@ public final class Expression {
         }
         
         /** @return the expressionFieldName */
+        public String getExpressionFieldName() {
+            return m_expressionFieldName;
+        }
+        
+        /** @return the expressionFieldName in java (prepended by __) */
         public String getFieldNameInJava() {
             return getJavaFieldName(m_expressionFieldName);
         }
