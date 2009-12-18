@@ -433,11 +433,13 @@ public class ClusterNodeModel extends NodeModel {
                     int deltaPos = 0;
                     for (int i = 0; i < m_dimension; i++) {
                         DataCell currentCell = currentRow.getCell(i);
-                        if ((!m_ignoreColumn[i])
-                                && (!(currentCell.isMissing()))) {
-                            delta[winner][deltaPos++] 
-                                          += ((DoubleValue)(currentCell))
-                                    .getDoubleValue();
+                        if (!m_ignoreColumn[i]) {
+                            if (!currentCell.isMissing()) {
+                                delta[winner][deltaPos] 
+                                              += ((DoubleValue)(currentCell))
+                                        .getDoubleValue();
+                            }
+                            deltaPos++;
                         }
                     }
                     m_clusterCoverage[winner]++;
