@@ -103,6 +103,16 @@ public final class KNIMEConstants {
      * cases may be slower. (Asynchronous I/O became default with v2.1.) */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
 
+    /** Java property to enable/disable table stream compression. Compression 
+     * results in smaller temp-file sizes but also (sometimes significant) 
+     * longer runtime. The default is {@value 
+     * org.knime.core.data.container.DataContainer#DEF_GZIP_COMPRESSION}.
+     * <p><strong>Warning:</strong> Changing this property will result in KNIME
+     * not being able to read workflows written previously (with a 
+     * different compression property). */
+    public static final String PROPERTY_TABLE_GZIP_COMPRESSION = 
+        "knime.compress.io";
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
@@ -115,15 +125,15 @@ public final class KNIMEConstants {
      * Java property used to set the timeout in seconds trying to establish a
      * connection to a database.
      */
-    public static final String KNIME_DATABASE_LOGIN_TIMEOUT
-    	= "knime.database.timeout";
+    public static final String KNIME_DATABASE_LOGIN_TIMEOUT = 
+            "knime.database.timeout";
 
     /**
      * Java property used to adjust the fetch size for retrieving data from
      * a database.
      */
-    public static final String KNIME_DATABASE_FETCHSIZE
-		= "knime.database.fetchsize";
+    public static final String KNIME_DATABASE_FETCHSIZE = 
+        "knime.database.fetchsize";
 
 
     /** KNIME home directory. */

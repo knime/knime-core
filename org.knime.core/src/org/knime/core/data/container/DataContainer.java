@@ -131,6 +131,10 @@ public class DataContainer implements RowAppender {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DataContainer.class);
     
+    /** Whether compression is enabled by default.
+     * @see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION */
+    public static final boolean DEF_GZIP_COMPRESSION = true;
+
     /** Java property name to set a different threshold for the number of
      * cells to be held in main memory. This property is set at startup, usually
      * by adding a line such as 
