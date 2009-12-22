@@ -62,24 +62,16 @@ import org.knime.core.data.DoubleValue;
  * @author Fabian Dill, University of Konstanz
  */
 public class BoxPlotterProperties extends MultiColumnPlotterProperties {
-
     private final BoxPlotAppearanceTab m_normalizeTab;
 
     /**
      *
+     *
      */
     @SuppressWarnings("unchecked")
     public BoxPlotterProperties() {
-       this(false);
-    }
-
-    /**
-     * @param normalize The initial value for the normalization.
-     */
-    @SuppressWarnings("unchecked")
-    public BoxPlotterProperties(final boolean normalize) {
         super(DoubleValue.class);
-        m_normalizeTab = new BoxPlotAppearanceTab(normalize);
+        m_normalizeTab = new BoxPlotAppearanceTab();
         addTab(m_normalizeTab.getDefaultName(), m_normalizeTab);
     }
 
@@ -88,6 +80,30 @@ public class BoxPlotterProperties extends MultiColumnPlotterProperties {
      * @return the checkbox to force normalized presentation.
      */
     public JCheckBox getNormalizeCheckBox() {
-        return m_normalizeTab.getNormalizeCheckBox();
+         return m_normalizeTab.getNormalizeCheckBox();
+    }
+
+    /**
+     * @param enabled True to enable the checkbox, false to disable it.
+     * @see javax.swing.AbstractButton#setEnabled(boolean)
+     */
+    public void setCheckboxEnabled(final boolean enabled) {
+        m_normalizeTab.getNormalizeCheckBox().setEnabled(enabled);
+    }
+
+    /**
+     * @param selected The initial value for the normalization checkbox.
+     * @see javax.swing.AbstractButton#setSelected(boolean)
+     */
+    public void setCheckboxSelected(final boolean selected) {
+        m_normalizeTab.getNormalizeCheckBox().setSelected(selected);
+    }
+
+    /**
+     * @param text The tooltip text for the normalization checkbox.
+     * @see javax.swing.JComponent#setToolTipText(java.lang.String)
+     */
+    public void setCheckboxToolTipText(final String text) {
+        m_normalizeTab.getNormalizeCheckBox().setToolTipText(text);
     }
 }

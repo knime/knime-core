@@ -92,6 +92,17 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
             m_plotter.setDataProvider(nodemodel);
             m_plotter.updatePaintModel();
             m_plotter.fitToScreen();
+
+            boolean hasNumColSpec = nodemodel.hasNumColSpec();
+            m_plotter.setNormalizeTabCheckboxEnabled(hasNumColSpec);
+            if (!hasNumColSpec) {
+                m_plotter.setNormalizeTabCheckboxToolTip(
+                        "New settings are available. Please reset and execute"
+                        + " the node to enable normalization.");
+            } else {
+                m_plotter.setToolTipText("");
+            }
+            m_plotter.setNormalizeTabCheckboxSelected(hasNumColSpec);
         }
     }
 

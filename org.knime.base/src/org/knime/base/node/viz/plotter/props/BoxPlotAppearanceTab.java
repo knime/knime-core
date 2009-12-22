@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- *
+ * 
  * History
  *   03.10.2006 (Fabian Dill): created
  */
@@ -55,54 +55,38 @@ import javax.swing.JCheckBox;
 import javax.swing.border.EtchedBorder;
 
 /**
- * Provides a checkbox if the visualization of the data should be normalized
+ * Provides a checkbox if the visualization of the data should be normalized 
  * or not. DefaultName is "Appearance".
- *
+ * 
  * @author Fabian Dill, University of Konstanz
  */
 public class BoxPlotAppearanceTab extends PropertiesTab {
 
     private final JCheckBox m_normalize;
-
+    
     /**
      * Creates a box with a checkbox (normalize).
      *
      */
     public BoxPlotAppearanceTab() {
-      this(false);
-    }
-
-    /**
-     * Creates a box with a checkbox (normalize).
-     * @param normalize The initial value for the normalize checkbox
-     *
-     */
-    public BoxPlotAppearanceTab(final boolean normalize) {
-        m_normalize = new JCheckBox("Normalize "
-                + "(with respect to min/max values of the domain)", normalize);
+        m_normalize = new JCheckBox("Normalize " 
+                + "(with respect to min/max values of the domain)", false);
         javax.swing.Box appBox = javax.swing.Box.createHorizontalBox();
         appBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         appBox.add(javax.swing.Box.createHorizontalStrut(SMALL_SPACE));
         appBox.add(m_normalize);
-        appBox.add(javax.swing.Box.createHorizontalStrut(SMALL_SPACE));
+        appBox.add(javax.swing.Box.createHorizontalStrut(SMALL_SPACE)); 
         add(appBox);
     }
-
+    
     /**
-     *
+     * 
      * @return the checkbox to force normalized presentation.
      */
     public JCheckBox getNormalizeCheckBox() {
         return m_normalize;
     }
-
-    /**
-     * @param normalize the value of the checkbox
-     */
-    public void setNormalized(final boolean normalize) {
-        m_normalize.setEnabled(normalize);
-    }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -110,6 +94,4 @@ public class BoxPlotAppearanceTab extends PropertiesTab {
     public String getDefaultName() {
         return "Appearance";
     }
-
-
 }

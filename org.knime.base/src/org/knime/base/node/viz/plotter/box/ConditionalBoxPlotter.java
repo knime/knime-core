@@ -55,6 +55,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeModel;
+import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -66,10 +67,6 @@ import org.knime.core.data.DoubleValue;
  */
 public class ConditionalBoxPlotter extends BoxPlotter {
 
-    public ConditionalBoxPlotter() {
-        super(new BoxPlotterProperties(true));
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -78,19 +75,19 @@ public class ConditionalBoxPlotter extends BoxPlotter {
             final Map<DataColumnSpec, double[]> statistics) {
         // create y-axis that consider the input domain
         ConditionalBoxPlotNodeModel model =
-            (ConditionalBoxPlotNodeModel)getDataProvider();
-        DataColumnSpec numColSpec = model.getInSpec().getColumnSpec(
-                model.getSettings().numericColumn());
+                (ConditionalBoxPlotNodeModel)getDataProvider();
+        DataColumnSpec numColSpec = model.getNumColSpec();
 
         Map<DataColumnSpec, Coordinate> coordinates =
                 new LinkedHashMap<DataColumnSpec, Coordinate>();
         for (DataColumnSpec colSpec : statistics.keySet()) {
-            /* Pass the input domain's min and max values of the numerical
+            /*
+             * Pass the input domain's min and max values of the numerical
              * column to all box plots by providing the column spec of the
-             * numerical column to all box plots. In this way they all use
-             * the same scale and the whole domain range is displayed. */
-            coordinates.put(colSpec,
-                    Coordinate.createCoordinate(numColSpec));
+             * numerical column to all box plots. In this way they all use the
+             * same scale and the whole domain range is displayed.
+             */
+            coordinates.put(colSpec, Coordinate.createCoordinate(numColSpec));
         }
         setCoordinates(coordinates);
 
@@ -99,4 +96,45 @@ public class ConditionalBoxPlotter extends BoxPlotter {
         double max = ((DoubleValue)domain.getUpperBound()).getDoubleValue();
         createYCoordinate(min, max);
     }
+
+    /**
+     * @param enabled True to enable the checkbox, false to disable it.
+     * @see javax.swing.AbstractButton#setEnabled(boolean)
+     */
+    public void setNormalizeTabCheckboxEnabled(final boolean enabled) {
+        AbstractPlotterProperties properties = getProperties();
+        if (properties != null && properties instanceof BoxPlotterProperties) {
+            BoxPlotterProperties boxProperties =
+                    (BoxPlotterProperties)getProperties();
+            boxProperties.setCheckboxEnabled(enabled);
+        }
+
+    }
+
+    /**
+     * @param text The tooltip text for the normalization checkbox.
+     * @see javax.swing.JComponent#setToolTipText(java.lang.String)
+     */
+    public void setNormalizeTabCheckboxToolTip(final String text) {
+        AbstractPlotterProperties properties = getProperties();
+        if (properties != null && properties instanceof BoxPlotterProperties) {
+            BoxPlotterProperties boxProperties =
+                    (BoxPlotterProperties)getProperties();
+            boxProperties.setCheckboxToolTipText(text);
+        }
+    }
+
+    /**
+     * @param selected The initial value for the normalization checkbox.
+     * @see javax.swing.AbstractButton#setSelected(boolean)
+     */
+    public void setNormalizeTabCheckboxSelected(final boolean selected) {
+        AbstractPlotterProperties properties = getProperties();
+        if (properties != null && properties instanceof BoxPlotterProperties) {
+            BoxPlotterProperties boxProperties =
+                    (BoxPlotterProperties)getProperties();
+            boxProperties.setCheckboxSelected(selected);
+        }
+    }
+
 }

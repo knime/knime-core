@@ -116,9 +116,10 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
 
     private HiLiteHandler m_hiLiteHandler = new HiLiteHandler();
 
-    /** The input table spec. Necessary for passing the input table domain to
-     * the view to allow a normalized visualization respecting the domain. */
-    private DataTableSpec m_inSpec;
+    /** The spec of the numeric column. Necessary for passing the
+     * column's domain to the view to allow a normalized visualization
+     * respecting the domain. */
+    private DataColumnSpec m_numColSpec;
 
     /**
      * Creates a conditional box plot node model.
@@ -199,10 +200,6 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         if (warning.length() > 0) {
             setWarningMessage(warning.trim());
         }
-        /* Save inSpec to provide the view a way to consider the input domain
-         * for normalization. */
-        m_inSpec= inSpecs[0];
-
         return new DataTableSpec[]{createOutputSpec(inSpecs[0])};
     }
 
@@ -414,6 +411,9 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             }
             colSpecs = temp;
         }
+         /* Save inSpec of the numeric column to provide the view a way to
+         * consider the input domain for normalization. */
+        m_numColSpec = inData[0].getDataTableSpec().getColumnSpec(numericIndex);
 
         return new BufferedDataTable[]{exec.createBufferedDataTable(
                 createOutputTable(inData[0].getDataTableSpec(), colSpecs)
@@ -536,6 +536,12 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             m_extremeOutliers =
                     new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
 
+           /* Load the numerical column spec if available.*/
+           if (settings.containsKey("numColSpec")) {
+                m_numColSpec = DataColumnSpec.load(
+                        settings.getConfig("numColSpec"));
+           }
+
             int nrOfCols = settings.getInt("nrOfCols");
 
             for (int i = 0; i < nrOfCols; i++) {
@@ -605,6 +611,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         m_mildOutliers = null;
         m_statistics = null;
         m_dataArray = null;
+        m_numColSpec = null;
     }
 
     /**
@@ -623,6 +630,9 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                 NodeSettings colSetting =
                         (NodeSettings)settings.addConfig("col" + (i++));
                 spec.save(colSetting);
+            }
+            if (m_numColSpec != null) {
+                m_numColSpec.save(settings.addConfig("numColSpec"));
             }
             for (Map.Entry<DataColumnSpec, double[]> entry : m_statistics
                     .entrySet()) {
@@ -739,10 +749,17 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     }
 
     /**
-     * @return the inSpec
+     * @return the numColSpec
      */
-    public DataTableSpec getInSpec() {
-        return m_inSpec;
+    public DataColumnSpec getNumColSpec() {
+        return m_numColSpec;
+    }
+
+    /**
+     * @return true if the spec of the numerical column is present
+     */
+    public boolean hasNumColSpec() {
+        return m_numColSpec != null;
     }
 
     /**
