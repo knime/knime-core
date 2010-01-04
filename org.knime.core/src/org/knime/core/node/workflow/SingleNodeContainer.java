@@ -165,11 +165,22 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /**
+    /** Get the underlying node. 
      * @return the underlying Node
      */
     Node getNode() {
         return m_node;
+    }
+    
+    /**  
+     * @return reference to underlying node. 
+     * @deprecated Method will be reduced to package scope
+     * in future version, currently public to enable workaround for bug #2136
+     * (see also bug #2137)
+     */
+    @Deprecated
+    public Node getNodeReferenceBug2136() {
+        return getNode();
     }
 
     /* ------------------ Port Handling ------------- */
