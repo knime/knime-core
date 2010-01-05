@@ -255,7 +255,9 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                 try {
                     DatabaseDriverLoader.loadDriver(new File(d));
                 } catch (IOException ioe) {
-                    LOGGER.warn("Can't load driver file \"" + d + "\"");
+                    LOGGER.warn("Can't load driver file \"" + d + "\""
+                        + (ioe.getMessage() != null 
+                            ? ", reason: " + ioe.getMessage() : "."));
                 }
             }
         }

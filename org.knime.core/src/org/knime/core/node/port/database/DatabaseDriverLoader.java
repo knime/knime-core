@@ -161,7 +161,9 @@ public final class DatabaseDriverLoader {
                 loadDriver(histFile);
             } catch (Throwable t) {
                 LOGGER.info("Could not load driver library file \""
-                        + hist + "\" from history.", t);
+                        + hist + "\" from history"
+                        + (t.getMessage() != null 
+                                ? ", reason: " + t.getMessage() : "."));
             }
         }
     }
@@ -211,7 +213,7 @@ public final class DatabaseDriverLoader {
         final String fileName = file.getAbsolutePath();
         if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
             throw new IOException("Unsupported file \"" + file + "\","
-            		+ " only zip and jar files are allowed.");
+                + " only zip and jar files are allowed.");
         }
         if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
             return;
