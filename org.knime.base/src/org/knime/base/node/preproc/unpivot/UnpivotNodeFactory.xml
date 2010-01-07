@@ -21,6 +21,9 @@
         <option name="Enable hiliting">
         Select, if hiliting is enabled between input and output data.
         </option>
+        <option name="Skip rows containing missing cells">
+        Skip all rows containing missing cells in selected value column(s).
+        </option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Data table">Input table with at least on value

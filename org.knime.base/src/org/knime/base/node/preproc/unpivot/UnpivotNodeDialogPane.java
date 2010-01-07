@@ -67,6 +67,11 @@ public class UnpivotNodeDialogPane extends DefaultNodeSettingsPane {
         createNewGroup(" Value columns ");
         addDialogComponent(new DialogComponentColumnFilter(
                 createColumnFilterValueColumns(), 0, false));
+        final DialogComponentBoolean missComponent = new DialogComponentBoolean(
+            createMissingValueModel(), "Skip rows containing missing cells");
+        missComponent.setToolTipText("Skip rows containing missing values "
+            + "in selected value column(s).");
+        addDialogComponent(missComponent);
         createNewGroup(" Retained columns ");
         addDialogComponent(new DialogComponentColumnFilter(
                 createColumnFilterOrderColumns(), 0, false));
@@ -100,4 +105,12 @@ public class UnpivotNodeDialogPane extends DefaultNodeSettingsPane {
         return new SettingsModelBoolean("enable-hiliting", false);
     }
 
+    /**
+     * Create model to ignore missing values.
+     * @return settings model for missing value handling
+     */
+    static SettingsModelBoolean createMissingValueModel() {
+        return new SettingsModelBoolean("missing-values", false);
+    }
+    
 }
