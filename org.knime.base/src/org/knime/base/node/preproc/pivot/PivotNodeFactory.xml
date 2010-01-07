@@ -40,6 +40,9 @@
         <option name="Enable hiliting">
         Select, if hiliting is enabled between input and output data.
         </option>
+        <option name="Ignore missing values">
+        Ignore rows containing missing values in pivot column.
+        </option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Data table">Input table with at least two 
