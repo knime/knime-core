@@ -175,7 +175,7 @@ public class ColumnFilterPanel extends JPanel {
          */
         private final Class<? extends DataValue>[] m_filterClasses;
         /**
-         * Creates a new value class filter
+         * Creates a new value class filter.
          * @param filterValueClasses all classes that are compatible with
          *        the type allowed in {@link #includeColumn(DataColumnSpec)}
          */
@@ -299,8 +299,8 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, Class...)}
-     * instead
+     * @deprecated Use the constructor 
+     * {@link #ColumnFilterPanel(boolean, Class...)} instead
      */
     @Deprecated
     public ColumnFilterPanel(
@@ -319,8 +319,8 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor {@link #ColumnFilterPanel(boolean, ColumnFilter)}
-     * instead
+     * @deprecated Use the constructor 
+     * {@link #ColumnFilterPanel(boolean, ColumnFilter)} instead
      */
     @Deprecated
     public ColumnFilterPanel(final ColumnFilter filter) {
