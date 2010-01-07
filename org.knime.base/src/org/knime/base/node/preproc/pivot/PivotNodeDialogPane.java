@@ -115,14 +115,14 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         aggMakeModel.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */
             public void stateChanged(final ChangeEvent e) {
-            	if (aggMakeModel.isEnabled()) {
-	                boolean b = aggMakeModel.getStringValue().equals(
-	                		MAKE_AGGREGATION[1]);
-	                aggModel.setEnabled(b);
-	                aggMethodModel.setEnabled(b);
-            	} else {
-            		aggMakeModel.setStringValue(MAKE_AGGREGATION[0]);
-            	}
+                if (aggMakeModel.isEnabled()) {
+                    boolean b = aggMakeModel.getStringValue().equals(
+                            MAKE_AGGREGATION[1]);
+                    aggModel.setEnabled(b);
+                    aggMethodModel.setEnabled(b);
+                } else {
+                    aggMakeModel.setStringValue(MAKE_AGGREGATION[0]);
+                }
             }
         });
 
@@ -137,24 +137,23 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(m_aggMethod);
         super.createNewGroup(" Advance ");
         addDialogComponent(new DialogComponentBoolean(
-                createSettingsEnableHiLite(), 
-                "Enable hiliting"));
-        addDialogComponent(new DialogComponentBoolean(
-                createSettingsMissingValues(), 
-                "Ignore missing values"));
+                createSettingsEnableHiLite(), "Enable hiliting"));
+        final DialogComponentBoolean missComponent = new DialogComponentBoolean(
+                createSettingsMissingValues(), "Ignore missing values");
+        missComponent.setToolTipText("Ignore rows "
+            + "containing missing values in pivot column.");
+        addDialogComponent(missComponent);
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadAdditionalSettingsFrom(NodeSettingsRO settings,
-    		DataTableSpec[] specs) throws NotConfigurableException {
-    	super.loadAdditionalSettingsFrom(settings, specs);
-    	boolean enable = (m_aggregation.getSelected() != null);
-    	m_aggregation.getModel().setEnabled(enable);
-    	m_aggMethod.getModel().setEnabled(enable);
-    	m_aggCheck.getModel().setEnabled(enable);
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        boolean enable = (m_aggregation.getSelected() != null);
+        m_aggCheck.getModel().setEnabled(enable);
     }
     
     /**
