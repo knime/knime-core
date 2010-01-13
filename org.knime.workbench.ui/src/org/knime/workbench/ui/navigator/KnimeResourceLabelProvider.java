@@ -113,7 +113,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
     /** Error icon. */
     public static final Image ERROR = KNIMEUIPlugin.getDefault()
-        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_Error.png");
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_error.png");
     /** Icon representing a node in the resource navigator. */
     public static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
