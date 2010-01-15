@@ -286,7 +286,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         ThreadPool pool = KNIMEConstants.GLOBAL_THREAD_POOL;
         final Future<?>[] fut = new Future<?>[bst.length];
         KNIMETimer timer = KNIMETimer.getInstance();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 try {
@@ -301,7 +301,8 @@ public class SVMLearnerNodeModel extends NodeModel {
                 }
 
             }
-        }, 0, 3000);
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, 3000);
         for (int i = 0; i < bst.length; i++) {
             fut[i] = pool.enqueue(bst[i]);
         }
@@ -318,10 +319,22 @@ public class SVMLearnerNodeModel extends NodeModel {
                     return null;
                 }
             });
-        } catch (ExecutionException ex) {
-            throw (Exception) ex.getCause();
+        } catch (Exception ex) {
+            exec.checkCanceled();
+            Throwable t = ex;
+            if (ex instanceof ExecutionException) {
+                t = ex.getCause();
+            }
+            if (t instanceof Exception) {
+                throw (Exception) t;
+            } else {
+                throw new Exception(t);
+            }
         } finally {
-            timer.cancel();
+            for (int i = 0; i < fut.length; i++) {
+                fut[i].cancel(true);
+            }
+            timerTask.cancel();
         }
 
         PMMLPortObjectSpecCreator pmmlcreate = 
