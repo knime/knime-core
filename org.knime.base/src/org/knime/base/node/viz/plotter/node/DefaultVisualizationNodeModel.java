@@ -178,63 +178,95 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // generate list of excluded columns; issuing warning
         findCompatibleColumns(inSpecs[0], true);
         return new DataTableSpec[0];
     }
 
     private void findCompatibleColumns(final DataTableSpec inSpec, 
-            final boolean warn)
-            throws InvalidSettingsException {
-        // first filter out those nominal columns with
-        // possible values == null
-        // or possibleValues.size() > 60
-        List<Integer>excludedCols = new ArrayList<Integer>();
-        int currColIdx = 0;
-        for (DataColumnSpec colSpec : inSpec) {
-            // nominal value
+            final boolean warn) throws InvalidSettingsException {
+        // list of excluded columns for visualization
+        final List<Integer>excludedCols = new ArrayList<Integer>();
+        // warning if view properties (color, size, and/or shape) are excluded
+        boolean propMgrWarning = false;
+        // warning if columns with too many/missing values are present
+        boolean nominalWarning = false;
+        // warning if columns with too missing bounds are present
+        boolean numericWarning = false;
+        for (int currCol = 0; currCol < inSpec.getNumColumns(); currCol++) {
+            final DataColumnSpec colSpec = inSpec.getColumnSpec(currCol);
+            // neither nominal nor numeric column
             if (!colSpec.getType().isCompatible(NominalValue.class) 
                     && !colSpec.getType().isCompatible(DoubleValue.class)) {
-                    excludedCols.add(currColIdx);
+                excludedCols.add(currCol);
             }
+            // for nominal columns check number of nominal values 
             if (colSpec.getType().isCompatible(NominalValue.class)) {
                 if (colSpec.getDomain().hasValues() 
-                        // bugfix 1299 
-                        // made the "60" adjustable via the dialog
+                        // bugfix 1299: made the "60" adjustable via the dialog
                         && colSpec.getDomain().getValues().size() 
                             > m_maxNominalValues.getIntValue()) {
-                    excludedCols.add(currColIdx);
+                    excludedCols.add(currCol);
+                    nominalWarning = true;
                 } else if (!colSpec.getDomain().hasValues()) {
-                    excludedCols.add(currColIdx);
+                    excludedCols.add(currCol);
+                    nominalWarning = true;
                 }
             }
-            // for numeric columns check if the lower and upper bounds are 
-            // available
+            // for numeric columns check if the lower/upper bounds are available
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 if (!colSpec.getDomain().hasBounds()) {
-                    excludedCols.add(currColIdx);
+                    excludedCols.add(currCol);
+                    numericWarning = true;
                 }
             }
-            currColIdx++;
+            // bugfix 2124: report warning when color, size, and/or shape
+            // handler(s) are excluded form visualization
+            if (excludedCols.contains(currCol)
+                && (colSpec.getColorHandler() != null
+                 || colSpec.getSizeHandler() != null
+                 || colSpec.getShapeHandler() != null)) {
+                propMgrWarning = true;
+            }
         }
+        
+        // format exclusion list indices to int[]
         m_excludedColumns = new int[excludedCols.size()];
         for (int i = 0; i < excludedCols.size(); i++) {
             m_excludedColumns[i] = excludedCols.get(i);
         }
-        if (warn && excludedCols.size() > 0) {
-            setWarningMessage("Some columns are ignored! Not compatible " 
-                    + "with DoubleValue or NominalValue or no or too many" 
-                    + " possible values or no lower and upper bound provided.");
-        }
-        // check for empty table
-        if (warn && inSpec.getNumColumns() - excludedCols.size() <= 0) {
+        
+        // check is all columns are excluded
+        if (warn && inSpec.getNumColumns() <= excludedCols.size()) {
             throw new InvalidSettingsException(
                 "No columns to visualize are available!"
-                    + " Please refer to the NodeDescription to find out why!");
+                + " Please refer to the NodeDescription to find out why!");
         }
+        
+        // report detailed warning
+    if (warn && excludedCols.size() > 0) {
+        final StringBuilder warning = new StringBuilder();
+        if (propMgrWarning) {
+            warning.append("Some view properties are ignored "
+               + " (defined on incompatible columns): ");
+        } else {
+            warning.append("Some columns are ignored: ");
+        }
+        if (nominalWarning) {
+            warning.append("too many/missing nominal values");
+            if (numericWarning) {
+                warning.append(" and ");
+            } else {
+                warning.append(".");
+            }
+        }
+        if (numericWarning) {
+            warning.append("bounds missing.");
+        }
+        setWarningMessage(warning.toString());
+    }
     }
     
-    
-
     /**
      * Converts the input data at inport 0 into a 
      * {@link org.knime.base.node.util.DataArray} with maximum number of rows as
@@ -246,17 +278,15 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        // first filter out those nominal columns with
-        // possible values == null
-        // or possibleValues.size() > m_maxNominalValues
+        // generate list of excluded columns, suppressing warning
         findCompatibleColumns(inData[0].getDataTableSpec(), false);
         DataTable filter = new FilterColumnTable(inData[0], false, 
                 getExcludedColumns());
         m_input = new DefaultDataArray(
                 filter, 1, m_maxRows.getIntValue(), exec);
         if (m_maxRows.getIntValue() < inData[0].getRowCount()) {
-            setWarningMessage("Only the rows from 0 to " 
-                    + m_maxRows.getIntValue() + " are displayed.");
+            setWarningMessage("Only the first " 
+                    + m_maxRows.getIntValue() + " rows are displayed.");
         }
         return new BufferedDataTable[0];
     }
@@ -344,14 +374,14 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
     /**
-     * @return the excludedColumns
+     * @return the excluded column indices
      */
     public int[] getExcludedColumns() {
         return m_excludedColumns;
     }
 
     /**
-     * @return the last
+     * @return the last row index
      */
     public int getEndIndex() {
         return m_maxRows.getIntValue();
