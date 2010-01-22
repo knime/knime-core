@@ -60,7 +60,7 @@ import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 
 /**
- * Class that hold static values about the knime platform. This includes,
+ * Class that hold static values about the KNIME platform. This includes,
  * among others, the welcome message and an icon.
  *
  * @author Bernd Wiswedel, University of Konstanz
@@ -205,7 +205,7 @@ public final class KNIMEConstants {
             icon = null;
         }
         KNIME16X16 = icon;
-        // we prefer to have all gui-related locales being set to us-standard
+        // we prefer to have all gui-related locals being set to us-standard
         try {
             Locale.setDefault(Locale.US);
         } catch (Exception e) {
