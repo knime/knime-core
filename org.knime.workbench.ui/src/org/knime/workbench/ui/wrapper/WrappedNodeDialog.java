@@ -105,7 +105,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private Menu m_menuBar;
 
-    private final NodeLogger LOGGER;
+    private final NodeLogger m_logger;
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -126,7 +126,7 @@ public class WrappedNodeDialog extends Dialog {
         this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
-        LOGGER = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
+        m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
     }
     
     /**
@@ -140,6 +140,9 @@ public class WrappedNodeDialog extends Dialog {
         super.handleShellCloseEvent();
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int open() {
         m_dialogPane.onOpen();
@@ -380,17 +383,17 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("failed to apply settings: " + ise.getMessage(),  ise);
+            m_logger.warn("failed to apply settings: " + ise.getMessage(), ise);
             showWarningMessage("Invalid settings:\n" + ise.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
         } catch (IllegalStateException ex) {
-            LOGGER.warn("failed to apply settings: " + ex.getMessage(), ex);
+            m_logger.warn("failed to apply settings: " + ex.getMessage(), ex);
             showWarningMessage("Invalid node state:\n" + ex.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
         } catch (Throwable t) {
-            LOGGER.error("failed to apply settings: " + t.getMessage(), t);
+            m_logger.error("failed to apply settings: " + t.getMessage(), t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
