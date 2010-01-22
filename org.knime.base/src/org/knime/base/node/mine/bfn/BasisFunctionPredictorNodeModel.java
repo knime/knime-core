@@ -119,8 +119,8 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                     modelSpec.getColumnSpec(i).getName());
         }
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
-        colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, createSpec(modelSpec, modelSpec.getNumColumns() - 5), 
+        colreg.append(new BasisFunctionPredictorCellFactory(dataSpec, 
+        	createSpec(dataSpec, modelSpec, modelSpec.getNumColumns() - 5), 
                 filteredColumns, pred.getBasisFunctions(), 
                 m_dontKnow, normalizeClassification(), m_appendClassProps));
        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
@@ -129,14 +129,15 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     
     /**
      * Creates the output model spec.
-     * @param modelSpecs input model spec
+     * @param dataSpec input data spec
+     * @param modelSpec input model spec
      * @param modelClassIdx index with reflects the class column
      * @return the new model spec
      */
-    public final DataColumnSpec[] createSpec(
-            final DataTableSpec modelSpecs, final int modelClassIdx) {
+    public final DataColumnSpec[] createSpec(final DataTableSpec dataSpec,
+            final DataTableSpec modelSpec, final int modelClassIdx) {
         Set<DataCell> possClasses = 
-            modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();
+            modelSpec.getColumnSpec(modelClassIdx).getDomain().getValues();
         final DataColumnSpec[] specs;
         if (possClasses == null) {
             if (m_appendClassProps) {
@@ -148,13 +149,17 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
             specs = new DataColumnSpec[possClasses.size() + 1];
             Iterator<DataCell> it = possClasses.iterator();
             for (int i = 0; i < possClasses.size(); i++) {
+        	String colName = DataTableSpec.getUniqueColumnName(
+        		dataSpec, it.next().toString());
                 specs[i] = new DataColumnSpecCreator(
-                        it.next().toString(), DoubleCell.TYPE).createSpec();
+                        colName, DoubleCell.TYPE).createSpec();
             }
         }
         DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
-                modelSpecs.getColumnSpec(modelClassIdx));
-        newTargetSpec.setName(m_applyColumn);
+                modelSpec.getColumnSpec(modelClassIdx));
+        String applyColumn = DataTableSpec.getUniqueColumnName(dataSpec, 
+        	m_applyColumn);
+        newTargetSpec.setName(applyColumn);
         specs[specs.length - 1] = newTargetSpec.createSpec();
         return specs;
     }
@@ -193,14 +198,14 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
             throws InvalidSettingsException {
         // get model spec
         final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[0];
+        // get data spec
+        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
         // sanity check for empty set of nominal values
         DataColumnSpec[] modelSpecs = 
-            createSpec(modelSpec, modelSpec.getNumColumns() - 5);
+            createSpec(dataSpec, modelSpec, modelSpec.getNumColumns() - 5);
         if (modelSpecs == null) {
             return new DataTableSpec[]{null};
         }
-        // get data spec
-        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
         String[] columns = new String[modelSpec.getNumColumns() - 5];
         for (int i = 0; i < columns.length; i++) {
             columns[i] = modelSpec.getColumnSpec(i).getName();
