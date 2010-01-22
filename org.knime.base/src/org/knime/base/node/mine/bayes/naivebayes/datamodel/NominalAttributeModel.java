@@ -237,7 +237,7 @@ class NominalAttributeModel extends AttributeModel {
                 noOfRows += noOfRows4Attr.intValue();
             }
             return noOfRows / (noOfRows4Class
-                    + m_classValues.size() * laplaceCorrector);
+                    + m_attributeVals.size() * laplaceCorrector);
         }
         /**
          * @return the missingValueRecs
