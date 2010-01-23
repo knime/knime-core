@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -577,17 +578,19 @@ public class FuzzyClusterNodeModel extends NodeModel {
                     + " automatically, please check it in the dialog.");
             }
         }
+        HashSet<String> listAsHash = new HashSet<String>(m_list);
         List<String> learningCols = new LinkedList<String>();
-        List<String> ignoreCols = new LinkedList<String>();
-        // counter for included columns
         for (int i = 0; i < inspec.getNumColumns(); i++) {
-            // if include does contain current column name
             String colname = inspec.getColumnSpec(i).getName();
-            if (m_list.contains(colname)) {
+            // if column is selected attribute
+            if (listAsHash.remove(colname)) {
                 learningCols.add(colname);
-            } else {
-                ignoreCols.add(colname);
             }
+        }
+        if (!listAsHash.isEmpty()) {
+            throw new InvalidSettingsException("Input table does not match "
+                    + "selected columns, unable to find column(s): "
+                    + listAsHash);
         }
 
         int nrCols = m_nrClusters + 1; // number of clusters + winner cluster
