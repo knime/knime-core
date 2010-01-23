@@ -695,14 +695,22 @@ public class ClusterNodeModel extends NodeModel {
 
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec)
             throws InvalidSettingsException {
-        for (String colName : m_usedColumns.getIncludeList()) {
-            if (!(tableSpec.containsName(colName))) {
-                throw new InvalidSettingsException(
-                        "Input column spec does not match selected columns.");
+        List<String> includes = m_usedColumns.getIncludeList();
+        HashSet<String> colNameHash = new HashSet<String>(includes);
+        // the order in this list is important, need to use the order defined
+        // by DTS, not m_usedColumns
+        List<String> activeCols = new LinkedList<String>();
+        for (DataColumnSpec colSpec : tableSpec) {
+            String name = colSpec.getName();
+            if (colNameHash.remove(name)) {
+                activeCols.add(name);
             }
         }
-        List<String> activeCols = new LinkedList<String>();
-        activeCols.addAll(m_usedColumns.getIncludeList());
+        if (!colNameHash.isEmpty()) {
+            throw new InvalidSettingsException("Input table does not match "
+                    + "selected columns, unable to find column(s): "
+                    + colNameHash);
+        }
 
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 FilterColumnTable.createFilterTableSpec(tableSpec,
