@@ -67,6 +67,11 @@ public interface NodeExecutionJobManagerFactory {
      * @return a unique ID of this job manager implementations
      */
     String getID();
+    
+    /**
+     * {@inheritDoc} 
+     */
+    String toString();
 
     /**
      * Returns a user readable - but still most likely unique - label. This is

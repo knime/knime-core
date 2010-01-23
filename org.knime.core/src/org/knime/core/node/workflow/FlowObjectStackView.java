@@ -133,7 +133,7 @@ final class FlowObjectStackView extends JPanel {
         } else {
             values = new Object[0][4];
         }
-        String[] colNames = new String[]{"Index", "Owner ID", "Type", "Value"};
+        String[] colNames = new String[]{"Index", "Owner ID", "Name", "Value"};
         DefaultTableModel model = (DefaultTableModel)m_table.getModel();
         model.setDataVector(values, colNames);
     }

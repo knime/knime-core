@@ -51,6 +51,24 @@
 
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
+import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -76,25 +94,6 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ColumnFilter;
-
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
-import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  *
@@ -405,6 +404,18 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             } else {
                 throw new InvalidSettingsException(
                         "Please define the binning column.");
+            }
+        }
+        //check if the aggregation columns are available
+        for (final ColorColumn col : m_aggrColName.getColorNameColumns()) {
+            DataColumnSpec cSpec = tableSpec.getColumnSpec(col.getColumnName());
+            if (cSpec == null) {
+                throw new InvalidSettingsException("Aggregation column '"
+                        + col.getColumnName() + "' not found in input table");
+            } else if (!cSpec.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Aggregation column '"
+                        + col.getColumnName() + "' is not numeric " 
+                        + "(not double compatible)");
             }
         }
         m_xColSpec = tableSpec.getColumnSpec(m_xColName.getStringValue());

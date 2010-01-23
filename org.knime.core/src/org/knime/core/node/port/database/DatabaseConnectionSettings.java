@@ -296,7 +296,8 @@ public class DatabaseConnectionSettings {
                     DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \""
-                            + loadedDriver + "\".", t);
+                            + loadedDriver + "\"" + (t.getMessage() != null 
+                                ? ", reason: " + t.getMessage() : "."));
                 }
             }
             return changed;

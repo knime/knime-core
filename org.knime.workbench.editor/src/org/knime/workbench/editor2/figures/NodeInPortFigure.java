@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2009
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
@@ -59,14 +59,14 @@ import org.knime.core.node.port.PortType;
 
 /**
  * Figure for displaying a <code>NodeInPort</code> inside a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeInPortFigure extends AbstractPortFigure {
     private final int m_id;
 
     /**
-     * 
+     *
      * @param type the type of the port
      * @param id The id of the port, needed to determine the position inside the
      *            surrounding node visual
@@ -84,10 +84,10 @@ public class NodeInPortFigure extends AbstractPortFigure {
 
     /**
      * Create a point list for the port figure (a polygon).
-     * 
+     *
      * There are two shapes. A triangular one for the data ports and a square
      * shaped one for the model ports.
-     * 
+     *
      * @param r The bounds
      * @return the pointlist (size=3)
      */
@@ -117,7 +117,7 @@ public class NodeInPortFigure extends AbstractPortFigure {
                 ((NODE_PORT_SIZE - 1) / 2)));
         points.addPoint(r.getRight().getCopy().translate(
                 -NODE_PORT_SIZE * 2 - 3,
-                ((NODE_PORT_SIZE - 1) / 2 - 1)));
+                ((NODE_PORT_SIZE - 1) / 2)));
         return points;
     }
 
@@ -125,7 +125,7 @@ public class NodeInPortFigure extends AbstractPortFigure {
      * Returns the preffered size of a port. A port is streched in length,
      * depending on the number of ports. Always try to fill up as much height as
      * possible.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

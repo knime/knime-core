@@ -75,6 +75,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.ComplexNumberCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.FuzzyIntervalCell;
@@ -86,6 +87,7 @@ import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config.DataCellEntry.ComplexNumberCellEntry;
+import org.knime.core.node.config.Config.DataCellEntry.DateAndTimeCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.FuzzyIntervalCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.FuzzyNumberCellEntry;
@@ -218,6 +220,30 @@ public abstract class Config extends AbstractConfigEntry
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
                 return new IntCell(config.getInt(CLASS.getSimpleName()));
+            }
+        };
+        
+        /**
+         * <code>DateAndTimeCell</code> entry.
+         */
+        public static final class DateAndTimeCellEntry implements DataCellEntry {
+            /**
+             * <code>DateAndTimeCell.class</code>.
+             */
+            public static final Class<DateAndTimeCell> CLASS = 
+                DateAndTimeCell.class;
+            /**
+             * {@inheritDoc}
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                ((DateAndTimeCell)cell).save(config);
+            }
+            /**
+             * {@inheritDoc}
+             */
+            public DataCell createCell(final ConfigRO config) 
+            throws InvalidSettingsException {
+                return DateAndTimeCell.load(config);
             }
         };
         
@@ -360,6 +386,8 @@ public abstract class Config extends AbstractConfigEntry
         DATACELL_MAP.put(DoubleCellEntry.CLASS.getName(),
                 new DoubleCellEntry());
         DATACELL_MAP.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
+        DATACELL_MAP.put(DateAndTimeCellEntry.CLASS.getName(), 
+                new DateAndTimeCellEntry());
         DATACELL_MAP.put(MissingCellEntry.CLASS.getName(), 
                 new MissingCellEntry());
         DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(), 

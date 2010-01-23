@@ -74,6 +74,8 @@ public class DateFieldExtractorNodeDialog
     static final String DAY_OF_MONTH = "Day of month";
     /** Day of week name. */
     static final String DAY_OF_WEEK = "Day of week";
+    /** Day of year name. */
+    static final String DAY_OF_YEAR = "Day of year";
     
 
     /**
@@ -92,6 +94,7 @@ public class DateFieldExtractorNodeDialog
         createUIComponentWithFormatSelection(MONTH);
         createUIComponentFor(DAY_OF_MONTH);
         createUIComponentWithFormatSelection(DAY_OF_WEEK);
+        createUIComponentFor(DAY_OF_YEAR);
     }
     
 }

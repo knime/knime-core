@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
@@ -88,6 +89,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  * RPropNodeModel trains a MultiLayerPerceptron with resilient backpropagation.
@@ -245,7 +247,6 @@ public class RPropNodeModel extends NodeModel {
             throws InvalidSettingsException {
         if (m_classcol.getStringValue() != null) {
             List<String> learningCols = new LinkedList<String>();
-            List<String> ignoredCols = new LinkedList<String>();
             List<String> targetCols = new LinkedList<String>();
             boolean classcolinspec = false;
             for (DataColumnSpec colspec : (DataTableSpec)inSpecs[INPORT]) {
@@ -275,6 +276,7 @@ public class RPropNodeModel extends NodeModel {
                     targetCols.add(colspec.getName());
                     classcolinspec = true;
                     // check for regression
+                    // TODO: Check what happens to other values than double
                     if (colspec.getType().isCompatible(DoubleValue.class)) {
                         // check if the values are in range [0,1]
                         DataColumnDomain domain = colspec.getDomain();
@@ -300,13 +302,26 @@ public class RPropNodeModel extends NodeModel {
                         + m_classcol.getStringValue()
                         + " not found in DataTableSpec");
             }
-            PMMLPortObjectSpec pmmlspec =
-                    new PMMLPortObjectSpec((DataTableSpec)inSpecs[0],
-                            learningCols, ignoredCols, targetCols);
-            return new PortObjectSpec[]{pmmlspec};
+
+            return new PortObjectSpec[]{createPMMLPortObjectSpec(
+                    (DataTableSpec)inSpecs[0], learningCols, targetCols)};
         } else {
             throw new InvalidSettingsException("Class column not set");
         }
+    }
+
+    private PMMLPortObjectSpec createPMMLPortObjectSpec(
+            final DataTableSpec spec, final List<String> learningCols,
+            final List<String> targetCols) throws InvalidSettingsException {
+        List<String> usedCols = new LinkedList<String>(learningCols);
+        usedCols.addAll(targetCols);
+        PMMLPortObjectSpecCreator pmmlSpecCreator =
+                new PMMLPortObjectSpecCreator(
+                       FilterColumnTable.createFilterTableSpec(spec,
+                               usedCols.toArray(new String[usedCols.size()])));
+        pmmlSpecCreator.setLearningColsNames(learningCols);
+        pmmlSpecCreator.setTargetColsNames(targetCols);
+        return pmmlSpecCreator.createSpec();
     }
 
     /**
@@ -331,7 +346,6 @@ public class RPropNodeModel extends NodeModel {
                     posSpec.getNumColumns() - 1).getName());
         }
         List<String> learningCols = new LinkedList<String>();
-        List<String> ignoredCols = new LinkedList<String>();
         List<String> targetCols = new LinkedList<String>();
 
         // Determine the number of inputs and the number of outputs. Make also
@@ -481,8 +495,8 @@ public class RPropNodeModel extends NodeModel {
         m_mlp.setInputMapping(m_inputmap);
         RProp myrprop = new RProp();
         m_errors = new double[m_nrIterations.getIntValue()];
-        for (int iteration = 0; iteration <
-                        m_nrIterations.getIntValue(); iteration++) {
+        for (int iteration = 0; iteration < m_nrIterations.getIntValue();
+                iteration++) {
             exec.setProgress((double)iteration
                     / (double)m_nrIterations.getIntValue(), "Iteration "
                     + iteration);
@@ -499,11 +513,10 @@ public class RPropNodeModel extends NodeModel {
             m_errors[iteration] = error;
             exec.checkCanceled();
         }
-        PMMLPortObjectSpec pmmlspec =
-                new PMMLPortObjectSpec(posSpec, learningCols, ignoredCols,
-                        targetCols);
-        PMMLNeuralNetworkPortObject nnpmml =
-                new PMMLNeuralNetworkPortObject(pmmlspec, m_mlp);
+
+        PMMLNeuralNetworkPortObject nnpmml = new PMMLNeuralNetworkPortObject(
+                createPMMLPortObjectSpec(posSpec, learningCols, targetCols),
+                m_mlp);
         return new PortObject[]{nnpmml};
     }
 

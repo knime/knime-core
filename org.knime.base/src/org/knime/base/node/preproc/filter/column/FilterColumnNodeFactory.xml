@@ -20,6 +20,14 @@
 			output table.
 		</option>
 		
+		<option name="Enforce Inclusion">
+			Select this option to enforce the current inclusion list to stay
+			the same even if the input table specification changes. If some
+			of the included columns are not available anymore, a warning
+			is displayed. (New columns will automatically be added to the
+			exclusion list.)
+		</option>
+		
 		<option name="Select">
 			Use these buttons to move columns between the Include and Exclude 
 			list.
@@ -38,6 +46,15 @@
 	    	This list contains the column names of the input table that are 
 	    	excluded at the output table.
 	    </option>
+
+        <option name="Enforce Exclusion">
+            Select this option to enforce the current exclusion list to stay
+            the same even if the input table specification changes. If some
+            of the excluded columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            inclusion list.)
+        </option>
+
 	</fullDescription>
 	
 	<ports>

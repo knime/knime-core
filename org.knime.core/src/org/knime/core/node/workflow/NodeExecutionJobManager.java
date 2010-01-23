@@ -107,6 +107,11 @@ public interface NodeExecutionJobManager {
      * @return a unique ID of this job manager implementations
      */
     String getID();
+    
+    /**
+     * {@inheritDoc} 
+     */
+    String toString();
 
     /**
      *

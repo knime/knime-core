@@ -49,7 +49,8 @@
 package org.knime.base.data.append.row;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -112,8 +113,8 @@ public class AppendedRowsIterator extends RowIterator {
     /** The next row to be returned. null if atEnd() */
     private DataRow m_nextRow;
 
-    /** HashSet to check for duplicates. */
-    private final HashSet<RowKey> m_duplicateHash;
+    /** Map to check for duplicates. */
+    private final Map<RowKey, RowKey> m_duplicateMap;
 
     /** has printed error message for duplicate entries? */
     private boolean m_hasPrintedError = false;
@@ -166,7 +167,7 @@ public class AppendedRowsIterator extends RowIterator {
         m_suffix = suffix;
         m_spec = spec;
         m_curTable = -1;
-        m_duplicateHash = new HashSet<RowKey>();
+        m_duplicateMap = new HashMap<RowKey, RowKey>();
         m_exec = exec;
         m_totalRowCount = totalRowCount;
         if (tables.length > 0) {
@@ -223,8 +224,9 @@ public class AppendedRowsIterator extends RowIterator {
         DataRow baseRow = m_curIterator.next(); // row from table
         m_curRowIndex++;
         boolean keyHasChanged = false;
-        RowKey key = baseRow.getKey();
-        while (!m_duplicateHash.add(key)) {
+        RowKey origKey = baseRow.getKey();
+        RowKey key = origKey;
+        while (m_duplicateMap.containsKey(key)) {
             if (m_exec != null) {
                 try {
                     m_exec.checkCanceled();
@@ -259,7 +261,8 @@ public class AppendedRowsIterator extends RowIterator {
                 baseRow = m_curIterator.next(); // row from table
                 m_curRowIndex++;
                 keyHasChanged = false; // stays false! rows have been skipped.
-                key = baseRow.getKey();
+                origKey = baseRow.getKey();
+                key = origKey;
             } else {
                 // first time we come here
                 if (!keyHasChanged && m_exec != null) {
@@ -279,6 +282,7 @@ public class AppendedRowsIterator extends RowIterator {
                 // to do duplicate handling.
             }
         }
+        m_duplicateMap.put(key, origKey);
         if (m_exec != null) {
             try {
                 m_exec.checkCanceled();
@@ -355,9 +359,25 @@ public class AppendedRowsIterator extends RowIterator {
     /**
      * Returns the set of all keys used in the resulting table.
      * @return unmodifiable set of all keys
+     * @deprecated Use the key set of {@link #getDuplicateNameMap()} instead.
      */
+    @Deprecated
     public Set<RowKey> getDuplicateHash() {
-    	return Collections.unmodifiableSet(m_duplicateHash);
+        return Collections.unmodifiableSet(m_duplicateMap.keySet());
+    }
+    
+    /** Get a map of keys in the resulting table to the keys in (any of) 
+     * the input tables, typically elements such as below.
+     * <table>
+     * <tr><th>Key</th><th>Value</th></tr>
+     * <tr><td>Row1</td><td>Row1</td></tr>
+     * <tr><td>Row2</td><td>Row2</td></tr>
+     * <tr><td>Row1_dup</td><td>Row1</td></tr>
+     * </table>
+     * @return Such a map (unmodifiable)
+     */
+    public Map<RowKey, RowKey> getDuplicateNameMap() {
+        return Collections.unmodifiableMap(m_duplicateMap);
     }
 
     /**

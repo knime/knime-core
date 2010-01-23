@@ -52,12 +52,17 @@ package org.knime.base.node.preproc.domain;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Set;
 
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
@@ -82,13 +87,15 @@ public class DomainNodeDialogPane extends NodeDialogPane {
     private final ColumnFilterPanel m_minMaxPanel;
     private final JCheckBox m_maxValuesChecker;
     private final JSpinner m_maxValuesSpinner;
+    private final JRadioButton m_possValUnselectedRetainButton;
+    private final JRadioButton m_possValUnselectedDropButton;
+    private final JRadioButton m_minMaxUnselectedRetainButton;
+    private final JRadioButton m_minMaxUnselectedDropButton;
     
     /** Inits members, does nothing else. */
     public DomainNodeDialogPane() {
         m_possValuesPanel = new ColumnFilterPanel();
         m_minMaxPanel = new ColumnFilterPanel();
-        JPanel possValPanel = new JPanel(new BorderLayout());
-        possValPanel.add(m_possValuesPanel, BorderLayout.CENTER);
         m_maxValuesChecker = new JCheckBox(
                 "Restrict number of possible values: ");
         SpinnerModel spinModel = 
@@ -102,14 +109,58 @@ public class DomainNodeDialogPane extends NodeDialogPane {
                 m_maxValuesSpinner.setEnabled(m_maxValuesChecker.isSelected());
            } 
         });
-        JPanel southPanel = new JPanel(new FlowLayout());
+        m_minMaxUnselectedRetainButton = 
+            new JRadioButton("Retain Min/Max Domain");
+        m_minMaxUnselectedDropButton = 
+            new JRadioButton("Drop Min/Max Domain");
+        m_possValUnselectedRetainButton = 
+            new JRadioButton("Retain Possible Value Domain");
+        m_possValUnselectedDropButton = 
+            new JRadioButton("Drop Possible Value Domain");
+        addTab("Possible Values", createPossValueTab());
+        addTab("Min & Max Values", createMinMaxTab());
+    }
+    
+    private static final String UNSELECTED_LABEL = 
+        "Columns in exclude list: ";
+    
+    private JPanel createMinMaxTab() {
+        JPanel minMaxPanel = new JPanel(new BorderLayout());
+        minMaxPanel.add(m_minMaxPanel, BorderLayout.CENTER);
+        JPanel retainMinMaxPanel = new JPanel(new GridLayout(0, 1));
+        retainMinMaxPanel.setBorder(
+                BorderFactory.createTitledBorder(UNSELECTED_LABEL));
+        ButtonGroup group = new ButtonGroup();
+        group.add(m_minMaxUnselectedRetainButton);
+        group.add(m_minMaxUnselectedDropButton);
+        m_minMaxUnselectedRetainButton.doClick();
+        retainMinMaxPanel.add(m_minMaxUnselectedRetainButton);
+        retainMinMaxPanel.add(m_minMaxUnselectedDropButton);
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        southPanel.add(retainMinMaxPanel);
+        minMaxPanel.add(southPanel, BorderLayout.SOUTH);
+        return minMaxPanel;
+    }
+    
+    private JPanel createPossValueTab() {
+        JPanel possValPanel = new JPanel(new BorderLayout());
+        possValPanel.add(m_possValuesPanel, BorderLayout.CENTER);
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel retainPossValPanel = new JPanel(new GridLayout(0, 1));
+        retainPossValPanel.setBorder(
+                BorderFactory.createTitledBorder(UNSELECTED_LABEL));
+        ButtonGroup group = new ButtonGroup();
+        group.add(m_possValUnselectedRetainButton);
+        group.add(m_possValUnselectedDropButton);
+        m_possValUnselectedRetainButton.doClick();
+        retainPossValPanel.add(m_possValUnselectedRetainButton);
+        retainPossValPanel.add(m_possValUnselectedDropButton);
+        southPanel.add(retainPossValPanel);
+        southPanel.add(new JLabel("   "));
         southPanel.add(m_maxValuesChecker);
         southPanel.add(m_maxValuesSpinner);
         possValPanel.add(southPanel, BorderLayout.SOUTH);
-        addTab("Possible Values", possValPanel);
-        JPanel minMaxPanel = new JPanel(new BorderLayout());
-        minMaxPanel.add(m_minMaxPanel, BorderLayout.CENTER);
-        addTab("Min & Max Values", minMaxPanel);
+        return possValPanel;
     }
 
     /**
@@ -138,8 +189,21 @@ public class DomainNodeDialogPane extends NodeDialogPane {
             m_maxValuesChecker.doClick();
         }
         m_maxValuesSpinner.setValue(maxPossValues >= 0 ? maxPossValues : 60);
+        boolean possValRetainUnselected = settings.getBoolean(
+                DomainNodeModel.CFG_POSSVAL_RETAIN_UNSELECTED, true);
+        boolean minMaxRetainUnselected = settings.getBoolean(
+                DomainNodeModel.CFG_MIN_MAX_RETAIN_UNSELECTED, true);
+        if (possValRetainUnselected) {
+            m_possValUnselectedRetainButton.doClick();
+        } else {
+            m_possValUnselectedDropButton.doClick();
+        }
+        if (minMaxRetainUnselected) {
+            m_minMaxUnselectedRetainButton.doClick();
+        } else {
+            m_minMaxUnselectedDropButton.doClick();
+        }
     }
-    
 
 
     /**
@@ -157,6 +221,10 @@ public class DomainNodeDialogPane extends NodeDialogPane {
         int maxPossVals = m_maxValuesChecker.isSelected() 
             ? (Integer)m_maxValuesSpinner.getValue() : -1;
         settings.addInt(DomainNodeModel.CFG_MAX_POSS_VALUES, maxPossVals);
+        settings.addBoolean(DomainNodeModel.CFG_POSSVAL_RETAIN_UNSELECTED, 
+                m_possValUnselectedRetainButton.isSelected());
+        settings.addBoolean(DomainNodeModel.CFG_MIN_MAX_RETAIN_UNSELECTED, 
+                m_minMaxUnselectedRetainButton.isSelected());
     }
 
 }

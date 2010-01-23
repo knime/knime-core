@@ -116,6 +116,11 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
 
     private HiLiteHandler m_hiLiteHandler = new HiLiteHandler();
 
+    /** The spec of the numeric column. Necessary for passing the
+     * column's domain to the view to allow a normalized visualization
+     * respecting the domain. */
+    private DataColumnSpec m_numColSpec;
+
     /**
      * Creates a conditional box plot node model.
      */
@@ -235,7 +240,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         DataColumnSpecCreator creator;
         int index = 0;
         for (String value : values) {
-            creator = new DataColumnSpecCreator(value, DoubleCell.TYPE);
+            creator = new DataColumnSpecCreator(replaceSpaces(value),
+                    DoubleCell.TYPE);
             colSpec[index++] = creator.createSpec();
         }
         return colSpec;
@@ -311,7 +317,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     continue;
                 }
             }
-            String nominal = r.getCell(nominalIndex).toString();
+            String nominal = replaceSpaces(r.getCell(nominalIndex).toString());
             if (r.getCell(numericIndex).isMissing()) {
                 // ignore missing cells in numeric column
                 continue;
@@ -405,11 +411,32 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             }
             colSpecs = temp;
         }
+         /* Save inSpec of the numeric column to provide the view a way to
+         * consider the input domain for normalization. */
+        m_numColSpec = inData[0].getDataTableSpec().getColumnSpec(numericIndex);
 
         return new BufferedDataTable[]{exec.createBufferedDataTable(
                 createOutputTable(inData[0].getDataTableSpec(), colSpecs)
                         .getTable(), exec)};
 
+    }
+
+    /**
+     * Put the string in parentheses if it contains leading or trailing spaces.
+     *
+     * @param string the string to be modified
+     * @return the string starting and ending with parentheses and the appended
+     *          modification string if applicable
+     */
+    private String replaceSpaces(final String string) {
+        StringBuffer sb = new StringBuffer(string);
+        if (string.startsWith(" ")  || string.endsWith(" ")) {
+            // replace the first leading space
+            sb = sb.insert(0, '(');
+            sb = sb.append(')');
+            sb.append("#with_blanks");
+        }
+        return sb.toString();
     }
 
     private double[] calculateStatistic(final Map<Double, Set<RowKey>> map,
@@ -509,6 +536,12 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             m_extremeOutliers =
                     new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
 
+           /* Load the numerical column spec if available.*/
+           if (settings.containsKey("numColSpec")) {
+                m_numColSpec = DataColumnSpec.load(
+                        settings.getConfig("numColSpec"));
+           }
+
             int nrOfCols = settings.getInt("nrOfCols");
 
             for (int i = 0; i < nrOfCols; i++) {
@@ -578,6 +611,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         m_mildOutliers = null;
         m_statistics = null;
         m_dataArray = null;
+        m_numColSpec = null;
     }
 
     /**
@@ -596,6 +630,9 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                 NodeSettings colSetting =
                         (NodeSettings)settings.addConfig("col" + (i++));
                 spec.save(colSetting);
+            }
+            if (m_numColSpec != null) {
+                m_numColSpec.save(settings.addConfig("numColSpec"));
             }
             for (Map.Entry<DataColumnSpec, double[]> entry : m_statistics
                     .entrySet()) {
@@ -709,5 +746,26 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
      */
     public DataArray getDataArray(final int index) {
         return m_dataArray;
+    }
+
+    /**
+     * @return the numColSpec
+     */
+    public DataColumnSpec getNumColSpec() {
+        return m_numColSpec;
+    }
+
+    /**
+     * @return true if the spec of the numerical column is present
+     */
+    public boolean hasNumColSpec() {
+        return m_numColSpec != null;
+    }
+
+    /**
+     * @return the settings
+     */
+    public ConditionalBoxPlotSettings getSettings() {
+        return m_settings;
     }
 }

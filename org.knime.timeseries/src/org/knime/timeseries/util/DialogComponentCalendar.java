@@ -58,6 +58,8 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
@@ -102,6 +104,12 @@ public class DialogComponentCalendar extends DialogComponent {
         overall.add(createDatePanel());
         overall.add(createTimePanel());
         getComponentPanel().add(overall);
+        
+        getModel().addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                updateComponent();
+            }
+        });
     }
 
     private JPanel createDatePanel() {
@@ -174,6 +182,20 @@ public class DialogComponentCalendar extends DialogComponent {
     }
 
     /**
+     * @param disabled If true, the checkbox for using the date is disabled.
+     */
+    public void setDateDisabled(final boolean disabled) {
+        m_useDateUI.setEnabled(!disabled);
+    }
+    
+    /**
+     * @param disabled If true, the checkbox for using the time is disabled.
+     */
+    public void setTimeDisabled(final boolean disabled) {
+        m_useTimeUI.setEnabled(!disabled);
+    }
+    
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -187,8 +209,13 @@ public class DialogComponentCalendar extends DialogComponent {
     @Override
     protected void updateComponent() {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
+        
         m_useDateUI.setSelected(model.useDate());
+        m_useDateUI.setEnabled(model.isEnabled());
+        
         m_useTimeUI.setSelected(model.useTime());
+        m_useTimeUI.setEnabled(model.isEnabled());
+        
         m_date.updateComponent();
         m_time.updateComponent();
     }

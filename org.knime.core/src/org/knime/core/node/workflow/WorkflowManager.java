@@ -1669,8 +1669,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Cleanup a node after execution. This will also permit the argument node
-     * to change its state in {@link NodeContainer#
-     * performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
+     * to change its state in {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be
      * continued.
      *
@@ -2490,6 +2489,7 @@ public final class WorkflowManager extends NodeContainer {
             }
         });
         executeAll();
+        
         synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
                 try {
@@ -2786,10 +2786,19 @@ public final class WorkflowManager extends NodeContainer {
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-            if (m_workflowMutex.equals(getParent().m_workflowMutex)) {
-                // simple: mutexes are the same which means that we have
-                // either in- or outgoing connections (or both). No need
-                // to add an synchronize on the parent-mutex.
+            if (m_workflowMutex.equals(getParent().m_workflowMutex)
+                    // simple: mutexes are the same which means that we have
+                    // either in- or outgoing connections (or both). No need
+                    // to add an synchronize on the parent-mutex.
+                    || Thread.holdsLock(getParent().m_workflowMutex)) {
+                    // the second case is less simple: we don't have the same
+                    // mutex but we already hold it: in this case, do not
+                    // make this change asynchronously because we obviously
+                    // called this from outside the "disconnected" metanode
+                    // and want to keep the state change sync'ed.
+                    // this fixes a problem with metanodes containing cluster
+                    // (sub) workflows which were started but the state of
+                    // the metanode/project was changed too late.
                 getParent().checkForNodeStateChanges(propagateChanges);
             } else {
                 // Different mutexes, that is this workflowmanager is a

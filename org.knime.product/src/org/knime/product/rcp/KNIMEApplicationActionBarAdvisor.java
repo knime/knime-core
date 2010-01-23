@@ -105,6 +105,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IAction m_importPrefAction;
 
+    private IAction m_print;
+
     // private IWorkbenchAction m_introAction;
 
     private IWorkbenchAction m_aboutAction;
@@ -146,6 +148,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IContributionItem m_showViewShortlistContributionItem;
 
     private List<IAction> m_multiInstanceViews;
+
+    private IAction m_resetPerspective;
 
     /**
      * Creates a new action bar advisor to configure a workbench window's action
@@ -197,6 +201,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_importPrefAction = new ImportPreferencesAction(window);
         register(m_importPrefAction);
 
+        m_print = ActionFactory.PRINT.create(window);
+        register(m_print);
+
         // Edit Actions
         m_cutAction = ActionFactory.CUT.create(window);
         register(m_cutAction);
@@ -224,6 +231,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
                 ContributionItemFactory.VIEWS_SHORTLIST.create(window);
         // create actions for views that register with the mult_inst_view point
         m_multiInstanceViews = createMultiInstanceViewActions();
+
+        m_resetPerspective = ActionFactory.RESET_PERSPECTIVE.create(window);
+        register(m_resetPerspective);
 
         // temporarily disable due to eclipse bug
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=211184
@@ -286,6 +296,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_saveAllAction);
         fileMenu.add(m_closeAllAction);
 
+        fileMenu.add(m_print);
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
         fileMenu.add(new Separator());
@@ -300,19 +311,20 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_exitAction);
 
         // Edit menu
+        editMenu.add(m_undoAction);
+        editMenu.add(m_redoAction);
+        editMenu.add(new Separator());
         editMenu.add(m_cutAction);
         editMenu.add(m_copyAction);
         editMenu.add(m_pasteAction);
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
-        editMenu.add(new Separator());
-        editMenu.add(m_undoAction);
-        editMenu.add(m_redoAction);
 
         // View menu
         addMultiViewsToMenu(viewMenu);
         viewMenu.add(m_showViewShortlistContributionItem);
+        viewMenu.add(m_resetPerspective);
 
         // Help menu
         // helpMenu.add(m_introAction);

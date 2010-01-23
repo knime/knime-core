@@ -232,7 +232,6 @@ public class PivotNodeModel extends NodeModel {
         final double nrRows = inData[0].getRowCount();
         int rowCnt = 0;
         ExecutionContext subExec = exec.createSubExecutionContext(0.75);
-        boolean containsMissing = false;
         // final all group, pivot pair and aggregate the values of each group
         for (final DataRow row : inData[0]) {
             subExec.checkCanceled();
@@ -245,7 +244,6 @@ public class PivotNodeModel extends NodeModel {
             // if missing values should be ignored
             if (pivotCell.isMissing()) {
                 if (m_ignoreMissValues.getBooleanValue()) {
-                    containsMissing = true;
                     continue;
                 }
             }
@@ -272,11 +270,6 @@ public class PivotNodeModel extends NodeModel {
                 }
                 set.add(row.getKey());
             }
-        }
-        // check pivoted elements for missing values
-        if (containsMissing) {
-            setWarningMessage("Pivot column \"" + m_pivot.getStringValue()
-                + "\" contains missing values which are ignored.");
         }
 
         final DataTableSpec outspec = initSpec(pivotList);

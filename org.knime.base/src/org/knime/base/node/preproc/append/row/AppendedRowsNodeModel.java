@@ -52,8 +52,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -174,25 +174,22 @@ public class AppendedRowsNodeModel extends NodeModel {
                     + " duplicate row(s).");
         }
         if (m_enableHiliting) {
-            // create hilite translation
+            // create hilite translation map
             Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
-            // set of all keys in the resulting table
-            Set<RowKey> dupHash = it.getDuplicateHash();
-            for (RowKey key : dupHash) {
-                Set<RowKey> set = new HashSet<RowKey>(1);
+            // map of all RowKeys and duplicate RowKeys in the resulting table
+            Map<RowKey, RowKey> dupMap = it.getDuplicateNameMap();
+            for (Map.Entry<RowKey, RowKey> e : dupMap.entrySet()) {
                 // if a duplicate key
-                if (key.getString().endsWith(m_suffix)) {
-                    String str = key.getString();
-                    str = str.substring(0, str.lastIndexOf(m_suffix));
-                    set.add(new RowKey(str));
+                if (!e.getKey().equals(e.getValue())) {
+                    Set<RowKey> set = Collections.singleton(e.getValue());
                     // put duplicate key and original key into map
-                    map.put(key, set);
+                    map.put(e.getKey(), set);
                 } else {
                     // skip duplicate keys
-                    if (!dupHash.contains(new RowKey(
-                            key.getString() + m_suffix))) {
-                        set.add(key);
-                        map.put(key, set);
+                    if (!dupMap.containsKey(new RowKey(e.getKey().getString()
+                            + m_suffix))) {
+                        Set<RowKey> set = Collections.singleton(e.getValue());
+                        map.put(e.getKey(), set);
                     }
                 }
             }

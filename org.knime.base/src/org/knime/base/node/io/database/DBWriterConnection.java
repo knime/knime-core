@@ -160,7 +160,7 @@ final class DBWriterConnection {
                         case Types.INTEGER:
                         case Types.BIT:
                         case Types.BOOLEAN:
-                            // those types must be compatible to IntValue
+                            // types must be compatible to IntValue
                             if (!cspec.getType().isCompatible(IntValue.class)) {
                                 throw new RuntimeException("Column \"" + name
                                         + "\" of type \"" + cspec.getType()
@@ -176,8 +176,8 @@ final class DBWriterConnection {
                         case Types.DECIMAL:
                         case Types.REAL:
                         case Types.BIGINT:
-                            // those types must also be compatible to IntValue
-                            if (!cspec.getType().isCompatible(IntValue.class)) {
+                            // types must also be compatible to DoubleValue
+                            if (!cspec.getType().isCompatible(DoubleValue.class)) {
                                 throw new RuntimeException("Column \"" + name
                                         + "\" of type \"" + cspec.getType()
                                         + "\" from input does not match type "
@@ -287,7 +287,7 @@ final class DBWriterConnection {
                         if (cell.isMissing()) {
                             stmt.setNull(dbIdx, Types.DATE);
                         } else {
-                        	DateAndTimeValue dateCell = (DateAndTimeValue) cell;
+                            DateAndTimeValue dateCell = (DateAndTimeValue) cell;
                         	if (!dateCell.hasTime() && !dateCell.hasMillis()) {
                         		java.sql.Date date = new java.sql.Date(
                         				dateCell.getUTCTimeInMillis());
@@ -297,8 +297,9 @@ final class DBWriterConnection {
                         				dateCell.getUTCTimeInMillis());
                         		stmt.setTime(dbIdx, time);
                         	} else {
-                        		java.sql.Timestamp timestamp = new java.sql.Timestamp(
-                        				dateCell.getUTCTimeInMillis());
+                        		java.sql.Timestamp timestamp = 
+                        		    new java.sql.Timestamp(
+                        		            dateCell.getUTCTimeInMillis());
                         		stmt.setTimestamp(dbIdx, timestamp);
                         	}
                         }

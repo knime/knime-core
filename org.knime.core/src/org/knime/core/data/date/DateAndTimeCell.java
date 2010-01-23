@@ -50,14 +50,22 @@
  */
 package org.knime.core.data.date;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * Cell storing a time and/or date. Time is represented by a {@link Calendar} 
@@ -68,13 +76,21 @@ import org.knime.core.node.NodeLogger;
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class DateAndTimeCell extends DataCell 
-    implements DateAndTimeValue, BoundedValue {
+    implements DateAndTimeValue, BoundedValue, StringValue {
     
     /** The UTC time zone used to represent the time. */
     public static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone("UTC");
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DateAndTimeCell.class);
+    
+    
+    /** Static method indicating preferred value class as required by 
+     * DataCell API.
+     * @return DateAndTimeValue.class */
+    public static final Class<? extends DataValue> getPreferredValueClass() {
+        return DateAndTimeValue.class;
+    }
     
     /**
      * 
@@ -257,7 +273,7 @@ public class DateAndTimeCell extends DataCell
         if (!m_hasTime) {
             resetTimeFields(m_utcCalendar);
         } else if (!m_hasMillis) {
-        	m_utcCalendar.clear(Calendar.MILLISECOND);
+            m_utcCalendar.clear(Calendar.MILLISECOND);
         }
     }
     
@@ -351,6 +367,56 @@ public class DateAndTimeCell extends DataCell
 
     
     // ***************************************************************
+    // **************      StringValue     ***************************
+    // ***************************************************************
+    
+    /* Different formatters for the getStringValue() implementation, most of 
+     * them are ISO-type style: http://www.w3.org/TR/NOTE-datetime,
+     * http://en.wikipedia.org/wiki/ISO_8601 */
+    
+    /** Formatter if only date is available. */
+    private static final DateFormat FORMAT_DATE =
+        new SimpleDateFormat("yyyy-MM-dd");
+    
+    /** Formatter if only date and time are available. */
+    private static final DateFormat FORMAT_DATE_AND_TIME =
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+    /** Formatter if date, time and ms are available. */
+    private static final DateFormat FORMAT_DATE_AND_TIME_AND_MS =
+        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
+        
+    /** Formatter if only time is available. */
+    private static final DateFormat FORMAT_TIME =
+        new SimpleDateFormat("HH:mm:ss");
+    
+    /** Formatter if only time and ms are available. */
+    private static final DateFormat FORMAT_TIME_AND_MS =
+        new SimpleDateFormat("HH:mm:ss.S");
+    
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getStringValue() {
+        Date date = getInternalUTCCalendarMember().getTime();
+        if (m_hasDate && m_hasTime && m_hasMillis) {
+            return FORMAT_DATE_AND_TIME_AND_MS.format(date);
+        } else if (m_hasDate && m_hasTime && !m_hasMillis) {
+            return FORMAT_DATE_AND_TIME.format(date);
+        } else if (m_hasDate && !m_hasTime && !m_hasMillis) {
+            return FORMAT_DATE.format(date);
+        } else if (!m_hasDate && m_hasTime && m_hasMillis) {
+            return FORMAT_TIME_AND_MS.format(date);
+        } else if (!m_hasDate && m_hasTime && !m_hasMillis) {
+            return FORMAT_TIME.format(date);
+        } else {
+            // ill-posed format (should have been rejected in constructor),
+            // use full precision
+            return FORMAT_DATE_AND_TIME_AND_MS.format(date);
+        }
+    }
+    
+    // ***************************************************************
     // **************         Utility      ***************************
     // ***************************************************************
     
@@ -435,6 +501,38 @@ public class DateAndTimeCell extends DataCell
     public boolean hasMillis() {
         return m_hasMillis;
     }
+    
+    private static final String CFG_HAS_DATE = "hasDate";
+    private static final String CFG_HAS_TIME = "hasTime";
+    private static final String CFG_HAS_MILLIS = "hasMillis";
+    private static final String CFG_TIME_IN_MILLIS = "timeInMillis";
+    
+    /** Save this cell to the argument config. This method writes directly
+     * into the config object, no sub-config is created.
+     * @param config To save to.
+     * @see #load(ConfigRO)
+     */
+    public void save(final ConfigWO config) {
+        config.addBoolean(CFG_HAS_DATE, m_hasDate);
+        config.addBoolean(CFG_HAS_TIME, m_hasTime);
+        config.addBoolean(CFG_HAS_MILLIS, m_hasMillis);
+        config.addLong(CFG_TIME_IN_MILLIS, m_utcCalendar.getTimeInMillis());
+    }
+    
+    /** Load a data cell that was previously written with the 
+     * {@link #save(ConfigWO)} method.
+     * @param config To load from.
+     * @return A new cell loaded from the argument.
+     * @throws InvalidSettingsException If the config is incomplete or invalid.
+     */
+    public static DateAndTimeCell load(final ConfigRO config) 
+        throws InvalidSettingsException {
+        boolean hasDate = config.getBoolean(CFG_HAS_DATE);
+        boolean hasTime = config.getBoolean(CFG_HAS_TIME);
+        boolean hasMillis = config.getBoolean(CFG_HAS_MILLIS);
+        long timeInMillis = config.getLong(CFG_TIME_IN_MILLIS);
+        return new DateAndTimeCell(timeInMillis, hasDate, hasTime, hasMillis);
+    }
 
     // ***************************************************************
     // **************         DataCell      **************************
@@ -470,15 +568,14 @@ public class DateAndTimeCell extends DataCell
         return (int)(m_utcCalendar.getTimeInMillis() 
                 ^ (m_utcCalendar.getTimeInMillis() >>> 32));
     }
-
+    
     /**
      * 
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-        return DateAndTimeValueRenderer.DEFAULT.getStringRepresentationFor(
-                this);
+        return getStringValue();
     }
 
 }

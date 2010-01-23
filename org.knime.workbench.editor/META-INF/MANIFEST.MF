@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
-Bundle-Version: 2.1.0.0022922
+Bundle-Version: 2.1.1.0023899
 Bundle-ClassPath: workbench-editor-patches.jar,
  workbench-editor.jar
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin

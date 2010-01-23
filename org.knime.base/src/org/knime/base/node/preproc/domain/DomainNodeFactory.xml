@@ -21,8 +21,10 @@
 		<p>
 		Include the columns, for which possible values shall be determined and
 		be put in the table specification. The default dialog option selects
-		all columns, which can represent themselves as String. All columns that
-		are not included here won't have a possible values list.
+		all columns, which can represent themselves as String. For all 
+		non-selected columns (the Exclude list) the possible value domain will 
+		be dropped or retained, depending on the selection of the corresponding
+		buttons below the Exclude list.
 		</p>
 		<p>You can also restrict the number of different values using the 
 		checkbox and the accompanying spinner at the bottom of this tab. 
@@ -34,7 +36,9 @@
 		<option name="Min &amp; Max">
 		Select all columns for which min and max values shall be determined. The
 		default dialog option includes all &quot;boundable&quot; columns, for
-		instance numeric ones.
+		instance numeric ones. Also select what happens with columns in the 
+		Exclude	list, i.e. either dropping the min/max domain that is available
+		in the input table or retaining it.
 		</option>
 	</fullDescription>
 	

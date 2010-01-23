@@ -315,8 +315,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Creates an execution result containing all calculated values in a
      * execution. The returned value is suitable to be used in
-     * {@link #loadDataAndInternals(
-     * NodeContentPersistor, ExecutionMonitor, LoadResult)}.
+     * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor, LoadResult)}.
      * If this node is not executed, it will assign null values to the fields
      * in the returned execution result.
      * @param exec For progress information.
@@ -1391,8 +1390,7 @@ public final class Node implements NodeModelWarningListener {
     // }
     /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
-     *            {@link NodeDialogPane# loadSettingsFrom(NodeSettingsRO,
-     *            PortObjectSpec[])}.
+     *            {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}.
      * @param foStack The stack of variables.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
@@ -1434,8 +1432,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
-     * {@link #getDialogPaneWithSettings(
-     * PortObjectSpec[], FlowObjectStack, NodeSettings)}
+     * {@link #getDialogPaneWithSettings(PortObjectSpec[], FlowObjectStack, NodeSettingsRO)}
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.

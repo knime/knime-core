@@ -96,6 +96,7 @@ import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -112,15 +113,15 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, University of Konstanz
  */
 class Buffer implements KNIMEStreamConstants {
-
+    
     /** Static field to enable/disable the usage of a GZipInput/OutpuStream
-     * when writing the binary data. This option defaults to true, meaning
-     * that we read/write to a compressed stream.
+     * when writing the binary data. This option defaults to
+     * {@value DataContainer#DEF_GZIP_COMPRESSION}.
      *
      * Note: Changing this parameter makes it impossible to read workflows
      * written previously. It's only used for internal testing purposes.
      */
-    private static final boolean IS_USE_GZIP = true;
+    private static final boolean IS_USE_GZIP;
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
@@ -209,8 +210,9 @@ class Buffer implements KNIMEStreamConstants {
      * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4722539): Temp files
      * are not deleted on windows when there are open streams.
      */
-    private static final HashSet<WeakReference<Buffer>>
-        OPENBUFFERS = new HashSet<WeakReference<Buffer>>();
+    private static final Set<WeakReference<Buffer>>
+        OPENBUFFERS = Collections.synchronizedSet(
+                new HashSet<WeakReference<Buffer>>());
 
     /** Number of dirs/files per directory when blobs are saved. */
     private static final int BLOB_ENTRIES_PER_DIRECTORY = 1000;
@@ -243,6 +245,31 @@ class Buffer implements KNIMEStreamConstants {
             Runtime.getRuntime().addShutdownHook(hook);
         } catch (Exception e) {
             LOGGER.warn("Unable to add shutdown hook to delete temp files", e);
+        }
+        // prefer this block over Boolean.getBoolean(...) to cover typos 
+        // on command line (warn on console)
+        String isUseGzipString = System.getProperty(
+                KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
+        boolean debugLog = true;
+        if (isUseGzipString == null) {
+            isUseGzipString = Boolean.toString(
+                    DataContainer.DEF_GZIP_COMPRESSION);
+            debugLog = false;
+        }
+        if ("true".equals(isUseGzipString)) {
+            IS_USE_GZIP = true;
+        } else if ("false".equals(isUseGzipString)) {
+            IS_USE_GZIP = false;
+        } else {
+            debugLog = false;
+            LOGGER.warn("Unable to read property " 
+                    + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
+                    + isUseGzipString + "\"); defaulting to " 
+                    + DataContainer.DEF_GZIP_COMPRESSION);
+            IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
+        }
+        if (debugLog) {
+            LOGGER.debug("Setting table stream compression to " + IS_USE_GZIP);
         }
     }
 

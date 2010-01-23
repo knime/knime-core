@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import javax.swing.SwingUtilities;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -58,6 +60,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -121,14 +124,32 @@ public class OpenViewAction extends Action {
                 + m_index + ")");
         try {
             final String title = m_nodeContainer.getViewName(m_index) + " - " 
-                + m_nodeContainer.getDisplayLabel();            
-            Display.getDefault().asyncExec(new Runnable() {
+                + m_nodeContainer.getDisplayLabel();
+            
+            Runnable runner = new Runnable() {
                 @Override
                 public void run() {
                     Node.invokeOpenView(
                             m_nodeContainer.getView(m_index), title);
                 }
-            });
+            };
+            // workaround for bug 2136: Schrodinger views must be opened
+            // in non-AWT thread (unchecked call to SU.invokeAndWait)
+            // This fix is to be reverted in future versions, 
+            // see bug 2137 for details
+            boolean isSchrodinger = false;
+            if (m_nodeContainer instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)m_nodeContainer;
+                String clName = snc.getNodeReferenceBug2136().
+                    getFactory().getClass().getName();
+                isSchrodinger = clName.startsWith(
+                        "com.schrodinger.knime.node.");
+            }
+            if (isSchrodinger) {
+                Display.getDefault().asyncExec(runner);
+            } else {
+                SwingUtilities.invokeLater(runner);
+            }
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),

@@ -57,7 +57,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -77,7 +76,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -156,11 +154,6 @@ public class SVMLearnerNodeModel extends NodeModel {
             new SettingsModelString(CFG_CLASSCOL, "");
 
     /*
-     * Position of class column
-     */
-    private int m_classpos;
-
-    /*
      * The chosen kernel
      */
     private KernelType m_kernelType = KernelFactory.getDefaultKernelType();
@@ -171,11 +164,6 @@ public class SVMLearnerNodeModel extends NodeModel {
      * For each category, a BinarySvm that splits the category from the others.
      */
     private Svm[] m_svms;
-
-    /*
-     * The DataTableSpec we have learned with
-     */
-    private DataTableSpec m_spec;
 
     /*
      * String containing info about the trained SVM's
@@ -221,59 +209,14 @@ public class SVMLearnerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec myspec = (DataTableSpec)inSpecs[0];
-        StringBuilder errormessage = new StringBuilder();
-        DataColumnSpec targetcol = null;
-        List<DataColumnSpec> validCols = new LinkedList<DataColumnSpec>();
-        if (myspec.getNumColumns() > 0) {
-            if (m_classcol.getStringValue().equals("")) {
-                throw new InvalidSettingsException("Class column not set");
-            } else {
-                int validColumns = 0;
-                boolean found = false;
-                for (DataColumnSpec colspec : myspec) {
-                    if (colspec.getName().equals(m_classcol.getStringValue())) {
-                      if (!colspec.getType().isCompatible(NominalValue.class)) {
-                            throw new InvalidSettingsException("Target column "
-                                    + colspec.getName() + " must be nominal.");
-                        }
-                      found = true;
-                      targetcol = colspec;
-                        m_classpos =
-                                myspec.findColumnIndex(m_classcol
-                                        .getStringValue());
-                    } else {
-                      if (!colspec.getType().isCompatible(DoubleValue.class)) {
-                            errormessage.append(colspec.getName() + ",");
-                        } else {
-                            validCols.add(colspec);
-                            validColumns++;
-                        }
-                    }
-                }
-                if (!found) {
-                    throw new InvalidSettingsException("Class column "
-                            + m_classcol.getStringValue() + " not found"
-                            + " in DataTableSpec.");
-                }
-                if (validColumns == 0) {
-                    throw new InvalidSettingsException("Input DataTable does"
-                            + " not contain one single valid column.");
-                }
-                if (errormessage.length() > 0) {
-                    // remove last ','
-                    int pos = errormessage.length();
-                    errormessage.replace(pos - 1, pos, " ");
-                    errormessage.append(": incompatible type."
-                            + " Will be ignored.");
-                    setWarningMessage(errormessage.toString());
-                }
-            }
-        }
+        DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
+        LearnColumnsAndColumnRearrangerTuple tuple = 
+            createTrainTableColumnRearranger(inSpec);
+        DataTableSpec trainSpec = tuple.getTrainingRearranger().createSpec();
         PMMLPortObjectSpecCreator pmmlcreate =
-                new PMMLPortObjectSpecCreator(myspec);
-        pmmlcreate.setTargetCol(targetcol);
-        pmmlcreate.setLearningCols(validCols);
+                new PMMLPortObjectSpecCreator(trainSpec);
+        pmmlcreate.setTargetCol(tuple.getTargetColumn());
+        pmmlcreate.setLearningCols(tuple.getLearningColumns());
         return new PortObjectSpec[]{pmmlcreate.createSpec()};
     }
 
@@ -283,39 +226,20 @@ public class SVMLearnerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable traintable = (BufferedDataTable)inData[0];
-        // Clean input data...
-        StringBuilder errormessage = new StringBuilder();
-        DataTableSpec inputSpec = traintable.getDataTableSpec();
-        Vector<Integer> excludeVector = new Vector<Integer>();
-        for (int i = 0; i < inputSpec.getNumColumns(); i++) {
-            DataColumnSpec colspec = inputSpec.getColumnSpec(i);
-            if (!colspec.getType().isCompatible(DoubleValue.class)
-                    && !colspec.getName().equals(m_classcol.getStringValue())) {
-                errormessage.append(colspec.getName() + ",");
-                excludeVector.add(i);
-            }
-        }
-        // ...if necessary
-        if (excludeVector.size() > 0) {
-            int[] exclude = new int[excludeVector.size()];
-            for (int e = 0; e < exclude.length; e++) {
-                exclude[e] = excludeVector.get(e);
-            }
-            ColumnRearranger colre =
-                    new ColumnRearranger(traintable.getDataTableSpec());
-            colre.remove(exclude);
-            traintable =
-                    exec.createColumnRearrangeTable(traintable, colre, exec);
-        }
-        m_spec = traintable.getDataTableSpec();
-        m_classpos = m_spec.findColumnIndex(m_classcol.getStringValue());
+        BufferedDataTable inTable = (BufferedDataTable)inData[0];
+        LearnColumnsAndColumnRearrangerTuple tuple =
+            createTrainTableColumnRearranger(inTable.getDataTableSpec());
+        // no progress needed as constant operation (column removal only)
+        BufferedDataTable trainTable = exec.createColumnRearrangeTable(inTable,
+                tuple.getTrainingRearranger(), exec.createSubProgress(0.0));
+        DataTableSpec trainSpec = trainTable.getDataTableSpec();
+        int classpos = trainSpec.findColumnIndex(m_classcol.getStringValue());
 
         // convert input data
         ArrayList<DoubleVector> inputData = new ArrayList<DoubleVector>();
         ArrayList<String> categories = new ArrayList<String>();
         StringValue classvalue = null;
-        for (DataRow row : traintable) {
+        for (DataRow row : trainTable) {
             exec.checkCanceled();
             ArrayList<Double> values = new ArrayList<Double>();
             boolean add = true;
@@ -324,11 +248,11 @@ public class SVMLearnerNodeModel extends NodeModel {
                     add = false;
                     break;
                 }
-                if (i != m_classpos) {
+                if (i != classpos) {
                     DoubleValue cell = (DoubleValue)row.getCell(i);
                     values.add(cell.getDoubleValue());
                 } else {
-                    classvalue = (StringValue)row.getCell(m_classpos);
+                    classvalue = (StringValue)row.getCell(classpos);
                     if (!categories.contains(classvalue.getStringValue())) {
                         categories.add(classvalue.getStringValue());
                     }
@@ -362,7 +286,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         ThreadPool pool = KNIMEConstants.GLOBAL_THREAD_POOL;
         final Future<?>[] fut = new Future<?>[bst.length];
         KNIMETimer timer = KNIMETimer.getInstance();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 try {
@@ -377,7 +301,8 @@ public class SVMLearnerNodeModel extends NodeModel {
                 }
 
             }
-        }, 0, 3000);
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, 3000);
         for (int i = 0; i < bst.length; i++) {
             fut[i] = pool.enqueue(bst[i]);
         }
@@ -394,28 +319,98 @@ public class SVMLearnerNodeModel extends NodeModel {
                     return null;
                 }
             });
-        } catch (ExecutionException ex) {
-            throw (Exception) ex.getCause();
+        } catch (Exception ex) {
+            exec.checkCanceled();
+            Throwable t = ex;
+            if (ex instanceof ExecutionException) {
+                t = ex.getCause();
+            }
+            if (t instanceof Exception) {
+                throw (Exception) t;
+            } else {
+                throw new Exception(t);
+            }
+        } finally {
+            for (int i = 0; i < fut.length; i++) {
+                fut[i].cancel(true);
+            }
+            timerTask.cancel();
         }
 
-        if (errormessage.length() > 0) {
-            // remove last ','
-            int pos = errormessage.length();
-            errormessage.replace(pos - 1, pos, " ");
-            errormessage.append(": incompatible type. Ignored.");
-            setWarningMessage(errormessage.toString());
-        }
-
-        PMMLPortObjectSpecCreator pmmlcreate =
-                new PMMLPortObjectSpecCreator(traintable.getDataTableSpec());
-        pmmlcreate.setTargetCol(m_spec.getColumnSpec(m_classcol
+        PMMLPortObjectSpecCreator pmmlcreate = 
+            new PMMLPortObjectSpecCreator(trainSpec);
+        pmmlcreate.setTargetCol(trainSpec.getColumnSpec(m_classcol
                 .getStringValue()));
         PMMLPortObjectSpec pmmlspec = pmmlcreate.createSpec();
         PMMLSVMPortObject pmml =
                 new PMMLSVMPortObject(pmmlspec, kernel, m_svms);
         return new PortObject[]{pmml};
     }
-
+    
+    private LearnColumnsAndColumnRearrangerTuple 
+        createTrainTableColumnRearranger(final DataTableSpec spec) 
+        throws InvalidSettingsException {
+        if (spec.getNumColumns() == 0) {
+            throw new InvalidSettingsException("No columns in input table");
+        }
+        String classCol = m_classcol.getStringValue();
+        if (classCol == null || classCol.length() == 0) {
+            throw new InvalidSettingsException("Class column not set");
+        }
+        DataColumnSpec targetColumn = null;
+        ArrayList<DataColumnSpec> learningColumns = 
+            new ArrayList<DataColumnSpec>();
+        ArrayList<String> rejectedColumns = new ArrayList<String>();
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            DataColumnSpec colspec = spec.getColumnSpec(i);
+            if (colspec.getName().equals(classCol)) {
+                if (!colspec.getType().isCompatible(StringValue.class)) {
+                    throw new InvalidSettingsException("Target column "
+                            + colspec.getName() + " must be nominal.");
+                }
+                targetColumn = colspec;
+            } else {
+                if (colspec.getType().isCompatible(DoubleValue.class)) {
+                    learningColumns.add(colspec);
+                } else {
+                    rejectedColumns.add(colspec.getName());
+                }
+            }
+        }
+        if (targetColumn == null) {
+            throw new InvalidSettingsException("Target column \""
+                    + m_classcol.getStringValue() + "\" not found"
+                    + " in DataTableSpec.");
+        }
+        if (learningColumns.isEmpty()) {
+            throw new InvalidSettingsException("Input DataTable does"
+                    + " not contain one single valid column.");
+        }
+        int rejectedColumnsSize = rejectedColumns.size();
+        if (rejectedColumnsSize > 0) {
+            List<String> shortList = rejectedColumns;
+            // do not list 1000+ columns in a user warning message
+            int maxLength = 4;
+            if (rejectedColumnsSize >= maxLength) {
+                shortList = new ArrayList<String>(
+                        rejectedColumns.subList(0, maxLength));
+                shortList.add("... (remainder truncated)"); // now 4 elements
+            }
+            setWarningMessage("Rejecting " + rejectedColumnsSize + " column(s)"
+                    + " due to incompatible type: " + shortList);
+        }
+        
+        String[] validColumns = new String[learningColumns.size() + 1];
+        for (int i = 0; i < learningColumns.size(); i++) {
+            validColumns[i] = learningColumns.get(i).getName();
+        }
+        validColumns[validColumns.length - 1] = targetColumn.getName();
+        ColumnRearranger result = new ColumnRearranger(spec);
+        result.keepOnly(validColumns);
+        return new LearnColumnsAndColumnRearrangerTuple(
+                result, learningColumns, targetColumn);
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -575,4 +570,41 @@ public class SVMLearnerNodeModel extends NodeModel {
         m_paramC.validateSettings(settings);
         m_classcol.validateSettings(settings);
     }
+    
+    private static final class LearnColumnsAndColumnRearrangerTuple {
+        
+        private final ColumnRearranger m_trainingRearranger;
+        private final List<DataColumnSpec> m_learningColumns;
+        private final DataColumnSpec m_targetColumn;
+        
+        /** Create tuple of column rearranger for training table and 
+         * corresponding learning and target columns. 
+         * @param trainingRearranger The training table column rearranger
+         * @param learningColumns The list of learning columns.
+         * @param targetColumn The target column. */
+        LearnColumnsAndColumnRearrangerTuple(
+                final ColumnRearranger trainingRearranger,
+                final List<DataColumnSpec> learningColumns,
+                final DataColumnSpec targetColumn) {
+            m_trainingRearranger = trainingRearranger;
+            m_learningColumns = learningColumns;
+            m_targetColumn = targetColumn;
+        }
+
+        /** @return the trainingRearranger */
+        ColumnRearranger getTrainingRearranger() {
+            return m_trainingRearranger;
+        }
+
+        /** @return the learningColumns */
+        List<DataColumnSpec> getLearningColumns() {
+            return m_learningColumns;
+        }
+
+        /** @return the targetColumn */
+        DataColumnSpec getTargetColumn() {
+            return m_targetColumn;
+        }
+    }
+    
 }

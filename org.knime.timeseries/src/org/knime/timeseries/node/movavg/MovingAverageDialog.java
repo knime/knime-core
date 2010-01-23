@@ -50,10 +50,7 @@
  */
 package org.knime.timeseries.node.movavg;
 
-//import java.util.LinkedList;
-//import java.util.List;
 
-//import javax.swing.JCheckBox;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -118,7 +115,7 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
      * @return the model for the window length
      */
     static SettingsModelOddIntegerBounded createWindowLengthModel() {
-        return new SettingsModelOddIntegerBounded("win_length", 21, 3, 1001);
+        return new SettingsModelOddIntegerBounded("win_length", 21, 3, 10001);
     }
 
     /**

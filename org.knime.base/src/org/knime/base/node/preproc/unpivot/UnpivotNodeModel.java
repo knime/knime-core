@@ -102,6 +102,9 @@ public class UnpivotNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_enableHilite =
         UnpivotNodeDialogPane.createHiLiteModel();
+    
+    private final SettingsModelBoolean m_missingValues =
+        UnpivotNodeDialogPane.createMissingValueModel();
 
     private HiLiteTranslator m_trans = null;
     private final HiLiteHandler m_hilite = new HiLiteHandler();
@@ -210,6 +213,10 @@ public class UnpivotNodeModel extends NodeModel {
             for (int i = 0; i < valueColumns.size(); i++) {
                 String colName = valueColumns.get(i);
                 DataCell acell = row.getCell(inSpec.findColumnIndex(colName));
+                if (acell.isMissing() && m_missingValues.getBooleanValue()) {
+                    // skip rows containing missing cells (in Value column(s))
+                    continue;
+                }
                 RowKey rowKey = RowKey.createRowKey(buf.size());
                 if (enableHilite) {
                     set.add(rowKey);
@@ -311,6 +318,11 @@ public class UnpivotNodeModel extends NodeModel {
         m_orderColumns.loadSettingsFrom(settings);
         m_valueColumns.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
+        try {
+            m_missingValues.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // ignored: new with 2.1.1+
+        }
     }
 
     /**
@@ -321,6 +333,7 @@ public class UnpivotNodeModel extends NodeModel {
         m_orderColumns.saveSettingsTo(settings);
         m_valueColumns.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
+        m_missingValues.saveSettingsTo(settings);
     }
 
     /**

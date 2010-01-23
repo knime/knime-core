@@ -47,21 +47,31 @@
  */
 package org.knime.timeseries.node.diff;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.util.DialogComponentCalendar;
+import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * 
  * Dialog for the TimeDifference node with a column selection for the first date
  * column, one for the other date column, a text field for the new column, a
  * selection list for the desired granularity (year, quarter, month, week, day,
- * hour, minute) of the difference and a spinner to chosse the rounding of the
+ * hour, minute) of the difference and a spinner to choose the rounding of the
  * fraction digits of the result.
  * 
  * 
@@ -79,18 +89,59 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
 
     private static final String CFG_ROUND = "round.numbers";
 
+    private static final String CFG_REF_TYPE = "seconddate.reference.type";
+
+    private static final String CFG_TIME = "cfg.time";
+
+    /** the key for always using the execution time as the second time. */
+    public static final String CFG_NOW = "Use execution time";
+    /** the key for using a column as the second time. */
+    public static final String CFG_COLUMN = "Use second column";
+    /** the key for using a specific time as the second time. */
+    public static final String CFG_FIXDATE = "Use fixed date";
+    
+    private final SettingsModelString m_referencemodel 
+                                = getReferenceTypeModel();
+    private final SettingsModelCalendar m_fixTimeComponent 
+                                = getCalendarModel();
+    private final SettingsModelString m_columnSelComponent
+                                = createColumn2Model();
+
+
     /**
      * New pane for configuring the TimeDifference node.
      */
     @SuppressWarnings("unchecked")
     protected TimeDifferenceNodeDialog() {
+        setHorizontalPlacement(true);
+        
+        // en- and disable the selection of the time and the
+        // second column, as selected by user.
+        m_referencemodel.addChangeListener(new ChangeListener() {
+
+             @Override
+            public void stateChanged(final ChangeEvent e) {
+                 updateComponentVisibility(
+                         m_referencemodel.getStringValue());
+                
+            }
+            
+        });
+        addDialogComponent(new DialogComponentButtonGroup(m_referencemodel,
+                false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE));
+
+        setHorizontalPlacement(false);
+        // time selection
+        addDialogComponent(new DialogComponentCalendar(m_fixTimeComponent,
+                "Fixed time "));
         // first date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColmn1Model(), "Select first date column", 0,
                 DateAndTimeValue.class));
         // second date column
         addDialogComponent(new DialogComponentColumnNameSelection(
-                createColumn2Model(), "Select second date column", 0,
+                m_columnSelComponent
+                , "Select second date column", 0,
                 org.knime.core.data.date.DateAndTimeValue.class));
         // granularity selection
         addDialogComponent(new DialogComponentStringSelection(
@@ -109,6 +160,20 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     /*
      * Models...
      */
+    
+    /**
+     * @return settings model for the selected time
+     */
+    static SettingsModelCalendar getCalendarModel() {
+        return new SettingsModelCalendar(CFG_TIME, null);
+    }
+
+    /**
+     * @return settings model for the type of the used reference column.
+     */
+    static SettingsModelString getReferenceTypeModel() {
+        return new SettingsModelString(CFG_REF_TYPE, CFG_NOW);
+    }
 
     /**
      * @return settings model for the first time column
@@ -148,5 +213,39 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelInteger createRoundingModel() {
         return new SettingsModelInteger(CFG_ROUND, 0);
+    }   
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        try {
+            m_referencemodel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_referencemodel.setStringValue(
+                    getReferenceTypeModel().getStringValue());
+        }
+        updateComponentVisibility(m_referencemodel.getStringValue());
+    }
+
+
+    /**
+     * @param string the identifier of the type of second time selection.
+     */
+    private void updateComponentVisibility(final String string) {
+        if (string.equals(CFG_FIXDATE)) {
+            m_fixTimeComponent.setEnabled(true);    
+            m_columnSelComponent.setEnabled(false);
+        } else if (string.equals(CFG_NOW)) {
+            m_fixTimeComponent.setEnabled(false);
+            m_columnSelComponent.setEnabled(false);
+        } else {  //default: use a second column
+            m_fixTimeComponent.setEnabled(false);
+            m_columnSelComponent.setEnabled(true);
+        }
+        
     }
 }

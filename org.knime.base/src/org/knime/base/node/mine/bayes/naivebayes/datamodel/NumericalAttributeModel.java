@@ -215,6 +215,7 @@ class NumericalAttributeModel extends AttributeModel {
                 if (m_noOfRows == 0) {
                     return 0;
                 }
+                // TODO Can we add laplace correction here?
                 return (double)m_missingValueRecs.intValue() / m_noOfRows;
             }
             final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
@@ -278,12 +279,20 @@ class NumericalAttributeModel extends AttributeModel {
                 throw new IllegalStateException("Model for attribute "
                         + getAttributeName() + " contains no rows.");
             }
-            m_mean = m_sum / m_noOfRows;
-            if (m_noOfRows == 1) {
+            int noOfRowsNonMissing = m_noOfRows - m_missingValueRecs.intValue();
+            // TODO Verify this! What if training data only contains missings
+            if (noOfRowsNonMissing == 0) {
+                throw new IllegalStateException("Model for attribute "
+                        + getAttributeName() + " and class \""
+                        + getClassValue() + "\" contains only missing values");
+            }
+            m_mean = m_sum / noOfRowsNonMissing;
+            if (noOfRowsNonMissing == 1) {
                 m_stdDeviation = 0;
             } else {
                 final double intermediateResult = (m_squareSum
-                        - ((m_sum * m_sum) / m_noOfRows)) / (m_noOfRows - 1);
+                        - ((m_sum * m_sum) / noOfRowsNonMissing))
+                        / (noOfRowsNonMissing - 1);
                 if (intermediateResult <= 0) {
                     //this should never happen but could be a rounding problem
                     m_stdDeviation = 0;

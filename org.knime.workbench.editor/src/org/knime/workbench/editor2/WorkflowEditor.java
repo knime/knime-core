@@ -330,6 +330,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IEditorPart editor = p.findEditor(in);
                     if (editor != null) {
                         editors.add(editor);
+                        if (editor instanceof WorkflowEditor) {
+                            /* Recursively get all subeditors. This is necessary
+                             *  for meta nodes in meta nodes. */
+                            editors.addAll(
+                                    ((WorkflowEditor)editor).getSubEditors());
+                        }
                     }
                 }
             }
@@ -349,47 +355,22 @@ public class WorkflowEditor extends GraphicalEditor implements
             ProjectWorkflowMap.unregisterClientFrom(path, this);
             ProjectWorkflowMap.remove(path);
         }
-
         // remember that this editor has been closed
         m_closed = true;
-
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
-
-
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
         }
-
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
-
         m_manager.removeNodeStateChangeListener(this);
-
         // remove resource listener..
         if (m_fileResource != null) {
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
-
-        // we only have to do it on the parent
-        if (m_parentEditor == null) {
-            // bugfix 799: not possible to stop closing earlier if user
-            // decides to NOT save it. Thus we have at least to try to
-            // cancel all running nodes
-            try {
-                m_manager.shutdown();
-            } catch (Throwable t) {
-                // at least we have tried it
-                LOGGER.error(
-                        "Could not cancel workflow manager for project "
-                        + m_fileResource.getProject().getName(), t);
-            }
-            WorkflowManager.ROOT.removeProject(m_manager.getID());
-        }
-
         getCommandStack().removeCommandStackListener(this);
-
         super.dispose();
     }
 
@@ -644,7 +625,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.fatal("Repository Manager Instance must not be null!");
             }
             assert m_manager == null;
-            
+
             IPath localPath = m_fileResource.getParent().getFullPath();
             m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
                     localPath);
@@ -686,8 +667,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
                 ProjectWorkflowMap.putWorkflow(localPath, m_manager);
             }
-            // in any case register as client (also if the workflow was already 
-            // loaded by another client 
+            // in any case register as client (also if the workflow was already
+            // loaded by another client
             ProjectWorkflowMap.registerClientTo(localPath, this);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
@@ -1351,7 +1332,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (m_fileResource.equals(delta.getResource())) {
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     // remove workflow.knime from moved to path
-                    IPath newDirPath = 
+                    IPath newDirPath =
                         delta.getMovedToPath().removeLastSegments(1);
                     // directory name (without workflow groups)
                     final String newName = newDirPath.lastSegment();

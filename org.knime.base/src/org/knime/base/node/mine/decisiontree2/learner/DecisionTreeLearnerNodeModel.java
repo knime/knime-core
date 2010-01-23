@@ -54,7 +54,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -64,6 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
 import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
@@ -80,6 +80,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -358,15 +359,13 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * @param exec the execution context for this run
      * @param data the input data to build the decision tree from
      * @return an empty data table array, as just a model is provided
+     * @throws Exception any type of exception, e.g. for cancellation,
+     *         invalid input,...
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
-     * @throws CanceledExecutionException if canceled.
-     * @throws IllegalArgumentException if the table has less than 2 records
-     * @throws IllegalAccessException if an illegal partitioning is accessed
      */
     @Override
     protected PortObject[] execute(final PortObject[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            IllegalArgumentException, IllegalAccessException {
+            final ExecutionContext exec) throws Exception {
 
         // holds the warning message displayed after execution
         StringBuilder warningMessageSb = new StringBuilder();
@@ -479,24 +478,31 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
         return new PortObject[]{
-                getPMMLOutPortObject(inData.getDataTableSpec())};
+                new PMMLDecisionTreePortObject(m_decisionTree,
+                        createPMMLPortObjectSpec(inData.getDataTableSpec()))};
     }
 
-    /**
-     * @return
-     */
-    private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
+    private PMMLPortObjectSpec createPMMLPortObjectSpec(
+            final DataTableSpec spec) throws InvalidSettingsException {
         String targetCol = m_classifyColumn.getStringValue();
         List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
-            String col = spec.getColumnSpec(i).getName();
-            if (!col.equals(targetCol)) {
+            DataColumnSpec columnSpec = spec.getColumnSpec(i);
+            String col = columnSpec.getName();
+            if (!col.equals(targetCol)
+                    && (columnSpec.getType().isCompatible(DoubleValue.class)
+                    || columnSpec.getType().isCompatible(NominalValue.class))) {
                 learnCols.add(spec.getColumnSpec(i).getName());
             }
         }
-        PMMLPortObjectSpec outSpec = new PMMLPortObjectSpec(
-                spec, learnCols, null, Arrays.asList(targetCol));
-        return new PMMLDecisionTreePortObject(m_decisionTree, outSpec);
+        String[] usedCols = learnCols.toArray(new String[learnCols.size() + 1]);
+        usedCols[usedCols.length - 1] = targetCol;
+        PMMLPortObjectSpecCreator pmmlSpecCreator =
+                new PMMLPortObjectSpecCreator(
+                       FilterColumnTable.createFilterTableSpec(spec, usedCols));
+        pmmlSpecCreator.setLearningColsNames(learnCols);
+        pmmlSpecCreator.setTargetColName(targetCol);
+        return pmmlSpecCreator.createSpec();
     }
 
     private void addHiliteAndColorInfo(final BufferedDataTable inData) {
@@ -762,10 +768,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         // check spec with selected column
-        DataColumnSpec columnSpec = inSpec.getColumnSpec(
-                m_classifyColumn.getStringValue());
-        if (columnSpec == null
-                || !columnSpec.getType().isCompatible(NominalValue.class)) {
+        String classifyColumn = m_classifyColumn.getStringValue();
+        DataColumnSpec columnSpec = inSpec.getColumnSpec(classifyColumn);
+        boolean isValid = columnSpec != null
+            && columnSpec.getType().isCompatible(NominalValue.class);
+        if (classifyColumn != null && !isValid) {
+            throw new InvalidSettingsException("Class column \""
+                    + classifyColumn + "\" not found or incompatible");
+        }
+        if (classifyColumn == null) { // auto-guessing
+            assert !isValid : "No class column set but valid configuration";
             // if no useful column is selected guess one
             // get the first useful one starting at the end of the table
             for (int i = inSpec.getNumColumns() - 1; i >= 0; i--) {
@@ -777,20 +789,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                             + m_classifyColumn.getStringValue() + "\".");
                     break;
                 }
-                throw new InvalidSettingsException("Table contains no nominal"
-                        + " attribute for classification.");
             }
+            throw new InvalidSettingsException("Table contains no nominal"
+                    + " attribute for classification.");
         }
-
-        return new PortObjectSpec[]{createPMMLSpec(inSpec)};
-    }
-
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec)
-        throws InvalidSettingsException {
-        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
-        creator.setTargetColsNames(Arrays.asList(
-                m_classifyColumn.getStringValue()));
-        return creator.createSpec();
+        return new PortObjectSpec[]{createPMMLPortObjectSpec(inSpec)};
     }
 
     /**

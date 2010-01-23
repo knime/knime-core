@@ -55,35 +55,32 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 
 /**
- * Class that hold static values about the knime platform. This includes,
+ * Class that hold static values about the KNIME platform. This includes,
  * among others, the welcome message and an icon.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEConstants {
     /** KNIME's major release number. */
-    public static final int MAJOR = 2;
+    public static final int MAJOR;
     /** KNIME's minor release number. */
-    public static final int MINOR = 1;
+    public static final int MINOR;
     /** KNIME's revision number. */
-    public static final int REV = 0;
+    public static final int REV;
     /** KNIME's build id. */
-    public static final String BUILD = ".0022922";
-
-    // IMPORTANT: Remember to also update the NodeLogger welcome screen with
-    // the current version and the prerequisites
+    public static final String BUILD;
     /** Workflow file version. */
-    public static final String VERSION = MAJOR + "." + MINOR + "." + REV
-        + BUILD;
+    public static final String VERSION;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "June 20, 2008";
+    public static final String BUILD_DATE = "November 25, 2009";
 
-    /** Java property name that is used to identify whether KNIME is started 
+    /** Java property name that is used to identify whether KNIME is started
      * in expert mode or not (e.g. whether to show loop nodes or not).
      * This field is also used for the preference pages.
      * <p>Values of this field must be either "true" or "false". */
@@ -91,21 +88,31 @@ public final class KNIMEConstants {
 
     /** Java property name to specify the default max thread count variable
      * (can be set via preference page). */
-    public static final String PROPERTY_MAX_THREAD_COUNT = 
+    public static final String PROPERTY_MAX_THREAD_COUNT =
         "org.knime.core.maxThreads";
 
-    /** Java property name to specify the default temp directory for 
-     * KNIME temp files (such as data files). This can be changed in the 
+    /** Java property name to specify the default temp directory for
+     * KNIME temp files (such as data files). This can be changed in the
      * preference pages and is by default the same as the java.io.tmpdir */
     public static final String PROPERTY_TEMP_DIR = "knime.tmpdir";
-    
+
     /** Java property to disable the asynchronous writing of KNIME tables. By
-     * default, each table container writing to disk performs the write 
+     * default, each table container writing to disk performs the write
      * operation in a dedicated (potentially re-used) thread. Setting this field
      * to true will instruct KNIME to always write synchronously, which in some
      * cases may be slower. (Asynchronous I/O became default with v2.1.) */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
-    
+
+    /** Java property to enable/disable table stream compression. Compression 
+     * results in smaller temp-file sizes but also (sometimes significant) 
+     * longer runtime. The default is {@value 
+     * org.knime.core.data.container.DataContainer#DEF_GZIP_COMPRESSION}.
+     * <p><strong>Warning:</strong> Changing this property will result in KNIME
+     * not being able to read workflows written previously (with a 
+     * different compression property). */
+    public static final String PROPERTY_TABLE_GZIP_COMPRESSION = 
+        "knime.compress.io";
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
@@ -118,20 +125,20 @@ public final class KNIMEConstants {
      * Java property used to set the timeout in seconds trying to establish a
      * connection to a database.
      */
-    public static final String KNIME_DATABASE_LOGIN_TIMEOUT 
-    	= "knime.database.timeout";
-    
+    public static final String KNIME_DATABASE_LOGIN_TIMEOUT = 
+            "knime.database.timeout";
+
     /**
      * Java property used to adjust the fetch size for retrieving data from
-     * a database. 
+     * a database.
      */
-    public static final String KNIME_DATABASE_FETCHSIZE 
-		= "knime.database.fetchsize";
+    public static final String KNIME_DATABASE_FETCHSIZE = 
+        "knime.database.fetchsize";
 
-    
+
     /** KNIME home directory. */
     private static File knimeHomeDir;
-    
+
     /** KNIME temp directory. */
     private static File knimeTempDir;
 
@@ -142,6 +149,15 @@ public final class KNIMEConstants {
 
 
     static {
+        VERSION = CorePlugin.getInstance().getBundle().getHeaders()
+            .get("Bundle-Version").toString();
+        String[] parts = VERSION.split("\\.");
+        MAJOR = Integer.parseInt(parts[0]);
+        MINOR = Integer.parseInt(parts[1]);
+        REV = Integer.parseInt(parts[2]);
+        BUILD = parts[3];
+
+
         String line1 =
                 "***  Welcome to KNIME v" + VERSION
                         + " - the Konstanz Information Miner  ***";
@@ -189,7 +205,7 @@ public final class KNIMEConstants {
             icon = null;
         }
         KNIME16X16 = icon;
-        // we prefer to have all gui-related locales being set to us-standard
+        // we prefer to have all gui-related locals being set to us-standard
         try {
             Locale.setDefault(Locale.US);
         } catch (Exception e) {
@@ -226,7 +242,7 @@ public final class KNIMEConstants {
         if (tempDirPath != null) {
             File f = new File(tempDirPath);
             if (!(f.isDirectory() && f.canWrite())) {
-                String error = "Unable to set temp path to \"" 
+                String error = "Unable to set temp path to \""
                         + tempDirPath + "\": no directory or not writable";
                 System.err.println(error);
                 throw new InternalError(error);
@@ -255,16 +271,16 @@ public final class KNIMEConstants {
     public static final String getKNIMEHomeDir() {
         return knimeHomeDir.getAbsolutePath();
     }
-    
+
     /** Location for KNIME related temp files such as data container files. This
      * is by default System.getProperty("java.io.tmpdir") but can be overwritten
-     * in the command line or the preference page. The 
-     * @return The path to the temp directory (trailing slashes omitted). 
+     * in the command line or the preference page. The
+     * @return The path to the temp directory (trailing slashes omitted).
      */
     public static final String getKNIMETempDir() {
         return knimeTempDir.getAbsolutePath();
     }
-    
+
     /** Set a new location for the KNIME temp directory. Client should not
      * be required to use this method. It has public scope so that bootstrap
      * classes can initialize this properly.
@@ -279,13 +295,13 @@ public final class KNIMEConstants {
         }
         if (!(dir.isDirectory() && dir.canWrite())) {
             throw new IllegalArgumentException("Can't set temp directory to \""
-                    + dir.getAbsolutePath() 
+                    + dir.getAbsolutePath()
                     + "\": not a directory or not writable");
         }
         System.setProperty("java.io.tmpdir", dir.getAbsolutePath());
         knimeTempDir = dir;
     }
-    
+
     /**
      * Hides public constructor.
      */

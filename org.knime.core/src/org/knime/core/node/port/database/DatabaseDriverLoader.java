@@ -161,7 +161,9 @@ public final class DatabaseDriverLoader {
                 loadDriver(histFile);
             } catch (Throwable t) {
                 LOGGER.info("Could not load driver library file \""
-                        + hist + "\" from history.", t);
+                        + hist + "\" from history"
+                        + (t.getMessage() != null 
+                                ? ", reason: " + t.getMessage() : "."));
             }
         }
     }
@@ -211,7 +213,7 @@ public final class DatabaseDriverLoader {
         final String fileName = file.getAbsolutePath();
         if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
             throw new IOException("Unsupported file \"" + file + "\","
-            		+ " only zip and jar files are allowed.");
+                + " only zip and jar files are allowed.");
         }
         if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
             return;
@@ -255,26 +257,29 @@ public final class DatabaseDriverLoader {
     }
 
     /**
-     * Get driver for name.
+     * Get driver for name. If no corresponding driver can be found, it looks up
+     * the current class path in order to try to instantiate this class.
      * @param driverName The driver name.
      * @return The <code>WrappedDriver</code> for the given driver name.
      */    
-    public static WrappedDriver getWrappedDriver(final String driverName) {
-        return DRIVER_MAP.get(driverName);
+    private static WrappedDriver getWrappedDriver(final String driverName) 
+            throws Exception {
+        WrappedDriver wdriver = DRIVER_MAP.get(driverName);
+        if (wdriver != null) {
+            return wdriver;
+        }
+        // otherwise try to load new driver from registered classes
+        Class<?> c = Class.forName(driverName, true, 
+                ClassLoader.getSystemClassLoader());
+        WrappedDriver d = new WrappedDriver((Driver) c.newInstance());
+        DRIVER_MAP.put(driverName, d);
+        return d;
     }
 
     private static Class<?> loadClass(final ClassLoader cl, final String name)
             throws ClassNotFoundException {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
-        try {
-            Class<?> c = Class.forName(className);
-            if (c != null) {
-                return c;
-            }
-        } catch (ClassNotFoundException cnfe) {
-            // ignored: try to load if from given driver file
-        }
         return cl.loadClass(className);
     }
 

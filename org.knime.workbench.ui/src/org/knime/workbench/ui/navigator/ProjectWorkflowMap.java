@@ -56,26 +56,26 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Fabian Dill, University of Konstanz
  */
 public final class ProjectWorkflowMap {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ProjectWorkflowMap.class);
-    
+
     private ProjectWorkflowMap() {
         // Utility class
     }
-    
+
     /**
-     * A map which keeps track of the number of registered clients to the 
+     * A map which keeps track of the number of registered clients to the
      * referring workflow. Registration is done by local path - since this is
-     * the key used in the project workflow map and the workflow manager 
-     * instance might be replaced. Registered clients in this map prevent the 
-     * workflow from being removed from the {@link #PROJECTS} map with 
+     * the key used in the project workflow map and the workflow manager
+     * instance might be replaced. Registered clients in this map prevent the
+     * workflow from being removed from the {@link #PROJECTS} map with
      * {@link #remove(IPath)}, only if there are no registered clients for this
-     * workflow, {@link #remove(IPath)} will actually remove the workflow from 
+     * workflow, {@link #remove(IPath)} will actually remove the workflow from
      * {@link #PROJECTS}.
-     * 
+     *
      */
-    private static final Map<IPath, Set<Object>>WORKFLOW_CLIENTS 
+    private static final Map<IPath, Set<Object>>WORKFLOW_CLIENTS
         = new HashMap<IPath, Set<Object>>();
 
     /*
@@ -85,43 +85,43 @@ public final class ProjectWorkflowMap {
      */
     private static final Map<IPath, NodeContainer> PROJECTS
         = new LinkedHashMap<IPath, NodeContainer>() {
-        
+
         @Override
         public NodeContainer put(final IPath key, final NodeContainer value) {
             NodeContainer old = super.put(key, value);
             if (old != null) {
-                LOGGER.debug("Removing \"" + key 
+                LOGGER.debug("Removing \"" + key
                         + "\" from project map");
             }
             if (value != null) {
-                LOGGER.debug("Adding \"" + key 
+                LOGGER.debug("Adding \"" + key
                         + "\" to project map (" + size() + " in total)");
             }
             return old;
         };
-        
+
         @Override
         public NodeContainer remove(final Object key) {
             NodeContainer old = super.remove(key);
             if (old != null) {
-                LOGGER.debug("Removing \"" + key 
+                LOGGER.debug("Removing \"" + key
                         + "\" from project map (" + size() + " remaining)");
             }
             return old;
         };
     };
-    
+
     /**
-     * 
+     *
      * @param workflow the path to the workflow which is used by the client
      * @param client any object which uses the workflow
-     *  
+     *
      * @see #unregisterClientFrom(IPath, Object)
      */
-    public static final void registerClientTo(final IPath workflow, 
+    public static final void registerClientTo(final IPath workflow,
             final Object client) {
         Set<Object> callers = WORKFLOW_CLIENTS.get(workflow);
-        if (callers == null) {            
+        if (callers == null) {
             callers = new HashSet<Object>();
         }
         callers.add(client);
@@ -129,17 +129,17 @@ public final class ProjectWorkflowMap {
         LOGGER.debug("registering " + client + " to " + workflow
                 + ". " + callers.size() + " registered clients now.");
     }
-    
+
     /**
-     * 
-     * @param workflow path to the workflow which is not used anymore by this 
-     * client (has no effect if the client was not yet registered for this 
+     *
+     * @param workflow path to the workflow which is not used anymore by this
+     * client (has no effect if the client was not yet registered for this
      * workflow path)
-     * @param client the client which has registered before with the 
+     * @param client the client which has registered before with the
      * {@link #registerClientTo(IPath, Object)} method
      * @see #registerClientTo(IPath, Object)
      */
-    public static final void unregisterClientFrom(final IPath workflow, 
+    public static final void unregisterClientFrom(final IPath workflow,
             final Object client) {
         if (workflow == null) {
             return;
@@ -151,13 +151,13 @@ public final class ProjectWorkflowMap {
         callers.remove(client);
         if (callers.isEmpty()) {
             WORKFLOW_CLIENTS.remove(workflow);
-        } else {            
-            WORKFLOW_CLIENTS.put(workflow, callers); 
+        } else {
+            WORKFLOW_CLIENTS.put(workflow, callers);
         }
         LOGGER.debug("unregistering " + client + " from " + workflow
                 + ". " + callers.size() + " left.");
     }
-    
+
     /*
      * All registered workflow listeners (KnimeResourceNavigator) which reflect
      * changes on opened workflows (display new nodes).
@@ -292,6 +292,16 @@ public final class ProjectWorkflowMap {
             manager.removeNodeStateChangeListener(NSC_LISTENER);
             manager.removeNodeMessageListener(MSG_LISTENER);
             manager.removeJobManagerChangedListener(JOB_MGR_LISTENER);
+            try {
+                manager.shutdown();
+            } catch (Throwable t) {
+                // at least we have tried it
+                LOGGER.error(
+                        "Could not cancel workflow manager for workflow "
+                        + path, t);
+            } finally {
+                WorkflowManager.ROOT.removeProject(manager.getID());
+            }
         }
     }
 
@@ -304,7 +314,7 @@ public final class ProjectWorkflowMap {
      */
     public static void putWorkflow(final IPath path,
             final WorkflowManager manager) {
-        // in case the manager is replaced 
+        // in case the manager is replaced
         // -> unregister listeners from the old one
         NodeContainer oldOne = PROJECTS.get(path);
         if (oldOne != null) {
@@ -325,8 +335,8 @@ public final class ProjectWorkflowMap {
 
     /**
      * Returns the {@link WorkflowManager} instance which is registered under
-     * the project file resource. Might be <code>null</code> if the 
-     * {@link WorkflowManager} was not registered under this path or 
+     * the project file resource. Might be <code>null</code> if the
+     * {@link WorkflowManager} was not registered under this path or
      * is closed.
      *
      * @see KnimeResourceContentProvider

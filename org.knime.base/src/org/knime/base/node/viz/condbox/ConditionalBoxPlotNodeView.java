@@ -44,29 +44,29 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 25, 2008 (sellien): created
  */
 package org.knime.base.node.viz.condbox;
 
-import org.knime.base.node.viz.plotter.box.BoxPlotter;
+import org.knime.base.node.viz.plotter.box.ConditionalBoxPlotter;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * Class for a view of the conditional box plot.
- * 
+ *
  * @author Stephan Sellien, University of Konstanz
- * 
+ *
  */
 public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
 
-    private final BoxPlotter m_plotter = new BoxPlotter();
+    private final ConditionalBoxPlotter m_plotter = new ConditionalBoxPlotter();
 
     /**
      * Creates a view for the conditional box plot.
-     * 
+     *
      * @param nodeModel the model
      */
     protected ConditionalBoxPlotNodeView(
@@ -92,6 +92,17 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
             m_plotter.setDataProvider(nodemodel);
             m_plotter.updatePaintModel();
             m_plotter.fitToScreen();
+
+            boolean hasNumColSpec = nodemodel.hasNumColSpec();
+            m_plotter.setNormalizeTabCheckboxEnabled(hasNumColSpec);
+            if (!hasNumColSpec) {
+                m_plotter.setNormalizeTabCheckboxToolTip(
+                        "New settings are available. Please reset and execute"
+                        + " the node to enable normalization.");
+            } else {
+                m_plotter.setToolTipText("");
+            }
+            m_plotter.setNormalizeTabCheckboxSelected(hasNumColSpec);
         }
     }
 
@@ -106,6 +117,6 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
      * {@inheritDoc}
      */
     @Override
-    protected void onOpen() {   
+    protected void onOpen() {
     }
 }
