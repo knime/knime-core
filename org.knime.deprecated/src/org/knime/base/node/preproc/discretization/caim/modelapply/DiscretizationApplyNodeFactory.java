@@ -3,7 +3,7 @@
  * $Revision: 4973 $ $Date: 2006-08-01 12:15:56 +0200 (Di, 01 Aug 2006) $
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2009
+ *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
-Bundle-Version: 2.1.1.0023899
+Bundle-Version: 2.1.2.0024266
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
  knime-core.jar

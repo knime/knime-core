@@ -1,7 +1,7 @@
 /* Created on Jun 9, 2006 12:17:56 PM by thor
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2009
+ *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
