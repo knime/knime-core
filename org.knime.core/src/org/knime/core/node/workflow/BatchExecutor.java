@@ -69,6 +69,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -494,6 +495,8 @@ public final class BatchExecutor {
 
                 if ("int".equals(o.m_type)) {
                     model.addInt(name, Integer.parseInt(o.m_value));
+                } else if ("long".equals(o.m_type)) {
+                    model.addLong(name, Long.parseLong(o.m_value));
                 } else if ("short".equals(o.m_type)) {
                     model.addShort(name, Short.parseShort(o.m_value));
                 } else if ("byte".equals(o.m_type)) {
@@ -515,6 +518,9 @@ public final class BatchExecutor {
                 } else if ("IntCell".equals(o.m_type)) {
                     int i = Integer.parseInt(o.m_value);
                     model.addDataCell(name, new IntCell(i));
+                } else if ("LongCell".equals(o.m_type)) {
+                    long i = Long.parseLong(o.m_value);
+                    model.addDataCell(name, new LongCell(i));
                 } else {
                     throw new IllegalArgumentException("Unknown option type '"
                             + o.m_type + "'");
