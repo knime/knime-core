@@ -152,6 +152,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         final ActionListener al = new ActionListener() {
 
             public void actionPerformed(final ActionEvent e) {
+            	model.setDimensionsSelected(m_dimensionSelection.isSelected());
                 m_qualitySlider.setEnabled(m_qualitySelection.isSelected());
                 if (showAdditionalInfo) {
                     m_dimensionLabel
