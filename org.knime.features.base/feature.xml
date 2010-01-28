@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="%featureName" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.2.0024266">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="%featureName" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.1.2.0024319">
 
    <description url="http://www.knime.org/">
       %description
    </description>
 
    <copyright>
-      Copyright, 2003 - 2009
+      Copyright, 2003 - 2010
       University of Konstanz, Germany
       KNIME GmbH, Konstanz, Germany
    </copyright>

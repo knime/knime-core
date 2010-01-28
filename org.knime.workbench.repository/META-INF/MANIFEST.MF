@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Repository
 Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
-Bundle-Version: 2.1.2.0024266
+Bundle-Version: 2.1.2.0024319
 Bundle-ClassPath: workbench-repository-patches.jar,
  workbench-repository.jar
 Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin

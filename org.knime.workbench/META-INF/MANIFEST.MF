@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench
 Bundle-SymbolicName: org.knime.workbench;singleton:=true
-Bundle-Version: 2.1.2.0024266
+Bundle-Version: 2.1.2.0024319
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ManifestVersion: 2
