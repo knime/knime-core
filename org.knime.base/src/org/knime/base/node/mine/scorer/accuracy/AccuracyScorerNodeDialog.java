@@ -157,12 +157,10 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                 (numCols > 0) ? spec.getColumnSpec(numCols - 1) : null;
         DataColumnSpec col1 =
                 (numCols > 1) ? spec.getColumnSpec(numCols - 2) : col2;
-        col1 =
-                spec.getColumnSpec(settings.getString(
-                        AccuracyScorerNodeModel.FIRST_COMP_ID, col1.getName()));
-        col2 =
-                spec.getColumnSpec(settings.getString(
-                        AccuracyScorerNodeModel.SECOND_COMP_ID, col2.getName()));
+        col1 = spec.getColumnSpec(settings.getString(
+                    AccuracyScorerNodeModel.FIRST_COMP_ID, col1.getName()));
+        col2 = spec.getColumnSpec(settings.getString(
+                    AccuracyScorerNodeModel.SECOND_COMP_ID, col2.getName()));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
     }
@@ -193,6 +191,7 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                     "First and second column cannot be the same.");
         }
         settings.addString(AccuracyScorerNodeModel.FIRST_COMP_ID, firstColumn);
-        settings.addString(AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
+        settings.addString(
+            AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
     }
 }

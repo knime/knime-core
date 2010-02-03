@@ -492,7 +492,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         return m_scorerCount[classIndex][classIndex];
     }
     
-    private int getFP(final int classIndex) {
+    private int getFN(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount[classIndex].length; i++) {
             if (classIndex != i) {
@@ -516,7 +516,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         return ret;
     }
     
-    private int getFN(final int classIndex) {
+    private int getFP(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
             if (classIndex != i) {
