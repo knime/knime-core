@@ -78,9 +78,6 @@ import org.w3c.dom.NodeList;
  */
 @Deprecated
 public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
-    /** The node logger for this class. */
-    // private static final NodeLogger LOGGER =
-    // NodeLogger.getLogger(DecisionTreeNodeSplitContinuous.class);
     private double m_threshold = 0.0;
 
     /**
@@ -210,7 +207,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
-            final DataRow row, final DataTableSpec spec) throws Exception {
+            final DataRow row, final DataTableSpec spec) {
         assert cell.getType().isCompatible(DoubleValue.class);
         double value = ((DoubleValue)cell).getDoubleValue();
         if (value <= m_threshold) {

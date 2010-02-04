@@ -251,17 +251,11 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(
             final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec) {
         assert (spec != null);
         if (m_splitAttr != null && !m_splitAttr.isEmpty()) {
             if (spec != m_previousSpec) {
                 m_previousIndex = spec.findColumnIndex(m_splitAttr);
-                if (m_previousIndex == -1) {
-                    LOGGER.error(spec.toString());
-                    throw new Exception("Decision Tree Prediction failed."
-                            + " Could not find attribute '"
-                            + m_splitAttr.toString() + "'");
-                }
                 m_previousSpec = spec;
             }
             assert (m_previousIndex != -1);
@@ -316,8 +310,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     public abstract LinkedHashMap<DataCell, Double> getClassCounts(
-            final DataCell cell, final DataRow row, final DataTableSpec spec)
-            throws Exception;
+            final DataCell cell, final DataRow row, final DataTableSpec spec);
 
     /**
      * {@inheritDoc}
@@ -531,7 +524,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * {@inheritDoc}
      */
     @Override
-    public TreeNode getChildAt(final int pos) {
+    public DecisionTreeNode getChildAt(final int pos) {
         assert m_child != null;
         assert pos >= 0 && pos < m_child.length;
         return m_child[pos];

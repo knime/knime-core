@@ -327,6 +327,8 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     public void loadFrom(final PMMLPortObjectSpec spec,
             final InputStream stream, final String version)
             throws ParserConfigurationException, SAXException, IOException {
+        /* TODO pass spec to PMMLDecisionTreeHandler (usage of parsed
+         * Mining Schema information */
         PMMLDecisionTreeHandler hdl = new PMMLDecisionTreeHandler();
         super.addPMMLContentHandler("TreeModel", hdl);
         super.loadFrom(spec, stream, version);
@@ -348,7 +350,6 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
      */
     @Override
     public String getSummary() {
-
         return "PMML Decision Tree Port with " + m_tree.getNumberNodes()
                 + " nodes";
     }

@@ -124,7 +124,6 @@ public class SplitQualityGini extends SplitQualityMeasure {
         // invert the index; necessary for missing value weighting
         giniSplit = 1 - giniSplit;
 
-        // LOGGER.debug("Gini index: " + giniSplit);
         // weight the gini index with the fraction of known valued records
         return (allOverRecords / (allOverRecords + numUnknownRecords))
                 * giniSplit;

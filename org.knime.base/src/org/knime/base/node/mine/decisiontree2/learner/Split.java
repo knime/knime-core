@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.decisiontree2.learner;
 
-import org.knime.core.node.NodeLogger;
 
 /**
  * Calculates the best split for a given attribute list and the original class
@@ -59,8 +58,6 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class Split {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(Split.class);
 
     private InMemoryTable m_table;
 
@@ -85,7 +82,6 @@ public abstract class Split {
      */
     public Split(final InMemoryTable table, final int attributeIndex,
             final SplitQualityMeasure splitQualityMeasure) {
-        LOGGER.debug("New split created.");
         m_table = table;
         m_splitQualityMeasure = splitQualityMeasure;
         m_attributeIndex = attributeIndex;

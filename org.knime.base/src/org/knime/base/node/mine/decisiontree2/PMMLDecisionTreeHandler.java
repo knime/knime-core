@@ -260,8 +260,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             while ((token = tokenizer.nextToken()) != null) {
                 splitValues.add(token);
             }
-            LOGGER.debug("Parsed split values: " + splitValues);
-
             m_buffer.setLength(0);
             getPreviousSimpleSetPredicate().setValues(splitValues);
         } else if (name.equals("CompoundPredicate")) {
@@ -343,8 +341,8 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         }
         m_tree = new DecisionTree(m_childStack.pop(), m_classColumn,
                 m_mvStrategy, m_ntcStrategy);
-        LOGGER.info("Decision tree with 'missing value strateg: "
-                + m_mvStrategy + "' and 'no true child strategy: "
+        LOGGER.info("Decision tree with missing value strateg: '"
+                + m_mvStrategy + "' and no true child strategy: '"
                 + m_ntcStrategy + "' created.");
     }
 

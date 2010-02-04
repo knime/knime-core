@@ -327,11 +327,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
-     * @throws Exception if something went wrong (unknown attriubte for example)
      */
     public abstract LinkedHashMap<DataCell, Double> getClassCounts(
             final DataRow row,
-            final DataTableSpec spec) throws Exception;
+            final DataTableSpec spec);
 
     /**
      * Return number of patterns of correct class (= majority class in a
@@ -407,14 +406,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         m_newColors = true;
         // then do all the cleanup for all children
         for (int i = 0; i < getChildCount(); i++) {
-            TreeNode n = getChildAt(i);
-            // not beautiful but safe - we know what we inserted!
-            if (n instanceof DecisionTreeNode) {
-                ((DecisionTreeNode)n).resetColorInformation();
-            } else {
-                LOGGER.coding("Odd: Decision Tree Predictor found a"
-                    + " TreeNode which is not a DecisionTreeNode");
-            }
+            getChildAt(i).resetColorInformation();
         }
     }
 
@@ -666,12 +658,12 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param pos position of child
      * @return child node at index
      */
-    public abstract TreeNode getChildAt(int pos);
+    public abstract DecisionTreeNode getChildAt(int pos);
 
     /**
      * @return parent of node
      */
-    public final TreeNode getParent() {
+    public final DecisionTreeNode getParent() {
         return m_parent;
     }
 

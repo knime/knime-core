@@ -53,7 +53,6 @@ package org.knime.base.node.mine.decisiontree2.learner;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.node.NodeLogger;
 
 /**
  * Finds the best split for a given {@link InMemoryTable}. The results can be
@@ -62,11 +61,6 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitFinder {
-
-    /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SplitFinder.class);
-
     private int m_splitAttributeIndex;
 
     private Split m_split;
@@ -99,11 +93,6 @@ public class SplitFinder {
 
         // create the best splits for each attribute
         List<Split> splitCandidates = new ArrayList<Split>();
-        long time = 0;
-        if (LOGGER.isInfoEnabled()) {
-            time = System.currentTimeMillis();
-            LOGGER.debug("Find best split for all attributes...");
-        }
 
         for (int i = 0; i < table.getNumAttributes(); i++) {
             // check if the attribute should be considered
@@ -126,21 +115,12 @@ public class SplitFinder {
             }
         }
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Split points for #rows<" + table.getNumberDataRows()
-                    + "> found in: " + (System.currentTimeMillis() - time));
-        }
-
         // get the best split
         Split bestSplit = null;
         double bestQualityMeasure = splitQualityMeasure.getWorstValue();
         int bestIndex = -1;
         int index = 0;
         for (Split splitCandidate : splitCandidates) {
-            LOGGER.debug("Split candidate: "
-                    + splitCandidate.getSplitAttributeName()
-                    + " best measure: "
-                    + splitCandidate.getBestQualityMeasure());
             if (splitCandidate.isValidSplit()
                     && splitQualityMeasure.isBetterOrEqual(splitCandidate
                             .getBestQualityMeasure(), bestQualityMeasure)) {
@@ -153,17 +133,6 @@ public class SplitFinder {
 
         m_splitAttributeIndex = bestIndex;
         m_split = bestSplit;
-        if (LOGGER.isDebugEnabled()) {
-            if (m_split == null) {
-                LOGGER.debug("No split could be evaluated.");
-            } else {
-                LOGGER
-                        .debug("Best split: " + m_split.getSplitAttributeName()
-                                + " best measure: "
-                                + m_split.getBestQualityMeasure());
-            }
-        }
-
     }
 
     /**

@@ -372,17 +372,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         ParallelProcessing parallelProcessing = new ParallelProcessing(
                 m_parallelProcessing.getIntValue());
 
-        long completeTime = System.currentTimeMillis();
-        LOGGER.info("Number available threads: "
-                + parallelProcessing.getMaxNumberThreads()
-                + " used threads: "
-                + parallelProcessing.getCurrentThreadsInUse());
-
-        // TODO
-        // if (LOGGER.isDebugEnabled()) {
-        // LOGGER.debug("Pruning confidence TH: "
-        // + m_pruningConfidenceThreshold);
-        // }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Number available threads: "
+                    + parallelProcessing.getMaxNumberThreads()
+                    + " used threads: "
+                    + parallelProcessing.getCurrentThreadsInUse());
+        }
 
         exec.setProgress("Preparing...");
 
@@ -404,16 +399,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // create initial In-Memory table
         exec.setProgress("Create initial In-Memory table...");
-        LOGGER.info("Create initial In-Memory table...");
-        long timer = System.currentTimeMillis();
         InMemoryTableCreator tableCreator =
                 new InMemoryTableCreator(inData, classColumnIndex,
                         m_minNumberRecordsPerNode.getIntValue());
         InMemoryTable initialTable =
                 tableCreator.createInMemoryTable(exec
                         .createSubExecutionContext(0.05));
-        LOGGER.info("Initial table created in (ms) "
-                + (System.currentTimeMillis() - timer));
         int removedRows = tableCreator.getRemovedRowsDueToMissingClassValue();
         if (removedRows == inData.getRowCount()) {
             throw new IllegalArgumentException("Class column contains only "
@@ -448,16 +439,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         // build the tree
         // before this set the node counter to 0
         m_counter.set(0);
-        LOGGER.info("Building tree...");
-        exec.setProgress("Building tree...");
-        timer = System.currentTimeMillis();
+        exec.setMessage("Building tree...");
 
         DecisionTreeNode root = null;
         root = buildTree(initialTable, exec, 0, splitQualityMeasure,
                 parallelProcessing);
-
-        LOGGER.info("Tree built in (ms) "
-                + (System.currentTimeMillis() - timer));
 
         // the decision tree model saved as PMML at the second out-port
         m_decisionTree = new DecisionTree(root,
@@ -467,28 +453,19 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                     classified. */
                 PMMLMissingValueStrategy.LAST_PREDICTION);
 
+
         // prune the tree
-        timer = System.currentTimeMillis();
         exec.setMessage("Prune tree with "
                 + m_pruningMethod.getStringValue() + "...");
-        LOGGER.info("Pruning tree with "
-                + m_pruningMethod.getStringValue() + "...");
         pruneTree();
-        LOGGER.info("Tree pruned in (ms) "
-                + (System.currentTimeMillis() - timer));
 
         // add highlight patterns and color information
-        long patternTime = System.currentTimeMillis();
         exec.setMessage("Adding hilite and color info to tree...");
         addHiliteAndColorInfo(inData);
-        LOGGER.info("Time for pattern adding: "
-                + (System.currentTimeMillis() - patternTime));
-
-        LOGGER.info("Number nodes: " + m_decisionTree.getNumberNodes());
-
-        LOGGER.info("All over time: "
-                + (System.currentTimeMillis() - completeTime));
-
+        LOGGER.info("Decision tree consisting of " 
+                + m_decisionTree.getNumberNodes() 
+                + " nodes created with pruning method " 
+                + m_pruningMethod.getStringValue());
         // set the warning message if available
         if (warningMessageSb.length() > 0) {
             setWarningMessage(warningMessageSb.toString());
@@ -591,7 +568,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         exec.checkCanceled();
         // derive this node's id from the counter
         int nodeId = m_counter.getAndIncrement();
-        LOGGER.info("At depth " + depth);
 
         DataCell majorityClass = table.getMajorityClassAsCell();
         LinkedHashMap<DataCell, Double> frequencies =
@@ -607,8 +583,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             return new DecisionTreeNodeLeaf(nodeId, majorityClass, frequencies);
         } else {
             // find the best splits for all attributes
-            long time = System.currentTimeMillis();
-            LOGGER.info("Finding best split...");
             SplitFinder splittFinder =
                     new SplitFinder(table, splitQualityMeasure,
                           m_averageSplitpoint.getBooleanValue(),
@@ -620,14 +594,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
             // get the best split among the best attribute splits
             Split split = splittFinder.getSplit();
-            LOGGER.info("Best split found.");
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Best split found in "
-                        + (System.currentTimeMillis() - time) + " ms.");
-
-                LOGGER.info("Partition data...");
-                time = System.currentTimeMillis();
-            }
 
             // if no best split could be evaluated, create a leaf node
             if (split == null || !split.isValidSplit()) {
@@ -642,14 +608,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             }
 
             // partition the attribute lists according to this split
-            LOGGER.info("Partition data... ");
             Partitioner partitioner = new Partitioner(table, split,
                     m_minNumberRecordsPerNode.getIntValue());
-            LOGGER.info("Data partitioned.");
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Data partitioned in "
-                        + (System.currentTimeMillis() - time) + " ms.");
-            }
 
             if (!partitioner.couldBeUsefulPartitioned()) {
                 table.freeUnderlyingDataRows();
@@ -686,7 +646,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                             new ParallelBuilding(threadName, partitionTable,
                                     exec, depth + 1, i, splitQualityMeasure,
                                     parallelProcessing);
-                    LOGGER.info("Start new parallel building thread: "
+                    LOGGER.debug("Start new parallel building thread: "
                             + threadName);
                     threads.add(buildThread);
                     buildThread.start();
@@ -1009,7 +969,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 m_resultNode = buildTree(m_table, m_exec, m_depth,
                         (SplitQualityMeasure) m_splitQM.clone(),
                         m_parallelProcessing);
-                LOGGER.info("Thread: " + getName() + " finished");
+                LOGGER.debug("Thread: " + getName() + " finished");
             } catch (Exception e) {
                 m_exception = e;
             }
