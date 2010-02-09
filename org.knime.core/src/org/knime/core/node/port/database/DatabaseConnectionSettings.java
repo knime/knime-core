@@ -347,4 +347,18 @@ public class DatabaseConnectionSettings {
         saveConnection(cont);
         return cont;
     }
+    
+    /**
+     * @return database driver used to open the connection
+     */
+    public final String getDriver() {
+        return m_driver;
+    }
+    
+    /**
+     * @return database name used to access the db URL
+     */
+    public final String getDBName() {
+        return m_dbName;
+    }
 }
