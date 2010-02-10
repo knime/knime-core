@@ -103,14 +103,14 @@ public final class KNIMEConstants {
      * cases may be slower. (Asynchronous I/O became default with v2.1.) */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
 
-    /** Java property to enable/disable table stream compression. Compression 
-     * results in smaller temp-file sizes but also (sometimes significant) 
-     * longer runtime. The default is {@value 
+    /** Java property to enable/disable table stream compression. Compression
+     * results in smaller temp-file sizes but also (sometimes significant)
+     * longer runtime. The default is {@value
      * org.knime.core.data.container.DataContainer#DEF_GZIP_COMPRESSION}.
      * <p><strong>Warning:</strong> Changing this property will result in KNIME
-     * not being able to read workflows written previously (with a 
+     * not being able to read workflows written previously (with a
      * different compression property). */
-    public static final String PROPERTY_TABLE_GZIP_COMPRESSION = 
+    public static final String PROPERTY_TABLE_GZIP_COMPRESSION =
         "knime.compress.io";
 
     /**
@@ -125,14 +125,14 @@ public final class KNIMEConstants {
      * Java property used to set the timeout in seconds trying to establish a
      * connection to a database.
      */
-    public static final String KNIME_DATABASE_LOGIN_TIMEOUT = 
+    public static final String KNIME_DATABASE_LOGIN_TIMEOUT =
             "knime.database.timeout";
 
     /**
      * Java property used to adjust the fetch size for retrieving data from
      * a database.
      */
-    public static final String KNIME_DATABASE_FETCHSIZE = 
+    public static final String KNIME_DATABASE_FETCHSIZE =
         "knime.database.fetchsize";
 
 
@@ -149,8 +149,16 @@ public final class KNIMEConstants {
 
 
     static {
-        VERSION = CorePlugin.getInstance().getBundle().getHeaders()
-            .get("Bundle-Version").toString();
+        String versionString;
+        if (CorePlugin.getInstance() != null) {
+            versionString = CorePlugin.getInstance().getBundle().getHeaders()
+                .get("Bundle-Version").toString();
+        } else {
+            System.err.println(
+                    "Can't locate CorePlugin, not an OSGi framework?");
+            versionString = "1.0.0.000000";
+        }
+        VERSION = versionString;
         String[] parts = VERSION.split("\\.");
         MAJOR = Integer.parseInt(parts[0]);
         MINOR = Integer.parseInt(parts[1]);
