@@ -101,27 +101,29 @@ public class DatabaseConnectionSettings {
 
     /**
      * DriverManager login timeout for database connection; not implemented/
-     * used by all databases.
+     * used by all database drivers.
      */
     private static final int LOGIN_TIMEOUT = initLoginTimeout();
     private static int initLoginTimeout() {
         String tout = System.getProperty(
                 KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
-        int timeout = 5;
+        int timeout = 5; // default
         if (tout != null) {
             try {
-                timeout = Integer.parseInt(tout);
-                if (timeout <= 0) {
+                int t = Integer.parseInt(tout);
+                if (t <= 0) {
                     LOGGER.warn("Database login timeout not valid (<=0) '"
-                        + tout + "', using default '" + LOGIN_TIMEOUT + "'.");
+                        + tout + "', using default '" + timeout + "'.");
+                } else {
+                    timeout = t;
                 }
             } catch (NumberFormatException nfe) {
                 LOGGER.warn("Database login timeout not valid '" + tout
-                        + "', using default '5'.");
+                        + "', using default '" + timeout + "'.");
             }
         }
-        LOGGER.info("Database login timeout: " + LOGIN_TIMEOUT + " sec.");
-        DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
+        LOGGER.info("Database login timeout: " + timeout + " sec.");
+        DriverManager.setLoginTimeout(timeout);
         return timeout;
     }
 
@@ -134,7 +136,9 @@ public class DatabaseConnectionSettings {
                 KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
         if (fsize != null) {
             try {
-                return Integer.parseInt(fsize);
+                int fetchsize = Integer.parseInt(fsize);
+                LOGGER.info("Database fetch size: " + fetchsize + " rows.");
+                return fetchsize;
             } catch (NumberFormatException nfe) {
                 LOGGER.warn("Database fetch size not valid '" + fsize
                         + "', no fetch size will be set.");
