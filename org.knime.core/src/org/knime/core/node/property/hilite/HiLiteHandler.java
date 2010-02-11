@@ -254,7 +254,7 @@ public class HiLiteHandler {
      *
      * @param event Contains all rows keys to hilite.
      */
-    public void fireHiLiteEvent(final KeyEvent event) {
+    public synchronized void fireHiLiteEvent(final KeyEvent event) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
@@ -327,7 +327,7 @@ public class HiLiteHandler {
      *
      * @param event Contains all rows keys to unhilite.
      */
-    public void fireUnHiLiteEvent(final KeyEvent event) {
+    public synchronized void fireUnHiLiteEvent(final KeyEvent event) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
@@ -388,7 +388,7 @@ public class HiLiteHandler {
      * Informs all registered hilite listener to reset all hilit rows.
      * @param event the event fired for clear hilite
      */
-    public void fireClearHiLiteEvent(final KeyEvent event) {
+    public synchronized void fireClearHiLiteEvent(final KeyEvent event) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
