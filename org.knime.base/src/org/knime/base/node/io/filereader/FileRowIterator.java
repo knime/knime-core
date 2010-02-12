@@ -358,7 +358,7 @@ class FileRowIterator extends RowIterator {
             if (token.equals("") && (!m_tokenizer.lastTokenWasQuoted())) {
                 isMissingCell = true;
             } else if (token.equals(m_frSettings
-                    .getMissingValueOfColumn(createdCols))) {
+                    .getMissingValueOfColumn(readCols))) {
                 // equals(null) if it was not specified - which is fine.
                 isMissingCell = true;
             } else {
