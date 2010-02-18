@@ -647,6 +647,16 @@ public class ThreadPool {
         setMaxThreads(0);
     }
 
+
+    /**
+     * Interrupts all running jobs.
+     */
+    public void interruptAll() {
+        for (Worker w : m_runningWorkers) {
+            w.interrupt();
+        }
+    }
+
     /**
      * Submits a value-returning task for execution and returns a Future
      * representing the pending results of the task. The method blocks until a
