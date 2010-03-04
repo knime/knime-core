@@ -62,7 +62,7 @@
          <attribute name="path" type="string" use="required">
             <annotation>
                <documentation>
-                  The absolute &quot;path&quot; that lead to this category e.g. &quot;/knime.basic/readers&quot;. The segments are the category level-IDs, separated by a slash (&quot;/&quot;).
+                  The absolute &quot;path&quot; that lead to this category e.g. &quot;/io/read&quot;. The segments are the category level-IDs, separated by a slash (&quot;/&quot;). Note, many categories are defined in the MANIFEST file in the plugin org.knime.base.
                </documentation>
             </annotation>
          </attribute>
