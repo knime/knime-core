@@ -51,6 +51,9 @@
 package org.knime.core.data.collection;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -70,12 +73,17 @@ import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.node.BufferedDataTable;
 
 /**
+ * A list of {@link DataCell} objects, which special treatment for
+ * {@link BlobDataCell}. The implementation will keep blobs in special
+ * {@link BlobWrapperDataCell} in order to allow for a possible garbage
+ * collection (and deserializing when a blob is accessed.)
  *
  * @author ohl, University of Konstanz
  */
-public class BlobSupportDataCellSet implements Iterable<DataCell> {
+public class BlobSupportDataCellSet
+    implements Iterable<DataCell>, Serializable {
 
-    private final Set<Wrapper> m_set;
+    private Set<Wrapper> m_set;
 
     private boolean m_containsBlobWrapperCells;
 
@@ -131,6 +139,13 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      *
      */
     BlobSupportDataCellSet(final Collection<? extends DataCell> cells) {
+        init(cells);
+    }
+
+    /**
+     * @param cells
+     */
+    private void init(final Collection<? extends DataCell> cells) {
         LinkedHashSet<Wrapper> cellSet = new LinkedHashSet<Wrapper>();
         DataType commonType = null;
         for (DataCell c : cells) {
@@ -173,7 +188,6 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
             m_elementType = commonType;
         }
         m_set = Collections.unmodifiableSet(cellSet);
-
     }
 
     /**
@@ -285,6 +299,34 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
         return s.getElementType().equals(m_elementType)
                 && s.m_set.equals(m_set);
     }
+    /*
+     * ----------- Serialization methods -------------------------------------
+     * Serialization is rarely used on this class as it is only used collection
+     * cells (which use a DataCellSerializer). It might be used when a
+     * collection cell is part of the column domain information, though
+     * (which, again, is a rare case).
+     */
+
+    private static final long serialVersionUID = -2654937729187428116L;
+
+    /** Read object method (as described in {@link Serializable} interface). */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream stream)
+        throws IOException, ClassNotFoundException {
+        Collection<DataCell> coll =
+            (Collection<DataCell>)stream.readObject();
+        init(coll);
+    }
+
+    /** Write object method (as described in {@link Serializable} interface). */
+    private void writeObject(final ObjectOutputStream stream)
+        throws IOException {
+        Collection<DataCell> coll = new LinkedHashSet<DataCell>();
+        for (Wrapper w : m_set) {
+            coll.add(w.getCell());
+        }
+        stream.writeObject(coll);
+    }
 
     /*
      * -----------------------------------------------------------------------
@@ -297,6 +339,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      *
      */
     private final class Wrapper {
+
         private final DataCell m_cell;
 
         /**

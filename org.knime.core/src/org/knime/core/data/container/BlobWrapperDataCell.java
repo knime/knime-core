@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,13 +44,15 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 15, 2006 (wiswedel): created
  */
 package org.knime.core.data.container;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.SoftReference;
 
 import org.knime.core.data.DataCell;
@@ -62,27 +64,27 @@ import org.knime.core.node.NodeLogger;
  * Wrapper for {@link BlobDataCell}. We explicitly wrap those cells in this
  * package to delay the access to the latest time possible (when someone
  * calls getCell() on the row). If such a cell has been added to an table
- * (by calling e.g. 
+ * (by calling e.g.
  * {@link org.knime.core.node.BufferedDataContainer#addRowToTable(
- * org.knime.core.data.DataRow) addRowToTable in a DataContainer}, 
- * the framework will write the underlying blob to a dedicated file and 
+ * org.knime.core.data.DataRow) addRowToTable in a DataContainer},
+ * the framework will write the underlying blob to a dedicated file and
  * internally link to this blob file. The blob object itself can be garbage
  * collected and will silently re-instantiated if accessed.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlobWrapperDataCell extends DataCell {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BlobWrapperDataCell.class);
-    
+
     private static boolean issuedWarningOnEqualsInvocation = false;
-    
+
     private Buffer m_buffer;
     private BlobAddress m_blobAddress;
-    private final CellClassInfo m_blobClass;
+    private CellClassInfo m_blobClass;
     private SoftReference<BlobDataCell> m_cellRef;
     private BlobDataCell m_hardCellRef;
-    
+
     /**
      * Keeps references.
      * @param b The buffer that owns the cell.
@@ -96,11 +98,11 @@ public final class BlobWrapperDataCell extends DataCell {
         m_blobAddress = ba;
         m_blobClass = cl;
     }
-    
+
     /**
      * Create a new wrapper cell for a blob object. The wrapper will keep a
      * hard reference to the cell unless the cell is added to data container,
-     * in which case the reference is softened. 
+     * in which case the reference is softened.
      * @param cell The cell to wrap.
      */
     public BlobWrapperDataCell(final BlobDataCell cell) {
@@ -109,10 +111,10 @@ public final class BlobWrapperDataCell extends DataCell {
         m_cellRef = new SoftReference<BlobDataCell>(cell);
         m_hardCellRef = cell;
     }
-    
+
     /**
-     * Fetches the content of the blob cell. May last long. The returned 
-     * DataCell is an instance of BlobDataCell unless there were problems 
+     * Fetches the content of the blob cell. May last long. The returned
+     * DataCell is an instance of BlobDataCell unless there were problems
      * retrieving the blob from the file system, in which case a missing cell
      * is returned (and a warning message is logged to the logging system).
      * @return The blob Data cell being read.
@@ -130,8 +132,8 @@ public final class BlobWrapperDataCell extends DataCell {
                 String error = ioe.getMessage();
                 Throwable cause = ioe.getCause();
                 if (cause != null) {
-                    error = error.concat(" (caused by \"" 
-                            + cause.getClass().getSimpleName() + ": " 
+                    error = error.concat(" (caused by \""
+                            + cause.getClass().getSimpleName() + ": "
                             + cause.getMessage() + ")");
                 }
                 LOGGER.warn(error, ioe);
@@ -140,7 +142,7 @@ public final class BlobWrapperDataCell extends DataCell {
         }
         return cell;
     }
-    
+
     /** Framework method to set buffer and address.
      * @param address Address to set.
      * @param buffer Owner buffer to set.
@@ -151,45 +153,45 @@ public final class BlobWrapperDataCell extends DataCell {
         }
         if (m_blobAddress != null && !m_blobAddress.equals(address)) {
             throw new IllegalStateException("Blob wrapper cell has already "
-                    + "an assigned blob address (" + m_blobAddress 
+                    + "an assigned blob address (" + m_blobAddress
                     + ", new one is " + address + ")");
         }
         if (m_buffer == null) {
-            assert m_hardCellRef != null 
-            : "Should not keep hard reference when buffer is not available.";
+            assert m_hardCellRef != null
+            : "Should keep hard reference when buffer is not available.";
             m_hardCellRef.setBlobAddress(address);
             m_blobAddress = address;
             m_buffer = buffer;
             m_hardCellRef = null;
         }
     }
-    
+
     /** @return The blob address. */
     BlobAddress getAddress() {
         return m_blobAddress;
     }
-    
+
     /** @return Class of the blob. */
     @SuppressWarnings("unchecked")
     public Class<? extends BlobDataCell> getBlobClass() {
         return (Class<? extends BlobDataCell>)m_blobClass.getCellClass();
     }
-    
+
     /** @return Class info to the blob. */
     CellClassInfo getBlobClassInfo() {
         return m_blobClass;
     }
-    
+
     /** @return DataType associated with the underlying blob cell. */
     DataType getBlobDataType() {
         return getBlobClassInfo().getDataType();
     }
-    
+
     /** @return owning buffer or null if not set yet. */
     Buffer getBuffer() {
         return m_buffer;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -219,5 +221,30 @@ public final class BlobWrapperDataCell extends DataCell {
     public String toString() {
         return getCell().toString();
     }
-    
+
+    private static final long serialVersionUID = 461923972324323848L;
+
+    private void writeObject(final ObjectOutputStream out)
+        throws IOException {
+        // Instances of this class should not be persisted in an ordinary use
+        // case (when part of a DataContainer/Buffer). Serialization comes in
+        // when the blob wrapper is part of a collection cell (e.g.
+        // BlobSupportDataCellList) and the DataTableSpec saves collections
+        // as part of the domain information (remotely connected to bug 2189)
+        DataCell cell = getCell(); // also deserializes if necessary
+        out.writeObject(cell);
+        out.writeObject(m_blobAddress);
+    }
+
+    private void readObject(final ObjectInputStream in)
+        throws IOException, ClassNotFoundException {
+        /* see #writeObject for details */
+        // in hypothetical cases this could also only be a missing cell
+        // (in case there were problems deserializing the blob during write)
+        // live with exceptions here
+        m_hardCellRef = (BlobDataCell)in.readObject();
+        m_blobAddress = (BlobAddress)in.readObject();
+        m_blobClass = CellClassInfo.get(m_hardCellRef);
+    }
+
 }
