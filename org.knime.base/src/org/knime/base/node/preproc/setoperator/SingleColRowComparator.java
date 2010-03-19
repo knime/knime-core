@@ -101,9 +101,6 @@ public class SingleColRowComparator implements Comparator<DataRow> {
      * @param colIdx the colIdx to set or -1 if the RowID should be used
      */
     public void setColumnIndex(final int colIdx) {
-//        if (colIdx < 0) {
-//            throw new IllegalArgumentException("Row index must be positive");
-//        }
         m_colIdx = colIdx;
     }
 
@@ -115,19 +112,12 @@ public class SingleColRowComparator implements Comparator<DataRow> {
             final String key1 = r1.getKey().getString();
             final String key2 = r2.getKey().getString();
             return compare(key1, key2, m_comp);
-        } else {
-            final DataCell cell1 = r1.getCell(m_colIdx);
-            final DataCell cell2 = r2.getCell(m_colIdx);
-            return compare(cell1, cell2, m_comp);
         }
+        final DataCell cell1 = r1.getCell(m_colIdx);
+        final DataCell cell2 = r2.getCell(m_colIdx);
+        return compare(cell1, cell2, m_comp);
     }
 
-    /**
-     * @param key1
-     * @param key2
-     * @param comp
-     * @return
-     */
     private int compare(final String c1, final String c2,
             final Comparator<DataCell> comp) {
         if (c1 == c2) {
