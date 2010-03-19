@@ -379,15 +379,12 @@ public final class GUIUtils {
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalCount);
-                    vals[0] += totalCount;
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalValCount);
-                    vals[1] += totalValCount;
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalSum);
-                    vals[2] += totalSum;
                     buf.append("</td>");
                     buf.append("<td>");
                     if (totalCount != 0) {
@@ -398,6 +395,9 @@ public final class GUIUtils {
                     buf.append("</td>");
                     buf.append("</tr>");
                 }
+                vals[0] += totalCount;
+                vals[1] += totalValCount;
+                vals[2] += totalSum;
                 buf.append("</table>");
             }
             buf.append("</td>");
