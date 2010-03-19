@@ -157,7 +157,6 @@ implements Serializable {
      * @param noOfElements the number of elements which should fit
      * @param barWidth the width of the bar
      * @param barHeight the height of the bar
-     * @param elementWidth the width of each element
      * @return <code>true</code> if the given number of elements fit into
      * the given bar ranges for the given layout
      */
@@ -267,8 +266,6 @@ implements Serializable {
     }
 
     /**
-     * @param aggrMethod the aggregation method which should be used
-     * @param layout the histogram layout
      * @param baseLine the x coordinate of the base line (0) on the screen
      * @param barElementColors all element colors which define the order
      * the elements should be drawn

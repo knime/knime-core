@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -146,13 +146,13 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 
     /**Constructor for class InteractiveHistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
+     * @param noOfBins the number of bins to create
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
      * @param spec the {@link DataTableSpec}
      * @param rows the {@link DataRow}
      * @param xColSpec the {@link DataColumnSpec} of the selected x column
      * @param aggrColumns the selected aggregation columns
-     * @param noOfBins the number of bins to create
      */
     public InteractiveHistogramVizModel(final List<Color> rowColors,
             final AggregationMethod aggrMethod, final HistogramLayout layout,

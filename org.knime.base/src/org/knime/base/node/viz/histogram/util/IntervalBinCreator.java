@@ -136,13 +136,14 @@ public abstract class IntervalBinCreator <E extends BinDataModel> {
             binInterval = BinningUtil.createBinInterval(upperBound,
                     calculatedLowerBound, noOfBins, isInteger);
         }
-        // increase the number of bars to include the max value
-        while (calculatedLowerBound + (binInterval * noOfBins)
-                < upperBound) {
-            noOfBins++;
+        double leftBoundary = calculatedLowerBound;
+        final double lastBoundary = BinningUtil.myRoundedBorders(
+                upperBound, binInterval,
+                AbstractHistogramVizModel.INTERVAL_DIGITS);
+        // increase bin interval if we have rounding problems
+        while (leftBoundary + (binInterval * noOfBins) < lastBoundary) {
+            binInterval = binInterval + binInterval * 0.001;
         }
-        double leftBoundary = BinningUtil.myRoundedBorders(calculatedLowerBound,
-                binInterval, AbstractHistogramVizModel.INTERVAL_DIGITS);
         boolean firstBar = true;
         createList(noOfBins);
         for (int i = 0; i < noOfBins; i++) {

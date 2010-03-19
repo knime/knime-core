@@ -403,8 +403,6 @@ public class BinDataModel implements Serializable {
 
     /**
      * Sets the rectangle for all bars in this bin.
-     * @param aggrMethod the aggregation method which should be used
-     * @param layout the histogram layout
      * @param baseLine the x coordinate of the base line (0) on the screen
      * @param barElementColors all element colors which define the order
      * the elements should be drawn
@@ -554,7 +552,6 @@ public class BinDataModel implements Serializable {
     }
     /**
      * Checks if all bars fit in the surrounding bin.
-     * @param layout the {@link HistogramLayout}
      * @param noOfBars the number of bars which should fit
      * @param binWidth the width of the bin
      * @return <code>true</code> if the given number of bars fit into

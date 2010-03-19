@@ -197,8 +197,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      * This calculates the proportional hilite rectangle of this bar which
      * could be displayed if the elements of this bar can't be draw.
      * Set the hilite rectangle in the middle of the bar since we
-     * @param aggrMethod the current {@link AggregationMethod}
-     * @param layout the current {@link HistogramLayout}
+     * @param calculator the {@link HistogramHiliteCalculator} to use
      */
     private void calculateHiliteRectangle(
             final HistogramHiliteCalculator calculator) {

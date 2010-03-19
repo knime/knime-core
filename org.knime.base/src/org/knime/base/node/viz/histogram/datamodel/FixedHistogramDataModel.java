@@ -165,7 +165,7 @@ public class FixedHistogramDataModel {
     }
 
     /**Constructor for class FixedHistogramDataModel used in serialization.
-     * @param xColSpecxColSpec the column specification of the bin column
+     * @param xColSpec the column specification of the bin column
      * @param aggrColumns the aggregation columns
      * @param binNominal if the bins are nominal or not
      * @param bins the bins itself

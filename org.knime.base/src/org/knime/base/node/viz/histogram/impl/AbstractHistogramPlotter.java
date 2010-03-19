@@ -461,8 +461,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * the start position of an bar on the x axis
      * @param yCoordinates The <code>Coordinate</code> object which contains
      * the start position of an bar on the y axis
-     * @param drawingSpace A <code>Rectangle</code> which defines the available
-     * drawing space
      */
     private static void setHistogramBinRectangle(
             final AbstractHistogramVizModel vizModel,

@@ -217,45 +217,32 @@ public final class BinningUtil {
         if (increment <= 0) {
             throw new IllegalArgumentException("Increment should be positive");
         }
-//        boolean dotFound = false;
         int firstDigitCounter = 0;
-//        int positionCounter = 0;
         int currentVal = 0;
         while (currentVal == 0) {
             firstDigitCounter++;
             currentVal = (int)(increment * Math.pow(10, firstDigitCounter));
         }
-//        for (int length = incrementString.length; positionCounter < length;
-//            positionCounter++) {
-//            char c = incrementString[positionCounter];
-//            if (c == '.') {
-//                dotFound = true;
-//            } else if (dotFound) {
-//                if (c != '0') {
-//                    firstDigitCounter++;
-//                    break;
-//                }
-//                firstDigitCounter++;
-//            }
-//        }
         //add one more digit since we call round up the last number
         final int digits = Math.max(noOfDigits, firstDigitCounter) + 1;
         final long factor = (long)Math.pow(10, digits);
 
         // Shift the decimal the correct number of places
         // to the right.
-        final double val = doubleVal * factor;
         double tmp;
         if (doubleVal < 0) {
+            final double val = doubleVal * factor;
         // Round to the nearest integer.
             tmp = Math.floor(val);
         } else {
+            final double val = (doubleVal * (factor * 10) + 9) / 10;
             tmp = Math.ceil(val);
         }
 
         // Shift the decimal the correct number of places
         // back to the left.
-        return tmp / factor;
+        final double increaseInterval = tmp / factor;
+        return increaseInterval;
     }
 
     /**
@@ -319,7 +306,8 @@ public final class BinningUtil {
 
     /**
      * Rounds the given number in steps if it is bigger than 20. For values
-     * less than 1 it uses the {@link smallValueRounder} method.
+     * less than 1 it uses the
+     * {@link #smallValueRounder(double, int, boolean, boolean)} method.
      *
      * @param value the value to round
      * @return the rounded value which is >= the given value and looks nicer :-)
