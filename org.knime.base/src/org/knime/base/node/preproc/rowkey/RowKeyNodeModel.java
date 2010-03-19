@@ -374,10 +374,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @param origSpec the original table specification to check for
-     * duplicate name
      * @param newColName the name of the column to add
-     * @param newColType the type of the column to add
      * @return the column specification
      * @throws InvalidSettingsException if the name is invalid or exists in the
      * original table specification
