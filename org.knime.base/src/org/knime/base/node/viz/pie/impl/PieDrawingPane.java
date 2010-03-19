@@ -271,12 +271,6 @@ public class PieDrawingPane extends AbstractDrawingPane {
         drawLabel(g2, label, labelAngle, area, labelLinkSize);
     }
 
-    /**
-     * @param g2
-     * @param section
-     * @param element
-     * @param color
-     */
     private void drawSection(final Graphics2D g2,
             final AggregationModel<? extends Arc2D, ? extends Arc2D> section,
             final boolean drawOutline) {
