@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
@@ -43,15 +43,91 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
-</body>
+ * -------------------------------------------------------------------
+ */
+
+package org.knime.base.node.preproc.groupby.aggregation.general;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+
+import java.util.Collection;
+import java.util.LinkedList;
+
+/**
+ * Returns all values as a {@link ListCell} per group.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ */
+public class ListCellOperator extends AggregationOperator {
+
+    private final Collection<DataCell> m_cells;
+
+    /**Constructor for class Concatenate.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public ListCellOperator(final int maxUniqueValues) {
+        super("List", false, false, maxUniqueValues, DataValue.class);
+        m_cells = new LinkedList<DataCell>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataType getDataType(final DataType origType) {
+        return ListCell.getCollectionType(origType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new ListCellOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (m_cells.size() >= getMaxUniqueValues()) {
+            return true;
+        }
+        m_cells.add(cell);
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        return CollectionCellFactory.createListCell(m_cells);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_cells.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Creates a ListCell that contains all elements "
+            + "per group (including missing values).";
+    }
+}

@@ -44,9 +44,6 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- *
- * History
- *    29.06.2007 (Tobias Koetter): created
  */
 
 package org.knime.base.node.preproc.groupby.aggregation;
@@ -55,18 +52,20 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 
-import org.knime.base.node.preproc.groupby.GroupByTable;
+import org.knime.base.node.preproc.groupby.BigGroupByTable;
 
 
 /**
  * Abstract class which has to be extended by all aggregation method operators
- * in the {@link AggregationMethod} enumeration to be used in
- * the {@link GroupByTable} class.
+ * that are before registering in the {@link AggregationMethods} class using the
+ * {@link AggregationMethods#registerOperator(AggregationOperator)} method.
+ * All registered classes can be used in the {@link BigGroupByTable} class.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class AggregationOperator {
+public abstract class AggregationOperator implements AggregationMeth {
 
     private final int m_maxUniqueValues;
 
@@ -74,53 +73,58 @@ public abstract class AggregationOperator {
 
     private final String m_label;
     private final String m_shortLabel;
-    private final boolean m_numerical;
     private final boolean m_usesLimit;
     private final boolean m_keepColSpec;
 
     /**The String to use by concatenation operators.*/
     public static final String CONCATENATOR = ", ";
 
+    private final Class<? extends DataValue> m_supportedType;
+
     /**Constructor for class AggregationOperator.
-     * @param label user readable label which is also used for the column name
-     * @param numerical <code>true</code> if the operator is only suitable
-     * for numerical columns
+     * @param label unique user readable label which is also used for
+     * the column name
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
      * @param keepColSpec <code>true</code> if the original column specification
      * should be kept if possible
      * @param maxUniqueValues the maximum number of unique values
+     * @param supportedClass the {@link DataValue} class supported by
+     * this method
      */
-    public AggregationOperator(final String label, final boolean numerical,
-            final boolean usesLimit, final boolean keepColSpec,
-            final int maxUniqueValues) {
-        this(label, label, numerical, usesLimit, keepColSpec, maxUniqueValues);
+    public AggregationOperator(final String label, final boolean usesLimit,
+            final boolean keepColSpec, final int maxUniqueValues,
+            final Class<? extends DataValue> supportedClass) {
+        this(label, label, usesLimit, keepColSpec, maxUniqueValues,
+                supportedClass);
     }
 
     /**Constructor for class AggregationOperator.
-     * @param label user readable label
+     * @param label unique user readable label
      * @param shortLabel the short label used for the column name
-     * @param numerical <code>true</code> if the operator is only suitable
-     * for numerical columns
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
      * @param keepColSpec <code>true</code> if the original column specification
      * should be kept if possible
      * @param maxUniqueValues the maximum number of unique values
+     * @param supportedClass the {@link DataValue} class supported by
+     * this method
      */
     public AggregationOperator(final String label, final String shortLabel,
-            final boolean numerical, final boolean usesLimit,
-            final boolean keepColSpec, final int maxUniqueValues) {
+            final boolean usesLimit, final boolean keepColSpec,
+            final int maxUniqueValues,
+            final Class<? extends DataValue> supportedClass) {
         m_label = label;
         m_shortLabel = shortLabel;
-        m_numerical = numerical;
         m_usesLimit = usesLimit;
         m_keepColSpec = keepColSpec;
         m_maxUniqueValues = maxUniqueValues;
+        m_supportedType = supportedClass;
     }
 
     /**
-     * Creates a new instance of this operator.
+     * Creates a new instance of this operator. A new instance is created for
+     * each column.
      *
      * @param origColSpec the {@link DataColumnSpec} of the original column
      * @param maxUniqueValues the maximum number of unique values
@@ -128,6 +132,14 @@ public abstract class AggregationOperator {
      */
     public abstract AggregationOperator createInstance(
             DataColumnSpec origColSpec, final int maxUniqueValues);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<? extends DataValue> getSupportedType() {
+        return m_supportedType;
+    }
 
     /**
      * @return the maxUniqueValues
@@ -150,21 +162,23 @@ public abstract class AggregationOperator {
         if (m_skipped) {
             return;
         }
+        if (cell == null) {
+            throw new NullPointerException("cell must not be null");
+        }
         m_skipped = computeInternal(cell);
     }
 
     /**
      * @param cell the {@link DataCell} to consider during computing the cell
-     * can't be <code>null</code>.
+     * can't be <code>null</code> but can be a missing cell
+     * {@link DataCell#isMissing()}.
      * @return <code>true</code> if this column should be skipped in further
      * calculations
      */
     protected abstract boolean computeInternal(final DataCell cell);
 
     /**
-     * @param colName the name of the new column
-     * @param origSpec the original {@link DataColumnSpec}
-     * @return the new {@link DataColumnSpecCreator} for the aggregated column
+     * {@inheritDoc}
      */
     public DataColumnSpec createColumnSpec(final String colName,
             final DataColumnSpec origSpec) {
@@ -225,25 +239,48 @@ public abstract class AggregationOperator {
     protected abstract void resetInternal();
 
     /**
-     * @return the label
+     * {@inheritDoc}
      */
     public String getLabel() {
         return m_label;
     }
 
     /**
-     * @return the short label which is used in the column name
+     * {@inheritDoc}
      */
     public String getShortLabel() {
         return m_shortLabel;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createOperator(final DataColumnSpec origColSpec,
+            final int maxUniqueValues) {
+        return createInstance(origColSpec, maxUniqueValues);
+    }
 
     /**
-     * @return the numerical
+     * {@inheritDoc}
      */
-    public boolean isNumerical() {
-        return m_numerical;
+    @Override
+    public boolean isCompatible(final DataColumnSpec origColSpec) {
+        if (origColSpec == null) {
+            throw new NullPointerException("column spec must not be null");
+        }
+        return isCompatible(origColSpec.getType());
+    }
+
+    /**
+     * @param type the {@link DataType} to check for compatibility
+     * @return true if this method supports the given {@link DataType}
+     */
+    public boolean isCompatible(final DataType type) {
+        if (type == null) {
+            throw new NullPointerException("type must not be null");
+        }
+        return type.isCompatible(m_supportedType);
     }
 
     /**
@@ -252,5 +289,30 @@ public abstract class AggregationOperator {
      */
     public boolean isUsesLimit() {
         return m_usesLimit;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo(final AggregationMeth o) {
+        if (o instanceof AggregationOperator) {
+            final AggregationOperator operator = (AggregationOperator)o;
+            final int typeComp = m_supportedType.getName().compareTo(
+                    operator.m_supportedType.getName());
+            if (typeComp != 0) {
+                //add the operators that support general types last
+                if (m_supportedType.equals(DataValue.class)) {
+                    return 1;
+                } else if (operator.m_supportedType.equals(DataValue.class)) {
+                    return -1;
+                }
+                //sort by type first
+                return typeComp;
+            }
+            //they support the same type sort them by operator label
+        }
+        //sort by label
+        return getLabel().compareTo(o.getLabel());
     }
 }

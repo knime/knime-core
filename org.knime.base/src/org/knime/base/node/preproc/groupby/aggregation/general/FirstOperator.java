@@ -44,49 +44,102 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * History
- * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+package org.knime.base.node.preproc.groupby.aggregation.general;
 
-import java.awt.Component;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
-
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 
 /**
- * List cell renderer that checks if the value being renderer is of type
- * <code>AggregationMethod</code> if so it will renderer the name of the method.
- * If not, the passed value's toString() method is used for rendering.
+ * Returns the first element per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodListCellRenderer
-    extends DefaultListCellRenderer {
+public class FirstOperator extends AggregationOperator {
 
-    private static final long serialVersionUID = -5113725870350491440L;
+    private DataCell m_firstCell = null;
+
+    /**Constructor for class MinOperator.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public FirstOperator(final int maxUniqueValues) {
+        super("First", false, true, maxUniqueValues, DataValue.class);
+    }
+
+    /**Constructor for class FirstOperator.
+     * @param label user readable label
+     * @param numerical <code>true</code> if the operator is only suitable
+     * for numerical columns
+     * @param usesLimit <code>true</code> if the method checks the number of
+     * unique values limit.
+     * @param keepColSpec <code>true</code> if the original column
+     * specification should be kept if possible
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public FirstOperator(final String label, final boolean numerical,
+            final boolean usesLimit, final boolean keepColSpec,
+            final int maxUniqueValues) {
+        super(label, usesLimit, keepColSpec, maxUniqueValues,
+                DataValue.class);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(final JList list,
-            final Object value, final int index, final boolean isSelected,
-            final boolean cellHasFocus) {
-        final Component c =
-            super.getListCellRendererComponent(list, value, index, isSelected,
-                    cellHasFocus);
-        assert (c == this);
-        if (value instanceof AggregationMeth) {
-            AggregationMeth aggregationMeth = (AggregationMeth)value;
-            setText(aggregationMeth.getLabel());
-            setToolTipText(aggregationMeth.getDescription());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
-        }
-        return this;
+    protected DataType getDataType(final DataType origType) {
+        return origType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new FirstOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (m_firstCell == null) {
+            m_firstCell = cell;
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        if (m_firstCell == null) {
+            return DataType.getMissingCell();
+        }
+        return m_firstCell;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_firstCell = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Takes the first entry per group.";
+    }
 }

@@ -44,9 +44,6 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- *
- * History
- *    08.08.2008 (Tobias Koetter): created
  */
 
 package org.knime.base.node.preproc.groupby.aggregation;
@@ -64,7 +61,7 @@ import java.util.List;
 
 
 /**
- * Class that defines the {@link AggregationMethod} for the aggregation column.
+ * Class that defines the {@link AggregationMethods} for the aggregation column.
  *
  * @author Tobias Koetter, University of Konstanz
  */
@@ -75,29 +72,37 @@ public class ColumnAggregator {
     private static final String CNFG_AGGR_METHODS = "aggregationMethod";
 
     private final DataColumnSpec m_origColSpec;
-    private final AggregationMethod m_method;
+    private final AggregationMeth m_operatorTemplate;
     private AggregationOperator m_operator;
 
     /**Constructor for class ColumnAggregator.
      * @param origColSpec the {@link DataColumnSpec} of the original column
-     * @param method the {@link AggregationMethod} to use for the given column
+     * @param method the {@link AggregationMeth} to use for the given column
      *
      */
     public ColumnAggregator(final DataColumnSpec origColSpec,
-            final AggregationMethod method) {
+            final AggregationMeth method) {
         if (origColSpec == null) {
             throw new NullPointerException("colSpec must not be null");
         }
         if (method == null) {
             throw new NullPointerException("method must not be null");
         }
-        if (!method.isCompatible(origColSpec)) {
+        m_operatorTemplate = method;
+        if (!m_operatorTemplate.isCompatible(origColSpec)) {
             throw new IllegalArgumentException("Aggregation method '"
-                    + method.getLabel() + "' not valid for column '"
+                    + m_operatorTemplate.getLabel() + "' not valid for column '"
                     + origColSpec.getName() + "'");
         }
         m_origColSpec = origColSpec;
-        m_method = method;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ColumnAggregator clone() {
+        return new ColumnAggregator(m_origColSpec, m_operatorTemplate);
     }
 
     /**
@@ -122,24 +127,26 @@ public class ColumnAggregator {
     }
 
     /**
-     * @return the {@link AggregationMethod} to use
+     * @return the {@link AggregationMethods} to use
      */
-    public AggregationMethod getMethod() {
-        return m_method;
+    public AggregationMeth getMethod() {
+        return m_operatorTemplate;
     }
 
     /**
+     * Creates only ones an {@link AggregationOperator} that is always
+     * returned by this method.
+     *
      * @param maxUniqueValues the maximum number of unique values
      * @return the operator for this column
      */
     public AggregationOperator getOperator(final int maxUniqueValues) {
         if (m_operator == null) {
-            m_operator = m_method.getOperator(m_origColSpec, maxUniqueValues);
+            m_operator = m_operatorTemplate.createOperator(m_origColSpec,
+                    maxUniqueValues);
         }
         return m_operator;
     }
-
-
 
     /**
      * {@inheritDoc}
@@ -171,8 +178,8 @@ public class ColumnAggregator {
                     + "aggregation method array should be of equal size");
         }
         for (int i = 0, length = aggrMethods.length; i < length; i++) {
-            final AggregationMethod method =
-                AggregationMethod.getMethod4Label(aggrMethods[i]);
+            final AggregationMeth method =
+                AggregationMethods.getMethod4Label(aggrMethods[i]);
             final DataColumnSpec spec = new DataColumnSpecCreator(
                     colNames[i], colTypes[i]).createSpec();
             colAggrList.add(new ColumnAggregator(spec, method));

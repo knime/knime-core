@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
@@ -43,15 +43,84 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
-</body>
+ * -------------------------------------------------------------------
+ */
+
+package org.knime.base.node.preproc.groupby.aggregation.general;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.IntCell;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+
+/**
+ * Returns the count per group.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ */
+public class CountOperator extends AggregationOperator {
+
+    private final DataType m_type = IntCell.TYPE;
+
+    private int m_counter = 0;
+
+    /**Constructor for class CountOperator.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public CountOperator(final int maxUniqueValues) {
+        super("Count", false, false, maxUniqueValues, DataValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataType getDataType(final DataType origType) {
+        return m_type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new CountOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        m_counter++;
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        return new IntCell(m_counter);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_counter = 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Counts members per group.";
+    }
+}

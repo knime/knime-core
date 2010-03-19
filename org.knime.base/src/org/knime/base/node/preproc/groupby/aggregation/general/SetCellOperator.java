@@ -44,49 +44,95 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * History
- * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+package org.knime.base.node.preproc.groupby.aggregation.general;
 
-import java.awt.Component;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.SetCell;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * List cell renderer that checks if the value being renderer is of type
- * <code>AggregationMethod</code> if so it will renderer the name of the method.
- * If not, the passed value's toString() method is used for rendering.
+ * Returns all values as a {@link SetCell} per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodListCellRenderer
-    extends DefaultListCellRenderer {
+public class SetCellOperator extends AggregationOperator {
 
-    private static final long serialVersionUID = -5113725870350491440L;
+    private final Set<DataCell> m_cells;
+
+    /**Constructor for class Concatenate.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public SetCellOperator(final int maxUniqueValues) {
+        super("Set", true, false, maxUniqueValues, DataValue.class);
+        try {
+            m_cells = new HashSet<DataCell>(maxUniqueValues);
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(
+                    "Maximum unique values number to big");
+        }
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(final JList list,
-            final Object value, final int index, final boolean isSelected,
-            final boolean cellHasFocus) {
-        final Component c =
-            super.getListCellRendererComponent(list, value, index, isSelected,
-                    cellHasFocus);
-        assert (c == this);
-        if (value instanceof AggregationMeth) {
-            AggregationMeth aggregationMeth = (AggregationMeth)value;
-            setText(aggregationMeth.getLabel());
-            setToolTipText(aggregationMeth.getDescription());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
-        }
-        return this;
+    protected DataType getDataType(final DataType origType) {
+        return SetCell.getCollectionType(origType);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new SetCellOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (m_cells.size() >= getMaxUniqueValues()) {
+            return true;
+        }
+        m_cells.add(cell);
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        return CollectionCellFactory.createSetCell(m_cells);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_cells.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Creates a ListCell that contains each element "
+                + "only once per group (including missing values).";
+    }
 }

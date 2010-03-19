@@ -53,12 +53,14 @@ package org.knime.base.node.preproc.groupby.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 
 import java.awt.Component;
@@ -203,6 +205,18 @@ public class AggregationColumnPanel extends MouseAdapter {
                 }
             });
             menu.add(selectNumerical);
+            final JMenuItem selectAll =
+                new JMenuItem("Select all columns");
+            selectAll.addActionListener(new ActionListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    selectAllRows();
+                }
+            });
+            menu.add(selectAll);
             menu.addSeparator();
 
             final JMenu aggrMenu = new JMenu("Aggregation method");
@@ -213,13 +227,7 @@ public class AggregationColumnPanel extends MouseAdapter {
                     noneSelected.setEnabled(false);
                     aggrMenu.add(noneSelected);
             } else {
-                final boolean onlyNumerical = onlyNumericalSelected();
-                final List<String> labels;
-                if (onlyNumerical) {
-                    labels = AggregationMethod.getNumericalMethodLabels();
-                } else {
-                    labels = AggregationMethod.getNoneNumericalMethodLabels();
-                }
+                final List<String> labels = getMethods4SelectedItems();
                 for (final String label : labels) {
                     final JMenuItem methodItem =
                         new JMenuItem(label);
@@ -419,7 +427,7 @@ public class AggregationColumnPanel extends MouseAdapter {
     protected void changeAggregationMethod(final String methodLabel) {
         final int[] selectedRows = m_aggrColTable.getSelectedRows();
         m_aggrColTableModel.setAggregationMethod(selectedRows,
-                AggregationMethod.getMethod4Label(methodLabel));
+                AggregationMethods.getMethod4Label(methodLabel));
         final Collection<Integer> idxs = new LinkedList<Integer>();
         for (final int i : selectedRows) {
             idxs.add(new Integer(i));
@@ -427,6 +435,12 @@ public class AggregationColumnPanel extends MouseAdapter {
         updateSelection(idxs);
     }
 
+    /**
+     * Selects all rows.
+     */
+    protected void selectAllRows() {
+        m_aggrColTable.selectAll();
+    }
     /**
      * Selects all numerical rows.
      */
@@ -453,14 +467,6 @@ public class AggregationColumnPanel extends MouseAdapter {
          return (selectedRows != null && selectedRows.length > 0);
     }
 
-    /**
-     * @return <code>true</code> if only numerical columns are selected
-     */
-    protected boolean onlyNumericalSelected() {
-        final boolean onlyNumerical = m_aggrColTableModel.onlyNumerical(
-                m_aggrColTable.getSelectedRows());
-        return onlyNumerical;
-    }
 
     /**
      * @return the number of aggregation columns
@@ -562,5 +568,26 @@ public class AggregationColumnPanel extends MouseAdapter {
             }
         }
         m_aggrColTableModel.initialize(colAggrs2Use);
+    }
+
+    /**
+     * @return a label list of all supported methods for the currently
+     * selected rows
+     */
+    protected List<String> getMethods4SelectedItems() {
+        final int[] selectedColumns =
+            m_aggrColTable.getSelectedRows();
+        final Set<DataType> types =
+            new HashSet<DataType>(selectedColumns.length);
+        for (final int row : selectedColumns) {
+            final ColumnAggregator aggregator =
+                m_aggrColTableModel.getColumnAggregator(row);
+            types.add(aggregator.getDataType());
+        }
+        final DataType superType = CollectionCellFactory.getElementType(
+                types.toArray(new DataType[0]));
+        final List<String> labels =
+            AggregationMethods.getCompatibleMethodLabels(superType);
+        return labels;
     }
 }

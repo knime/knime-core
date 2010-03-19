@@ -54,7 +54,8 @@ package org.knime.base.node.preproc.groupby.dialogutil;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 
 import java.util.ArrayList;
@@ -100,7 +101,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         }
         for (final DataColumnSpec spec : specs) {
             m_cols.add(new ColumnAggregator(spec,
-                    AggregationMethod.getDefaultMethod(spec)));
+                    AggregationMethods.getDefaultMethod(spec)));
         }
         fireTableDataChanged();
     }
@@ -154,7 +155,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * @param method the aggregation method to use
      */
     protected void setAggregationMethod(final int[] selectedRows,
-            final AggregationMethod method) {
+            final AggregationMeth method) {
         if (selectedRows == null) {
             return;
         }
@@ -177,22 +178,6 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         }
         return "Aggregation (click to change)";
 
-    }
-
-    /**
-     * @param rows2check the index of the rows to check
-     * @return <code>true</code> if all rows with the given index are numerical
-     */
-    protected boolean onlyNumerical(final int[] rows2check) {
-        if (rows2check == null) {
-            return false;
-        }
-        for (final int idx : rows2check) {
-            if (!isNumerical(idx)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -239,9 +224,9 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         if (aValue == null) {
             return;
         }
-        if (aValue instanceof AggregationMethod) {
-            final AggregationMethod newMethod =
-                (AggregationMethod)aValue;
+        if (aValue instanceof AggregationMeth) {
+            final AggregationMeth newMethod =
+                (AggregationMeth)aValue;
             assert columnIdx == 1;
             updateMethod(row, newMethod);
         }
@@ -251,7 +236,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * @param row row index to change the method for
      * @param method the new aggregation method
      */
-    private void updateMethod(final int row, final AggregationMethod method) {
+    private void updateMethod(final int row, final AggregationMeth method) {
         final ColumnAggregator colAggr = getColumnAggregator(row);
         m_cols.set(row, new ColumnAggregator(
                 colAggr.getColSpec(), method));
@@ -261,12 +246,11 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * @param row the index of the row
      * @return the aggregator for the row with the given index
      */
-    private ColumnAggregator getColumnAggregator(final int row) {
+    protected ColumnAggregator getColumnAggregator(final int row) {
         if (row < 0 || m_cols.size() <= row) {
-            throw new IllegalArgumentException("Invalid row index");
+            throw new IllegalArgumentException("Invalid row index: " + row);
         }
-        final ColumnAggregator colAggr =
-            m_cols.get(row);
+        final ColumnAggregator colAggr = m_cols.get(row);
         return colAggr;
     }
 
@@ -308,7 +292,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     @Override
     public Class<?> getColumnClass(final int columnIndex) {
         if (columnIndex == 1) {
-            return AggregationMethod.class;
+            return AggregationMeth.class;
         }
         return DataColumnSpec.class;
     }

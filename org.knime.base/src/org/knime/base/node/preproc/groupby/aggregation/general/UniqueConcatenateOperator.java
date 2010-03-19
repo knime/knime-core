@@ -44,63 +44,115 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * History
- * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+package org.knime.base.node.preproc.groupby.aggregation.general;
 
-import java.awt.Component;
-import java.awt.event.MouseEvent;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableCellRenderer;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Table cell renderer that checks if the value being renderer is of type
- * <code>AggregationMethod</code> if so it will renderer the name of the method.
- * If not, the passed value's toString() method is used for rendering.
+ * Returns the concatenation of all different values per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodTableCellRenderer
-    extends DefaultTableCellRenderer {
-  private static final long serialVersionUID = -2935929914992836023L;
+public class UniqueConcatenateOperator extends AggregationOperator {
 
-    /**
-     * {@inheritDoc}
+    private final DataType m_type = StringCell.TYPE;
+
+    private final Set<String> m_vals;
+
+    /**Constructor for class Concatenate.
+     * @param maxUniqueValues the maximum number of unique values
      */
-    @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
-        final Component c =
-            super.getTableCellRendererComponent(table, value, isSelected,
-                hasFocus, row, column);
-        assert (c == this);
-        if (value instanceof AggregationMeth) {
-            setText(((AggregationMeth)value).getLabel());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
+    public UniqueConcatenateOperator(final int maxUniqueValues) {
+        super("Unique concatenate", true, false, maxUniqueValues,
+                DataValue.class);
+        try {
+            m_vals = new HashSet<String>(maxUniqueValues);
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(
+                    "Maximum unique values number to big");
         }
-        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText() {
-        return "Left mouse click to change method. "
-        + "Right mouse click for context menu.";
+    protected DataType getDataType(final DataType origType) {
+        return m_type;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText(final MouseEvent event) {
-        return getToolTipText();
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new UniqueConcatenateOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (cell.isMissing()) {
+            return false;
+        }
+        final String val = cell.toString();
+        if (m_vals.contains(val)) {
+            return false;
+        }
+        //check if the set contains more values than allowed
+        //before adding a new value
+        if (m_vals.size() >= getMaxUniqueValues()) {
+            return true;
+        }
+        m_vals.add(val);
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        final StringBuilder buf = new StringBuilder();
+        boolean first = true;
+        for (final String val : m_vals) {
+            if (first) {
+                first = false;
+            } else {
+                buf.append(AggregationOperator.CONCATENATOR);
+            }
+            buf.append(val);
+        }
+        return new StringCell(buf.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_vals.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Concatenates each value only once per group.";
     }
 }

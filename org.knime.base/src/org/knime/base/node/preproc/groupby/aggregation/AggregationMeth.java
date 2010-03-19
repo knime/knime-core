@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
@@ -43,15 +43,73 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
-</body>
+ * -------------------------------------------------------------------
+ */
+
+package org.knime.base.node.preproc.groupby.aggregation;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataValue;
+
+
+/**
+ * Interface that implements the main methods of an aggregation method.
+ * However the main work is done by the {@link AggregationOperator} that can
+ * be created using the {@link #createOperator(DataColumnSpec, int)} method.
+ * A new {@link AggregationOperator} should be created per column.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ */
+public interface AggregationMeth extends Comparable<AggregationMeth> {
+
+
+    /**
+     * @return the unique label
+     */
+    String getLabel();
+
+
+    /**
+     * @param colName the unique name of the column
+     * @param origSpec the original {@link DataColumnSpec}
+     * @return the new {@link DataColumnSpecCreator} for the aggregated column
+     */
+    DataColumnSpec createColumnSpec(String colName, DataColumnSpec origSpec);
+
+
+    /**
+     * @return the short label which is used in the column name
+     */
+    String getShortLabel();
+
+    /**
+     * @param origColSpec the {@link DataColumnSpec} of the column to
+     * check for compatibility
+     * @return <code>true</code> if the aggregation method is compatible
+     */
+    boolean isCompatible(DataColumnSpec origColSpec);
+
+
+    /**
+     * Creates a new instance of this operator and returns it.
+     * A new instance must be created for each column.
+     *
+     * @param origColSpec the {@link DataColumnSpec} of the original column
+     * @param maxUniqueValues the maximum number of unique values
+     * @return a new instance of this operator
+     */
+    AggregationOperator createOperator(DataColumnSpec origColSpec,
+            int maxUniqueValues);
+
+    /**
+     * @return a description that explains the used aggregation method to
+     * the user
+     */
+    public String getDescription();
+
+    /**
+     * @return the supported {@link DataValue} class
+     */
+    public Class<? extends DataValue> getSupportedType();
+}

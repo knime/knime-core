@@ -44,49 +44,105 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * History
- * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+package org.knime.base.node.preproc.groupby.aggregation.general;
 
-import java.awt.Component;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.IntCell;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * List cell renderer that checks if the value being renderer is of type
- * <code>AggregationMethod</code> if so it will renderer the name of the method.
- * If not, the passed value's toString() method is used for rendering.
+ * Returns the count of the unique values per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodListCellRenderer
-    extends DefaultListCellRenderer {
+public class UniqueCountOperator extends AggregationOperator {
 
-    private static final long serialVersionUID = -5113725870350491440L;
+    private final DataType m_type = IntCell.TYPE;
+
+    private final Set<String> m_vals;
+
+    /**Constructor for class Concatenate.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public UniqueCountOperator(final int maxUniqueValues) {
+        super("Unique count", true, false, maxUniqueValues,
+                DataValue.class);
+        try {
+            m_vals = new HashSet<String>(maxUniqueValues);
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(
+                    "Maximum unique values number to big");
+        }
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(final JList list,
-            final Object value, final int index, final boolean isSelected,
-            final boolean cellHasFocus) {
-        final Component c =
-            super.getListCellRendererComponent(list, value, index, isSelected,
-                    cellHasFocus);
-        assert (c == this);
-        if (value instanceof AggregationMeth) {
-            AggregationMeth aggregationMeth = (AggregationMeth)value;
-            setText(aggregationMeth.getLabel());
-            setToolTipText(aggregationMeth.getDescription());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
-        }
-        return this;
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new UniqueCountOperator(maxUniqueValues);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataType getDataType(final DataType origType) {
+        return m_type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (cell.isMissing()) {
+            return false;
+        }
+        final String val = cell.toString();
+        if (m_vals.contains(val)) {
+            return false;
+        }
+        //check if the set contains more values than allowed
+        //before adding a new value
+        if (m_vals.size() >= getMaxUniqueValues()) {
+            return true;
+        }
+        m_vals.add(val);
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        return new IntCell(m_vals.size());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_vals.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Counts each value only once per group.";
+    }
 }

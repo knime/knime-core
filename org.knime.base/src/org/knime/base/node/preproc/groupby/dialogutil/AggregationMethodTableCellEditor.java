@@ -53,13 +53,12 @@ package org.knime.base.node.preproc.groupby.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 
 import java.awt.Component;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultTreeCellEditor;
 
@@ -72,8 +71,7 @@ import javax.swing.tree.DefaultTreeCellEditor;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodTableCellEditor extends DefaultCellEditor
-implements TableCellEditor {
+public class AggregationMethodTableCellEditor extends DefaultCellEditor {
 
     private static final long serialVersionUID = 1415862346615703238L;
 
@@ -99,9 +97,9 @@ implements TableCellEditor {
         final Object valueAt = m_model.getValueAt(row, 0);
         final Object methodVal = m_model.getValueAt(row, 1);
         if (valueAt instanceof DataColumnSpec) {
-            final AggregationMethod method;
-                if (methodVal instanceof AggregationMethod) {
-                    method = (AggregationMethod)methodVal;
+            final AggregationMethods method;
+                if (methodVal instanceof AggregationMethods) {
+                    method = (AggregationMethods)methodVal;
                 } else {
                     method = null;
                 }

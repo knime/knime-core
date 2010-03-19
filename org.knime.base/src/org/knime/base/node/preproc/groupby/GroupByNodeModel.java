@@ -72,7 +72,8 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 
 import java.io.File;
@@ -86,10 +87,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses
- * the {@link GroupByTable} class to create the resulting table.
+ * the {@link GroupTable} class implementations to create the resulting table.
  *
  * @author Tobias Koetter, University of Konstanz
  */
@@ -138,6 +142,9 @@ public class GroupByNodeModel extends NodeModel {
     /**Configuration key for the retain order option.*/
     protected static final String CFG_RETAIN_ORDER = "retainOrder";
 
+    /**Configuration key for the in memory option.*/
+    protected static final String CFG_IN_MEMORY = "inMemory";
+
     /**Configuration key for the aggregation column name policy.*/
     protected static final String CFG_COLUMN_NAME_POLICY = "columnNamePolicy";
 
@@ -157,6 +164,9 @@ public class GroupByNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_retainOrder =
         new SettingsModelBoolean(CFG_RETAIN_ORDER, false);
+
+    private final SettingsModelBoolean m_inMemory =
+        new SettingsModelBoolean(CFG_IN_MEMORY, false);
 
     private final SettingsModelString m_columnNamePolicy =
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
@@ -178,6 +188,22 @@ public class GroupByNodeModel extends NodeModel {
     public GroupByNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
+        //add the  process in memory change listener
+        m_inMemory.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                inMemoryChanged();
+            }
+        });
+        inMemoryChanged();
+    }
+
+    /**
+     * Call this method if the process in memory flag has changed.
+     */
+    protected void inMemoryChanged() {
+        m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
+        m_sortInMemory.setEnabled(!m_inMemory.getBooleanValue());
     }
 
     /**
@@ -238,6 +264,7 @@ public class GroupByNodeModel extends NodeModel {
         }
         m_columnNamePolicy.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
+        m_inMemory.saveSettingsTo(settings);
     }
 
     /**
@@ -348,6 +375,12 @@ public class GroupByNodeModel extends NodeModel {
         } catch (final InvalidSettingsException e) {
             m_retainOrder.setBooleanValue(false);
         }
+        try {
+            //this option was introduced in Knime 2.1.2+
+            m_inMemory.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_inMemory.setBooleanValue(false);
+        }
         m_maxUniqueValues.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
         m_sortInMemory.loadSettingsFrom(settings);
@@ -434,7 +467,7 @@ public class GroupByNodeModel extends NodeModel {
         m_groupByCols.setExcludeList(exclList);
         //check for invalid group columns
         try {
-            GroupByTable.checkGroupCols(origSpec, groupByCols);
+            GroupTable.checkGroupCols(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
@@ -444,7 +477,7 @@ public class GroupByNodeModel extends NodeModel {
         }
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
-        final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
+        final DataTableSpec spec = GroupTable.createGroupByTableSpec(
                 origSpec, groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), colNamePolicy);
 
@@ -475,7 +508,7 @@ public class GroupByNodeModel extends NodeModel {
         // create the data object
         final BufferedDataTable table = (BufferedDataTable)inData[0];
         if (table == null) {
-            throw new IllegalArgumentException("NO input table found");
+            throw new IllegalArgumentException("No input table found");
         }
         if (table.getRowCount() < 1) {
             setWarningMessage("Empty input table found");
@@ -490,10 +523,19 @@ public class GroupByNodeModel extends NodeModel {
         compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
-        final GroupByTable resultTable = new GroupByTable(exec, table,
+        final GroupTable resultTable;
+        if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
+            resultTable = new MemoryGroupByTable(exec, table,
+                    groupByCols, m_columnAggregators2Use.toArray(
+                            new ColumnAggregator[0]), maxUniqueVals,
+                            sortInMemory, enableHilite, colNamePolicy,
+                            retainOrder);
+        } else {
+            resultTable = new BigGroupByTable(exec, table,
                 groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), maxUniqueVals, sortInMemory,
                         enableHilite, colNamePolicy, retainOrder);
+        }
         if (m_enableHilite.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(
                     resultTable.getHiliteMapping()));
@@ -551,8 +593,9 @@ public class GroupByNodeModel extends NodeModel {
             nominal =
                 config.getString(OLD_CFG_NOMINAL_COL_METHOD);
         } catch (final InvalidSettingsException e) {
-            numeric = AggregationMethod.getDefaultNumericMethod().getLabel();
-            nominal = AggregationMethod.getDefaultNominalMethod().getLabel();
+            numeric = AggregationMethods.getDefaultNumericalMethod().getLabel();
+            nominal =
+                AggregationMethods.getDefaultNotNumericalMethod().getLabel();
         }
         return compCreateColumnAggregators(spec, excludeCols,
                 numeric, nominal);
@@ -588,10 +631,10 @@ public class GroupByNodeModel extends NodeModel {
     private static List<ColumnAggregator> compCreateColumnAggregators(
             final DataTableSpec spec, final List<String> excludeCols,
             final String numeric, final String nominal) {
-        final AggregationMethod numericMethod =
-            AggregationMethod.getMethod4Label(numeric);
-        final AggregationMethod nominalMethod =
-            AggregationMethod.getMethod4Label(nominal);
+        final AggregationMeth numericMethod =
+            AggregationMethods.getMethod4Label(numeric);
+        final AggregationMeth nominalMethod =
+            AggregationMethods.getMethod4Label(nominal);
         final Set<String> groupCols = new HashSet<String>(excludeCols);
         final List<ColumnAggregator> colAg =
             new LinkedList<ColumnAggregator>();
@@ -599,8 +642,8 @@ public class GroupByNodeModel extends NodeModel {
             colIdx < length; colIdx++) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colIdx);
             if (!groupCols.contains(colSpec.getName())) {
-                final AggregationMethod method =
-                    AggregationMethod.getAggregationMethod(colSpec,
+                final AggregationMeth method =
+                    AggregationMethods.getAggregationMethod(colSpec,
                             numericMethod, nominalMethod);
                 colAg.add(new ColumnAggregator(colSpec, method));
             }

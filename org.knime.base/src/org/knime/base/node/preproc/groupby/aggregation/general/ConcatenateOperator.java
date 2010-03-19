@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
@@ -43,15 +43,96 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
-</body>
+ * -------------------------------------------------------------------
+ */
+
+package org.knime.base.node.preproc.groupby.aggregation.general;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+
+/**
+ * Returns the all values concatenated per group.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ */
+public class ConcatenateOperator extends AggregationOperator {
+
+    private final DataType m_type = StringCell.TYPE;
+
+    private final StringBuilder m_buf = new StringBuilder();
+
+    private boolean m_first = true;
+
+    /**Constructor for class Concatenate.
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public ConcatenateOperator(final int maxUniqueValues) {
+        super("Concatenate", false, false, maxUniqueValues,
+                DataValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataType getDataType(final DataType origType) {
+        return m_type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AggregationOperator createInstance(
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        return new ConcatenateOperator(maxUniqueValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (cell.isMissing()) {
+            return false;
+        }
+        if (m_first) {
+            m_first = false;
+        } else {
+            m_buf.append(AggregationOperator.CONCATENATOR);
+        }
+        m_buf.append(cell.toString());
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataCell getResultInternal() {
+        return new StringCell(m_buf.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_buf.setLength(0);
+        m_first = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Concatenates the values per group.";
+    }
+}

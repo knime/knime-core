@@ -1,7 +1,7 @@
 <!--
 ========================================================================
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,12 +46,8 @@
 ====================================================================
 -->
 <body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
+Contains implementations of the  
+{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator}
+that handle numerical columns that are compatible with 
+{@link org.knime.core.data.DoubleValue.class}.
 </body>

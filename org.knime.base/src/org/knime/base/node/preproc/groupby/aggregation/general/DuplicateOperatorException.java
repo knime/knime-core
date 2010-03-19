@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
@@ -43,15 +43,42 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the main classes used for aggregating <code>DataCell</code>s. 
-New aggregation methods should implement the abstract 
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationOperator} 
-class and register itself in the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods} class
-using the
-{@link org.knime.base.node.preproc.groupby.aggregation.AggregationMethods#registerOperator(AggregationOperator)}
-method.  
-</body>
+ * -------------------------------------------------------------------
+ */
+
+package org.knime.base.node.preproc.groupby.aggregation.general;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+
+
+/**
+ * Indicates that an operator with the name already exists.
+ * The already registered operator can be retrieved by the
+ * {@link DuplicateOperatorException}{@link #getOperator()} method.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ */
+public class DuplicateOperatorException extends Exception {
+
+    private static final long serialVersionUID = 1145847365353307663L;
+
+    private final AggregationOperator m_operator;
+
+    /**Constructor for class DuplicateOperatorException.
+     * @param msg the error message
+     * @param operator the already registered {@link AggregationOperator}
+     */
+    public DuplicateOperatorException(final String msg,
+            final AggregationOperator operator) {
+        super(msg);
+        m_operator = operator;
+    }
+
+
+    /**
+     * @return the already registered operator
+     */
+    public AggregationOperator getOperator() {
+        return m_operator;
+    }
+}

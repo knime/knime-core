@@ -52,6 +52,8 @@
 package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -68,9 +70,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.List;
 
@@ -78,7 +83,10 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -115,6 +123,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final SettingsModelBoolean m_retainOrder =
         new SettingsModelBoolean(GroupByNodeModel.CFG_RETAIN_ORDER, false);
 
+    private final SettingsModelBoolean m_inMemory =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_IN_MEMORY, false);
+
     private final SettingsModelString m_columnNamePolicy =
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
                 ColumnNamePolicy.getDefault().getLabel());
@@ -134,7 +145,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
         addTab("Options", m_panel);
 
 //The group column box
-        m_groupColPanel = new DialogComponentColumnFilter(m_groupByCols, 0);
+        m_groupColPanel =
+            new DialogComponentColumnFilter(m_groupByCols, 0, false);
         m_groupColPanel.setIncludeTitle(" Group column(s) ");
         m_groupColPanel.setExcludeTitle(" Available column(s) ");
         m_groupByCols.addChangeListener(new ChangeListener() {
@@ -167,42 +179,128 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_panel.setMinimumSize(dimension);
         m_panel.setMaximumSize(dimension);
         m_panel.setPreferredSize(dimension);
+
+        //add the  process in memory change listener
+        m_inMemory.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                inMemoryChanged();
+            }
+        });
+        inMemoryChanged();
+        final Component descriptionTab = createDescriptionTab();
+        descriptionTab.setMinimumSize(dimension);
+        descriptionTab.setMaximumSize(dimension);
+        descriptionTab.setPreferredSize(dimension);
+        addTab("Description", descriptionTab);
+    }
+
+    private Component createDescriptionTab() {
+        final StringBuilder buf = new StringBuilder();
+        final List<AggregationMeth> methods =
+            AggregationMethods.getAvailableMethods();
+        Class<? extends DataValue> lastType = null;
+        for (final AggregationMeth method : methods) {
+            final Class<? extends DataValue> supportedType =
+                method.getSupportedType();
+            if (lastType == null || lastType != supportedType) {
+                if (lastType != null) {
+                    //close the previous definition list
+                    buf.append("</dl>");
+                }
+                buf.append("<h3>");
+                if (supportedType == DataValue.class) {
+                    buf.append("All data types");
+                } else if (supportedType == DoubleValue.class) {
+                    buf.append("Numerical data types");
+                } else {
+                    buf.append(supportedType.getName());
+                }
+                buf.append("</h3>");
+                buf.append("\n");
+                buf.append("<dl>");
+                lastType = supportedType;
+            }
+            buf.append("<dt><b>");
+            buf.append(method.getLabel());
+            buf.append("</b></dt>");
+            buf.append("\n");
+            buf.append("<dd>");
+            buf.append(method.getDescription());
+            buf.append("</dd>");
+            buf.append("\n");
+        }
+        final JEditorPane editorPane = new JEditorPane("text/html",
+                buf.toString());
+        editorPane.setEditable(false);
+        final JScrollPane scrollPane = new JScrollPane(editorPane,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        return scrollPane;
+    }
+
+    /**
+     * Call this method if the process in memory flag has changed.
+     */
+    protected void inMemoryChanged() {
+        m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
+        m_sortInMemory.setEnabled(!m_inMemory.getBooleanValue());
     }
 
     private JComponent createAdvancedOptionsBox() {
-        final Box box = new Box(BoxLayout.X_AXIS);
-        box.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), " Advanced settings "));
-        box.add(Box.createVerticalGlue());
+//general option box
+        final Box generalBox = new Box(BoxLayout.X_AXIS);
+        generalBox.add(Box.createVerticalGlue());
         final DialogComponent maxNoneNumericVals =
             new DialogComponentNumber(m_maxUniqueValues,
                     "Maximum unique values per group", new Integer(1000), 5);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
-        box.add(maxNoneNumericVals.getComponentPanel());
-        box.add(Box.createVerticalGlue());
+        generalBox.add(maxNoneNumericVals.getComponentPanel());
+        generalBox.add(Box.createVerticalGlue());
 
         final DialogComponent enableHilite = new DialogComponentBoolean(
                 m_enableHilite, "Enable hiliting");
-        box.add(enableHilite.getComponentPanel());
-        box.add(Box.createVerticalGlue());
-
-        final DialogComponent sortInMemory = new DialogComponentBoolean(
-                m_sortInMemory, "Sort in memory");
-        box.add(sortInMemory.getComponentPanel());
-        box.add(Box.createVerticalGlue());
-        final DialogComponent retainOrder = new DialogComponentBoolean(
-                m_retainOrder, "Retain order");
-        retainOrder.setToolTipText(
-                "Retains the original row order of the input table.");
-        box.add(retainOrder.getComponentPanel());
-        box.add(Box.createVerticalGlue());
+        generalBox.add(enableHilite.getComponentPanel());
+        generalBox.add(Box.createVerticalGlue());
         final DialogComponentStringSelection colNamePolicy =
             new DialogComponentStringSelection(m_columnNamePolicy, null,
                     ColumnNamePolicy.getPolicyLabels());
-        box.add(colNamePolicy.getComponentPanel());
-        box.add(Box.createVerticalGlue());
-        return box;
+        generalBox.add(colNamePolicy.getComponentPanel());
+        generalBox.add(Box.createVerticalGlue());
+
+//memory option box
+        final Box memoryBox = new Box(BoxLayout.X_AXIS);
+        memoryBox.add(Box.createVerticalGlue());
+        final DialogComponent inMemory = new DialogComponentBoolean(
+                m_inMemory, "Process in memory");
+        inMemory.setToolTipText(
+        "Processes all data in memory.");
+        memoryBox.add(inMemory.getComponentPanel());
+        memoryBox.add(Box.createVerticalGlue());
+
+        final DialogComponent sortInMemory = new DialogComponentBoolean(
+                m_sortInMemory, "Sort in memory");
+        memoryBox.add(sortInMemory.getComponentPanel());
+        memoryBox.add(Box.createVerticalGlue());
+
+        final DialogComponent retainOrder = new DialogComponentBoolean(
+                m_retainOrder, "Retain row order");
+        retainOrder.setToolTipText(
+                "Retains the original row order of the input table.");
+        memoryBox.add(retainOrder.getComponentPanel());
+        memoryBox.add(Box.createVerticalGlue());
+
+//Advanced settings box
+        final Box rootBox = new Box(BoxLayout.Y_AXIS);
+        rootBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), " Advanced settings "));
+        rootBox.add(Box.createHorizontalGlue());
+        rootBox.add(generalBox);
+        rootBox.add(Box.createHorizontalGlue());
+        rootBox.add(memoryBox);
+        rootBox.add(Box.createHorizontalGlue());
+        return rootBox;
     }
 
     /**
@@ -245,6 +343,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (final InvalidSettingsException e) {
             m_retainOrder.setBooleanValue(false);
         }
+        try {
+            //this option was introduced in Knime 2.1.2+
+            m_inMemory.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_inMemory.setBooleanValue(false);
+        }
         m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         groupByColsChanged();
     }
@@ -262,6 +366,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
+        m_inMemory.saveSettingsTo(settings);
     }
 
     /**
