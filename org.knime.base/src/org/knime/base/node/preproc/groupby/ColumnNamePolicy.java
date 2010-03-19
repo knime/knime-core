@@ -52,7 +52,7 @@
 package org.knime.base.node.preproc.groupby;
 
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 
 
 /**
@@ -84,11 +84,11 @@ public enum ColumnNamePolicy {
 
     /**
      * @param origName the original name of the column
-     * @param aggregation the {@link AggregationMeth} to use
+     * @param aggregation the {@link AggregationMethod} to use
      * @return the column name of the aggregation column
      */
     public String createColumName(final String origName,
-            final AggregationMeth aggregation) {
+            final AggregationMethod aggregation) {
         if (origName == null) {
             throw new NullPointerException("origSpec must not be null");
         }

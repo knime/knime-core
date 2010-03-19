@@ -72,7 +72,7 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 
@@ -93,7 +93,7 @@ import javax.swing.event.ChangeListener;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses
- * the {@link GroupTable} class implementations to create the resulting table.
+ * the {@link GroupByTable} class implementations to create the resulting table.
  *
  * @author Tobias Koetter, University of Konstanz
  */
@@ -467,7 +467,7 @@ public class GroupByNodeModel extends NodeModel {
         m_groupByCols.setExcludeList(exclList);
         //check for invalid group columns
         try {
-            GroupTable.checkGroupCols(origSpec, groupByCols);
+            GroupByTable.checkGroupCols(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
@@ -477,7 +477,7 @@ public class GroupByNodeModel extends NodeModel {
         }
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
-        final DataTableSpec spec = GroupTable.createGroupByTableSpec(
+        final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
                 origSpec, groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), colNamePolicy);
 
@@ -523,7 +523,7 @@ public class GroupByNodeModel extends NodeModel {
         compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
-        final GroupTable resultTable;
+        final GroupByTable resultTable;
         if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
             resultTable = new MemoryGroupByTable(exec, table,
                     groupByCols, m_columnAggregators2Use.toArray(
@@ -631,9 +631,9 @@ public class GroupByNodeModel extends NodeModel {
     private static List<ColumnAggregator> compCreateColumnAggregators(
             final DataTableSpec spec, final List<String> excludeCols,
             final String numeric, final String nominal) {
-        final AggregationMeth numericMethod =
+        final AggregationMethod numericMethod =
             AggregationMethods.getMethod4Label(numeric);
-        final AggregationMeth nominalMethod =
+        final AggregationMethod nominalMethod =
             AggregationMethods.getMethod4Label(nominal);
         final Set<String> groupCols = new HashSet<String>(excludeCols);
         final List<ColumnAggregator> colAg =
@@ -642,7 +642,7 @@ public class GroupByNodeModel extends NodeModel {
             colIdx < length; colIdx++) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colIdx);
             if (!groupCols.contains(colSpec.getName())) {
-                final AggregationMeth method =
+                final AggregationMethod method =
                     AggregationMethods.getAggregationMethod(colSpec,
                             numericMethod, nominalMethod);
                 colAg.add(new ColumnAggregator(colSpec, method));

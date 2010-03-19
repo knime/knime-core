@@ -76,7 +76,7 @@ import java.util.Map.Entry;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class MemoryGroupByTable extends GroupTable {
+public class MemoryGroupByTable extends GroupByTable {
 
     private class GroupKey {
         /**

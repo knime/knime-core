@@ -49,7 +49,7 @@
  */
 package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 
 import java.awt.Component;
 
@@ -80,8 +80,8 @@ public class AggregationMethodListCellRenderer
             super.getListCellRendererComponent(list, value, index, isSelected,
                     cellHasFocus);
         assert (c == this);
-        if (value instanceof AggregationMeth) {
-            AggregationMeth aggregationMeth = (AggregationMeth)value;
+        if (value instanceof AggregationMethod) {
+            AggregationMethod aggregationMeth = (AggregationMethod)value;
             setText(aggregationMeth.getLabel());
             setToolTipText(aggregationMeth.getDescription());
 //            setIcon(((DataColumnSpec)value).getType().getIcon());

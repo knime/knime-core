@@ -65,7 +65,7 @@ import org.knime.base.node.preproc.groupby.BigGroupByTable;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class AggregationOperator implements AggregationMeth {
+public abstract class AggregationOperator implements AggregationMethod {
 
     private final int m_maxUniqueValues;
 
@@ -295,7 +295,7 @@ public abstract class AggregationOperator implements AggregationMeth {
      * {@inheritDoc}
      */
     @Override
-    public int compareTo(final AggregationMeth o) {
+    public int compareTo(final AggregationMethod o) {
         if (o instanceof AggregationOperator) {
             final AggregationOperator operator = (AggregationOperator)o;
             final int typeComp = m_supportedType.getName().compareTo(

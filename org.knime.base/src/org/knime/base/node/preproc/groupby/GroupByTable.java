@@ -65,7 +65,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
@@ -82,9 +82,9 @@ import java.util.Set;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class GroupTable {
+public abstract class GroupByTable {
 
-    private static final AggregationMeth RETAIN_ORDER_COL_AGGR_METHOD =
+    private static final AggregationMethod RETAIN_ORDER_COL_AGGR_METHOD =
         AggregationMethods.getRowOrderMethod();
     private static final String RETAIN_ORDER_COL_NAME = "orig_order_col";
     private final List<String> m_groupCols;
@@ -99,7 +99,7 @@ public abstract class GroupTable {
     private final BufferedDataTable m_resultTable;
     private final boolean m_sortInMemory;
 
-    /**Constructor for class GroupTable.
+    /**Constructor for class GroupByTable.
      * @param exec the <code>ExecutionContext</code>
      * @param inDataTable the table to aggregate
      * @param groupByCols the name of all columns to group by
@@ -118,7 +118,7 @@ public abstract class GroupTable {
      * retained
      * @throws CanceledExecutionException if the user has canceled the execution
      */
-    protected GroupTable(final ExecutionContext exec,
+    protected GroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
             final List<String> groupByCols,
             final ColumnAggregator[] colAggregators, final int maxUniqueValues,

@@ -61,7 +61,7 @@ import org.knime.core.data.DataValue;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public interface AggregationMeth extends Comparable<AggregationMeth> {
+public interface AggregationMethod extends Comparable<AggregationMethod> {
 
 
     /**

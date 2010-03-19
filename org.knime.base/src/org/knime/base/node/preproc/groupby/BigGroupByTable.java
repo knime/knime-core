@@ -81,7 +81,7 @@ import java.util.Set;
  * @author Tobias Koetter, University of Konstanz
  */
 public class BigGroupByTable extends
-GroupTable {
+GroupByTable {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BigGroupByTable.class);

@@ -73,7 +73,6 @@ import org.knime.base.node.preproc.groupby.aggregation.numerical.ProductOperator
 import org.knime.base.node.preproc.groupby.aggregation.numerical.StdDeviationOperator;
 import org.knime.base.node.preproc.groupby.aggregation.numerical.SumOperator;
 import org.knime.base.node.preproc.groupby.aggregation.numerical.VarianceOperator;
-import org.knime.base.node.viz.aggregation.AggregationMethod;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,9 +95,9 @@ public final class AggregationMethods {
     private final Map<String, AggregationOperator> m_operators =
         new HashMap<String, AggregationOperator>();
 
-    private final AggregationMeth m_defNotNumericalMeth;
-    private final AggregationMeth m_defNumericalMeth;
-    private final AggregationMeth m_rowOrderMethod;
+    private final AggregationMethod m_defNotNumericalMeth;
+    private final AggregationMethod m_defNumericalMeth;
+    private final AggregationMethod m_rowOrderMethod;
 
     private AggregationMethods() {
         //add all default methods
@@ -235,10 +234,10 @@ public final class AggregationMethods {
      * numerical columns
      * @return the {@link AggregationMethod} to use
      */
-    public static AggregationMeth getAggregationMethod(
+    public static AggregationMethod getAggregationMethod(
             final DataColumnSpec colSpec,
-            final AggregationMeth numericColMethod,
-            final AggregationMeth nominalColMethod) {
+            final AggregationMethod numericColMethod,
+            final AggregationMethod nominalColMethod) {
         if (colSpec.getType().isCompatible(DoubleValue.class)) {
             return numericColMethod;
         }
@@ -250,13 +249,13 @@ public final class AggregationMethods {
      * @return all {@link AggregationOperator}s that are compatible with
      * the given {@link DataType}
      */
-    public static List<AggregationMeth> getCompatibleMethods(
+    public static List<AggregationMethod> getCompatibleMethods(
             final DataType type) {
         if (type == null) {
             throw new IllegalArgumentException("type must not be empty");
         }
-        final List<AggregationMeth> compatibleMethods =
-            new ArrayList<AggregationMeth>();
+        final List<AggregationMethod> compatibleMethods =
+            new ArrayList<AggregationMethod>();
         final Collection<AggregationOperator> operators =
             getInstance().getOperators();
         for (final AggregationOperator operator : operators) {
@@ -277,11 +276,11 @@ public final class AggregationMethods {
         if (type == null) {
             throw new IllegalArgumentException("type must not be empty");
         }
-        final List<AggregationMeth> compatibleMethods =
+        final List<AggregationMethod> compatibleMethods =
             getCompatibleMethods(type);
         final List<String> methods =
             new ArrayList<String>(compatibleMethods.size());
-        for (final AggregationMeth method : compatibleMethods) {
+        for (final AggregationMethod method : compatibleMethods) {
             methods.add(method.getLabel());
         }
         return methods;
@@ -291,9 +290,9 @@ public final class AggregationMethods {
      * @param spec the {@link DataColumnSpec} to get the default method for
      * @return the default {@link AggregationMethod} for the given column spec
      */
-    public static AggregationMeth getDefaultMethod(
+    public static AggregationMethod getDefaultMethod(
             final DataColumnSpec spec) {
-        final List<AggregationMeth> methods =
+        final List<AggregationMethod> methods =
             getCompatibleMethods(spec.getType());
         if (methods.size() > 0) {
             return methods.get(0);
@@ -306,7 +305,7 @@ public final class AggregationMethods {
      * <code>AggregationMethod</code>
      * @return the <code>AggregationMethod</code> for the given label
      */
-    public static AggregationMeth getMethod4SettingsModel(
+    public static AggregationMethod getMethod4SettingsModel(
             final SettingsModelString model) {
         if (model == null) {
             throw new NullPointerException("model must not be null");
@@ -320,7 +319,7 @@ public final class AggregationMethods {
      * @throws IllegalArgumentException if no <code>AggregationMethod</code>
      * exists for the given label
      */
-    public static AggregationMeth getMethod4Label(final String label)
+    public static AggregationMethod getMethod4Label(final String label)
     throws IllegalArgumentException {
         return getInstance().getMethod(label);
     }
@@ -331,7 +330,7 @@ public final class AggregationMethods {
      * @throws IllegalArgumentException if no <code>AggregationMethod</code>
      * exists for the given label
      */
-    private AggregationMeth getMethod(final String label)
+    private AggregationMethod getMethod(final String label)
     throws IllegalArgumentException {
         if (label == null) {
             throw new NullPointerException("Label must not be null");
@@ -348,9 +347,9 @@ public final class AggregationMethods {
      * @return all available methods ordered by the supported type and the
      * operator name
      */
-    public static List<AggregationMeth> getAvailableMethods() {
-        final List<AggregationMeth> methods =
-            new ArrayList<AggregationMeth>(getInstance().getOperators());
+    public static List<AggregationMethod> getAvailableMethods() {
+        final List<AggregationMethod> methods =
+            new ArrayList<AggregationMethod>(getInstance().getOperators());
         Collections.sort(methods);
         return methods;
     }
@@ -358,14 +357,14 @@ public final class AggregationMethods {
     /**
      * @return the default not numerical method
      */
-    public static AggregationMeth getDefaultNotNumericalMethod() {
+    public static AggregationMethod getDefaultNotNumericalMethod() {
         return getInstance().m_defNotNumericalMeth;
     }
 
     /**
      * @return the default not numerical method
      */
-    public static AggregationMeth getDefaultNumericalMethod() {
+    public static AggregationMethod getDefaultNumericalMethod() {
         return getInstance().m_defNumericalMeth;
     }
 
@@ -373,7 +372,7 @@ public final class AggregationMethods {
      * @return the method used to order the rows of the output
      * table if the row order should be retained
      */
-    public static AggregationMeth getRowOrderMethod() {
+    public static AggregationMethod getRowOrderMethod() {
         return getInstance().m_rowOrderMethod;
     }
 }

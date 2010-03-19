@@ -70,7 +70,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
@@ -197,10 +197,10 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     private Component createDescriptionTab() {
         final StringBuilder buf = new StringBuilder();
-        final List<AggregationMeth> methods =
+        final List<AggregationMethod> methods =
             AggregationMethods.getAvailableMethods();
         Class<? extends DataValue> lastType = null;
-        for (final AggregationMeth method : methods) {
+        for (final AggregationMethod method : methods) {
             final Class<? extends DataValue> supportedType =
                 method.getSupportedType();
             if (lastType == null || lastType != supportedType) {

@@ -72,16 +72,16 @@ public class ColumnAggregator {
     private static final String CNFG_AGGR_METHODS = "aggregationMethod";
 
     private final DataColumnSpec m_origColSpec;
-    private final AggregationMeth m_operatorTemplate;
+    private final AggregationMethod m_operatorTemplate;
     private AggregationOperator m_operator;
 
     /**Constructor for class ColumnAggregator.
      * @param origColSpec the {@link DataColumnSpec} of the original column
-     * @param method the {@link AggregationMeth} to use for the given column
+     * @param method the {@link AggregationMethod} to use for the given column
      *
      */
     public ColumnAggregator(final DataColumnSpec origColSpec,
-            final AggregationMeth method) {
+            final AggregationMethod method) {
         if (origColSpec == null) {
             throw new NullPointerException("colSpec must not be null");
         }
@@ -129,7 +129,7 @@ public class ColumnAggregator {
     /**
      * @return the {@link AggregationMethods} to use
      */
-    public AggregationMeth getMethod() {
+    public AggregationMethod getMethod() {
         return m_operatorTemplate;
     }
 
@@ -178,7 +178,7 @@ public class ColumnAggregator {
                     + "aggregation method array should be of equal size");
         }
         for (int i = 0, length = aggrMethods.length; i < length; i++) {
-            final AggregationMeth method =
+            final AggregationMethod method =
                 AggregationMethods.getMethod4Label(aggrMethods[i]);
             final DataColumnSpec spec = new DataColumnSpecCreator(
                     colNames[i], colTypes[i]).createSpec();

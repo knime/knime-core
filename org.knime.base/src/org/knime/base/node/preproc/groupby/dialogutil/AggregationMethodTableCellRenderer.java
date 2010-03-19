@@ -49,7 +49,7 @@
  */
 package org.knime.base.node.preproc.groupby.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 
 import java.awt.Component;
 import java.awt.event.MouseEvent;
@@ -80,8 +80,8 @@ public class AggregationMethodTableCellRenderer
             super.getTableCellRendererComponent(table, value, isSelected,
                 hasFocus, row, column);
         assert (c == this);
-        if (value instanceof AggregationMeth) {
-            setText(((AggregationMeth)value).getLabel());
+        if (value instanceof AggregationMethod) {
+            setText(((AggregationMethod)value).getLabel());
 //            setIcon(((DataColumnSpec)value).getType().getIcon());
         }
         return this;

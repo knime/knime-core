@@ -51,7 +51,7 @@ package org.knime.base.node.preproc.groupby.dialogutil;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMeth;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
 
 import java.util.List;
@@ -90,9 +90,9 @@ public class AggregationMethodComboBox extends JComboBox {
         if (m_type == null || !m_type.equals(spec.getType())) {
             //recreate the combo box if the type has change
             removeAllItems();
-            final List<AggregationMeth> compatibleMethods =
+            final List<AggregationMethod> compatibleMethods =
                 AggregationMethods.getCompatibleMethods(spec.getType());
-            for (final AggregationMeth method : compatibleMethods) {
+            for (final AggregationMethod method : compatibleMethods) {
                 addItem(method);
             }
             //save the current type for comparison
@@ -105,8 +105,8 @@ public class AggregationMethodComboBox extends JComboBox {
     /**
      * @return the selected {@link AggregationMethods}
      */
-    public AggregationMeth getSelectedMethod() {
-        return (AggregationMeth)getSelectedItem();
+    public AggregationMethod getSelectedMethod() {
+        return (AggregationMethod)getSelectedItem();
     }
 
 }
