@@ -1685,6 +1685,11 @@ public final class Node implements NodeModelWarningListener {
         return m_factory;
     }
 
+    /** @return the underlying node model. */
+    public NodeModel getNodeModel() {
+        return m_model;
+    }
+
     /**
      * @return true if this node's model is a interruptible model
      */

@@ -157,7 +157,7 @@ public final class WorkflowManager extends NodeContainer {
      * If a checkForNodeStateChanges-Thread is already waiting, additional
      * ones will be discarded. */
     private static final Executor PARENT_NOTIFIER =
-        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, 
+        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
                     /** {@inheritDoc} */
                     @Override
@@ -1581,8 +1581,8 @@ public final class WorkflowManager extends NodeContainer {
      * only called with {@link SingleNodeContainer} as argument but may also be
      * called with a remotely executed meta node.
      * @param nc node whose execution is about to start
-     * @return whether there was an actual state transition, false if the 
-     *         execution was canceled (cancel checking to be done in 
+     * @return whether there was an actual state transition, false if the
+     *         execution was canceled (cancel checking to be done in
      *         synchronized block)
      */
     boolean doBeforePreExecution(final NodeContainer nc) {
@@ -2017,10 +2017,10 @@ public final class WorkflowManager extends NodeContainer {
                 checkForNodeStateChanges(false);
                 return true;
             } else {
-                // node may not be executinInProgress when previously queued 
-                // but then canceled upon user request; this method is called 
-                // from a worker thread, which does not know about cancelation  
-                // yet (it is interrupted when run as local job ... but this  
+                // node may not be executinInProgress when previously queued
+                // but then canceled upon user request; this method is called
+                // from a worker thread, which does not know about cancelation
+                // yet (it is interrupted when run as local job ... but this
                 // isn't a local job)
                 return false;
             }
@@ -3013,11 +3013,11 @@ public final class WorkflowManager extends NodeContainer {
                     // can't configured due to stack clash
                     if (!snc.getState().equals(State.IDLE)) {
                         // if not already idle make sure it is!
-                        snc.reset(); 
+                        snc.reset();
                     }
                     // report the problem
                     snc.setNodeMessage(new NodeMessage(Type.ERROR,
-                            "Can't merge FlowVariable Stacks! (likely " 
+                            "Can't merge FlowVariable Stacks! (likely "
                             + "a loop problem.)"));
                     // different output if any output spec was non-null
                     for (PortObjectSpec s : inSpecs) {
@@ -4613,6 +4613,38 @@ public final class WorkflowManager extends NodeContainer {
             setDirty();
         }
     }
+
+    /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
+     * of the requested type. Intended purpose is to allow certain extensions
+     * (reporting, web service, ...) access to specialized nodes.
+     * @param <T> Specific NodeModel type.
+     * @param nodeModelClass The class of interest
+     * @param recurse Whether to recurse into contained meta nodes.
+     * @return A (unsorted) list of nodes matching the class criterion
+     */
+    public <T extends NodeModel>Map<NodeID, T> findNodes(
+            final Class<T> nodeModelClass, final boolean recurse) {
+        Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                NodeModel model = snc.getNode().getNodeModel();
+                if (nodeModelClass.isAssignableFrom(model.getClass())) {
+                    result.put(snc.getID(), nodeModelClass.cast(model));
+                }
+            }
+        }
+        if (recurse) { // do separately to maintain some sort of order
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                if (nc instanceof WorkflowManager) {
+                    result.putAll(((WorkflowManager)nc).findNodes(
+                            nodeModelClass, true));
+                }
+            }
+        }
+        return result;
+    }
+
 
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).

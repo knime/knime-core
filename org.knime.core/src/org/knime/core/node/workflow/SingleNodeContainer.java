@@ -183,6 +183,11 @@ public final class SingleNodeContainer extends NodeContainer {
         return getNode();
     }
 
+    /** @return reference to underlying node's model. */
+    public NodeModel getNodeModel() {
+        return getNode().getNodeModel();
+    }
+
     /* ------------------ Port Handling ------------- */
 
     /** {@inheritDoc} */
@@ -644,7 +649,7 @@ public final class SingleNodeContainer extends NodeContainer {
     void mimicRemotePostExecute() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
-            case PREEXECUTE: // in case of errors, e.g. flow stack problems 
+            case PREEXECUTE: // in case of errors, e.g. flow stack problems
                              // encountered during doBeforeExecution
             case EXECUTINGREMOTELY:
                 setState(State.POSTEXECUTE);
@@ -691,9 +696,9 @@ public final class SingleNodeContainer extends NodeContainer {
                 // (this method is called from a worker thread, whereas cancel
                 // typically from the UI thread)
                 if (!Thread.currentThread().isInterrupted()) {
-                    LOGGER.debug("Execution of node " + getNameWithID() 
+                    LOGGER.debug("Execution of node " + getNameWithID()
                             + " was probably canceled (node is " + getState()
-                            + " during 'preexecute') but calling thead is not" 
+                            + " during 'preexecute') but calling thead is not"
                             + " interrupted");
                 }
                 return false;
@@ -725,7 +730,7 @@ public final class SingleNodeContainer extends NodeContainer {
     void performStateTransitionPOSTEXECUTE() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
-            case PREEXECUTE: // in case of errors, e.g. flow stack problems 
+            case PREEXECUTE: // in case of errors, e.g. flow stack problems
                              // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
@@ -1082,10 +1087,10 @@ public final class SingleNodeContainer extends NodeContainer {
         }
         return dlgSettings.equals(nodeSettings);
     }
-    
+
     /** Get the tables that are kept by the underlying node. The return value
-     * is null if (a) the underlying node is not a 
-     * {@link org.knime.core.node.BufferedDataTableHolder} or (b) the node 
+     * is null if (a) the underlying node is not a
+     * {@link org.knime.core.node.BufferedDataTableHolder} or (b) the node
      * is not executed.
      * @return The internally held tables.
      * @see org.knime.core.node.BufferedDataTableHolder
