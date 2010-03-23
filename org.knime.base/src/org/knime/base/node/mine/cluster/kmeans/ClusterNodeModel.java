@@ -52,6 +52,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -611,30 +612,44 @@ public class ClusterNodeModel extends NodeModel {
         m_ignoreColumn = new boolean[m_dimension];
         m_nrIgnoredColumns = 0;
 
-        // if not configured yet fill include list with
-        // double compatible columns
-        if (m_usedColumns.getIncludeList().size() == 0
-                && m_usedColumns.getExcludeList().size() == 0) {
-            List<String> includedColumns = new ArrayList<String>();
-            List<String> excludedColumns = new ArrayList<String>();
-            for (int i = 0; i < m_spec.getNumColumns(); i++) {
-                DataColumnSpec colSpec = m_spec.getColumnSpec(i);
+        if (m_usedColumns.isKeepAllSelected()) {
+            boolean hasNumericColumn = false;
+            for (DataColumnSpec colSpec : m_spec) {
                 if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                    includedColumns.add(colSpec.getName());
-                } else {
-                    excludedColumns.add(colSpec.getName());
+                    hasNumericColumn = true;
+                    break;
                 }
             }
-            // set all double compatible columns as include list
-            m_usedColumns.setIncludeList(includedColumns);
-            m_usedColumns.setExcludeList(excludedColumns);
+            if (!hasNumericColumn) {
+                throw new InvalidSettingsException(
+                        "No numeric columns in input");
+            }
+        } else {
+            // if not configured yet fill include list with
+            // double compatible columns
+            if (m_usedColumns.getIncludeList().size() == 0
+                    && m_usedColumns.getExcludeList().size() == 0) {
+                List<String> includedColumns = new ArrayList<String>();
+                List<String> excludedColumns = new ArrayList<String>();
+                for (int i = 0; i < m_spec.getNumColumns(); i++) {
+                    DataColumnSpec colSpec = m_spec.getColumnSpec(i);
+                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                        includedColumns.add(colSpec.getName());
+                    } else {
+                        excludedColumns.add(colSpec.getName());
+                    }
+                }
+                // set all double compatible columns as include list
+                m_usedColumns.setIncludeList(includedColumns);
+                m_usedColumns.setExcludeList(excludedColumns);
+            }
+            // check if some columns are included
+            if (m_usedColumns.getIncludeList().size() <= 0) {
+                setWarningMessage("No column in include list! "
+                        + "Produces one huge cluster");
+            }
         }
         addExcludeColumnsToIgnoreList();
-        // check if some columns are included
-        if (m_usedColumns.getIncludeList().size() <= 0) {
-            setWarningMessage("No column in include list! "
-                    + "Produces one huge cluster");
-        }
         DataTableSpec appendedSpec = createAppendedSpec();
         // return spec for data and model outport!
         return new PortObjectSpec[]{appendedSpec, createPMMLSpec(m_spec)};
@@ -671,15 +686,21 @@ public class ClusterNodeModel extends NodeModel {
         // add all excluded columns to the ignore list
         m_ignoreColumn = new boolean[m_dimension];
         m_nrIgnoredColumns = 0;
+        Collection<String> exclList = m_usedColumns.getExcludeList();
         for (int i = 0; i < m_dimension; i++) {
+            DataColumnSpec col = m_spec.getColumnSpec(i);
             // ignore if not compatible with double
-            m_ignoreColumn[i] = !(m_spec.getColumnSpec(i).getType()
-                    .isCompatible(DoubleValue.class))
-                    ||
+            boolean ignore = !col.getType().isCompatible(DoubleValue.class);
+            if (!ignore) {
+                if (m_usedColumns.isKeepAllSelected()) {
+                    // leave "ignore" untouched
+                } else {
                     //  or if it is in the exclude list:
-                    m_usedColumns.getExcludeList()
-                    .contains(m_spec.getColumnSpec(i).getName());
-            if (m_ignoreColumn[i]) {
+                    ignore = exclList.contains(col.getName());
+                }
+            }
+            m_ignoreColumn[i] = ignore;
+            if (ignore) {
                 m_nrIgnoredColumns++;
             }
         }
@@ -695,7 +716,17 @@ public class ClusterNodeModel extends NodeModel {
 
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec)
             throws InvalidSettingsException {
-        List<String> includes = m_usedColumns.getIncludeList();
+        List<String> includes;
+        if (m_usedColumns.isKeepAllSelected()) {
+            includes = new ArrayList<String>();
+            for (DataColumnSpec col : tableSpec) {
+                if (col.getType().isCompatible(DoubleValue.class)) {
+                    includes.add(col.getName());
+                }
+            }
+        } else {
+            includes = m_usedColumns.getIncludeList();
+        }
         HashSet<String> colNameHash = new HashSet<String>(includes);
         // the order in this list is important, need to use the order defined
         // by DTS, not m_usedColumns

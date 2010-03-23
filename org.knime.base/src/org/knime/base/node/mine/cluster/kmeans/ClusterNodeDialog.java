@@ -59,7 +59,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  * Dialog for
  * {@link ClusterNodeModel} - allows
  * to adjust number of clusters and other properties.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public class ClusterNodeDialog extends DefaultNodeSettingsPane {
@@ -67,13 +67,13 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
 //    private final JTextField m_nrClustersTextField;
 //
 //    private final JTextField m_maxNrIterationsTextField;
-//    
+//
 //    private final ColumnFilterPanel m_columnFilter;
-    
+
     private DialogComponentNumber m_nrOfClusters;
-    
+
     private DialogComponentNumber m_maxNrOfIterations;
-    
+
     private DialogComponentColumnFilter m_columnFilter;
 
     /**
@@ -84,8 +84,8 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
     ClusterNodeDialog() {
         super();
         SettingsModelIntegerBounded smib = new SettingsModelIntegerBounded(
-                ClusterNodeModel.CFG_NR_OF_CLUSTERS, 
-                ClusterNodeModel.INITIAL_NR_CLUSTERS, 
+                ClusterNodeModel.CFG_NR_OF_CLUSTERS,
+                ClusterNodeModel.INITIAL_NR_CLUSTERS,
                 1, Integer.MAX_VALUE);
         m_nrOfClusters = new DialogComponentNumber(smib,
                 "number of clusters: ", 1,
@@ -97,19 +97,19 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
                         1, Integer.MAX_VALUE),
                         "max. number of iterations: ", 10);
         m_columnFilter = new DialogComponentColumnFilter(
-                new SettingsModelFilterString(ClusterNodeModel.CFG_COLUMNS), 
-                0, DoubleValue.class);
+                new SettingsModelFilterString(ClusterNodeModel.CFG_COLUMNS),
+                0, true, DoubleValue.class);
         addDialogComponent(m_nrOfClusters);
         addDialogComponent(m_maxNrOfIterations);
         addDialogComponent(m_columnFilter);
         setDefaultTabTitle("K-Means Properties");
     }
 
-    
-    
+
+
     /*
      * Update content of dialog fields according to new settings provided.
-     * 
+     *
      * @param config the config to write into the current settings
      * @param specs the spec for each input
      * @throws NotConfigurableException never
@@ -128,11 +128,11 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
      * Apply copies #clusters and max #iterations into settings object. Note
      * that no sanity checks are performed - the model needs to check these
      * itself and throw appropriate exceptions.
-     * 
+     *
      * @param settings the object to write into the current settings
-     * 
+     *
      * @throws InvalidSettingsException if settings don't make sense
-     * 
+     *
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO,DataTableSpec[])
      *
     @Override
