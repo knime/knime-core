@@ -67,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -91,8 +92,8 @@ public class ThreadPool {
 
         /**
          * Creates a <tt>FutureTask</tt> that will upon running, execute the
-         * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will
-         * return the given result on successful completion.
+         * given <tt>Runnable</tt>, and arrange that <tt>get</tt> will return
+         * the given result on successful completion.
          *
          * @param runnable the runnable task
          * @param result the result to return on successful completion. If you
@@ -242,8 +243,14 @@ public class ThreadPool {
                     } catch (CancellationException ex) {
                         LOGGER.debug("Future was canceled");
                     } catch (ExecutionException ex) {
-                        LOGGER.error("An exception occurred while executing "
-                                + "a runnable.", ex.getCause());
+                        if ((ex.getCause() != null)
+                                || (ex.getCause() instanceof CanceledExecutionException)) {
+                            LOGGER.info("Runnable was canceled by user");
+                        } else {
+                            LOGGER.error(
+                                    "An exception occurred while executing "
+                                            + "a runnable.", ex.getCause());
+                        }
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
                         LOGGER.error("An exception occurred while executing "
@@ -263,8 +270,7 @@ public class ThreadPool {
          * @param r the Runnable to run
          * @param pool the pool from which the worker is taken from
          * @return <code>true</code> if the worker has been woken up,
-         *         <code>false</code> if not because the thread has already
-         *         died
+         *         <code>false</code> if not because the thread has already died
          */
         public boolean wakeup(final MyFuture<?> r, final ThreadPool pool) {
             synchronized (m_lock) {
@@ -407,8 +413,7 @@ public class ThreadPool {
      *
      * @param r the task to submit
      * @return a Future representing pending completion of the task, and whose
-     *         <tt>get()</tt> method will return <tt>null</tt> upon
-     *         completion.
+     *         <tt>get()</tt> method will return <tt>null</tt> upon completion.
      * @throws NullPointerException if <code>task</code> null
      * @see #submit(Runnable)
      */
@@ -424,7 +429,6 @@ public class ThreadPool {
 
         return ftask;
     }
-
 
     /**
      * Tries to submits a value-returning task for immediate execution and
@@ -445,7 +449,7 @@ public class ThreadPool {
      * @param t the task to submit
      * @param <T> any result type
      * @return a Future representing pending completion of the task or
-     * <code>null</code> if no thread was available
+     *         <code>null</code> if no thread was available
      * @throws NullPointerException if <code>task</code> null
      *
      * @see #submit(Callable)
@@ -469,15 +473,14 @@ public class ThreadPool {
     }
 
     /**
-     * Tries to submits a Runnable task for immediate execution and
-     * returns a Future representing the task if a thread
-     * is free. If no thread is currently available <code>null</code> is
-     * returned and the task is not queued.
+     * Tries to submits a Runnable task for immediate execution and returns a
+     * Future representing the task if a thread is free. If no thread is
+     * currently available <code>null</code> is returned and the task is not
+     * queued.
      *
      * @param r the task to submit
      * @return a Future representing pending completion of the task, and whose
-     *         <tt>get()</tt> method will return <tt>null</tt> upon
-     *         completion.
+     *         <tt>get()</tt> method will return <tt>null</tt> upon completion.
      * @throws NullPointerException if <code>task</code> null
      * @see #submit(Runnable)
      */
@@ -499,12 +502,10 @@ public class ThreadPool {
         return ftask;
     }
 
-
-    private Worker wakeupWorker(final MyFuture<?> task,
-            final ThreadPool pool) {
+    private Worker wakeupWorker(final MyFuture<?> task, final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get()
-                    < m_maxThreads.get()) {
+            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
+                    .get()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -553,8 +554,8 @@ public class ThreadPool {
      * nothing more than submitting jobs.
      *
      * @param <T> Type of the argument (result type)
-     * @param r A callable, which will be executed by the
-     *          thread invoking this method.
+     * @param r A callable, which will be executed by the thread invoking this
+     *            method.
      * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken
      *             out of a thread pool
@@ -576,7 +577,8 @@ public class ThreadPool {
 
         if (!b) {
             synchronized (thisWorker.m_startedFrom.m_runningWorkers) {
-                b = thisWorker.m_startedFrom.m_runningWorkers
+                b =
+                        thisWorker.m_startedFrom.m_runningWorkers
                                 .contains(thisWorker);
             }
 
@@ -642,7 +644,7 @@ public class ThreadPool {
             }
         }
         synchronized (m_pendingJobs) {
-           m_pendingJobs.notifyAll();
+            m_pendingJobs.notifyAll();
         }
         setMaxThreads(0);
     }
@@ -697,8 +699,7 @@ public class ThreadPool {
      *
      * @param task the task to submit
      * @return a Future representing pending completion of the task, and whose
-     *         <tt>get()</tt> method will return <tt>null</tt> upon
-     *         completion.
+     *         <tt>get()</tt> method will return <tt>null</tt> upon completion.
      * @throws NullPointerException if <code>task</code> null
      * @throws InterruptedException if the thread is interrupted
      * @see #enqueue(Runnable)

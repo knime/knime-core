@@ -253,6 +253,10 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             // this node has not been started by a thread from a thread pool.
             // This is odd, but may happen
             submitter.call();
+        } catch (ExecutionException ex) {
+            // the execution exception may be caused by an interrupt of the node
+            exec.checkCanceled();
+            throw ex;
         }
 
         final BufferedDataTable[] combinedResults =
