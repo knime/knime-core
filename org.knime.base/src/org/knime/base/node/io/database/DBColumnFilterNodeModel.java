@@ -123,7 +123,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         DatabasePortObjectSpec spec = ((DatabasePortObject)inData[0]).getSpec();
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery());
+        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
@@ -153,7 +153,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery());
+        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
@@ -161,21 +161,29 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 colre.createSpec(), conn.createConnectionModel())};
     }
     
-    private String createQuery(final String query) {
+    private String createQuery(final String query, final String driver) {
         StringBuilder buf = new StringBuilder();
         if (m_filter.getExcludeList().isEmpty()) {
             super.setWarningMessage("All columns retained.");
             buf.append("*"); // selects all columns
         } else {
-            for (String s : m_filter.getIncludeList()) {
+            for (String colName : m_filter.getIncludeList()) {
                 if (buf.length() > 0) {
                     buf.append(",");
                 }
-                buf.append(s);
+                if (!colName.matches("\\w*")) { // if no word chars in name
+                    if (driver.contains("mysql")) {
+                        buf.append("`" + colName  + "`");                
+                    } else {
+                        buf.append("\"" + colName  + "\"");
+                    }
+                } else {
+                    buf.append(colName);
+                }
             }
         }
         return "SELECT " + buf + " FROM (" + query + ") table_" 
-        		+ System.identityHashCode(this);
+            + System.identityHashCode(this);
     }
         
 }

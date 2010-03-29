@@ -130,7 +130,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery());
+        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
                 new DatabasePortObjectSpec(dbObj.getSpec().getDataTableSpec(),
@@ -152,19 +152,31 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel());
-        String newQuery = createQuery(conn.getQuery());
+        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 spec.getDataTableSpec(), conn.createConnectionModel())};
     }
     
-    private String createQuery(final String query) {
-        String buf = m_column.getStringValue()
-            + " " + m_operator.getStringValue();
-        if (!m_value.getStringValue().trim().isEmpty())
-            buf += " " + m_value.getStringValue().trim();
-        return "SELECT * FROM (" + query + ") " +
-        		"table_" + System.identityHashCode(this) + " WHERE " + buf; 
+    private String createQuery(final String query, final String driver) {
+        StringBuilder buf = new StringBuilder();
+        String colName = m_column.getStringValue();
+        if (!colName.matches("\\w*")) { // if no word chars in column name
+            if (driver.contains("mysql")) {
+                buf.append("`" + colName  + "`");                
+            } else {
+                buf.append("\"" + colName  + "\"");
+            }
+        } else {
+            buf.append(colName);
+        }
+        buf.append(" " + m_operator.getStringValue());
+        if (!m_value.getStringValue().trim().isEmpty()) {
+            buf.append(" " + m_value.getStringValue().trim());
+        }
+        return "SELECT * FROM (" + query + ") "
+            + "table_" + System.identityHashCode(this) 
+            + " WHERE " + buf.toString(); 
     }
         
 }

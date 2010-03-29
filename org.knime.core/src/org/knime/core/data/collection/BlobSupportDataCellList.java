@@ -51,6 +51,9 @@
 package org.knime.core.data.collection;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,13 +79,17 @@ import org.knime.core.node.BufferedDataTable;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class BlobSupportDataCellList implements Iterable<DataCell> {
+public class BlobSupportDataCellList
+    implements Iterable<DataCell>, Serializable {
 
-    private final List<DataCell> m_cellList;
+    /* Fields could all be final, they are assigned also in the readObject
+     * method, though. */
+
+    private List<DataCell> m_cellList;
 
     private boolean m_containsBlobWrapperCells;
 
-    private final DataType m_elementType;
+    private DataType m_elementType;
 
     /**
      * Creates new instance based on a collection of data cells.
@@ -93,6 +100,10 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
      */
     protected BlobSupportDataCellList(
             final Collection<? extends DataCell> coll) {
+        init(coll);
+    }
+
+    private void init(final Collection<? extends DataCell> coll) {
         ArrayList<DataCell> cellList = new ArrayList<DataCell>(coll.size());
         DataType commonType = null;
         for (DataCell c : coll) {
@@ -292,5 +303,30 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
             coll.add(c);
         }
         return create(coll);
+    }
+
+    /*
+     * ----------- Serialization methods -------------------------------------
+     * Serialization is rarely used on this class as it is only used collection
+     * cells (which use a DataCellSerializer). It might be used when a
+     * collection cell is part of the column domain information, though
+     * (which, again, is a rare case).
+     */
+
+    private static final long serialVersionUID = -4988063246730813627L;
+
+    /** Read object method (as described in {@link Serializable} interface). */
+    @SuppressWarnings("unchecked")
+    private void readObject(final ObjectInputStream stream)
+        throws IOException, ClassNotFoundException {
+        Collection<DataCell> cellList =
+            (Collection<DataCell>)stream.readObject();
+        init(cellList);
+    }
+
+    /** Write object method (as described in {@link Serializable} interface). */
+    private void writeObject(final ObjectOutputStream stream)
+        throws IOException {
+        stream.writeObject(m_cellList);
     }
 }

@@ -61,12 +61,13 @@ import java.util.Observable;
 import org.knime.base.node.util.exttool.ViewUpdateNotice.ViewType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableBoolean;
 
 /**
  * Wraps a Java runtime process. Supports cancellations and progress messages
- * (through the {@link ExecutionContext}). Picks up the output of the launched
+ * (through the {@link ExecutionMonitor}). Picks up the output of the launched
  * process and forwards it into the log file. It keeps a buffer of 500 lines for
  * views to display and implements the {@link Observable} interface. All
  * listeners will be provided with a {@link ViewUpdateNotice} that contains a
@@ -210,6 +211,10 @@ public class CommandExecution extends Observable {
      * the stderr to the logger and notifies the registered observer if a msg
      * occurs.
      *
+     * <p><strong>Note:</strong> This method exists for historical reasons. It
+     * casts the argument to an {@link ExecutionMonitor} and calls the
+     * corresponding {@link #execute(ExecutionMonitor) execute} method.
+     *
      * @see Runtime#exec(String[], String[], File)
      *
      * @param exec The <code>ExecutionContext</code> to monitor the status of
@@ -220,6 +225,24 @@ public class CommandExecution extends Observable {
      * @throws Exception If the execution terminates abnormally.
      */
     public int execute(final ExecutionContext exec) throws Exception {
+        return execute((ExecutionMonitor)exec);
+    }
+
+    /**
+     * Executes the commands via the Runtime and streams the stdout as well as
+     * the stderr to the logger and notifies the registered observer if a msg
+     * occurs.
+     *
+     * @see Runtime#exec(String[], String[], File)
+     *
+     * @param exec The <code>ExecutionMonitor</code> to monitor the status of
+     *            execution and to check for user cancellations.
+     *
+     * @return The exit value of the subprocess.
+     *
+     * @throws Exception If the execution terminates abnormally.
+     */
+    public int execute(final ExecutionMonitor exec) throws Exception {
 
         // execute the command
         int exitVal;
@@ -343,7 +366,7 @@ public class CommandExecution extends Observable {
 
         private final MutableBoolean m_done;
 
-        private final ExecutionContext m_exec;
+        private final ExecutionMonitor m_exec;
 
         /**
          * Creates a new runnable for a thread that should check periodically
@@ -354,7 +377,7 @@ public class CommandExecution extends Observable {
          * @param exec to check for user cancellations.
          */
         CheckCanceledRunnable(final Process proc, final MutableBoolean done,
-                final ExecutionContext exec) {
+                final ExecutionMonitor exec) {
             m_proc = proc;
             m_done = done;
             m_exec = exec;
@@ -391,7 +414,7 @@ public class CommandExecution extends Observable {
 
         private final Process m_proc;
 
-        private final ExecutionContext m_exec;
+        private final ExecutionMonitor m_exec;
 
         private final LinkedList<String> m_outBuffer;
 
@@ -404,7 +427,7 @@ public class CommandExecution extends Observable {
          * @param exec used to check for user cancellations.
          * @param outputBuffer the list to add the output lines to
          */
-        StdErrCatchRunnable(final Process proc, final ExecutionContext exec,
+        StdErrCatchRunnable(final Process proc, final ExecutionMonitor exec,
                 final LinkedList<String> outputBuffer) {
             m_proc = proc;
             m_exec = exec;
@@ -466,7 +489,7 @@ public class CommandExecution extends Observable {
 
         private final Process m_proc;
 
-        private final ExecutionContext m_exec;
+        private final ExecutionMonitor m_exec;
 
         private final LinkedList<String> m_outBuffer;
 
@@ -478,7 +501,7 @@ public class CommandExecution extends Observable {
          * @param exec used to check for user cancellations.
          * @param outputBuffer list to add output lines to
          */
-        StdOutCatchRunnable(final Process proc, final ExecutionContext exec,
+        StdOutCatchRunnable(final Process proc, final ExecutionMonitor exec,
                 final LinkedList<String> outputBuffer) {
             m_proc = proc;
             m_exec = exec;

@@ -49,6 +49,7 @@ package org.knime.base.node.io.filereader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -373,9 +374,12 @@ public class FileReaderNodeModel extends NodeModel {
                 return;
             }
 
-            if (location.openStream() == null) {
+            InputStream inStream = location.openStream();
+            if (inStream == null) {
                 setWarningMessage("The file '" + location.toString()
                         + "' can't be accessed anymore!");
+            } else {
+                inStream.close();
             }
         } catch (IOException ioe) {
             setWarningMessage("The file '" + location.toString()
