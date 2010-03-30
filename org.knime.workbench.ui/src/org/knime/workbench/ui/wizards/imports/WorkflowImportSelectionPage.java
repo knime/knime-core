@@ -187,7 +187,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
      */
     public WorkflowImportSelectionPage() {
         super(NAME);
-        setTitle("Wokflow Import Selection");
+        setTitle("Workflow Import Selection");
         setDescription("Select the workflows to import.");
         setImageDescriptor(ICON);
         m_btnData = new GridData();
