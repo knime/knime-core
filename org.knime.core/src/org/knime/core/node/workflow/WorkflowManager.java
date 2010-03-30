@@ -157,7 +157,7 @@ public final class WorkflowManager extends NodeContainer {
      * If a checkForNodeStateChanges-Thread is already waiting, additional
      * ones will be discarded. */
     private static final Executor PARENT_NOTIFIER =
-        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, 
+        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
                     /** {@inheritDoc} */
                     @Override
@@ -1581,8 +1581,8 @@ public final class WorkflowManager extends NodeContainer {
      * only called with {@link SingleNodeContainer} as argument but may also be
      * called with a remotely executed meta node.
      * @param nc node whose execution is about to start
-     * @return whether there was an actual state transition, false if the 
-     *         execution was canceled (cancel checking to be done in 
+     * @return whether there was an actual state transition, false if the
+     *         execution was canceled (cancel checking to be done in
      *         synchronized block)
      */
     boolean doBeforePreExecution(final NodeContainer nc) {
@@ -2017,10 +2017,10 @@ public final class WorkflowManager extends NodeContainer {
                 checkForNodeStateChanges(false);
                 return true;
             } else {
-                // node may not be executinInProgress when previously queued 
-                // but then canceled upon user request; this method is called 
-                // from a worker thread, which does not know about cancelation  
-                // yet (it is interrupted when run as local job ... but this  
+                // node may not be executinInProgress when previously queued
+                // but then canceled upon user request; this method is called
+                // from a worker thread, which does not know about cancelation
+                // yet (it is interrupted when run as local job ... but this
                 // isn't a local job)
                 return false;
             }
@@ -2488,8 +2488,16 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         });
-        executeAll();
-        
+        // workaround for bug 2217: workflows are not executed when they
+        // have a job manager (SGE) assigned, stalls with "MARKFOREXEC"
+        // until v2.2 we keep this if-switch to avoid any side effects
+        if (isLocalWFM()) {
+            executeAll();
+        } else {
+            // long term solution is to always let the parent execute this node
+            getParent().executeUpToHere(getID());
+        }
+
         synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
                 try {
@@ -3013,11 +3021,11 @@ public final class WorkflowManager extends NodeContainer {
                     // can't configured due to stack clash
                     if (!snc.getState().equals(State.IDLE)) {
                         // if not already idle make sure it is!
-                        snc.reset(); 
+                        snc.reset();
                     }
                     // report the problem
                     snc.setNodeMessage(new NodeMessage(Type.ERROR,
-                            "Can't merge FlowVariable Stacks! (likely " 
+                            "Can't merge FlowVariable Stacks! (likely "
                             + "a loop problem.)"));
                     // different output if any output spec was non-null
                     for (PortObjectSpec s : inSpecs) {
