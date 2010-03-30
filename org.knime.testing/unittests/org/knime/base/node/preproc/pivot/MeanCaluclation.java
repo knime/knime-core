@@ -18,18 +18,6 @@
  */
 package org.knime.base.node.preproc.pivot;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import junit.framework.TestCase;
-
-import org.knime.base.data.statistics.StatisticsTable;
-import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
-import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
-import org.knime.base.node.preproc.groupby.GroupByTable;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -48,225 +36,238 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettings;
 
+import org.knime.base.data.statistics.StatisticsTable;
+import org.knime.base.node.preproc.groupby.BigGroupByTable;
+import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
+import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
+import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import junit.framework.TestCase;
+
 /**
- * This test ensures that the calculation of the mean is equal 
+ * This test ensures that the calculation of the mean is equal
  * (and of course correct) for the following nodes:
  * <ul>
  * <li>GroupBy</li>
  * <li>Pivot</li>
  * <li>Statistics View</li>
  * </ul>
- * 
- * 
+ *
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class MeanCaluclation extends TestCase {
 
     public void testSimpleMean() throws Exception {
         // create data table spec
-        
-        DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
+
+        final DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
                 "Col1", StringCell.TYPE);
-        DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
                 "Col2", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
                 "Col3", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
                 "Col4", DoubleCell.TYPE);
-        DataTableSpec spec = new DataTableSpec(
-                colSpecCreator1.createSpec(), 
+        final DataTableSpec spec = new DataTableSpec(
+                colSpecCreator1.createSpec(),
                 colSpecCreator2.createSpec(),
                 colSpecCreator3.createSpec(),
                 colSpecCreator4.createSpec());
-        
-        DataContainer container = new DataContainer(spec);
+
+        final DataContainer container = new DataContainer(spec);
         container.addRowToTable(
-                new DefaultRow("Row1", 
+                new DefaultRow("Row1",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(2), 
+                        new DoubleCell(1),
+                        new DoubleCell(2),
                         new DoubleCell(3)));
         container.addRowToTable(
-                new DefaultRow("Row2", 
+                new DefaultRow("Row2",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(4), 
+                        new DoubleCell(1),
+                        new DoubleCell(4),
                         new DoubleCell(6)));
         container.addRowToTable(
-                new DefaultRow("Row3", 
+                new DefaultRow("Row3",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(6), 
+                        new DoubleCell(1),
+                        new DoubleCell(6),
                         new DoubleCell(3)));
         container.addRowToTable(
-                new DefaultRow("Row4", 
+                new DefaultRow("Row4",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(8), 
+                        new DoubleCell(1),
+                        new DoubleCell(8),
                         new DoubleCell(4.5)));
         container.addRowToTable(
-                new DefaultRow("Row5", 
+                new DefaultRow("Row5",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(10), 
+                        new DoubleCell(1),
+                        new DoubleCell(10),
                         new DoubleCell(1.5)));
         container.close();
         // col1 = 1
         // col2 = 6
         // col3 = 3.6
-        double[] reference = new double[] {Double.NaN, 1.0, 6.0, 3.6};
-        
+        final double[] reference = new double[] {Double.NaN, 1.0, 6.0, 3.6};
+
         performChecks(container.getTable(), reference);
     }
-    
+
     public void testMeanWithMissingValues() throws Exception {
         // create data table spec
-        
-        DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
+
+        final DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
                 "Col1", StringCell.TYPE);
-        DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
                 "Col2", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
                 "Col3", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
                 "Col4", DoubleCell.TYPE);
-        DataTableSpec spec = new DataTableSpec(
-                colSpecCreator1.createSpec(), 
+        final DataTableSpec spec = new DataTableSpec(
+                colSpecCreator1.createSpec(),
                 colSpecCreator2.createSpec(),
                 colSpecCreator3.createSpec(),
                 colSpecCreator4.createSpec());
-        
-        DataContainer container = new DataContainer(spec);
+
+        final DataContainer container = new DataContainer(spec);
         container.addRowToTable(
-                new DefaultRow("Row1", 
+                new DefaultRow("Row1",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        DataType.getMissingCell(), 
+                        new DoubleCell(1),
+                        DataType.getMissingCell(),
                         new DoubleCell(3)));
         container.addRowToTable(
-                new DefaultRow("Row2", 
+                new DefaultRow("Row2",
                         new StringCell("A"),
                         DataType.getMissingCell(),
-                        new DoubleCell(4), 
+                        new DoubleCell(4),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row3", 
+                new DefaultRow("Row3",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(6), 
+                        new DoubleCell(1),
+                        new DoubleCell(6),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row4", 
+                new DefaultRow("Row4",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(8), 
+                        new DoubleCell(1),
+                        new DoubleCell(8),
                         new DoubleCell(4.5)));
         container.addRowToTable(
-                new DefaultRow("Row5", 
+                new DefaultRow("Row5",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(10), 
+                        new DoubleCell(1),
+                        new DoubleCell(10),
                         new DoubleCell(1.5)));
         container.close();
         // col1 = 1
         // col2 = 7
         // col3 = 3
-        double[] reference = new double[] {Double.NaN, 1.0, 7.0, 3.0};
-        
+        final double[] reference = new double[] {Double.NaN, 1.0, 7.0, 3.0};
+
         performChecks(container.getTable(), reference);
     }
 
-    
-    public void testMeanWithEvenMoreMissingValues() 
+
+    public void testMeanWithEvenMoreMissingValues()
         throws Exception {
         // create data table spec
-        DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
                 "Col1", StringCell.TYPE);
-        DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
                 "Col2", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
                 "Col3", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
                 "Col4", DoubleCell.TYPE);
-        DataTableSpec spec = new DataTableSpec(
-                colSpecCreator1.createSpec(), 
+        final DataTableSpec spec = new DataTableSpec(
+                colSpecCreator1.createSpec(),
                 colSpecCreator2.createSpec(),
                 colSpecCreator3.createSpec(),
                 colSpecCreator4.createSpec());
-        
-        DataContainer container = new DataContainer(spec);
+
+        final DataContainer container = new DataContainer(spec);
         container.addRowToTable(
-                new DefaultRow("Row1", 
+                new DefaultRow("Row1",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        DataType.getMissingCell(), 
+                        new DoubleCell(1),
+                        DataType.getMissingCell(),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row2", 
+                new DefaultRow("Row2",
                         new StringCell("A"),
                         DataType.getMissingCell(),
-                        new DoubleCell(4), 
+                        new DoubleCell(4),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row3", 
+                new DefaultRow("Row3",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(6), 
+                        new DoubleCell(1),
+                        new DoubleCell(6),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row4", 
+                new DefaultRow("Row4",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(8), 
+                        new DoubleCell(1),
+                        new DoubleCell(8),
                         DataType.getMissingCell()));
         container.addRowToTable(
-                new DefaultRow("Row5", 
+                new DefaultRow("Row5",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(10), 
+                        new DoubleCell(1),
+                        new DoubleCell(10),
                         DataType.getMissingCell()));
         container.close();
         // col1 = 1
         // col2 = 7
         // col3 = 3
-        double[] reference = new double[] {Double.NaN, 1.0, 7.0, Double.NaN};
-        DataTable table = container.getTable();
+        final double[] reference = new double[] {Double.NaN, 1.0, 7.0, Double.NaN};
+        final DataTable table = container.getTable();
         // statistics table
-        StatisticsTable statsTable = new StatisticsTable(
+        final StatisticsTable statsTable = new StatisticsTable(
                 table, new ExecutionMonitor());
-        double[] means = statsTable.getMean();
+        final double[] means = statsTable.getMean();
         assertTrue(Arrays.equals(reference, means));
         // group by
-        Node groupByNode = new Node(
+        final Node groupByNode = new Node(
                 (NodeFactory)new GroupByNodeFactory());
-        ExecutionContext exec = new ExecutionContext(
+        final ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
-        BufferedDataTable bdt = exec.createBufferedDataTable(
+        final BufferedDataTable bdt = exec.createBufferedDataTable(
                 table, exec);
-        List<String>colNames = new ArrayList<String>();
-        colNames.add("Col1"); 
-        ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
+        final List<String>colNames = new ArrayList<String>();
+        colNames.add("Col1");
+        final ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
             new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(1),
-                    AggregationMethod.MEAN), 
+                    AggregationMethods.getMethod4Label("Mean")),
             new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(2),
-                    AggregationMethod.MEAN), 
+                    AggregationMethods.getMethod4Label("Mean")),
             new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(3),
-                    AggregationMethod.MEAN),                     
+                    AggregationMethods.getMethod4Label("Mean")),
         };
-        GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
-                columnAggregators, 10000, true, false, 
-                ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD);
-        for (DataRow row : groupTable.getBufferedTable()) {
-            assertEquals(reference[1], 
+        final BigGroupByTable groupTable = new BigGroupByTable(exec, bdt,
+                colNames, columnAggregators, 10000, true, false,
+                ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD, false);
+        for (final DataRow row : groupTable.getBufferedTable()) {
+            assertEquals(reference[1],
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
-            assertEquals(reference[2], 
+            assertEquals(reference[2],
                     ((DoubleValue)row.getCell(2)).getDoubleValue());
             assertTrue(row.getCell(3).isMissing());
         }
         // pivoting
-        PivotNodeModel pivotModel = new PivotNodeModel();
-        NodeSettings settings = new NodeSettings("test");
+        final PivotNodeModel pivotModel = new PivotNodeModel();
+        final NodeSettings settings = new NodeSettings("test");
         pivotModel.saveSettingsTo(settings);
         settings.addString("group_column", "Col1");
         settings.addString("pivot_column", "Col1");
@@ -278,8 +279,8 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         BufferedDataTable[] out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
-            assertEquals(reference[2], 
+        for (final DataRow row : out[0]) {
+            assertEquals(reference[2],
                     ((DoubleValue)row.getCell(0)).getDoubleValue());
         }
         settings.addString("aggregation_column", "Col4");
@@ -288,7 +289,7 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
+        for (final DataRow row : out[0]) {
             assertTrue(row.getCell(0).isMissing());
         }
         settings.addString("aggregation_column", "Col2");
@@ -297,106 +298,106 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
-            assertEquals(reference[1], 
+        for (final DataRow row : out[0]) {
+            assertEquals(reference[1],
                     ((DoubleValue)row.getCell(0)).getDoubleValue());
         }
     }
-    
+
     public void testWithNegativeValues() throws Exception {
         // create data table spec
-        DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator1 = new DataColumnSpecCreator(
                 "Col1", StringCell.TYPE);
-        DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator2 = new DataColumnSpecCreator(
                 "Col2", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator3 = new DataColumnSpecCreator(
                 "Col3", DoubleCell.TYPE);
-        DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
+        final DataColumnSpecCreator colSpecCreator4  = new DataColumnSpecCreator(
                 "Col4", DoubleCell.TYPE);
-        DataTableSpec spec = new DataTableSpec(
-                colSpecCreator1.createSpec(), 
+        final DataTableSpec spec = new DataTableSpec(
+                colSpecCreator1.createSpec(),
                 colSpecCreator2.createSpec(),
                 colSpecCreator3.createSpec(),
                 colSpecCreator4.createSpec());
-        
-        DataContainer container = new DataContainer(spec);
+
+        final DataContainer container = new DataContainer(spec);
         container.addRowToTable(
-                new DefaultRow("Row1", 
+                new DefaultRow("Row1",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(-4), 
+                        new DoubleCell(1),
+                        new DoubleCell(-4),
                         new DoubleCell(-4)));
         container.addRowToTable(
-                new DefaultRow("Row2", 
+                new DefaultRow("Row2",
                         new StringCell("A"),
                         DataType.getMissingCell(),
-                        new DoubleCell(4), 
+                        new DoubleCell(4),
                         new DoubleCell(4)));
         container.addRowToTable(
-                new DefaultRow("Row3", 
+                new DefaultRow("Row3",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(-4), 
+                        new DoubleCell(1),
+                        new DoubleCell(-4),
                         new DoubleCell(-4)));
         container.addRowToTable(
-                new DefaultRow("Row4", 
+                new DefaultRow("Row4",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(4), 
+                        new DoubleCell(1),
+                        new DoubleCell(4),
                         new DoubleCell(4)));
         container.addRowToTable(
-                new DefaultRow("Row5", 
+                new DefaultRow("Row5",
                         new StringCell("A"),
-                        new DoubleCell(1), 
-                        new DoubleCell(4), 
+                        new DoubleCell(1),
+                        new DoubleCell(4),
                         DataType.getMissingCell()));
         container.close();
         // col1 = 1
         // col2 = 7
         // col3 = 3
-        double[] reference = new double[] {Double.NaN, 1.0, 0.8, 0.0};
+        final double[] reference = new double[] {Double.NaN, 1.0, 0.8, 0.0};
 
         performChecks(container.getTable(), reference);
     }
-    
-    private void performChecks(DataTable table, double[] reference) 
+
+    private void performChecks(final DataTable table, final double[] reference)
         throws Exception {
         // statistics table
-        StatisticsTable statsTable = new StatisticsTable(
+        final StatisticsTable statsTable = new StatisticsTable(
                 table, new ExecutionMonitor());
-        double[] means = statsTable.getMean();
+        final double[] means = statsTable.getMean();
         assertTrue(Arrays.equals(reference, means));
         // group by
-        Node groupByNode = new Node((NodeFactory)new GroupByNodeFactory());
-        ExecutionContext exec = new ExecutionContext(
+        final Node groupByNode = new Node((NodeFactory)new GroupByNodeFactory());
+        final ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
-        BufferedDataTable bdt = exec.createBufferedDataTable(
+        final BufferedDataTable bdt = exec.createBufferedDataTable(
                 table, exec);
-        List<String>colNames = new ArrayList<String>();
-        colNames.add("Col1"); 
-        ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
+        final List<String>colNames = new ArrayList<String>();
+        colNames.add("Col1");
+        final ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
                 new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(1),
-                        AggregationMethod.MEAN), 
+                        AggregationMethods.getMethod4Label("Mean")),
                 new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(2),
-                        AggregationMethod.MEAN), 
+                        AggregationMethods.getMethod4Label("Mean")),
                 new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(3),
-                        AggregationMethod.MEAN),                     
+                        AggregationMethods.getMethod4Label("Mean")),
             };
-            GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
-                    columnAggregators, 10000, true, false, 
-                    ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD);
-        for (DataRow row : groupTable.getBufferedTable()) {
-            assertEquals(reference[1], 
+            final BigGroupByTable groupTable = new BigGroupByTable(exec, bdt,
+                    colNames, columnAggregators, 10000, true, false,
+                    ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD, false);
+        for (final DataRow row : groupTable.getBufferedTable()) {
+            assertEquals(reference[1],
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
-            assertEquals(reference[2], 
+            assertEquals(reference[2],
                     ((DoubleValue)row.getCell(2)).getDoubleValue());
-            assertEquals(reference[3], 
+            assertEquals(reference[3],
                     ((DoubleValue)row.getCell(3)).getDoubleValue());
         }
         // pivoting
-        PivotNodeModel pivotModel = new PivotNodeModel();
-        NodeSettings settings = new NodeSettings("test");
+        final PivotNodeModel pivotModel = new PivotNodeModel();
+        final NodeSettings settings = new NodeSettings("test");
         pivotModel.saveSettingsTo(settings);
         settings.addString("group_column", "Col1");
         settings.addString("pivot_column", "Col1");
@@ -408,8 +409,8 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         BufferedDataTable[] out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
-            assertEquals(reference[2], 
+        for (final DataRow row : out[0]) {
+            assertEquals(reference[2],
                     ((DoubleValue)row.getCell(0)).getDoubleValue());
         }
         settings.addString("aggregation_column", "Col4");
@@ -418,8 +419,8 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
-            assertEquals(reference[3], 
+        for (final DataRow row : out[0]) {
+            assertEquals(reference[3],
                     ((DoubleValue)row.getCell(0)).getDoubleValue());
         }
         settings.addString("aggregation_column", "Col2");
@@ -428,10 +429,10 @@ public class MeanCaluclation extends TestCase {
         pivotModel.configure(new DataTableSpec[] {bdt.getDataTableSpec()});
         out = pivotModel.execute(
                 new BufferedDataTable[] {bdt}, exec);
-        for (DataRow row : out[0]) {
-            assertEquals(reference[1], 
+        for (final DataRow row : out[0]) {
+            assertEquals(reference[1],
                     ((DoubleValue)row.getCell(0)).getDoubleValue());
         }
     }
-    
+
 }
