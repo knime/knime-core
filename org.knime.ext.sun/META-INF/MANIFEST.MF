@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME JavaScripting node
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
-Bundle-Version: 2.1.2.0024319
+Bundle-Version: 2.1.3.0025224
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.base
