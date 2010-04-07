@@ -2488,15 +2488,9 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         });
-        // workaround for bug 2217: workflows are not executed when they
-        // have a job manager (SGE) assigned, stalls with "MARKFOREXEC"
-        // until v2.2 we keep this if-switch to avoid any side effects
-        if (isLocalWFM()) {
-            executeAll();
-        } else {
-            // long term solution is to always let the parent execute this node
-            getParent().executeUpToHere(getID());
-        }
+        // let parent execute this node (important if job manager is assigned)
+        // see also bug 2217
+        getParent().executeUpToHere(getID());
 
         synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
