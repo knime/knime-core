@@ -44,14 +44,15 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   18.10.2006 (ohl): created
  */
 package org.knime.core.node.defaultnodesettings;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -60,7 +61,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class SettingsModelStringArray extends SettingsModel {
@@ -71,7 +72,7 @@ public class SettingsModelStringArray extends SettingsModel {
 
     /**
      * Creates a new object holding a string value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
@@ -90,7 +91,7 @@ public class SettingsModelStringArray extends SettingsModel {
      * {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
-    @Override    
+    @Override
     protected SettingsModelStringArray createClone() {
         return new SettingsModelStringArray(m_configName, m_value);
     }
@@ -122,7 +123,7 @@ public class SettingsModelStringArray extends SettingsModel {
             setStringArrayValue(settings.getStringArray(m_configName, m_value));
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
-        } 
+        }
     }
 
     /**
@@ -136,7 +137,7 @@ public class SettingsModelStringArray extends SettingsModel {
 
     /**
      * set the value stored to (a copy of) the new value.
-     * 
+     *
      * @param newValue the new value to store.
      */
     public void setStringArrayValue(final String[] newValue) {
@@ -147,7 +148,8 @@ public class SettingsModelStringArray extends SettingsModel {
             if ((m_value == null) || (m_value.length != newValue.length)) {
                 same = false;
             } else {
-                List<String> current = Arrays.asList(m_value);
+                Set<String> current =
+                    new HashSet<String>(Arrays.asList(m_value));
                 same = true;
                 for (String s : newValue) {
                     if (!current.contains(s)) {
@@ -157,14 +159,14 @@ public class SettingsModelStringArray extends SettingsModel {
                 }
             }
         }
-        
+
         if (newValue == null) {
             m_value = null;
         } else {
             m_value = new String[newValue.length];
             System.arraycopy(newValue, 0, m_value, 0, newValue.length);
         }
-        
+
         if (!same) {
             notifyChangeListeners();
         }

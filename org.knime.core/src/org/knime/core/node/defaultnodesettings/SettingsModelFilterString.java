@@ -53,8 +53,10 @@ package org.knime.core.node.defaultnodesettings;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -194,16 +196,16 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param selected if keep all box is selected or not
      */
     public void setKeepAllSelected(final boolean selected) {
-    	boolean notify = setKeepAllSelectedNO(selected);
-    	if (notify) {
-    		notifyChangeListeners();
-    	}
+        boolean notify = setKeepAllSelectedNO(selected);
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     private boolean setKeepAllSelectedNO(final boolean selected) {
-    	boolean notify = (m_keepAll != selected);
-    	m_keepAll = selected;
-    	return notify;
+        boolean notify = (m_keepAll != selected);
+        m_keepAll = selected;
+        return notify;
     }
 
     /**
@@ -251,7 +253,7 @@ public class SettingsModelFilterString extends SettingsModel {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             Config lists = settings.getConfig(m_configName);
-            // the way we do this, partially correct settings will be parially
+            // the way we do this, partially correct settings will be partially
             // transferred into the dialog. Which is okay, I guess.
             setIncludeList(lists.getStringArray(CFGKEY_INCL, (String[])null));
             setExcludeList(lists.getStringArray(CFGKEY_EXCL, (String[])null));
@@ -296,13 +298,14 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     private boolean setIncludeListNO(final Collection<String> newValue) {
-    	// figure out if we need to notify listeners
+        // figure out if we need to notify listeners
         boolean notify = (newValue.size() != m_inclList.size());
         if (!notify) {
             // if the size is the same we need to compare each list item (the
             // order of the lists doesn't matter)!
+            Set<String> newSet = new HashSet<String>(newValue);
             for (String s : m_inclList) {
-                if (!newValue.contains(s)) {
+                if (!newSet.contains(s)) {
                     notify = true;
                     break;
                 }
@@ -317,13 +320,13 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     public final void setNewValues(final Collection<String> incl,
-    		final Collection<String> excl, final boolean keepAll) {
-    	boolean notify = setKeepAllSelectedNO(keepAll);
-    	notify |= setIncludeListNO(incl);
-    	notify |= setExcludeListNO(excl);
-    	if (notify) {
-    		notifyChangeListeners();
-    	}
+            final Collection<String> excl, final boolean keepAll) {
+        boolean notify = setKeepAllSelectedNO(keepAll);
+        notify |= setIncludeListNO(incl);
+        notify |= setExcludeListNO(excl);
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -348,7 +351,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
-    	boolean notify = setExcludeListNO(newValue);
+        boolean notify = setExcludeListNO(newValue);
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
