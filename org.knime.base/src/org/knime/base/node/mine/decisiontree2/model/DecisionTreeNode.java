@@ -73,6 +73,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
+import org.knime.core.util.Pair;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -283,18 +284,21 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     }
 
     /**
-     * Classify a new pattern given as a row of values. Returns the class with
-     * the maximum count.
+     * Classify a new pattern given as a row of values. Returns the winning
+     * class and the class counts of all classes.
      *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return class of pattern the decision tree predicts
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
-    public final DataCell classifyPattern(final DataRow row,
+    public final Pair<DataCell, LinkedHashMap<DataCell, Double>>
+            getWinnerAndClasscounts(final DataRow row,
             final DataTableSpec spec) throws Exception {
         LinkedHashMap<DataCell, Double> classCounts = getClassCounts(row, spec);
-        return getWinner(classCounts);
+        DataCell winner = getWinner(classCounts);
+        return new Pair<DataCell, LinkedHashMap<DataCell, Double>>(
+                winner, classCounts);
     }
 
     /**
@@ -303,7 +307,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      *
      * @return class of pattern the decision tree predicts
      */
-    public static final DataCell getWinner(final LinkedHashMap<DataCell, Double>
+    private final DataCell getWinner(final LinkedHashMap<DataCell, Double>
             classCounts) {
         double winnerCount = -1.0;
         DataCell winner = null;
@@ -313,6 +317,12 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
                 winnerCount = thisClassCount;
                 winner = classCell;
             }
+        }
+        /* If the winner count equals the class count of the majority class of
+           this node, the majority class is the winner to avoid inconsistencies
+            on ties. */
+        if (winnerCount == classCounts.get(m_class)) {
+            winner = m_class;
         }
         if (winner == null) {
             return DataType.getMissingCell();
