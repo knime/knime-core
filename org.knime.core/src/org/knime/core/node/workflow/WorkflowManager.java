@@ -1826,7 +1826,10 @@ public final class WorkflowManager extends NodeContainer {
                 ((SingleNodeContainer)nc).reset();
             } else {
                 assert nc instanceof WorkflowManager;
-                // FIXME: only reset the nodes connected to relevant ports
+                // FIXME: only reset the nodes connected to relevant ports.
+                //  Otherwise also Source Nodes in Metanodes are reset.
+                //  Note, however, that those MUST be reset if a variable
+                //  connection exists. See also bug 2225
                 ((WorkflowManager)nc).resetAllNodesInWFM();
             }
         }
@@ -1847,6 +1850,9 @@ public final class WorkflowManager extends NodeContainer {
                     ((SingleNodeContainer)nc).markForExecution(true);
                 } else {
                     // FIXME - check ports
+                    //  if we did not reset all nodes in WFM above. Otherwise
+                    //  we MUST ensure (later?) that source nodes are actually
+                    //  queued - see bug 2225
                     ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(true);
                 }
             }
