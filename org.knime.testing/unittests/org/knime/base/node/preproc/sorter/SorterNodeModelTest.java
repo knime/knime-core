@@ -1,33 +1,64 @@
-/* 
- * -------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
+/*
+ * ------------------------------------------------------------------------
  *
- * Copyright, 2003 - 2008
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
+ *  Copyright (C) 2003 - 2009
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
  *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
- * -------------------------------------------------------------------
- * 
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ------------------------------------------------------------------------
+ *
  * History
- *   11.02.2005 (cebron): created
+ *   16.04.2010 (hofer): created
  */
 package org.knime.base.node.preproc.sorter;
 
+
 import java.util.HashMap;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -40,6 +71,7 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -48,184 +80,172 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
- * Test class for the SorterNodeModel.
- * 
- * @author Nicolas Cebron, University of Konstanz
+ * Junit4 Test for {@link org.knime.base.node.preproc.sorter.SorterNodeModel}
+ *
+ * @author Heiko Hofer
  */
-public class SorterNodeModelTest extends TestCase {
-    private static final ExecutionContext EXEC_CONTEXT = new ExecutionContext(
-            new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
-                SingleNodeContainer.MemoryPolicy.CacheSmallInMemory,
-                new HashMap<Integer, ContainerTable>());
+public class SorterNodeModelTest {
+    private static ExecutionContext EXEC_CONTEXT;
 
     private SorterNodeModel m_snm;
-
     private NodeSettings m_settings;
 
     /**
-     * Initialisation of the instance variables.
-     * 
-     * @see TestCase#setUp()
+     * @throws java.lang.Exception
      */
-    @Override
-    protected void setUp() {
-        m_snm = new SorterNodeModel();
-        m_settings = new NodeSettings("Sorter");
-
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        EXEC_CONTEXT = new ExecutionContext(
+           new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
+                    SingleNodeContainer.MemoryPolicy.CacheSmallInMemory,
+                    new HashMap<Integer, ContainerTable>());
     }
 
     /**
-     * Clean up.
-     * 
-     * @see TestCase#tearDown()
+     * @throws java.lang.Exception
      */
-    @Override
-    protected void tearDown() {
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        EXEC_CONTEXT = null;
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        m_snm = new SorterNodeModel();
+        m_settings = new NodeSettings("Sorter");
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @After
+    public void tearDown() throws Exception {
         m_snm = null;
         m_settings = null;
     }
 
+
     /**
-     * test the SaveSettingsTo method of the <code>SorterNodeModel</code>.
-     * 
+     * Test method for {@link org.knime.base.node.preproc.sorter.SorterNodeModel#saveSettingsTo(...)}.
      */
-    public void testSaveSettingsTo() {
+    @Test
+    public final void testSaveSettingsTo() throws InvalidSettingsException {
+        Assert.assertFalse(m_settings.containsKey(
+                SorterNodeModel.INCLUDELIST_KEY));
+        Assert.assertFalse(m_settings.containsKey(
+                SorterNodeModel.SORTORDER_KEY));
+        Assert.assertFalse(m_settings.containsKey(
+                SorterNodeModel.SORTINMEMORY_KEY));
 
-        // save to empty includelist and sortorder
+        // save empty
         m_snm.saveSettingsTo(m_settings);
-        try {
-            assertNull(m_settings
-                    .getStringArray(SorterNodeModel.INCLUDELIST_KEY));
-        } catch (InvalidSettingsException e) {
-            // e.printStackTrace();
-        }
-        try {
-            assertNull(m_settings
-                    .getBooleanArray(SorterNodeModel.SORTORDER_KEY));
-        } catch (InvalidSettingsException e) {
-            // e.printStackTrace();
-        }
 
-        // load testsettings in the model and save them
-        boolean[] testboolarray = {true, false};
-        m_settings
-                .addBooleanArray(SorterNodeModel.SORTORDER_KEY, testboolarray);
-        DataCell[] dcarray = {new DoubleCell(3), new StringCell("Test")};
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
+        // populate settings
+        boolean[] sortOrder = {true, false};
+        m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, sortOrder);
+        String[] inclCols = {"TestCol1", "TestCol2"};
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, inclCols);
+        boolean sortInMemory = false;
+        m_settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, sortInMemory);
 
-        try {
-            m_snm.validateSettings(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-        try {
-            m_snm.loadValidatedSettingsFrom(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
+
+        m_snm.validateSettings(m_settings);
+        m_snm.loadValidatedSettingsFrom(m_settings);
+
 
         NodeSettings newsettings = new NodeSettings("Sorter");
         m_snm.saveSettingsTo(newsettings);
 
-        try {
-            boolean[] booltestarray = newsettings
+        boolean[] sortOrderTest = newsettings
                     .getBooleanArray(SorterNodeModel.SORTORDER_KEY);
-            assertNotNull(booltestarray);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-        try {
-            String[] dctestarray = newsettings
+        Assert.assertTrue(sortOrderTest[0]);
+        Assert.assertFalse(sortOrderTest[1]);
+        Assert.assertEquals(2, sortOrderTest.length);
+
+        String[] inclColsTest = newsettings
                     .getStringArray(SorterNodeModel.INCLUDELIST_KEY);
-            assertNotNull(dctestarray);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
+        Assert.assertArrayEquals(inclCols, inclColsTest);
     }
 
     /**
-     * test the ValidateSettings method of the <code>SorterNodeModel</code>.
-     * 
+     * Test method for {@link org.knime.base.node.preproc.sorter.SorterNodeModel#validateSettings(org.knime.core.node.NodeSettingsRO)}.
      */
-    public void testValidateSettings() {
-
+    @Test(expected = InvalidSettingsException.class)
+    public final void testValidateSettingsEmpty() throws InvalidSettingsException{
         // try to validate an empty settings-object
-        try {
-            m_snm.validateSettings(m_settings);
-            fail("Should have raised an InvalidSettingsException");
-        } catch (InvalidSettingsException expected) {
-            // nothing, we can continue
-        }
+        m_snm.validateSettings(m_settings);
+    }
 
+    @Test(expected = InvalidSettingsException.class)
+    public final void testValidateSettingsIncorrectKey() throws InvalidSettingsException{
         // add two null objects with incorrect keys
-        m_settings.addDataCellArray("Incorrect Key 1", (DataCell[])null);
+        m_settings.addStringArray("Incorrect Key 1", (String[])null);
         m_settings.addBooleanArray("Incorrect Key 2", null);
-        try {
-            m_snm.validateSettings(m_settings);
-            fail("Should have raised an InvalidSettingsException");
-        } catch (InvalidSettingsException expected) {
-            // nothing, we can continue
-        }
+        m_settings.addBoolean("Incorrect Key 3", false);
+        m_snm.validateSettings(m_settings);
+    }
 
+    @Test(expected = InvalidSettingsException.class)
+    public final void testValidateSettingsIncorrectValue() throws InvalidSettingsException{
         // add two null objects with the correct keys
         // to the settings object
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY,
-                (DataCell[])null);
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY,
+                (String[])null);
         m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, null);
-        try {
-            m_snm.validateSettings(m_settings);
-            fail("Should have raised an InvalidSettingsException");
-        } catch (InvalidSettingsException expected) {
-            // nothing, we can continue
-        }
+        m_settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, false);
 
-        // add a includelist-object but a null Sortorder-object
-        DataCell[] dcarray = {new DoubleCell(3), new StringCell("Test")};
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
-        try {
-            m_snm.validateSettings(m_settings);
-            fail("Should have raised an InvalidSettingsException");
-        } catch (InvalidSettingsException expected) {
-            // nothing, we can continue
-        }
+        m_snm.validateSettings(m_settings);
+    }
 
-        // add a sortorder-object, now everything should be fine
-        boolean[] testboolarray = {true, false};
-        m_settings
-                .addBooleanArray(SorterNodeModel.SORTORDER_KEY, testboolarray);
-        try {
-            m_snm.validateSettings(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
+    @Test(expected = InvalidSettingsException.class)
+    public final void testValidateSettingsNoSortOrder() throws InvalidSettingsException {
+        m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, null);
+        String[] inclCols = {"TestCol1", "TestCol2"};
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, inclCols);
+        boolean sortInMemory = false;
+        m_settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, sortInMemory);
 
+        m_snm.validateSettings(m_settings);
+    }
+
+    @Test
+    public final void testValidateSettings() throws InvalidSettingsException {
+        boolean[] sortOrder = {true, false};
+        m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, sortOrder);
+        String[] inclCols = {"TestCol1", "TestCol2"};
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, inclCols);
+        boolean sortInMemory = false;
+        m_settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, sortInMemory);
+
+        m_snm.validateSettings(m_settings);
     }
 
     /**
-     * test the LoadValidateSettings method of the <code>SorterNodeModel</code>.
-     * 
+     * Test method for {@link org.knime.base.node.preproc.sorter.SorterNodeModel#loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)}.
      */
-    public void testLoadValidatedSettingsFrom() {
-        DataCell[] dcarray = {new DoubleCell(3), new StringCell("Test")};
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
-        boolean[] testboolarray = {true, false};
-        m_settings
-                .addBooleanArray(SorterNodeModel.SORTORDER_KEY, testboolarray);
+    @Test
+    public final void testLoadValidatedSettingsFrom() throws InvalidSettingsException {
+        boolean[] sortOrder = {true, false};
+        m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, sortOrder);
+        String[] inclCols = {"TestCol1", "TestCol2"};
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, inclCols);
+        boolean sortInMemory = false;
+        m_settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, sortInMemory);
 
-        try {
-            m_snm.loadValidatedSettingsFrom(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-
+        m_snm.validateSettings(m_settings);
+        m_snm.loadValidatedSettingsFrom(m_settings);
     }
 
     /**
-     * test the execute method of the <code>SorterNodeModel</code>.
-     * 
+     * Test method for {@link org.knime.base.node.preproc.sorter.SorterNodeModel#execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}.
+     * @throws Exception
+     * @throws CanceledExecutionException
      */
-    public void testExecute() {
-
+    @Test
+    public final void testExecuteBufferedDataTableArrayExecutionContext() throws CanceledExecutionException, Exception {
         // try to sort a table with 1 entry
         String[] columnNames = {"col1", "col2", "col3", "col4"};
         DataType[] columnTypes = {DoubleCell.TYPE, StringCell.TYPE,
@@ -244,29 +264,21 @@ public class SorterNodeModelTest extends TestCase {
                 columnTypes)};
 
         // set settings
-        DataCell[] dcarray = {new StringCell("col1"), new StringCell("col2"),
-                new StringCell("col3"), new StringCell("col4")};
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
+        String[] includeCols = {"col1", "col2", "col3", "col4"};
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, includeCols);
         boolean[] sortorder = {true, true, true, true};
         m_settings.addBooleanArray(SorterNodeModel.SORTORDER_KEY, sortorder);
-        try {
-            m_snm.loadValidatedSettingsFrom(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-        try {
-            resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
-                    inputTable, null), EXEC_CONTEXT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        m_snm.loadValidatedSettingsFrom(m_settings);
+        resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
+                    inputTable, EXEC_CONTEXT), EXEC_CONTEXT);
 
         // test output
 
         RowIterator rowIt = resultTable[0].iterator();
-        assertTrue(rowIt.hasNext());
-        assertEquals(rows[0], rowIt.next());
-        assertFalse(rowIt.hasNext());
+        Assert.assertTrue(rowIt.hasNext());
+        Assert.assertEquals(rows[0], rowIt.next());
+        Assert.assertFalse(rowIt.hasNext());
         m_snm.reset();
 
         // *********************************************//
@@ -278,11 +290,11 @@ public class SorterNodeModelTest extends TestCase {
         int dimension = 50;
         // *********************************************//
         // set settings
-        dcarray = new DataCell[dimension];
+        includeCols = new String[dimension];
         for (int i = 0; i < dimension; i++) {
-            dcarray[i] = new StringCell("col" + i);
+            includeCols[i] = "col" + i;
         }
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, includeCols);
         sortorder = new boolean[dimension];
         for (int i = 0; i < dimension; i++) {
             sortorder[i] = true;
@@ -291,30 +303,24 @@ public class SorterNodeModelTest extends TestCase {
 
         DataTable[] inputTable2 = {generateUnitMatrixTable(dimension)};
 
-        try {
-            m_snm.loadValidatedSettingsFrom(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-        try {
-            resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
-                    inputTable2, null), EXEC_CONTEXT);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        m_snm.loadValidatedSettingsFrom(m_settings);
+
+        resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
+                    inputTable2, EXEC_CONTEXT), EXEC_CONTEXT);
+
 
         // test output (should have sorted all rows in reverse order)
         rowIt = resultTable[0].iterator();
-        assertTrue(rowIt.hasNext());
+        Assert.assertTrue(rowIt.hasNext());
         int k = dimension - 1;
-        // TODO while loop
-        // while (!rowIt.atEnd()) {
-        // IntCell ic = (IntCell) rowIt.next().getKey();
-        // assertEquals(k, ic.getIntValue());
-        k--;
-        // }
-        // assertTrue(rowIt.atEnd());
+        while (rowIt.hasNext()) {
+            RowKey rk = rowIt.next().getKey();
+            int ic = Integer.parseInt(rk.getString());
+            Assert.assertEquals(k, ic);
+            k--;
+        }
+        Assert.assertFalse(rowIt.hasNext());
         m_snm.reset();
 
         // *********************************************//
@@ -326,11 +332,11 @@ public class SorterNodeModelTest extends TestCase {
         dimension = 100;
         // *********************************************//
         // set settings
-        dcarray = new DataCell[dimension];
+        includeCols = new String[dimension];
         for (int i = 0; i < dimension; i++) {
-            dcarray[i] = new StringCell("col" + i);
+            includeCols[i] = "col" + i;
         }
-        m_settings.addDataCellArray(SorterNodeModel.INCLUDELIST_KEY, dcarray);
+        m_settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, includeCols);
         sortorder = new boolean[dimension];
         for (int i = 0; i < dimension; i++) {
             sortorder[i] = true;
@@ -339,37 +345,29 @@ public class SorterNodeModelTest extends TestCase {
 
         DataTable[] inputTable3 = {generateUnitMatrixTable(dimension)};
 
-        try {
-            m_snm.loadValidatedSettingsFrom(m_settings);
-        } catch (InvalidSettingsException e) {
-            e.printStackTrace();
-        }
-        try {
-            resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
-                    inputTable3, null), EXEC_CONTEXT);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        m_snm.loadValidatedSettingsFrom(m_settings);
+
+        resultTable = m_snm.execute(EXEC_CONTEXT.createBufferedDataTables(
+                    inputTable3, EXEC_CONTEXT), EXEC_CONTEXT);
 
         // test output (should have sorted all rows in reverse order)
         rowIt = resultTable[0].iterator();
-        assertTrue(rowIt.hasNext());
+        Assert.assertTrue(rowIt.hasNext());
         k = dimension - 1;
         while (rowIt.hasNext()) {
             RowKey rk = rowIt.next().getKey();
             int ic = Integer.parseInt(rk.getString());
-            assertEquals(k, ic);
+            Assert.assertEquals(k, ic);
             k--;
         }
-        assertFalse(rowIt.hasNext());
+        Assert.assertFalse(rowIt.hasNext());
         m_snm.reset();
-
     }
 
     /**
      * This method produces a unit matrix -<code>DataTable</code>.
-     * 
+     *
      * @param dimension of the matrix
      * @return Unit matrix
      */
@@ -399,5 +397,6 @@ public class SorterNodeModelTest extends TestCase {
         }
         return new DefaultTable(unitmatrix, columnNames, columnTypes);
     }
+
 
 }
