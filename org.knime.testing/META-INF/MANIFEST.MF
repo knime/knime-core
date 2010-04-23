@@ -11,6 +11,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.base,
  org.junit,
+ org.junit4,
  org.eclipse.core.resources,
  org.apache.log4j
 Eclipse-RegisterBuddy: org.knime.base
