@@ -151,7 +151,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             final String name) throws SAXException {
         // if Array -> read buffer out
         m_elementStack.pop();
-        if (name.equals("Entries")
+        if (name.equals("REAL-Entries")
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             String[] coords = m_buffer.toString().trim().split(" ");
             ArrayList<Double> suppValues = new ArrayList<Double>();
@@ -217,7 +217,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-        if ((name.equals("Indices") || name.equals("Entries"))
+        if ((name.equals("Indices") || name.equals("REAL-Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             m_buffer = new StringBuffer();
         } else if (name.equals("PolynomialKernelType")) {
