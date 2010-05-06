@@ -51,20 +51,20 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class ExtractModelTypeHandler extends PMMLContentHandler {
     /** Public ID .*/
     public static final String ID = "ExtractModel";
-    
+
     private PMMLModelType m_type = null;
-    
+
     private boolean m_hasNamespace = false;
-    
+
     /**
-     * 
-     * @return the type of valid PMML models (v2.1)
+     *
+     * @return the type of valid PMML models
      */
     public PMMLModelType getModelType() {
         return m_type;
@@ -93,10 +93,15 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void endElement(final String uri, final String localName, 
+    public void endElement(final String uri, final String localName,
             final String name) throws SAXException {
         for (PMMLModelType t : PMMLModelType.values()) {
             if (t.name().equals(name)) {
+                if (m_type != null) {
+                    throw new SAXException("Multiple PMML models in one PMML "
+                            + "file are not yet supported. Found "
+                            + m_type.name() + " and " + name + ".");
+                }
                 m_type = t;
                 break;
             }
@@ -118,9 +123,9 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * @return true if there is a PMML namespace declaration
      */
     public boolean hasNamespace() {
