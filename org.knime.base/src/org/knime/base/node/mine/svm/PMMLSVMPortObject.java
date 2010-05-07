@@ -361,7 +361,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
                 char[] chars = buff.toString().toCharArray();
                 handler.characters(chars, 0, chars.length);
                 handler.endElement(null, null, "Indices");
-                handler.startElement(null, null, "REAL-Entries", null);
+                handler.startElement(null, null, "Entries", null);
                 buff = new StringBuffer();
                 for (int x = 0; x < nrValues; x++) {
                     double d = supVecs[i][j].getValue(x);
@@ -372,7 +372,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
                 }
                 chars = buff.toString().toCharArray();
                 handler.characters(chars, 0, chars.length);
-                handler.endElement(null, null, "REAL-Entries");
+                handler.endElement(null, null, "Entries");
                 handler.endElement(null, null, "REAL-SparseArray");
                 handler.endElement(null, null, "VectorInstance");
 
