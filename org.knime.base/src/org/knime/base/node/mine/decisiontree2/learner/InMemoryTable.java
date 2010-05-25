@@ -229,7 +229,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
         // initialize the boolean array remembering whether an attribute
         // should be considered during learning
-        m_considerAttribute = tableTemplate.m_considerAttribute;
+        m_considerAttribute = tableTemplate.m_considerAttribute.clone();
     }
 
     /**
@@ -458,7 +458,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * mapping class values ({@link DataCell}) to the frequency as doubles
      */
     public LinkedHashMap<DataCell, Double> getClassFrequencies() {
-        LinkedHashMap<DataCell, Double> resultMap = 
+        LinkedHashMap<DataCell, Double> resultMap =
             new LinkedHashMap<DataCell, Double>();
         int i = 0;
         for (double frequency : m_classFrequencyArray) {

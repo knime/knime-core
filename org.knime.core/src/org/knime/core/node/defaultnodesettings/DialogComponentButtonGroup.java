@@ -51,6 +51,10 @@
 
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
+
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Enumeration;
@@ -63,11 +67,9 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.JRadioButton;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
@@ -360,9 +362,15 @@ public class DialogComponentButtonGroup extends DialogComponent {
               buttonBox = Box.createHorizontalBox();
               buttonBox.add(Box.createHorizontalGlue());
           }
+          final Dimension titleSize;
           if (label != null) {
-              buttonBox.setBorder(BorderFactory.createTitledBorder(
-                      BorderFactory.createEtchedBorder(), label));
+              final TitledBorder borderTitle =
+                  BorderFactory.createTitledBorder(
+                      BorderFactory.createEtchedBorder(), label);
+              titleSize = borderTitle.getMinimumSize(buttonBox);
+              buttonBox.setBorder(borderTitle);
+          } else {
+              titleSize = null;
           }
           for (final Enumeration<AbstractButton> buttons = group.getElements();
               buttons.hasMoreElements();) {
@@ -374,6 +382,15 @@ public class DialogComponentButtonGroup extends DialogComponent {
                   buttonBox.add(Box.createHorizontalGlue());
               }
           }
+          final Dimension preferredSize = buttonBox.getPreferredSize();
+          if (titleSize != null
+                  && titleSize.getWidth() > preferredSize.getWidth()) {
+              //add 5 to have a little space at the end looks nicer
+              preferredSize.setSize(titleSize.getWidth() + 5,
+                      preferredSize.getHeight());
+          }
+          buttonBox.setPreferredSize(preferredSize);
+          buttonBox.setMinimumSize(preferredSize);
           return buttonBox;
       }
 

@@ -51,7 +51,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
@@ -91,8 +91,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered.
      *
-     * @deprecated Use the constructor @{link {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean)}
-     * instead.
+     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(
+     * SettingsModelFilterString, int, boolean)} instead.
      */
     @SuppressWarnings("unchecked")
     @Deprecated
@@ -130,8 +130,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param inPortIndex the index of the port whose table is filtered.
      * @param allowedTypes filter for the columns all column not compatible with
      *            any of the allowed types are not displayed.
-     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean, Class...)}
-     * instead
+     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(
+     * SettingsModelFilterString, int, boolean, Class...)} instead
      */
     @Deprecated
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
@@ -173,8 +173,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @param filter for the columns, all column not compatible with
      *            any of the allowed types are not displayed.
      *
-     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(SettingsModelFilterString, int, boolean, ColumnFilter)}
-     * instead
+     * @deprecated Use the constructor {@link #DialogComponentColumnFilter(
+     * SettingsModelFilterString, int, boolean, ColumnFilter)} instead
      */
     @Deprecated
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
@@ -233,14 +233,16 @@ public class DialogComponentColumnFilter extends DialogComponent {
         final Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
         final Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
         final boolean compKeepAll = m_columnFilter.isKeepAllSelected();
-        final List<String> modelIncl = filterModel.getIncludeList();
-        final List<String> modelExcl = filterModel.getExcludeList();
+        final Set<String> modelIncl =
+            new LinkedHashSet<String>(filterModel.getIncludeList());
+        final Set<String> modelExcl =
+            new LinkedHashSet<String>(filterModel.getExcludeList());
         final boolean modelKeepAll = filterModel.isKeepAllSelected();
 
         boolean update =
                 (compIncl.size() != modelIncl.size())
                         || (compExcl.size() != modelExcl.size()
-                        		|| compKeepAll != modelKeepAll);
+                                || compKeepAll != modelKeepAll);
 
         if (!update) {
             // update if the current spec and the spec we last updated with
@@ -284,10 +286,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * transfers the settings from the component into the settings model.
      */
     private void updateModel() {
-    	final boolean keepAll = m_columnFilter.isKeepAllSelected();
-    	final SettingsModelFilterString filterModel =
-    		(SettingsModelFilterString)getModel();
-    	final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
+        final boolean keepAll = m_columnFilter.isKeepAllSelected();
+        final SettingsModelFilterString filterModel =
+            (SettingsModelFilterString)getModel();
+        final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
         final Set<String> exclList = m_columnFilter.getExcludedColumnSet();
 
         filterModel.setNewValues(inclList, exclList, keepAll);

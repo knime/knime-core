@@ -64,7 +64,6 @@ import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -93,6 +92,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.util.Pair;
 
 /**
  *
@@ -209,9 +209,13 @@ public class DecTreePredictorNodeModel extends NodeModel {
             DataCell cl = null;
             LinkedHashMap<String, Double> classDistrib = null;
             try {
+                Pair<DataCell, LinkedHashMap<DataCell, Double>> pair
+                        = m_decTree.getWinnerAndClasscounts(
+                                thisRow, inData.getDataTableSpec());
+                cl = pair.getFirst();
                 LinkedHashMap<DataCell, Double> classCounts =
-                   m_decTree.getClassCounts(thisRow, inData.getDataTableSpec());
-                cl = DecisionTreeNode.getWinner(classCounts);
+                   pair.getSecond();
+
                 classDistrib = getDistribution(classCounts);
                 if (coveredPattern < m_maxNumCoveredPattern.getIntValue()) {
                     // remember this one for HiLite support

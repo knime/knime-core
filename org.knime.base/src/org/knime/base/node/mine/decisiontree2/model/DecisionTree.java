@@ -61,6 +61,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -159,21 +160,6 @@ public class DecisionTree implements Serializable {
     }
 
     /**
-     * Classify a new pattern given as a row of values. Returns the class with
-     * the maximum count.
-     *
-     * @param row input pattern
-     * @param spec the corresponding table spec
-     * @return class of pattern the decision tree predicts
-     * @throws Exception if something went wrong (unknown attriubte for example)
-     */
-    public final DataCell classifyPattern(final DataRow row,
-            final DataTableSpec spec) throws Exception {
-        return m_rootNode.classifyPattern(row, spec);
-    }
-
-
-    /**
      * Add a new pattern to this tree for HiLiting purposes. Stores pattern ID
      * and color (if available) in the leaves.
      *
@@ -211,6 +197,17 @@ public class DecisionTree implements Serializable {
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
             final DataTableSpec spec) throws Exception {
         return m_rootNode.getClassCounts(row, spec);
+    }
+
+
+    /**
+     * Delegates to
+     * {@link DecisionTreeNode#getWinnerAndClasscounts(DataRow, DataTableSpec)}
+     */
+    public final Pair<DataCell, LinkedHashMap<DataCell, Double>>
+            getWinnerAndClasscounts(final DataRow row, final DataTableSpec spec)
+            throws Exception {
+        return m_rootNode.getWinnerAndClasscounts(row, spec);
     }
 
     /**

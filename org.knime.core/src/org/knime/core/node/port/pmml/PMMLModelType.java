@@ -48,8 +48,8 @@
 package org.knime.core.node.port.pmml;
 
 /**
- * Enum to describe valid PMML models (and extensions) as of version 2.1.
- * 
+ * Enum to describe valid PMML models as of version 3.2.
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public enum PMMLModelType {
@@ -71,11 +71,12 @@ public enum PMMLModelType {
         SequenceModel,
         /** PMML Support Vector Machine Model. */
         SupportVectorMachineModel,
-        /** 
-         * PMML Extension fur own model implementation if PMML standard 
-         * models don't fit. 
-         */
-        Extension,
-        /** Neither a valid PMML model nor an extension was found. */
+        /** PMML Model Composition */
+        MiningModel,
+        /** PMML RuleSetModel */
+        RuleSetModel,
+        /** PMML TextModel */
+        TextModel,
+        /** No valid PMML model was found. */
         None
 }
