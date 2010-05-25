@@ -75,6 +75,7 @@ import org.knime.core.node.config.Config;
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
+@SuppressWarnings("serial")
 public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =

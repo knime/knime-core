@@ -134,7 +134,9 @@ public class PMMLNeuralNetworkPortObject extends PMMLPortObject {
                 + (m_mlp.getNrLayers() - 1));
 
         handler.startElement(null, null, "NeuralNetwork", atts);
-        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
+        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler,
+                getWriteVersion());
+        writeLocalTransformations(handler);
         addTargets(handler, m_mlp);
         // input layer
         addInputLayer(handler, m_mlp);

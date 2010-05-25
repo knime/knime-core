@@ -109,7 +109,7 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
     @Override
     protected void writePMMLModel(final TransformerHandler handler)
             throws SAXException {
-        new PMMLRegressionContentHandler(this)
+        new PMMLRegressionContentHandler(this, getWriteVersion())
                 .writePMMLRegressionModel(handler);
     }
 
@@ -273,6 +273,23 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         public String toString() {
             return "RegressionTable: " + m_variables.size() + " variables";
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getWriteVersion() {
+        return PMML_V3_2;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void writeLocalTransformations(final TransformerHandler handler)
+            throws SAXException {
+        super.writeLocalTransformations(handler);
     }
 
 }

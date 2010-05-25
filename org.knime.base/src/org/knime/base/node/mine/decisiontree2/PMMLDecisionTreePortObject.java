@@ -147,7 +147,9 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
 
         handler.startElement(null, null, "TreeModel", atts);
 
-        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
+        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler,
+                getWriteVersion());
+        writeLocalTransformations(handler);
 
         addTreeNode(handler, m_tree.getRootNode());
         handler.endElement(null, null, "TreeModel");
@@ -353,5 +355,4 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         return "PMML Decision Tree Port with " + m_tree.getNumberNodes()
                 + " nodes";
     }
-
 }

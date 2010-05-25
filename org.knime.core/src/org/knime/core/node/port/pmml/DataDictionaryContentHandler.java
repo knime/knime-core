@@ -53,6 +53,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -75,38 +76,39 @@ import org.xml.sax.SAXException;
  * Parses a PMML DataDictionary and converts it into a {@link DataTableSpec}.
  * Each DataField is converted into a {@link DataColumnSpec}.
  * <ul>
- * <li> &lt;xs:attribute name=&quot;name&quot; type=&quot;FIELD-NAME&quot; use=&quot;required&quot; /&gt; will be
- * the column name </li>
- * <li> &lt;xs:attribute name=&quot;dataType&quot; type=&quot;DATATYPE&quot; use=&quot;required&quot; /> will be
- * the column type </li>
+ * <li> &lt;xs:attribute name=&quot;name&quot; type=&quot;FIELD-NAME&quot;
+ * use=&quot;required&quot; /&gt; will be the column name </li>
+ * <li> &lt;xs:attribute name=&quot;dataType&quot; type=&quot;DATATYPE&quot;
+ * use=&quot;required&quot; /> will be the column type </li>
  * <li> if the dataType attribute is not available (optional until PMML v3.2),
- * it is tried to be inferred from 
- * &lt;xs:attribute name=&quot;optype&quot; type=&quot;OPTYPE&quot; /&gt;, 
- * which is one of 
+ * it is tried to be inferred from
+ * &lt;xs:attribute name=&quot;optype&quot; type=&quot;OPTYPE&quot; /&gt;,
+ * which is one of
  * <ul>
  * <li>categorical</li>
  * <li>ordinal</li>
  * <li>continuous.</li>
  * </ul>
  * Continuous is mapped to {@link DoubleCell#TYPE}, the others are assumed to be
- * of type {@link StringCell#TYPE}. 
+ * of type {@link StringCell#TYPE}.
  * </li>
  * </ul>
  * The {@link DataColumnDomain} is also created by using either the Interval or
  * the Value fields from PMML:
- * <
+ *
  * <pre>
  *  &lt;xs:choice&gt;
- *  &lt;xs:element ref=&quot;Interval&quot; minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot; /&gt;
- *  &lt;xs:element ref=&quot;Value&quot; minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot; /&gt;
+ *  &lt;xs:element ref=&quot;Interval&quot; minOccurs=&quot;0&quot;
+ *  maxOccurs=&quot;unbounded&quot; /&gt; &lt;xs:element ref=&quot;Value&quot;
+ *  minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot; /&gt;
  *  &lt;/xs:choice&gt;
  * </pre>
- * 
+ *
  * Some examples simply list each occurring value also for continuous columns,
  * thus they are all collected, sorted and then the minimal and maximal values
  * are chosen as the lower and upper bound. If they are not numerical they are
  * used as nominal values.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class DataDictionaryContentHandler extends PMMLContentHandler {
@@ -136,7 +138,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     private Stack<String> m_elemStack;
 
     /**
-     * 
+     *
      */
     public DataDictionaryContentHandler() {
         m_elemStack = new Stack<String>();
@@ -146,7 +148,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -159,7 +161,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
                 m_currentName = atts.getValue("name");
                 handleOpType(name, atts);
                 handleDataType(name, atts);
-                // if we could not infer a valid DataType (either String, 
+                // if we could not infer a valid DataType (either String,
                 // Double or Int) we must throw an exception
                 if (m_currentType == null) {
                     throw new SAXException("Could not infer valid data type!"
@@ -208,7 +210,8 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
         }
     }
 
-    private void handleDataType(final String name, final Attributes atts) 
+    private void handleDataType(@SuppressWarnings("unused") final String name,
+            final Attributes atts)
         throws SAXException {
         String typeName = atts.getValue("dataType");
         if (typeName == null) {
@@ -231,7 +234,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -304,7 +307,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     private void parseBoundsFromValues() throws SAXException {
         if (!Double.isNaN(m_currentMin) || !Double.isNaN(m_currentMax)) {
             throw new SAXException(
-                    "Invalid PMML! Found \"Interval\" and \"Value\" element " 
+                    "Invalid PMML! Found \"Interval\" and \"Value\" element "
                     + "for DataField " + m_currentName);
         }
         List<Double> parsedValues = new ArrayList<Double>();
@@ -323,7 +326,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * @return the loaded dta table spec
      */
     public DataTableSpec getDataTableSpec() {
@@ -331,13 +334,13 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void characters(final char[] ch, final int start, final int length)
             throws SAXException {
-
+        // ignore character data
     }
 
     /**
@@ -357,6 +360,19 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
         m_elemStack.clear();
         m_read = false;
         m_currentValues.clear();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        Set<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

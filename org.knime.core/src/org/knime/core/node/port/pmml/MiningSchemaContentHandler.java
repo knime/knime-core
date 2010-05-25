@@ -49,54 +49,56 @@ package org.knime.core.node.port.pmml;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.knime.core.node.NodeLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class MiningSchemaContentHandler extends PMMLContentHandler {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            MiningSchemaContentHandler.class); 
-    
+            MiningSchemaContentHandler.class);
+
     private List<String>m_learningFields;
     private List<String>m_ignoredFields;
     private List<String>m_targetFields;
-    
+
     /** ID of this handler. */
     public static final String ID = "MiningSchemaContentHandler";
-    
+
     /**
-     * 
+     *
      */
     public MiningSchemaContentHandler() {
         m_learningFields = new LinkedList<String>();
         m_ignoredFields = new LinkedList<String>();
         m_targetFields = new LinkedList<String>();
     }
-    
+
     /**
-     * 
+     *
      * @return the names of the columns used for learning
      */
     public List<String>getLearningFields() {
         return m_learningFields;
     }
-    
+
     /**
-     * 
+     *
      * @return the names of the ignored columns
      */
     public List<String>getIgnoredFields() {
         return m_ignoredFields;
     }
-    
+
     /**
-     * 
+     *
      * @return the names of the target columns
      */
     public List<String>getTargetFields() {
@@ -107,7 +109,7 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void characters(final char[] ch, 
+    public void characters(final char[] ch,
             final int start, final int length)
             throws SAXException {
     }
@@ -123,7 +125,7 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void endElement(final String uri, 
+    public void endElement(final String uri,
             final String localName, final String name)
             throws SAXException {
     }
@@ -132,22 +134,22 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, 
+    public void startElement(final String uri,
             final String localName, final String name,
             final Attributes atts) throws SAXException {
         if ("MiningField".equals(name)) {
             // get attributes
             // check for unsupported attributes:
             if (atts.getValue("missingValueReplacement") != null) {
-                LOGGER.warn("\"missingValueReplacement\" is not supported and " 
+                LOGGER.warn("\"missingValueReplacement\" is not supported and "
                         + "will be ignored. Skipping it");
             }
             if (atts.getValue("missingValueTreatment") != null) {
-                LOGGER.warn("\"missingValueTreatment\" is not supported and " 
+                LOGGER.warn("\"missingValueTreatment\" is not supported and "
                         + "will be ignored. Skipping it");
             }
             if (atts.getValue("outliers") != null) {
-                LOGGER.warn("\"outliers\" is not supported and " 
+                LOGGER.warn("\"outliers\" is not supported and "
                         + "will be ignored. Skipping it");
             }
             String colName = atts.getValue("name");
@@ -163,6 +165,18 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
                 m_targetFields.add(colName);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        Set<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

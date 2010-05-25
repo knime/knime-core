@@ -60,32 +60,32 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ * This class is not sufficently tested yet and the API of this class might be
+ * still subject to changes.
+ *
  * @author Fabian Dill, University of Konstanz
  */
-
-// TODO: add support for the name mapping!!! no list of strings 
-// but Map<String, String> 
+@Deprecated
 public class PMMLAssociationRuleHandler extends PMMLContentHandler {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLAssociationRuleHandler.class);
-    
-    /** Id of this handler. */ 
+
+    /** Id of this handler. */
     public static final String ID = "association.rule.handler";
-    
+
     private double m_minSupport;
     private double m_minConfidence;
     private int m_nrOfTransactions;
     private int m_nrOfItems;
     private int m_nrOfItemsets;
     private int m_nrOfRules;
-    
-    private final Set<FrequentItemSet>m_itemsets 
+
+    private final Set<FrequentItemSet>m_itemsets
         = new LinkedHashSet<FrequentItemSet>();
-    private final Set<AssociationRule>m_rules 
+    private final Set<AssociationRule>m_rules
         = new LinkedHashSet<AssociationRule>();
-    
+
     private Map<String, String>m_items = new LinkedHashMap<String, String>();
 
     private FrequentItemSet m_currentItemSet;
@@ -93,7 +93,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void characters(final char[] ch, final int start, 
+    public void characters(final char[] ch, final int start,
             final int length) throws SAXException {
     }
 
@@ -108,7 +108,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void endElement(final String uri, 
+    public void endElement(final String uri,
             final String localName, final String name) throws SAXException {
         if (name.equals("Itemset")) {
             // last itemset must explicitely added here
@@ -122,10 +122,13 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, final String localName, 
+    public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
         // start element -> extract minimum support, confidence, nr of items
-        if (name.equals("AssociationRuleModel")) {
+        if (name.equals("AssociationModel")
+        		/* In order to support association rule PMML models previously written
+				   by KNIME the wrong model name is still parsed. */
+        		|| name.equals("AssociationRuleModel")) {
             // all required attributes
             m_nrOfTransactions = Integer.parseInt(
                     atts.getValue("numberOfTransactions"));
@@ -145,7 +148,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
             }
             // ignore the mapped value!
             if (atts.getValue("mappedValue") != null) {
-                LOGGER.warn("Ignoring mapped value: " 
+                LOGGER.warn("Ignoring mapped value: "
                         + atts.getValue("mappedValue"));
             }
             // and the weight
@@ -171,8 +174,8 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
             // find the item:
             if (!m_items.containsKey(itemId)) {
                 throw new SAXException(
-                        "Referenced item " + itemId + " in itemset " 
-                        + m_currentItemSet.getId() 
+                        "Referenced item " + itemId + " in itemset "
+                        + m_currentItemSet.getId()
                         + " cannot be found in items!");
             }
             // TODO: also support String ids
@@ -180,9 +183,14 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
         } else if (name.equals("AssociationRule")) {
             double support = Double.parseDouble(atts.getValue("support"));
             double confidence = Double.parseDouble(atts.getValue("confidence"));
-            double lift = Double.parseDouble(atts.getValue("lift"));
             String antecedentId = atts.getValue("antecedent");
             String consequentId = atts.getValue("consequent");
+            // The lift attribute is optional
+            String value = atts.getValue("lift");
+            double lift = 0.0;
+            if (value != null) {
+                lift = Double.parseDouble(value);
+            }
             FrequentItemSet antecedent = null;
             FrequentItemSet consequent = null;
             for (FrequentItemSet set : m_itemsets) {
@@ -194,7 +202,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
             }
             if (consequent == null || antecedent == null) {
                 throw new SAXException(
-                        "One of the referenced itemsets " 
+                        "One of the referenced itemsets "
                         + antecedentId + " or " + consequentId
                         + " in association rule could not be found.");
             }
@@ -246,6 +254,13 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
     }
 
     /**
+     * @return the items
+     */
+    public Map<String, String> getItems() {
+        return m_items;
+    }
+
+    /**
      * @return the itemsets
      */
     public Set<FrequentItemSet> getItemsets() {
@@ -258,6 +273,4 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
     public Set<AssociationRule> getRules() {
         return m_rules;
     }
-    
-
 }

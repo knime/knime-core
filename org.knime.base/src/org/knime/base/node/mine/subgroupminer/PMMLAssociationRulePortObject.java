@@ -50,9 +50,12 @@ package org.knime.base.node.mine.subgroupminer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
@@ -67,24 +70,30 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ * This class is not sufficently tested yet and the API of this class might be
+ * still subject to changes.
+ *
+
+*
  * @author Fabian Dill, University of Konstanz
  */
+ @Deprecated
 public class PMMLAssociationRulePortObject extends PMMLPortObject {
 
     private double m_minSupport;
     private double m_minConfidence;
     private int m_nrOfTransactions;
     private int m_nrOfItems;
-    
+
+    private Map<String, String> m_items;
+
     private Set<FrequentItemSet> m_itemsets;
     private Set<AssociationRule> m_associationRules;
-    private List<String>m_nameMapping;
-    
+
     /** PortType for association rules. */
-    public static final PortType TYPE 
+    public static final PortType TYPE
         = new PortType(PMMLAssociationRulePortObject.class);
-    
+
     /**
      * Creates a new PMML association rule port object.
      */
@@ -92,7 +101,7 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         m_itemsets = new LinkedHashSet<FrequentItemSet>();
         m_associationRules = new LinkedHashSet<AssociationRule>();
     }
-    
+
     /**
      * Creates a new PMML association rule port object.
      * @param spec PMML spec
@@ -100,25 +109,32 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
      * @param minConfidence minimum confidence
      * @param nrOfTransactions number of transactions
      * @param nrOfItems number of items
+     * @param items mapping of item id to item name
      * @param itemsets collection of frequent item sets
      */
     public PMMLAssociationRulePortObject(
             final PMMLPortObjectSpec spec,
             final double minSupport,
             final double minConfidence, final int nrOfTransactions,
-            final int nrOfItems, final Collection<FrequentItemSet>itemsets) {
+            final int nrOfItems, final  Map<String, String> items,
+            final Collection<FrequentItemSet>itemsets) {
         super(spec, PMMLModelType.AssociationModel);
         m_minSupport = minSupport;
         m_minConfidence = minConfidence;
         m_nrOfTransactions = nrOfTransactions;
         m_nrOfItems = nrOfItems;
-        m_itemsets = new LinkedHashSet<FrequentItemSet>(); 
+        m_items =  new LinkedHashMap<String, String>();
+        m_items.putAll(items);
+        m_itemsets = new LinkedHashSet<FrequentItemSet>();
         m_itemsets.addAll(itemsets);
         m_associationRules = new LinkedHashSet<AssociationRule>();
     }
-    
+
     /**
-     * Creates a new PMML association rule port object.
+     * Creates a new PMML association rule port object. This constructor is
+     * deprecated and should no longer be used. It relies on setting the
+     * mapping with the deprecated method <code>setNameMapping</code>.
+     *
      * @param spec PMML spec
      * @param rules collection of association rules
      * @param minSupport minimum support
@@ -126,11 +142,12 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
      * @param nrOfTransactions number of transactions
      * @param nrOfItems number of items
      */
+     @Deprecated
     public PMMLAssociationRulePortObject(
             final PMMLPortObjectSpec spec,
             final Collection<AssociationRule> rules,
             final double minSupport,
-            final double minConfidence, 
+            final double minConfidence,
             final int nrOfTransactions,
             final int nrOfItems) {
         super(spec, PMMLModelType.AssociationModel);
@@ -140,21 +157,29 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         m_nrOfItems = nrOfItems;
         m_associationRules = new LinkedHashSet<AssociationRule>();
         m_associationRules.addAll(rules);
+        m_items =  new LinkedHashMap<String, String>();
         m_itemsets = new LinkedHashSet<FrequentItemSet>();
         for (AssociationRule rule : m_associationRules) {
             m_itemsets.add(rule.getAntecedent());
             m_itemsets.add(rule.getConsequent());
         }
     }
-    
+
     /**
-     * Sets a new name mapping.
+     * Sets a new name mapping. This method should no longer be used. The name
+     * mapping (list of strings) is replaced by a mapping of item_id to value.
+     * Set the items in the constructor instead.
+     *
      * @param nameMapping list of names
      */
+     @Deprecated
     public void setNameMapping(final List<String>nameMapping) {
-        m_nameMapping = nameMapping;
+         int i = 0;
+         for (String value : nameMapping) {
+             m_items.put(String.valueOf(i++), value);
+        }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -174,59 +199,49 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
     protected void writePMMLModel(final TransformerHandler handler)
             throws SAXException {
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, "functionName", CDATA, 
+        atts.addAttribute(null, null, "functionName", CDATA,
                 "associationRules");
-        atts.addAttribute(null, null, "numberOfTransactions", CDATA, 
+        atts.addAttribute(null, null, "numberOfTransactions", CDATA,
                 "" + m_nrOfTransactions);
-        atts.addAttribute(null, null, "minimumSupport", CDATA, 
+        atts.addAttribute(null, null, "minimumSupport", CDATA,
                 "" + m_minSupport);
-        atts.addAttribute(null, null, "minimumConfidence", CDATA, 
+        atts.addAttribute(null, null, "minimumConfidence", CDATA,
                 "" + m_minConfidence);
         atts.addAttribute(null, null, "numberOfItems", CDATA, "" + m_nrOfItems);
-        atts.addAttribute(null, null, "numberOfItemsets", CDATA, 
+        atts.addAttribute(null, null, "numberOfItemsets", CDATA,
                 "" + m_itemsets.size());
-        atts.addAttribute(null, null, "numberOfRules", CDATA, 
+        atts.addAttribute(null, null, "numberOfRules", CDATA,
                 "" + m_associationRules.size());
-        handler.startElement(null, null, "AssociationRuleModel", atts);
-        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
+        handler.startElement(null, null, "AssociationModel", atts);
+        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler,
+                getWriteVersion());
+        writeLocalTransformations(handler);
         writeItems(handler);
         writeItemsets(handler);
         writeRules(handler);
-        handler.endElement(null, null, "AssociationRuleModel");
+        handler.endElement(null, null, "AssociationModel");
     }
-    
-    private void writeItems(final TransformerHandler handler) 
+
+    private void writeItems(final TransformerHandler handler)
         throws SAXException {
-        Set<Integer>alreadyWritten = new LinkedHashSet<Integer>();
-        for (FrequentItemSet set : m_itemsets) {
-            for (Integer item : set) {
-                if (!alreadyWritten.contains(item)) {
-                    AttributesImpl atts = new AttributesImpl();
-                    atts.addAttribute(null, null, "id", CDATA, "" + item);
-                    // add the nameMapping here
-                    String name = "item_" + item;
-                    if (m_nameMapping != null 
-                            && m_nameMapping.size() > item
-                            && m_nameMapping.get(item) != null) {
-                        name = m_nameMapping.get(item);
-                    }
-                    atts.addAttribute(null, null, "value", CDATA, name);
-                    handler.startElement(null, null, "Item", atts);
-                    handler.endElement(null, null, "Item");
-                }
-            }
+        for (Entry<String, String> itemEntry : m_items.entrySet()) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, itemEntry.getKey());
+            atts.addAttribute(null, null, "value", CDATA, itemEntry.getValue());
+            handler.startElement(null, null, "Item", atts);
+            handler.endElement(null, null, "Item");
         }
-        
+
     }
-    
-    private void writeItemsets(final TransformerHandler handler) 
+
+    private void writeItemsets(final TransformerHandler handler)
         throws SAXException {
         for (FrequentItemSet set : m_itemsets) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "id", CDATA, set.getId());
-            atts.addAttribute(null, null, "support", CDATA, 
+            atts.addAttribute(null, null, "support", CDATA,
                     "" + set.getSupport());
-            atts.addAttribute(null, null, "numberOfItems", CDATA, 
+            atts.addAttribute(null, null, "numberOfItems", CDATA,
                     "" + set.getItems().size());
             handler.startElement(null, null, "Itemset", atts);
             // add here the ItemRefs to the items (use index of item as id)
@@ -240,27 +255,30 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         }
     }
 
-    private void writeRules(final TransformerHandler handler) 
+    private void writeRules(final TransformerHandler handler)
         throws SAXException {
         for (AssociationRule rule : m_associationRules) {
             AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, "support", CDATA, 
+            atts.addAttribute(null, null, "support", CDATA,
                     "" + rule.getSupport());
-            atts.addAttribute(null, null, "confidence", CDATA, 
+            atts.addAttribute(null, null, "confidence", CDATA,
                     "" + rule.getConfidence());
-            atts.addAttribute(null, null, "lift", CDATA, 
+            atts.addAttribute(null, null, "lift", CDATA,
                     "" + rule.getLift());
             atts.addAttribute(null, null, "antecedent", CDATA,
                     rule.getAntecedent().getId());
-            atts.addAttribute(null, null, "consequent", CDATA, 
+            atts.addAttribute(null, null, "consequent", CDATA,
                     rule.getConsequent().getId());
             handler.startElement(null, null, "AssociationRule", atts);
             handler.endElement(null, null, "AssociationRule");
         }
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void loadFrom(final PMMLPortObjectSpec spec, 
+    public void loadFrom(final PMMLPortObjectSpec spec,
             final InputStream in, final String version)
             throws SAXException, ParserConfigurationException, IOException {
         PMMLAssociationRuleHandler hdl = new PMMLAssociationRuleHandler();
@@ -270,6 +288,7 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         m_minConfidence = hdl.getMinConfidence();
         m_nrOfItems = hdl.getNrOfItems();
         m_nrOfTransactions = hdl.getNrOfTransactions();
+        m_items = hdl.getItems();
         m_associationRules = hdl.getRules();
         m_itemsets = hdl.getItemsets();
     }

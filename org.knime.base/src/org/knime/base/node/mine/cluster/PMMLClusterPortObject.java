@@ -67,22 +67,22 @@ import org.xml.sax.helpers.AttributesImpl;
 
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLClusterPortObject extends PMMLPortObject {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterPortObject.class);
-    
+
     private List<DataColumnSpec> m_usedColumns;
     private double[][]m_prototypes;
     private int m_nrOfClusters;
     private int[] m_clusterCoverage;
     private String[] m_labels;
-    
+
     /**
-     * Constants indicating whether the squared euclidean or the euclidean 
+     * Constants indicating whether the squared euclidean or the euclidean
      * comparison measure should be used.
      */
     public enum ComparisonMeasure {
@@ -91,24 +91,24 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         /** Euclidean distance. */
         euclidean
     }
-    
+
     private ComparisonMeasure m_measure = ComparisonMeasure.squaredEuclidean;
-    
+
     /**
      * PMML Cluster port type.
      */
-    public static final PortType TYPE 
+    public static final PortType TYPE
         = new PortType(PMMLClusterPortObject.class);
-    
+
     /**
      * Default constructor necessary for loading.
      */
     public PMMLClusterPortObject() {
-        
+        // nothing to do
     }
-    
+
     /**
-     * 
+     *
      * @param prototypes the unnormalized prototypes of clusters
      * @param nrOfClusters number of clusters
      * @param portSpec the {@link PMMLPortObjectSpec} holding information of the
@@ -116,11 +116,11 @@ public class PMMLClusterPortObject extends PMMLPortObject {
      */
     public PMMLClusterPortObject(
             final double[][] prototypes,
-            final int nrOfClusters, 
+            final int nrOfClusters,
             final PMMLPortObjectSpec portSpec) {
         super(portSpec, PMMLModelType.ClusteringModel);
         m_nrOfClusters = nrOfClusters;
-        m_usedColumns = getColumnSpecsFor(portSpec.getLearningFields(), 
+        m_usedColumns = getColumnSpecsFor(portSpec.getLearningFields(),
                 portSpec.getDataTableSpec());
         m_labels = new String[m_nrOfClusters];
         for (int i = 0; i < m_nrOfClusters; i++) {
@@ -128,11 +128,11 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
         m_prototypes = prototypes;
         for (int i = 0; i < prototypes.length; i++) {
-            m_prototypes[i] = prototypes[i]; 
+            m_prototypes[i] = prototypes[i];
         }
     }
-    
-    
+
+
     private List<DataColumnSpec> getColumnSpecsFor(final List<String> colNames,
             final DataTableSpec tableSpec) {
         List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
@@ -146,34 +146,34 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
         return colSpecs;
     }
-    
+
     /**
-     * 
+     *
      * @param labels cluster labels
      */
     public void setClusterLabels(final String[] labels) {
         m_labels = labels;
     }
-    
+
     /**
-     * 
+     *
      * @param clusterCoverage how many data points are in each cluster
      */
     public void setClusterCoverage(final int[] clusterCoverage) {
         m_clusterCoverage = clusterCoverage;
     }
-    
+
 
     /**
-     * 
+     *
      * @param measure the used comparison measure
      */
     public void setComparisonMeasure(final ComparisonMeasure measure) {
         m_measure = measure;
     }
-    
+
     /**
-     * 
+     *
      * @return the used comparison measure
      */
     public ComparisonMeasure getComparisonMeasure() {
@@ -181,7 +181,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
 
     /**
-     * 
+     *
      * @return used columns
      */
     public List<DataColumnSpec> getUsedColumns() {
@@ -190,7 +190,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
 
 
     /**
-     * 
+     *
      * @return <em>normalized</em> prototypes
      */
     public double[][] getPrototypes() {
@@ -199,7 +199,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
 
 
     /**
-     * 
+     *
      * @return number of clusters
      */
     public int getNrOfClusters() {
@@ -207,16 +207,16 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
 
     /**
-     * 
+     *
      * @return number of covered data points per cluster
      */
     public int[] getClusterCoverage() {
         return m_clusterCoverage;
     }
 
-    
+
     /**
-     * 
+     *
      * @return cluster names
      */
     public String[] getLabels() {
@@ -228,9 +228,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
      * {@inheritDoc}
      */
     @Override
-    public void writePMMLModel(final TransformerHandler handler) 
+    public void writePMMLModel(final TransformerHandler handler)
         throws SAXException {
-        // create the cluster model 
+        // create the cluster model
         // with the attributes...
         AttributesImpl atts = new AttributesImpl();
         // modelName
@@ -240,39 +240,41 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         // modelClass
         atts.addAttribute(null, null, "modelClass", CDATA, "centerBased");
         // numberOfClusters
-        atts.addAttribute(null, null, "numberOfClusters", CDATA, 
+        atts.addAttribute(null, null, "numberOfClusters", CDATA,
                 "" + m_nrOfClusters);
         handler.startElement(null, null, "ClusteringModel", atts);
         if (m_usedColumns != null) {
-            PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
+            PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler,
+                    getWriteVersion());
+            writeLocalTransformations(handler);
             addUsedDistanceMeasure(handler);
             addClusteringFields(handler, m_usedColumns);
             addClusters(handler, m_prototypes);
         }
         handler.endElement(null, null, "ClusteringModel");
     }
-    
+
     /**
      * Writes the used distance measure - so far it is euclidean.
      * @param handler to write to
      * @throws SAXException if something goes wrong
      */
-    protected void addUsedDistanceMeasure(final TransformerHandler handler) 
+    protected void addUsedDistanceMeasure(final TransformerHandler handler)
         throws SAXException {
         // add kind="distance" to ComparisonMeasure element
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, "kind", CDATA, "distance");
         handler.startElement(null, null, "ComparisonMeasure", atts);
         // for now hard-coded squared euclidean
-        handler.startElement(null, null, 
+        handler.startElement(null, null,
                 m_measure.name(), null);
         handler.endElement(null, null, m_measure.name());
         handler.endElement(null, null, "ComparisonMeasure");
     }
-    
+
     /**
      * Writes the clustering fields (name).
-     *  
+     *
      * @param handler to write to
      * @param colSpecs column specs of used columns
      * @throws SAXException if something goes wrong
@@ -287,10 +289,10 @@ public class PMMLClusterPortObject extends PMMLPortObject {
             handler.endElement(null, null, "ClusteringField");
         }
     }
-    
+
     /*
      * Writes the center fields (name, minimum, and maximum).
-     * 
+     *
      * @param handler to write to
      * @param colSpecs used columns in correct order
      * @throws SAXException if something goes wrong
@@ -303,27 +305,27 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         for (DataColumnSpec colSpec : colSpecs) {
             // a derived field with name "normalized-[columnName]"
             AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, "name", CDATA, 
+            atts.addAttribute(null, null, "name", CDATA,
                     "normalized-" + colSpec.getName());
             atts.addAttribute(null, null, "optype", CDATA, "continuous");
-            atts.addAttribute(null, null, "dataType", CDATA, 
+            atts.addAttribute(null, null, "dataType", CDATA,
                     PMMLPortObjectSpec.getDataType(colSpec));
             handler.startElement(null, null, "DerivedField", atts);
             // NormContinuous field="[columnName]"
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "field", CDATA, 
+                atts.addAttribute(null, null, "field", CDATA,
                         colSpec.getName());
                 handler.startElement(null, null, "NormContinuous", atts);
                     // LinearNorm orig="[lowerBound]" norm="0"
                     atts = new AttributesImpl();
-                    atts.addAttribute(null, null, "orig", CDATA, 
+                    atts.addAttribute(null, null, "orig", CDATA,
                             "" + m_mins[i]);
                     atts.addAttribute(null, null, "norm", CDATA, "0");
                     handler.startElement(null, null, "LinearNorm", atts);
                     handler.endElement(null, null, "LinearNorm");
                     // LinearNorm orig="[upperBound]" norm="1"
                     atts = new AttributesImpl();
-                    atts.addAttribute(null, null, "orig", CDATA, 
+                    atts.addAttribute(null, null, "orig", CDATA,
                             "" + m_maxs[i]);
                     atts.addAttribute(null, null, "norm", CDATA, "1");
                     handler.startElement(null, null, "LinearNorm", atts);
@@ -335,10 +337,10 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         handler.endElement(null, null, "CenterFields");
     }
     */
-    
+
     /**
      * Writes the actual cluster prototypes.
-     * 
+     *
      * @param handler to write to
      * @param prototypes the normalized prototypes
      * @throws SAXException if something goes wrong
@@ -349,15 +351,15 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         for (double[] prototype : prototypes) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "name", CDATA, "cluster_" + i);
-            if (m_clusterCoverage != null 
+            if (m_clusterCoverage != null
                     && m_clusterCoverage.length == m_prototypes.length) {
-            atts.addAttribute(null, null, "size", CDATA, 
+            atts.addAttribute(null, null, "size", CDATA,
                     "" + m_clusterCoverage[i]);
             }
             i++;
             handler.startElement(null, null, "Cluster", atts);
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "n", CDATA, 
+                atts.addAttribute(null, null, "n", CDATA,
                             "" + prototype.length);
                 atts.addAttribute(null, null, "type", CDATA, "real");
                 handler.startElement(null, null, "Array", atts);
@@ -373,20 +375,20 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
 
     /*
-    private double[] normalizePrototype(final double[] prototype, 
+    private double[] normalizePrototype(final double[] prototype,
             final double min, final double max) {
         double[] normalized = new double[prototype.length];
         for (int i = 0; i < prototype.length; i++) {
-            normalized[i] = (prototype[i] - min) / (max - min); 
+            normalized[i] = (prototype[i] - min) / (max - min);
         }
         return normalized;
     }
     */
-    
+
     /** {@inheritDoc} */
     @Override
-    public void loadFrom(final PMMLPortObjectSpec spec, 
-            final InputStream in, final String version) 
+    public void loadFrom(final PMMLPortObjectSpec spec,
+            final InputStream in, final String version)
         throws ParserConfigurationException, SAXException, IOException {
         PMMLClusterHandler hdl = new PMMLClusterHandler();
         super.addPMMLContentHandler("clusterModel", hdl);
@@ -400,14 +402,14 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         m_prototypes = hdl.getPrototypes();
         m_labels = hdl.getLabels();
         m_measure = hdl.getComparisonMeasure();
-        m_usedColumns = getColumnSpecsFor(spec.getLearningFields(), 
-                spec.getDataTableSpec()); 
+        m_usedColumns = getColumnSpecsFor(spec.getLearningFields(),
+                spec.getDataTableSpec());
         LOGGER.info("loaded cluster port object");
         LOGGER.debug("number of clusters: " + m_nrOfClusters);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -423,7 +425,15 @@ public class PMMLClusterPortObject extends PMMLPortObject {
                 labels += m_labels[i];
             }
         }
-        return "ClusteringModel with " + m_nrOfClusters 
+        return "ClusteringModel with " + m_nrOfClusters
             + " cluster: " + labels;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getWriteVersion() {
+        return PMML_V3_2;
     }
 }

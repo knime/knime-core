@@ -48,6 +48,7 @@
 package org.knime.core.node.port.pmml;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -65,27 +66,27 @@ import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.xml.sax.SAXException;
 
 /**
- *  
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public final class PMMLPortObjectSerializer 
+public final class PMMLPortObjectSerializer
     extends PortObjectSerializer<PMMLPortObject> {
 
     private static final String FILE_NAME = "model.pmml";
     private static final String CLAZZ_FILE_NAME = "clazz";
 
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public PMMLPortObject loadPortObject(final PortObjectZipInputStream in, 
-            final PortObjectSpec spec, final ExecutionMonitor exec) 
+    public PMMLPortObject loadPortObject(final PortObjectZipInputStream in,
+            final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         String entryName = in.getNextEntry().getName();
         if (!entryName.equals(CLAZZ_FILE_NAME)) {
             throw new IOException(
-                    "Found unexpected zip entry " + entryName 
+                    "Found unexpected zip entry " + entryName
                     + "! Expected " + CLAZZ_FILE_NAME);
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -93,44 +94,58 @@ public final class PMMLPortObjectSerializer
         if (clazzName == null) {
             throw new IllegalArgumentException(
                     "No port object class found! Cannot load port object!");
-        } 
+        }
         try {
             Class<?> clazz = GlobalClassCreator.createClass(clazzName);
             if (!PMMLPortObject.class.isAssignableFrom(clazz)) {
                 // throw exception
                 throw new IllegalArgumentException(
-                        "Class " + clazz.getName() 
+                        "Class " + clazz.getName()
                         + " must extend PMMLPortObject! Loading failed!");
             }
+            /* Try to read the PMML version number of the second line of the zip
+             * entry. If it is not set take 3.1 as default. */
+            String versionNumber = reader.readLine();
+            if (versionNumber == null) {
+                versionNumber = PMMLPortObject.PMML_V3_1;
+            }
             PMMLPortObject portObj = (PMMLPortObject)clazz.newInstance();
+            // Optionally load PMML version number. If it's not present,
+            // then set to 3.1 as the default.
             entryName = in.getNextEntry().getName();
             if (!entryName.equals(FILE_NAME)) {
                 throw new IOException(
-                        "Found unexpected zip entry " + entryName 
+                        "Found unexpected zip entry " + entryName
                         + "! Expected " + FILE_NAME);
             }
-            portObj.loadFrom((PMMLPortObjectSpec)spec, in, 
-                    PMMLPortObject.PMML_V3_1);
-            return (PMMLPortObject)portObj;
+            portObj.loadFrom((PMMLPortObjectSpec)spec, in,
+                    versionNumber);
+            return portObj;
         } catch (Exception e) {
             throw new IOException(e);
         }
     }
-    
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void savePortObject(final PMMLPortObject portObject, 
+    public void savePortObject(final PMMLPortObject portObject,
             final PortObjectZipOutputStream out,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        OutputStreamWriter writer = null;
+        BufferedWriter writer = null;
         try {
             out.putNextEntry(new ZipEntry(CLAZZ_FILE_NAME));
-            writer = new OutputStreamWriter(out);
+            writer = new BufferedWriter(new OutputStreamWriter(out));
             writer.write(portObject.getClass().getName());
+            writer.newLine();
+            /* Store the PMML version number in the second line of the zip
+             * entry. This solution is not nice but the only way to keep
+             * compatibility for old versions. With a new zip entry old KNIME
+             * version can no longer read newly saved workflows. */
+            writer.write(portObject.getWriteVersion());
             writer.flush();
             out.putNextEntry(new ZipEntry(FILE_NAME));
             portObject.save(out);
@@ -138,8 +153,8 @@ public final class PMMLPortObjectSerializer
             throw new IOException(e);
         } catch (TransformerConfigurationException e) {
             throw new IOException(e);
-        } 
+        }
     }
-   
+
 
 }

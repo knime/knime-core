@@ -52,7 +52,9 @@ package org.knime.base.node.mine.regression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import javax.xml.transform.sax.TransformerHandler;
 
@@ -60,6 +62,7 @@ import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredi
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -80,6 +83,9 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     private PMMLPortObjectSpec m_spec;
     private String m_modelName;
     private String m_algorithmName;
+    private String m_writeVersion;
+
+    private PMMLRegressionPortObject m_port;
 
     /**
      * Creates a new PMML content handler for regression models.
@@ -98,11 +104,15 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
      * existing port object.
      *
      * @param po a PMML regression port object
+     * @param writeVersion The PMML version to write
      */
-    public PMMLRegressionContentHandler(final PMMLRegressionPortObject po) {
+    public PMMLRegressionContentHandler(final PMMLRegressionPortObject po,
+            final String writeVersion) {
         m_modelName = po.getModelName();
+        m_writeVersion = writeVersion;
         m_regressionTable = po.getRegressionTable();
         m_spec = po.getSpec();
+        m_port = po;
     }
 
     /**
@@ -219,7 +229,8 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         }
         a.addAttribute("", "", "targetFieldName", "CDATA", getTargetField());
         h.startElement("", "", "RegressionModel", a);
-        PMMLPortObjectSpec.writeMiningSchema(m_spec, h);
+        PMMLPortObjectSpec.writeMiningSchema(m_spec, h, m_writeVersion);
+        m_port.writeLocalTransformations(h);
         addRegressionTable(h);
         h.endElement("", "", "RegressionModel");
     }
@@ -249,12 +260,13 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     @Override
     public void characters(final char[] ch, final int start, final int length)
             throws SAXException {
+        // ignore character data
     }
 
     /** {@inheritDoc} */
     @Override
     public void endDocument() throws SAXException {
-
+        // nothing to do here
     }
 
     /** {@inheritDoc} */
@@ -341,11 +353,13 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         @Override
         public void characters(final char[] ch, final int start,
                 final int length) throws SAXException {
+            // ignore character data
         }
 
         /** {@inheritDoc} */
         @Override
         public void endDocument() throws SAXException {
+            // nothing to do here
         }
 
         /** {@inheritDoc} */
@@ -362,6 +376,18 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         @Override
         public void startElement(final String uri, final String localName,
                 final String name, final Attributes atts) throws SAXException {
+         // nothing to do here
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Set<String> getSupportedVersions() {
+            TreeSet<String> versions = new TreeSet<String>();
+            versions.add(PMMLPortObject.PMML_V3_0);
+            versions.add(PMMLPortObject.PMML_V3_1);
+            versions.add(PMMLPortObject.PMML_V3_2);
+            return versions;
         }
     } // class PMMLMiningSchemaHandler
 
@@ -397,13 +423,13 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         @Override
         public void characters(final char[] ch, final int start,
                 final int length) throws SAXException {
-
+            // ignore character data
         }
 
         /** {@inheritDoc} */
         @Override
         public void endDocument() throws SAXException {
-
+            // nothing to do here
         }
 
         /** {@inheritDoc} */
@@ -447,6 +473,17 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             }
 
         }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Set<String> getSupportedVersions() {
+            TreeSet<String> versions = new TreeSet<String>();
+            versions.add(PMMLPortObject.PMML_V3_0);
+            versions.add(PMMLPortObject.PMML_V3_1);
+            versions.add(PMMLPortObject.PMML_V3_2);
+            return versions;
+        }
     } // class PMMLRegressionTableContentHandler
 
     private static final class PMMLNumericPredictorContentHandler
@@ -489,7 +526,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         @Override
         public void characters(final char[] ch, final int start,
                 final int length) throws SAXException {
-
         }
 
         /** {@inheritDoc} */
@@ -524,7 +560,17 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                         + "child xml element: " + name);
             }
         }
-
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Set<String> getSupportedVersions() {
+            TreeSet<String> versions = new TreeSet<String>();
+            versions.add(PMMLPortObject.PMML_V3_0);
+            versions.add(PMMLPortObject.PMML_V3_1);
+            versions.add(PMMLPortObject.PMML_V3_2);
+            return versions;
+        }
     } // class NumericPredictorContentHandler
 
 
@@ -537,5 +583,17 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                     + "\" in xml element \"" + elementName + "\"");
         }
         return value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 }

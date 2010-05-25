@@ -47,6 +47,9 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -54,119 +57,145 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class PMMLContentHandler extends DefaultHandler 
-    implements ContentHandler {
-
+public abstract class PMMLContentHandler extends DefaultHandler
+        implements ContentHandler {
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public abstract void characters(final char[] ch, 
+    public abstract void characters(final char[] ch,
             final int start, final int length) throws SAXException;
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public abstract void endDocument() throws SAXException;
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public abstract void endElement(final String uri, final String localName, 
+    public abstract void endElement(final String uri, final String localName,
             final String name)throws SAXException;
-    
+
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public abstract void startElement(final String uri, final String localName, 
+    public abstract void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException;
 
-    
+
     /* For convenience implement the following methods empty...*/
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void endPrefixMapping(final String prefix) throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public void ignorableWhitespace(final char[] ch, final int start, 
+    public void ignorableWhitespace(final char[] ch, final int start,
             final int length) throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void processingInstruction(final String target, final String data)
             throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void setDocumentLocator(final Locator locator) {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void skippedEntity(final String name) throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void startDocument() throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void startPrefixMapping(final String prefix, final String uri)
             throws SAXException {
         // TODO Auto-generated method stub
-        
+
     }
-    
-    
+
+    /**
+     * Checks whether the PMML version is supported.
+     *
+     * @param version The PMML version to be tested.
+     * @return True if the handler can read the specified version, false
+     *      otherwise
+     */
+    public boolean canReadPMMLVersion(final String version) {
+        return getSupportedVersions().contains(version);
+    }
+
+    /**
+     * Returns the supported PMML versions. Override this method in a derived
+     * class to change the set of supported versions. Versions are e.g.
+     * {@link PMMLPortObject#PMML_V3_1} or {@link PMMLPortObject#PMML_V3_2}.
+     *
+     * @return A set of the PMML version supported by this PMML port object.
+     */
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        return versions;
+    }
+
+
+
+
 
 }

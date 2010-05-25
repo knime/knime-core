@@ -83,6 +83,7 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -671,7 +672,19 @@ public final class Node implements NodeModelWarningListener {
                 exec.setMessage("Copying input object at port " +  i);
                 ExecutionMonitor subExec = exec.createSubProgress(0.0);
                 try {
-                    inData[i] = copyPortObject(data[i], subExec);
+                	/* TODO: To be removed asap
+                	 * Quick (and very dirty) fix that disables copying
+                	 * of PMMLPortObjects when they are passed from one node
+                	 * to the next node. This is necessary right now to avoid
+                	 * the interpretation of the integrated PMML (with
+                	 * preprocessing) as this is not supported yet. Now the
+                	 * PMML port objects are just passed through to the
+                	 * PMMLWriter.*/
+                    if (data[i] instanceof PMMLPortObject) {
+                        inData[i] = data[i];
+                    } else {
+                        inData[i] = copyPortObject(data[i], subExec);
+                    }
                 } catch (CanceledExecutionException e) {
                     createWarningMessageAndNotify("Execution canceled");
                     return false;

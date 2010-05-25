@@ -138,19 +138,28 @@ public class NormalizerNodeModel extends NodeModel {
      * model).
      */
     public NormalizerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE,
-                NormalizerPortObject.TYPE});
+        this(NormalizerPortObject.TYPE);
     }
 
     /**
-     * All {@link org.knime.core.data.def.IntCell} columns are converted to
-     * {@link org.knime.core.data.def.DoubleCell} columns.
-     *
-     * {@inheritDoc}
+     * @param modelPortType
      */
-    @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+    protected NormalizerNodeModel(final PortType modelPortType) {
+        super(new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE,
+                modelPortType});
+    }
+
+    /**
+     * @param inSpecs An array of DataTableSpecs (as many as this model has
+     *            inputs).
+     * @return An array of DataTableSpecs (as many as this model has outputs)
+     *
+     * @throws InvalidSettingsException if the <code>#configure()</code> failed,
+     *             that is, the settings are inconsistent with given
+     *             DataTableSpec elements.
+     */
+    protected PortObjectSpec[] prepareConfigure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec spec = (DataTableSpec)inSpecs[0];
         // extract selected numeric columns
@@ -164,11 +173,23 @@ public class NormalizerNodeModel extends NodeModel {
                 Normalizer.generateNewSpec(spec, m_columns), modelSpec};
     }
 
+    /**
+     * All {@link org.knime.core.data.def.IntCell} columns are converted to
+     * {@link org.knime.core.data.def.DoubleCell} columns.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        return prepareConfigure(inSpecs);
+    }
+
     private String[] numericColumnSelection(final DataTableSpec spec)
             throws InvalidSettingsException {
         // if the node has not been configured before OR all columns have been
         // selected in the dialog, then return all numeric columns from the
-        // input spec
+        // input m_spec
         if (m_columns == null || m_allNumericColumns) {
             String[] allNumColumns = findAllNumericColumns(spec);
             // no normalization
@@ -210,7 +231,7 @@ public class NormalizerNodeModel extends NodeModel {
             if (!spec.containsName(name)) {
                 throw new InvalidSettingsException("Could not"
                         + " find column \"" + name + "\""
-                            + " in spec.");
+                            + " in m_spec.");
             }
         }
         // no normalization
@@ -237,14 +258,30 @@ public class NormalizerNodeModel extends NodeModel {
         return poscolumns.toArray(new String[poscolumns.size()]);
     }
 
+
     /**
-     * New normalized {@link org.knime.core.data.DataTable} is created depending
-     * on the mode.
-     *
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    protected PortObject[] execute(final PortObject[] inObjects,
+            final ExecutionContext exec) throws Exception {
+        CalculationResult result = calculate(inObjects, exec);
+        NormalizerPortObject p = new NormalizerPortObject(
+                result.getSpec(), result.getConfig());
+        return new PortObject[] {result.getDataTable(), p};
+    }
+
+    /**
+     * New normalized {@link org.knime.core.data.DataTable} is created depending
+     * on the mode.
+     */
+    /**
+     * @param inData The input data.
+     * @param exec For BufferedDataTable creation and progress.
+     * @return the result of the calculation
+     * @throws Exception If the node calculation fails for any reason.
+     */
+    protected CalculationResult calculate(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
         DataTableSpec inSpec = inTable.getSpec();
@@ -258,9 +295,8 @@ public class NormalizerNodeModel extends NodeModel {
         boolean fixDomainBounds = false;
         switch (m_mode) {
         case NONORM_MODE:
-            NormalizerPortObject p = new NormalizerPortObject(
-                    new DataTableSpec(), new AffineTransConfiguration());
-            return new PortObject[]{inTable, p};
+            return new CalculationResult(inTable, new DataTableSpec(),
+                    new AffineTransConfiguration());
         case MINMAX_MODE:
             fixDomainBounds = true;
             outTable = ntable.doMinMaxNorm(m_max, m_min, prepareExec);
@@ -285,23 +321,20 @@ public class NormalizerNodeModel extends NodeModel {
         DataTableSpec modelSpec =
             FilterColumnTable.createFilterTableSpec(inSpec, m_columns);
         AffineTransConfiguration configuration = outTable.getConfiguration();
-        NormalizerPortObject modelPO =
-            new NormalizerPortObject(modelSpec, configuration);
-
         DataTableSpec spec = outTable.getDataTableSpec();
         // fix the domain to min/max in case of MINMAX_MODE; fixes bug #1187
         // ideally this goes into the AffineTransConfiguration/AffineTransTable,
-        // but that will not work with the applier node (which will apply 
-        // the same transformation, which is not guaranteed to snap to min/max) 
+        // but that will not work with the applier node (which will apply
+        // the same transformation, which is not guaranteed to snap to min/max)
         if (fixDomainBounds) {
-            DataColumnSpec[] newColSpecs = 
+            DataColumnSpec[] newColSpecs =
                 new DataColumnSpec[spec.getNumColumns()];
             for (int i = 0; i < newColSpecs.length; i++) {
                 newColSpecs[i] = spec.getColumnSpec(i);
             }
             for (int i = 0; i < m_columns.length; i++) {
                 int index = spec.findColumnIndex(m_columns[i]);
-                DataColumnSpecCreator creator = 
+                DataColumnSpecCreator creator =
                     new DataColumnSpecCreator(newColSpecs[index]);
                 DataColumnDomainCreator domCreator =
                     new DataColumnDomainCreator(newColSpecs[index].getDomain());
@@ -324,7 +357,8 @@ public class NormalizerNodeModel extends NodeModel {
             count++;
         }
         container.close();
-        return new PortObject[]{container.getTable(), modelPO};
+        return new CalculationResult(container.getTable(), modelSpec,
+                configuration);
     }
 
     /**
@@ -403,4 +437,48 @@ public class NormalizerNodeModel extends NodeModel {
             throw new InvalidSettingsException("INVALID MODE");
         }
     }
+
+    /**
+     * Helper class for being able to return all necessary information in the
+     * {@link #calculate(PortObject[], ExecutionContext)} method.
+
+     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     */
+    protected final class CalculationResult {
+        private final BufferedDataTable m_dataTable;
+        private final DataTableSpec m_spec;
+        private final AffineTransConfiguration m_config;
+        /**
+         * @param m_dataTable
+         * @param m_spec
+         * @param config
+         */
+        private CalculationResult(final BufferedDataTable dataTable,
+                final DataTableSpec spec,
+                final AffineTransConfiguration config) {
+            super();
+            this.m_dataTable = dataTable;
+            this.m_spec = spec;
+            this.m_config = config;
+        }
+        /**
+         * @return the m_dataTable
+         */
+        public BufferedDataTable getDataTable() {
+            return m_dataTable;
+        }
+        /**
+         * @return the m_spec
+         */
+        public DataTableSpec getSpec() {
+            return m_spec;
+        }
+        /**
+         * @return the config
+         */
+        public AffineTransConfiguration getConfig() {
+            return m_config;
+        }
+    }
+
 }

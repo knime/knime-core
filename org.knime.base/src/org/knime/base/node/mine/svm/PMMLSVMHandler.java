@@ -52,7 +52,9 @@ package org.knime.base.node.mine.svm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
@@ -60,6 +62,7 @@ import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -151,7 +154,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             final String name) throws SAXException {
         // if Array -> read buffer out
         m_elementStack.pop();
-        if (name.equals("Entries")
+        if (name.equals("REAL-Entries")
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             String[] coords = m_buffer.toString().trim().split(" ");
             ArrayList<Double> suppValues = new ArrayList<Double>();
@@ -217,7 +220,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-        if ((name.equals("Indices") || name.equals("Entries"))
+        if ((name.equals("Indices") || name.equals("REAL-Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             m_buffer = new StringBuffer();
         } else if (name.equals("PolynomialKernelType")) {
@@ -267,6 +270,18 @@ public class PMMLSVMHandler extends PMMLContentHandler {
         }
         m_elementStack.push(name);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

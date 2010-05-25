@@ -52,52 +52,54 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLClusterHandler extends PMMLContentHandler {
-    
+
     // number of clusters <ClusterModel numberOfClusters="">
     // prototypes <Cluster><Array>values </Array>
     // with name <Cluster name="...">
     // String[] usedColumns <ClusteringField field="">
-    // int[] clusterCoverage -> <Cluster size=""> 
-    
+    // int[] clusterCoverage -> <Cluster size="">
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterHandler.class);
-    
-    /* 
+
+    /*
      * Conformance:
      * ComparisonMeasure -> euclidean although only squaredEuclidean is in core
-     * 
+     *
      * Compare function -> absDiff (absolute distance)
      */
-    
+
     private ComparisonMeasure m_measure;
-    
-    private static final Set<String>UNSUPPORTED 
+
+    private static final Set<String>UNSUPPORTED
         = new LinkedHashSet<String>();
-    
-    private static final Set<String>IGNORED 
+
+    private static final Set<String>IGNORED
         = new LinkedHashSet<String>();
-    
+
     private static final Set<String>KNOWN = new LinkedHashSet<String>();
-    
+
     static {
         UNSUPPORTED.add("KohonenMap");
         UNSUPPORTED.add("LocalTransformations");
-        
+
         IGNORED.add("Covariances");
         IGNORED.add("MissingValueWeights");
-        
+
         KNOWN.add("PMML");
         KNOWN.add("Header");
         KNOWN.add("Application");
@@ -107,26 +109,26 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         KNOWN.add("Value");
         KNOWN.add("Interval");
     }
-    
+
     private int m_nrOfClusters;
     private double[][] m_prototypes;
     private String[] m_labels;
     private int[] m_clusterCoverage;
     private Set<String> m_usedColumns = new LinkedHashSet<String>();
-    
+
     private StringBuffer m_buffer;
     private int m_currentCluster = 0;
-    
-    private Stack<String>m_elementStack = new Stack<String>(); 
-    
+
+    private Stack<String>m_elementStack = new Stack<String>();
+
     private String m_lastDerivedField;
-    
+
     private Map<String, LinearNorm>m_linearNorms;
     private LinearNorm m_currentLinearNorm;
-    
-    
+
+
     /**
-     * 
+     *
      * @return number of clusters
      */
     public int getNrOfClusters() {
@@ -134,7 +136,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * @return the prototypes
      */
     public double[][] getPrototypes() {
@@ -142,15 +144,15 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * @return labels of the cluster in same order as prototypes
      */
     public String[] getLabels() {
         return m_labels;
     }
-    
+
     /**
-     * 
+     *
      * @return the number of items in the cluster
      */
     public int[] getClusterCoverage() {
@@ -158,15 +160,15 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     }
 
     /**
-     * 
+     *
      * @return list of used columns
      */
     public Set<String> getUsedColumns() {
         return m_usedColumns;
     }
-    
+
     /**
-     * 
+     *
      * @return the used comparison measure
      */
     public ComparisonMeasure getComparisonMeasure() {
@@ -196,9 +198,9 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         m_buffer = null;
         m_currentCluster = 0;
         m_lastDerivedField = null;
-        
+
         if (m_linearNorms != null) {
-            for (int clusterNr = 0; clusterNr < m_prototypes.length; 
+            for (int clusterNr = 0; clusterNr < m_prototypes.length;
                 clusterNr++) {
                 int columnIndex = 0;
                 // if there are some normalized columns - unnormalize them
@@ -207,7 +209,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                     if (linearNorm != null) {
                         // normalize
                         LOGGER.warn(
-                                "De-normalizing prototype value for column \"" 
+                                "De-normalizing prototype value for column \""
                                 + col + "\"");
                         m_prototypes[clusterNr][columnIndex] =
                                 linearNorm.unnormalize(
@@ -223,7 +225,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void endElement(final String uri, final String localName, 
+    public void endElement(final String uri, final String localName,
             final String name) throws SAXException {
         // if Array -> read buffer out
         m_elementStack.pop();
@@ -232,30 +234,30 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             // TODO -> check if coord.length == m_usedColumns.length
             double[] protoCoords = new double[m_usedColumns.size()];
             for (int i = 0; i < m_usedColumns.size(); i++) {
-                protoCoords[i] = Double.parseDouble(coords[i]);  
+                protoCoords[i] = Double.parseDouble(coords[i]);
             }
-            m_prototypes[m_currentCluster] = protoCoords;  
+            m_prototypes[m_currentCluster] = protoCoords;
         }
-        if (name.equals("Cluster") 
+        if (name.equals("Cluster")
                 && m_elementStack.peek().equals("ClusteringModel")) {
-            m_currentCluster++;            
+            m_currentCluster++;
         }
         if (name.equals("NormContinuous")) {
             // initialize only when necessary
             if (m_linearNorms == null) {
                 m_linearNorms = new LinkedHashMap<String, LinearNorm>();
             }
-            // element NormContinuos put on map 
-            m_linearNorms.put(m_currentLinearNorm.getName(), 
+            // element NormContinuos put on map
+            m_linearNorms.put(m_currentLinearNorm.getName(),
                     m_currentLinearNorm);
         }
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, final String localName, 
+    public void startElement(final String uri, final String localName,
             final String name,
             final Attributes atts) throws SAXException {
         // ensure to throw exception on method distribution/kohonen/etc.
@@ -285,7 +287,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             m_prototypes = new double[m_nrOfClusters][m_usedColumns.size()];
             m_labels = new String[m_nrOfClusters];
             m_clusterCoverage = new int[m_nrOfClusters];
-        } else if (name.equals("Cluster") 
+        } else if (name.equals("Cluster")
                 && m_elementStack.peek().equals("ClusteringModel")) {
             // Cluster -> retrieve name
             m_labels[m_currentCluster] = atts.getValue("name");
@@ -307,13 +309,13 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             // some models do not have ClusteringField but MiningField
         } else if (name.equals("MiningField")) {
             // but then it must be of usageType=active
-            if (atts.getValue("usageType") != null 
+            if (atts.getValue("usageType") != null
                     && atts.getValue("usageType").equals("active")) {
-                // since we have a set this should not mess up with the 
-                // clustering fields 
-                // (if both clustering and mining fields are defined) 
+                // since we have a set this should not mess up with the
+                // clustering fields
+                // (if both clustering and mining fields are defined)
                 m_usedColumns.add(atts.getValue("name"));
-            }            
+            }
         } else if (name.equals("NormContinuous")) {
             String fieldName = atts.getValue("field");
             m_lastDerivedField = fieldName;
@@ -330,17 +332,17 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         } else if (name.equals("ComparisonMeasure")) {
             // only absolute difference as compare function is supported
             String compareFunction = atts.getValue("compareFunction");
-            // set default values here - because we do not validate against 
+            // set default values here - because we do not validate against
             // schema
             if (compareFunction == null) {
-               compareFunction = "absDiff"; 
+               compareFunction = "absDiff";
             }
             if (!compareFunction.equals("absDiff")) {
                 throw new IllegalArgumentException(
-                        "Only the absolute difference (\"absDiff\") as " 
+                        "Only the absolute difference (\"absDiff\") as "
                         + "compare function is supported!");
             }
-        } else if (!m_elementStack.isEmpty() 
+        } else if (!m_elementStack.isEmpty()
                 && m_elementStack.peek().equals("ComparisonMeasure")) {
             if (!name.trim().equals(
                     ComparisonMeasure.euclidean.name())
@@ -350,16 +352,28 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                         "\"" + ComparisonMeasure.euclidean
                         + "\" and \""
                         + ComparisonMeasure.squaredEuclidean
-                        + "\" are the only supported comparison " 
+                        + "\" are the only supported comparison "
                         + "measures! Found " + name + ".");
             } else {
                 m_measure = ComparisonMeasure.valueOf(name);
             }
-            
+
         } else if (!KNOWN.contains(name)) {
             LOGGER.warn("Skipping unknown element " + name);
         }
         m_elementStack.push(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

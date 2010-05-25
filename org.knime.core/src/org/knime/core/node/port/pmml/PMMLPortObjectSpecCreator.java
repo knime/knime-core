@@ -55,7 +55,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
@@ -65,43 +64,26 @@ public class PMMLPortObjectSpecCreator {
 
     private final DataTableSpec m_dataTableSpec;
 
-    private final List<String>m_learningCols;
+    private final List<String> m_learningCols;
 
     private final List<String> m_ignoredCols;
 
     private final List<String> m_targetCols;
 
     /**
-     * Adds all columns in the table spec as learning columns.
-     * When the target or ignore columns are set, they are removed from the
-     * learning columns.
-     *
      * @param tableSpec equivalent to the data dictionary
-     * @throws InvalidSettingsException if a data column type is not compatible 
-     *  with double or nominal value (not supported by PMML)
      */
-    public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) 
-        throws InvalidSettingsException {
+    public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) {
         m_dataTableSpec = tableSpec;
         m_learningCols = new LinkedList<String>();
         m_ignoredCols = new LinkedList<String>();
         m_targetCols = new LinkedList<String>();
-        // add all columns as learning columns
-        List<String>colNames = new LinkedList<String>();
-        for (DataColumnSpec colSpec : tableSpec) {
-            if (!colSpec.getType().isCompatible(DoubleValue.class)
-                    && !colSpec.getType().isCompatible(NominalValue.class)) {
-                colNames.clear();
-                throw new InvalidSettingsException(
-                        "Only double and nominal value compatible columns " 
-                        + "are yet supported for PMML models!");
-            }
-            colNames.add(colSpec.getName());
-        }
-        setLearningColsNames(colNames);
     }
 
     /**
+     * Only double and nominal value compatible columns are yet supported for
+     * PMML models!
+     *
      * @param learningCols the learningCols to set
      */
     public void setLearningColsNames(final List<String> learningCols) {
@@ -109,23 +91,23 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Learning columns must not be null!");
         }
-        if (validColumnSpecNames(learningCols)) {
+        if (isValidColumnSpecNames(learningCols)) {
             m_learningCols.clear();
             m_learningCols.addAll(learningCols);
         }
     }
 
     /**
-     *
+     * Only double and nominal value compatible columns are yet supported for
+     * PMML models!
      * @param learningCols column used for training
      */
     public void setLearningCols(final List<DataColumnSpec> learningCols) {
-        // TODO: sanity checks . != null, etc.
         if (learningCols == null) {
-           throw new IllegalArgumentException(
-                   "Learning columns must not be null!");
+            throw new IllegalArgumentException(
+                    "Learning columns must not be null!");
         }
-        if (validColumnSpec(learningCols)) {
+        if (isValidColumnSpec(learningCols)) {
             m_learningCols.clear();
             for (DataColumnSpec colSpec : learningCols) {
                 m_learningCols.add(colSpec.getName());
@@ -133,16 +115,20 @@ public class PMMLPortObjectSpecCreator {
         }
     }
 
-
     /**
+     * This method will be removed in a version 2.2 . Ignored columns/fields are
+     * by definition not necessary for the model and can cause problems when the
+     * types are not supported.
+     *
      * @param ignoredCols the ignoredCols to set
      */
+    @Deprecated
     public void setIgnoredColsNames(final List<String> ignoredCols) {
         if (ignoredCols == null) {
             throw new IllegalArgumentException(
                     "Ignored columns must not be null!");
         }
-        if (validColumnSpecNames(ignoredCols)) {
+        if (isValidColumnSpecNames(ignoredCols)) {
             m_ignoredCols.clear();
             m_ignoredCols.addAll(ignoredCols);
         }
@@ -150,17 +136,20 @@ public class PMMLPortObjectSpecCreator {
         m_targetCols.removeAll(m_ignoredCols);
     }
 
-
     /**
+     * This method will be removed in a version 2.2 . Ignored columns/fields are
+     * by definition not necessary for the model and can cause problems when the
+     * types are not supported.
      *
      * @param ignoredCols columns ignored during learning
      */
-    public void setIgnoredCols(final List<DataColumnSpec>ignoredCols) {
+    @Deprecated
+    public void setIgnoredCols(final List<DataColumnSpec> ignoredCols) {
         if (ignoredCols == null) {
             throw new IllegalArgumentException(
                     "Ignored columns must not be null!");
         }
-        if (validColumnSpec(ignoredCols)) {
+        if (isValidColumnSpec(ignoredCols)) {
             m_ignoredCols.clear();
             for (DataColumnSpec colSpec : ignoredCols) {
                 m_ignoredCols.add(colSpec.getName());
@@ -172,6 +161,7 @@ public class PMMLPortObjectSpecCreator {
 
     /**
      * Puts argument into set and call {@link #setTargetColsNames(List)}.
+     *
      * @param targetCol the target column to set
      */
     public void setTargetColName(final String targetCol) {
@@ -180,6 +170,7 @@ public class PMMLPortObjectSpecCreator {
 
     /**
      * Puts argument into set and call {@link #setTargetCols(List)}.
+     *
      * @param targetCol the target column to set
      */
     public void setTargetCol(final DataColumnSpec targetCol) {
@@ -187,6 +178,9 @@ public class PMMLPortObjectSpecCreator {
     }
 
     /**
+     * Only double and nominal value compatible columns are yet supported for
+     * PMML models!
+     *
      * @param targetCols the targetCols to set
      */
     public void setTargetColsNames(final List<String> targetCols) {
@@ -194,7 +188,7 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Target columns must not be null!");
         }
-        if (validColumnSpecNames(targetCols)) {
+        if (isValidColumnSpecNames(targetCols)) {
             m_targetCols.clear();
             m_targetCols.addAll(targetCols);
         }
@@ -202,44 +196,23 @@ public class PMMLPortObjectSpecCreator {
     }
 
     /**
+     * Only double and nominal value compatible columns are yet supported for
+     * PMML models!
      *
      * @param targetCols predicted columns
      */
-    public void setTargetCols(final List<DataColumnSpec>targetCols) {
-        // TODO: sanity checks != null, etc.
+    public void setTargetCols(final List<DataColumnSpec> targetCols) {
         if (targetCols == null) {
             throw new IllegalArgumentException(
                     "Target columns must not be null!");
         }
-        if (validColumnSpec(targetCols)) {
+        if (isValidColumnSpec(targetCols)) {
             m_targetCols.clear();
             for (DataColumnSpec colSpec : targetCols) {
                 m_targetCols.add(colSpec.getName());
             }
         }
         m_learningCols.removeAll(m_targetCols);
-    }
-
-    private boolean validColumnSpec(final List<DataColumnSpec> colSpecs) {
-        for (DataColumnSpec colSpec : colSpecs) {
-            if (m_dataTableSpec.getColumnSpec(colSpec.getName()) == null) {
-                throw new IllegalArgumentException("Column with name "
-                        + colSpec.getName()
-                        + " is not in underlying DataTableSpec!");
-            }
-        }
-        return true;
-    }
-
-    private boolean validColumnSpecNames(final List<String> colSpecs) {
-        for (String colSpec : colSpecs) {
-            if (m_dataTableSpec.getColumnSpec(colSpec) == null) {
-                throw new IllegalArgumentException("Column with name "
-                        + colSpec
-                        + " is not in underlying DataTableSpec!");
-            }
-        }
-        return true;
     }
 
     /**
@@ -249,12 +222,60 @@ public class PMMLPortObjectSpecCreator {
      * @return created spec based upon the set attributes
      */
     public PMMLPortObjectSpec createSpec() {
-        return new PMMLPortObjectSpec(
-                m_dataTableSpec,
-                m_learningCols,
-                m_ignoredCols,
-                m_targetCols);
+        if (m_learningCols.isEmpty()) {
+            /*
+             * Add all compatible columns as learning columns if no learning
+             * column has been set explicitly.
+             */
+            List<String> colNames = new LinkedList<String>();
+            for (DataColumnSpec colSpec : m_dataTableSpec) {
+                if (isValidColumnSpec(colSpec)) {
+                    colNames.add(colSpec.getName());
+                    m_ignoredCols.remove(colSpec);
+                    m_targetCols.remove(colSpec);
+                }
+            }
+            setLearningColsNames(colNames);
+        }
+        return new PMMLPortObjectSpec(m_dataTableSpec, m_learningCols,
+                m_ignoredCols, m_targetCols);
     }
 
+    private boolean isValidColumnSpec(final List<DataColumnSpec> colSpecs) {
+        for (DataColumnSpec colSpec : colSpecs) {
+            if (m_dataTableSpec.getColumnSpec(colSpec.getName()) == null) {
+                throw new IllegalArgumentException("Column with name "
+                        + colSpec.getName()
+                        + " is not in underlying DataTableSpec!");
+            }
+            if (!isValidColumnSpec(colSpec)) {
+                throw new IllegalArgumentException(
+                        "Only double and nominal value compatible columns "
+                                + "are yet supported for PMML models!");
+            }
+        }
+        return true;
+    }
+
+    private boolean isValidColumnSpecNames(final List<String> colSpecs) {
+        for (String colSpec : colSpecs) {
+            DataColumnSpec columnSpec = m_dataTableSpec.getColumnSpec(colSpec);
+            if (m_dataTableSpec.getColumnSpec(colSpec) == null) {
+                throw new IllegalArgumentException("Column with name "
+                        + colSpec + " is not in underlying DataTableSpec!");
+            }
+            if (!isValidColumnSpec(columnSpec)) {
+                throw new IllegalArgumentException(
+                        "Only double and nominal value compatible columns "
+                                + "are yet supported for PMML models!");
+            }
+        }
+        return true;
+    }
+
+    private boolean isValidColumnSpec(final DataColumnSpec columnSpec) {
+        return columnSpec.getType().isCompatible(DoubleValue.class)
+                || columnSpec.getType().isCompatible(NominalValue.class);
+    }
 
 }

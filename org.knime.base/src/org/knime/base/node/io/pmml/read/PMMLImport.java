@@ -68,11 +68,11 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
@@ -88,21 +88,21 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
+ * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLImport {
-    
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            PMMLImport.class);
-    
-    private static final Map<String, String>NS_MAP 
-    = new HashMap<String, String>();
-    
-    private static final 
-    Map<String, Class<? extends PMMLPortObject>>REGISTRY 
-        = new HashMap<String, Class<? extends PMMLPortObject>>();
-    
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(PMMLImport.class);
+
+    private static final Map<String, String> NS_MAP =
+            new HashMap<String, String>();
+
+    private static final Map<String, Class<? extends PMMLPortObject>> REGISTRY =
+            new HashMap<String, Class<? extends PMMLPortObject>>();
+
     static {
         NS_MAP.put("3.0", "http://www.dmg.org/PMML-3_0");
         NS_MAP.put("3.1", "http://www.dmg.org/PMML-3_1");
@@ -110,67 +110,77 @@ public class PMMLImport {
 
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         for (IConfigurationElement element : registry
-                    .getConfigurationElementsFor("org.knime.base.pmmlports")) {
+                .getConfigurationElementsFor("org.knime.base.pmmlports")) {
             String modelType = element.getAttribute("modeltype");
             try {
-                Class<? extends PMMLPortObject> clazz 
-                    = (Class<?extends PMMLPortObject>)Class.forName(element
-                            .getAttribute("PMMLPortObject"));
+                /*
+                 * Use the configuration element method to load an object of the
+                 * given class name. This method ensures the correct classpath
+                 * is used providing access to all extension points.
+                 */
+                final Object o =
+                        element.createExecutableExtension("PMMLPortObject");
+                @SuppressWarnings("unchecked")
+                Class<? extends PMMLPortObject> clazz =
+                        (Class<? extends PMMLPortObject>)o.getClass();
                 if (REGISTRY.get(modelType) == null) {
                     // add class
                     REGISTRY.put(modelType, clazz);
                 } // else already registered -> first come first serve
             } catch (InvalidRegistryObjectException e) {
                 throw new IllegalArgumentException(e);
-            } catch (ClassNotFoundException e) {
+            } catch (CoreException e) {
                 throw new IllegalArgumentException(e);
             }
             for (String key : REGISTRY.keySet()) {
                 LOGGER.debug("model type: " + key);
-                    LOGGER.debug("port object: " 
-                            + REGISTRY.get(key).getSimpleName());
-                
+                LOGGER.debug("port object: "
+                        + REGISTRY.get(key).getSimpleName());
             }
         }
     }
-    
+
     private File m_file;
+
     private ErrorHandler m_errorHandler = new LoggingErrorHandler();
+
     private PMMLModelType m_modelType = PMMLModelType.None;
+
     private String m_version;
+
     private boolean m_hasNamespace;
-    
+
     private PMMLPortObjectSpec m_portObjectSpec;
+
     private PMMLPortObject m_portObject;
-    
+
     private PMMLImport() {
-        
+        //
     }
-    
+
     /**
-     * Reads the passed file, checks the PMML version, the PMML model type,
-     * and namespace and also validates the file against the schema, then 
-     * creates the {@link PMMLPortObjectSpec} and {@link PMMLPortObject} from
-     * the content of the file.
-     * 
+     * Reads the passed file, checks the PMML version, the PMML model type, and
+     * namespace and also validates the file against the schema, then creates
+     * the {@link PMMLPortObjectSpec} and {@link PMMLPortObject} from the
+     * content of the file.
+     *
      * @param file containing the PMML model
      * @param errorHandler error handler used during parsing
-     * @throws SAXException if something goes wrong (wrong version, 
-     *  unsupported model type or invalid file)
+     * @throws SAXException if something goes wrong (wrong version, unsupported
+     *             model type or invalid file)
      */
-    public PMMLImport(final File file, final ErrorHandler errorHandler) 
-        throws SAXException {
+    public PMMLImport(final File file, final ErrorHandler errorHandler)
+            throws SAXException {
         if (file == null) {
-            throw new IllegalArgumentException(
-                    "File must not be null!");
+            throw new IllegalArgumentException("File must not be null!");
         }
         if (!file.exists()) {
-            throw new IllegalArgumentException(
-                    "File " + file.getName() + " does not exists.");
+            throw new IllegalArgumentException("File " + file.getName()
+                    + " does not exists.");
         }
         m_file = file;
         m_errorHandler = errorHandler;
-        // initial file parsing: 
+        // initial file parsing:
         // extract model type, version, and if namespace is available
         preCollectInformation();
         initializePortObjectClass();
@@ -190,191 +200,173 @@ public class PMMLImport {
             // created in temp dir -> now we can delete it;
             m_file.delete();
         }
-    
+
     }
-    
+
     /**
-     * @see PMMLImport#PMMLImport(File, ErrorHandler) with default error 
-     *  handler: {@link LoggingErrorHandler}.
-     * 
+     * @see PMMLImport#PMMLImport(File, ErrorHandler) with default error
+     *      handler: {@link LoggingErrorHandler}.
+     *
      * @param file containing the PMML model
      * @throws SAXException if something goes wrong
      */
     public PMMLImport(final File file) throws SAXException {
         this(file, new LoggingErrorHandler());
     }
-    
-    
+
     /**
-     * 
+     *
      * @param file the file containing the PMML model
      * @return true if the type of model is supported by the current platform
-     *  configuration
+     *         configuration
      * @throws SAXException if something goes wrong
      */
-    public static boolean isModelSupported(final File file) 
-        throws SAXException {
+    public static boolean isModelSupported(final File file)
+            throws SAXException {
         PMMLImport importer = new PMMLImport();
         importer.m_file = file;
         importer.preCollectInformation();
         return REGISTRY.get(importer.m_modelType.name()) != null;
     }
-    
+
     /**
-     * 
+     *
      * @return the parsed port object spec (data dictionary and mining schema)
      */
     public PMMLPortObjectSpec getPortObjectSpec() {
         return m_portObjectSpec;
     }
-    
+
     /**
-     * 
+     *
      * @return the parsed PMML model
      */
     public PMMLPortObject getPortObject() {
         return m_portObject;
     }
-    
+
     private void preCollectInformation() throws SAXException {
         try {
-        SAXParserFactory fac = SAXParserFactory.newInstance();
-        SAXParser parser = fac.newSAXParser();
-        PMMLMasterContentHandler masterHandler = new PMMLMasterContentHandler();
-        DataDictionaryContentHandler ddHandler =
-                new DataDictionaryContentHandler();
-        masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                ddHandler);
-        ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
-        masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
-                modelTypeHdl);
-        MiningSchemaContentHandler miningSchemaHdl =
-                new MiningSchemaContentHandler();
-        masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
-                miningSchemaHdl);
-        parser.parse(m_file, masterHandler);
-        m_version = masterHandler.getVersion();
-        m_modelType = modelTypeHdl.getModelType();
-        m_hasNamespace = modelTypeHdl.hasNamespace();
-        if (!m_version.startsWith("3")) {
-            throw new SAXException(
-            "PMML model seems to be of a not supported version. " 
-                    + "Only PMML versions 3.0, 3.1, 3.2 are supported. "
-                    + "Found " + m_version);
-        }
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            SAXParser parser = fac.newSAXParser();
+            PMMLMasterContentHandler masterHandler =
+                    new PMMLMasterContentHandler();
+            DataDictionaryContentHandler ddHandler =
+                    new DataDictionaryContentHandler();
+            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
+                    ddHandler);
+            ExtractModelTypeHandler modelTypeHdl =
+                    new ExtractModelTypeHandler();
+            masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
+                    modelTypeHdl);
+            MiningSchemaContentHandler miningSchemaHdl =
+                    new MiningSchemaContentHandler();
+            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
+                    miningSchemaHdl);
+            parser.parse(m_file, masterHandler);
+            m_version = masterHandler.getVersion();
+            m_modelType = modelTypeHdl.getModelType();
+            m_hasNamespace = modelTypeHdl.hasNamespace();
         } catch (IOException io) {
             throw new SAXException(io);
         } catch (ParserConfigurationException pce) {
             throw new SAXException(pce);
         }
     }
-    
+
     private void initializePortObjectClass() {
-        Class<? extends PMMLPortObject> portObject = REGISTRY.get(
-                m_modelType.name());
-        if (portObject == null) {
+        Class<? extends PMMLPortObject> portClass =
+                REGISTRY.get(m_modelType.name());
+        if (portClass == null) {
             throw new IllegalArgumentException("Model type: " + m_modelType
                     + " not supported yet.");
         } else {
             try {
-            Class<? extends PMMLPortObject> clazz =
-                    (Class<? extends PMMLPortObject>)Class
-                            .forName(portObject.getName());
-            m_portObject = clazz.newInstance();
-            } catch (ClassNotFoundException cnfe) {
-                throw new IllegalArgumentException(
-                        "PortObject for model " + m_modelType 
-                        + " could not be initialized!");
+                m_portObject = portClass.newInstance();
             } catch (IllegalAccessException iae) {
-                throw new IllegalArgumentException(
-                        "PortObject for model " + m_modelType 
-                        + " could not be initialized!");                
+                throw new IllegalArgumentException("PortObject for model "
+                        + m_modelType + " could not be initialized!", iae);
             } catch (InstantiationException e) {
-                throw new IllegalArgumentException(
-                        "PortObject for model " + m_modelType 
-                        + " could not be initialized!");
+                throw new IllegalArgumentException("PortObject for model "
+                        + m_modelType + " could not be initialized!", e);
             }
         }
     }
 
     private void validate() throws SAXException {
         try {
-        LOGGER.debug("Validating PMML file " + m_file.getName()
-                + ". Version = " + m_version);
-        SchemaFactory schemaFac =
-                SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        SAXParserFactory fac = SAXParserFactory.newInstance();
-        fac.setNamespaceAware(true);
-        
-        Schema schema = null;
-        if (m_version == null) {
-            throw new SAXException(
-                    "Input file is not a valid PMML file. "
-                            + "Attribute \"version\" is missing");
-        }
-        String schemaLocation = PMMLPortObject.getLocalSchemaLocation(
-                m_version);
-        if (schemaLocation == null) {
-            throw new SAXException(
-                    "Version " + m_version + " is not supported!");
-        }
-        schema =
-            schemaFac
-                    .newSchema(new SAXSource(new InputSource(
+            LOGGER.debug("Validating PMML file " + m_file.getName()
+                    + ". Version = " + m_version);
+            SchemaFactory schemaFac =
+                    SchemaFactory
+                            .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            fac.setNamespaceAware(true);
+
+            Schema schema = null;
+            if (m_version == null) {
+                throw new SAXException("Input file is not a valid PMML file. "
+                        + "Attribute \"version\" is missing");
+            }
+            String schemaLocation =
+                    PMMLPortObject.getLocalSchemaLocation(m_version);
+            if (schemaLocation == null) {
+                throw new SAXException("Version " + m_version
+                        + " is not supported!");
+            }
+            schema =
+                    schemaFac.newSchema(new SAXSource(new InputSource(
                             getSchemaInputStream(schemaLocation))));
-        FileInputStream fis = new FileInputStream(m_file);
-        XFilter filter = new XFilter(m_version);
-        filter.setParent(fac.newSAXParser().getXMLReader());
-        // use validator here
-        Validator validator = schema.newValidator();
-        // register error handler
-        validator.setErrorHandler(m_errorHandler);
-        validator.validate(new SAXSource(filter, new InputSource(fis)));
+            FileInputStream fis = new FileInputStream(m_file);
+            XFilter filter = new XFilter(m_version);
+            filter.setParent(fac.newSAXParser().getXMLReader());
+            // use validator here
+            Validator validator = schema.newValidator();
+            // register error handler
+            validator.setErrorHandler(m_errorHandler);
+            validator.validate(new SAXSource(filter, new InputSource(fis)));
         } catch (IOException io) {
             throw new SAXException(io);
         } catch (ParserConfigurationException pce) {
             throw new SAXException(pce);
         }
     }
-    
+
     private PMMLPortObjectSpec parseSpec() throws SAXException {
         try {
-        SAXParserFactory fac = SAXParserFactory.newInstance();
-        SAXParser parser = fac.newSAXParser();
-        PMMLMasterContentHandler masterHandler = new PMMLMasterContentHandler();
-        DataDictionaryContentHandler ddHandler =
-                new DataDictionaryContentHandler();
-        masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                ddHandler);
-        MiningSchemaContentHandler miningSchemaHdl =
-                new MiningSchemaContentHandler();
-        masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
-                miningSchemaHdl);
-        parser.parse(m_file, masterHandler);
-        PMMLPortObjectSpecCreator creator =
-            new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
-        creator.setIgnoredColsNames(miningSchemaHdl.getIgnoredFields());
-        creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
-        creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
-        return creator.createSpec();
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            SAXParser parser = fac.newSAXParser();
+            PMMLMasterContentHandler masterHandler =
+                    new PMMLMasterContentHandler();
+            DataDictionaryContentHandler ddHandler =
+                    new DataDictionaryContentHandler();
+            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
+                    ddHandler);
+            MiningSchemaContentHandler miningSchemaHdl =
+                    new MiningSchemaContentHandler();
+            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
+                    miningSchemaHdl);
+            parser.parse(m_file, masterHandler);
+            PMMLPortObjectSpecCreator creator =
+                    new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
+            creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
+            creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
+            return creator.createSpec();
         } catch (IOException e) {
             throw new SAXException(e);
         } catch (ParserConfigurationException pce) {
             throw new SAXException(pce);
-        } catch (InvalidSettingsException ise) {
-            throw new SAXException(ise);
         }
     }
-    
+
     private File addNamespace(final File file) throws IOException {
         LOGGER.debug("adding namespace");
         File f = File.createTempFile("ns_added", ".xml");
         f.deleteOnExit();
-        BufferedReader reader = new BufferedReader(
-                new FileReader(file));
+        BufferedReader reader = new BufferedReader(new FileReader(file));
         BufferedWriter writer = new BufferedWriter(new FileWriter(f));
         String line = reader.readLine();
-        boolean tagOpen = false; 
+        boolean tagOpen = false;
         while (line != null) {
             if (line.startsWith("<PMML")) {
                 tagOpen = true;
@@ -382,9 +374,10 @@ public class PMMLImport {
             if (tagOpen && line.endsWith(">")) {
                 tagOpen = false;
                 // add namespace declaration
-                line = "<PMML version=\"" + m_version 
-                + "\" xmlns=\"" + NS_MAP.get(m_version) + "\" xmlns:xsi=" 
-                + "\"http://www.w3.org/2001/XMLSchema-instance\">";
+                line =
+                       "<PMML version=\"" + m_version + "\" xmlns=\""
+                           + NS_MAP.get(m_version) + "\" xmlns:xsi="
+                           + "\"http://www.w3.org/2001/XMLSchema-instance\">";
                 LOGGER.debug(line);
             }
             if (!tagOpen) {
@@ -396,11 +389,11 @@ public class PMMLImport {
         writer.close();
         return f;
     }
-    
-    private PMMLPortObject parseModel(final PMMLPortObjectSpec portObjectSpec) 
-        throws SAXException {
+
+    private PMMLPortObject parseModel(final PMMLPortObjectSpec portObjectSpec)
+            throws SAXException {
         try {
-            m_portObject.loadFrom(portObjectSpec, new FileInputStream(m_file), 
+            m_portObject.loadFrom(portObjectSpec, new FileInputStream(m_file),
                     m_version);
         } catch (FileNotFoundException e) {
             throw new SAXException(e);
@@ -411,13 +404,12 @@ public class PMMLImport {
         }
         return m_portObject;
     }
-    
+
     private InputStream getSchemaInputStream(final String path) {
         ClassLoader loader = PMMLPortObject.class.getClassLoader();
         String packagePath =
                 PMMLPortObject.class.getPackage().getName().replace('.', '/');
-        return loader.getResourceAsStream(
-                packagePath + path);
+        return loader.getResourceAsStream(packagePath + path);
     }
-    
+
 }

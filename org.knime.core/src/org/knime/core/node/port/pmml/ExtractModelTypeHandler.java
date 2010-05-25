@@ -47,6 +47,9 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -130,6 +133,18 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
      */
     public boolean hasNamespace() {
         return m_hasNamespace;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        Set<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }
