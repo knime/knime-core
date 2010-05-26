@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
  *   01.08.2007 (thor): created
  */
@@ -55,19 +55,18 @@ import java.util.Timer;
 /**
  * This final singleton class is a global timer available for all classes inside
  * KNIME. This timer is especially useful for nodes that execute external code
- * which is not aware of execution canceling and such stuff. The underlying
- * timer thread runs as daemon thread.
- *
+ * which is not aware of execution canceling and such stuff.
+ * 
  * <b>Users of this timer must make sure, that the scheduled tasks are
  * fast-running, otherwise other tasks will be blocked.</b>
- *
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class KNIMETimer extends Timer {
     private static final KNIMETimer INSTANCE = new KNIMETimer();
 
     private KNIMETimer() {
-        super("Global KNIME Timer", true);
+        super("Global KNIME Timer");
     }
 
     /**
@@ -82,7 +81,7 @@ public final class KNIMETimer extends Timer {
 
     /**
      * Returns the singleton instance of the global KNIME timer.
-     *
+     * 
      * @return a timer
      */
     public static KNIMETimer getInstance() {
