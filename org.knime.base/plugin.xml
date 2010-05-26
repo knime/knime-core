@@ -238,13 +238,7 @@
             level-id="pca"
             name="PCA"
             path="/mining">
-      </category>      
-      <category
-            icon="icons/missing.gif"
-            level-id="pmmlpreprocessing"
-            name="PMML Preprocessing"
-            path="/">
-      </category>      
+      </category>           
    </extension>
             
      <extension
@@ -374,18 +368,6 @@
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
-      <node
-            category-path="/pmmlpreprocessing"
-            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"
-            id="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"/>
-      <node
-            category-path="/pmmlpreprocessing"
-            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"
-            id="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"/>
-     <node
-            category-path="/pmmlpreprocessing"
-            factory-class="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"
-            id="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
