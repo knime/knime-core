@@ -403,7 +403,7 @@ public final class BatchExecutor {
                               this.cancel();
                           }
                       }
-                  }, 1000, Long.MAX_VALUE);
+                  }, 1000, 1000);
             }
             successful = wfm.executeAllAndWaitUntilDone();
         }
