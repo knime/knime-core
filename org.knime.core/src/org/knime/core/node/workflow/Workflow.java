@@ -52,6 +52,8 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -453,7 +455,7 @@ class Workflow {
      * @return set of nodes with used inports
      */
     ArrayList<NodeAndInports> findAllConnectedNodes(final Set<Integer> inPorts) {
-        ArrayList<NodeAndInports> output = new ArrayList<NodeAndInports>();
+        ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
         // find everything that is connected to an input port of this workflow
         // with an index contained in the set:
         for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
@@ -463,16 +465,18 @@ class Workflow {
                     assert cc.getType().
                          equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
                 } else {
-                    output.add(new NodeAndInports(cc.getDest(), cc.getDestPort()));
+                    tempOutput.add(new NodeAndInports(cc.getDest(),
+                            cc.getDestPort(), /*depth=*/0));
                 }
             }
         }
         // now follow those nodes and keep adding until we reach the end of the workflow
         int currentNode = 0;
-        while (currentNode < output.size()) {
-            NodeID currID = output.get(currentNode).getID();
+        while (currentNode < tempOutput.size()) {
+            NodeID currID = tempOutput.get(currentNode).getID();
             NodeContainer currNode = m_nodes.get(currID);
-            Set<Integer> currInports = output.get(currentNode).getInports();
+            Set<Integer> currInports = tempOutput.get(currentNode).getInports();
+            int currDepth = tempOutput.get(currentNode).getDepth();
             Set<Integer> currOutports = new HashSet<Integer>();
             if (   (currNode instanceof SingleNodeContainer)
                 || (currInports == null)) {
@@ -498,33 +502,46 @@ class Workflow {
                     NodeID destID = cc.getDest();
                     if (!destID.equals(this.getID())) {
                         // only if we have not yet reached an outport!
-                        if (!output.contains(destID)) {
+                        // try to find node in existing list:
+                        int ix = 0;
+                        for (ix = 0; ix < tempOutput.size(); ix++) {
+                            if (tempOutput.get(ix).m_id.equals(destID)) {
+                                break;
+                            }
+                        }
+                        if (ix >= tempOutput.size()) {
                             // ...and it's a node not yet in our list: add it
-                            output.add(new NodeAndInports(destID, cc.getDestPort()));
+                            tempOutput.add(new NodeAndInports(destID,
+                                    cc.getDestPort(), currDepth + 1));
                         } else {
-                            // the node is already in our list, make sure the port is correct
+                            // node is already in list, adjust depth to new
+                            // maximum and add port if not already contained:
                             // first collect all instance of this node and
                             // gather their inport indices
-                            Set<Integer> existingIndices = new HashSet<Integer>();
-                            for (NodeAndInports nai : output) {
-                                if (nai.getID().equals(destID)) {
-                                    existingIndices.addAll(nai.getInports());
-                                }
-                                // and if it does not yet exist add port to list
-                                // TODO: Verify that this is correct! (are we
-                                // breaking the order here???)
-                                if (!(nai.getInports().contains(cc.getDestPort()))) {
-                                    nai.addInport(cc.getDestPort());
-                                }
-                            }
+                            NodeAndInports nai = tempOutput.get(ix);
+                            // must exist only once:
+                            assert ix == tempOutput.lastIndexOf(destID);
+                            // index can not yet have been added:
+                            assert !(nai.getInports().contains(cc.getDestPort()));
+                            // depth has to be smaller or equal
+                            assert nai.getDepth() <= currDepth + 1;
+                            nai.addInport(cc.getDestPort());
+                            nai.setDepth(currDepth + 1);
                         }
                     }
                 }
             }
             currentNode++;
         }
+        // make sure nodes are list sorted by their final depth!
+        Collections.sort(tempOutput, new Comparator() {
+            public int compare(final Object nai0, final Object nai1) {
+                return (new Integer(((NodeAndInports)nai0).m_depth).
+                        compareTo(((NodeAndInports)nai1).m_depth));
+            }
+        });
         // done - return set of nodes and ports
-        return output;
+        return tempOutput;
     }
 
     /** Determine inports which are connected (directly or indirectly) to
@@ -764,17 +781,22 @@ class Workflow {
     /** Helper class for lists of nodes with their inports */
     class NodeAndInports {
         private NodeID m_id;
+        private int m_depth;  // indicates max depth from start node(s)
         private Set<Integer> m_inports;
-        public NodeAndInports(final NodeID id, final Integer portIx) {
+        public NodeAndInports(final NodeID id, final Integer portIx,
+                final int depth) {
             m_id = id;
             m_inports = new HashSet<Integer>();
             if (portIx != null) {
                 m_inports.add(portIx);
             }
+            m_depth = depth;
         }
         public NodeID getID() { return m_id; }
         public Set<Integer> getInports() { return m_inports; }
         public void addInport(final int ip) { m_inports.add(ip); }
+        public void setDepth(final int d) { m_depth = d; }
+        public int getDepth() { return m_depth; }
     }
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
@@ -791,26 +813,28 @@ class Workflow {
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
             final NodeID endNode) {
-        ArrayList<NodeAndInports> matchingNodes = new ArrayList<NodeAndInports>();
+        ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
-            return matchingNodes;
+            return tempOutput;
         }
         // for the breath first search (temporarily) add start node:
-        matchingNodes.add(new NodeAndInports(startNode, null));
+        tempOutput.add(new NodeAndInports(startNode, null, 0));
         // iterate over index since we add new nodes at the end of the list
         int currIndex = 0;
-        while (currIndex < matchingNodes.size()) {
-            NodeID currID = matchingNodes.get(currIndex).getID();
+        while (currIndex < tempOutput.size()) {
+            NodeAndInports currNAI = tempOutput.get(currIndex);
+            NodeID currID = currNAI.getID();
+            int currDepth = currNAI.getDepth();
             NodeContainer currNode = m_nodes.get(currID);
             // determine set of indices of affected outports for current node
-            Set<Integer> currInports = matchingNodes.get(currIndex).getInports();
+            Set<Integer> currInports = currNAI.getInports();
             Set<Integer> currOutports = new HashSet<Integer>();
-            if (   (currNode instanceof SingleNodeContainer)
+            if ((currNode instanceof SingleNodeContainer)
                 || (currInports == null)) {
                 // simple: all outports are affected
                 // (SNC or WFM without listed inports)
-                for (int i=0; i<currNode.getNrOutPorts(); i++) {
+                for (int i = 0; i < currNode.getNrOutPorts(); i++) {
                     currOutports.add(i);
                 }
             } else {
@@ -818,11 +842,14 @@ class Workflow {
                 // less simple: we need to determine which outports are
                 // connected to the listed inports:
                 for (Integer inPortIx : currInports) {
-                    Workflow currWorkflow = ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports = currWorkflow.connectedOutPorts(inPortIx);
+                    Workflow currWorkflow =
+                        ((WorkflowManager)currNode).getWorkflow();
+                    Set<Integer> connectedOutports =
+                        currWorkflow.connectedOutPorts(inPortIx);
                     currOutports.addAll(connectedOutports);
                 }
             }
+            // and now find immediate successors:
             for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
                 assert (cc.getSource().equals(currID));
                 if (currOutports.contains(cc.getSourcePort())) {
@@ -835,35 +862,46 @@ class Workflow {
                     }
                     if ((!destID.equals(endNode))) {
                         // we have not yet reached the end...
-                        if (!matchingNodes.contains(destID)) {
-                            // ...and it's a node not yet in our list: add it
-                            matchingNodes.add(new NodeAndInports(destID, cc.getDestPort()));
+                        // try to find node in existing list:
+                        int ix = 0;
+                        for (ix = 0; ix < tempOutput.size(); ix++) {
+                            if (tempOutput.get(ix).m_id.equals(destID)) {
+                                break;
+                            }
+                        }
+                        if (ix >= tempOutput.size()) {
+                            // ...we did not find it: add it to the list
+                            tempOutput.add(new NodeAndInports(destID,
+                                    cc.getDestPort(), currDepth + 1));
                         } else {
-                            // the node is already in our list, make sure the port is correct
+                            // node is already in list, adjust depth to new
+                            // maximum and add port if not already contained:
                             // first collect all instance of this node and
                             // gather their inport indices
-                            Set<Integer> existingIndices = new HashSet<Integer>();
-                            for (NodeAndInports nai : matchingNodes) {
-                                if (nai.getID().equals(destID)) {
-                                    existingIndices.addAll(nai.getInports());
-                                }
-                                // and if it does not yet exist add node/port to end of list
-                                // (DO NOT add index to existing list since this node may
-                                // already have been processed!)
-                                if (!(nai.getInports().contains(cc.getDestPort()))) {
-                                    // TODO: verify that we don't break the order (otherwise we add an infinte loop...
-//                                    matchingNodes.add(new NodeAndInports(destID, cc.getDestPort()));
-                                    nai.addInport(cc.getDestPort());
-                                }
-                            }
+                            NodeAndInports nai = tempOutput.get(ix);
+                            // must exist only once:
+                            assert ix == tempOutput.lastIndexOf(destID);
+                            // index can not yet have been added:
+                            assert !(nai.getInports().contains(cc.getDestPort()));
+                            // depth has to be smaller or equal
+                            assert nai.getDepth() <= currDepth + 1;
+                            nai.addInport(cc.getDestPort());
+                            nai.setDepth(currDepth + 1);
                         }
                     }
                 }
             }
             currIndex += 1;
         }
-        matchingNodes.remove(startNode);
-        return matchingNodes;
+        tempOutput.remove(startNode);
+        // make sure nodes are list sorted by their final depth!
+        Collections.sort(tempOutput, new Comparator() {
+            public int compare(final Object nai0, final Object nai1) {
+                return (new Integer(((NodeAndInports)nai0).m_depth).
+                        compareTo(((NodeAndInports)nai1).m_depth));
+            }
+        });
+        return tempOutput;
     }
 
 
