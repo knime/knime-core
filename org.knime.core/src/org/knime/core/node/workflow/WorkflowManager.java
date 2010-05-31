@@ -109,6 +109,7 @@ import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
+import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -1090,6 +1091,49 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
+    /**
+     * Mark all nodes in this workflow that are connected to the given
+     * inports.
+     * Note that this routine will NOT trigger any actions connected to
+     * possible outports of this WFM.
+     *
+     * @param inPorts set of port indices of the WFM.
+     */
+    void markForExecutionNodesInWFMConnectedToInPorts(
+            final Set<Integer> inPorts) {
+        synchronized (m_workflowMutex) {
+            boolean changed = false; // will be true in case of state changes
+            ArrayList<NodeAndInports> nodes
+                          = m_workflow.findAllConnectedNodes(inPorts);
+            for (NodeAndInports nai : nodes) {
+                NodeContainer nc = m_workflow.getNode(nai.getID());
+                if (nc instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
+                    switch (nc.getState()) {
+                    case CONFIGURED:
+                    case IDLE:
+                        changed = true;
+                        snc.markForExecution(true);
+                        break;
+                    default:
+                        // either executed or to-be-executed
+                    }
+                } else {
+                    WorkflowManager wfm = ((WorkflowManager)nc);
+                    assert nc instanceof WorkflowManager;
+                    // does not need to set "changed" flag here as child
+                    // will propagate state changes by calling
+                    // call checkForNodeStateChanges (likely too often)
+                    wfm.markForExecutionNodesInWFMConnectedToInPorts(
+                                                       nai.getInports());
+                }
+            }
+            if (changed) {
+                checkForNodeStateChanges(true);
+            }
+        }
+    }
+
     /** mark all nodes connected to the specified outport(!)
      * in this workflow (and all subworkflows!) for execution
      * (if they are not executed already). Also go back up to the
@@ -1330,6 +1374,44 @@ public final class WorkflowManager extends NodeContainer {
                     } else {
                         assert nc instanceof WorkflowManager;
                         ((WorkflowManager)nc).resetAllNodesInWFM();
+                    }
+                }
+            }
+            // TODO Michael: this can be replaced by checkForNodeState...
+            //
+            // don't let the WFM decide on the state himself - for example,
+            // if there is only one WFMTHROUGH connection contained, it will
+            // produce wrong states! Force it to be idle.
+            setState(State.IDLE);
+        }
+    }
+
+    /**
+     * Reset all nodes in this workflow that are connected to the given
+     * inports.
+     * Note that this routine will NOT trigger any resets connected to
+     * possible outports of this WFM.
+     *
+     * @param inPorts set of port indices of the WFM.
+     */
+    void resetNodesInWFMConnectedToInPorts(final Set<Integer> inPorts) {
+        synchronized (m_workflowMutex) {
+            if (!isResetable()) {
+                // only attempt to do this if possible.
+                return;
+            }
+            ArrayList<NodeAndInports> nodes
+              = m_workflow.findAllConnectedNodes(inPorts);
+            for (NodeAndInports nai : nodes) {
+                NodeContainer nc = m_workflow.getNode(nai.getID());
+                if (nc.isResetable()) {
+                    if (nc instanceof SingleNodeContainer) {
+                        ((SingleNodeContainer)nc).reset();
+                    } else {
+                        assert nc instanceof WorkflowManager;
+                        ((WorkflowManager)nc)
+                              .resetNodesInWFMConnectedToInPorts(
+                                                             nai.getInports());
                     }
                 }
             }
@@ -1785,11 +1867,13 @@ public final class WorkflowManager extends NodeContainer {
                     + " be SingleNodeContainers!");
         }
         // (1) find all intermediate node, the loop's "body"
-        List<NodeID> loopBodyNodes = findAllNodesConnectedToLoopBody(
-                headNode.getID(), tailNode.getID());
+        ArrayList<NodeAndInports> loopBodyNodes
+                                  = m_workflow.findAllNodesConnectedToLoopBody(
+                                            headNode.getID(), tailNode.getID());
         // (2) check if any of those nodes are still waiting to be
         //     executed or currently executing
-        for (NodeID id : loopBodyNodes) {
+        for (NodeAndInports nai : loopBodyNodes) {
+            NodeID id = nai.getID();
             NodeContainer currNode = m_workflow.getNode(id);
             if (currNode.getState().executionInProgress()) {
                 // stop right here - loop can not yet be restarted!
@@ -1812,7 +1896,8 @@ public final class WorkflowManager extends NodeContainer {
         ((SingleNodeContainer)headNode).enableReQueuing();
         // (4) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
-        for (NodeID id : loopBodyNodes) {
+        for (NodeAndInports nai : loopBodyNodes) {
+            NodeID id = nai.getID();
             NodeContainer nc = m_workflow.getNode(id);
             if (nc == null) {
                 throw new IllegalStateException("Node in loop body not in"
@@ -1826,11 +1911,10 @@ public final class WorkflowManager extends NodeContainer {
                 ((SingleNodeContainer)nc).reset();
             } else {
                 assert nc instanceof WorkflowManager;
-                // FIXME: only reset the nodes connected to relevant ports.
-                //  Otherwise also Source Nodes in Metanodes are reset.
-                //  Note, however, that those MUST be reset if a variable
-                //  connection exists. See also bug 2225
-                ((WorkflowManager)nc).resetAllNodesInWFM();
+                // only reset the nodes connected to relevant ports.
+                // See also bug 2225
+                ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(
+                                                              nai.getInports());
             }
         }
         // (5) configure the nodes from start to rest (it's not
@@ -1844,16 +1928,21 @@ public final class WorkflowManager extends NodeContainer {
         // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
             // (6) ... we enable the body to be queued again.
-            for (NodeID id : loopBodyNodes) {
+            for (NodeAndInports nai : loopBodyNodes) {
+                NodeID id = nai.getID();
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).markForExecution(true);
+                    // make sure it's not already done...
+                    if (nc.getState().equals(State.IDLE)
+                            || nc.getState().equals(State.CONFIGURED)) {
+                        ((SingleNodeContainer)nc).markForExecution(true);
+                    }
                 } else {
-                    // FIXME - check ports
-                    //  if we did not reset all nodes in WFM above. Otherwise
-                    //  we MUST ensure (later?) that source nodes are actually
-                    //  queued - see bug 2225
-                    ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(true);
+                    // Mark only reset (see above) nodes for re-execution
+                    // see bug 2225
+                    ((WorkflowManager)nc)
+                            .markForExecutionNodesInWFMConnectedToInPorts(
+                                                             nai.getInports());
                 }
             }
             // and (7) mark end of loop for re-execution
@@ -1865,46 +1954,6 @@ public final class WorkflowManager extends NodeContainer {
         // (9) and finally try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
-    }
-
-    /** Create list of nodes (id)s that are part of a loop body. Note that
-     * this also includes any dangling branches which leave the loop but
-     * do not connect back to the end-node. Used to re-execute all nodes
-     * of a loop.
-     * The list does not contain the start node or end node.
-     *
-     * @param startNode id of head of loop
-     * @param endNode if of tail of loop
-     * @return list of nodes within loop body & any dangling branches
-     */
-    private List<NodeID> findAllNodesConnectedToLoopBody(final NodeID startNode,
-            final NodeID endNode) {
-        ArrayList<NodeID> matchingNodes = new ArrayList<NodeID>();
-        if (startNode.equals(endNode)) {
-            // silly case
-            return matchingNodes;
-        }
-        matchingNodes.add(startNode);
-        int currIndex = 0;
-        while (currIndex < matchingNodes.size()) {
-            NodeID currID = matchingNodes.get(currIndex);
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(currID)) {
-                assert (cc.getSource().equals(currID));
-                NodeID succID = cc.getDest();
-                if (succID.equals(this.getID())) {
-                    // if any branch leaves this WFM, complain!
-                    throw new IllegalFlowObjectStackException(
-                            "Loops are not permitted to leave workflows!");
-                }
-                if ((!succID.equals(endNode))
-                        && (!matchingNodes.contains(succID))) {
-                    matchingNodes.add(succID);
-                }
-            }
-            currIndex += 1;
-        }
-        matchingNodes.remove(startNode);
-        return matchingNodes;
     }
 
     /** check if node can be safely reset. In case of a WFM we will check
