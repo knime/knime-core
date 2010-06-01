@@ -1881,12 +1881,25 @@ public final class WorkflowManager extends NodeContainer {
                 return;
             }
             if (this.canExecuteNode(id)) {
+                // FIXME: how can we miss anything??
+                // This results in WFM with branches that are not part of the
+                // loop to be executed completey, which we do NOT want!
+                // ORIGINAL CODE:
                 // we missed some nodes during the initial marking - most
                 // likely because these are in an untouched branch. Mark
                 // them now and return for now.
-                this.markAndQueueNodeAndPredecessors(id, -1);
-                currNode.addWaitingLoop(slc);
-                return;
+//                this.markAndQueueNodeAndPredecessors(id, -1);
+//                currNode.addWaitingLoop(slc);
+//                return;
+                // NEW CODE:
+                if (currNode instanceof WorkflowManager) {
+                    // ignore - see above
+                } else {
+                    assert currNode instanceof SingleNodeContainer;
+                    this.markAndQueueNodeAndPredecessors(id, -1);
+                    currNode.addWaitingLoop(slc);
+                    return;
+                }
             }
         }
         // (3) mark the origin of the loop to be executed again
