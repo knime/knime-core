@@ -228,7 +228,8 @@ final class PMMLGeneralRegressionWriter {
      */
     private void addPCovMatrix(final TransformerHandler handler)
             throws SAXException {
-        if (null == m_content.getPCovMatrix()) {
+        if (null == m_content.getPCovMatrix()
+                || 0 == m_content.getPCovMatrix().length) {
             return;
         }
         // PMML 3.1: matrix of Parameter estimate covariances. Made up of
