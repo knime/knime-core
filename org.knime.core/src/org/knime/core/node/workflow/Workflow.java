@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -898,12 +899,20 @@ class Workflow {
             }
             currIndex += 1;
         }
-        tempOutput.remove(startNode);
+        // search for start node and remove it
+        for (Iterator<NodeAndInports> it = tempOutput.iterator();
+            it.hasNext();) {
+            NodeAndInports nodeAndInports = it.next();
+            if (nodeAndInports.getID().equals(startNode)) {
+                it.remove();
+                break;
+            }
+        }
         // make sure nodes are list sorted by their final depth!
-        Collections.sort(tempOutput, new Comparator() {
-            public int compare(final Object nai0, final Object nai1) {
-                return (new Integer(((NodeAndInports)nai0).m_depth).
-                        compareTo(((NodeAndInports)nai1).m_depth));
+        Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
+            public int compare(
+                    final NodeAndInports n0, final NodeAndInports n1) {
+                return n0.m_depth - n1.m_depth;
             }
         });
         return tempOutput;
