@@ -449,7 +449,9 @@ class Workflow {
     }
 
     /** Determine all nodes which are connected (directly or indirectly) to
-     * the given inports in this workflow.
+     * the given inports in this workflow. The list is sorted according to
+     * "longest path layering" making sure that nodes are always added behind
+     * all of their predecessors.
      *
      * @param inPorts indices of inports
      * @return set of nodes with used inports
@@ -802,7 +804,10 @@ class Workflow {
      * this also includes any dangling branches which leave the loop but
      * do not connect back to the end-node. Used to re-execute all nodes
      * of a loop. NOTE that this list can contain nodes more than one with
-     * different inport indices!
+     * different inport indices! The list is sorted according to "longest
+     * path layering" making sure that nodes are always added behind
+     * all of their predecessors.
+     *
      * The list does not contain the start node or end node.
      *
      * @param startNode id of head of loop
