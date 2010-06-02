@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   13.02.2008 (Fabian Dill): created
  */
@@ -63,22 +63,22 @@ import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractPortFigure extends Shape {
-    
-    
+
+
     private final int m_nrOfPorts;
     private final PortType m_portType;
-    
+
     /** Size constant for the workflow ports. */
     public static final int WF_PORT_SIZE = 20;
-    
+
     /** Size constant for node ports. */
     public static final int NODE_PORT_SIZE = 9;
 
@@ -97,7 +97,7 @@ public abstract class AbstractPortFigure extends Shape {
     }
 
     /**
-     * 
+     *
      * @return the type of the port
      */
     protected PortType getType() {
@@ -111,21 +111,21 @@ public abstract class AbstractPortFigure extends Shape {
     protected int getNrPorts() {
         return m_nrOfPorts;
     }
-    
+
     /**
      * We need to set the colors explicitly dependend on the {@link PortType}.
-     * Currently supported are {@link BufferedDataTable#TYPE} : black, 
-     * {@link ModelPortObject#TYPE} : blue, {@link DatabasePortObject#TYPE} : 
+     * Currently supported are {@link BufferedDataTable#TYPE} : black,
+     * {@link ModelPortObject#TYPE} : blue, {@link DatabasePortObject#TYPE} :
      * dark yellow.
-     * 
+     *
      * @return the background color, dependend on the {@link PortType}
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public Color getBackgroundColor() {
         Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
-        if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(getType())) {
+        if (PMMLPortObject.TYPE.isSuperTypeOf(getType())) {
             // model
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
         } else if (AbstractSimplePortObject.class.isAssignableFrom(
@@ -143,23 +143,23 @@ public abstract class AbstractPortFigure extends Shape {
         }
         return color;
     }
-    
+
     /**
      * The color is determined with {@link #getBackgroundColor()} and set.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void paintFigure(final Graphics graphics) {
-        graphics.setBackgroundColor(getBackgroundColor());        
+        graphics.setBackgroundColor(getBackgroundColor());
         super.paintFigure(graphics);
     }
 
     /**
-     * Fills the shape, the points of the actual shape are set in 
-     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and 
+     * Fills the shape, the points of the actual shape are set in
+     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and
      * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
-     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other 
+     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other
      * port types are filled.
      *
      * {@inheritDoc}
@@ -178,10 +178,10 @@ public abstract class AbstractPortFigure extends Shape {
 
 
     /**
-     * Outlines the shape, the points of the actual shape are set in 
-     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and 
+     * Outlines the shape, the points of the actual shape are set in
+     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and
      * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
-     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other 
+     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other
      * port types are filled.
      *
      * {@inheritDoc}
@@ -192,17 +192,17 @@ public abstract class AbstractPortFigure extends Shape {
     protected void outlineShape(final Graphics graphics) {
         Rectangle r = getBounds().getCopy().shrink(3, 3);
         PointList points = createShapePoints(r);
-        if (getType().equals(BufferedDataTable.TYPE)) {            
+        if (getType().equals(BufferedDataTable.TYPE)) {
             graphics.drawPolygon(points);
         }
     }
-    
+
     //////////////////////////////////////////////////////////////////
     //
     // ABSTRACT METHODS
     //
     //////////////////////////////////////////////////////////////////
-    
+
     /**
      * Create a point list for the triangular figure (a polygon).
      *
@@ -211,7 +211,7 @@ public abstract class AbstractPortFigure extends Shape {
      */
     protected abstract PointList createShapePoints(final Rectangle r);
 
-    
+
     /**
      * Children must return a <code>Locator</code> that calculate the position
      * inside the hosting figure.
@@ -219,5 +219,5 @@ public abstract class AbstractPortFigure extends Shape {
      * @return The locator
      */
     public abstract Locator getLocator();
-    
+
 }

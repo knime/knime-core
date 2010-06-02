@@ -71,7 +71,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * Dialog to enter the port name and type.
@@ -89,25 +89,6 @@ public class MetaPortDialog extends Dialog {
         Database,
         /** FlowVariable port. */
         FlowVariables;
-
-        private static String[] names;
-
-        static {
-            names = new String[4];
-            names[0] = Data.name();
-            names[1] = PMML.name();
-            names[2] = Database.name();
-            names[3] = FlowVariables.name();
-        }
-
-
-        /**
-         *
-         * @return the enum fields as a string array
-         */
-        public static String[] getNames() {
-            return names;
-        }
     }
 
     private Shell m_shell;
@@ -181,7 +162,12 @@ public class MetaPortDialog extends Dialog {
         label2.setText("Port Type:");
         m_type = new Combo(composite,
                 SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY | SWT.BORDER);
-        m_type.setItems(PortTypes.names);
+        PortTypes[] values = PortTypes.values();
+        String[] names = new String[values.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = values[i].name();
+        }
+        m_type.setItems(names);
         m_type.addFocusListener(new FocusAdapter() {
 
             @Override
@@ -208,19 +194,23 @@ public class MetaPortDialog extends Dialog {
 //                }
                 resetError();
                 String selected = m_type.getItem(m_type.getSelectionIndex());
-                if (PortTypes.valueOf(selected).equals(PortTypes.Data)) {
+                switch (PortTypes.valueOf(selected)) {
+                case Data:
                     m_port = new Port(BufferedDataTable.TYPE);
-                } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.PMML)) {
-                    m_port = new Port(KNIMEEditorPlugin.PMML_PORT_TYPE);
-                } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.Database)) {
+                    break;
+                case PMML:
+                    m_port = new Port(PMMLPortObject.TYPE);
+                    break;
+                case Database:
                     m_port = new Port(DatabasePortObject.TYPE);
-                } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.FlowVariables)) {
+                    break;
+                case FlowVariables:
                     m_port = new Port(FlowVariablePortObject.TYPE);
+                    break;
+                default:
+                    throw new IllegalStateException(
+                            "Unknown port type: " + selected);
                 }
-
                 m_shell.dispose();
             }
 

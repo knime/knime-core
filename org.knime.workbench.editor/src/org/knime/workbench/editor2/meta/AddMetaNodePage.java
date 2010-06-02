@@ -77,7 +77,8 @@ import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
@@ -98,11 +99,11 @@ public class AddMetaNodePage extends WizardPage {
     private List m_outPorts;
     private final java.util.List<Port>m_inPortList = new ArrayList<Port>();
     private final java.util.List<Port>m_outPortList = new ArrayList<Port>();
-    
+
     private String m_template;
-    
+
     private boolean m_wasVisible = false;
-    
+
     private boolean m_nameCustomized = false;
 
     /**
@@ -127,34 +128,34 @@ public class AddMetaNodePage extends WizardPage {
         createCenterPart(composite);
         m_previewPanel = new Composite(composite, SWT.FILL | SWT.BORDER);
         m_previewPanel.setLayoutData(new GridData(
-                GridData.HORIZONTAL_ALIGN_CENTER 
+                GridData.HORIZONTAL_ALIGN_CENTER
                 | GridData.VERTICAL_ALIGN_CENTER));
         m_previewPanel.setLayout(new FillLayout());
         m_previewPanel.addPaintListener(new PaintListener() {
             private static final int IMAGE_HEIGHT = 30;
             private static final int IMAGE_WIDTH = 30;
             private static final int PORT_BAR_HEIGHT = 40;
-            private static final int PORT_SIZE 
+            private static final int PORT_SIZE
                 = AbstractPortFigure.NODE_PORT_SIZE;
-            
+
             private int m_top;
-            
+
             public void paintControl(final PaintEvent e) {
                 GC gc = e.gc;
                 Rectangle bounds = m_previewPanel.getBounds();
-                m_top = (bounds.height / 2) - (IMAGE_HEIGHT / 2) 
+                m_top = (bounds.height / 2) - (IMAGE_HEIGHT / 2)
                     - (PORT_SIZE / 2);
                 drawInPorts(gc);
                 drawOutPorts(gc);
                 gc.drawImage(ImageRepository.getImage(
-                    "/icons/meta/meta_custom_preview.png"), 
-                    (bounds.width / 2) - (IMAGE_WIDTH / 2), 
+                    "/icons/meta/meta_custom_preview.png"),
+                    (bounds.width / 2) - (IMAGE_WIDTH / 2),
                     (bounds.height / 2) - (IMAGE_HEIGHT / 2));
             }
-            
+
             private void drawInPorts(final GC gc) {
                 Rectangle b = m_previewPanel.getBounds();
-                int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
+                int offset = (PORT_BAR_HEIGHT + PORT_SIZE)
                     / (m_inPortList.size() + 1);
                 int left = (b.width / 2) - (IMAGE_WIDTH / 2);
                 int i = 0;
@@ -165,11 +166,11 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE, y,
                                 left, y + (PORT_SIZE / 2),
                                 left - PORT_SIZE, y + PORT_SIZE});
-                    } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
+                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
                             inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(
-                                left - PORT_SIZE, 
+                                left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
                     } else if (inPort.getType().equals(
@@ -177,18 +178,26 @@ public class AddMetaNodePage extends WizardPage {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
                         gc.fillRectangle(
-                                left - PORT_SIZE, 
+                                left - PORT_SIZE,
                                 y,
-                                PORT_SIZE, PORT_SIZE);                        
+                                PORT_SIZE, PORT_SIZE);
+                    } else if (inPort.getType().equals(
+                            FlowVariablePortObject.TYPE)) {
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_RED));
+                        gc.fillRectangle(
+                                left - PORT_SIZE,
+                                y,
+                                PORT_SIZE, PORT_SIZE);
                     }
                     i++;
                 }
             }
-            
+
             private void drawOutPorts(final GC gc) {
                 Rectangle b = m_previewPanel.getBounds();
                 int right = (b.width / 2) + (IMAGE_WIDTH / 2) + 2;
-                int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
+                int offset = (PORT_BAR_HEIGHT + PORT_SIZE)
                     / (m_outPortList.size() + 1);
                 int i = 0;
                 for (Port inPort : m_outPortList) {
@@ -198,7 +207,7 @@ public class AddMetaNodePage extends WizardPage {
                                 right, y,
                                 right + PORT_SIZE, y + (PORT_SIZE / 2),
                                 right, y + PORT_SIZE});
-                    } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
+                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
                             inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
@@ -207,9 +216,14 @@ public class AddMetaNodePage extends WizardPage {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
+                    } else if (inPort.getType().equals(
+                            FlowVariablePortObject.TYPE)) {
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_RED));
+                        gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
                     }
                     i++;
-                }                
+                }
             }
         });
         setControl(composite);
@@ -219,13 +233,13 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     /**
-     * 
+     *
      * @param template the selected meta node template from previous page
      */
     void setTemplate(final String template) {
         m_template = template;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void setVisible(final boolean visible) {
@@ -236,8 +250,8 @@ public class AddMetaNodePage extends WizardPage {
         }
         m_previewPanel.redraw();
     }
-    
-    
+
+
     private void populateFieldsFromTemplate() {
         NodeLogger.getLogger(AddMetaNodePage.class).debug(
                 "trying to populate fields from template " + m_template);
@@ -287,8 +301,8 @@ public class AddMetaNodePage extends WizardPage {
         }
         updateStatus();
     }
-    
-    
+
+
     private void updateMetaNodeName() {
         if (!m_nameCustomized) {
             int nrInPorts = m_inPortList.size();
@@ -296,7 +310,7 @@ public class AddMetaNodePage extends WizardPage {
             m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
         }
     }
-    
+
     /**
      *
      * @return list of entered out ports
@@ -494,7 +508,7 @@ public class AddMetaNodePage extends WizardPage {
             public void modifyText(final ModifyEvent e) {
                 m_nameCustomized = true;
             }
-            
+
         });
         gridData = new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL

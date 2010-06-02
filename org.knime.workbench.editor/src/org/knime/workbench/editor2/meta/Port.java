@@ -53,7 +53,8 @@ package org.knime.workbench.editor2.meta;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * Helper class to represent a port with name and type.
@@ -78,7 +79,7 @@ public class Port {
         this(type);
         m_name = name;
     }
-    
+
     /**
      *
      * @return port type
@@ -86,9 +87,9 @@ public class Port {
     public PortType getType() {
         return m_type;
     }
-    
+
     /**
-     * 
+     *
      * @param name new name of the port
      */
     public void setName(final String name) {
@@ -111,10 +112,12 @@ public class Port {
     public String toString() {
         if (m_type.equals(BufferedDataTable.TYPE)) {
             return m_name + " (Data)";
-        } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(m_type)) {
+        } else if (PMMLPortObject.TYPE.isSuperTypeOf(m_type)) {
             return m_name + " (PMML)";
         } else if (m_type.equals(DatabasePortObject.TYPE)) {
             return m_name + " (Database)";
+        } else if (m_type.equals(FlowVariablePortObject.TYPE)) {
+            return m_name + " (FlowVariable)";
         } else {
             return m_name + " (unknown)";
         }

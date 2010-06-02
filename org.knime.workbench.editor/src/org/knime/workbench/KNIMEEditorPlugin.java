@@ -51,8 +51,6 @@
 package org.knime.workbench;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -68,11 +66,6 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
 
     // The shared instance.
     private static KNIMEEditorPlugin plugin;
-
-    /**
-     * Type of this port.
-     */
-    public static final PortType PMML_PORT_TYPE = new PortType(PMMLPortObject.class);
 
     /**
      * The constructor.
