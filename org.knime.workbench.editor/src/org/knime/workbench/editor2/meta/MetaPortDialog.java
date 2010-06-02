@@ -70,6 +70,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.workbench.KNIMEEditorPlugin;
 
 /**
@@ -85,20 +86,23 @@ public class MetaPortDialog extends Dialog {
         /** Model port. */
         PMML,
         /** Database port. */
-        Database;
-        
+        Database,
+        /** FlowVariable port. */
+        FlowVariables;
+
         private static String[] names;
-        
+
         static {
-            names = new String[3];
+            names = new String[4];
             names[0] = Data.name();
             names[1] = PMML.name();
             names[2] = Database.name();
+            names[3] = FlowVariables.name();
         }
-        
-        
+
+
         /**
-         * 
+         *
          * @return the enum fields as a string array
          */
         public static String[] getNames() {
@@ -114,7 +118,7 @@ public class MetaPortDialog extends Dialog {
     private static final int HEIGHT = 150;
 
     private Port m_port = null;
-    
+
 
     /**
      *
@@ -212,7 +216,11 @@ public class MetaPortDialog extends Dialog {
                 } else if (PortTypes.valueOf(selected).equals(
                         PortTypes.Database)) {
                     m_port = new Port(DatabasePortObject.TYPE);
+                } else if (PortTypes.valueOf(selected).equals(
+                        PortTypes.FlowVariables)) {
+                    m_port = new Port(FlowVariablePortObject.TYPE);
                 }
+
                 m_shell.dispose();
             }
 
