@@ -799,11 +799,60 @@
             id="org.knime.base.node.meta.looper.LoopStartCountNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
+            id="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
+            id="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory">
+      </node>
+      <node
             after="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
             category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.LoopEndNodeFactory"
             id="org.knime.base.node.meta.looper.LoopEndNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.looper.LoopEndNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
+            id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
+            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
+            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
             category-path="/loopsupport/features"
@@ -866,48 +915,6 @@
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.meta.looper.LoopEndNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
-            id="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
-            id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
-            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
-            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
             category-path="manipulation/row/row-filter"
