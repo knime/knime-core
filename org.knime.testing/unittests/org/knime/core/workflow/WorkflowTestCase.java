@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.11.2008 (wiswedel): created
  */
@@ -49,41 +49,41 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class WorkflowTestCase extends TestCase {
-    
+
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
-    
+
     private WorkflowManager m_manager;
     private ReentrantLock m_lock;
-    
+
     /**
-     * 
+     *
      */
     public WorkflowTestCase() {
         m_lock = new ReentrantLock();
     }
-    
+
     protected NodeID loadAndSetWorkflow() throws Exception {
         ClassLoader l = getClass().getClassLoader();
         String workflowDirString = getClass().getPackage().getName();
         URL workflowURL = l.getResource(workflowDirString.replace('.', '/'));
         if (workflowURL == null) {
-            throw new Exception("Can't load workflow that's expected to be " 
+            throw new Exception("Can't load workflow that's expected to be "
                     + "in package " + workflowDirString);
         }
         File workflowDir = new File(workflowURL.getFile());
         if (!workflowDir.isDirectory()) {
-            throw new Exception("Can't load workflow directory: " 
+            throw new Exception("Can't load workflow directory: "
                     + workflowDirString);
         }
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
                 workflowDir, new ExecutionMonitor(), false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
-            throw new Exception("Errors reading workflow: " 
+            throw new Exception("Errors reading workflow: "
                     + loadResult.getFilteredError("", LoadResultEntryType.Ok));
         } else {
             switch (loadResult.getType()) {
@@ -98,28 +98,28 @@ public class WorkflowTestCase extends TestCase {
         setManager(m);
         return m.getID();
     }
-    
+
     /**
      * @param manager the manager to set
      */
-    protected void setManager(WorkflowManager manager) {
+    protected void setManager(final WorkflowManager manager) {
         m_manager = manager;
     }
-    
+
     /**
      * @return the manager
      */
     protected WorkflowManager getManager() {
         return m_manager;
     }
-    
-    protected void checkState(final NodeID id, 
+
+    protected void checkState(final NodeID id,
             final State... expected) throws Exception {
         NodeContainer nc = findNodeContainer(id);
         checkState(nc, expected);
     }
-    
-    protected void checkState(final NodeContainer nc, 
+
+    protected void checkState(final NodeContainer nc,
             final State... expected) throws Exception {
         State actual = nc.getState();
         boolean matches = false;
@@ -130,19 +130,19 @@ public class WorkflowTestCase extends TestCase {
         }
         if (!matches) {
             String error = "node " + nc.getNameWithID() + " has wrong state; "
-            + "expected (any of) " + Arrays.toString(expected) + ", actual " 
+            + "expected (any of) " + Arrays.toString(expected) + ", actual "
             + actual + " (dump follows)";
             m_logger.info("Test failed: " + error);
             dumpWorkflowToLog();
             fail(error);
         }
     }
-    
+
     protected void checkMetaOutState(final NodeID metaID, final int portIndex,
             final State... expected) throws Exception {
         NodeContainer nc = findNodeContainer(metaID);
         if (!(nc instanceof WorkflowManager)) {
-            throw new IllegalArgumentException("Node with ID " + metaID  
+            throw new IllegalArgumentException("Node with ID " + metaID
                     + " is not a meta node: " + nc.getNameWithID());
         }
         WorkflowOutPort p = ((WorkflowManager)nc).getOutPort(portIndex);
@@ -156,20 +156,20 @@ public class WorkflowTestCase extends TestCase {
         if (!matches) {
             String error = "Workflow outport " + portIndex + " of WFM "
                 + nc.getNameWithID() + " has wrong state; expected (any of) "
-                + Arrays.toString(expected) + ", actual " + actual 
+                + Arrays.toString(expected) + ", actual " + actual
                 + " (dump follows)";
             m_logger.info("Test failed: " + error);
             dumpWorkflowToLog();
             fail(error);
         }
     }
-    
+
     protected WorkflowManager findParent(final NodeID id) {
         if (m_manager == null) {
             throw new NullPointerException("WorkflowManager not set.");
         }
         if (!id.hasPrefix(m_manager.getID())) {
-            throw new IllegalArgumentException("NodeID " + id + " has not " 
+            throw new IllegalArgumentException("NodeID " + id + " has not "
                     + "same prefix as WorkflowManager: " + m_manager.getID());
         }
         if (!id.hasSamePrefix(m_manager.getID())) {
@@ -183,15 +183,15 @@ public class WorkflowTestCase extends TestCase {
         }
         return m_manager;
     }
-    
-    protected NodeContainer findNodeContainer(final NodeID id) 
+
+    protected NodeContainer findNodeContainer(final NodeID id)
     throws Exception {
         WorkflowManager parent = findParent(id);
         return parent.getNodeContainer(id);
     }
-    
+
     protected ConnectionContainer findInConnection(final NodeID id,
-            final int port) 
+            final int port)
         throws Exception {
         WorkflowManager parent = findParent(id);
         for (ConnectionContainer cc : parent.getConnectionContainers()) {
@@ -201,15 +201,15 @@ public class WorkflowTestCase extends TestCase {
         }
         return null;
     }
-    
+
     protected ConnectionContainer findLeavingWorkflowConnection(final NodeID id,
             final int port) throws Exception {
         NodeContainer nc = findNodeContainer(id);
         if (!(nc instanceof WorkflowManager)) {
-            throw new IllegalArgumentException("Node " + id 
+            throw new IllegalArgumentException("Node " + id
                     + " is not a workflow manager");
         }
-        for (ConnectionContainer cc 
+        for (ConnectionContainer cc
                 : ((WorkflowManager)nc).getConnectionContainers()) {
             if (cc.getDest().equals(id) && cc.getDestPort() == port) {
                 return cc;
@@ -217,8 +217,8 @@ public class WorkflowTestCase extends TestCase {
         }
         return null;
     }
-    
-    protected void executeAndWait(final NodeID... ids) 
+
+    protected void executeAndWait(final NodeID... ids)
         throws Exception {
         NodeID prefix = null;
         WorkflowManager parent = null;
@@ -227,7 +227,7 @@ public class WorkflowTestCase extends TestCase {
                 prefix = id.getPrefix();
                 parent = findParent(id);
             } else if (!prefix.equals(id.getPrefix())) {
-                throw new IllegalArgumentException("Mixing NodeIDs of " 
+                throw new IllegalArgumentException("Mixing NodeIDs of "
                         + "different levels " + Arrays.toString(ids));
             }
         }
@@ -238,12 +238,12 @@ public class WorkflowTestCase extends TestCase {
         try {
             for (NodeID id : ids) {
                 waitWhileNodeInExecution(id);
-            } 
+            }
         } finally {
             m_lock.unlock();
         }
     }
-    
+
     protected void waitWhileInExecution() throws Exception {
         waitWhileNodeInExecution(m_manager);
     }
@@ -251,18 +251,19 @@ public class WorkflowTestCase extends TestCase {
     protected void waitWhileNodeInExecution(final NodeID id) throws Exception {
         waitWhileNodeInExecution(findNodeContainer(id));
     }
-    
-    protected void waitWhileNodeInExecution(final NodeContainer node) 
+
+    protected void waitWhileNodeInExecution(final NodeContainer node)
     throws Exception {
         waitWhile(node, new Hold() {
             @Override
             protected boolean shouldHold() {
-                return node.getState().executionInProgress();
+                State s = node.getState();
+                return s.executionInProgress();
             }
         });
     }
-        
-    protected void waitWhile(final NodeContainer nc, 
+
+    protected void waitWhile(final NodeContainer nc,
             final Hold hold) throws Exception {
         if (!hold.shouldHold()) {
             return;
@@ -293,7 +294,7 @@ public class WorkflowTestCase extends TestCase {
                         break;
                     }
                 } else {
-                    condition.await();
+                    condition.await(5, TimeUnit.SECONDS);
                 }
             }
         } finally {
@@ -301,8 +302,8 @@ public class WorkflowTestCase extends TestCase {
             nc.removeNodeStateChangeListener(l);
         }
     }
-    
-    
+
+
     /** {@inheritDoc} */
     @Override
     protected void tearDown() throws Exception {
@@ -333,12 +334,12 @@ public class WorkflowTestCase extends TestCase {
             setManager(null);
         }
     }
-    
+
     protected void dumpWorkflowToLog() throws IOException {
         String toString = m_manager.printNodeSummary(m_manager.getID(), 0);
         dumpLineBreakStringToLog(toString);
     }
-    
+
     protected void dumpLineBreakStringToLog(final String s) throws IOException {
         BufferedReader r = new BufferedReader(new StringReader(s));
         String line;
@@ -347,12 +348,12 @@ public class WorkflowTestCase extends TestCase {
         }
         r.close();
     }
-    
+
     protected abstract class Hold {
         protected abstract boolean shouldHold();
         protected int getSecondsToWaitAtMost() {
             return -1;
         }
     }
-    
+
 }

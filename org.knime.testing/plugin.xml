@@ -43,6 +43,11 @@
             factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
             id="org.knime.testing.node.datagenerator.TestDataNodeFactory">
       </node>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
+            id="org.knime.testing.node.executioncount.ExecutionCountNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
