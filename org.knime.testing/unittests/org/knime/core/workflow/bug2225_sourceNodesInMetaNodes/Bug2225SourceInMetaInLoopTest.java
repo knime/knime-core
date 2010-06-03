@@ -60,7 +60,6 @@ public class Bug2225SourceInMetaInLoopTest extends WorkflowTestCase {
         checkState(m_tblView, State.CONFIGURED);
         executeAndWait(m_loopEnd);
         waitWhileInExecution();
-        System.out.println(getManager().printNodeSummary(getManager().getID(), 0));
         checkState(m_loopEnd, State.EXECUTED);
         Map<NodeID, ExecutionCountNodeModel> counterNodes =
             getManager().findNodes(ExecutionCountNodeModel.class, true);
