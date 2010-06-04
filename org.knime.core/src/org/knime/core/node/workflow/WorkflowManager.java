@@ -3170,7 +3170,7 @@ public final class WorkflowManager extends NodeContainer {
                     if (!cc.getType().isLeavingWorkflow()) {
                         LOGGER.debug("Attempting to configure node "
                                 + succNode);
-                        configureNodeAndSuccessors(succNode, true);
+                        configureNodeAndPortSuccessors(succNode, null, true, false);
                     }
                 }
             }
@@ -3189,7 +3189,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     private void configureNodeAndSuccessors(final NodeID nodeId,
             final boolean configureMyself) {
-        configureNodeAndPortSuccessors(nodeId, null, configureMyself);
+        configureNodeAndPortSuccessors(nodeId, null, configureMyself, true);
     }
 
     /**
@@ -3200,10 +3200,12 @@ public final class WorkflowManager extends NodeContainer {
      * @param ports indices of output port successors are connected to (null if
      *   all are to be used).
      * @param configureMyself true if the node itself is to be configured
+     * @param configurePartent true also the parent is configured (if affected)
      */
     private void configureNodeAndPortSuccessors(final NodeID nodeId,
             final Set<Integer> ports,
-            final boolean configureMyself) {
+            final boolean configureMyself,
+            final boolean configureParent) {
         // ensure we always configured ALL successors if we configure the node
         assert (!configureMyself) || (ports == null);
 
@@ -3260,7 +3262,7 @@ public final class WorkflowManager extends NodeContainer {
         // And finally clean up: if the WFM was part of the list of nodes
         // make sure we only configure nodes actually connected to ports
         // which are connected to nodes which we did configure!
-        if (wfmIsPartOfList) {
+        if (configureParent && wfmIsPartOfList) {
             Set<Integer> portsToConf = new LinkedHashSet<Integer>();
             for (int i = 0; i < getNrWorkflowOutgoingPorts(); i++) {
                 for (ConnectionContainer cc : m_workflow.getConnectionsByDest(
@@ -3274,7 +3276,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!portsToConf.isEmpty()) {
                 getParent().configureNodeAndPortSuccessors(this.getID(),
-                        portsToConf, false);
+                        portsToConf, false, configureParent);
             }
         }
     }
