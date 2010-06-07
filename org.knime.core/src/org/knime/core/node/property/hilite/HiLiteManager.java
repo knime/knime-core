@@ -90,8 +90,7 @@ public final class HiLiteManager {
                 return;
             }
             for (HiLiteHandler h : m_targetHandlers) {
-                h.fireHiLiteEventInternal(new KeyEvent(
-                        m_eventSource, event.keys()));
+                h.fireHiLiteEvent(new KeyEvent(m_eventSource, event.keys()));
             }
         }
 
@@ -103,7 +102,7 @@ public final class HiLiteManager {
                 return;
             }
             for (HiLiteHandler h : m_targetHandlers) {
-                h.fireUnHiLiteEventInternal(
+                h.fireUnHiLiteEvent(
                         new KeyEvent(m_eventSource, event.keys()));
             }
         }
@@ -116,7 +115,7 @@ public final class HiLiteManager {
                 return;
             }
             for (HiLiteHandler h : m_targetHandlers) {
-                h.fireClearHiLiteEventInternal(
+                h.fireClearHiLiteEvent(
                         new KeyEvent(m_eventSource, event.keys()));
             }
         }
@@ -134,7 +133,7 @@ public final class HiLiteManager {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            m_sourceHandler.fireHiLiteEventInternal(
+            m_sourceHandler.fireHiLiteEvent(
                     new KeyEvent(m_eventSource, event.keys()));
         }
         /**
@@ -144,7 +143,7 @@ public final class HiLiteManager {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            m_sourceHandler.fireUnHiLiteEventInternal(
+            m_sourceHandler.fireUnHiLiteEvent(
                                 new KeyEvent(m_eventSource, event.keys()));
  
         }
@@ -155,7 +154,7 @@ public final class HiLiteManager {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            m_sourceHandler.fireClearHiLiteEventInternal(
+            m_sourceHandler.fireClearHiLiteEvent(
                     new KeyEvent(m_eventSource, event.keys()));
         }
     };
