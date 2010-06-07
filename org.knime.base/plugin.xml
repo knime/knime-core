@@ -360,6 +360,11 @@
             category-path="/io/read"
             id="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"/>
       <node
+            after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
+            category-path="/io/read"
+            factory-class="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
+            id="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"/>
+      <node
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
             id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
