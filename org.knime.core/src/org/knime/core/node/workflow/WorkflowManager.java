@@ -1753,9 +1753,6 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
-    class InnerFlowLoopContext extends FlowObject {
-    }
-
     /** Cleanup a node after execution. This will also permit the argument node
      * to change its state in {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be

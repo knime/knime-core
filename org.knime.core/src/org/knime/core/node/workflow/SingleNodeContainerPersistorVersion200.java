@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Jan 25, 2008 (wiswedel): created
  */
@@ -74,12 +74,12 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class SingleNodeContainerPersistorVersion200 extends
         SingleNodeContainerPersistorVersion1xx {
-    
+
     private static final String NODE_FILE = "node.xml";
 
     public SingleNodeContainerPersistorVersion200(
@@ -87,30 +87,30 @@ public class SingleNodeContainerPersistorVersion200 extends
             final String versionString) {
         super(workflowPersistor, versionString);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodePersistorVersion200 createNodePersistor() {
         return new NodePersistorVersion200(this);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected String loadNodeFactoryClassName(final NodeSettingsRO parentSettings,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getString(KEY_FACTORY_NAME);
     }
-    
+
     @Override
-    protected String loadNodeFile(final NodeSettingsRO settings) 
+    protected String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getString("node_file");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected SingleNodeContainerSettings loadSNCSettings(
-            final NodeSettingsRO settings, 
+            final NodeSettingsRO settings,
             final NodePersistorVersion1xx nodePersistor)
     throws InvalidSettingsException {
         if (LoadVersion.V200.equals(LoadVersion.get(getVersionString()))) {
@@ -118,7 +118,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
             // (previously these settings were saves as part of the node.xml)
-            SingleNodeContainerSettings sncs = 
+            SingleNodeContainerSettings sncs =
                 new SingleNodeContainerSettings();
             MemoryPolicy p;
             NodeSettingsRO sub =
@@ -139,9 +139,9 @@ public class SingleNodeContainerPersistorVersion200 extends
             sncs.setMemoryPolicy(p);
             return sncs;
         }
-            
+
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected List<FlowObject> loadFlowObjects(
@@ -158,6 +158,8 @@ public class SingleNodeContainerPersistorVersion200 extends
             } else if ("loopcontext".equals(type)) {
                 result.add(new RestoredFlowLoopContext());
 //                int tailID = sub.getInt("tailID");
+            } else if ("loopcontext_execute".equals(type)) {
+                result.add(new InnerFlowLoopContext());
             } else {
                 throw new InvalidSettingsException(
                         "Unknown flow object type: " + type);
@@ -165,18 +167,18 @@ public class SingleNodeContainerPersistorVersion200 extends
         }
         return result;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean shouldFixModelPortOrder() {
         return false;
     }
-    
+
     protected String save(final SingleNodeContainer snc,
             final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
             final boolean isSaveData) throws CanceledExecutionException,
             IOException {
-        if (nodeDirRef.equals(snc.getNodeContainerDirectory()) 
+        if (nodeDirRef.equals(snc.getNodeContainerDirectory())
                 && !snc.isDirty()) {
             return SETTINGS_FILE_NAME;
         }
@@ -193,7 +195,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             if (nodeDirDeleted) {
                 debug = "Replaced node directory \"" + nodeDirRef + "\"";
             } else {
-                debug = "Failed to replace node directory \"" + nodeDirRef 
+                debug = "Failed to replace node directory \"" + nodeDirRef
                     + "\" -- writing into existing directory";
             }
         } else {
@@ -205,11 +207,11 @@ public class SingleNodeContainerPersistorVersion200 extends
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
-        NodeContainerMetaPersistorVersion200 metaPersistor = 
+        NodeContainerMetaPersistorVersion200 metaPersistor =
             createNodeContainerMetaPersistor(nodeDirRef);
         metaPersistor.save(snc, settings);
         NodePersistorVersion200 persistor = createNodePersistor();
-        persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
+        persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
@@ -222,25 +224,25 @@ public class SingleNodeContainerPersistorVersion200 extends
         exec.setProgress(1.0);
         return SETTINGS_FILE_NAME;
     }
-    
+
     protected void saveNodeFactoryClassName(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         String cl = nc.getNode().getFactory().getClass().getName();
         settings.addString(KEY_FACTORY_NAME, cl);
     }
-    
-    protected ReferencedFile saveNodeFileName(final NodeSettingsWO settings, 
+
+    protected ReferencedFile saveNodeFileName(final NodeSettingsWO settings,
             final ReferencedFile nodeDirectoryRef) {
         String fileName = NODE_FILE;
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }
-    
-    protected void saveSNCSettings(final NodeSettingsWO settings, 
+
+    protected void saveSNCSettings(final NodeSettingsWO settings,
             final SingleNodeContainer snc) {
         snc.saveSNCSettings(settings);
     }
-    
+
     protected void saveFlowObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");
@@ -258,8 +260,12 @@ public class SingleNodeContainerPersistorVersion200 extends
             } else if (s instanceof FlowLoopContext) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
                 sub.addString("type", "loopcontext");
+            } else if (s instanceof InnerFlowLoopContext) {
+                NodeSettingsWO sub =
+                    stackSet.addNodeSettings("Loop_Execute_" + c);
+                sub.addString("type", "loopcontext_execute");
             } else {
-                getLogger().error("Saving of flow objects of type \"" 
+                getLogger().error("Saving of flow objects of type \""
                         + s.getClass().getSimpleName() +  "\" not implemented");
             }
             c += 1;
@@ -267,10 +273,10 @@ public class SingleNodeContainerPersistorVersion200 extends
     }
 
 
-    
+
     /** {@inheritDoc} */
     @Override
-    protected NodeContainerMetaPersistorVersion200 
+    protected NodeContainerMetaPersistorVersion200
             createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion200(baseDir);
     }

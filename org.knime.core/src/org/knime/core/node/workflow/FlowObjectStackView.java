@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 1, 2009 (wiswedel): created
  */
@@ -65,10 +65,10 @@ import org.knime.core.node.util.FlowVariableTableCellRenderer;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class FlowObjectStackView extends JPanel {
-    
+
     /** Table displaying name, value and owner of a {@link FlowVariable}. */
     private final JTable m_table;
-    
+
     /** Creates new empty view. */
     public FlowObjectStackView() {
         super(new BorderLayout());
@@ -89,11 +89,11 @@ final class FlowObjectStackView extends JPanel {
                 return false;
             }
         });
-        m_table.setDefaultRenderer(FlowVariable.class, 
+        m_table.setDefaultRenderer(FlowVariable.class,
                 new FlowVariableTableCellRenderer());
         add(new JScrollPane(m_table), BorderLayout.CENTER);
     }
-    
+
     /** Updates the view to display the given stack.
      * @param stack Whose values are to be displayed. */
     public void update(final FlowObjectStack stack) {
@@ -124,8 +124,11 @@ final class FlowObjectStackView extends JPanel {
                         o = "Unknown Type: " + v.getType();
                     }
                     obj[3] = o;
-                } else {
+                } else if (s instanceof FlowLoopContext) {
                     obj[2] = "Loop (" + (loopCount++) + ")";
+                    obj[3] = null;
+                } else if (s instanceof InnerFlowLoopContext) {
+                    obj[2] = "Loop-Execute";
                     obj[3] = null;
                 }
                 values[counter++] = obj;
