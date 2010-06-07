@@ -339,10 +339,6 @@
             id="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"
-            id="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"/>
-      <node
-            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.split.SplitNodeFactory"
             id="org.knime.base.node.preproc.split.SplitNodeFactory"/>
       <node
