@@ -55,7 +55,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -880,34 +879,38 @@ class Workflow {
                             tempOutput.add(new NodeAndInports(destID,
                                     cc.getDestPort(), currDepth + 1));
                         } else {
+                            assert ix != currIndex;
                             // node is already in list, adjust depth to new
                             // maximum and add port if not already contained:
-                            // first collect all instance of this node and
-                            // gather their inport indices
                             NodeAndInports nai = tempOutput.get(ix);
-                            // must exist only once:
-                            assert ix == tempOutput.lastIndexOf(destID);
-                            // index can not yet have been added:
-                            assert !(nai.getInports().contains(cc.getDestPort()));
-                            // depth has to be smaller or equal
-                            assert nai.getDepth() <= currDepth + 1;
-                            nai.addInport(cc.getDestPort());
-                            nai.setDepth(currDepth + 1);
+                            if (!nai.getInports().contains(cc.getDestPort())) {
+                                nai.addInport(cc.getDestPort());
+                            }
+                            if (nai.getDepth() != currDepth + 1) {
+                                // depth has to be smaller or equal
+                                assert nai.getDepth() < currDepth + 1;
+                                nai.setDepth(currDepth + 1);
+                                if (ix < currIndex) {
+                                    // move this node to end of list if it was
+                                    // already "touched" so that depth of
+                                    // successors will also be adjusted!
+                                    nai = tempOutput.remove(ix);
+                                    tempOutput.add(nai);
+                                    // critical: we removed an element in our
+                                    // list which resided before our pointer.
+                                    // Make sure we still point to current node.
+                                    currIndex--;
+                                }
+                            }
                         }
                     }
                 }
             }
             currIndex += 1;
         }
-        // search for start node and remove it
-        for (Iterator<NodeAndInports> it = tempOutput.iterator();
-            it.hasNext();) {
-            NodeAndInports nodeAndInports = it.next();
-            if (nodeAndInports.getID().equals(startNode)) {
-                it.remove();
-                break;
-            }
-        }
+        // remove start node
+        NodeAndInports nai = tempOutput.remove(0);
+        assert (nai.getID().equals(startNode));
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
             public int compare(
