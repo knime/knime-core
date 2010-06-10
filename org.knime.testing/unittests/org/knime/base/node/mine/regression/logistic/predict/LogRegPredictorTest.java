@@ -187,7 +187,7 @@ public class LogRegPredictorTest {
         }
         // Create predictor
         LogRegPredictor predictor = new LogRegPredictor(
-                content.createPortObject(), data.getDataTableSpec(),
+                content.createPMMLPortObject(), data.getDataTableSpec(),
                 true);
         for (DataRow row : data) {
             DataCell[] predicted = predictor.getCells(row);
