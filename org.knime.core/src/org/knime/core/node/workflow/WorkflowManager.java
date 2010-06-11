@@ -1253,32 +1253,32 @@ public final class WorkflowManager extends NodeContainer {
      * Also re-configure not executed nodes the same way to make sure that
      * new workflow variables are spread accordingly.
      */
-    public void resetAll() {
-        synchronized (m_workflowMutex) {
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                boolean hasNonParentPredecessors = false;
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsByDest(id)) {
-                    if (!cc.getSource().equals(this.getID())) {
-                        hasNonParentPredecessors = true;
-                        break;
-                    }
-                }
-                if (!hasNonParentPredecessors) {
-                    if (getNodeContainer(id).isResetable()) {
-                        // reset nodes which are green - will configure
-                        // them afterwards anyway.
-                        resetAndConfigureNode(id);
-                    } else {
-                        // but make sure to re-configure yellow nodes so
-                        // that new variables are available in those
-                        // pipeline branches!
-                        configureNodeAndSuccessors(id, true);
-                    }
-                }
-            }
-        }
-    }
+//    public void resetAll() {
+//        synchronized (m_workflowMutex) {
+//            for (NodeID id : m_workflow.getNodeIDs()) {
+//                boolean hasNonParentPredecessors = false;
+//                for (ConnectionContainer cc
+//                        : m_workflow.getConnectionsByDest(id)) {
+//                    if (!cc.getSource().equals(this.getID())) {
+//                        hasNonParentPredecessors = true;
+//                        break;
+//                    }
+//                }
+//                if (!hasNonParentPredecessors) {
+//                    if (getNodeContainer(id).isResetable()) {
+//                        // reset nodes which are green - will configure
+//                        // them afterwards anyway.
+//                        resetAndConfigureNode(id);
+//                    } else {
+//                        // but make sure to re-configure yellow nodes so
+//                        // that new variables are available in those
+//                        // pipeline branches!
+//                        configureNodeAndSuccessors(id, true);
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Re-configure all configured (NOT executed) nodes in this workflow
@@ -1318,8 +1318,11 @@ public final class WorkflowManager extends NodeContainer {
      * reset (or we just reset it), also configure it.
      * Note that this does NOT affect any successors of this workflow
      * manager but touches all nodes inside this wfm and its kids.
+     *
+     * TODO Maybe redundant: call resetAllNodes... and then configure them
+     *  (only called when WorkflowVariables are set)
      */
-    void resetAllNodesOnlyInThisWFM() {
+    void resetAndReconfigureAllNodesInWFM() {
         synchronized (m_workflowMutex) {
             // do not worry about pipelines, just process all nodes "left
             // to right" and make sure we touch all of them (also yellow/green
@@ -1346,7 +1349,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 } else {
                     assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).resetAllNodesOnlyInThisWFM();
+                    ((WorkflowManager)nc).resetAndReconfigureAllNodesInWFM();
                 }
             }
             checkForNodeStateChanges(true);
@@ -2185,7 +2188,7 @@ public final class WorkflowManager extends NodeContainer {
             // TODO - this case should never happen but can not yet be
             // guaranteed since Bernd's persistor grap calls it left and right.
             assert nc instanceof WorkflowManager;
-            ((WorkflowManager)nc).resetAll();
+            ((WorkflowManager)nc).resetAllNodesInWFM();
         }
     }
 
@@ -2308,7 +2311,7 @@ public final class WorkflowManager extends NodeContainer {
                         // point from the outside and should reset all kids.
                         // (resetSuccessors() follows ports and will be
                         // called throughout subsequent calls...)
-                        ((WorkflowManager)nc).resetAll();
+                        ((WorkflowManager)nc).resetAllNodesInWFM();
                     }
                     nc.resetJobManagerViews();
                     // and launch configure starting with this node
@@ -3149,9 +3152,11 @@ public final class WorkflowManager extends NodeContainer {
     private void configureNodesConnectedToPortInWFM(final int inportIndex) {
         synchronized (m_workflowMutex) {
             // configure node only if it's not yet completely executed.
-            if (this.getState().equals(State.EXECUTED)) {
-                return;
-            }
+            // we can not avoid this: WFM with only WFM_THROUGH connections
+            // will act as "EXECUTED" after reset and hence not configure.
+//            if (this.getState().equals(State.EXECUTED)) {
+//                return;
+//            }
             // TODO: we can put our own
             // objects onto the stack here (to clean up later)?
             LOGGER.debug("Attempting to configure meta node " + this.getID()
@@ -4608,7 +4613,7 @@ public final class WorkflowManager extends NodeContainer {
                 // new variable settings are used by all nodes!
                 // Note that resetAll also needs to configure non-executed
                 // nodes in order to spread those new variables correctly!
-                resetAllNodesOnlyInThisWFM();
+                resetAndReconfigureAllNodesInWFM();
             } else {
                 // otherwise only configure already configured nodes. This
                 // is required to make sure they rebuild their
