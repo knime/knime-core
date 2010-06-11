@@ -71,7 +71,7 @@ public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
 
         executeAllAndWait();
         checkState(m_metaWithOnlyThrough, State.EXECUTED);
-        getManager().resetAll();
+        getManager().getParent().resetAndConfigureNode(getManager().getID());
         checkState(m_metaWithOnlyThrough, State.CONFIGURED);
     }
 
