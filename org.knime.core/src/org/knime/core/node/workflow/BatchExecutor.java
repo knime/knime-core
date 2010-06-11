@@ -368,7 +368,7 @@ public final class BatchExecutor {
         }
 
         if (reset) {
-            wfm.resetAll();
+            wfm.resetAllNodesInWFM();
             LOGGER.debug("Workflow reset done.");
         }
 
