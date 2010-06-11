@@ -218,6 +218,11 @@ public class WorkflowTestCase extends TestCase {
         return null;
     }
 
+    protected void executeAllAndWait() throws Exception {
+        m_manager.getParent().executeUpToHere(m_manager.getID());
+        waitWhileInExecution();
+    }
+
     protected void executeAndWait(final NodeID... ids)
         throws Exception {
         NodeID prefix = null;
