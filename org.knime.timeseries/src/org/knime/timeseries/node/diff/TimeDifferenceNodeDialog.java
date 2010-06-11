@@ -76,6 +76,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * 
  * 
  * @author KNIME GmbH
+ * @author Iris Adä, University Konstanz
  */
 public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
 
@@ -99,6 +100,9 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     public static final String CFG_COLUMN = "Use second column";
     /** the key for using a specific time as the second time. */
     public static final String CFG_FIXDATE = "Use fixed date";
+    /** the key for generating the difference, between the previous and
+     * the current row. */
+    public static final String CFG_ROW_DIFF = "Use previous row";
     
     private final SettingsModelString m_referencemodel 
                                 = getReferenceTypeModel();
@@ -128,12 +132,10 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
             
         });
         addDialogComponent(new DialogComponentButtonGroup(m_referencemodel,
-                false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE));
+                false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE, CFG_ROW_DIFF));
 
         setHorizontalPlacement(false);
-        // time selection
-        addDialogComponent(new DialogComponentCalendar(m_fixTimeComponent,
-                "Fixed time "));
+       
         // first date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColmn1Model(), "Select first date column", 0,
@@ -154,6 +156,9 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
         // new column name
         addDialogComponent(new DialogComponentString(createNewColNameModel(),
                 "Appended column name:"));
+        // time selection
+        addDialogComponent(new DialogComponentCalendar(m_fixTimeComponent,
+                "Fixed time "));
     }
     
 
@@ -239,7 +244,8 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
         if (string.equals(CFG_FIXDATE)) {
             m_fixTimeComponent.setEnabled(true);    
             m_columnSelComponent.setEnabled(false);
-        } else if (string.equals(CFG_NOW)) {
+        } else if (string.equals(CFG_NOW)
+                || string.equals(CFG_ROW_DIFF)) {
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(false);
         } else {  //default: use a second column

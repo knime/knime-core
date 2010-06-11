@@ -78,6 +78,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * quarter, month, week, day, hour, minute).
  * 
  * @author KNIME GmbH
+ * @author Iris Adä, University Konstanz
  */
 public class TimeDifferenceNodeModel extends NodeModel {
 
@@ -159,12 +160,53 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     }
                     long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
-                    double diffTime = (last - first) / g.getFactor();
-                    BigDecimal bd = new BigDecimal(diffTime);
-                    bd =
-                            bd.setScale(m_rounding.getIntValue(),
-                                    BigDecimal.ROUND_CEILING);
-                    return new DoubleCell(bd.doubleValue());
+                    return getRoundedTimeDifference(first, last , g);
+                    
+                }
+            });
+        } else if (typeofref.equals(TimeDifferenceNodeDialog.CFG_ROW_DIFF)) {
+            // option for producing the time difference between current and the
+            // previous row. 
+            // append the new column with single cell factory
+            rearranger.append(new SingleCellFactory(
+                    createOutputColumnSpec(inData[0].getDataTableSpec(),
+                            m_newColName.getStringValue())) {
+                /** saves the previous time value (contained in the last row) */
+                private DateAndTimeValue m_previous = null;
+
+                /**
+                 * Value for the new column is based on the values of the 
+                 * current row and the value of the previous row.
+                 * Therefore both rows must contain a DateAndTimeValue,
+                 * the selected granularity, and the fraction digits for 
+                 * rounding.
+                 * 
+                 * @param row the current row
+                 * @return the difference between the two date values with the
+                 *         given granularity and rounding
+                 */
+                @Override
+                public DataCell getCell(final DataRow row) {
+                    DataCell cell1 = row.getCell(m_col1Idx);
+                    // the cell is missing or not compatible to date and time 
+                    // value
+                    if ((cell1.isMissing()) 
+                            || !cell1.getType().isCompatible(
+                                    DateAndTimeValue.class)) {
+                        m_previous = null;
+                        return DataType.getMissingCell();
+                    }
+                    // the previous line didn't contain a value 
+                    // (e.g. we are in the first row)
+                    if (m_previous == null) {
+                        m_previous = (DateAndTimeValue)cell1;
+                        return DataType.getMissingCell();
+                    }
+                    long first = (m_previous).getUTCTimeInMillis();
+                    long last = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
+                    m_previous = (DateAndTimeValue)cell1;
+                    return getRoundedTimeDifference(first, last , g);
+                    
                 }
             });
         } else {
@@ -195,16 +237,11 @@ public class TimeDifferenceNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     }
                     long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
-                    double diffTime = (m_time - first) / g.getFactor();
-                    BigDecimal bd = new BigDecimal(diffTime);
-                    bd =
-                            bd.setScale(m_rounding.getIntValue(),
-                                    BigDecimal.ROUND_CEILING);
-                    return new DoubleCell(bd.doubleValue());
+                    return getRoundedTimeDifference(first, m_time, g);
                 }
-            });
-            
+            });            
         }
+
         BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
                 rearranger, exec);
         return new BufferedDataTable[]{out};
@@ -216,6 +253,24 @@ public class TimeDifferenceNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // nothing
+    }
+    /**
+     * 
+     * @param first the older time
+     * @param last the newer time
+     * @param g the granularity
+     * @return a double cell containing the time difference between the first
+     * and the last, already granulated and rounded. 
+     */
+    private DoubleCell getRoundedTimeDifference(final long first, 
+            final long last, 
+            final Granularity g) {
+        double diffTime = (last - first) / g.getFactor();
+        BigDecimal bd = new BigDecimal(diffTime);
+        bd =
+                bd.setScale(m_rounding.getIntValue(),
+                        BigDecimal.ROUND_CEILING);
+        return new DoubleCell(bd.doubleValue());
     }
 
     /**
@@ -262,7 +317,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     "Input must contain at least one date/time columns!");
         }
         m_col1Idx = inSpecs[0].findColumnIndex(m_col1.getStringValue());
-        if(nrDateCols >1){
+        if (nrDateCols > 1) {
         	m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
         }
         // check for first date column in input spec
@@ -270,12 +325,6 @@ public class TimeDifferenceNodeModel extends NodeModel {
             throw new InvalidSettingsException("Column "
                     + m_col1.getStringValue() + " not found in input table");
         }
-        // we don't need a second column
-//        // check for second date column in input spec
-//        if (m_col2Idx < 0) {
-//            throw new InvalidSettingsException("Column "
-//                    + m_col2.getStringValue() + " not found in input table");
-//        }
         // return new spec with appended column
         // (time and chosen new column name)
         return new DataTableSpec[]{new DataTableSpec(inSpecs[0],

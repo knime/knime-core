@@ -10,8 +10,9 @@
     <fullDescription>
         <intro>Appends the difference between two dates with the selected aggregation level 
         (year, quarter, month, week, day, hour, minute) and a selected precision for rounding.
-        For the second date/time there are three possibilites. The node can be configured 
-        to use the time at execution, the entires of a second column or a fixed date/time. 
+        For the second date/time there are four possibilites. The node can be configured 
+        to use the time at execution, the entries of a second column, a fixed date/time or 
+        the time contained in the previous row. 
         </intro>
         
         <option name="Select first date column">Select the column containing the start date</option>
@@ -24,7 +25,7 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="2 date columns">In data with at least one date columns</inPort>
+        <inPort index="0" name="Table with date information">In data with at least one date columns</inPort>
         <outPort index="0" name="Difference">Out data with the time difference appended</outPort>
     </ports>    
 </knimeNode>
