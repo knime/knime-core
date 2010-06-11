@@ -655,7 +655,7 @@ public final class Node implements NodeModelWarningListener {
         // check for existence of all input tables
         // TODO allow for optional inputs
         for (int i = 0; i < data.length; i++) {
-            if (data[i] == null) {
+            if (data[i] == null && !m_inputs[i].type.isOptional()) {
                 m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
@@ -665,7 +665,9 @@ public final class Node implements NodeModelWarningListener {
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
-            if (data[i] instanceof BufferedDataTable) {
+            if (data[i] == null) { // optional input
+                inData[i] = null;  // (checked above)
+            } else if (data[i] instanceof BufferedDataTable) {
                 inData[i] = data[i];
             } else {
                 exec.setMessage("Copying input object at port " +  i);
@@ -685,11 +687,12 @@ public final class Node implements NodeModelWarningListener {
 
         // check for compatible input PortObjects
         for (int i = 0; i < inData.length; i++) {
-            PortType thisType = m_model.getInPortType(i);
-            if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
+            PortType thisType = m_inputs[i].type;
+            if (thisType.isOptional() && inData[i] == null) {
+                // ignore non-populated optional input
+            } else if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
                 createErrorMessageAndNotify("Connection Error: Mismatch"
-                                        + " of input port types (port " + i
-                                        + ").");
+                        + " of input port types (port " + i + ").");
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
@@ -1239,7 +1242,11 @@ public final class Node implements NodeModelWarningListener {
                     if (BufferedDataTable.class.isAssignableFrom(
                             m_inputs[i].type.getPortObjectClass())
                             && (inSpecs[i] == null)) {
-                        return false;
+                        if (m_inputs[i].type.isOptional()) {
+                            // ignore, unconnected optional input
+                        } else {
+                            return false;
+                        }
                         // TODO: did we really need a warning here??
                         // throw new InvalidSettingsException(
                         // "Node is not executable until all predecessors "

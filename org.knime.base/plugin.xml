@@ -381,6 +381,10 @@
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"
             id="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"/>
+     <node
+            category-path="/manipulation/row/row-transform"
+            factory-class="org.knime.base.node.preproc.append.row.AppendedRowsWithOptionalInNodeFactory"
+            id="org.knime.base.node.preproc.append.row.AppendedRowsWithOptionalInNodeFactory"/>
       <node
             category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"

@@ -52,9 +52,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -78,6 +81,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteManager;
@@ -128,12 +132,43 @@ public class AppendedRowsNodeModel extends NodeModel {
         super(2, 1);
     }
 
+    /** Create new node with given number of inputs. All inputs except the first
+     * one are declared as optional.
+     * @param nrIns Nr inputs, must be >=1.
+     */
+    AppendedRowsNodeModel(final int nrIns) {
+        super(getInPortTypes(nrIns), new PortType[] {BufferedDataTable.TYPE});
+    }
+
+    private static final PortType[] getInPortTypes(final int nrIns) {
+        if (nrIns < 1) {
+            throw new IllegalArgumentException("invalid input count: " + nrIns);
+        }
+        PortType[] result = new PortType[nrIns];
+        Arrays.fill(result, new PortType(BufferedDataTable.class, true));
+//        result[0] = BufferedDataTable.TYPE;
+        return result;
+    }
+
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] rawInData,
             final ExecutionContext exec) throws Exception {
+
+        // remove all null tables first (optional input data)
+        ArrayList<BufferedDataTable> tablesAsList =
+            new ArrayList<BufferedDataTable>(rawInData.length);
+        for (BufferedDataTable t : rawInData) {
+            if (t != null) {
+                tablesAsList.add(t);
+            }
+        }
+        BufferedDataTable[] inData = tablesAsList.toArray(
+                new BufferedDataTable[tablesAsList.size()]);
+
         DataTable[] corrected;
         int totalRowCount = 0;
         for (BufferedDataTable t : inData) {
@@ -202,8 +237,18 @@ public class AppendedRowsNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] rawInSpecs)
             throws InvalidSettingsException {
+        // remove null specs (from optional inputs)
+        List<DataTableSpec> list =
+            new ArrayList<DataTableSpec>(rawInSpecs.length);
+        for (DataTableSpec s : rawInSpecs) {
+            if (s != null) {
+                list.add(s);
+            }
+        }
+        DataTableSpec[] inSpecs = list.toArray(new DataTableSpec[list.size()]);
+
         DataTableSpec[] corrected;
         if (m_isIntersection) {
             corrected = new DataTableSpec[inSpecs.length];
@@ -228,8 +273,10 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     static String[] getIntersection(final DataTableSpec... specs) {
         LinkedHashSet<String> hash = new LinkedHashSet<String>();
-        for (DataColumnSpec c : specs[0]) {
-            hash.add(c.getName());
+        if (specs.length > 0) {
+            for (DataColumnSpec c : specs[0]) {
+                hash.add(c.getName());
+            }
         }
         LinkedHashSet<String> hash2 = new LinkedHashSet<String>();
         for (int i = 1; i < specs.length; i++) {

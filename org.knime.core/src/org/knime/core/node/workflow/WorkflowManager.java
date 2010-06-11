@@ -657,8 +657,9 @@ public final class WorkflowManager extends NodeContainer {
             } else {
                 assert m_workflow.containsNodeKey(dest);
                 // ...make sure the destination node is configured again (and
-                // all of its successors if needed):
-                configureNodeAndSuccessors(dest, true);
+                // all of its successors if needed)
+                // (reset required if optional input is connected)
+                resetAndConfigureNode(dest);
             }
         }
         // and finally notify listeners
@@ -706,13 +707,26 @@ public final class WorkflowManager extends NodeContainer {
                 return false;  // WFM inport index exists
             }
         }
-        if (destNode != null) {
+        if (destNode != null) { // ordinary node
             if (destNode.getNrInPorts() <= destPort) {
                 return false;  // dest Node index exists
             }
-        } else {
+            // destination node may have optional inputs
+            if (hasSuccessorInProgress(dest)) {
+                return false;
+            }
+            if (m_workflow.getNode(dest).getState().executionInProgress()) {
+                return false;
+            }
+        } else { // leaving workflow connection
+            assert dest.equals(getID());
             if (this.getNrOutPorts() <= destPort) {
                 return false;  // WFM outport index exists
+            }
+            // nodes with optional inputs may have executing successors
+            // note it is ok if the WFM itself is executing...
+            if (getParent().hasSuccessorInProgress(getID())) {
+                return false;
             }
         }
         // check if we are about to replace an existing connection
@@ -1549,10 +1563,14 @@ public final class WorkflowManager extends NodeContainer {
                     return false;
                 }
             }
-            // 5) we fail on nodes which are not fully connected:
-            if (predConn.size() < nc.getNrInPorts()) {
-                // do not deal with incompletely connected nodes!
-                return false;
+            // 5) we fail on nodes which are not fully connected
+            //    (whereby unconnected optional inputs are ok)
+            NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
+            for (int i = 0; i < predPorts.length; i++) {
+                if (predPorts[i] == null
+                        && !nc.getInPort(i).getPortType().isOptional()) {
+                    return false;
+                }
             }
             // 6) now let's see if we can mark the predecessors of this node
             //  (and this way trigger the backwards traversal)
@@ -1583,11 +1601,10 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
             // (B) check if this node is markable and mark it!
-            NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
             boolean canBeMarked = true;
             for (NodeOutPort portIt : predPorts) {
-                if (portIt == null
-                    || (!portIt.getNodeState().executionInProgress()
+                if (portIt != null
+                    && (!portIt.getNodeState().executionInProgress()
                         && portIt.getPortObject() == null)) {
                     canBeMarked = false;
                 }
@@ -1638,8 +1655,12 @@ public final class WorkflowManager extends NodeContainer {
         for (int i = 0; i < ports.length; i++) {
             if (ports[i] != null) {
                 inData[i] = ports[i].getPortObject();
+                allDataAvailable &= inData[i] != null;
+            } else if (nc.getInPort(i).getPortType().isOptional()) {
+                // unconnected optional input - ignore
+            } else {
+                allDataAvailable = false;
             }
-            allDataAvailable &= inData[i] != null;
         }
         if (allDataAvailable) {
             switch (nc.getState()) {
@@ -2940,8 +2961,17 @@ public final class WorkflowManager extends NodeContainer {
             return getParent().isFullyConnected(id);
         }
         NodeContainer nc = getNodeContainer(id);
-        // Note that this enforces FULLY connected nodes
-        return m_workflow.getConnectionsByDest(id).size() == nc.getNrInPorts();
+        NodeOutPort[] predOutPorts = assemblePredecessorOutPorts(id);
+        for (int i = 0; i < predOutPorts.length; i++) {
+            NodeOutPort p = predOutPorts[i];
+            if (p == null) { // unconnected port
+                // accept only if inport is optional
+                if (!nc.getInPort(i).getPortType().isOptional()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /** Attempts to configure all nodes in the workflow. It will also try to
@@ -2996,8 +3026,12 @@ public final class WorkflowManager extends NodeContainer {
                     inSpecs[i] = predPorts[i].getPortObjectSpec();
                     sos[i] = predPorts[i].getFlowObjectStack();
                     hiliteHdls[i] = predPorts[i].getHiLiteHandler();
+                    allSpecsExists &= inSpecs[i] != null;
+                } else if (snc.getInPort(i).getPortType().isOptional()) {
+                    // optional input, which is not connected ... ignore
+                } else {
+                    allSpecsExists = false;
                 }
-                allSpecsExists &= inSpecs[i] != null;
             }
             if (!allSpecsExists) {
                 // only configure nodes with all Input Specs present
@@ -3027,7 +3061,6 @@ public final class WorkflowManager extends NodeContainer {
                     scsc = new FlowObjectStack(snc.getID(),
                             getWorkflowVariableStack());
                 } else {
-                    assert inCount >= 1;
                     try {
                         scsc = new FlowObjectStack(snc.getID(), sos);
                     } catch (IllegalFlowObjectStackException e) {
@@ -4210,13 +4243,21 @@ public final class WorkflowManager extends NodeContainer {
                 Set<State> allowedStates =
                     new HashSet<State>(Arrays.asList(State.values()));
                 NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
-                for (NodeOutPort p : predPorts) {
-                    if (p == null) {
-                        allowedStates.retainAll(
-                                Collections.singleton(State.IDLE));
-                        continue;
+                for (int pi = 0; pi < predPorts.length; pi++) {
+                    NodeOutPort predOutPort = predPorts[pi];
+                    NodeInPort inport = nc.getInPort(pi);
+                    State predOutPortState;
+                    if (predOutPort == null) { // unconnected
+                        if (inport.getPortType().isOptional()) {
+                            // optional inport -- imitate executed predecessor
+                            predOutPortState = State.EXECUTED;
+                        } else {
+                            predOutPortState = State.IDLE;
+                        }
+                    } else {
+                        predOutPortState = predOutPort.getNodeState();
                     }
-                    switch (p.getNodeState()) {
+                    switch (predOutPortState) {
                     case IDLE:
                         allowedStates.retainAll(Arrays.asList(
                                 State.IDLE));

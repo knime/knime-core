@@ -48,16 +48,15 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Arrays;
-
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
-/** Runnable that represents the execution of a node. This abstract class 
+/** Runnable that represents the execution of a node. This abstract class
  * defines the overall procedure of an execution including setup (e.g. to copy
  * the necessary data onto a cluster master), main execution and result
  * retrieval. It also reflects the current step of the execution in the node's
@@ -66,22 +65,22 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * @author Peter Ohl, University of Konstanz
  */
 public abstract class NodeExecutionJob implements Runnable {
-    
+
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     /** Whether this job has been saved using the saveReconnectSettings
      * method in the corresponding {@link NodeExecutionJobManager}. This flag
      * can never be true if the job manager does not allow a disconnect. */
     private boolean m_isSavedForDisconnect = false;
-    
+
     private final NodeContainer m_nc;
     private final PortObject[] m_data;
 
-    
-    /** Creates a new execution job for a given node. The array argument 
+
+    /** Creates a new execution job for a given node. The array argument
      * represent the available input data..
-     * @param nc The node that is to be executed. 
-     * @param data The input data of that node, must not be null, 
+     * @param nc The node that is to be executed.
+     * @param data The input data of that node, must not be null,
      *           nor contain null elements.
      */
     protected NodeExecutionJob(
@@ -89,8 +88,12 @@ public abstract class NodeExecutionJob implements Runnable {
         if (nc == null || data == null) {
             throw new NullPointerException("Args must not be null.");
         }
-        if (Arrays.asList(data).contains(null)) {
-            throw new NullPointerException("Array arg must not contain null.");
+        for (int i = 0; i < data.length; i++) {
+            PortType type = nc.getInPort(i).getPortType();
+            if (data[i] == null && !type.isOptional()) {
+                throw new NullPointerException("Array arg must not contain " +
+                		"null for non-optional ports");
+            }
         }
         m_nc = nc;
         m_data = data;
@@ -144,7 +147,7 @@ public abstract class NodeExecutionJob implements Runnable {
                 if (status != null && status.isSuccess()) {
                     String elapsed = StringFormat.formatElapsedTime(
                             System.currentTimeMillis() - time);
-                    m_logger.info(m_nc.getNameWithID() 
+                    m_logger.info(m_nc.getNameWithID()
                             + " End execute (" + elapsed + ")");
                 }
             }
@@ -167,15 +170,15 @@ public abstract class NodeExecutionJob implements Runnable {
             logError(throwable);
         }
     }
-    
+
     private void logError(final Throwable e) {
-        m_logger.error("Caught \"" + e.getClass().getSimpleName() + "\": " 
+        m_logger.error("Caught \"" + e.getClass().getSimpleName() + "\": "
                 + e.getMessage(), e);
     }
-    
+
     /** Whether this job has been disconnected (from a cluster execution, e.g.)
      * and is now resuming the execution. If so, the execution procedure will
-     * skip the execution setup. This property will be false for locally 
+     * skip the execution setup. This property will be false for locally
      * executed nodes.
      * @return The above described property.
      */
@@ -187,22 +190,22 @@ public abstract class NodeExecutionJob implements Runnable {
     protected void beforeExecute() {
         // possibly overwritten by sub-classes
     }
-    
-    /** Called when the main execution takes place. The node will be in the 
-     * appropriate state ({@link State#EXECUTING} or 
+
+    /** Called when the main execution takes place. The node will be in the
+     * appropriate state ({@link State#EXECUTING} or
      * {@link State#EXECUTINGREMOTELY} when this method is called.
      * @return Whether the execution was successful.
      */
     protected abstract NodeContainerExecutionStatus mainExecute();
-    
-    /** Called to finalize the execution. For instance, remote executors will 
-     * copy the result data onto the local machine. This method is called no 
+
+    /** Called to finalize the execution. For instance, remote executors will
+     * copy the result data onto the local machine. This method is called no
      * matter if the main execution was successful or not.*/
     protected void afterExecute() {
         // possibly overwritten by sub-classes
     }
-    
-    /** Called when the execution is to be canceled. 
+
+    /** Called when the execution is to be canceled.
      * @return Whether the cancelation was successful.
      * @see java.util.concurrent.Future#cancel(boolean) */
     protected abstract boolean cancel();
@@ -221,7 +224,7 @@ public abstract class NodeExecutionJob implements Runnable {
         return m_nc;
     }
 
-    /** 
+    /**
      * @param isSavedForDisconnect the isSavedForDisconnect to set
      */
     void setSavedForDisconnect(final boolean isSavedForDisconnect) {

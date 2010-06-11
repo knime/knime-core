@@ -429,7 +429,6 @@ public abstract class NodeModel {
             final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
-        // TODO: check ingoing types! (in Node!)
 
         setWarningMessage(null);
 
@@ -852,7 +851,8 @@ public abstract class NodeModel {
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
             if (copyInSpecs[i] == null
-                    && BufferedDataTable.TYPE.equals(m_inPortTypes[i])) {
+                    && BufferedDataTable.TYPE.equals(m_inPortTypes[i])
+                    && !m_inPortTypes[i].isOptional()) {
                 // only mimic empty table for real table connections
                 copyInSpecs[i] = new DataTableSpec();
             }

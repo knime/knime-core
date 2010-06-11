@@ -516,8 +516,8 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** Called when the state of a node should switch from
      * {@link State#QUEUED} to {@link State#PREEXECUTE}. The method is to be
      * called from the node's parent in a synchronized environment.
-     * @return whether there was an actual state transition, false if the 
-     *         execution was canceled (cancel checking to be done in 
+     * @return whether there was an actual state transition, false if the
+     *         execution was canceled (cancel checking to be done in
      *         synchronized block) */
     abstract boolean performStateTransitionPREEXECUTE();
 
@@ -1200,7 +1200,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param inStack Incoming {@link FlowObjectStack}.
      * @param exec For progress
      * @param loadResult Where to report errors/warnings to
-     * @param preserveNodeMessage Whether possible node messages in the 
+     * @param preserveNodeMessage Whether possible node messages in the
      *        persistor are to be preserved (parameter to configure method
      *        that is called during load).
      * @return The list of nodes that were inserted, for single node containers
@@ -1232,7 +1232,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** Saves all internals that are necessary to mimic the computed result
      * into a new execution result object. This method is called on node
      * instances, which are, e.g. executed on a server and later on read back
-     * into a true KNIME instance (upon which 
+     * into a true KNIME instance (upon which
      * {@link #loadExecutionResult(NodeContainerExecutionResult, ExecutionMonitor, LoadResult)}
      * is called).
      * @param exec For progress information (this method will copy port
