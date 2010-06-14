@@ -53,6 +53,7 @@ package org.knime.base.data.sort;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -175,17 +176,15 @@ public class SortedTableTest {
 
         BufferedDataTable bdt =
             m_exec.createBufferedDataTable(inputTable, m_exec);
-        // TODO Remove comments when SortedTable is merged with trunk
-        SortedTable sortedTable = null; //new SortedTable(bdt, Arrays.asList("Index"),
-//                new boolean[] {true}, false, maxOpenContainers, m_exec);
+        SortedTable sortedTable = new SortedTable(bdt, Arrays.asList("Index"),
+                new boolean[] {true}, false, maxOpenContainers, m_exec);
         BufferedDataTable defaultResult = sortedTable.getBufferedDataTable();
 
         // set private fields
         maxRowsField.setInt(sortedTable, maxNumRowsPerContainer);
         // 30MB min memory
-     // TODO Remove comments when SortedTable is merged with trunk
-//        MemoryService memService = new MemoryService(0.001, 10000000, false);
-//        memServiceField.set(sortedTable, memService);
+        MemoryService memService = new MemoryService(0.001, 10000000, false);
+        memServiceField.set(sortedTable, memService);
         // run again with change settings
         sortOnDiskMethod.invoke(sortedTable, bdt, m_exec);
 
