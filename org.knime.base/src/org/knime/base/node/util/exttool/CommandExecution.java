@@ -463,7 +463,7 @@ public class CommandExecution extends Observable {
                 }
             } catch (IOException ioe) {
                 LOGGER.error("I/O Error while trying to read from"
-                        + "the std err of the external process!!"
+                        + " the std err of the external process!!"
                         + " Giving up.", ioe);
             } catch (CanceledExecutionException cee) {
                 LOGGER.debug("STDERR: ....Canceled..."
@@ -538,7 +538,7 @@ public class CommandExecution extends Observable {
                 }
             } catch (IOException ioe) {
                 LOGGER.error("I/O Error while trying to read from"
-                        + "the std out of the external process!!"
+                        + " the std out of the external process!!"
                         + " Giving up.", ioe);
             } catch (CanceledExecutionException cee) {
                 LOGGER.debug("STDOUT: ....Canceled..."
