@@ -983,6 +983,12 @@
             factory-class="org.knime.base.node.preproc.filter.hilite.collector.HiLiteCollectorNodeFactory"
             id="org.knime.base.node.preproc.filter.hilite.collector.HiLiteCollectorNodeFactory">
       </node>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.LoopEnd2NodeFactory"
+            id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
+      </node>      
    </extension>
       <extension
          point="org.knime.base.pmmlports">
