@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -54,7 +54,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.IntCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the count per group.
@@ -68,10 +68,9 @@ public class CountOperator extends AggregationOperator {
     private int m_counter = 0;
 
     /**Constructor for class CountOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public CountOperator(final int maxUniqueValues) {
-        super("Count", false, false, maxUniqueValues, DataValue.class);
+    public CountOperator() {
+        super("Count", false, false, 1, DataValue.class);
     }
 
     /**
@@ -88,7 +87,7 @@ public class CountOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new CountOperator(maxUniqueValues);
+        return new CountOperator();
     }
 
     /**

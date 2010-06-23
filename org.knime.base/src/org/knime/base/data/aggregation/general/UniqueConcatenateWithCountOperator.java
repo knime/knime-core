@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -55,7 +55,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -143,7 +143,7 @@ public class UniqueConcatenateWithCountOperator
             if (first) {
                 first = false;
             } else {
-                buf.append(AggregationOperator.CONCATENATOR);
+                buf.append(getDelimiter());
             }
             buf.append(entry.getKey());
             buf.append('(');
@@ -151,6 +151,14 @@ public class UniqueConcatenateWithCountOperator
             buf.append(')');
         }
         return new StringCell(buf.toString());
+    }
+
+    /**
+     * Override this method to change the standard delimiter.
+     * @return the delimiter to use.
+     */
+    protected String getDelimiter() {
+        return AggregationOperator.STANDARD_DELIMITER;
     }
 
     /**

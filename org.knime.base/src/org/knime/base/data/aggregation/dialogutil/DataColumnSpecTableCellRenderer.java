@@ -47,7 +47,7 @@
  * History
  * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 

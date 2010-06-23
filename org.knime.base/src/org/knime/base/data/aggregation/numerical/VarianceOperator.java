@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.numerical;
+package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -54,7 +54,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the variance per group.
@@ -70,10 +70,9 @@ public class VarianceOperator extends AggregationOperator {
     private int m_validCount = 0;
 
     /**Constructor for class VarianceOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public VarianceOperator(final int maxUniqueValues) {
-        super("Variance", false, false, maxUniqueValues, DoubleValue.class);
+    public VarianceOperator() {
+        this("Variance");
     }
 
     /**
@@ -87,19 +86,9 @@ public class VarianceOperator extends AggregationOperator {
     /**Constructor for class NumericOperators.VarianceOperator.
      * @param label user readable label which is also used for the
      * column name
-     * @param numerical <code>true</code> if the operator is only suitable
-     * for numerical columns
-     * @param usesLimit <code>true</code> if the method checks the number of
-     * unique values limit.
-     * @param keepColSpec <code>true</code> if the original column
-     * specification should be kept if possible
-     * @param maxUniqueValues the maximum number of unique values
      */
-    VarianceOperator(final String label, final boolean numerical,
-            final boolean usesLimit, final boolean keepColSpec,
-            final int maxUniqueValues) {
-        super(label, usesLimit, keepColSpec, maxUniqueValues,
-                DoubleValue.class);
+    VarianceOperator(final String label) {
+        super(label, false, false, 1, DoubleValue.class);
     }
 
     /**
@@ -108,7 +97,7 @@ public class VarianceOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new VarianceOperator(maxUniqueValues);
+        return new VarianceOperator();
     }
 
     /**

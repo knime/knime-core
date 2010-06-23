@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -55,7 +55,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.def.DoubleCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the maximum per group.
@@ -70,12 +70,9 @@ public class MaxOperator extends AggregationOperator {
 
     /**Constructor for class MinOperator.
      * @param origColSpec the {@link DataColumnSpec} of the original column
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public MaxOperator(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        super("Maximum", "Max", false, true, maxUniqueValues,
-                DataValue.class);
+    public MaxOperator(final DataColumnSpec origColSpec) {
+        super("Maximum", "Max", false, true, 1, DataValue.class);
         if (origColSpec == null) {
             //this could only happen in the enumeration definition
             m_comparator = DoubleCell.TYPE.getComparator();
@@ -101,7 +98,7 @@ public class MaxOperator extends AggregationOperator {
         if (origColSpec == null) {
             throw new NullPointerException("origColSpec must not be null");
         }
-        return new MaxOperator(origColSpec, maxUniqueValues);
+        return new MaxOperator(origColSpec);
     }
 
     /**

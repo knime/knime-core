@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -55,10 +55,10 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Returns all values as a {@link ListCell} per group.
@@ -67,14 +67,33 @@ import java.util.LinkedList;
  */
 public class ListCellOperator extends AggregationOperator {
 
-    private final Collection<DataCell> m_cells;
+    private final List<DataCell> m_cells;
 
     /**Constructor for class Concatenate.
      * @param maxUniqueValues the maximum number of unique values
      */
     public ListCellOperator(final int maxUniqueValues) {
-        super("List", false, false, maxUniqueValues, DataValue.class);
+        this("List", "List", maxUniqueValues);
+    }
+
+    /**Constructor for class ListCellOperator.
+     * @param label of the derived class
+     * @param colName the column name
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    protected ListCellOperator(final String label, final String colName,
+            final int maxUniqueValues) {
+        super(label, colName, false, false, maxUniqueValues,
+                DataValue.class);
         m_cells = new LinkedList<DataCell>();
+    }
+
+
+    /**
+     * @return the cells
+     */
+    protected List<DataCell> getCells() {
+        return m_cells;
     }
 
     /**

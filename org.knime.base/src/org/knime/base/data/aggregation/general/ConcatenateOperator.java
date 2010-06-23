@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -54,7 +54,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the all values concatenated per group.
@@ -70,10 +70,9 @@ public class ConcatenateOperator extends AggregationOperator {
     private boolean m_first = true;
 
     /**Constructor for class Concatenate.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public ConcatenateOperator(final int maxUniqueValues) {
-        super("Concatenate", false, false, maxUniqueValues,
+    public ConcatenateOperator() {
+        super("Concatenate", false, false, 1,
                 DataValue.class);
     }
 
@@ -91,7 +90,7 @@ public class ConcatenateOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new ConcatenateOperator(maxUniqueValues);
+        return new ConcatenateOperator();
     }
 
     /**
@@ -105,10 +104,18 @@ public class ConcatenateOperator extends AggregationOperator {
         if (m_first) {
             m_first = false;
         } else {
-            m_buf.append(AggregationOperator.CONCATENATOR);
+            m_buf.append(getDelimiter());
         }
         m_buf.append(cell.toString());
         return false;
+    }
+
+    /**
+     * Override this method to change the standard delimiter.
+     * @return the delimiter to use.
+     */
+    protected String getDelimiter() {
+        return AggregationOperator.STANDARD_DELIMITER;
     }
 
     /**

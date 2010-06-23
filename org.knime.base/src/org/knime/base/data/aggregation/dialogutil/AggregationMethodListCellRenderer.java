@@ -47,9 +47,9 @@
  * History
  * 27.08.2008 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethod;
 
 import java.awt.Component;
 
@@ -81,10 +81,9 @@ public class AggregationMethodListCellRenderer
                     cellHasFocus);
         assert (c == this);
         if (value instanceof AggregationMethod) {
-            AggregationMethod aggregationMeth = (AggregationMethod)value;
+            final AggregationMethod aggregationMeth = (AggregationMethod)value;
             setText(aggregationMeth.getLabel());
             setToolTipText(aggregationMeth.getDescription());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
         }
         return this;
     }

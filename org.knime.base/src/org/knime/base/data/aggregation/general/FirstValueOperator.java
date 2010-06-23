@@ -46,12 +46,12 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 
 /**
@@ -62,10 +62,9 @@ import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 public class FirstValueOperator extends FirstOperator {
 
     /**Constructor for class FirstValueOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public FirstValueOperator(final int maxUniqueValues) {
-        super("First value", false, false, true, maxUniqueValues);
+    public FirstValueOperator() {
+        super("First value");
     }
 
     /**
@@ -74,7 +73,7 @@ public class FirstValueOperator extends FirstOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new FirstValueOperator(maxUniqueValues);
+        return new FirstValueOperator();
     }
 
     /**

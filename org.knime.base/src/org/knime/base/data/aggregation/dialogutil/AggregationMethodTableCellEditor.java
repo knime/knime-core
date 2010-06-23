@@ -49,11 +49,11 @@
  *    27.08.2008 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.AggregationMethods;
 
 import java.awt.Component;
 

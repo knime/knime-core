@@ -49,14 +49,14 @@
  *    27.08.2008 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.DataValue;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,26 +181,16 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     }
 
     /**
-     * @return the row indices of all numerical rows
+     * @param type the type to check for compatibility
+     * @return indices of all rows that are compatible with the given type
+     * or an empty collection if none is compatible
      */
-    protected Collection<Integer> getNumericalRowIdxs() {
+    public Collection<Integer> getCompatibleRowIdxs(
+            final Class<? extends DataValue> type) {
         final Collection<Integer> result = new LinkedList<Integer>();
         for (int i = 0, length = m_cols.size(); i < length; i++) {
-            if (isNumerical(i)) {
-                result.add(new Integer(i));
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @return the row indices of all none numerical rows
-     */
-    protected Collection<Integer> getNoneNumericalRowIdxs() {
-        final Collection<Integer> result = new LinkedList<Integer>();
-        for (int i = 0, length = m_cols.size(); i < length; i++) {
-            if (!isNumerical(i)) {
-                result.add(new Integer(i));
+            if (isCompatible(i, type)) {
+                result.add(Integer.valueOf(i));
             }
         }
         return result;
@@ -208,11 +198,13 @@ public class AggregationColumnTableModel extends DefaultTableModel {
 
     /**
      * @param row the index of the row to check
+     * @param type the type to check for compatibility
      * @return <code>true</code> if the row contains a numerical column
      */
-    protected boolean isNumerical(final int row) {
+    public boolean isCompatible(final int row,
+            final Class<? extends DataValue> type) {
         final ColumnAggregator colAggr = getColumnAggregator(row);
-        return colAggr.getDataType().isCompatible(DoubleValue.class);
+        return colAggr.isCompatible(type);
     }
 
     /**
@@ -246,7 +238,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * @param row the index of the row
      * @return the aggregator for the row with the given index
      */
-    protected ColumnAggregator getColumnAggregator(final int row) {
+    public ColumnAggregator getColumnAggregator(final int row) {
         if (row < 0 || m_cols.size() <= row) {
             throw new IllegalArgumentException("Invalid row index: " + row);
         }
@@ -258,7 +250,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     /**
      * @return the {@link ColumnAggregator} {@link List}
      */
-    protected List<ColumnAggregator> getColumnAggregators() {
+    public List<ColumnAggregator> getColumnAggregators() {
         return Collections.unmodifiableList(m_cols);
     }
 

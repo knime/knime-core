@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.numerical;
+package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -54,7 +54,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the sum per group.
@@ -68,10 +68,9 @@ public class SumOperator extends AggregationOperator {
     private double m_sum = 0;
 
     /**Constructor for class SumOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public SumOperator(final int maxUniqueValues) {
-        super("Sum", false, false, maxUniqueValues, DoubleValue.class);
+    public SumOperator() {
+        super("Sum", false, false, 1, DoubleValue.class);
     }
 
     /**
@@ -88,7 +87,7 @@ public class SumOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new SumOperator(maxUniqueValues);
+        return new SumOperator();
     }
 
     /**

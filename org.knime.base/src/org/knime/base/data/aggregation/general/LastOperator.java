@@ -46,14 +46,14 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.general;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 /**
  * Returns the last element per group.
@@ -65,29 +65,16 @@ public class LastOperator extends AggregationOperator {
     private DataCell m_lastCell = null;
 
     /**Constructor for class MinOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public LastOperator(final int maxUniqueValues) {
-        super("Last", false, true, maxUniqueValues, DataValue.class);
+    public LastOperator() {
+        this("Last");
     }
-
     /**Constructor for class LastOperator.
-     * @param label user readable label
-     * @param numerical <code>true</code> if the operator is only suitable
-     * for numerical columns
-     * @param usesLimit <code>true</code> if the method checks the number of
-     * unique values limit.
-     * @param keepColSpec <code>true</code> if the original column
-     * specification should be kept if possible
-     * @param maxUniqueValues the maximum number of unique values
+     * @param label the label
      */
-    public LastOperator(final String label, final boolean numerical,
-            final boolean usesLimit, final boolean keepColSpec,
-            final int maxUniqueValues) {
-        super(label, usesLimit,  keepColSpec, maxUniqueValues,
-                DataValue.class);
+    protected LastOperator(final String label) {
+        super(label, false, true, 1, DataValue.class);
     }
-
     /**
      * {@inheritDoc}
      */
@@ -102,7 +89,7 @@ public class LastOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new LastOperator(maxUniqueValues);
+        return new LastOperator();
     }
 
     /**

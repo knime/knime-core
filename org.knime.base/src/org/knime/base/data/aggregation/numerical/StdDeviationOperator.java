@@ -46,14 +46,14 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.preproc.groupby.aggregation.numerical;
+package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.AggregationOperator;
 
 
 /**
@@ -64,10 +64,9 @@ import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
 public class StdDeviationOperator extends VarianceOperator {
 
     /**Constructor for class StdDeviationOperator.
-     * @param maxUniqueValues the maximum number of unique values
      */
-    public StdDeviationOperator(final int maxUniqueValues) {
-        super("Standard deviation", true, false, false, maxUniqueValues);
+    public StdDeviationOperator() {
+        super("Standard deviation");
     }
 
     /**
@@ -76,7 +75,7 @@ public class StdDeviationOperator extends VarianceOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new StdDeviationOperator(maxUniqueValues);
+        return new StdDeviationOperator();
     }
 
     /**

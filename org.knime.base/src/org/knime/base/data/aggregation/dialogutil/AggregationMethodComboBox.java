@@ -46,13 +46,13 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
 
 import java.util.List;
 

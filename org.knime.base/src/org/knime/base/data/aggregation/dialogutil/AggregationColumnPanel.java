@@ -49,19 +49,21 @@
  *    27.08.2008 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby.dialogutil;
+package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -71,10 +73,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -181,30 +187,70 @@ public class AggregationColumnPanel extends MouseAdapter {
                 menu.add(item);
                 return menu;
             }
-            final JMenuItem selectNominal =
-                new JMenuItem("Select all none numerical columns");
-            selectNominal.addActionListener(new ActionListener() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    selectAllNoneNumericalRows();
+            createColumnSelectionMenu(menu);
+            menu.addSeparator();
+            createAggregationSection(menu);
+            return menu;
+        }
+
+        /**
+         * Adds the column selection section to the given menu.
+         * This section allows the user to select all rows that are compatible
+         * to the chosen data type at once.
+         * @param menu the menu to append the column selection section
+         */
+        private void createColumnSelectionMenu(final JPopupMenu menu) {
+            final Collection<Class<? extends DataValue>> existingTypes =
+                getAllPresentTypes();
+            if (existingTypes.size() < 3) {
+                //create no sub menu if their are to few different types
+                for (final Class<? extends DataValue> type : existingTypes) {
+                    if (type == DataValue.class) {
+                        //skip the general type since this one is always present
+                        continue;
+                    }
+                    final JMenuItem selectCompatible =
+                        new JMenuItem("Select "
+                                + AggregationMethods.getUserTypeLabel(
+                                        type).toLowerCase()
+                                + " columns");
+                    selectCompatible.addActionListener(new ActionListener() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public void actionPerformed(final ActionEvent e) {
+                            selectCompatibleRows(type);
+                        }
+                    });
+                    menu.add(selectCompatible);
                 }
-            });
-            menu.add(selectNominal);
-            final JMenuItem selectNumerical =
-                new JMenuItem("Select all numerical columns");
-            selectNumerical.addActionListener(new ActionListener() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    selectAllNumericalRows();
+            } else {
+                //create a column selection sub menu
+                final JMenu menuItem = new JMenu("Select all...");
+                final JMenuItem supportedMenu = menu.add(menuItem);
+                for (final Class<? extends DataValue> type : existingTypes) {
+                    if (type == DataValue.class) {
+                        //skip the general type since this one is always present
+                        continue;
+                    }
+                    final JMenuItem selectCompatible =
+                        new JMenuItem(AggregationMethods.getUserTypeLabel(
+                                        type).toLowerCase()
+                                + " columns");
+                    selectCompatible.addActionListener(new ActionListener() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public void actionPerformed(final ActionEvent e) {
+                            selectCompatibleRows(type);
+                        }
+                    });
+                    supportedMenu.add(selectCompatible);
                 }
-            });
-            menu.add(selectNumerical);
+            }
+            //add the select all columns entry
             final JMenuItem selectAll =
                 new JMenuItem("Select all columns");
             selectAll.addActionListener(new ActionListener() {
@@ -217,34 +263,70 @@ public class AggregationColumnPanel extends MouseAdapter {
                 }
             });
             menu.add(selectAll);
-            menu.addSeparator();
+        }
 
-            final JMenu aggrMenu = new JMenu("Aggregation method");
-
+        /**
+         * Adds the aggregation method section to the given menu.
+         * This section allows the user to set an aggregation method for
+         * all selected columns.
+         * @param menu the menu to append the aggregation section
+         */
+        private void createAggregationSection(final JPopupMenu menu) {
             if (!rowsSelected()) {
                     final JMenuItem noneSelected =
-                        new JMenuItem("No column selected");
+                        new JMenuItem("Select a column to change method");
                     noneSelected.setEnabled(false);
-                    aggrMenu.add(noneSelected);
-            } else {
-                final List<String> labels = getMethods4SelectedItems();
-                for (final String label : labels) {
+                    menu.add(noneSelected);
+                    return;
+            }
+//            final JMenu aggrMenu = new JMenu("Aggregation method");
+            final List<Entry<String, List<AggregationMethod>>>
+                methodList = getMethods4SelectedItems();
+            if (methodList.size() == 1) {
+                //we need no sub menu for a single group
+                for (final AggregationMethod method
+                        : methodList.get(0).getValue()) {
                     final JMenuItem methodItem =
-                        new JMenuItem(label);
+                        new JMenuItem(method.getLabel());
+                    methodItem.setToolTipText(method.getDescription());
                     methodItem.addActionListener(new ActionListener() {
                         /**
                          * {@inheritDoc}
                          */
                         @Override
                         public void actionPerformed(final ActionEvent e) {
-                            changeAggregationMethod(label);
+                            changeAggregationMethod(method.getLabel());
                         }
                     });
-                    aggrMenu.add(methodItem);
+                    menu.add(methodItem);
+                }
+            } else {
+                for (final Entry<String, List<AggregationMethod>> entry
+                        : methodList) {
+                    final String type = entry.getKey();
+                    final List<AggregationMethod> methods =
+                        entry.getValue();
+                    final JMenu menuItem = new JMenu(type + " Methods");
+                    final JMenuItem subMenu = menu.add(menuItem);
+                    for (final AggregationMethod method : methods) {
+                        final JMenuItem methodItem =
+                            new JMenuItem(method.getLabel());
+                        methodItem.setToolTipText(method.getDescription());
+                        methodItem.addActionListener(new ActionListener() {
+                            /**
+                             * {@inheritDoc}
+                             */
+                            @Override
+                            public void actionPerformed(
+                                    final ActionEvent e) {
+                                changeAggregationMethod(method.getLabel());
+                            }
+                        });
+                        subMenu.add(methodItem);
+                    }
                 }
             }
-            menu.add(aggrMenu);
-            return menu;
+//            menu.add(aggrMenu);
         }
     }
 
@@ -291,6 +373,23 @@ public class AggregationColumnPanel extends MouseAdapter {
         rootBox.add(createAggrColTable());
         rootBox.add(Box.createHorizontalGlue());
         m_panel.add(rootBox);
+    }
+
+    /**
+     * @return all supported types with at least one row in the table
+     */
+    public Collection<Class<? extends DataValue>> getAllPresentTypes() {
+        final Collection<Class<? extends DataValue>> supportedTypes =
+            AggregationMethods.getSupportedTypes();
+        final Collection<Class<? extends DataValue>> existingTypes =
+            new LinkedList<Class<? extends DataValue>>();
+        for (final Class<? extends DataValue> type : supportedTypes) {
+            if (noOfCompatibleRows(type) > 0) {
+                //add only types that have at least one row
+                existingTypes.add(type);
+            }
+        }
+        return existingTypes;
     }
 
     private Box createAggrColBox() {
@@ -441,28 +540,34 @@ public class AggregationColumnPanel extends MouseAdapter {
     protected void selectAllRows() {
         m_aggrColTable.selectAll();
     }
+
     /**
-     * Selects all numerical rows.
+     * Selects all rows that are compatible with the given type.
+     * @param type the type to check for compatibility
      */
-    protected void selectAllNumericalRows() {
+    protected void selectCompatibleRows(
+            final Class<? extends DataValue> type) {
         final Collection<Integer> idxs =
-            m_aggrColTableModel.getNumericalRowIdxs();
+            m_aggrColTableModel.getCompatibleRowIdxs(type);
         updateSelection(idxs);
     }
 
     /**
-     * Selects all none numerical rows.
+     * Returns the number of rows that are compatible to the given type.
+     * @param type the type to check for
+     * @return the number of compatible rows
      */
-    protected void selectAllNoneNumericalRows() {
+    int noOfCompatibleRows(
+            final Class<? extends DataValue> type) {
         final Collection<Integer> idxs =
-            m_aggrColTableModel.getNoneNumericalRowIdxs();
-        updateSelection(idxs);
+            m_aggrColTableModel.getCompatibleRowIdxs(type);
+        return idxs != null ? idxs.size() : 0;
     }
 
     /**
      * @return <code>true</code> if at least one row is selected
      */
-    protected boolean rowsSelected() {
+    boolean rowsSelected() {
          final int[] selectedRows = m_aggrColTable.getSelectedRows();
          return (selectedRows != null && selectedRows.length > 0);
     }
@@ -574,7 +679,8 @@ public class AggregationColumnPanel extends MouseAdapter {
      * @return a label list of all supported methods for the currently
      * selected rows
      */
-    protected List<String> getMethods4SelectedItems() {
+    protected List<Entry<String, List<AggregationMethod>>>
+        getMethods4SelectedItems() {
         final int[] selectedColumns =
             m_aggrColTable.getSelectedRows();
         final Set<DataType> types =
@@ -586,8 +692,45 @@ public class AggregationColumnPanel extends MouseAdapter {
         }
         final DataType superType = CollectionCellFactory.getElementType(
                 types.toArray(new DataType[0]));
-        final List<String> labels =
-            AggregationMethods.getCompatibleMethodLabels(superType);
-        return labels;
+        final Map<Class<? extends DataValue>, List<AggregationMethod>>
+        methodGroups = AggregationMethods.getCompatibleMethodGroups(superType);
+        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>>
+            methodSet = methodGroups.entrySet();
+        final List<String> labels = new ArrayList<String>(methodSet.size());
+        final Map<String, List<AggregationMethod>> labelSet =
+            new HashMap<String, List<AggregationMethod>>(methodSet.size());
+        for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
+            entry : methodSet) {
+            final String label =
+                AggregationMethods.getUserTypeLabel(entry.getKey());
+            labels.add(label);
+            labelSet.put(label, entry.getValue());
+        }
+        Collections.sort(labels);
+        final List<Entry<String, List<AggregationMethod>>> list =
+            new ArrayList<Entry<String, List<AggregationMethod>>>(
+                    methodSet.size());
+        for (final String label : labels) {
+            final List<AggregationMethod> methods = labelSet.get(label);
+            final Entry<String, List<AggregationMethod>> entry =
+                new Map.Entry<String, List<AggregationMethod>>() {
+                    @Override
+                    public String getKey() {
+                        return label;
+                    }
+                    @Override
+                    public List<AggregationMethod> getValue() {
+                        return methods;
+                    }
+                    @Override
+                    public List<AggregationMethod> setValue(
+                            final List<AggregationMethod> value) {
+                        return methods;
+                    }
+            };
+            list.add(entry);
+        }
+
+        return list;
     }
 }
