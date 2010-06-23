@@ -82,7 +82,7 @@ public class MedianOperator extends AggregationOperator {
             m_cells = new ArrayList<DataCell>(maxUniqueValues);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
-            "Maximum unique values number to big");
+            "Maximum unique values number too big");
         }
     }
 
