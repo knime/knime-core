@@ -299,11 +299,12 @@ public final class Node implements NodeModelWarningListener {
                 break;
             case FAIL:
                 loadResult.addError(error);
-                    createErrorMessageAndNotify(error, e);
+                createErrorMessageAndNotify(error, e);
                 loader.setNeedsResetAfterLoad();
                 break;
             case WARN:
                 createWarningMessageAndNotify(error, e);
+                loadResult.addWarning(error);
                 loader.setDirtyAfterLoad();
                 break;
             }
