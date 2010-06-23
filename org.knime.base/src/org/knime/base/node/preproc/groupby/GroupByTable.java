@@ -64,10 +64,10 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.MutableInteger;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 
 import java.util.ArrayList;

@@ -59,8 +59,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationOperator;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.ColumnAggregator;
 
 import java.util.Arrays;
 import java.util.HashMap;

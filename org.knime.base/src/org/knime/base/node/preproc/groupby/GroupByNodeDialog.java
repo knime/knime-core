@@ -52,8 +52,6 @@
 package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -70,10 +68,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
-import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -83,10 +80,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -188,55 +182,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
             }
         });
         inMemoryChanged();
-        final Component descriptionTab = createDescriptionTab();
+        final Component descriptionTab =
+            AggregationMethods.createDescriptionPane();
         descriptionTab.setMinimumSize(dimension);
         descriptionTab.setMaximumSize(dimension);
         descriptionTab.setPreferredSize(dimension);
         addTab("Description", descriptionTab);
-    }
-
-    private Component createDescriptionTab() {
-        final StringBuilder buf = new StringBuilder();
-        final List<AggregationMethod> methods =
-            AggregationMethods.getAvailableMethods();
-        Class<? extends DataValue> lastType = null;
-        for (final AggregationMethod method : methods) {
-            final Class<? extends DataValue> supportedType =
-                method.getSupportedType();
-            if (lastType == null || lastType != supportedType) {
-                if (lastType != null) {
-                    //close the previous definition list
-                    buf.append("</dl>");
-                }
-                buf.append("<h3>");
-                if (supportedType == DataValue.class) {
-                    buf.append("All data types");
-                } else if (supportedType == DoubleValue.class) {
-                    buf.append("Numerical data types");
-                } else {
-                    buf.append(supportedType.getName());
-                }
-                buf.append("</h3>");
-                buf.append("\n");
-                buf.append("<dl>");
-                lastType = supportedType;
-            }
-            buf.append("<dt><b>");
-            buf.append(method.getLabel());
-            buf.append("</b></dt>");
-            buf.append("\n");
-            buf.append("<dd>");
-            buf.append(method.getDescription());
-            buf.append("</dd>");
-            buf.append("\n");
-        }
-        final JEditorPane editorPane = new JEditorPane("text/html",
-                buf.toString());
-        editorPane.setEditable(false);
-        final JScrollPane scrollPane = new JScrollPane(editorPane,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        return scrollPane;
     }
 
     /**

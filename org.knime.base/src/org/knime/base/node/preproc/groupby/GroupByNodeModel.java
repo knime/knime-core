@@ -72,9 +72,9 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
 
 import java.io.File;
 import java.io.FileInputStream;

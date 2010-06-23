@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
    <extension-point id="pmmlports" name="pmml.ports" schema="schema/pmmlports.exsd"/>
+   <extension-point id="AggregationOperator" name="AggregationOperator" schema="schema/org.knime.base.AggregationOperator.exsd"/>
     <extension
          point="org.knime.workbench.repository.categories">
       <category
@@ -988,7 +989,7 @@
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.LoopEnd2NodeFactory"
             id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
-      </node>      
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
