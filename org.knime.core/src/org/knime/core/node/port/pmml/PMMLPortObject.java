@@ -164,8 +164,10 @@ public abstract class PMMLPortObject implements PortObject {
     /**
      * Default constructor necessary for loading. Derived classes also
      * <em>must</em> provide a default constructor, otherwise loading will fail.
+     * Calling this constructor is discouraged. It is only available for 
+     * internal calls.
      */
-    public PMMLPortObject() {
+    protected PMMLPortObject() {
         m_masterHandler = new PMMLMasterContentHandler();
         m_isLoaded = false;
     }
