@@ -571,8 +571,12 @@ public class KNIMEApplication implements IApplication {
                     + " add '-D" + XUL + "=...' to knime.ini");
         } else if (xul191Location != null) {
             Bundle eclipseCore = Platform.getBundle("org.eclipse.core.runtime");
-            if ((eclipseCore.getVersion().getMajor() == 3)
-                && (eclipseCore.getVersion().getMinor() < 5)) {
+            String version = (String)eclipseCore.getHeaders().get("Bundle-Version");
+            String[] parts = version.split("\\.");
+            int major = Integer.parseInt(parts[0]);
+            int minor = Integer.parseInt(parts[1]);
+
+            if ((major == 3) && (minor < 5)) {
                 System.setProperty(XUL, "");
                 System.out.println("Rejecting xulrunner '"
                         + xul191Location.getAbsolutePath() + "' as internal web "
