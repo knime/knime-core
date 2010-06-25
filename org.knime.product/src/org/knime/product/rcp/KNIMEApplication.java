@@ -224,12 +224,12 @@ public class KNIMEApplication implements IApplication {
             try {
                 // the operation will fail if the url is not a valid
                 // instance data area, so other checking is unneeded
-                if (instanceLoc.setURL(workspaceUrl, true)) {
+                if (instanceLoc.set(workspaceUrl, true)) {
                     launchData.writePersistedData();
                     writeWorkspaceVersion();
                     return true;
                 }
-            } catch (IllegalStateException e) {
+            } catch (Exception e) {
                 MessageDialog
                         .openError(
                                 shell,
