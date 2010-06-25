@@ -48,18 +48,17 @@
 
 package org.knime.base.data.aggregation.numerical;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 
 /**
@@ -127,12 +126,12 @@ public class MedianOperator extends AggregationOperator {
             return DataType.getMissingCell();
         }
         if (m_cells.size() == 1) {
-            return m_cells.get(0);
+            return convertToDoubleCellIfNecessary(m_cells.get(0));
         }
         Collections.sort(m_cells, m_comparator);
         final double middle = m_cells.size() / 2.0;
         if (middle > (int)middle) {
-            return m_cells.get((int)middle);
+            return convertToDoubleCellIfNecessary(m_cells.get((int)middle));
         }
         //the list is even return the middle two
         final double val1 =
@@ -140,6 +139,21 @@ public class MedianOperator extends AggregationOperator {
         final double val2 =
             ((DoubleValue)m_cells.get((int) middle)).getDoubleValue();
         return new DoubleCell((val1 + val2) / 2);
+    }
+
+    /** Converts argument to DoubleCell if it does not fully support the
+     * DataValue interfaces supported by DoubleCell.TYPE
+     * @param cell Cell to convert (or not)
+     * @return The argument or a new DoubleCell.
+     */
+    private DataCell convertToDoubleCellIfNecessary(final DataCell cell) {
+        if (cell.isMissing()) {
+            return DataType.getMissingCell();
+        }
+        if (TYPE.isASuperTypeOf(cell.getType())) {
+            return cell;
+        }
+        return new DoubleCell(((DoubleValue)cell).getDoubleValue());
     }
 
     /**
