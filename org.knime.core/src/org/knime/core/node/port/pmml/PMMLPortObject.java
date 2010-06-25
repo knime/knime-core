@@ -167,7 +167,7 @@ public abstract class PMMLPortObject implements PortObject {
      * Calling this constructor is discouraged. It is only available for 
      * internal calls.
      */
-    protected PMMLPortObject() {
+    public PMMLPortObject() {
         m_masterHandler = new PMMLMasterContentHandler();
         m_isLoaded = false;
     }
