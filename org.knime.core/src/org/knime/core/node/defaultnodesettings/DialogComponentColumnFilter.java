@@ -51,12 +51,6 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,6 +58,13 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.ColumnFilterPanel;
+import org.knime.core.node.util.DataValueColumnFilter;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * Provides a component for column filtering. This component for the default
@@ -323,6 +324,25 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_columnFilter.setEnabled(enabled);
+    }
+
+    /**
+     * @param allowedTypes filter for the columns all column not compatible with
+     *            any of the allowed types are not displayed.
+     */
+    public void setAllowedTypes(
+            final Class<? extends DataValue>... allowedTypes) {
+        setColumnFilter(new DataValueColumnFilter(allowedTypes));
+    }
+
+    /**
+     * @param filter for the columns, all column not compatible with
+     *            any of the allowed types are not displayed
+     */
+    public void setColumnFilter(final ColumnFilter filter) {
+        m_columnFilter.setColumnFilter(filter);
+        //update the settings to be in sync with the panel
+        updateModel();
     }
 
     /**

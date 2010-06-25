@@ -47,6 +47,11 @@
  */
 package org.knime.core.node.util;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -85,11 +90,6 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
 
 
 /**
@@ -184,7 +184,7 @@ public class ColumnFilterPanel extends JPanel {
             if (filterValueClasses == null || filterValueClasses.length == 0) {
                 throw new NullPointerException("Classes must not be null");
             }
-            List<Class<? extends DataValue>> list = Arrays
+            final List<Class<? extends DataValue>> list = Arrays
                     .asList(filterValueClasses);
             if (list.contains(null)) {
                 throw new NullPointerException("List of value classes must not "
@@ -199,7 +199,7 @@ public class ColumnFilterPanel extends JPanel {
          * @return true, if given column should be visible in column filter
          */
         public final boolean includeColumn(final DataColumnSpec cspec) {
-            for (Class<? extends DataValue> cl : m_filterClasses) {
+            for (final Class<? extends DataValue> cl : m_filterClasses) {
                 if (cspec.getType().isCompatible(cl)) {
                     return true;
                 }
@@ -214,7 +214,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /** The filter used to filter out/in valid column types. */
-    private final ColumnFilter m_filter;
+    private ColumnFilter m_filter;
 
     private final HashSet<DataColumnSpec> m_hideColumns =
         new HashSet<DataColumnSpec>();
@@ -232,6 +232,8 @@ public class ColumnFilterPanel extends JPanel {
      */
     private static final Border EXCLUDE_BORDER =
         BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
+
+    private DataTableSpec m_spec;
 
 
     /**
@@ -299,7 +301,7 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor 
+     * @deprecated Use the constructor
      * {@link #ColumnFilterPanel(boolean, Class...)} instead
      */
     @Deprecated
@@ -319,7 +321,7 @@ public class ColumnFilterPanel extends JPanel {
      * @see #update(DataTableSpec, boolean, Collection)
      * @see #update(DataTableSpec, boolean, String...)
      *
-     * @deprecated Use the constructor 
+     * @deprecated Use the constructor
      * {@link #ColumnFilterPanel(boolean, ColumnFilter)} instead
      */
     @Deprecated
@@ -407,7 +409,7 @@ public class ColumnFilterPanel extends JPanel {
 
         m_searchFieldIncl = new JTextField(8);
         m_searchButtonIncl = new JButton("Search");
-        ActionListener actionListenerIncl = new ActionListener() {
+        final ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
                         m_markAllHitsIncl.isSelected());
@@ -415,14 +417,14 @@ public class ColumnFilterPanel extends JPanel {
         };
         m_searchFieldIncl.addActionListener(actionListenerIncl);
         m_searchButtonIncl.addActionListener(actionListenerIncl);
-        JPanel inclSearchPanel = new JPanel(new BorderLayout());
+        final JPanel inclSearchPanel = new JPanel(new BorderLayout());
         inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
                 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Select all search hits");
-        ActionListener actionListenerAllIncl = new ActionListener() {
+        final ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
                 onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
@@ -431,7 +433,7 @@ public class ColumnFilterPanel extends JPanel {
         };
         m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
         inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
-        JPanel includePanel = new JPanel(new BorderLayout());
+        final JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(
                 INCLUDE_BORDER, " Include ");
         includePanel.setBorder(m_includeBorder);
@@ -458,7 +460,7 @@ public class ColumnFilterPanel extends JPanel {
 
         m_searchFieldExcl = new JTextField(8);
         m_searchButtonExcl = new JButton("Search");
-        ActionListener actionListenerExcl = new ActionListener() {
+        final ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
                         m_markAllHitsExcl.isSelected());
@@ -466,14 +468,14 @@ public class ColumnFilterPanel extends JPanel {
         };
         m_searchFieldExcl.addActionListener(actionListenerExcl);
         m_searchButtonExcl.addActionListener(actionListenerExcl);
-        JPanel exclSearchPanel = new JPanel(new BorderLayout());
+        final JPanel exclSearchPanel = new JPanel(new BorderLayout());
         exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
                 15));
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Select all search hits");
-        ActionListener actionListenerAllExcl = new ActionListener() {
+        final ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
                 onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
@@ -482,15 +484,15 @@ public class ColumnFilterPanel extends JPanel {
         };
         m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
         exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
-        JPanel excludePanel = new JPanel(new BorderLayout());
+        final JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(
                 EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
 
-        JPanel buttonPan2 = new JPanel(new GridLayout());
-        Border border = BorderFactory.createTitledBorder(" Select ");
+        final JPanel buttonPan2 = new JPanel(new GridLayout());
+        final Border border = BorderFactory.createTitledBorder(" Select ");
         buttonPan2.setBorder(border);
         buttonPan2.add(buttonPan);
 
@@ -503,7 +505,7 @@ public class ColumnFilterPanel extends JPanel {
                 /** {@inheritDoc} */
                 @Override
                 public void itemStateChanged(final ItemEvent ie) {
-                    boolean keepAll = m_keepAllBox.isSelected();
+                    final boolean keepAll = m_keepAllBox.isSelected();
                     if (keepAll) {
                         onAddAll();
                     }
@@ -515,16 +517,16 @@ public class ColumnFilterPanel extends JPanel {
         }
 
         // adds include, button, exclude component
-        JPanel center = new JPanel();
+        final JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.X_AXIS));
         center.add(excludePanel);
         center.add(buttonPan2);
         center.add(includePanel);
-        JPanel all = new JPanel();
+        final JPanel all = new JPanel();
         all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
         all.add(center);
         if (m_keepAllBox != null) {
-            JPanel keepAllPanel = new JPanel(
+            final JPanel keepAllPanel = new JPanel(
                     new FlowLayout(FlowLayout.RIGHT, 0, 0));
             keepAllPanel.add(m_keepAllBox);
             all.add(keepAllPanel);
@@ -543,7 +545,7 @@ public class ColumnFilterPanel extends JPanel {
         if (m_keepAllBox != null) {
             m_keepAllBox.setEnabled(enabled);
         }
-        boolean newEnabled = enabled && !isKeepAllSelected();
+        final boolean newEnabled = enabled && !isKeepAllSelected();
         enabledComponents(newEnabled);
     }
 
@@ -595,7 +597,7 @@ public class ColumnFilterPanel extends JPanel {
 
     private void fireFilteringChangedEvent() {
         if (m_listeners != null) {
-            for (ChangeListener listener : m_listeners) {
+            for (final ChangeListener listener : m_listeners) {
                 listener.stateChanged(new ChangeEvent(this));
             }
         }
@@ -626,10 +628,10 @@ public class ColumnFilterPanel extends JPanel {
      */
     private void onRemIt() {
         // add all selected elements from the include to the exclude list
-        Object[] o = m_inclList.getSelectedValues();
-        HashSet<Object> hash = new HashSet<Object>();
+        final Object[] o = m_inclList.getSelectedValues();
+        final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+        for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
         boolean changed = false;
@@ -637,7 +639,7 @@ public class ColumnFilterPanel extends JPanel {
             changed |= m_inclMdl.removeElement(o[i]);
         }
         m_exclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
             }
@@ -655,10 +657,10 @@ public class ColumnFilterPanel extends JPanel {
      * list.
      */
     private void onRemAll() {
-        boolean changed = m_inclMdl.elements().hasMoreElements();
+        final boolean changed = m_inclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (!m_hideColumns.contains(c)) {
                 m_exclMdl.addElement(c);
             }
@@ -675,10 +677,10 @@ public class ColumnFilterPanel extends JPanel {
      */
     private void onAddIt() {
         // add all selected elements from the exclude to the include list
-        Object[] o = m_exclList.getSelectedValues();
-        HashSet<Object> hash = new HashSet<Object>();
+        final Object[] o = m_exclList.getSelectedValues();
+        final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
+        for (final Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
         boolean changed = false;
@@ -686,7 +688,7 @@ public class ColumnFilterPanel extends JPanel {
             changed |= m_exclMdl.removeElement(o[i]);
         }
         m_inclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
                 m_inclMdl.addElement(c);
             }
@@ -701,10 +703,10 @@ public class ColumnFilterPanel extends JPanel {
      * exclude list.
      */
     private void onAddAll() {
-        boolean changed = m_exclMdl.elements().hasMoreElements();
+        final boolean changed = m_exclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (!m_hideColumns.contains(c)) {
                 m_inclMdl.addElement(c);
             }
@@ -741,6 +743,7 @@ public class ColumnFilterPanel extends JPanel {
      */
     public void update(final DataTableSpec spec, final boolean exclude,
             final Collection<String> list) {
+        m_spec = spec;
         assert (spec != null && list != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -824,8 +827,8 @@ public class ColumnFilterPanel extends JPanel {
     private static Set<String> getColumnList(final ListModel model) {
         final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < model.getSize(); i++) {
-            Object o = model.getElementAt(i);
-            String cell = ((DataColumnSpec)o).getName();
+            final Object o = model.getElementAt(i);
+            final String cell = ((DataColumnSpec)o).getName();
             list.add(cell);
         }
         return list;
@@ -840,7 +843,7 @@ public class ColumnFilterPanel extends JPanel {
      * @return the data type or <code>null</code>
      */
     public DataType getType(final String name) {
-        for (DataColumnSpec spec : m_order) {
+        for (final DataColumnSpec spec : m_order) {
             if (spec.getName().equals(name)) {
                 return spec.getType();
             }
@@ -873,7 +876,7 @@ public class ColumnFilterPanel extends JPanel {
             return;
         }
         if (markAllHits) {
-            int[] searchHits = getAllSearchHits(list, searchStr);
+            final int[] searchHits = getAllSearchHits(list, searchStr);
             list.clearSelection();
             if (searchHits.length > 0) {
                 list.setSelectedIndices(searchHits);
@@ -885,7 +888,7 @@ public class ColumnFilterPanel extends JPanel {
             if (start >= model.getSize()) {
                 start = 0;
             }
-            int f = searchInList(list, searchStr, start);
+            final int f = searchInList(list, searchStr, start);
             if (f >= 0) {
                 list.scrollRectToVisible(list.getCellBounds(f, f));
                 list.setSelectedIndex(f);
@@ -900,8 +903,8 @@ public class ColumnFilterPanel extends JPanel {
             final int startIndex) {
         // this method was (slightly modified) copied from
         // JList#getNextMatch
-        ListModel model = list.getModel();
-        int max = model.getSize();
+        final ListModel model = list.getModel();
+        final int max = model.getSize();
         String prefix = str;
         if (prefix == null) {
             throw new IllegalArgumentException();
@@ -913,7 +916,7 @@ public class ColumnFilterPanel extends JPanel {
 
         int index = startIndex;
         do {
-            Object o = model.getElementAt(index);
+            final Object o = model.getElementAt(index);
 
             if (o != null) {
                 String string;
@@ -953,12 +956,12 @@ public class ColumnFilterPanel extends JPanel {
      */
     private static int[] getAllSearchHits(final JList list, final String str) {
 
-        ListModel model = list.getModel();
-        int max = model.getSize();
+        final ListModel model = list.getModel();
+        final int max = model.getSize();
         final ArrayList<Integer> hits = new ArrayList<Integer>(max);
         int index = 0;
         do {
-            int tempIndex = searchInList(list, str, index);
+            final int tempIndex = searchInList(list, str, index);
             // if the search returns no hit or returns a hit before the
             // current search position exit the while loop
             if (tempIndex < index || tempIndex < 0) {
@@ -1002,7 +1005,7 @@ public class ColumnFilterPanel extends JPanel {
      */
     public final void hideColumns(final DataColumnSpec... columns) {
         boolean changed = false;
-        for (DataColumnSpec column : columns) {
+        for (final DataColumnSpec column : columns) {
             if (m_inclMdl.contains(column)) {
                 m_hideColumns.add(column);
                 changed |= m_inclMdl.removeElement(column);
@@ -1024,13 +1027,13 @@ public class ColumnFilterPanel extends JPanel {
             return;
         }
         // add all selected elements from the include to the exclude list
-        HashSet<Object> hash = new HashSet<Object>();
+        final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(m_hideColumns);
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+        for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
             hash.add(e.nextElement());
         }
         m_exclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
             }
@@ -1090,5 +1093,22 @@ public class ColumnFilterPanel extends JPanel {
      */
     public void setAddButtonText(final String text) {
         m_addButton.setText(text);
+    }
+
+    /**
+     * Sets the internal used {@link ColumnFilter} to the given one and calls
+     * the {@link #update(DataTableSpec, boolean, Collection)} method to
+     * update the column panel.
+     *
+     * @param filter the new {@link ColumnFilter} to use
+     */
+    public void setColumnFilter(final ColumnFilter filter) {
+        m_filter = filter;
+        if (m_spec == null) {
+            //the spec is not available that's why we do not need to call
+            //the update method
+            return;
+        }
+        update(m_spec, true, getExcludedColumnSet());
     }
 }
