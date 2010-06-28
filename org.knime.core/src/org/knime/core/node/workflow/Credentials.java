@@ -53,6 +53,7 @@ import java.util.WeakHashMap;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 
 /** The credentials implementation. Fields are mutable (in comparison to the
@@ -60,7 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class Credentials implements ICredentials {
+public final class Credentials implements ICredentials, Cloneable {
 
     private final String m_name;
     private String m_login;
@@ -89,7 +90,7 @@ public final class Credentials implements ICredentials {
      * @param login The login name.
      * @param password the password.
      */
-    public Credentials(final String name, final String login, 
+    public Credentials(final String name, final String login,
         final String password) {
         if (name == null) {
             throw new NullPointerException("Argument must not be null");
@@ -100,6 +101,7 @@ public final class Credentials implements ICredentials {
         m_name = name;
         m_login = login;
         m_password = password;
+        m_clientNodes = new WeakHashMap<NodeContainer, Object>();
     }
 
     /** {@inheritDoc} */
@@ -133,28 +135,52 @@ public final class Credentials implements ICredentials {
     public String getName() {
         return m_name;
     }
-    
+
     /**
      * @return true, if this and the given {@link Credentials} object's
-     *         name and login matches, otherwise false 
-     * {@inheritDoc} 
+     *         name and login matches, otherwise false
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object obj) {
-	if (obj == this) {
-	    return true;
-	}
-	if (!(obj instanceof Credentials)) {
-	    return false;
-	}
-	Credentials cred = (Credentials) obj;
-	if (!m_name.equals(cred.m_name)) {
-	    return false;
-	}
-	if (!m_login.equals(cred.m_login)) {
-	    return false;
-	}
-	return true;
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Credentials)) {
+            return false;
+        }
+        Credentials cred = (Credentials) obj;
+        if (!ConvenienceMethods.areEqual(m_name, cred.m_name)) {
+            return false;
+        }
+        if (!ConvenienceMethods.areEqual(m_login, cred.m_login)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        int hash = m_name.hashCode();
+        if (m_login != null) {
+            hash = hash ^ m_login.hashCode();
+        }
+        return hash;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Credentials clone() {
+        try {
+            Credentials clone = (Credentials)super.clone();
+            // discard registered listeners
+            clone.m_clientNodes = new WeakHashMap<NodeContainer, Object>();
+            return clone;
+        } catch (CloneNotSupportedException cnse) {
+            throw new RuntimeException(
+                    "Cloning failed although Clonable", cnse);
+        }
     }
 
     /** Remove the client from the history list (if registered).

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   11.09.2007 (mb): created
  */
@@ -60,7 +60,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface WorkflowPersistor extends NodeContainerPersistor {
@@ -75,12 +75,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** Key for this node's internal ID. */
     static final String KEY_ID = "id";
-    
+
     /** Identifier for KNIME workflows when saved to disc. */
     public static final String WORKFLOW_FILE = "workflow.knime";
-    
+
     /** File used to signal that workflow was saved in usual manner. It will
-     * always be present in the workflow directory unless the workflow is 
+     * always be present in the workflow directory unless the workflow is
      * exported with the "exclude data" flag being set. */
     public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
 
@@ -89,35 +89,40 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
 
     Set<ConnectionContainerTemplate> getConnectionSet();
-    
+
     HashMap<Integer, ContainerTable> getGlobalTableRepository();
-    
+
     String getName();
-    
+
     /** Get the workflow variables associated with this meta node/workflow.
      * This method must not return null (but possibly an empty list). The result
      * may be unmodifiable.
-     * @return The workflow variables. 
+     * @return The workflow variables.
      */
     List<FlowVariable> getWorkflowVariables();
-    
+
+    /** Get (non-null) map of credentials.
+     * @return The credentials defined on this meta node.
+     */
+    List<Credentials> getCredentials();
+
     WorkflowPortTemplate[] getInPortTemplates();
-    
+
     WorkflowPortTemplate[] getOutPortTemplates();
-    
+
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
      */
     public UIInformation getInPortsBarUIInfo();
-    
+
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
      */
     public UIInformation getOutPortsBarUIInfo();
-    
+
     /** @return the shouldFailOnLoadDataError */
     public boolean mustWarnOnDataLoadError();
-    
+
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
@@ -127,7 +132,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private int m_destPort;
         private boolean m_isDeletable;
         private final UIInformation m_uiInfo;
-        
+
         /**
          * Creates new template connection.
          * @param source ID Suffix of source node
@@ -137,8 +142,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param isDeletable whether connection is deletable
          * @param uiInfo Corresponding UI info, maybe null
          */
-        ConnectionContainerTemplate(final int source, 
-                final int sourcePort, final int dest, final int destPort, 
+        ConnectionContainerTemplate(final int source,
+                final int sourcePort, final int dest, final int destPort,
                 final boolean isDeletable, final UIInformation uiInfo) {
             m_sourceSuffix = source;
             m_sourcePort = sourcePort;
@@ -147,12 +152,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             m_isDeletable = isDeletable;
             m_uiInfo = uiInfo;
         }
-        
+
         /** Copies an existing connection (used for copy&paste).
          * @param original To copy.
          * @param preserveDeletableFlag Whether to retain the deletable status
          * of the original connection. */
-        ConnectionContainerTemplate(final ConnectionContainer original, 
+        ConnectionContainerTemplate(final ConnectionContainer original,
                 final boolean preserveDeletableFlag) {
             m_sourcePort = original.getSourcePort();
             m_destPort = original.getDestPort();
@@ -200,21 +205,21 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         int getDestPort() {
             return m_destPort;
         }
-        
+
         /**
          * @return the isDeletable
          */
         boolean isDeletable() {
             return m_isDeletable;
         }
-        
+
         /**
          * @param isDeletable the isDeletable to set
          */
         public void setDeletable(final boolean isDeletable) {
             m_isDeletable = isDeletable;
         }
-        
+
         /** @param destPort the destPort to set */
         public void setDestPort(final int destPort) {
             m_destPort = destPort;
@@ -228,18 +233,18 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return "[" + getSourceSuffix() + "(" 
-                + getSourcePort() + ") -> " + getDestSuffix() 
+            return "[" + getSourceSuffix() + "("
+                + getSourcePort() + ") -> " + getDestSuffix()
                 + "( " + getDestPort() + ")]";
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return m_sourceSuffix + (m_sourcePort << 8) 
-                + (m_destSuffix << 16) + (m_destPort << 24); 
+            return m_sourceSuffix + (m_sourcePort << 8)
+                + (m_destSuffix << 16) + (m_destPort << 24);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public boolean equals(final Object obj) {
@@ -257,7 +262,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
     }
-    
+
     static final class WorkflowPortTemplate {
         private final int m_portIndex;
         private final PortType m_portType;
@@ -283,9 +288,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return m_portName;
         }
     }
-    
+
     public static class LoadResultEntry {
-        
+
         public enum LoadResultEntryType {
             // sorted according to severity
             Ok,
@@ -293,30 +298,30 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             Error,
             DataLoadError
         }
-        
+
         private final LoadResultEntryType m_type;
         private final String m_message;
-        
+
         public LoadResultEntry(
                 final LoadResultEntryType type, final String message) {
             m_type = type;
             m_message = message;
         }
-        
+
         /**
          * @return the type
          */
         public LoadResultEntryType getType() {
             return m_type;
         }
-    
+
         /**
          * @return the message
          */
         public String getMessage() {
             return m_message;
         }
-        
+
         /**
          * @return the hasErrorDuringNonDataLoad
          */
@@ -333,7 +338,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             }
             return false;
         }
-    
+
         /**
          * @return the hasErrorDuringNonDataLoad
          */
@@ -346,25 +351,25 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
                 return false;
             }
         }
-        
+
         private static final LoadResultEntry[] EMPTY = new LoadResultEntry[0];
-        
+
         public LoadResultEntry[] getChildren() {
             return EMPTY;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return getFilteredError("", LoadResultEntryType.Ok);
         }
-        
+
         /** Returns error message of this element and all of its children.
          * @param indent The indentation of the string (increased for children)
-         * @param filter A filter for the least severity level  
+         * @param filter A filter for the least severity level
          * @return The string.
          */
-        public String getFilteredError(final String indent, 
+        public String getFilteredError(final String indent,
                 final LoadResultEntryType filter) {
             StringBuilder b = new StringBuilder(indent);
             b.append("Status: ");
@@ -377,24 +382,24 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             }
             return b.toString();
         }
-    
+
     }
 
     public static class LoadResult extends LoadResultEntry {
-        
-        private final List<LoadResultEntry> m_errors = 
+
+        private final List<LoadResultEntry> m_errors =
             new ArrayList<LoadResultEntry>();
-        
+
         /** */
         public LoadResult(final String name) {
             super(LoadResultEntryType.Ok, name);
         }
-        
+
         public void addError(final String error) {
             addError(error, false);
         }
 
-        public void addError(final String error, 
+        public void addError(final String error,
                 final boolean isErrorDuringDataLoad) {
             LoadResultEntryType t = isErrorDuringDataLoad
             ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
@@ -432,7 +437,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
         private WorkflowManager m_workflowManager;
         private boolean m_guiMustReportDataLoadErrors = false;
-        
+
         /**
          * @param name
          */
@@ -446,14 +451,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         void setWorkflowManager(final WorkflowManager workflowManager) {
             m_workflowManager = workflowManager;
         }
-        
+
         /**
          * @return the workflowManager
          */
         public WorkflowManager getWorkflowManager() {
             return m_workflowManager;
         }
-        
+
         /**
          * @param guiMustReportDataLoadErrors the guiMustReportError to set
          */
@@ -461,14 +466,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
                 final boolean guiMustReportDataLoadErrors) {
             m_guiMustReportDataLoadErrors = guiMustReportDataLoadErrors;
         }
-        
+
         /**
          * @return the guiMustReportError
          */
         public boolean getGUIMustReportDataLoadErrors() {
             return m_guiMustReportDataLoadErrors;
         }
-        
+
         /** Generate a user friendly message about the load procedure.
          * @return This message.
          */

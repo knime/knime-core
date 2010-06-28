@@ -110,7 +110,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     private String m_name;
     private List<FlowVariable> m_workflowVariables;
-    private Map<String, Credentials> m_credentials;
+    private List<Credentials> m_credentials;
 
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -196,6 +196,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     @Override
     public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Credentials> getCredentials() {
+        return m_credentials;
     }
 
     /** {@inheritDoc} */
@@ -323,7 +329,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             loadResult.addError(error);
-            m_credentials = Collections.emptyMap();
+            m_credentials = Collections.emptyList();
         }
 
         NodeSettingsRO metaFlowParentSettings =
@@ -939,15 +945,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return Collections.emptyList();
     }
 
-    /** Loads credentials, this method returns an empty map. Credentials added
-     * for v2.2
+    /** Loads credentials, this method returns an empty list.
+     * Credentials added for v2.2
      * @param settings to load from.
-     * @return the credentials map
+     * @return the credentials list
      * @throws InvalidSettingsException If this fails for any reason.
      */
-    protected Map<String, Credentials> loadCredentials(
+    protected List<Credentials> loadCredentials(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        return Collections.emptyMap();
+        return Collections.emptyList();
     }
 
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)

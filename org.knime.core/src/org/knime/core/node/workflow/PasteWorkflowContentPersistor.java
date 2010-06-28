@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jul 2, 2009 (wiswedel): created
  */
@@ -75,7 +75,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
-    
+
     /** Create new persistor.
      * @param connectionSet A copy of connection clones.
      * @param loaderMap The loader map.
@@ -92,7 +92,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     public Set<ConnectionContainerTemplate> getConnectionSet() {
         return m_connectionSet;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
@@ -152,6 +152,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public List<Credentials> getCredentials() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public boolean mustWarnOnDataLoadError() {
         return false;
     }
@@ -165,7 +172,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent, 
+    public NodeContainer getNodeContainer(final WorkflowManager parent,
             final NodeID id) {
         throwUnsupportedOperationException();
         return null;
@@ -205,7 +212,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
             throws InvalidSettingsException, IOException {
         throwUnsupportedOperationException();
     }
-    
+
     /** Throws a new exception with a meaningful error message.
      * It is called when a non supported method is invoked.
      */
@@ -217,7 +224,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         if (callStack.length > 3) {
             methodName = callStack[2].getMethodName() + "\"";
         }
-        throw new UnsupportedOperationException("Calling \"" + methodName 
+        throw new UnsupportedOperationException("Calling \"" + methodName
                 + "\" not allowed on \"" + getClass().getSimpleName() + "\"");
     }
 }

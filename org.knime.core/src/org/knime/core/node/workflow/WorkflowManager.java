@@ -272,6 +272,8 @@ public final class WorkflowManager extends NodeContainer {
         m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables =
             new Vector<FlowVariable>(persistor.getWorkflowVariables());
+        m_credentialsStore =
+            new CredentialsStore(this, persistor.getCredentials());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -292,7 +294,6 @@ public final class WorkflowManager extends NodeContainer {
         m_workflowMutex = m_inPorts.length == 0
             && m_outPorts.length == 0 ? new Object() : parent.m_workflowMutex;
         m_globalTableRepository = persistor.getGlobalTableRepository();
-        m_credentialsStore = new CredentialsStore(this);
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -1375,7 +1376,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(true);
         }
     }
-    
+
     public void resetAll() {
 	this.resetAllNodesInWFM();
     }

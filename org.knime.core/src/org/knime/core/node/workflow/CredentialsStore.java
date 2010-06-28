@@ -52,7 +52,9 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -74,12 +76,25 @@ public final class CredentialsStore {
     /** Create new credential store for a workflow.
      * @param manager The workflow keeping this store to persist credentials.
      */
+    @SuppressWarnings("unchecked")
     CredentialsStore(final WorkflowManager manager) {
+        this(manager, Collections.EMPTY_LIST);
+    }
+
+    /** Create new credential store for a workflow.
+     * @param manager The workflow keeping this store to persist credentials.
+     * @param creds The list of initial credentials.
+     */
+    CredentialsStore(final WorkflowManager manager,
+            final List<Credentials> creds) {
         if (manager == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_manager = manager;
         m_credentials = new LinkedHashMap<String, Credentials>();
+        for (Credentials c : creds) {
+            m_credentials.put(c.getName(), c);
+        }
     }
 
     /**
@@ -147,8 +162,8 @@ public final class CredentialsStore {
                     + "name \"" + name + "\"");
         }
     }
-    
-    /** Replace the credential variable given by the credential name. 
+
+    /** Replace the credential variable given by the credential name.
      * @param cred to be replaced in this store
      * @return true, if the previous value is replace, otherwise false
      */

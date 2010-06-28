@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 9, 2008 (wiswedel): created
  */
@@ -69,7 +69,7 @@ import org.knime.core.node.NodeSettingsRO;
  * @author Bernd Wiswedel, University of Konstanz
  */
 class CopyWorkflowPersistor implements WorkflowPersistor {
-    
+
     private final Map<Integer, NodeContainerPersistor> m_ncs;
     private final Set<ConnectionContainerTemplate> m_cons;
     private final UIInformation m_inportUIInfo;
@@ -80,25 +80,26 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
     private final List<FlowVariable> m_workflowVariables;
-    
+    private final List<Credentials> m_credentials;
+
     @SuppressWarnings("unchecked")
-    CopyWorkflowPersistor(final WorkflowManager original, 
+    CopyWorkflowPersistor(final WorkflowManager original,
             final HashMap<Integer, ContainerTable> tableRep,
             final boolean preserveDeletableFlags) {
-        m_inportUIInfo = original.getInPortsBarUIInfo() != null 
+        m_inportUIInfo = original.getInPortsBarUIInfo() != null
             ? original.getInPortsBarUIInfo().clone() : null;
-        m_outportUIInfo = original.getOutPortsBarUIInfo() != null 
+        m_outportUIInfo = original.getOutPortsBarUIInfo() != null
             ? original.getOutPortsBarUIInfo().clone() : null;
         m_inportTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         m_outportTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
         for (int i = 0; i < m_inportTemplates.length; i++) {
             WorkflowInPort in = original.getInPort(i);
-            m_inportTemplates[i] = 
+            m_inportTemplates[i] =
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         for (int i = 0; i < m_outportTemplates.length; i++) {
             WorkflowOutPort in = original.getOutPort(i);
-            m_outportTemplates[i] = 
+            m_outportTemplates[i] =
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_name = original.getNameField();
@@ -115,15 +116,19 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
                     m_tableRep, true));
         }
-        
+
         for (ConnectionContainer cc : original.getConnectionContainers()) {
             m_cons.add(new ConnectionContainerTemplate(cc, true));
         }
         List<FlowVariable> vars = original.getWorkflowVariables();
         m_workflowVariables = vars == null ? Collections.EMPTY_LIST
                 : new ArrayList<FlowVariable>(vars);
+        m_credentials = new ArrayList<Credentials>();
+        for (Credentials c : original.getCredentialsStore().getCredentials()) {
+            m_credentials.add(c.clone());
+        }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
@@ -159,7 +164,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables;
     }
-    
+
+    /** {@inheritDoc} */
+    public List<Credentials> getCredentials() {
+        return m_credentials;
+    }
+
     /** {@inheritDoc} */
     @Override
     public UIInformation getOutPortsBarUIInfo() {
@@ -171,7 +181,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public WorkflowPortTemplate[] getOutPortTemplates() {
         return m_outportTemplates;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
@@ -208,13 +218,13 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public boolean needsResetAfterLoad() {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
         return true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustComplainIfStateDoesNotMatch() {
@@ -226,7 +236,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
             final NodeSettingsRO parentSettings, final LoadResult loadResult) {
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustWarnOnDataLoadError() {

@@ -58,9 +58,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -170,20 +170,23 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected Map<String, Credentials> loadCredentials(
+    protected List<Credentials> loadCredentials(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         // TODO fix version strings
         if (!settings.containsKey(CFG_CREDENTIALS)) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         NodeSettingsRO sub = settings.getNodeSettings(CFG_CREDENTIALS);
-        Map<String, Credentials> r = new LinkedHashMap<String, Credentials>();
+        List<Credentials> r = new ArrayList<Credentials>();
+        Set<String> credsNameSet = new HashSet<String>();
         for (String key : sub.keySet()) {
             NodeSettingsRO child = sub.getNodeSettings(key);
             Credentials c = Credentials.load(child);
-            if (r.put(c.getName(), c) != null) {
+            if (!credsNameSet.add(c.getName())) {
                 getLogger().warn("Duplicate credentials variable \""
                         + c.getName() + "\" -- ignoring it");
+            } else {
+                r.add(c);
             }
         }
         return r;

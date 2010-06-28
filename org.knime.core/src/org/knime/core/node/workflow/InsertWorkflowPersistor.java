@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 10, 2009 (wiswedel): created
  */
@@ -69,11 +69,11 @@ import org.knime.core.node.NodeSettingsRO;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class InsertWorkflowPersistor implements WorkflowPersistor {
-    
+
     private final WorkflowPersistor m_wfmPersistor;
-    
+
     /**
-     * 
+     *
      */
     InsertWorkflowPersistor(final WorkflowPersistor wfmPersistor) {
         if (wfmPersistor == null) {
@@ -117,11 +117,17 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     public String getName() {
         throw new IllegalStateException("can't set name on root");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public List<FlowVariable> getWorkflowVariables() {
         throw new IllegalStateException("can't set workflow variables on root");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Credentials> getCredentials() {
+        throw new IllegalStateException("can't set credentials on root");
     }
 
     /** {@inheritDoc} */
@@ -168,7 +174,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     public boolean isDirtyAfterLoad() {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustComplainIfStateDoesNotMatch() {
