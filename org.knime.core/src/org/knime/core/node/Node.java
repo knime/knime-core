@@ -85,6 +85,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
@@ -1413,8 +1414,7 @@ public final class Node implements NodeModelWarningListener {
      * @see #hasDialog()
      */
     public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final FlowObjectStack foStack,
-            final NodeSettingsRO settings)
+            final PortObjectSpec[] inSpecs, final NodeSettingsRO settings)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length];
@@ -1433,14 +1433,15 @@ public final class Node implements NodeModelWarningListener {
                 corrInSpecs[i] = inSpecs[i];
             }
         }
-        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, foStack);
+        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs,
+                getFlowObjectStack(), getCredentialsProvider());
         return dialogPane;
     }
 
     /**
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
-     * {@link #getDialogPaneWithSettings(PortObjectSpec[], FlowObjectStack, NodeSettingsRO)}
+     * {@link #getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO)}
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
@@ -1801,6 +1802,22 @@ public final class Node implements NodeModelWarningListener {
             }
             m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }
+    }
+
+    // ////////////////////////
+    // Credentials handling
+    // ////////////////////////
+
+    /** Sets credentials in model.
+     * @param provider provider to set.
+     */
+    public void setCredentialsProvider(final CredentialsProvider provider) {
+        m_model.setCredentialsProvider(provider);
+    }
+
+    /** @return The credentials as set in the model. */
+    public CredentialsProvider getCredentialsProvider() {
+        return m_model.getCredentialsProvider();
     }
 
     static class SettingsLoaderAndWriter {

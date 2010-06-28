@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  */
 package org.knime.core.node.workflow;
 
@@ -58,7 +58,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -72,39 +74,42 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
-    
+
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
     /** Key for UI info's class name. */
     private static final String CFG_UIINFO_CLASS = "ui_classname";
-    
+
     /** Key for workflow variables. */
     private static final String CFG_WKF_VARIABLES = "workflow_variables";
-    
+
+    /** Key for credentials. */
+    private static final String CFG_CREDENTIALS = "workflow_credentials";
+
     /** A Version representing a specific workflow format. This enum covers only
-     * the version that this specific class can read (or write). 
+     * the version that this specific class can read (or write).
      * Ordinal numbering is important. */
     static enum LoadVersion {
         // Don't modify order, ordinal number are important.
         /** Version 2.0.0 - 2.0.x. */
         V200("2.0.0"),
-        /** Trunk version when 2.0.x was out, covers cluster and 
+        /** Trunk version when 2.0.x was out, covers cluster and
          * server prototypes. Obsolete since 2009-08-12. */
         V210_Pre("2.0.1"),
         /** Version 2.1.x. */
         V210("2.1.0");
         // TODO change config name for flow variables (was/is scope_stack)
         // in SNCPV200#saveFlowObjectStack to flow_stack
-        
+
         private final String m_versionString;
-        
+
         private LoadVersion(final String str) {
             m_versionString = str;
         }
-        
+
         /** @return The String representing the LoadVersion (workflow.knime). */
         public String getVersionString() {
             return m_versionString;
@@ -124,30 +129,30 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
     }
     static final String VERSION_LATEST = LoadVersion.V210.getVersionString();
-    
+
     static boolean canReadVersion(final String versionString) {
         return LoadVersion.get(versionString) != null;
     }
-    
+
     WorkflowPersistorVersion200() {
         super(null, VERSION_LATEST);
     }
-    
+
     WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
             final String versionString) {
         super(tableRep, versionString);
     }
-    
+
     protected String getSaveVersion() {
         return VERSION_LATEST;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustComplainIfStateDoesNotMatch() {
         return true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public List<FlowVariable> loadWorkflowVariables(
@@ -162,62 +167,83 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         return result;
     }
-    
+
+    /** {@inheritDoc} */
+    @Override
+    protected Map<String, Credentials> loadCredentials(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO fix version strings
+        if (!settings.containsKey(CFG_CREDENTIALS)) {
+            return Collections.emptyMap();
+        }
+        NodeSettingsRO sub = settings.getNodeSettings(CFG_CREDENTIALS);
+        Map<String, Credentials> r = new LinkedHashMap<String, Credentials>();
+        for (String key : sub.keySet()) {
+            NodeSettingsRO child = sub.getNodeSettings(key);
+            Credentials c = Credentials.load(child);
+            if (r.put(c.getName(), c) != null) {
+                getLogger().warn("Duplicate credentials variable \""
+                        + c.getName() + "\" -- ignoring it");
+            }
+        }
+        return r;
+    }
+
     /** {@inheritDoc} */
     @Override
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return set.getString("name");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO readParentSettings() throws IOException {
         return null; // only used in 1.3.x
     }
-    
+
     @Override
-    protected boolean loadIsMetaNode(final NodeSettingsRO settings) 
+    protected boolean loadIsMetaNode(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("node_is_meta");
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected String loadUIInfoClassName(final NodeSettingsRO settings) 
+    protected String loadUIInfoClassName(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         if (settings.containsKey(CFG_UIINFO_CLASS)) {
             return settings.getString(CFG_UIINFO_CLASS);
         }
         return null;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void loadUIInfoSettings(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        // in previous releases, the settings were directly written to the 
-        // top-most node settings object; since 2.0 they've been put into a 
+        // in previous releases, the settings were directly written to the
+        // top-most node settings object; since 2.0 they've been put into a
         // separate sub-settings object
-        NodeSettingsRO subSettings = 
+        NodeSettingsRO subSettings =
             settings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
         super.loadUIInfoSettings(uiInfo, subSettings);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected int loadConnectionDestID(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destID");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected int loadConnectionDestPort(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destPort");
     }
-    
+
     @Override
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
         throws InvalidSettingsException {
@@ -226,10 +252,10 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         return null;
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadInPortsSettingsEnum(final NodeSettingsRO settings) 
+    protected NodeSettingsRO loadInPortsSettingsEnum(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
@@ -246,35 +272,35 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         result.setPortName(name);
         return result;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected String loadInPortsBarUIInfoClassName(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return loadUIInfoClassName(settings);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void loadInPortsBarUIInfo(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         loadUIInfoSettings(uiInfo, settings);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected String loadOutPortsBarUIInfoClassName(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return loadUIInfoClassName(settings);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void loadOutPortsBarUIInfo(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         loadUIInfoSettings(uiInfo, settings);
     }
-    
+
     @Override
     protected NodeSettingsRO loadOutPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -283,14 +309,14 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         return null;
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadOutPortsSettingsEnum(final NodeSettingsRO settings) 
+    protected NodeSettingsRO loadOutPortsSettingsEnum(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected WorkflowPortTemplate loadOutPortTemplate(
@@ -303,7 +329,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         result.setPortName(name);
         return result;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean loadIfMustWarnOnDataLoadError(final File workflowDir) {
@@ -312,69 +338,70 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     protected void saveUIInfoClassName(final NodeSettingsWO settings,
             final UIInformation info) {
-        settings.addString(CFG_UIINFO_CLASS, info != null 
+        settings.addString(CFG_UIINFO_CLASS, info != null
                 ? info.getClass().getName() : null);
     }
-    
+
     protected void saveUIInfoSettings(final NodeSettingsWO settings,
             final UIInformation uiInfo) {
         if (uiInfo == null) {
             return;
         }
         // nest into separate sub config
-        NodeSettingsWO subConfig = 
+        NodeSettingsWO subConfig =
             settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
         uiInfo.save(subConfig);
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected NodeContainerMetaPersistorVersion200 
+    protected NodeContainerMetaPersistorVersion200
         createNodeContainerMetaPersistor(final ReferencedFile nodeDirectory) {
         return new NodeContainerMetaPersistorVersion200(nodeDirectory);
     }
 
-    
+
     /** {@inheritDoc} */
     @Override
     protected WorkflowPersistorVersion200 createWorkflowPersistor() {
         return new WorkflowPersistorVersion200(
                 getGlobalTableRepository(), getVersionString());
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected SingleNodeContainerPersistorVersion200 
+    protected SingleNodeContainerPersistorVersion200
         createSingleNodeContainerPersistor() {
         return new SingleNodeContainerPersistorVersion200(
                 this, getVersionString());
     }
-    
+
     public String save(final WorkflowManager wm,
             final ReferencedFile workflowDirRef, final ExecutionMonitor execMon,
             final boolean isSaveData) throws IOException,
             CanceledExecutionException {
-        if (workflowDirRef.equals(wm.getNodeContainerDirectory()) 
+        if (workflowDirRef.equals(wm.getNodeContainerDirectory())
                 && !wm.isDirty()) {
             return WORKFLOW_FILE;
         }
         File workflowDir = workflowDirRef.getFile();
         workflowDir.mkdirs();
         if (!workflowDir.isDirectory()) {
-            throw new IOException("Unable to create or write directory \": " 
+            throw new IOException("Unable to create or write directory \": "
                     + workflowDir + "\"");
         }
-        NodeSettings settings = 
+        NodeSettings settings =
             new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
         settings.addString(
                 WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getNameField());
-        NodeContainerMetaPersistorVersion200 metaPersistor = 
+        NodeContainerMetaPersistorVersion200 metaPersistor =
             createNodeContainerMetaPersistor(workflowDirRef);
         metaPersistor.save(wm, settings);
-        saveWorkflowVariables(wm, settings); 
-        
+        saveWorkflowVariables(wm, settings);
+        saveCredentials(wm, settings);
+
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
         double progRatio = 1.0 / (nodes.size() + 1);
@@ -399,7 +426,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             connectionNumber += 1;
         }
         int inCount = wm.getNrInPorts();
-        NodeSettingsWO inPortsSetts = inCount > 0 
+        NodeSettingsWO inPortsSetts = inCount > 0
             ? saveInPortsSetting(settings) : null;
         NodeSettingsWO inPortsSettsEnum = null;
         if (inPortsSetts != null) {
@@ -414,7 +441,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             saveInPort(singlePort, wm, i);
         }
         int outCount = wm.getNrOutPorts();
-        NodeSettingsWO outPortsSetts = outCount > 0 
+        NodeSettingsWO outPortsSetts = outCount > 0
             ? saveOutPortsSetting(settings) : null;
         NodeSettingsWO outPortsSettsEnum = null;
         if (outPortsSetts != null) {
@@ -425,7 +452,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
         }
         for (int i = 0; i < outCount; i++) {
-            NodeSettingsWO singlePort = 
+            NodeSettingsWO singlePort =
                 saveOutPortSetting(outPortsSettsEnum, i);
             saveOutPort(singlePort, wm, i);
         }
@@ -435,11 +462,11 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
         o.write("Do not delete this file!");
         o.newLine();
-        o.write("This file serves to indicate that the workflow was written " 
+        o.write("This file serves to indicate that the workflow was written "
                 + "as part of the usual save routine (not exported).");
         o.newLine();
         o.newLine();
-        o.write("Workflow was last saved by user "); 
+        o.write("Workflow was last saved by user ");
         o.write(System.getProperty("user.name"));
         o.write(" on " + new Date());
         o.close();
@@ -452,17 +479,17 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         execMon.setProgress(1.0);
         return WORKFLOW_FILE;
     }
-    
+
     protected void saveWorkflowName(
             final NodeSettingsWO settings, final String name) {
         settings.addString("name", name);
     }
-    
+
     protected void saveWorkflowVariables(final WorkflowManager wfm,
             final NodeSettingsWO settings) {
         List<FlowVariable> vars = wfm.getWorkflowVariables();
         if (!vars.isEmpty()) {
-            NodeSettingsWO wfmVarSub = 
+            NodeSettingsWO wfmVarSub =
                 settings.addNodeSettings(CFG_WKF_VARIABLES);
             int i = 0;
             for (FlowVariable v : vars) {
@@ -471,9 +498,21 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
     }
 
+    protected void saveCredentials(final WorkflowManager wfm,
+            final NodeSettingsWO settings) {
+        CredentialsStore credentialsStore = wfm.getCredentialsStore();
+        NodeSettingsWO sub = settings.addNodeSettings(CFG_CREDENTIALS);
+        synchronized (credentialsStore) {
+            for (Credentials c : credentialsStore.getCredentials()) {
+                NodeSettingsWO s = sub.addNodeSettings(c.getName());
+                c.save(s);
+            }
+        }
+    }
+
     /**
      * Save nodes in an own sub-config object as a series of configs.
-     * 
+     *
      * @param settings To save to.
      * @return The sub config where subsequent writing takes place.
      */
@@ -483,7 +522,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /**
      * Save connections in an own sub-config object.
-     * 
+     *
      * @param settings To save to.
      * @return The sub config where subsequent writing takes place.
      */
@@ -503,9 +542,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         String nodeDirID = container.getName().replaceAll("[^a-zA-Z0-9 ]", "_")
                 + " (#" + idSuffix + ")";
 
-        ReferencedFile nodeDirectoryRef = 
+        ReferencedFile nodeDirectoryRef =
             new ReferencedFile(workflowDirRef, nodeDirID);
-        String fileName; 
+        String fileName;
         if (container instanceof WorkflowManager) {
             WorkflowPersistorVersion200 p = createWorkflowPersistor();
             fileName = p.save((WorkflowManager)container, nodeDirectoryRef,
@@ -513,7 +552,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         } else {
             SingleNodeContainerPersistorVersion200 p =
                 createSingleNodeContainerPersistor();
-            fileName = p.save((SingleNodeContainer)container, 
+            fileName = p.save((SingleNodeContainer)container,
                     nodeDirectoryRef, exec, isSaveData);
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
@@ -521,7 +560,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         saveUIInfoClassName(settings, container.getUIInformation());
         saveUIInfoSettings(settings, container.getUIInformation());
     }
-    
+
     protected void saveNodeIDSuffix(final NodeSettingsWO settings,
             final NodeContainer nc) {
         settings.addInt(KEY_ID, nc.getID().getIndex());
@@ -531,12 +570,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final String location) {
         settings.addString("node_settings_file", location);
     }
-    
+
     protected void saveIsMeta(
             final NodeSettingsWO settings, final NodeContainer nc) {
         settings.addBoolean("node_is_meta", nc instanceof WorkflowManager);
     }
-    
+
     protected NodeSettingsWO saveInPortsSetting(final NodeSettingsWO settings) {
         return settings.addNodeSettings("meta_in_ports");
     }
@@ -545,23 +584,23 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final NodeSettingsWO settings) {
         return settings.addNodeSettings("port_enum");
     }
-    
+
     protected NodeSettingsWO saveInPortSetting(
             final NodeSettingsWO settings, final int portIndex) {
         return settings.addNodeSettings("inport_" + portIndex);
     }
-    
+
     protected void saveInportsBarUIInfoClassName(final NodeSettingsWO settings,
             final UIInformation info) {
         saveUIInfoClassName(settings, info);
     }
-    
+
     protected void saveInportsBarUIInfoSettings(final NodeSettingsWO settings,
             final UIInformation uiInfo) {
         saveUIInfoSettings(settings, uiInfo);
     }
-    
-    protected void saveInPort(final NodeSettingsWO settings, 
+
+    protected void saveInPort(final NodeSettingsWO settings,
             final WorkflowManager wm, final int portIndex) {
         WorkflowInPort inport = wm.getInPort(portIndex);
         settings.addInt("index", portIndex);
@@ -569,33 +608,33 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         NodeSettingsWO portTypeSettings = settings.addNodeSettings("type");
         inport.getPortType().save(portTypeSettings);
     }
-    
+
     protected NodeSettingsWO saveOutPortsSetting(
             final NodeSettingsWO settings) {
         return settings.addNodeSettings("meta_out_ports");
     }
-    
+
     protected NodeSettingsWO saveOutPortsEnumSetting(
             final NodeSettingsWO settings) {
         return settings.addNodeSettings("port_enum");
     }
-    
+
     protected void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings,
             final UIInformation info) {
         saveUIInfoClassName(settings, info);
     }
-    
+
     protected void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings,
             final UIInformation uiInfo) {
         saveUIInfoSettings(settings, uiInfo);
     }
-    
+
     protected NodeSettingsWO saveOutPortSetting(
             final NodeSettingsWO settings, final int portIndex) {
         return settings.addNodeSettings("outport_" + portIndex);
     }
-    
-    protected void saveOutPort(final NodeSettingsWO settings, 
+
+    protected void saveOutPort(final NodeSettingsWO settings,
             final WorkflowManager wm, final int portIndex) {
         WorkflowOutPort outport = wm.getOutPort(portIndex);
         settings.addInt("index", portIndex);
@@ -603,7 +642,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         NodeSettingsWO portTypeSettings = settings.addNodeSettings("type");
         outport.getPortType().save(portTypeSettings);
     }
-    
+
     protected void saveConnection(final NodeSettingsWO settings,
             final ConnectionContainer connection) {
         int sourceID = connection.getSource().getIndex();
@@ -638,5 +677,5 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
     }
 
-    
+
 }

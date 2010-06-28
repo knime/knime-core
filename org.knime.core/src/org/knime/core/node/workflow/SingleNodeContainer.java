@@ -165,15 +165,15 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Get the underlying node. 
+    /** Get the underlying node.
      * @return the underlying Node
      */
     Node getNode() {
         return m_node;
     }
-    
-    /**  
-     * @return reference to underlying node. 
+
+    /**
+     * @return reference to underlying node.
      * @deprecated Method will be reduced to package scope
      * in future version, currently public to enable workaround for bug #2136
      * (see also bug #2137)
@@ -1011,6 +1011,31 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     ////////////////////////////////////
+    // Credentials handling
+    ////////////////////////////////////
+
+    /** Set credentials store on this node. It will clear usage history to
+     * previously accessed credentials (client usage in credentials, see
+     * {@link Credentials}) and set a new provider on the underlying node, which
+     * has this node as client.
+     * @param store The new store to set.
+     * @see Node#setCredentialsProvider(CredentialsProvider)
+     * @throws NullPointerException If the argument is null.
+     */
+    void setCredentialsStore(final CredentialsStore store) {
+        CredentialsProvider oldProvider = m_node.getCredentialsProvider();
+        if (oldProvider != null) {
+            oldProvider.clearClientHistory();
+            if (oldProvider.getClient() == this
+                    && oldProvider.getStore() == store) {
+                // no change
+                return;
+            }
+        }
+        m_node.setCredentialsProvider(new CredentialsProvider(this, store));
+    }
+
+    ////////////////////////////////////
     // FlowObjectStack handling
     ////////////////////////////////////
 
@@ -1061,10 +1086,9 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
             throws NotConfigurableException {
-        FlowObjectStack stack = getFlowObjectStack();
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings);
-        return m_node.getDialogPaneWithSettings(inSpecs, stack, settings);
+        return m_node.getDialogPaneWithSettings(inSpecs, settings);
     }
 
     /** {@inheritDoc} */

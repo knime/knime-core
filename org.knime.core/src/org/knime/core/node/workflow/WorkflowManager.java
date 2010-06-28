@@ -187,6 +187,10 @@ public final class WorkflowManager extends NodeContainer {
     /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
+    /** Password store. This object is associated with each meta-node
+     * (contained meta nodes have their own password store). */
+    private final CredentialsStore m_credentialsStore;
+
     private final List<ReferencedFile> m_deletedNodesFileLocations
         = new ArrayList<ReferencedFile>();
 
@@ -250,6 +254,7 @@ public final class WorkflowManager extends NodeContainer {
             // ...synchronize across border
             m_workflowMutex = parent.m_workflowMutex;
         }
+        m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         checkForNodeStateChanges(false); // get default state right
@@ -287,6 +292,7 @@ public final class WorkflowManager extends NodeContainer {
         m_workflowMutex = m_inPorts.length == 0
             && m_outPorts.length == 0 ? new Object() : parent.m_workflowMutex;
         m_globalTableRepository = persistor.getGlobalTableRepository();
+        m_credentialsStore = new CredentialsStore(this);
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -1368,6 +1374,10 @@ public final class WorkflowManager extends NodeContainer {
             }
             checkForNodeStateChanges(true);
         }
+    }
+    
+    public void resetAll() {
+	this.resetAllNodesInWFM();
     }
 
     /**
@@ -2694,7 +2704,8 @@ public final class WorkflowManager extends NodeContainer {
         NodeSettings settings = new NodeSettings("wfm_settings");
         saveSettings(settings);
         dialogPane.internalLoadSettingsFrom(
-                settings, inSpecs, new FlowObjectStack(getID()));
+                settings, inSpecs, new FlowObjectStack(getID()),
+                        new CredentialsProvider(this, m_credentialsStore));
         return dialogPane;
     }
 
@@ -3077,6 +3088,7 @@ public final class WorkflowManager extends NodeContainer {
                     scsc.push(slc);
                 }
                 snc.setFlowObjectStack(scsc);
+                snc.setCredentialsStore(m_credentialsStore);
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
                 for (int i = 0; i < inCount; i++) {
@@ -4418,6 +4430,13 @@ public final class WorkflowManager extends NodeContainer {
             throw new IllegalStateException("Worklow has not been saved yet.");
         }
         return file.rename(newName);
+    }
+
+    /** Get reference to credentials store used to persist name/passwords.
+     * @return password store associated with this workflow/meta-node.
+     */
+    public CredentialsStore getCredentialsStore() {
+        return m_credentialsStore;
     }
 
     /** Get the name of the workflow. If none has been set, a name is derived

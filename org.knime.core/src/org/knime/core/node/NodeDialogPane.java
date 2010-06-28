@@ -94,6 +94,7 @@ import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
@@ -107,10 +108,10 @@ import org.knime.core.util.MutableInteger;
 /**
  * The base class for all node dialogs. It provides a tabbed pane to which the
  * derived dialog can add its own components (method
- * {@link #addTab(String, Component)}. Subclasses will also override 
+ * {@link #addTab(String, Component)}. Subclasses will also override
  * {@link #saveSettingsTo(NodeSettingsWO)} and either
  * {@link #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])} or
- * {@link #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}, whereby the 
+ * {@link #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}, whereby the
  * latter is only of interest when dealing with custom port types. Failing to
  * override one of the two load methods will result in errors during runtime.
  *
@@ -184,6 +185,9 @@ public abstract class NodeDialogPane {
      * activated. */
     private FlowObjectStack m_flowObjectStack;
 
+    /** The credentials available in the workflow. */
+    private CredentialsProvider m_credentialsProvider;
+
     /** The specs that were provided to the most recent internalLoadSettingsFrom
      * invocation. Ideally this member should not be kept as field but we need
      * it when the wrapped node dialog pane calls loadSettings on user request
@@ -250,6 +254,21 @@ public abstract class NodeDialogPane {
         return result;
     }
 
+    /** Get a list of available credentials identifiers. This is important for,
+     * e.g. nodes connecting to password-secured systems (e.g. data bases). The
+     * user will select a credentials object from the list of available
+     * credentials and the node will store the credentials identifier as part
+     * of the node configuration.
+     * @return a list of credentials variables defined on the workflow.
+     */
+    public final Collection<String> getCredentialsNames() {
+        if (m_credentialsProvider == null) {
+            m_logger.warn("No credentials provider set, using empty list");
+            return Collections.emptyList();
+        }
+        return m_credentialsProvider.listNames();
+    }
+
     /** Method being called from the node when the dialog shall load the
      * settings from a NodeSettingsRO object. This method will call the
      * abstract loadSettingsFrom method and finally load internals
@@ -257,15 +276,18 @@ public abstract class NodeDialogPane {
      * @param settings To load from.
      * @param specs The DTSs from the inports.
      * @param foStack Flow object stack (contains flow variables)
+     * @param credentialsProvider The credentials available in the flow
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     public void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs, final FlowObjectStack foStack)
+            final PortObjectSpec[] specs, final FlowObjectStack foStack,
+            final CredentialsProvider credentialsProvider)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
         m_flowObjectStack = foStack;
+        m_credentialsProvider = credentialsProvider;
         m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
@@ -452,9 +474,9 @@ public abstract class NodeDialogPane {
     public void onCancel() {
         // default implementation does nothing.
     }
-    
+
     /**
-     * Override this method in order to react on events if the surrounding 
+     * Override this method in order to react on events if the surrounding
      * dialog is supposed to be closed.
      */
     public void onClose() {
@@ -462,13 +484,13 @@ public abstract class NodeDialogPane {
     }
 
     /**
-     * Override this method in order to react on events if the surrounding 
+     * Override this method in order to react on events if the surrounding
      * dialog is supposed to be opened.
      */
     public void onOpen() {
         // default implementation does nothing.
     }
-    
+
     /**
      * Invoked when the settings need to be applied. The implementation should
      * write the current user settings from its components into the passed
@@ -537,7 +559,8 @@ public abstract class NodeDialogPane {
     public final void loadSettingsFrom(final InputStream in)
         throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
-        internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack);
+        internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack,
+                m_credentialsProvider);
     }
 
     /**

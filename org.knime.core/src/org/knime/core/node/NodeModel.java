@@ -64,9 +64,11 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 
@@ -1041,6 +1043,35 @@ public abstract class NodeModel {
                         t);
             }
         }
+    }
+
+    /** Credentials provider, set by the NodeContainer (via) Node before
+     * configure/execute. */
+    private CredentialsProvider m_credentialsProvider;
+
+    /** Framework method to update credentials provider before
+     * configure/execute
+     * @param provider The provider for credentials. */
+    final void setCredentialsProvider(final CredentialsProvider provider) {
+        m_credentialsProvider = provider;
+    }
+
+    /** Accessor to credentials defined on a workflow. The method will return
+     * a non-null provider during {@link #configure(DataTableSpec[])} and
+     * {@link #execute(BufferedDataTable[], ExecutionContext)} (or their
+     * respective {@link PortObject}-typed counterparts). Sub-classes can
+     * read out credentials here. Any invocation of the
+     * {@link CredentialsProvider#get(String)} method will register this node
+     * as client to the requested credentials, indicating that theses
+     * credentials need to be available upon load or in a remote execution of
+     * this node (e.g. cluster or server execution). The credentials identifier
+     * (its {@link ICredentials#getName()} should be part of the configuration,
+     * i.e. chosen by the user in the configuration dialog.
+     *
+     * @return A provider for credentials available in this workflow.
+     */
+    protected final CredentialsProvider getCredentialsProvider() {
+        return m_credentialsProvider;
     }
 
     /** Holds the {@link FlowObjectStack} of this node. */
