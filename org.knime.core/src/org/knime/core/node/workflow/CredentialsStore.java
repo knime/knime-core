@@ -95,7 +95,7 @@ public final class CredentialsStore implements Observer {
         m_manager = manager;
         m_credentials = new LinkedHashMap<String, Credentials>();
         for (Credentials c : creds) {
-            add(c);
+            addNoNotify(c);
         }
     }
 
@@ -146,15 +146,20 @@ public final class CredentialsStore implements Observer {
      * in use
      */
     public void add(final Credentials cred) {
-        synchronized (this) {
-            if (m_credentials.containsKey(cred.getName())) {
-                throw new IllegalArgumentException("Identifier \""
-                        + cred.getName() + "\" for credentials already in use");
-            }
-            cred.addObserver(this);
-            m_credentials.put(cred.getName(), cred);
-        }
+        addNoNotify(cred);
         m_manager.setDirty();
+    }
+
+    /** Add credentials, don't notify Observers.
+     * @param cred To add.
+     */
+    private synchronized void addNoNotify(final Credentials cred) {
+        if (m_credentials.containsKey(cred.getName())) {
+            throw new IllegalArgumentException("Identifier \""
+                    + cred.getName() + "\" for credentials already in use");
+        }
+        cred.addObserver(this);
+        m_credentials.put(cred.getName(), cred);
     }
 
     /** Remove a credentials variable from this store.
