@@ -112,14 +112,49 @@ public final class CredentialsStore implements Observer {
      */
     public synchronized Credentials get(final String name,
             final NodeContainer client) {
+        Credentials c = get(name, client);
+        c.addClient(client);
+        return c;
+    }
+    
+    /**
+     * Read out credentials under a given name. The name is the (global)
+     * identifier under which this credentials are store (see
+     * {@link Credentials#getName()}).
+     * @param name The name to lookup
+     * @return The credentials for this name
+     * @throws IllegalArgumentException If the identifier is unknown
+     */
+    public synchronized Credentials get(final String name) {
         Credentials c = m_credentials.get(name);
         if (c == null) {
             throw new IllegalArgumentException("No credentials stored to "
                     + "name \"" + name + "\"");
         }
-        c.addClient(client);
         return c;
     }
+    
+    /**
+     * Checks, if a {@link CredentialsStore} is contained in this store under
+     * the given name.
+     * @param name credential name to check
+     * @return true, if a credentials exists, otherwise false
+     */
+    public synchronized boolean contains(final String name) {
+        return m_credentials.containsKey(name);
+    }
+    
+    /**
+     * Update the {@link Credentials} with the name from the given
+     * crendentials object. Only the login and password are updated.
+     * @param credentials the name of the credential to be replaced
+     * @throws IllegalArgumentException If the identifier is unknown
+     */
+    public synchronized void update(final Credentials credentials) {
+        Credentials c = get(credentials.getName());
+        c.setPassword(credentials.getPassword());
+        c.setLogin(credentials.getLogin());
+    } 
 
     /** Get iterable for credentials. Used internally (load/save). Caller
      * must not modify the list!

@@ -104,6 +104,7 @@ import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
 import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.OpenCredentialVariablesDialogAction;
 import org.knime.workbench.ui.navigator.actions.OpenWorkflowVariablesDialogAction;
 import org.knime.workbench.ui.navigator.actions.ResetWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
@@ -462,8 +463,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new ExecuteWorkflowAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new ConfigureWorkflowAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                new OpenCredentialVariablesDialogAction());
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
             menu.insertAfter(ExportKnimeWorkflowAction.ID,
                     new OpenWorkflowVariablesDialogAction());
         }
