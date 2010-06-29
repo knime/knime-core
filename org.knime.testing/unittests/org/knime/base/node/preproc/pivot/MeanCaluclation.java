@@ -18,6 +18,18 @@
  */
 package org.knime.base.node.preproc.pivot;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.statistics.StatisticsTable;
+import org.knime.base.node.preproc.groupby.BigGroupByTable;
+import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
+import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -35,19 +47,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettings;
-
-import org.knime.base.data.statistics.StatisticsTable;
-import org.knime.base.node.preproc.groupby.BigGroupByTable;
-import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
-import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethods;
-import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import junit.framework.TestCase;
 
 /**
  * This test ensures that the calculation of the mean is equal
