@@ -56,6 +56,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 
 /**
@@ -68,7 +70,7 @@ import java.util.Map;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class CredentialsStore {
+public final class CredentialsStore implements Observer {
 
     private final WorkflowManager m_manager;
     private final Map<String, Credentials> m_credentials;
@@ -93,7 +95,7 @@ public final class CredentialsStore {
         m_manager = manager;
         m_credentials = new LinkedHashMap<String, Credentials>();
         for (Credentials c : creds) {
-            m_credentials.put(c.getName(), c);
+            add(c);
         }
     }
 
@@ -119,11 +121,12 @@ public final class CredentialsStore {
         return c;
     }
 
-    /** Get iterable for credentials. Used internally (load/save).
+    /** Get iterable for credentials. Used internally (load/save). Caller
+     * must not modify the list!
      * @return The credentials in this store.
      */
     public Iterable<Credentials> getCredentials() {
-        return m_credentials.values();
+        return Collections.unmodifiableCollection(m_credentials.values());
     }
 
     /** Clear any access history of the given client on any of the credentials.
@@ -142,12 +145,16 @@ public final class CredentialsStore {
      * @throws IllegalArgumentException If the the argument's name is already
      * in use
      */
-    public synchronized void add(final Credentials cred) {
-        if (m_credentials.containsKey(cred.getName())) {
-            throw new IllegalArgumentException("Identifier \""
-                    + cred.getName() + "\" for credentials already in use");
+    public void add(final Credentials cred) {
+        synchronized (this) {
+            if (m_credentials.containsKey(cred.getName())) {
+                throw new IllegalArgumentException("Identifier \""
+                        + cred.getName() + "\" for credentials already in use");
+            }
+            cred.addObserver(this);
+            m_credentials.put(cred.getName(), cred);
         }
-        m_credentials.put(cred.getName(), cred);
+        m_manager.setDirty();
     }
 
     /** Remove a credentials variable from this store.
@@ -155,20 +162,16 @@ public final class CredentialsStore {
      * @throws NullPointerException If the argument is null
      * @throws IllegalArgumentException If the variable is unknown.
      */
-    public synchronized void remove(final String name) {
-        Credentials c = m_credentials.remove(name);
-        if (c == null) {
-            throw new IllegalArgumentException("No credentials stored to "
-                    + "name \"" + name + "\"");
+    public void remove(final String name) {
+        synchronized (this) {
+            Credentials c = m_credentials.remove(name);
+            if (c == null) {
+                throw new IllegalArgumentException("No credentials stored to "
+                        + "name \"" + name + "\"");
+            }
+            c.deleteObserver(this);
         }
-    }
-
-    /** Replace the credential variable given by the credential name.
-     * @param cred to be replaced in this store
-     * @return true, if the previous value is replace, otherwise false
-     */
-    public synchronized boolean replace(final Credentials cred) {
-        return (m_credentials.put(cred.getName(), cred) == null);
+        m_manager.setDirty();
     }
 
     /** Get a list with identifiers of the available credential variables.#
@@ -186,6 +189,12 @@ public final class CredentialsStore {
         return "Credentials store for workflow + \"" + m_manager.getNameWithID()
             + "\" (" + listNames() + " credentials)";
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void update(final Observable o, final Object arg) {
+        m_manager.setDirty();
     }
 
 }

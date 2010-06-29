@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Observable;
 import java.util.WeakHashMap;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -61,7 +62,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class Credentials implements ICredentials, Cloneable {
+public final class Credentials extends Observable implements ICredentials {
 
     private final String m_name;
     private String m_login;
@@ -114,7 +115,11 @@ public final class Credentials implements ICredentials, Cloneable {
      * @param login the login to set
      */
     void setLogin(final String login) {
-        m_login = login;
+        if (!ConvenienceMethods.areEqual(m_login, login)) {
+            m_login = login;
+            setChanged();
+            notifyObservers();
+        }
     }
 
     /** {@inheritDoc} */
@@ -172,15 +177,9 @@ public final class Credentials implements ICredentials, Cloneable {
     /** {@inheritDoc} */
     @Override
     public Credentials clone() {
-        try {
-            Credentials clone = (Credentials)super.clone();
-            // discard registered listeners
-            clone.m_clientNodes = new WeakHashMap<NodeContainer, Object>();
-            return clone;
-        } catch (CloneNotSupportedException cnse) {
-            throw new RuntimeException(
-                    "Cloning failed although Clonable", cnse);
-        }
+        // don't use super.clone() as we extend Observable and the Observer
+        // list must not be copied
+        return new Credentials(m_name, m_login, m_password);
     }
 
     /** Remove the client from the history list (if registered).
