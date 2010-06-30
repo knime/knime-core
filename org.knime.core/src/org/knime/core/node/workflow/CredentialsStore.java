@@ -112,7 +112,7 @@ public final class CredentialsStore implements Observer {
      */
     public synchronized Credentials get(final String name,
             final NodeContainer client) {
-        Credentials c = get(name, client);
+        Credentials c = get(name);
         c.addClient(client);
         return c;
     }
