@@ -19,6 +19,7 @@
 package org.knime.workbench.ui.masterkey;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -172,7 +173,18 @@ public class CredentialVariableTable implements Iterable<Credentials> {
             switch (arg1) {
             case 0: return cred.getName();
             case 1: return cred.getLogin();
-            case 2: return cred.getPassword();
+            case 2: {
+        	String passString = cred.getPassword();
+        	if (passString.isEmpty()) {
+        	    return "<not set>";
+        	}
+        	StringBuilder buf = new StringBuilder();
+        	for (int i = 0; 
+        		i < Integer.bitCount(passString.hashCode()); i++) {
+        	    buf.append('*');
+        	}
+        	return buf.toString();
+            }
             default: throw new RuntimeException(
                     "Invalid number of columns defined: " + arg1);
             }
