@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="polyRegLearner.png" type="Learner">
-    <name>Polynomial Regression Learner</name>
+    <name>Polynomial Regression (Learner)</name>
 
     <shortDescription>Learner that builds a polynomial regression model from the input data</shortDescription>
 
