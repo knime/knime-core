@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./logistic_regression_learn.png" type="Learner">
+    <name>Logistic Regression (Learner, Heiko)</name>
+    <shortDescription>Performs a multinomial logistic regression.</shortDescription>
+    <fullDescription>
+        <intro>
+            Performs a multinomial logistic regression. Select in the dialog a 
+            target column (combo box on top), i.e. the response. The two
+            lists in the center of the dialog allow you to include only certain 
+            columns which represent the (independent) variables.
+            Make sure the columns you want to have included being in the right
+            "include" list.
+            
+            See article in wikipedia about 
+            <a href="http://en.wikipedia.org/wiki/Logistic_regression">logistic regression</a>
+            for an overview about the topic.
+            
+            This particular implementation uses an iterative optimization procedure
+            termed Fisher's scoring in order to compute the model. 
+		</intro>
+        <option name="Target">
+            To select the target column. Only columns with nominal data are allowed.
+        </option>
+        <option name="Values">
+            To specify the independent columns the should be included in the regression model. 
+            Numeric and nominal data can be included.
+        </option>  		
+	</fullDescription>
+    <ports>
+        <inPort index="0" name="Input data">Table on which to perform regression. The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.</inPort>
+        <outPort index="0" name="Model for Predictor">Model to connect to a predictor node.</outPort>
+        <outPort index="1" name="Coefficients and Statistics">Coefficients and statistics of the logistic regression model.</outPort>
+	</ports>
+	<views>
+		<view index="0" name="Logistic Regression Result View">
+    		Displays the estimated coefficients and error statistics. Note, 
+    		that the estimated coefficients are not reliable when the standard
+    		error is high.
+		</view>
+	</views>
+</knimeNode>
