@@ -87,7 +87,7 @@ public class SettingsModelLong extends SettingsModelNumber {
      */
     @Override
     String getNumberValueStr() {
-        return Long.toString(m_value);
+        return Long.toString(getLongValue());
     }
     
     /**
@@ -107,7 +107,6 @@ public class SettingsModelLong extends SettingsModelNumber {
     }
     
     /**
-     * 
      * @return the stored long value
      */
     public long getLongValue() {
@@ -119,7 +118,7 @@ public class SettingsModelLong extends SettingsModelNumber {
      */
     @Override
     void setNumberValueStr(final String newValueStr) {
-        m_value = Long.parseLong(newValueStr);
+        setLongValue(Long.parseLong(newValueStr));
     }
 
     
