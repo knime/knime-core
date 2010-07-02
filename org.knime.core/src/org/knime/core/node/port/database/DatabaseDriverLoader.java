@@ -183,7 +183,7 @@ public final class DatabaseDriverLoader {
      * @throws InvalidSettingsException if the database drivers could not
      *             registered
      */
-    static Driver registerDriver(final String driver)
+    public static Driver registerDriver(final String driver)
             throws InvalidSettingsException {
         try {
             Driver wrappedDriver =
@@ -202,7 +202,7 @@ public final class DatabaseDriverLoader {
      * @param file Load driver from.
      * @throws IOException {@link IOException}
      */
-    public static final void loadDriver(final File file) throws IOException {
+    public static void loadDriver(final File file) throws IOException {
         if (file == null || !file.exists()) {
             throw new IOException("File \"" + file + "\" does not exist.");
         }
@@ -291,7 +291,7 @@ public final class DatabaseDriverLoader {
      * @return an String containing protocol, port, host, and database name
      *      place holder
      */
-    public static final String getURLForDriver(final String driver) {
+    public static String getURLForDriver(final String driver) {
         String url = DRIVER_TO_URL.get(driver);
         if (url == null) {
             return "<protocol>://<host>:<port>/<database_name>";
@@ -305,7 +305,7 @@ public final class DatabaseDriverLoader {
      * @param driverClass driver class name
      * @return driver file location
      */
-    public static final File getDriverFileForDriverClass(
+    public static File getDriverFileForDriverClass(
             final String driverClass) {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
     }
