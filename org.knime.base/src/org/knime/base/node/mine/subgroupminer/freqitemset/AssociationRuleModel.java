@@ -59,9 +59,10 @@ import org.knime.core.node.ModelContentWO;
 
 
 /**
- * 
+ * @deprecated 
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class AssociationRuleModel {
     private static final String ASSOCIATION_RULES = "associationRules";
 

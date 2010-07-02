@@ -114,7 +114,7 @@ public class TIDApriori implements AprioriAlgorithm {
                             + transactionNr);
             exec.checkCanceled();
             // this type cast is save since the maximum length was checked in 
-            // SubgroupMinerModel#preprocess
+            // SubgroupMinerModel2#preprocess
             for (int item = (int)transaction.nextSetBit(0); item >= 0; 
                 item = (int)transaction.nextSetBit(item + 1)) {
                 /*
@@ -174,7 +174,7 @@ public class TIDApriori implements AprioriAlgorithm {
         // LOGGER.debug("frequent items: " + m_frequentItems);
     }
 
-    /*
+    /**
      * Filters the always frequent items which occur in every transaction.
      */
     private void filterAlwaysFrequentItems() {

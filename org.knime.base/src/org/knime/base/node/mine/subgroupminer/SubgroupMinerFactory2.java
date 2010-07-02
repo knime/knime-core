@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  * 
- * History
- *   25.10.2005 (Normal): created
  */
 package org.knime.base.node.mine.subgroupminer;
 
@@ -59,13 +57,13 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubgroupMinerFactory extends NodeFactory<SubgroupMinerModel> {
+public class SubgroupMinerFactory2 extends NodeFactory<SubgroupMinerModel2> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public SubgroupMinerModel createNodeModel() {
-        return new SubgroupMinerModel();
+    public SubgroupMinerModel2 createNodeModel() {
+        return new SubgroupMinerModel2();
     }
 
     /**
@@ -81,8 +79,8 @@ public class SubgroupMinerFactory extends NodeFactory<SubgroupMinerModel> {
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
-            final SubgroupMinerModel nodeModel) {
-        return null; // new SubgroupMinerView((SubgroupMinerModel)nodeModel);
+            final SubgroupMinerModel2 nodeModel) {
+        return null;
     }
 
     /**
@@ -98,6 +96,6 @@ public class SubgroupMinerFactory extends NodeFactory<SubgroupMinerModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new SubgroupMinerDialog();
+        return new SubgroupMinerDialog2();
     }
 }

@@ -55,7 +55,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
-import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetTable;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -74,18 +74,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * the output table should be sorted and the underlying algorithm.
  * 
  * @author Fabian Dill, University of Konstanz
+ * @author Iris Adae, University of Konstanz
  */
-public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
+public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
     
-    private final DialogComponentColumnNameSelection m_bitVectorColumnComp;
+    private final DialogComponentColumnNameSelection m_transactionCols;
 
     private final DialogComponentNumber m_minSupportComp;
 
     private final DialogComponentStringSelection m_itemSetTypeComp;
 
     private final DialogComponentNumber m_itemSetLengthComp;
-
-    private final DialogComponentStringSelection m_sortByComp;
 
     private final DialogComponentStringSelection m_dataStructComp;
 
@@ -99,12 +98,13 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      * default dialog components.
      */
     @SuppressWarnings("unchecked")
-    public SubgroupMinerDialog() {
+    public SubgroupMinerDialog2() {
         super();
         
-        m_bitVectorColumnComp = new DialogComponentColumnNameSelection(
-                createBitVectorColumnModel(),
-                "Column containing the bit vectors", 0, BitVectorValue.class);
+        m_transactionCols = new DialogComponentColumnNameSelection(
+              createBitVectorColumnModel(),
+              "Column containing transactions (BitVector or CollectionColumn)",
+              0, BitVectorValue.class, CollectionDataValue.class);
         
         m_minSupportComp = new DialogComponentNumber(
                 createMinSupportModel(),
@@ -116,12 +116,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
 
         m_itemSetLengthComp = new DialogComponentNumber(
                 createItemsetLengthModel(),
-                "Maximal Itemset Length:", 1);
-        
-        m_sortByComp = new DialogComponentStringSelection(
-                createSortByModel(), "Sort output table by: ",
-                FrequentItemSetTable.Sorter.asStringList());
-        
+                "Maximal Itemset Length:", 1);        
 
         m_dataStructComp = new DialogComponentStringSelection(
                 createAlgorithmModel(),
@@ -153,14 +148,13 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
         
         // adding to panel
         createNewGroup("Itemset Mining");
-        addDialogComponent(m_bitVectorColumnComp);
+        addDialogComponent(m_transactionCols);
         addDialogComponent(m_minSupportComp);
         addDialogComponent(m_dataStructComp);
         
         createNewGroup("Output");
         addDialogComponent(m_itemSetTypeComp);
         addDialogComponent(m_itemSetLengthComp);
-        addDialogComponent(m_sortByComp);
         
         createNewGroup("Association Rules");
         addDialogComponent(m_associationRules);
@@ -175,8 +169,9 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      * @return settings model for the bitvector column
      */
     static SettingsModelString createBitVectorColumnModel() {
+        //TODO change the cfg also to transaction col????? 
         return new SettingsModelString(
-                SubgroupMinerModel.CFG_BITVECTOR_COL, "");
+                SubgroupMinerModel2.CFG_TRANSACTION_COL, "");
     }
     
     /**
@@ -185,8 +180,8 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelDoubleBounded createMinSupportModel() {
         return new SettingsModelDoubleBounded(
-                SubgroupMinerModel.CFG_MIN_SUPPORT, 
-                SubgroupMinerModel.DEFAULT_MIN_SUPPORT, 0.0, 1.0);
+                SubgroupMinerModel2.CFG_MIN_SUPPORT, 
+                SubgroupMinerModel2.DEFAULT_MIN_SUPPORT, 0.0, 1.0);
     }
     
     /**
@@ -194,7 +189,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      * @return settings model for the item set type
      */
     static SettingsModelString createItemSetTypeModel() {
-        return new SettingsModelString(SubgroupMinerModel.CFG_ITEMSET_TYPE, 
+        return new SettingsModelString(SubgroupMinerModel2.CFG_ITEMSET_TYPE, 
                 FrequentItemSet.Type.CLOSED.name());
     }
     
@@ -204,19 +199,9 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelIntegerBounded createItemsetLengthModel() {
         return new SettingsModelIntegerBounded(
-                SubgroupMinerModel.CFG_MAX_ITEMSET_LENGTH,
-                SubgroupMinerModel.DEFAULT_MAX_ITEMSET_LENGTH,
+                SubgroupMinerModel2.CFG_MAX_ITEMSET_LENGTH,
+                SubgroupMinerModel2.DEFAULT_MAX_ITEMSET_LENGTH,
                 1, Integer.MAX_VALUE);
-    }
-    
-    /**
-     * 
-     * @return settings model for the sort by method
-     */
-    static SettingsModelString createSortByModel() {
-        return new SettingsModelString(
-                SubgroupMinerModel.CFG_SORT_BY,
-                FrequentItemSetTable.Sorter.NONE.name());
     }
     
     /**
@@ -225,7 +210,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelBoolean createAssociationRuleFlagModel() {
         return new SettingsModelBoolean(
-                SubgroupMinerModel.CFG_ASSOCIATION_RULES, false);
+                SubgroupMinerModel2.CFG_ASSOCIATION_RULES, false);
     }
     
     /**
@@ -234,8 +219,8 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelDoubleBounded createConfidenceModel() {
         SettingsModelDoubleBounded model = new SettingsModelDoubleBounded(
-                SubgroupMinerModel.CFG_CONFIDENCE,
-                SubgroupMinerModel.DEFAULT_CONFIDENCE, 0.0, 1.0);
+                SubgroupMinerModel2.CFG_CONFIDENCE,
+                SubgroupMinerModel2.DEFAULT_CONFIDENCE, 0.0, 1.0);
         model.setEnabled(false);
         return model;
     }
@@ -246,7 +231,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createAlgorithmModel() {
         return new SettingsModelString(
-                SubgroupMinerModel.CFG_UNDERLYING_STRUCT, 
+                SubgroupMinerModel2.CFG_UNDERLYING_STRUCT, 
                 AprioriAlgorithmFactory.AlgorithmDataStructure.ARRAY.name());
     }
 }

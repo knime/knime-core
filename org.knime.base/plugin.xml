@@ -455,8 +455,8 @@
             id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
       <node
             category-path="/mining/subgroup"
-            factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory"
-            id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory"/>
+            factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"
+            id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
 	   <node
 	         category-path="/statistics/regression"
 	         factory-class="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"

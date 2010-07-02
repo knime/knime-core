@@ -77,7 +77,7 @@ public final class TIDItemSet {
     
 
     /*
-     * Creates and empty TIDItemSet and with no items. Attention: the bitset is
+     * Creates an empty TIDItemSet and with no items. Attention: the bitset is
      * empty, that means adding an item to this set will result in an itemset
      * with support = 0, since the common transaction ids are intersected. Use
      * createEmptyTIDItemSet instead.

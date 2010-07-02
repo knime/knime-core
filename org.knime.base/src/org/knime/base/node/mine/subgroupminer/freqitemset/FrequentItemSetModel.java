@@ -60,9 +60,10 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
 
-/**
+/**@deprecated 
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class FrequentItemSetModel {
 
     // private static final NodeLogger LOGGER = NodeLogger

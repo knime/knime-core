@@ -63,7 +63,7 @@ import java.util.List;
 public final class AprioriAlgorithmFactory {
     /**
      * Register here possible implementations of the apriori algorithm to be
-     * provided by the subgroup miner node (SubgroupMinerModel).
+     * provided by the subgroup miner node (SubgroupMinerModel2).
      * 
      * @author Fabian Dill, University of Konstanz
      */

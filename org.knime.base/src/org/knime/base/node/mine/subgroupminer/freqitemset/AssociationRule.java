@@ -57,9 +57,6 @@ package org.knime.base.node.mine.subgroupminer.freqitemset;
  * @author Fabian Dill, University of Konstanz
  */
 public class AssociationRule {
-//    private Integer m_consequent;
-//
-//    private List<Integer> m_antecedent;
 
     private double m_confidence;
 
@@ -70,18 +67,6 @@ public class AssociationRule {
     private final FrequentItemSet m_antecedent;
     
     private final FrequentItemSet m_consequent;
-
-//    public AssociationRule(final Integer consequent,
-//            final List<Integer> antecendent, final double confidence,
-//            final double support) {
-//        m_consequent = consequent;
-//        m_antecedent = antecendent;
-//        m_confidence = confidence;
-//        m_support = support;
-//    }
-
-    // TODO: rewrite to have a FrequentItem antecedent
-    // and a FrequentItemSet as consequent
     
     /**
      * Creates an association rule with the list of ids of the antecedent and an
@@ -91,6 +76,7 @@ public class AssociationRule {
      * @param antecedent the antecedent of the rule
      * @param confidence the confidence of the rule
      * @param support the support of the rule
+     * @param lift the lift of the rule
      */
     public AssociationRule(final FrequentItemSet antecedent, 
             final FrequentItemSet consequent, final double support,
@@ -128,7 +114,7 @@ public class AssociationRule {
      * @return lift value
      */
     public double getLift() {
-    	return m_lift;
+        return m_lift;
     }
 
 

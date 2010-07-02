@@ -134,7 +134,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      * 
      * @param transactions the database as bitsets
      */
-    public void findFrequentItems(final List<BitVectorValue> transactions) {
+    private void findFrequentItems(final List<BitVectorValue> transactions) {
         int[] items = new int[m_bitSetLength + 1];
         m_mapping = new int[m_bitSetLength + 1];
 
@@ -228,7 +228,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     private void count(final BitVectorValue transaction,
             final ArrayPrefixTreeNode node, final int item, final int level) {
         // this type cast is save since the maximum length was checked in 
-        // SubgroupMinerModel#preprocess
+        // SubgroupMinerModel2#preprocess
         for (int i = (int)transaction.nextSetBit(item); i >= 0; 
                 i = (int)transaction.nextSetBit(i + 1)) {
             if (m_mapping[i] < 0) {
@@ -498,4 +498,5 @@ public class ArrayApriori implements AprioriAlgorithm {
         }
         return closedList;
     }
+
 }

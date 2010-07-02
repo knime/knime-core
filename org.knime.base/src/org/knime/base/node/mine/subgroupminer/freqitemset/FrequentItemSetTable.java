@@ -72,9 +72,10 @@ import org.knime.core.data.RowIterator;
  * FrequentItemSetTable are of variable length ( the rest is filled with empty
  * cells) and the user is able to sort by itemset length.
  * 
- * 
+ * @deprecated 
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class FrequentItemSetTable implements DataTable {
     /** the feature the table should be sorted by. */
     public static enum Sorter {
