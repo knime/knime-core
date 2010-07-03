@@ -455,6 +455,10 @@ class Workflow {
      *
      * @param inPorts indices of inports
      * @return set of nodes with used inports
+     *
+     * @FIXME: this is an almost complete replication of the function
+     *   findAllNodesConnectedToLoopBody - they should both call a more general
+     *   implementation!
      */
     ArrayList<NodeAndInports> findAllConnectedNodes(final Set<Integer> inPorts) {
         ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
@@ -473,12 +477,12 @@ class Workflow {
             }
         }
         // now follow those nodes and keep adding until we reach the end of the workflow
-        int currentNode = 0;
-        while (currentNode < tempOutput.size()) {
-            NodeID currID = tempOutput.get(currentNode).getID();
+        int currIndex = 0;
+        while (currIndex < tempOutput.size()) {
+            NodeID currID = tempOutput.get(currIndex).getID();
             NodeContainer currNode = m_nodes.get(currID);
-            Set<Integer> currInports = tempOutput.get(currentNode).getInports();
-            int currDepth = tempOutput.get(currentNode).getDepth();
+            Set<Integer> currInports = tempOutput.get(currIndex).getInports();
+            int currDepth = tempOutput.get(currIndex).getDepth();
             Set<Integer> currOutports = new HashSet<Integer>();
             if (   (currNode instanceof SingleNodeContainer)
                 || (currInports == null)) {
@@ -516,24 +520,34 @@ class Workflow {
                             tempOutput.add(new NodeAndInports(destID,
                                     cc.getDestPort(), currDepth + 1));
                         } else {
+                            assert ix != currIndex;
                             // node is already in list, adjust depth to new
                             // maximum and add port if not already contained:
-                            // first collect all instance of this node and
-                            // gather their inport indices
                             NodeAndInports nai = tempOutput.get(ix);
-                            // must exist only once:
-                            assert ix == tempOutput.lastIndexOf(destID);
-                            // index can not yet have been added:
-                            assert !(nai.getInports().contains(cc.getDestPort()));
-                            // depth has to be smaller or equal
-                            assert nai.getDepth() <= currDepth + 1;
-                            nai.addInport(cc.getDestPort());
-                            nai.setDepth(currDepth + 1);
+                            if (!nai.getInports().contains(cc.getDestPort())) {
+                                nai.addInport(cc.getDestPort());
+                            }
+                            if (nai.getDepth() != currDepth + 1) {
+                                // depth has to be smaller or equal
+                                assert nai.getDepth() < currDepth + 1;
+                                nai.setDepth(currDepth + 1);
+                                if (ix < currIndex) {
+                                    // move this node to end of list if it was
+                                    // already "touched" so that depth of
+                                    // successors will also be adjusted!
+                                    nai = tempOutput.remove(ix);
+                                    tempOutput.add(nai);
+                                    // critical: we removed an element in our
+                                    // list which resided before our pointer.
+                                    // Make sure we still point to current node.
+                                    currIndex--;
+                                }
+                            }
                         }
                     }
                 }
             }
-            currentNode++;
+            currIndex++;
         }
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator() {
@@ -814,6 +828,10 @@ class Workflow {
      * @param endNode if of tail of loop
      * @return list of nodes within loop body & any dangling branches. The list
      *   also contains the used input ports of each node.
+     *
+     * @FIXME: this is an almost complete replication of the function
+     *   findAllConnectedNodes - they should both call a more general
+     *   implementation!
      */
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
