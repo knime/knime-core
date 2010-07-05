@@ -154,7 +154,10 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             final String name) throws SAXException {
         // if Array -> read buffer out
         m_elementStack.pop();
-        if (name.equals("REAL-Entries")
+        /* "Entries" was wrong. This element does not exist in PMML. It is only
+         * kept here for compatibility reasons.
+         */
+        if ((name.equals("REAL-Entries") || name.equals("Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             String[] coords = m_buffer.toString().trim().split(" ");
             ArrayList<Double> suppValues = new ArrayList<Double>();
