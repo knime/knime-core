@@ -11,10 +11,10 @@
 	
 	<fullDescription>
 		<intro>
-			Searches for frequent itemsets meeting the user-defined minimum support
-			criterion and, optionally, creates association rules from them. 
-			The column containing the transactions (BitVectors or Collections) 
-			has to be selected. The minimum 
+			Searches for frequent itemsets meeting the user-defined minimum 
+			support criterion and, optionally, creates association rules from 
+			them. The column containing the transactions (BitVectors or 
+			Collections) has to be selected. The minimum 
 			support as an absolute number must be provided (therefore check the number
 			of transactions to obtain a sensible criterion). If the frequent itemsets
 			should be free (unconstrained) or closed or maximal has also be defined.
@@ -26,9 +26,10 @@
 			provided. The confidence is a value to define how often the rule is 
 			right. Association rules generated here are in the form to have only one
 			item in the consequence.
-			The underlying algorithm can be either an ARRAY or a TIDList. 
-			Choose the former when there are many transactions an less items, and 
-			the latter if the structure of the input data is vice versa.		
+			The underlying data structure used by the algorithm can be either an
+			ARRAY or a TIDList. Choose the former when there are many 
+			transactions an less items, and	the latter if the structure of the 
+			input data is vice versa.		
 		</intro>
 		
 	<option name="Column containing transactions">
@@ -41,7 +42,7 @@
 		support" transactions, where the itemset occurs. Make sure, to have here
 		a meaningful number in proportion of the number of rows of the input.
 	</option>
-	<option name="Underlying algorithm">
+	<option name="Underlying data structure">
         Either ARRAY or TIDList: ARRAY is recommended when the number of 
         transactions (rows) is larger than the number of items, and the TIDList
         if the number of rows is small and the number of items large. In

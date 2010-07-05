@@ -120,7 +120,7 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
 
         m_dataStructComp = new DialogComponentStringSelection(
                 createAlgorithmModel(),
-                "Underlying algorithm: ",
+                "Underlying data structure: ",
                 AprioriAlgorithmFactory.AlgorithmDataStructure.asStringList());
         
 
@@ -147,16 +147,16 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
         
         
         // adding to panel
-        createNewGroup("Itemset Mining");
+        createNewGroup(" Itemset Mining ");
         addDialogComponent(m_transactionCols);
         addDialogComponent(m_minSupportComp);
         addDialogComponent(m_dataStructComp);
         
-        createNewGroup("Output");
+        createNewGroup(" Output ");
         addDialogComponent(m_itemSetTypeComp);
         addDialogComponent(m_itemSetLengthComp);
         
-        createNewGroup("Association Rules");
+        createNewGroup(" Association Rules ");
         addDialogComponent(m_associationRules);
         addDialogComponent(m_confidence);
     }
