@@ -380,6 +380,8 @@ public class ClusterNodeModel extends NodeModel {
      * that are extremely similar to the first n patterns...
      *
      * {@inheritDoc}
+     *
+     * @FIXME actually do something useful with missing values!
      */
     @Override
     protected PortObject[] execute(final PortObject[] data,
@@ -440,6 +442,9 @@ public class ClusterNodeModel extends NodeModel {
                                 delta[winner][deltaPos]
                                               += ((DoubleValue)(currentCell))
                                         .getDoubleValue();
+                            } else {
+                                throw new Exception("Missing Values not" +
+                                		" (yet) allowed in k-Means.");
                             }
                             deltaPos++;
                         }
