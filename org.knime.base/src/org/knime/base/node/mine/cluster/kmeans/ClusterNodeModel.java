@@ -443,8 +443,8 @@ public class ClusterNodeModel extends NodeModel {
                                               += ((DoubleValue)(currentCell))
                                         .getDoubleValue();
                             } else {
-                                throw new Exception("Missing Values not" +
-                                		" (yet) allowed in k-Means.");
+                                throw new Exception("Missing Values not"
+                                    + " (yet) allowed in k-Means.");
                             }
                             deltaPos++;
                         }
