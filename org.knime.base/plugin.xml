@@ -581,6 +581,11 @@
             factory-class="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
             id="org.knime.base.node.preproc.groupby.GroupByNodeFactory"/>
       <node
+            after="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
+            category-path="/manipulation/row/row-transform"
+            factory-class="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"
+            id="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"/>
+      <node
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.pivot.PivotNodeFactory"
             id="org.knime.base.node.preproc.pivot.PivotNodeFactory"/>
