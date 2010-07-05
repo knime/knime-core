@@ -1007,6 +1007,18 @@
             factory-class="org.knime.base.node.meta.looper.LoopEnd2NodeFactory"
             id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
       </node>
+      <node
+            category-path="/mining/subgroup"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
+            id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
+            id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">

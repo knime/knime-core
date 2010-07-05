@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Predictor" icon="./sgm_market_appl.png">
+	<name>Subset Matcher</name>
+	
+	<shortDescription>
+		Subset Matcher.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			Subset matcher.
+		</intro>
+		<option name="Subset column">
+		  The column that contains the subsets to search for
+		</option>
+		<option name="Id column">
+          The id of the set to search in.
+        </option>
+        <option name="Set column">
+          The column that contains sets to search in
+        </option>
+        <option name="Append set column">
+          The matching set is appended if this option is ticked.
+        </option>
+	</fullDescription>
+	
+	<ports>
+	   <inPort name="Subsets" index="0">Subsets</inPort>
+	   <inPort name="Sets" index="1">Sets to search in</inPort>
+		<outPort name="Matching sets" index="0">
+		      Matching sets
+	    </outPort>
+	</ports>
+</knimeNode>
