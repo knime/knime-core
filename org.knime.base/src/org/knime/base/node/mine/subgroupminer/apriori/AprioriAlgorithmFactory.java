@@ -61,6 +61,7 @@ import java.util.List;
  * @author Fabian Dill, University of Konstanz
  */
 public final class AprioriAlgorithmFactory {
+    
     /**
      * Register here possible implementations of the apriori algorithm to be
      * provided by the subgroup miner node (SubgroupMinerModel2).
@@ -108,10 +109,6 @@ public final class AprioriAlgorithmFactory {
             final int dbsize) {
         if (type.equals(AlgorithmDataStructure.ARRAY)) {
             return new ArrayApriori(bitSetLength, dbsize);
-            /*
-             * }else if(type.equals(SubgroupMinerConfig.DataStruture.LIST)){
-             * return new ListApriori();
-             */
         } else if (type.equals(AlgorithmDataStructure.TIDList)) {
             return new TIDApriori();
         } else {
