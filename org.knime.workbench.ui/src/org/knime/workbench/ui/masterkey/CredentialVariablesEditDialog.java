@@ -69,8 +69,10 @@ public class CredentialVariablesEditDialog extends Dialog {
     public void loadFrom(final Credentials credential) {
         m_name.setText(credential.getName());
         m_name.setEditable(false);
-        m_login.setText(credential.getLogin());
-        m_pass.setText(credential.getPassword());
+        String login = credential.getLogin();
+        m_login.setText(login == null ? "" : login);
+        String password = credential.getPassword();
+        m_pass.setText(password == null ? "" : password);
     }
 
     /**

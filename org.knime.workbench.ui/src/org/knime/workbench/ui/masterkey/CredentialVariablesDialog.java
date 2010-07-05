@@ -155,6 +155,26 @@ public class CredentialVariablesDialog extends Dialog {
         m_editVarBtn = new Button(btnsComp, SWT.PUSH);
         m_editVarBtn.setText("Edit");
         m_editVarBtn.setLayoutData(gridData);
+        m_editVarBtn.addSelectionListener(new SelectionListener() {
+
+            @Override
+            public void widgetDefaultSelected(final SelectionEvent arg0) {
+                widgetSelected(arg0);
+            }
+
+            @Override
+            public void widgetSelected(final SelectionEvent arg0) {
+                int selectionIdx = m_table.getViewer().getTable()
+                    .getSelectionIndex();
+                if (selectionIdx < 0) {
+                    MessageDialog.openWarning(getShell(), "Empty selection",
+                    "Please select the credential you want to edit.");
+                    return;
+                }
+                Credentials selectedCred = m_table.get(selectionIdx);
+                editCredentials(selectedCred, selectionIdx);
+            }
+        });
 
         m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
         m_removeVarBtn.setText("Remove");
