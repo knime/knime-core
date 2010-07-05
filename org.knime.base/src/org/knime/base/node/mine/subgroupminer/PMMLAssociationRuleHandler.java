@@ -126,9 +126,9 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
             final String name, final Attributes atts) throws SAXException {
         // start element -> extract minimum support, confidence, nr of items
         if (name.equals("AssociationModel")
-        		/* In order to support association rule PMML models previously written
-				   by KNIME the wrong model name is still parsed. */
-        		|| name.equals("AssociationRuleModel")) {
+            /* In order to support association rule PMML models previously
+               written by KNIME the wrong model name is still parsed. */
+                || name.equals("AssociationRuleModel")) {
             // all required attributes
             m_nrOfTransactions = Integer.parseInt(
                     atts.getValue("numberOfTransactions"));

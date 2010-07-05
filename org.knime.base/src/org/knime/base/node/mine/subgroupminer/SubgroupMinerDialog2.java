@@ -103,7 +103,7 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
         
         m_transactionCols = new DialogComponentColumnNameSelection(
               createBitVectorColumnModel(),
-              "Column containing transactions (BitVector or CollectionColumn)",
+              "Column containing transactions",
               0, BitVectorValue.class, CollectionDataValue.class);
         
         m_minSupportComp = new DialogComponentNumber(
@@ -111,16 +111,16 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
                 "Minimum support (0-1)", 0.1);
         
         m_itemSetTypeComp = new DialogComponentStringSelection(
-                createItemSetTypeModel(), "Item Set Type",
+                createItemSetTypeModel(), "Itemset type",
                 FrequentItemSet.Type.asStringList());
 
         m_itemSetLengthComp = new DialogComponentNumber(
                 createItemsetLengthModel(),
-                "Maximal Itemset Length:", 1);        
+                "Maximal itemset length:", 1);        
 
         m_dataStructComp = new DialogComponentStringSelection(
                 createAlgorithmModel(),
-                "Underlying data structure: ",
+                "Underlying algorithm: ",
                 AprioriAlgorithmFactory.AlgorithmDataStructure.asStringList());
         
 
@@ -132,7 +132,7 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
         
         // components 
         m_confidence = new DialogComponentNumber(
-                confidenceModel, "Minimum Confidence:", 0.1);
+                confidenceModel, "Minimum confidence:", 0.1, 8);
         
 
         m_associationRules = new DialogComponentBoolean(
@@ -159,17 +159,13 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
         createNewGroup("Association Rules");
         addDialogComponent(m_associationRules);
         addDialogComponent(m_confidence);
-
-
-
     }
 
     /**
      * 
-     * @return settings model for the bitvector column
+     * @return settings model for the transaction column
      */
     static SettingsModelString createBitVectorColumnModel() {
-        //TODO change the cfg also to transaction col????? 
         return new SettingsModelString(
                 SubgroupMinerModel2.CFG_TRANSACTION_COL, "");
     }

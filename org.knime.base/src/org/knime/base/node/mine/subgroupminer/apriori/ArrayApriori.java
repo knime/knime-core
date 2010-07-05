@@ -336,10 +336,9 @@ public class ArrayApriori implements AprioriAlgorithm {
             withoutI.remove(i);
             List<Integer>iList = new ArrayList<Integer>(1);
             iList.add(i);
-//            AssociationRule rule = new AssociationRule(
-//                    i, withoutI, 1, m_dbsize);
             AssociationRule rule = new AssociationRule(
-                    new FrequentItemSet(Integer.toString(m_idCounter++), withoutI, 1.0),
+                    new FrequentItemSet(Integer.toString(m_idCounter++), 
+                            withoutI, 1.0),
                     new FrequentItemSet(Integer.toString(m_idCounter++),
                             iList, 1.0),
                     1.0, 1.0, 1.0);
@@ -373,7 +372,8 @@ public class ArrayApriori implements AprioriAlgorithm {
                                 new FrequentItemSet(
                                         Integer.toString(m_idCounter++), iList, 
                                         getSupportFor(iList)),
-                                        s.getSupport(), c, c / getSupportFor(iList)
+                                        s.getSupport(), c, 
+                                            c / getSupportFor(iList)
                                 );
                         associationRules.add(rule);
                         // logger.debug("found association rule: " + rule);
@@ -407,7 +407,7 @@ public class ArrayApriori implements AprioriAlgorithm {
             list.add(set);
         }
         FrequentItemSet initialSet = new FrequentItemSet(
-        		Integer.toString(m_idCounter++));
+                Integer.toString(m_idCounter++));
         getFrequentItemSets(m_root, list, initialSet, 0);
         if (type.equals(FrequentItemSet.Type.CLOSED)) {
             List<FrequentItemSet> resultList = filterClosedItemsets(list);

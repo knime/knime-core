@@ -73,7 +73,7 @@ import org.knime.core.node.NodeLogger;
  * @author Fabian Dill, University of Konstanz
  */
 public class TIDApriori implements AprioriAlgorithm {
-	
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TIDApriori.class);
 
@@ -356,14 +356,13 @@ public class TIDApriori implements AprioriAlgorithm {
             // support = dbsize, confidence = 1
             List<Integer> rest = new ArrayList<Integer>(alwaysFrequentIds);
             rest.remove(new Integer(item.getId()));
-//            AssociationRule rule = new AssociationRule(item.getId(), rest, 1,
-//                    m_dbsize);
             List<Integer>itemList = new ArrayList<Integer>();
             itemList.add(item.getId());
             AssociationRule rule = new AssociationRule(
-                    new FrequentItemSet(Integer.toString(m_idCounter++), rest, 1.0), 
-                    new FrequentItemSet(Integer.toString(m_idCounter++), itemList, 1.0),
-                    1.0, 1.0, 1.0);
+                    new FrequentItemSet(Integer.toString(m_idCounter++), rest, 
+                        1.0), 
+                    new FrequentItemSet(Integer.toString(m_idCounter++), 
+                        itemList, 1.0), 1.0, 1.0, 1.0);
             associationRules.add(rule);
         }
         // for each itemset
@@ -383,16 +382,11 @@ public class TIDApriori implements AprioriAlgorithm {
                         TIDItem tidItem = m_frequentItems.get(index);
                         itemSet.addItem(tidItem);
                     }
-                    // LOGGER.debug("newly created itemset: " + itemSet);
-                    // LOGGER.debug("s " + s);
-                    // LOGGER.debug("s' support: " + itemSet.getSupport() + "
-                    // s': " + itemSet);
+
                     double newSupport = itemSet.getSupport();
                     double oldSupport = s.getSupport();
                     double c = oldSupport / newSupport;
                     if (c >= confidence) {
-//                        AssociationRule rule = new AssociationRule(i,
-//                                sWithoutI, c, s.getSupport());
                         List<Integer>iList = new ArrayList<Integer>();
                         iList.add(i);
                         int index = m_frequentItems.indexOf(new TIDItem(i));

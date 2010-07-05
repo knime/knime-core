@@ -112,7 +112,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private DialogComponentColumnFilter m_includeColumns 
         = new DialogComponentColumnFilter(
                 BitVectorGeneratorNodeModel.createColumnFilterModel(), 0,
-                DoubleValue.class);
+                false, DoubleValue.class);
 
 
     /**

@@ -97,7 +97,7 @@ public interface AprioriAlgorithm {
      * with the passed minimal confidence.
      * 
      * @param confidence the desired minimal confidence of the rules
-     * @return a list of associaiton rules with the minimum confidence
+     * @return a list of association rules with the minimum confidence
      */
     public List<AssociationRule> getAssociationRules(final double confidence);
 }

@@ -52,7 +52,6 @@ package org.knime.base.node.mine.subgroupminer;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -60,12 +59,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class BitVectorGeneratorNodeFactory extends NodeFactory {
+public class BitVectorGeneratorNodeFactory 
+        extends NodeFactory<BitVectorGeneratorNodeModel> {
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public BitVectorGeneratorNodeModel createNodeModel() {
         return new BitVectorGeneratorNodeModel();
     }
 
@@ -81,8 +82,8 @@ public class BitVectorGeneratorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<BitVectorGeneratorNodeModel> createNodeView(
+            final int viewIndex, final BitVectorGeneratorNodeModel nodeModel) {
         return new BitVectorGeneratorView(
                 (BitVectorGeneratorNodeModel)nodeModel);
     }

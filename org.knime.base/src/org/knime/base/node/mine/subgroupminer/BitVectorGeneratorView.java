@@ -64,7 +64,9 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class BitVectorGeneratorView extends NodeView {
+public class BitVectorGeneratorView 
+        extends NodeView<BitVectorGeneratorNodeModel> {
+    
     private JEditorPane m_pane;
 
     private static final int ROUNDING_CONSTANT = 10000;

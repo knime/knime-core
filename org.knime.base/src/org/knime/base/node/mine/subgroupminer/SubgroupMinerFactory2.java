@@ -48,8 +48,8 @@
  */
 package org.knime.base.node.mine.subgroupminer;
 
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
@@ -78,8 +78,8 @@ public class SubgroupMinerFactory2 extends NodeFactory<SubgroupMinerModel2> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final SubgroupMinerModel2 nodeModel) {
+    public NodeView<SubgroupMinerModel2> createNodeView(
+            final int viewIndex, final SubgroupMinerModel2 nodeModel) {
         return null;
     }
 
