@@ -66,6 +66,7 @@ import org.junit.Test;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
@@ -137,7 +138,12 @@ public class PMMLGeneralRegressionPortObjectTest {
         String saved = new String(os.getBytes(), "UTF-8");
         PMMLGeneralRegressionPortObject portSaved =
             new PMMLGeneralRegressionPortObject();
-        PMMLPortObjectSpec spec = getPMMLSpec();
+        PMMLPortObjectSpec spec;
+        try {
+            spec = getPMMLSpec();
+        } catch (InvalidSettingsException e) {
+           throw new TransformerConfigurationException(e);
+        }
         InputStream stream = new ByteArrayInputStream(
                 saved.getBytes("UTF-8"));
         portSaved.loadFrom(spec, stream, PMMLPortObject.PMML_V3_1);
@@ -152,7 +158,12 @@ public class PMMLGeneralRegressionPortObjectTest {
         throws ParserConfigurationException, SAXException, IOException {
         PMMLGeneralRegressionPortObject port =
             new PMMLGeneralRegressionPortObject();
-        PMMLPortObjectSpec spec = getPMMLSpec();
+        PMMLPortObjectSpec spec;
+        try {
+            spec = getPMMLSpec();
+        } catch (InvalidSettingsException e) {
+            throw new SAXException(e);
+        }
         InputStream stream = new ByteArrayInputStream(
                 getPMMLFile().getBytes("UTF-8"));
         port.loadFrom(spec, stream, PMMLPortObject.PMML_V3_1);
@@ -160,7 +171,7 @@ public class PMMLGeneralRegressionPortObjectTest {
     }
 
 
-    private PMMLPortObjectSpec getPMMLSpec() {
+    private PMMLPortObjectSpec getPMMLSpec() throws InvalidSettingsException {
         String[] names = new String[]{"jobcat", "minority", "sex", "age",
                 "work"};
         DataType[] types = new DataType[]{DoubleCell.TYPE, DoubleCell.TYPE,
@@ -168,6 +179,7 @@ public class PMMLGeneralRegressionPortObjectTest {
         DataTableSpec tableSpec = new DataTableSpec(names, types);
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(tableSpec);
+        specCreator.setLearningCols(tableSpec);
         return specCreator.createSpec();
     }
 
