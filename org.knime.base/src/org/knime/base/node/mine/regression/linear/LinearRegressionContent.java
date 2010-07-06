@@ -167,6 +167,7 @@ public final class LinearRegressionContent {
     public static PMMLPortObjectSpec createPortObjectSpec(
             final DataTableSpec spec) throws InvalidSettingsException {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
+        c.setLearningCols(spec);
         c.setTargetCols(Arrays.asList(spec.getColumnSpec(
                 spec.getNumColumns() - 1)));
         return c.createSpec();

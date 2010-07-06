@@ -210,7 +210,7 @@ public class SVMLearnerNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
-        LearnColumnsAndColumnRearrangerTuple tuple = 
+        LearnColumnsAndColumnRearrangerTuple tuple =
             createTrainTableColumnRearranger(inSpec);
         DataTableSpec trainSpec = tuple.getTrainingRearranger().createSpec();
         PMMLPortObjectSpecCreator pmmlcreate =
@@ -337,8 +337,9 @@ public class SVMLearnerNodeModel extends NodeModel {
             timerTask.cancel();
         }
 
-        PMMLPortObjectSpecCreator pmmlcreate = 
+        PMMLPortObjectSpecCreator pmmlcreate =
             new PMMLPortObjectSpecCreator(trainSpec);
+        pmmlcreate.setLearningCols(trainSpec);
         pmmlcreate.setTargetCol(trainSpec.getColumnSpec(m_classcol
                 .getStringValue()));
         PMMLPortObjectSpec pmmlspec = pmmlcreate.createSpec();
@@ -346,9 +347,9 @@ public class SVMLearnerNodeModel extends NodeModel {
                 new PMMLSVMPortObject(pmmlspec, kernel, m_svms);
         return new PortObject[]{pmml};
     }
-    
-    private LearnColumnsAndColumnRearrangerTuple 
-        createTrainTableColumnRearranger(final DataTableSpec spec) 
+
+    private LearnColumnsAndColumnRearrangerTuple
+        createTrainTableColumnRearranger(final DataTableSpec spec)
         throws InvalidSettingsException {
         if (spec.getNumColumns() == 0) {
             throw new InvalidSettingsException("No columns in input table");
@@ -358,7 +359,7 @@ public class SVMLearnerNodeModel extends NodeModel {
             throw new InvalidSettingsException("Class column not set");
         }
         DataColumnSpec targetColumn = null;
-        ArrayList<DataColumnSpec> learningColumns = 
+        ArrayList<DataColumnSpec> learningColumns =
             new ArrayList<DataColumnSpec>();
         ArrayList<String> rejectedColumns = new ArrayList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
@@ -399,7 +400,7 @@ public class SVMLearnerNodeModel extends NodeModel {
             setWarningMessage("Rejecting " + rejectedColumnsSize + " column(s)"
                     + " due to incompatible type: " + shortList);
         }
-        
+
         String[] validColumns = new String[learningColumns.size() + 1];
         for (int i = 0; i < learningColumns.size(); i++) {
             validColumns[i] = learningColumns.get(i).getName();
@@ -410,7 +411,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         return new LearnColumnsAndColumnRearrangerTuple(
                 result, learningColumns, targetColumn);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -570,15 +571,15 @@ public class SVMLearnerNodeModel extends NodeModel {
         m_paramC.validateSettings(settings);
         m_classcol.validateSettings(settings);
     }
-    
+
     private static final class LearnColumnsAndColumnRearrangerTuple {
-        
+
         private final ColumnRearranger m_trainingRearranger;
         private final List<DataColumnSpec> m_learningColumns;
         private final DataColumnSpec m_targetColumn;
-        
-        /** Create tuple of column rearranger for training table and 
-         * corresponding learning and target columns. 
+
+        /** Create tuple of column rearranger for training table and
+         * corresponding learning and target columns.
          * @param trainingRearranger The training table column rearranger
          * @param learningColumns The list of learning columns.
          * @param targetColumn The target column. */
@@ -606,5 +607,5 @@ public class SVMLearnerNodeModel extends NodeModel {
             return m_targetColumn;
         }
     }
-    
+
 }

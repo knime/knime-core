@@ -171,10 +171,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                 createModelSpec(tableSpec)};
     }
 
-    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec) 
+    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec)
         throws InvalidSettingsException {
         String[] selectedCols = computeSelectedColumns(inSpec);
-        DataColumnSpec[] usedColumns = 
+        DataColumnSpec[] usedColumns =
             new DataColumnSpec[selectedCols.length + 1];
         int k = 0;
         Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
@@ -186,8 +186,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
         usedColumns[k++] = inSpec.getColumnSpec(m_settings.getTargetColumn());
 
+        DataTableSpec tableSpec = new DataTableSpec(usedColumns);
         PMMLPortObjectSpecCreator crea =
-                new PMMLPortObjectSpecCreator(new DataTableSpec(usedColumns));
+                new PMMLPortObjectSpecCreator(tableSpec);
+        crea.setLearningCols(tableSpec);
         crea.setTargetCol(usedColumns[k - 1]);
         return crea.createSpec();
     }
@@ -505,15 +507,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             throw new InvalidSettingsException("No target column selected");
         }
     }
-    
+
     /** Depending on whether the includeAll flag is set, it determines the list
-     * of learning (independent) columns. If the flag is not set, it returns 
+     * of learning (independent) columns. If the flag is not set, it returns
      * the list stored in m_settings.
      * @param spec to get column names from.
      * @return The list of learning columns.
-     * @throws InvalidSettingsException If no valid columns are in the spec. 
+     * @throws InvalidSettingsException If no valid columns are in the spec.
      */
-    private String[] computeSelectedColumns(final DataTableSpec spec) 
+    private String[] computeSelectedColumns(final DataTableSpec spec)
     throws InvalidSettingsException {
         String[] includes;
         String target = m_settings.getTargetColumn();
@@ -529,7 +531,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             }
             includes = includeList.toArray(new String[includeList.size()]);
             if (includes.length == 0) {
-                throw new InvalidSettingsException("No double-compatible " 
+                throw new InvalidSettingsException("No double-compatible "
                         + "variables (learning columns) in input table");
             }
         } else {

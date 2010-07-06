@@ -55,6 +55,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
@@ -114,6 +115,37 @@ public class PMMLPortObjectSpecCreator {
             }
         }
     }
+
+    /**
+     * Sets all columns of the data table spec as learning columns.
+     * Only double and nominal value compatible columns are yet supported for
+     * PMML models!
+     * @param tableSpec the table spec containing the columns to be added
+     * @throws InvalidSettingsException if a data column type is not compatible
+     *          with double or nominal value (not supported by PMML)
+     */
+    public void setLearningCols(final DataTableSpec tableSpec)
+            throws InvalidSettingsException {
+        if (tableSpec == null) {
+            throw new IllegalArgumentException(
+                    "Table spec must not be null!");
+        }
+        // add all columns as learning columns
+        List<String>colNames = new LinkedList<String>();
+        for (DataColumnSpec colSpec : tableSpec) {
+            if (!colSpec.getType().isCompatible(DoubleValue.class)
+                    && !colSpec.getType().isCompatible(NominalValue.class)) {
+                colNames.clear();
+                throw new InvalidSettingsException(
+                        "Only double and nominal value compatible columns "
+                        + "are yet supported for PMML models!");
+            }
+            colNames.add(colSpec.getName());
+        }
+        setLearningColsNames(colNames);
+    }
+
+
 
     /**
      * This method will be removed in a version 2.2 . Ignored columns/fields are
@@ -224,17 +256,18 @@ public class PMMLPortObjectSpecCreator {
     public PMMLPortObjectSpec createSpec() {
         if (m_learningCols.isEmpty()) {
             /*
-             * Add all compatible columns as learning columns if no learning
-             * column has been set explicitly.
+             * Add remaining compatible columns as learning columns if no
+             * learning column has been set explicitly. Remaining columns are
+             * all columns that have not been set as target or ignore column.
              */
             List<String> colNames = new LinkedList<String>();
             for (DataColumnSpec colSpec : m_dataTableSpec) {
                 if (isValidColumnSpec(colSpec)) {
                     colNames.add(colSpec.getName());
-                    m_ignoredCols.remove(colSpec);
-                    m_targetCols.remove(colSpec);
                 }
             }
+            colNames.removeAll(m_ignoredCols);
+            colNames.removeAll(m_targetCols);
             setLearningColsNames(colNames);
         }
         return new PMMLPortObjectSpec(m_dataTableSpec, m_learningCols,
