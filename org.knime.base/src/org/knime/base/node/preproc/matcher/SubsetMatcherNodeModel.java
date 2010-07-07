@@ -48,17 +48,6 @@
 
 package org.knime.base.node.preproc.matcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -85,6 +74,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.ThreadPool;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * <code>NodeModel</code> implementation.
@@ -95,17 +95,17 @@ public class SubsetMatcherNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(SubsetMatcherNodeModel.class);
 
-    private final SettingsModelColumnName m_transactionIDCol =
-        createTransactionIDColNameModel();
+    private final SettingsModelColumnName m_setIDCol =
+        createSetIDColNameModel();
 
-    private final SettingsModelString m_transactionCol =
-        createTransactionColNameModel();
+    private final SettingsModelString m_setCol =
+        createSetColNameModel();
 
-    private final SettingsModelString m_itemSetCol =
-        createItemSetColNameModel();
+    private final SettingsModelString m_subsetCol =
+        createSubsetColNameModel();
 
-    private final SettingsModelBoolean m_appendTransactionListCol =
-        createAppendTransactionListColModel();
+    private final SettingsModelBoolean m_appendSetListCol =
+        createAppendSetListColModel();
 
     /**The internal used data container that is used in the analysis threads.*/
     private BufferedDataContainer m_dc;
@@ -115,9 +115,9 @@ public class SubsetMatcherNodeModel extends NodeModel {
 
     /**The number of skipped rows.*/
     private final AtomicInteger m_skipCounter = new AtomicInteger(0);
-    
-    /**The number of processed transactions.*/
-    private final AtomicInteger m_transactionCounter = new AtomicInteger(0);
+
+    /**The number of processed sets.*/
+    private final AtomicInteger m_setCounter = new AtomicInteger(0);
 
     /**Constructor for class ItemSetMatcherNodeModel.*/
     public SubsetMatcherNodeModel() {
@@ -127,29 +127,29 @@ public class SubsetMatcherNodeModel extends NodeModel {
     /**
      * @return transaction column name model
      */
-    static SettingsModelString createTransactionColNameModel() {
-        return new SettingsModelString("transactionColumn", null);
+    static SettingsModelString createSetColNameModel() {
+        return new SettingsModelString("setColumn", null);
     }
 
     /**
      * @return the item set column model
      */
-    static SettingsModelString createItemSetColNameModel() {
-        return new SettingsModelString("itemSetColumn", null);
+    static SettingsModelString createSubsetColNameModel() {
+        return new SettingsModelString("subsetColumn", null);
     }
 
     /**
      * @return the transaction id column model.
      */
-    static SettingsModelColumnName createTransactionIDColNameModel() {
-        return new SettingsModelColumnName("transactionIDCol", null);
+    static SettingsModelColumnName createSetIDColNameModel() {
+        return new SettingsModelColumnName("setIDCol", null);
     }
 
     /**
      * @return the append item set column model
      */
-    static SettingsModelBoolean createAppendTransactionListColModel() {
-        return new SettingsModelBoolean("appendTransactionListCol", true);
+    static SettingsModelBoolean createAppendSetListColModel() {
+        return new SettingsModelBoolean("appendSetListCol", true);
     }
 
     /**
@@ -158,49 +158,55 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        final DataTableSpec setSpec = inSpecs[0];
-        checkPresetColumn(setSpec, m_itemSetCol, "Item set");
-        final DataTableSpec transSpec = inSpecs[1];
-        checkPresetColumn(transSpec, m_transactionCol, "Transaction");
-        DataColumnSpec transactionIDSpec;
-        if (!m_transactionIDCol.useRowID()) {
-            final String colName = m_transactionIDCol.getColumnName();
+        final DataTableSpec subsetTableSpec = inSpecs[0];
+        checkPresetColumn(subsetTableSpec, m_subsetCol, "Subset");
+        final DataTableSpec setTableSpec = inSpecs[1];
+        checkPresetColumn(setTableSpec, m_setCol, "Set");
+        DataColumnSpec setIDSpec;
+        if (!m_setIDCol.useRowID()) {
+            final String colName = m_setIDCol.getColumnName();
             if (colName == null || colName.isEmpty()) {
-                m_transactionIDCol.useRowID();
-                setWarningMessage("Transaction id column preset to row id");
+                m_setIDCol.useRowID();
+                setWarningMessage("Set id column preset to row id");
             } else {
-                if (!transSpec.containsName(colName)) {
+                if (!setTableSpec.containsName(colName)) {
                     throw new InvalidSettingsException(
-                        "Transaction id column does not exist");
+                        "Set id column '" + colName
+                        + "' does not exist");
                 }
             }
-            transactionIDSpec =
-                transSpec.getColumnSpec(m_transactionIDCol.getColumnName());
+            setIDSpec =
+                setTableSpec.getColumnSpec(m_setIDCol.getColumnName());
         } else {
-            transactionIDSpec = null;
+            setIDSpec = null;
         }
-        final DataColumnSpec transactionListSpec =
-            transSpec.getColumnSpec(m_transactionCol.getStringValue());
-        final DataColumnSpec itemSetSpec =
-            setSpec.getColumnSpec(m_itemSetCol.getStringValue());
-        if (transactionListSpec == null || itemSetSpec == null) {
-            throw new InvalidSettingsException("No transaction and/or"
-                + " itemset column are selected.");
+        if (!m_setIDCol.useRowID()
+                && !setTableSpec.containsName(m_setCol.getStringValue())) {
+            throw new InvalidSettingsException("Set column '"
+                    + m_setCol.getStringValue() + "' not found");
         }
-        DataType transType = 
-            transactionListSpec.getType().getCollectionElementType();
-        DataType itemsetType = itemSetSpec.getType().getCollectionElementType();
-        if (transType == null || itemsetType == null) {
-            throw new InvalidSettingsException("Transaction and/or"
-                + " itemset column are not a collection.");
+        final DataColumnSpec setListSpec =
+            setTableSpec.getColumnSpec(m_setCol.getStringValue());
+        final DataColumnSpec subsetSpec =
+            subsetTableSpec.getColumnSpec(m_subsetCol.getStringValue());
+        if (setListSpec == null || subsetSpec == null) {
+            throw new InvalidSettingsException("No set and/or"
+                + " subset column are selected.");
         }
-        if (!transType.equals(itemsetType)) {
-            throw new InvalidSettingsException("Transaction and "
-                    + "item set column have to be of the same type.");
+        final DataType setType =
+            setListSpec.getType().getCollectionElementType();
+        final DataType subsetType =
+            subsetSpec.getType().getCollectionElementType();
+        if (setType == null || subsetType == null) {
+            throw new InvalidSettingsException("Set and/or"
+                + " subset column are not a collection.");
         }
-        final DataTableSpec resultSpec = createTableSpec(transactionIDSpec,
-                transactionListSpec, itemSetSpec,
-                m_appendTransactionListCol.getBooleanValue());
+        if (!setType.equals(subsetType)) {
+            throw new InvalidSettingsException("Set and "
+                    + "subset column have to be of the same type.");
+        }
+        final DataTableSpec resultSpec = createTableSpec(setIDSpec,
+                setListSpec, subsetSpec, m_appendSetListCol.getBooleanValue());
         return new DataTableSpec[] {resultSpec};
     }
 
@@ -210,100 +216,102 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable setTable = inData[0];
-        final DataTableSpec setSpec = setTable.getSpec();
-        final int setColIdx =
-                setSpec.findColumnIndex(m_itemSetCol.getStringValue());
-        //the comparator that should be used to sort the item set AND the
-        //transaction list
-        final Comparator<DataCell> comparator =
-            setSpec.getColumnSpec(setColIdx).getType().getComparator();
-        final BufferedDataTable transTable = inData[1];
-        final DataTableSpec transSpec = transTable.getSpec();
-        final int transIDColIdx;
-        final DataColumnSpec idSpec;
-        if (m_transactionIDCol.useRowID()) {
-            transIDColIdx = -1;
-            idSpec = null;
+        final BufferedDataTable subsetTable = inData[0];
+        final DataTableSpec subsetTableSpec = subsetTable.getSpec();
+        final int subsetColIdx =
+                subsetTableSpec.findColumnIndex(m_subsetCol.getStringValue());
+        //the comparator that should be used to sort the subset AND the
+        //set list
+        final Comparator<DataCell> comparator = subsetTableSpec.getColumnSpec(
+                subsetColIdx).getType().getComparator();
+
+        final BufferedDataTable setTable = inData[1];
+        final DataTableSpec setTableSpec = setTable.getSpec();
+        final int setIDColIdx;
+        final DataColumnSpec setIDSpec;
+        if (m_setIDCol.useRowID()) {
+            setIDColIdx = -1;
+            setIDSpec = null;
         } else {
-            transIDColIdx = transSpec.findColumnIndex(m_transactionIDCol
+            setIDColIdx = setTableSpec.findColumnIndex(m_setIDCol
                     .getStringValue());
-            idSpec = transSpec.getColumnSpec(transIDColIdx);
+            setIDSpec = setTableSpec.getColumnSpec(setIDColIdx);
         }
         final int transColIdx =
-            transSpec.findColumnIndex(m_transactionCol.getStringValue());
-        final boolean appendTransCol =
-            m_appendTransactionListCol.getBooleanValue();
+            setTableSpec.findColumnIndex(m_setCol.getStringValue());
+        final boolean appendSetCol =
+            m_appendSetListCol.getBooleanValue();
 
         //create the data container
         final DataTableSpec resultSpec =
-            createTableSpec(idSpec, transSpec.getColumnSpec(transColIdx),
-                    setSpec.getColumnSpec(setColIdx), appendTransCol);
+            createTableSpec(setIDSpec, setTableSpec.getColumnSpec(transColIdx),
+                    subsetTableSpec.getColumnSpec(subsetColIdx), appendSetCol);
         m_dc = exec.createDataContainer(resultSpec);
 
-        final int setRowCount = setTable.getRowCount();
-        if (setRowCount == 0) {
+        final int subsetRowCount = subsetTable.getRowCount();
+        if (subsetRowCount == 0) {
             setWarningMessage("Empty subset table found");
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
-        final int transRowCount = transTable.getRowCount();
+        final int setRowCount = setTable.getRowCount();
         if (setRowCount == 0) {
             setWarningMessage("Empty set table found");
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
-        final double totalRowCount = setRowCount + transRowCount;
-        final ExecutionMonitor setExec =
-            exec.createSubProgress(setRowCount / totalRowCount);
-        final ExecutionMonitor transExec =
-            exec.createSubProgress(transRowCount / totalRowCount);
+        final double totalRowCount = subsetRowCount + setRowCount;
+        final ExecutionMonitor subsetExec =
+            exec.createSubProgress(subsetRowCount / totalRowCount);
 
         //create the rule model
         exec.setMessage("Generating subset base...");
         final Map<DataCell, SubsetMatcher> matcherMap =
-            createMatcherMap(setExec, setTable, setColIdx, comparator);
-        setExec.setProgress(1.0);
+            createMatcherMap(subsetExec, subsetTable, subsetColIdx, comparator);
+        subsetExec.setProgress(1.0);
         if (matcherMap.isEmpty()) {
             setWarningMessage("No item sets found");
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
 
+        final ExecutionMonitor setExec =
+            exec.createSubProgress(setRowCount / totalRowCount);
         //create the matching processes
         exec.setMessage("Processing sets... ");
-        // initialize the thread pool for parallelization of the transaction
+        // initialize the thread pool for parallelization of the set
         // analysis
         final ThreadPool pool =
                 KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool();
-        for (final DataRow row : transTable) {
-            DataCell idCell;
-            if (transIDColIdx < 0) {
+        for (final DataRow row : setTable) {
+            exec.checkCanceled();
+            DataCell setIDCell;
+            if (setIDColIdx < 0) {
                 final RowKey key = row.getKey();
-                idCell = new StringCell(key.getString());
+                setIDCell = new StringCell(key.getString());
             } else {
-                idCell = row.getCell(transIDColIdx);
+                setIDCell = row.getCell(setIDColIdx);
             }
-            final DataCell transactionCell =
+            final DataCell setCell =
                 row.getCell(transColIdx);
-            if (!(transactionCell instanceof CollectionDataValue)) {
-                transExec.setProgress(m_transactionCounter.incrementAndGet()
-                        / (double)transRowCount);
+            if (!(setCell instanceof CollectionDataValue)) {
+                setExec.setProgress(m_setCounter.incrementAndGet()
+                        / (double)setRowCount);
                 m_skipCounter.incrementAndGet();
                 continue;
             }
-            final CollectionDataValue transactionList =
-                (CollectionDataValue)transactionCell;
-            if (transactionList.size() < 1) {
-                //skip empty transaction lists
-                transExec.setProgress(m_transactionCounter.incrementAndGet()
-                        / (double)transRowCount);
+            final CollectionDataValue setList =
+                (CollectionDataValue)setCell;
+            if (setList.size() < 1) {
+                //skip empty sets
+                setExec.setProgress(m_setCounter.incrementAndGet()
+                        / (double)setRowCount);
                 m_skipCounter.incrementAndGet();
                 continue;
             }
-            // submit for each transaction a job in the thread pool
-            pool.enqueue(createRunnable(transExec, transRowCount, idCell,
-                    transactionList, appendTransCol, comparator, matcherMap));
+            // submit for each set a job in the thread pool
+            pool.enqueue(createRunnable(setExec, setRowCount, setIDCell,
+                    setList, appendSetCol, comparator, matcherMap));
         }
         // wait until all jobs are finished before closing the container
         // and returning the method
@@ -312,7 +320,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         m_dc.close();
         if (m_skipCounter.intValue() > 0) {
             setWarningMessage("No matching subsets found for " + m_skipCounter
-                    + " of " + transRowCount + " sets");
+                    + " out of " + setRowCount + " sets");
         }
         exec.setProgress(1.0);
         return new BufferedDataTable[]{m_dc.getTable()};
@@ -320,9 +328,9 @@ public class SubsetMatcherNodeModel extends NodeModel {
 
 
     private Runnable createRunnable(final ExecutionMonitor exec,
-            final int noOfTransactions, final DataCell idCell,
-            final CollectionDataValue transactionCell,
-            final boolean appendTransCol, final Comparator<DataCell> comparator,
+            final int noOfSets, final DataCell setIDCell,
+            final CollectionDataValue setCell, final boolean appendSetCol,
+            final Comparator<DataCell> comparator,
             final Map<DataCell, SubsetMatcher> matcherMap) {
         return new Runnable() {
             @Override
@@ -331,22 +339,22 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     //check cancel prior updating the global counter!!!
                     exec.checkCanceled();
                     final int transCounter =
-                        m_transactionCounter.incrementAndGet();
-                    exec.setMessage(idCell.toString() + " "
+                        m_setCounter.incrementAndGet();
+                    exec.setMessage(setIDCell.toString() + " ("
                             + transCounter + " of "
-                            + noOfTransactions);
-                    if (transactionCell.size() <= 0) {
+                            + noOfSets + ")");
+                    if (setCell.size() <= 0) {
                         //skip empty collections
                         exec.setProgress(
-                                transCounter / (double)noOfTransactions);
+                                transCounter / (double)noOfSets);
                         m_skipCounter.incrementAndGet();
                         return;
                     }
                     final DataCell[] items = collectionCell2SortedArray(
-                            transactionCell, comparator);
+                            setCell, comparator);
                     if (items.length < 1) {
                         exec.setProgress(
-                                transCounter / (double)noOfTransactions);
+                                transCounter / (double)noOfSets);
                         m_skipCounter.incrementAndGet();
                         return;
                     }
@@ -366,20 +374,20 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     }
                     if (subSets.size() < 1) {
                         exec.setProgress(
-                                transCounter / (double)noOfTransactions);
+                                transCounter / (double)noOfSets);
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    for (final DataCell itemSet : subSets) {
+                    for (final DataCell subSet : subSets) {
                         exec.checkCanceled();
-                        //create for each item set a result row
+                        //create for each matching subset a result row
                         final List<DataCell> cells = new LinkedList<DataCell>();
-                        cells.add(idCell);
-                        if (appendTransCol) {
-                            cells.add((DataCell)transactionCell);
+                        cells.add(setIDCell);
+                        if (appendSetCol) {
+                            cells.add((DataCell)setCell);
                         }
-                        //the item set column
-                        cells.add(itemSet);
+                        //the subset column
+                        cells.add(subSet);
                         final RowKey rowKey =
                             RowKey.createRowKey(m_rowId.getAndIncrement());
                         final DefaultRow row = new DefaultRow(rowKey, cells);
@@ -387,7 +395,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                             m_dc.addRowToTable(row);
                         }
                     }
-                    exec.setProgress(transCounter / (double)noOfTransactions);
+                    exec.setProgress(transCounter / (double)noOfSets);
                 } catch (final CanceledExecutionException e) {
                     // ignore this just exit the run method
                 } catch (final Exception e) {
@@ -412,7 +420,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         for (final DataRow row : table) {
             exec.checkCanceled();
             exec.setProgress(counter / (double) rowCount,
-                    "Processing item set " + counter + " of " + rowCount);
+                    "Processing subset " + counter + " of " + rowCount);
             final DataCell cell =
                 row.getCell(colIdx);
             if (!(cell instanceof CollectionDataValue)) {
@@ -428,12 +436,12 @@ public class SubsetMatcherNodeModel extends NodeModel {
             final DataCell[] itemSet =
                 collectionCell2SortedArray(collectionCell, comparator);
             final DataCell rootItem = itemSet[0];
-            SubsetMatcher rootMatcher = map.get(rootItem);
-            if (rootMatcher == null) {
-                rootMatcher = new SubsetMatcher(rootItem, comparator);
-                map.put(rootItem, rootMatcher);
+            SubsetMatcher matcher = map.get(rootItem);
+            if (matcher == null) {
+                matcher = new SubsetMatcher(rootItem, comparator);
+                map.put(rootItem, matcher);
             }
-            rootMatcher.appendChildMatcher(itemSet, 1);
+            matcher.appendChildMatcher(itemSet, 1);
             counter++;
         }
         return map;
@@ -442,41 +450,41 @@ public class SubsetMatcherNodeModel extends NodeModel {
     /**
      * The table specification has the following structure:
      * <ol>
-     * <li>transaction id</li>
-     * <li>transaction list (optional)</li>
-     * <li>item set</li>
+     * <li>set id</li>
+     * <li>matching subset list(optional)</li>
+     * <li>set</li>
      * </ol>.
-     * @param idCol the transaction id column spec
-     * @param listCol the transaction list column spec
-     * @param itemSetCol the item set column spec
-     * @param appendListCol <code>true</code> if the transaction id list
+     * @param setIDCol the set id column spec
+     * @param setCol the set column spec
+     * @param subsetCol the subset column spec
+     * @param appendSetListCol <code>true</code> if the set list
      * should be appended
      * @return the {@link DataTableSpec}
      */
-    private DataTableSpec createTableSpec(final DataColumnSpec idCol,
-            final DataColumnSpec listCol, final DataColumnSpec itemSetCol,
-            final boolean appendListCol) {
+    private DataTableSpec createTableSpec(final DataColumnSpec setIDCol,
+            final DataColumnSpec setCol, final DataColumnSpec subsetCol,
+            final boolean appendSetListCol) {
         final List<DataColumnSpec> specs = new LinkedList<DataColumnSpec>();
-        if (idCol != null) {
-            specs.add(idCol);
+        if (setIDCol != null) {
+            specs.add(setIDCol);
         } else {
             final DataColumnSpecCreator specCreator =
                 new DataColumnSpecCreator("ID", StringCell.TYPE);
             specs.add(specCreator.createSpec());
         }
-        if (appendListCol) {
-            if (itemSetCol != null && listCol != null
-                    && itemSetCol.getName().equals(listCol.getName())) {
+        if (appendSetListCol) {
+            if (subsetCol != null && setCol != null
+                    && subsetCol.getName().equals(setCol.getName())) {
                 //check for a duplicate name
                 final DataColumnSpecCreator creator =
-                    new DataColumnSpecCreator(listCol);
-                creator.setName(listCol.getName() + "#1");
+                    new DataColumnSpecCreator(setCol);
+                creator.setName(setCol.getName() + "#1");
                 specs.add(creator.createSpec());
             } else {
-                specs.add(listCol);
+                specs.add(setCol);
             }
         }
-        specs.add(itemSetCol);
+        specs.add(subsetCol);
         return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
     }
 
@@ -493,11 +501,17 @@ public class SubsetMatcherNodeModel extends NodeModel {
             }
             setWarningMessage(colType + " column preset to "
                     + model.getStringValue());
-        } else {
-            if (!spec.containsName(colName)) {
-                throw new InvalidSettingsException(
-                        colType + " column does not exist");
-            }
+        }
+        if (model.getStringValue() == null
+                || model.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException(
+                    "No collection column found in "
+                    + colType.toLowerCase() + " table");
+        }
+        if (!spec.containsName(model.getStringValue())) {
+            throw new InvalidSettingsException(
+                    "Column '" + model.getStringValue() + "' does not exist in "
+                    + colType.toLowerCase() + " table");
         }
     }
 
@@ -526,10 +540,10 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_transactionCol.validateSettings(settings);
-        m_itemSetCol.validateSettings(settings);
-        m_transactionIDCol.validateSettings(settings);
-        m_appendTransactionListCol.validateSettings(settings);
+        m_setCol.validateSettings(settings);
+        m_subsetCol.validateSettings(settings);
+        m_setIDCol.validateSettings(settings);
+        m_appendSetListCol.validateSettings(settings);
     }
 
     /**
@@ -538,10 +552,10 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_transactionCol.loadSettingsFrom(settings);
-        m_itemSetCol.loadSettingsFrom(settings);
-        m_transactionIDCol.loadSettingsFrom(settings);
-        m_appendTransactionListCol.loadSettingsFrom(settings);
+        m_setCol.loadSettingsFrom(settings);
+        m_subsetCol.loadSettingsFrom(settings);
+        m_setIDCol.loadSettingsFrom(settings);
+        m_appendSetListCol.loadSettingsFrom(settings);
     }
 
     /**
@@ -549,10 +563,10 @@ public class SubsetMatcherNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_transactionCol.saveSettingsTo(settings);
-        m_itemSetCol.saveSettingsTo(settings);
-        m_transactionIDCol.saveSettingsTo(settings);
-        m_appendTransactionListCol.saveSettingsTo(settings);
+        m_setCol.saveSettingsTo(settings);
+        m_subsetCol.saveSettingsTo(settings);
+        m_setIDCol.saveSettingsTo(settings);
+        m_appendSetListCol.saveSettingsTo(settings);
     }
 
     /**
@@ -564,7 +578,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         m_dc = null;
         m_rowId.set(0);
         m_skipCounter.set(0);
-        m_transactionCounter.set(0);
+        m_setCounter.set(0);
     }
 
     /**

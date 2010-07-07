@@ -67,18 +67,20 @@ public class SubsetMatcherNodeDialog extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
     public SubsetMatcherNodeDialog() {
+        createNewGroup(" Subset options ");
         addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createItemSetColNameModel(),
+                SubsetMatcherNodeModel.createSubsetColNameModel(),
                 "Subset column:", 0, CollectionDataValue.class));
+        createNewGroup(" Set options ");
         addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createTransactionIDColNameModel(),
-                "Id column:", 1, DataValue.class));
+                SubsetMatcherNodeModel.createSetIDColNameModel(),
+                "ID column:", 1, DataValue.class));
         addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createTransactionColNameModel(),
-                "Set column:", 1, CollectionDataValue.class));
+                SubsetMatcherNodeModel.createSetColNameModel(),
+                "Collection column:", 1, CollectionDataValue.class));
         addDialogComponent(new DialogComponentBoolean(
-                SubsetMatcherNodeModel.createAppendTransactionListColModel(),
-                "Append set column"));
+                SubsetMatcherNodeModel.createAppendSetListColModel(),
+                "Append column with matching sets"));
     }
 
 }
