@@ -49,7 +49,7 @@
         </option>
         <option name="Enable hiliting">
 			If enabled, the hiliting of a group row will hilite all rows of this
-			group in other views. Depending of the number of rows, enabling this 
+			group in other views. Depending on the number of rows, enabling this 
 			feature might consume a lot of memory.
         </option>
         <option name="Column naming">
