@@ -57,7 +57,7 @@ import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -83,7 +83,7 @@ public class UniqueConcatenateWithCountOperator
         super("Unique concatenate with count", true, false, maxUniqueValues,
                 DataValue.class);
         try {
-            m_vals = new HashMap<String, MutableInteger>(maxUniqueValues);
+            m_vals = new LinkedHashMap<String, MutableInteger>(maxUniqueValues);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");

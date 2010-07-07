@@ -57,7 +57,7 @@ import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 
@@ -77,7 +77,7 @@ public class OrElementOperator extends AggregationOperator {
         super("Union", true, false, maxUniqueValues,
                 CollectionDataValue.class);
         try {
-            m_vals = new HashSet<DataCell>(maxUniqueValues);
+            m_vals = new LinkedHashSet<DataCell>(maxUniqueValues);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");

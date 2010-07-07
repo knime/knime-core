@@ -56,7 +56,7 @@ import org.knime.core.data.def.StringCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -77,7 +77,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
         super("Unique concatenate", true, false, maxUniqueValues,
                 DataValue.class);
         try {
-            m_vals = new HashSet<String>(maxUniqueValues);
+            m_vals = new LinkedHashSet<String>(maxUniqueValues);
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
