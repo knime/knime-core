@@ -50,13 +50,17 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,6 +82,7 @@ import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -95,6 +100,12 @@ public final class SingleNodeContainer extends NodeContainer {
     /** my logger. */
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(SingleNodeContainer.class);
+
+    /** Name of the sub-directory containing node-local files. These files
+     * manually copied by the user and the node will automatically list those
+     * files as node-local flow variables in its configuration dialog.
+     */
+    public static final String DROP_DIR_NAME = "drop";
 
     /** underlying node. */
     private final Node m_node;
@@ -1046,7 +1057,44 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     void setFlowObjectStack(final FlowObjectStack st) {
         synchronized (m_nodeMutex) {
+            pushNodeDropDirURLsOntoStack(st);
             m_node.setFlowObjectStack(st);
+        }
+    }
+
+    private void pushNodeDropDirURLsOntoStack(final FlowObjectStack st) {
+        ReferencedFile refDir = getNodeContainerDirectory();
+        ReferencedFile dropFolder = refDir == null ? null
+                : new ReferencedFile(refDir, DROP_DIR_NAME);
+        if (dropFolder == null) {
+            return;
+        }
+        dropFolder.lock();
+        try {
+            File directory = dropFolder.getFile();
+            if (!directory.exists()) {
+                return;
+            }
+            String[] files = directory.list();
+            if (files != null) {
+                StringBuilder debug = new StringBuilder(
+                        "Found " + files.length + " node local file(s) to "
+                        + getNameWithID() + ": ");
+                debug.append(Arrays.copyOf(files, Math.max(3, files.length)));
+                for (String f : files) {
+                    File child = new File(directory, f);
+                    try {
+                        st.push(new FlowVariable("node.local." + f,
+//                                child.getAbsolutePath(), Scope.Local));
+                                child.toURI().toURL().toString(), Scope.Local));
+//                    } catch (Exception mue) {
+                    } catch (MalformedURLException mue) {
+                        LOGGER.warn("Unable to process drop file", mue);
+                    }
+                }
+            }
+        } finally {
+            dropFolder.unlock();
         }
     }
 
@@ -1175,9 +1223,9 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags) {
+            final boolean preserveDeletableFlags, final boolean copyNCNodeDir) {
         return new CopySingleNodeContainerPersistor(this,
-                preserveDeletableFlags);
+                preserveDeletableFlags, copyNCNodeDir);
     }
 
     // /////////////////////////////////////////////////////////////////////

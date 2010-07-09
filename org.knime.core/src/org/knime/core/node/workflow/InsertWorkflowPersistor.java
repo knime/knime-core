@@ -131,6 +131,11 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    public List<ReferencedFile> getObsoleteNodeDirectories() {
+        return Collections.emptyList();
+    }
+
+    /** {@inheritDoc} */
     @Override
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return Collections.singletonMap(

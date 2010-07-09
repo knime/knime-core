@@ -1170,10 +1170,13 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation
      * should be copied also (false when individual nodes are copied
      * but true when an entire meta node is copied).
+     * @param copyNCNodeDir If to keep the location of the node directories
+     *        (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
      * @return A new persistor for copying. */
     protected abstract NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags);
+            final boolean preserveDeletableFlags, boolean copyNCNodeDir);
 
     /**
      * @param directory the nodeContainerDirectory to set

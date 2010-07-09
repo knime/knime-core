@@ -387,6 +387,11 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 && !wm.isDirty()) {
             return WORKFLOW_FILE;
         }
+        // delete "old" node directories if not saving to the working
+        // directory -- do this before saving the nodes (dirs newly created)
+        if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
+            wm.deleteObsoleteNodeDirs();
+        }
         File workflowDir = workflowDirRef.getFile();
         workflowDir.mkdirs();
         if (!workflowDir.isDirectory()) {
@@ -538,12 +543,24 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final ReferencedFile workflowDirRef, final NodeContainer container,
             final ExecutionMonitor exec, final boolean isSaveData)
             throws CanceledExecutionException, IOException {
+        WorkflowManager parent = container.getParent();
+        ReferencedFile workingDir = parent.getNodeContainerDirectory();
+        boolean isWorkingDir = workflowDirRef.equals(workingDir);
+
         saveNodeIDSuffix(settings, container);
         int idSuffix = container.getID().getIndex();
+
         // name of sub-directory container node/sub-workflow settings
         // all chars which are not letter or number are replaced by '_'
         String nodeDirID = container.getName().replaceAll("[^a-zA-Z0-9 ]", "_")
-                + " (#" + idSuffix + ")";
+            + " (#" + idSuffix + ")";
+
+        // try to re-use previous node dir (might be different from calculated
+        // one above in case node was renamed between releases)
+        if (isWorkingDir && container.getNodeContainerDirectory() != null) {
+            ReferencedFile ncDirectory = container.getNodeContainerDirectory();
+            nodeDirID = ncDirectory.getFile().getName();
+        }
 
         ReferencedFile nodeDirectoryRef =
             new ReferencedFile(workflowDirRef, nodeDirID);

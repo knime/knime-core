@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 9, 2008 (wiswedel): created
  */
@@ -61,35 +61,47 @@ import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
-    
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(CopySingleNodeContainerPersistor.class);
+
     private final NodeFactory<NodeModel> m_nodeFactory;
     private final CopyNodePersistor m_nodePersistor;
     private final List<FlowObject> m_flowObjectList;
     private final SingleNodeContainerSettings m_sncSettings;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
-    
-    /**
-     * 
+
+    /** Create copy persistor.
+     * @param original To copy from
+     * @param preserveDeletableFlag Whether to keep the "is-deletable" flags
+     *        in the target.
+     * @param copyNCNodeDir If to keep the location of the node directories
+     *        (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
      */
     public CopySingleNodeContainerPersistor(
-            final SingleNodeContainer m_original, 
-            final boolean preserveDeletableFlag) {
-        Node originalNode = m_original.getNode();
-        FlowObjectStack stack = m_original.getFlowObjectStack();
+            final SingleNodeContainer original,
+            final boolean preserveDeletableFlag,
+            final boolean copyNCNodeDir) {
+        Node originalNode = original.getNode();
+        FlowObjectStack stack = original.getFlowObjectStack();
         List<FlowObject> objs;
         if (stack != null) {
-            objs = stack.getFlowObjectsOwnedBy(m_original.getID());
+            objs = stack.getFlowObjectsOwnedBy(original.getID(),
+                    /*exclude*/Scope.Local);
         } else {
             objs = Collections.emptyList();
         }
@@ -97,12 +109,11 @@ final class CopySingleNodeContainerPersistor implements
         for (FlowObject o : objs) {
             m_flowObjectList.add(o.cloneAndUnsetOwner());
         }
-        m_sncSettings = m_original.getSingleNodeContainerSettings().clone();
+        m_sncSettings = original.getSingleNodeContainerSettings().clone();
         m_nodeFactory = originalNode.getFactory();
         m_nodePersistor = originalNode.createCopyPersistor();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
-                m_original, preserveDeletableFlag);
-
+                original, preserveDeletableFlag, copyNCNodeDir);
     }
 
     /** {@inheritDoc} */
@@ -119,7 +130,7 @@ final class CopySingleNodeContainerPersistor implements
         if (m_flowObjectList.isEmpty()) {
             return Collections.emptyList();
         }
-        List<FlowObject> clones = 
+        List<FlowObject> clones =
             new ArrayList<FlowObject>(m_flowObjectList.size());
         for (FlowObject o : m_flowObjectList) {
             clones.add(o.clone());
@@ -152,19 +163,19 @@ final class CopySingleNodeContainerPersistor implements
     public boolean needsResetAfterLoad() {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustComplainIfStateDoesNotMatch() {
         return true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SingleNodeContainerSettings getSNCSettings() {

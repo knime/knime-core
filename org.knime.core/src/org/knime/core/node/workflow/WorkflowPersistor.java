@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -105,6 +106,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The credentials defined on this meta node.
      */
     List<Credentials> getCredentials();
+
+    /** List of node directories, whose corresponding nodes failed
+     * to load. These directories will be deleted in the next save invocation.
+     * @return List of obsolete node directories
+     */
+    List<ReferencedFile> getObsoleteNodeDirectories();
 
     WorkflowPortTemplate[] getInPortTemplates();
 

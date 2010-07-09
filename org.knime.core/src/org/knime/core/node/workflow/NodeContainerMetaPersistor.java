@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 19, 2007 (wiswedel): created
  */
@@ -63,41 +63,51 @@ interface NodeContainerMetaPersistor {
     /** Key for this node's user name. */
     static final String KEY_CUSTOM_NAME = "customName";
 
+
+    /** File reference to the node container directory. Something like
+     * &lt;workflow_space>/File Reader (#xy). This value is non-null when
+     * (i) loading from disk or (ii) if pasted into a workflow as part of
+     * an undo of a delete command. It's null if node is copied&pasted. If
+     * the value is non-null the referenced file will remove from the list
+     * of obsolete node directories (must not clear directories as they may
+     * contain a "drop" folder).
+     * @return The node container dir or null
+     */
     ReferencedFile getNodeContainerDirectory();
-    
+
     int getNodeIDSuffix();
 
     void setNodeIDSuffix(final int nodeIDSuffix);
-    
+
     String getCustomName();
 
     String getCustomDescription();
 
     NodeExecutionJobManager getExecutionJobManager();
-    
+
     NodeSettingsRO getExecutionJobSettings();
 
     State getState();
 
     UIInformation getUIInfo();
-    
+
     NodeMessage getNodeMessage();
-    
+
     boolean isDeletable();
-    
+
     boolean isDirtyAfterLoad();
-    
+
     void setUIInfo(final UIInformation uiInfo);
-    
+
     /** Load content, gets both the current settings (first argument) and
      * the "parent settings", which are only used in 1.3.x flows and will be
      * ignored in any version after that.
      * @param settings The settings object that is usually read from
-     * @param parentSettings The parent settings, mostly ignored. 
+     * @param parentSettings The parent settings, mostly ignored.
      * @param loadResult Where to add errors and warnings to.
      * @return Whether errors occured that require a reset of the node.
      */
-    boolean load(final NodeSettingsRO settings, 
+    boolean load(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings, final LoadResult loadResult);
-    
+
 }

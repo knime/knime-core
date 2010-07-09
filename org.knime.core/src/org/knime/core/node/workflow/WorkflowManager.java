@@ -1751,8 +1751,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (LoopRole.END.equals(snc.getLoopRole())) {
                     // if this is an END to a loop, make sure it knows its head
                     FlowLoopContext slc = snc.getNode().
-                               getFlowObjectStack().peek(
-                                       FlowLoopContext.class);
+                               getFlowObjectStack().peek(FlowLoopContext.class);
                     if (slc == null) {
                         LOGGER.debug("Incoming flow object stack for "
                                 + snc.getNameWithID() + ":\n"
@@ -3525,9 +3524,9 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags) {
+            final boolean preserveDeletableFlags, final boolean copyNCNodeDir) {
         return new CopyWorkflowPersistor(
-                this, tableRep, preserveDeletableFlags);
+                this, tableRep, preserveDeletableFlags, copyNCNodeDir);
     }
 
     //////////////////////////////////////
@@ -3543,8 +3542,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
             final NodeID... nodeIDs) {
-        WorkflowPersistor copyPersistor =
-            sourceManager.copy(nodeIDs);
+        WorkflowPersistor copyPersistor = sourceManager.copy(nodeIDs);
         return paste(copyPersistor);
     }
 
@@ -3554,6 +3552,22 @@ public final class WorkflowManager extends NodeContainer {
      * used in the {@link #paste(WorkflowPersistor)} method.
      */
     public WorkflowPersistor copy(final NodeID... nodeIDs) {
+        return copy(false, nodeIDs);
+    }
+
+    /** Copy the nodes with the given ids.
+     * @param copyNCNodeDir True if the returned persistor should also keep
+     *        the locations of the node's directories (e.g.
+     *        &lt;workflow>/File Reader (#xy)/). This is true if the copy serves
+     *        as backup of an undoable delete command (undoable = undo enabled).
+     *        If it is undone, the directories must not be cleared before the
+     *        next save (in order to keep the drop folder)
+     * @param nodeIDs The nodes to copy (must exist).
+     * @return A workflow persistor hosting the node templates, ready to be
+     * used in the {@link #paste(WorkflowPersistor)} method.
+     */
+    public WorkflowPersistor copy(final boolean copyNCNodeDir,
+            final NodeID... nodeIDs) {
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
         if (idsHashed.size() != nodeIDs.length) {
             throw new IllegalArgumentException(
@@ -3567,8 +3581,8 @@ public final class WorkflowManager extends NodeContainer {
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
-                loaderMap.put(cont.getID().getIndex(),
-                        cont.getCopyPersistor(m_globalTableRepository, false));
+                loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor(
+                        m_globalTableRepository, false, copyNCNodeDir));
                 for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
@@ -3882,6 +3896,8 @@ public final class WorkflowManager extends NodeContainer {
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
+        m_deletedNodesFileLocations.addAll(
+                persistor.getObsoleteNodeDirectories());
         Collection<NodeID> resultColl = persistorMap.keySet();
         return resultColl.toArray(new NodeID[resultColl.size()]);
     }
@@ -4122,7 +4138,7 @@ public final class WorkflowManager extends NodeContainer {
             NodeID subId = new NodeID(getID(), suffix);
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
-            // 100+ workflows simultaneously in a cluster ennvironment)
+            // 100+ workflows simultaneously in a cluster environment)
             synchronized (m_workflowMutex) {
                 if (m_workflow.containsNodeKey(subId)) {
                     subId = createUniqueID();
@@ -4130,6 +4146,15 @@ public final class WorkflowManager extends NodeContainer {
                 NodeContainerPersistor pers = nodeEntry.getValue();
                 translationMap.put(suffix, subId);
                 NodeContainer container = pers.getNodeContainer(this, subId);
+                NodeContainerMetaPersistor metaPersistor =
+                    pers.getMetaPersistor();
+                ReferencedFile ncRefDir =
+                    metaPersistor.getNodeContainerDirectory();
+                if (ncRefDir != null) {
+                    // the nc dir is in the deleted locations list if the node
+                    // was deleted and is now restored (undo)
+                    m_deletedNodesFileLocations.remove(ncRefDir);
+                }
                 addNodeContainer(container, false);
                 if (pers.isDirtyAfterLoad()) {
                     container.setDirty();
@@ -4215,23 +4240,6 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 if (isWorkingDirectory) {
-                    for (ReferencedFile deletedNodeDir
-                            : m_deletedNodesFileLocations) {
-                        File f = deletedNodeDir.getFile();
-                        if (f.exists()) {
-                            if (FileUtil.deleteRecursively(f)) {
-                                LOGGER.debug(
-                                        "Deleted obsolete node directory \""
-                                        + f.getAbsolutePath() + "\"");
-                            } else {
-                                LOGGER.warn(
-                                        "Deletion of obsolete node directory \""
-                                        + f.getAbsolutePath() + "\" failed");
-                            }
-                        }
-                    }
-                    // bug fix 1857: this list must be cleared upon save
-                    m_deletedNodesFileLocations.clear();
                     m_loadVersion = saveVersion;
                 }
                 new WorkflowPersistorVersion200().save(
@@ -4240,6 +4248,28 @@ public final class WorkflowManager extends NodeContainer {
                 workflowDirRef.unlock();
             }
         }
+    }
+
+    /** Delete directories of removed nodes. This is part of the save routine to
+     * commit the changes. Called from the saving persistor class */
+    void deleteObsoleteNodeDirs() {
+        for (ReferencedFile deletedNodeDir
+                : m_deletedNodesFileLocations) {
+            File f = deletedNodeDir.getFile();
+            if (f.exists()) {
+                if (FileUtil.deleteRecursively(f)) {
+                    LOGGER.debug(
+                            "Deleted obsolete node directory \""
+                            + f.getAbsolutePath() + "\"");
+                } else {
+                    LOGGER.warn(
+                            "Deletion of obsolete node directory \""
+                            + f.getAbsolutePath() + "\" failed");
+                }
+            }
+        }
+        // bug fix 1857: this list must be cleared upon save
+        m_deletedNodesFileLocations.clear();
     }
 
     /** Performs sanity check on workflow. This is necessary upon load.

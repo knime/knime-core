@@ -54,7 +54,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.knime.core.internal.ReferencedFile;
@@ -68,6 +70,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
@@ -178,13 +181,14 @@ public class SingleNodeContainerPersistorVersion200 extends
             final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
             final boolean isSaveData) throws CanceledExecutionException,
             IOException {
-        if (nodeDirRef.equals(snc.getNodeContainerDirectory())
-                && !snc.isDirty()) {
+        ReferencedFile sncWorkingDirRef = snc.getNodeContainerDirectory();
+        if (nodeDirRef.equals(sncWorkingDirRef) && !snc.isDirty()) {
             return SETTINGS_FILE_NAME;
         }
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
-        boolean nodeDirDeleted = FileUtil.deleteRecursively(nodeDir);
+        boolean nodeDirDeleted =
+            deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {
                 throw new IOException("Unable to write or create directory \""
@@ -202,6 +206,31 @@ public class SingleNodeContainerPersistorVersion200 extends
             debug = "Created node directory \"" + nodeDirRef + "\"";
         }
         getLogger().debug(debug);
+
+        // get drop directory in "home" (the designated working dir)
+        ReferencedFile nodeDropDirInWDRef = sncWorkingDirRef == null ? null
+                : new ReferencedFile(
+                        sncWorkingDirRef, SingleNodeContainer.DROP_DIR_NAME);
+
+        ReferencedFile nodeDropDirRef = new ReferencedFile(
+                nodeDirRef, SingleNodeContainer.DROP_DIR_NAME);
+
+        // if node container directory is set and we write into a new location
+        if (nodeDropDirInWDRef != null &&
+                !nodeDropDirRef.equals(nodeDropDirInWDRef)) {
+
+            // this code is executed in either of the two cases:
+            // - Node was copy&paste from node with drop folder
+            //   (its (freshly copied) drop folder is currently in /tmp)
+            // - Node is saved into new location (saveAs) -- need to copy
+            //   the drop folder there (either from /tmp or from working dir)
+            File dropInSource = nodeDropDirRef.getFile();
+            File dropInTarget = new File(
+                    nodeDir, SingleNodeContainer.DROP_DIR_NAME);
+            if (dropInSource.exists()) {
+                FileUtil.copyDir(dropInSource, dropInTarget);
+            }
+        }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
@@ -215,10 +244,10 @@ public class SingleNodeContainerPersistorVersion200 extends
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
-        if (snc.getNodeContainerDirectory() == null) {
+        if (sncWorkingDirRef == null) {
             snc.setNodeContainerDirectory(nodeDirRef);
         }
-        if (nodeDirRef.equals(snc.getNodeContainerDirectory())) {
+        if (nodeDirRef.equals(sncWorkingDirRef)) {
             snc.unsetDirty();
         }
         exec.setProgress(1.0);
@@ -249,7 +278,8 @@ public class SingleNodeContainerPersistorVersion200 extends
         FlowObjectStack stack = nc.getFlowObjectStack();
         @SuppressWarnings("unchecked")
         Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST
-                : stack.getFlowObjectsOwnedBy(nc.getID());
+                : stack.getFlowObjectsOwnedBy(
+                        nc.getID(), /*exclude*/Scope.Local);
         int c = 0;
         for (FlowObject s : myObjs) {
             if (s instanceof FlowVariable) {
@@ -279,6 +309,35 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected NodeContainerMetaPersistorVersion200
             createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion200(baseDir);
+    }
+
+    /** Delete content of directory, skipping (direct) childs as given in
+     * 2nd argument. Use case is: to delete a node directory but skip its
+     * drop folder.
+     * @param directory The directory whose content is to be deleted
+     * @param exclude A list of direct child names that are to be skipped
+     * @return false if directory does not exist, true if non-listed children
+     *         are deleted
+     */
+    private boolean deleteChildren(
+            final File directory, final String... exclude) {
+        if (!directory.isDirectory()) {
+            return false;
+        }
+        HashSet<String> excludeSet =
+            new HashSet<String>(Arrays.asList(exclude));
+        File[] children = directory.listFiles();
+        if (children == null) {
+            return true;
+        }
+        boolean success = true;
+        for (File f : children) {
+            if (!excludeSet.contains(f.getName())) {
+                boolean s = FileUtil.deleteRecursively(f);
+                success &= s;
+            }
+        }
+        return success;
     }
 
 }

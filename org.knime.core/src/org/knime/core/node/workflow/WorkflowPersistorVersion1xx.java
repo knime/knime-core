@@ -55,6 +55,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,6 +119,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     private NodeSettingsRO m_workflowSett;
     private ReferencedFile m_workflowDir;
+    private List<ReferencedFile> m_obsoleteNodeDirectories;
 
     static boolean canReadVersion(final String versionString) {
         boolean result = versionString.equals("0.9.0");
@@ -133,6 +135,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_nodeContainerLoaderMap =
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
+        m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
     }
 
     protected final String getVersionString() {
@@ -202,6 +205,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     @Override
     public List<Credentials> getCredentials() {
         return m_credentials;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<ReferencedFile> getObsoleteNodeDirectories() {
+        return m_obsoleteNodeDirectories;
     }
 
     /** {@inheritDoc} */
@@ -588,6 +597,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 } else {
                     getLogger().error(error, e);
                 }
+                // node directory is the parent of the settings.xml
+                m_obsoleteNodeDirectories.add(nodeFile.getParent());
                 setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
@@ -864,6 +875,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             children.push(fullFile.getName());
             fullFile = fullFile.getParentFile();
         }
+        // create a ReferencedFile hierarchy for the settings file
         ReferencedFile result = workflowDirRef;
         while (!children.empty()) {
             result = new ReferencedFile(result, children.pop());

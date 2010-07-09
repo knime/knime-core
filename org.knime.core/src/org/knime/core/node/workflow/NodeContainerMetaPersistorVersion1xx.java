@@ -1,4 +1,4 @@
-                           /* 
+                           /*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 20, 2007 (wiswedel): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor {
@@ -73,28 +73,28 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     private int m_nodeIDSuffix;
 
     private NodeExecutionJobManager m_jobManager;
-    
+
     private NodeSettingsRO m_executionJobSettings;
-    
+
     private UIInformation m_uiInfo;
 
     private State m_state = State.IDLE;
-    
+
     private NodeMessage m_nodeMessage;
-    
+
     private boolean m_isDeletable = true;
-    
+
     private boolean m_isDirtyAfterLoad;
-    
+
     private final ReferencedFile m_nodeContainerDirectory;
-    
+
     /** @param baseDir The node container directory
      */
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile baseDir) {
-        assert baseDir != null : "Directory must not be null"; 
+        assert baseDir != null : "Directory must not be null";
         m_nodeContainerDirectory = baseDir;
     }
-    
+
     protected NodeLogger getLogger() {
         return m_logger;
     }
@@ -113,7 +113,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     public UIInformation getUIInfo() {
         return m_uiInfo;
     }
-    
+
     /** {@inheritDoc} */
     public void setUIInfo(final UIInformation uiInfo) {
         m_uiInfo = uiInfo;
@@ -123,60 +123,61 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     public int getNodeIDSuffix() {
         return m_nodeIDSuffix;
     }
-    
+
     /** {@inheritDoc} */
     public void setNodeIDSuffix(final int nodeIDSuffix) {
         m_nodeIDSuffix = nodeIDSuffix;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeExecutionJobManager getExecutionJobManager() {
         return m_jobManager;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeSettingsRO getExecutionJobSettings() {
         return m_executionJobSettings;
     }
-    
+
     /** {@inheritDoc} */
     public State getState() {
         return m_state;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeMessage getNodeMessage() {
         return m_nodeMessage;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDeletable() {
         return m_isDeletable;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
         return m_isDirtyAfterLoad;
     }
-    
+
     /** Mark node as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
-    
+
     /** {@inheritDoc} */
+    @Override
     public ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
 
    /** {@inheritDoc} */
     @Override
-    public boolean load(final NodeSettingsRO settings, 
+    public boolean load(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings, final LoadResult loadResult) {
         boolean isResetRequired = false;
         try {
@@ -189,10 +190,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             m_customName = null;
         }
         try {
-            m_customDescription = 
+            m_customDescription =
                 loadCustomDescription(settings, parentSettings);
         } catch (InvalidSettingsException e) {
-            String error = 
+            String error =
                 "Invalid custom description in settings: " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
@@ -202,7 +203,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         try {
             m_jobManager = loadNodeExecutionJobManager(settings);
         } catch (InvalidSettingsException e) {
-            String error = "Can't restore node execution job manager: " 
+            String error = "Can't restore node execution job manager: "
                 + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
@@ -212,11 +213,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         boolean hasJobManagerLoadFailed = m_jobManager == null;
         try {
             if (!hasJobManagerLoadFailed) {
-                m_executionJobSettings = 
+                m_executionJobSettings =
                     loadNodeExecutionJobSettings(settings);
             }
         } catch (InvalidSettingsException e) {
-            String error = "Can't restore node execution job manager: " 
+            String error = "Can't restore node execution job manager: "
                 + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
@@ -226,7 +227,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
         try {
             if (!hasJobManagerLoadFailed) {
-                ReferencedFile jobManagerInternalsDirectory = 
+                ReferencedFile jobManagerInternalsDirectory =
                     loadJobManagerInternalsDirectory(
                             m_nodeContainerDirectory, settings);
                 if (jobManagerInternalsDirectory != null) {
@@ -243,14 +244,14 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
         try {
             m_state = loadState(settings, parentSettings);
-//            if (State.EXECUTINGREMOTELY.equals(m_state) 
+//            if (State.EXECUTINGREMOTELY.equals(m_state)
 //                    && m_executionJobSettings == null) {
 //                throw new InvalidSettingsException("State loaded as "
 //                        + "EXECUTINGREMOTELY but no execution job "
 //                        + "settings available");
 //            }
         } catch (InvalidSettingsException e) {
-            String error = "Can't restore node's state, fallback to " 
+            String error = "Can't restore node's state, fallback to "
                 + State.IDLE + ": " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
@@ -268,29 +269,29 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         m_isDeletable = loadIsDeletable(settings);
         return isResetRequired;
     }
-    
+
     /** Read the custom name.
      * @param settings The settings associated with the node (used in 2.0+)
      * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
      * @return The custom name or null
      * @throws InvalidSettingsException In case of errors reading the argument
      */
-    protected String loadCustomName(final NodeSettingsRO settings, 
-            final NodeSettingsRO parentSettings) 
+    protected String loadCustomName(final NodeSettingsRO settings,
+            final NodeSettingsRO parentSettings)
         throws InvalidSettingsException {
         if (!parentSettings.containsKey(KEY_CUSTOM_NAME)) {
             return null;
         }
         return parentSettings.getString(KEY_CUSTOM_NAME);
     }
-    
+
     /** Read the custom description.
      * @param settings The settings associated with the node (used in 2.0+)
      * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
      * @return The custom name or null
      * @throws InvalidSettingsException In case of errors reading the argument
      */
-    protected String loadCustomDescription(final NodeSettingsRO settings, 
+    protected String loadCustomDescription(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings)
         throws InvalidSettingsException {
         if (!parentSettings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
@@ -300,7 +301,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
     /** Load the execution manager responsible for this node. This methods
-     * is overwritten in the persistor reading the 2.0+ workflows. 
+     * is overwritten in the persistor reading the 2.0+ workflows.
      * @param settings To load from.
      * @return null (only this implementation).
      * @throws InvalidSettingsException If that fails.
@@ -309,8 +310,8 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return null;
     }
-    
-    /** Load the settings representing the pending execution of this node. 
+
+    /** Load the settings representing the pending execution of this node.
      * Returns null if this node was not saved as being executing.
      * @param settings To load from.
      * @return The execution job.
@@ -320,10 +321,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return null;
     }
-    
-    /** Load the directory name that is used to persist internals of the 
+
+    /** Load the directory name that is used to persist internals of the
      * associated job manager. The default (local) job manager typically does
-     * not save any internals, but others (e.g. the grid executor) save 
+     * not save any internals, but others (e.g. the grid executor) save
      * the logs of their remote jobs.
      * @param parentDir The parent directory (the node dir).
      * @param settings To load from.
@@ -331,11 +332,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @throws InvalidSettingsException If errors occur.
      */
     protected ReferencedFile loadJobManagerInternalsDirectory(
-            final ReferencedFile parentDir, final NodeSettingsRO settings) 
+            final ReferencedFile parentDir, final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return null;
     }
-    
+
     /**
      * Load the state of the node.
      * @param settings The settings associated with the node (used in 2.0+)
@@ -343,7 +344,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @return The state
      * @throws InvalidSettingsException In case of errors reading the argument
      */
-    protected State loadState(final NodeSettingsRO settings, 
+    protected State loadState(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings)
             throws InvalidSettingsException {
         boolean isOldAutoExecutable = false;
@@ -367,12 +368,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             return State.IDLE;
         }
     }
-    
+
     protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return null;
     }
-    
+
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
         return true;
     }

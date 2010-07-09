@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 9, 2008 (wiswedel): created
  */
@@ -60,15 +60,15 @@ import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-final class CopyNodeContainerMetaPersistor 
+final class CopyNodeContainerMetaPersistor
 implements NodeContainerMetaPersistor {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CopyNodeContainerMetaPersistor.class);
-    
+
     private final String m_customName;
     private final String m_customDescription;
     private int m_nodeIDSuffix;
@@ -77,12 +77,18 @@ implements NodeContainerMetaPersistor {
     private final NodeMessage m_nodeMessage;
     private final UIInformation m_uiInformation;
     private final boolean m_isDeletable;
-    
-    /**
-     * 
+    private final ReferencedFile m_ncDirRef;
+
+    /** Create copy persistor.
+     * @param original To copy from
+     * @param preserveDeletableFlag Whether to keep the "is-deletable" flags
+     *        in the target.
+     * @param copyNCNodeDir If to keep the location of the node directories
+     *        (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
      */
-    CopyNodeContainerMetaPersistor(final NodeContainer original, 
-            final boolean preserveDeletableFlag) {
+    CopyNodeContainerMetaPersistor(final NodeContainer original,
+            final boolean preserveDeletableFlag, final boolean copyNCNodeDir) {
         m_customName = original.getCustomName();
         m_customDescription = original.getCustomDescription();
         m_nodeIDSuffix = original.getID().getIndex();
@@ -108,6 +114,11 @@ implements NodeContainerMetaPersistor {
             m_uiInformation = null;
         }
         m_isDeletable = !preserveDeletableFlag || original.isDeletable();
+        if (copyNCNodeDir) {
+            m_ncDirRef = original.getNodeContainerDirectory();
+        } else {
+            m_ncDirRef = null;
+        }
     }
 
     /** {@inheritDoc} */
@@ -125,7 +136,7 @@ implements NodeContainerMetaPersistor {
     /** {@inheritDoc} */
     @Override
     public ReferencedFile getNodeContainerDirectory() {
-        return null;
+        return m_ncDirRef;
     }
 
     /** {@inheritDoc} */
@@ -133,7 +144,7 @@ implements NodeContainerMetaPersistor {
     public int getNodeIDSuffix() {
         return m_nodeIDSuffix;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeExecutionJobManager getExecutionJobManager() {
@@ -147,12 +158,12 @@ implements NodeContainerMetaPersistor {
             return null;
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeSettingsRO getExecutionJobSettings() {
         // return null here (non-null value means that the
-        // node is still executing, i.e. m_original is executing) 
+        // node is still executing, i.e. m_original is executing)
         return null;
     }
 
@@ -161,7 +172,7 @@ implements NodeContainerMetaPersistor {
     public State getState() {
         return m_state;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeMessage getNodeMessage() {
@@ -173,7 +184,7 @@ implements NodeContainerMetaPersistor {
     public UIInformation getUIInfo() {
         return m_uiInformation;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDeletable() {
@@ -182,11 +193,11 @@ implements NodeContainerMetaPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public boolean load(final NodeSettingsRO settings, 
+    public boolean load(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings, final LoadResult loadResult) {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {

@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +156,11 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     public List<Credentials> getCredentials() {
         throwUnsupportedOperationException();
         return null;
+    }
+
+    /** {@inheritDoc} */
+    public List<ReferencedFile> getObsoleteNodeDirectories() {
+        return Collections.emptyList();
     }
 
     /** {@inheritDoc} */

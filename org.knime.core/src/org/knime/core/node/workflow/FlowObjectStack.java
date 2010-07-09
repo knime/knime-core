@@ -52,6 +52,7 @@ package org.knime.core.node.workflow;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -63,6 +64,7 @@ import java.util.Vector;
 
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.Pair;
 
@@ -73,28 +75,28 @@ import org.knime.core.util.Pair;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FlowObjectStack implements Iterable<FlowObject> {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FlowObjectStack.class);
-    
+
     /** Root stack with all constants. */
     private static FlowObjectStack rootStack = new FlowObjectStack();
-    
+
     /** Stack of FlowObjects, which is shared among nodes along the
      * workflow. */
     private final Vector<FlowObject> m_stack;
     /** Owner of FlowObject object, which are put onto m_stack via this
      * StackWrapper. */
     private final NodeID m_nodeID;
-    
+
     /** Root stack. */
     private FlowObjectStack() {
         m_nodeID = WorkflowManager.ROOT.getID();
         m_stack = new Vector<FlowObject>();
         File wsDirPath = KNIMEPath.getWorkspaceDirPath();
         if (wsDirPath != null) {
-            push(new FlowVariable(
-                    "knime.workspace", wsDirPath.getAbsolutePath(), true));
+            push(new FlowVariable("knime.workspace",
+                    wsDirPath.getAbsolutePath(), Scope.Global));
         }
         for (Map.Entry<Object, Object> p : System.getProperties().entrySet()) {
             String name = p.getKey().toString();
@@ -106,7 +108,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 case INTEGER:
                     try {
                         int i = Integer.parseInt(value);
-                        push(new FlowVariable("knime." + key, i, true));
+                        push(new FlowVariable("knime." + key, i, Scope.Global));
                     } catch (Exception e) {
                         LOGGER.warn("Can't parse assignment of integer "
                                 + "constant \"" + key + "\": " + value);
@@ -115,14 +117,14 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 case DOUBLE:
                     try {
                         double d = Double.parseDouble(value);
-                        push(new FlowVariable("knime." + key, d, true));
+                        push(new FlowVariable("knime." + key, d, Scope.Global));
                     } catch (Exception e) {
                         LOGGER.warn("Can't parse assignment of double"
                                 + "constant\"" + key + "\": " + value);
                     }
                     break;
                 case STRING:
-                    push(new FlowVariable("knime." + key, value, true));
+                    push(new FlowVariable("knime." + key, value, Scope.Global));
                     break;
                 }
             }
@@ -145,7 +147,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
         }
-        List<Vector<FlowObject>> predecessors = 
+        List<Vector<FlowObject>> predecessors =
             new ArrayList<Vector<FlowObject>>();
         for (int i = 0; i < predStacks.length; i++) {
             if (predStacks[i] != null) {
@@ -157,8 +159,6 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         if (predecessors.size() == 0) {
             m_stack = new Vector<FlowObject>();
-        } else if (predecessors.size() == 1) {
-            m_stack = (Vector<FlowObject>)predecessors.get(0).clone();
         } else {
             @SuppressWarnings("unchecked")
             Vector<FlowObject>[] sos = predecessors.toArray(
@@ -175,21 +175,21 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         FlowObject[] nexts = new FlowObject[sos.length];
         boolean hasMoreElements = false;
         for (int i = 0; i < sos.length; i++) {
-            its[i] = sos[i].iterator();
+            its[i] = new FilteredScopeIterator(sos[i].iterator(), Scope.Local);
             hasMoreElements = hasMoreElements ||  its[i].hasNext();
         }
         while (hasMoreElements) {
             hasMoreElements = false;
             // hash of variables to fix bug 1959 (constants are duplicated
             // on nodes with 2+ inports)
-            LinkedHashSet<FlowObject> variableSet = 
+            LinkedHashSet<FlowObject> variableSet =
                 new LinkedHashSet<FlowObject>();
             FlowObject commonFlowO = null;
             /* for each input stack, traverse the stack bottom up until either
              * the top or a FlowLoopContext control object is found. The loop
              * controls must come in the same order on each of the stacks (if
              * present). Repeat that until the top of the stack is reached. For
-             * each of the buckets, put the variables into a hash and add the 
+             * each of the buckets, put the variables into a hash and add the
              * hash set content to the result list. */
             for (int i = 0; i < sos.length; i++) {
                 while (nexts[i] != null || its[i].hasNext()) {
@@ -210,7 +210,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                         break;
                     }
                     // remove any previously added variable first to update
-                    // variable order ("add" overwrites variables but does not 
+                    // variable order ("add" overwrites variables but does not
                     // update insertion order)
                     variableSet.remove(o);
                     variableSet.add(o);
@@ -270,7 +270,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param name To peek
      * @param type The type of the variable to seek.
      * @return the variable or null
-     */ 
+     */
     public FlowVariable peekFlowVariable(final String name, final Type type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             FlowObject e = m_stack.get(i);
@@ -285,13 +285,13 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         throw new NoSuchElementException("No such variable \"" + name + "\" of"
                 + " type " + type);
     }
-    
+
     /** Get all (visible!) variables on the stack in a non-modifiable map.
      * This method is used to show available variables to the user.
      * @return Such a map.
      */
     public Map<String, FlowVariable> getAvailableFlowVariables() {
-        LinkedHashMap<String, FlowVariable> hash = 
+        LinkedHashMap<String, FlowVariable> hash =
             new LinkedHashMap<String, FlowVariable>();
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             FlowObject e = m_stack.get(i);
@@ -305,17 +305,23 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         return Collections.unmodifiableMap(hash);
     }
-    
+
     /** Get all objects on the stack that are owned by the node with the given
      * id. This method is used to persist the stack.
      * @param id identifies objects of interest.
-     * @return list of all elements that are put onto the stack by 
+     * @param ignoredScopes List of scopes that are skipped
+     *        (e.g. local variables are ignored in successor nodes)
+     * @return list of all elements that are put onto the stack by
      *         the argument node
      */
-    List<FlowObject> getFlowObjectsOwnedBy(final NodeID id) {
+    List<FlowObject> getFlowObjectsOwnedBy(final NodeID id,
+            final Scope... ignoredScopes) {
         List<FlowObject> result = new ArrayList<FlowObject>();
         boolean isInSequence = true;
-        for (FlowObject v : m_stack) {
+        FilteredScopeIterator it =
+            new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
+        while (it.hasNext()) {
+            FlowObject v = it.next();
             if (v.getOwner().equals(id)) {
                 isInSequence = false;
                 result.add(v);
@@ -325,7 +331,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         return result;
     }
-    
+
 
     /**
      * @param item FlowObject to be put onto stack.
@@ -347,13 +353,13 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     boolean isEmpty() {
         return m_stack.isEmpty();
     }
-    
-    /** Get number of elements in the stack. 
+
+    /** Get number of elements in the stack.
      * @return size of stack. */
     int size() {
         return m_stack.size();
     }
-    
+
     /** Get iterator on elements, top of stack first. The iterator is
      * read only and not affected by potential modifications of the stack
      * after this method returns (iterator on copy).
@@ -364,7 +370,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         Collections.reverse(copy);
         return Collections.unmodifiableList(copy).iterator();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -390,7 +396,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         b.append("--------");
         return b.toString();
     }
-    
+
     private static final Pair<String, Type> getVariableDefinition(
             final String propKey) {
         String varName;
@@ -414,5 +420,66 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         return new Pair<String, Type>(varName, varType);
     }
-    
+
+    /** Iterator that removes flow variables with given scopes from an
+     * underlying iterator. Used, for instance to remove "local" variables when
+     * merging stacks of predecessor nodes.
+     */
+    private static final class FilteredScopeIterator
+        implements Iterator<FlowObject> {
+
+        private final Iterator<FlowObject> m_it;
+        private final List<Scope> m_ignoredScopes;
+        private FlowObject m_next;
+
+        /**
+         *
+         */
+        public FilteredScopeIterator(final Iterator<FlowObject> it,
+                final Scope... ignoredScopes) {
+            m_it = it;
+            m_ignoredScopes = Arrays.asList(ignoredScopes);
+            m_next = internalNext();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return m_next != null;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public FlowObject next() {
+            FlowObject result = m_next;
+            if (result == null) {
+                throw new NoSuchElementException("Iterator at end");
+            }
+            m_next = internalNext();
+            return result;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not supported");
+        }
+
+        private FlowObject internalNext() {
+            while (m_it.hasNext()) {
+                FlowObject next = m_it.next();
+                if (next instanceof FlowVariable) {
+                    FlowVariable v = (FlowVariable)next;
+                    if (m_ignoredScopes.contains(v.getScope())) {
+                        continue;
+                    }
+                }
+                return next;
+            }
+            return null;
+        }
+
+    }
+
+
 }

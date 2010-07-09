@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 15, 2007 (mb): created
  */
@@ -57,11 +57,11 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * FlowVariable holding local variables of basic types which can
  * be passed along connections in a workflow.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public final class FlowVariable extends FlowObject {
-    
+
     /** reserved prefix for global flow variables. */
     public static final String GLOBAL_CONST_ID = "knime";
 
@@ -74,96 +74,130 @@ public final class FlowVariable extends FlowObject {
         /** String type. */
         STRING
     };
-    
+
+    /** Scope of variable. */
+    public static enum Scope {
+        /** (VM-)Global constant, such as workspace location. */
+        Global("knime"),
+        /** Ordinary workflow or flow variable. */
+        Flow("node.local"),
+        /** Node local flow variable, e.g. node drop location. */
+        Local("");
+
+        private final String m_prefix;
+
+        /**
+         *
+         */
+        private Scope(final String prefix) {
+            m_prefix = prefix;
+        }
+
+        /** Throws IllegalFlowObjectStackException if the name of the variable
+         * is inconsistent for this scope.
+         * @param name Nam to test
+         * @throws IllegalFlowObjectStackException If name is invalid
+         */
+        public void verifyName(final String name) {
+            if (m_prefix.length() > 0 && !name.startsWith(m_prefix)) {
+                throw new IllegalFlowObjectStackException(
+                        "Invalid " + name()
+                        + " variable, name must start with \""
+                        +  m_prefix + "\": " + name);
+            }
+            switch (this) {
+            case Flow:
+                if (name.startsWith(Global.m_prefix)
+                        || name.startsWith(Local.m_prefix)) {
+                    throw new IllegalFlowObjectStackException(
+                            "Invalid flow variable, invalid prefix: "
+                            + name);
+                }
+            default:
+                // ignore
+            }
+        }
+    }
+
     private final Type m_type;
+    private final Scope m_scope;
     private final String m_name;
     private String m_valueS = null;
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
-    
+
 
     private FlowVariable(final String name, final Type type,
-            final boolean isGlobalConstant) {
+            final Scope scope) {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
         }
-        if (!isGlobalConstant && name.startsWith(GLOBAL_CONST_ID)) {
-            throw new IllegalFlowObjectStackException(
-                    "Name of flow variables must not start with \""
-                    + GLOBAL_CONST_ID + "\": " + name);
-        }
-        if (isGlobalConstant && !name.startsWith(GLOBAL_CONST_ID)) {
-            throw new IllegalFlowObjectStackException(
-                    "Name of global flow constant must start with \"" 
-                    + GLOBAL_CONST_ID + "\": " + name);
-        }
+        scope.verifyName(name);
         m_name = name;
         m_type = type;
+        m_scope = scope;
     }
-    
+
     /** create new FlowVariable representing a string.
-     * 
+     *
      * @param name of the variable
      * @param valueS string value
      */
     public FlowVariable(final String name, final String valueS) {
-        this(name, valueS, false);
+        this(name, valueS, Scope.Flow);
     }
 
     /** create new FlowVariable representing a double.
-     * 
+     *
      * @param name of the variable
      * @param valueD double value
      */
     public FlowVariable(final String name, final double valueD) {
-        this(name, valueD, false);
+        this(name, valueD, Scope.Flow);
     }
 
     /** create new FlowVariable representing an integer.
-     * 
+     *
      * @param name of the variable
      * @param valueI int value
      */
     public FlowVariable(final String name, final int valueI) {
-        this(name, valueI, false);
+        this(name, valueI, Scope.Flow);
     }
 
     /** create new FlowVariable representing a string which can either
      * be a global workflow variable or a local one.
-     * 
+     *
      * @param name of the variable
      * @param valueS string value
-     * @param isGlobalConstant indicating if the variable is global or not
+     * @param scope Scope of variable
      */
-    FlowVariable(final String name, final String valueS, 
-            final boolean isGlobalConstant) {
-        this(name, Type.STRING, isGlobalConstant);
+    FlowVariable(final String name, final String valueS, final Scope scope) {
+        this(name, Type.STRING, scope);
         m_valueS = valueS;
     }
-    
+
     /** create new FlowVariable representing a double which can either
      * be a global workflow variable or a local one.
-     * 
+     *
      * @param name of the variable
      * @param valueD double value
-     * @param isGlobalConstant indicating if the variable is global or not
+     * @param scope Scope of variable
      */
-    FlowVariable(final String name, final double valueD,
-            final boolean isGlobalConstant) {
-        this(name, Type.DOUBLE, isGlobalConstant);
+    FlowVariable(final String name, final double valueD, final Scope scope) {
+        this(name, Type.DOUBLE, scope);
         m_valueD = valueD;
     }
-    
+
     /** create new FlowVariable representing an integer which can either
      * be a global workflow variable or a local one.
-     * 
+     *
      * @param name of the variable
      * @param valueI int value
-     * @param isGlobalConstant indicating if the variable is global or not
+     * @param scope Scope of variable
      */
-    FlowVariable(final String name, final int valueI,
-            final boolean isGlobalConstant) {
-        this(name, Type.INTEGER, isGlobalConstant);
+    FlowVariable(final String name, final int valueI, final Scope scope) {
+        this(name, Type.INTEGER, scope);
         m_valueI = valueI;
     }
 
@@ -178,9 +212,14 @@ public final class FlowVariable extends FlowObject {
      * @return true if the variable is a global workflow variable.
      */
     public boolean isGlobalConstant() {
-        return m_name.startsWith(GLOBAL_CONST_ID);
+        return m_scope.equals(Scope.Global);
     }
-    
+
+    /** @return the scope */
+    public Scope getScope() {
+        return m_scope;
+    }
+
     /** @return the type */
     public Type getType() {
         return m_type;
@@ -216,7 +255,7 @@ public final class FlowVariable extends FlowObject {
         }
         return m_valueI;
     }
-    
+
     /** Saves this flow variable to a settings object. This method writes
      * directly into the argument object (no creating of intermediate child).
      * @param settings To save to.
@@ -238,7 +277,7 @@ public final class FlowVariable extends FlowObject {
             assert false : "Unknown variable type: " + getType();
         }
     }
-    
+
     /**
      * Read a flow variable from a settings object. This is the counterpart
      * to {@link #save(NodeSettingsWO)}.
@@ -275,7 +314,7 @@ public final class FlowVariable extends FlowObject {
         }
         return v;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -286,9 +325,9 @@ public final class FlowVariable extends FlowObject {
         case STRING: value = m_valueS; break;
         default: throw new InternalError("m_type must not be null");
         }
-        return "SV: \"" + m_name + "\" (" + m_type + ": " + value + ")"; 
+        return "SV: \"" + m_name + "\" (" + m_type + ": " + value + ")";
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -301,11 +340,11 @@ public final class FlowVariable extends FlowObject {
         FlowVariable v = (FlowVariable)obj;
         return v.getType().equals(getType()) && v.getName().equals(getName());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return getType().hashCode() ^ getName().hashCode();
     }
-    
+
 }

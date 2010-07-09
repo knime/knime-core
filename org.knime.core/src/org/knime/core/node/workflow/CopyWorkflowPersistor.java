@@ -82,10 +82,20 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
 
+    /** Create copy persistor.
+     * @param original To copy from
+     * @param tableRep The table map in the target
+     * @param preserveDeletableFlags Whether to keep the "is-deletable" flags
+     *        in the target.
+     * @param copyNCNodeDir If to keep the location of the node directories
+     *        (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
+     */
     @SuppressWarnings("unchecked")
     CopyWorkflowPersistor(final WorkflowManager original,
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags) {
+            final boolean preserveDeletableFlags,
+            final boolean copyNCNodeDir) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
             ? original.getInPortsBarUIInfo().clone() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
@@ -104,7 +114,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         }
         m_name = original.getNameField();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
-                original, preserveDeletableFlags);
+                original, preserveDeletableFlags, copyNCNodeDir);
         if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
             m_tableRep = new HashMap<Integer, ContainerTable>();
         } else {
@@ -114,7 +124,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
         for (NodeContainer nc : original.getNodeContainers()) {
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
-                    m_tableRep, true));
+                    m_tableRep, true, copyNCNodeDir));
         }
 
         for (ConnectionContainer cc : original.getConnectionContainers()) {
@@ -168,6 +178,11 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     public List<Credentials> getCredentials() {
         return m_credentials;
+    }
+
+    /** {@inheritDoc} */
+    public List<ReferencedFile> getObsoleteNodeDirectories() {
+        return Collections.emptyList();
     }
 
     /** {@inheritDoc} */
