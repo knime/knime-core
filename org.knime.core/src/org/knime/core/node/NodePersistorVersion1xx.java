@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 11, 2007 (wiswedel): created
  */
@@ -72,11 +72,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private SingleNodeContainerPersistorVersion1xx 
+    private SingleNodeContainerPersistorVersion1xx
         m_sncPersistor;
-    
+
     private boolean m_isExecuted;
-    
+
     private boolean m_hasContent;
 
     private boolean m_isConfigured;
@@ -86,27 +86,27 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private ReferencedFile m_nodeInternDirectory;
 
     private NodeSettingsRO m_modelSettings;
-    
+
     private PortObject[] m_portObjects;
 
     private PortObjectSpec[] m_portObjectSpecs;
-    
+
     private String[] m_portObjectSummaries;
 
     private BufferedDataTable[] m_internalHeldTables;
 
     private boolean m_needsResetAfterLoad;
-    
+
     private boolean m_isDirtyAfterLoad;
-    
+
     private String m_warningMessage;
-    
-    /** List of factories (only the simple class name), which were 
+
+    /** List of factories (only the simple class name), which were
      * auto-executable in 1.3.x and need to be restored as configured only. */
     public static final List<String> OLD_AUTOEXECUTABLE_NODEFACTORIES =
-        Arrays.asList("InteractivePieNodeFactory", "HistogramNodeFactory", 
+        Arrays.asList("InteractivePieNodeFactory", "HistogramNodeFactory",
                 "JmolViewerNodeFactory", "TableNodeFactory");
-                
+
     static String createDataFileDirName(final int index) {
         return DATA_FILE_PREFIX + index;
     }
@@ -122,26 +122,31 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final SingleNodeContainerPersistorVersion1xx sncPersistor) {
         m_sncPersistor = sncPersistor;
     }
-    
+
     protected NodeLogger getLogger() {
         return m_logger;
     }
-    
+
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
-    
+
     protected boolean loadHasContent(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
-    
+
+    /** Sub class hook to read warning message.
+     * @param settings Ignored
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown
+     */
     protected String loadWarningMessage(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return null;
     }
-    
+
     protected boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISCONFIGURED);
@@ -151,11 +156,17 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return new ReferencedFile(nodeDir, INTERN_FILE_DIR);
     }
 
-    protected ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings, 
+    /** Load internal directory.
+     * @param settings Ignored (but allows sub-classing)
+     * @param nodeDir Node directory.
+     * @return Internal directory.
+     * @throws InvalidSettingsException If that fails for any reason.
+     */
+    protected ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings,
             final ReferencedFile nodeDir) throws InvalidSettingsException {
         return getNodeInternDirectory(nodeDir);
     }
-    
+
     protected void loadPorts(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep)
@@ -169,7 +180,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                     .getPortObjectClass());
             if (m_isConfigured) {
-                PortObjectSpec spec = 
+                PortObjectSpec spec =
                     loadPortObjectSpec(node, settings, i);
                 setPortObjectSpec(i, spec);
             }
@@ -179,7 +190,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     object = loadBufferedDataTable(
                             node, settings, execPort, loadTblRep, i, tblRep);
                 } else {
-                    throw new IOException("Can't restore model ports of " 
+                    throw new IOException("Can't restore model ports of "
                             + "old 1.x workflows. Execute node again.");
                 }
                 String summary = object != null ? object.getSummary() : null;
@@ -189,15 +200,26 @@ public class NodePersistorVersion1xx implements NodePersistor {
             execPort.setProgress(1.0);
         }
     }
-    
-    protected void loadInternalHeldTables(final Node node, 
-            final ExecutionMonitor execMon, 
-            final NodeSettingsRO settings, 
-            final Map<Integer, BufferedDataTable> loadTblRep, 
+
+    /** Sub class hook to read internal tables.
+     * @param node Ignored.
+     * @param execMon Ignored.
+     * @param settings Ignored.
+     * @param loadTblRep Ignored.
+     * @param tblRep Ignored.
+     * @throws IOException Not actually thrown.
+     * @throws InvalidSettingsException Not actually thrown.
+     * @throws CanceledExecutionException Not actually thrown.
+     */
+    protected void loadInternalHeldTables(final Node node,
+            final ExecutionMonitor execMon,
+            final NodeSettingsRO settings,
+            final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep)
     throws IOException, InvalidSettingsException, CanceledExecutionException {
+        // sub class hook
     }
-    
+
     private BufferedDataTable loadBufferedDataTable(final Node node,
             final NodeSettingsRO settings, final ExecutionMonitor execMon,
             final Map<Integer, BufferedDataTable> loadTblRep, final int index,
@@ -224,7 +246,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                             dataConfigFile)));
             String dataPath = dataSettings.getString(CFG_DATA_FILE_DIR);
             // dataDir = /data
-            ReferencedFile dataDirRef = 
+            ReferencedFile dataDirRef =
                 new ReferencedFile(m_nodeDirectory, dataPath);
             // note: we do not check for existence here - in some cases
             // this directory may not exist (when exported and empty
@@ -244,7 +266,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO dataSettings = settings
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
-            ReferencedFile dataDirRef = 
+            ReferencedFile dataDirRef =
                 new ReferencedFile(m_nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
@@ -280,9 +302,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
         if (isVersion11x) {
             NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
             String specName = spec.getString(CFG_OUTPUT_PREFIX + index);
-            ReferencedFile targetFileRef = 
+            ReferencedFile targetFileRef =
                 new ReferencedFile(m_nodeDirectory, specName);
-            File targetFile = targetFileRef.getFile(); 
+            File targetFile = targetFileRef.getFile();
             DataTableSpec outSpec = null;
             if (targetFile.exists()) {
                 NodeSettingsRO settingsSpec = NodeSettings
@@ -295,14 +317,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO dataSettings = settings
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
-            ReferencedFile dataDirRef = 
+            ReferencedFile dataDirRef =
                 new ReferencedFile(m_nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             DataTableSpec outSpec = null;
             if (portSettings.getBoolean(CFG_HAS_SPEC_FILE, true)) {
-                ReferencedFile dirRef = 
+                ReferencedFile dirRef =
                     new ReferencedFile(dataDirRef, dataName);
                 File dir = dirRef.getFile();
                 if (!(dir.isDirectory() && dir.canRead())) {
@@ -319,33 +341,33 @@ public class NodePersistorVersion1xx implements NodePersistor {
             return outSpec;
         }
     }
-    
+
     /**
      * @return the singleNodeContainerPersistor
      */
-    public SingleNodeContainerPersistorVersion1xx 
+    public SingleNodeContainerPersistorVersion1xx
         getSingleNodeContainerPersistor() {
         return m_sncPersistor;
     }
 
-    /** Is configured according to the settings object. 
+    /** Is configured according to the settings object.
      * @return If node is saved in configured state. */
     public boolean isConfigured() {
         return m_isConfigured;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isExecuted() {
         return m_isExecuted;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean hasContent() {
         return m_hasContent;
     }
-    
+
     /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
@@ -356,42 +378,42 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
         return m_isDirtyAfterLoad;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean mustWarnOnDataLoadError() {
         return getSingleNodeContainerPersistor().mustWarnOnDataLoadError();
     }
-    
-    /** Loads content into node instance. 
+
+    /** Loads content into node instance.
      * @param node The target node, used for meta info (#ports, e.g) and to
-     *  invoke the 
+     *  invoke the
      *  {@link Node#load(NodePersistor, ExecutionMonitor, LoadResult)} on
      * @param configFileRef The configuration file for the node.
      * @param exec For progress/cancelation
      * @param loadTblRep The table repository used during load
      * @param tblRep The table repository for blob handling
      * @param loadResult where to add errors to
-     * @throws IOException If files can't be read 
+     * @throws IOException If files can't be read
      * @throws CanceledExecutionException If canceled
      */
     public void load(final Node node, final ReferencedFile configFileRef,
-            final ExecutionMonitor exec, 
+            final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep,
-            final LoadResult loadResult) 
+            final LoadResult loadResult)
             throws IOException, CanceledExecutionException {
         ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);
         ExecutionMonitor loadExec = exec.createSilentSubProgress(0.7);
@@ -416,12 +438,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
             settings = new NodeSettings("empty");
             setNeedsResetAfterLoad(); // also implies dirty
         } else {
-            settings = 
+            settings =
                 NodeSettings.loadFromXML(new FileInputStream(configFile));
         }
-    
+
         m_modelSettings = settings;
-        
+
         try {
             m_hasContent = loadHasContent(settings);
         } catch (InvalidSettingsException ise) {
@@ -430,22 +452,22 @@ public class NodePersistorVersion1xx implements NodePersistor {
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad(); // also implies dirty
         }
-        
+
         try {
             m_warningMessage = loadWarningMessage(settings);
         } catch (InvalidSettingsException ise) {
-            String e = "Unable to load (old) warning message: " 
+            String e = "Unable to load (old) warning message: "
                 + ise.getMessage();
             loadResult.addError(e);
             getLogger().warn(e, ise);
             setDirtyAfterLoad();
         }
-        
+
         try {
             m_isExecuted = loadIsExecuted(settings);
             if (m_isExecuted && OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(
                     node.getFactory().getClass().getSimpleName())) {
-                getLogger().debug("Setting executed flag of node \"" 
+                getLogger().debug("Setting executed flag of node \""
                         + node.getFactory().getClass().getSimpleName()
                         + "\" to false due to version bump (loaded as true)");
                 m_isExecuted = false;
@@ -457,7 +479,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
-    
+
         try {
             m_isConfigured = loadIsConfigured(settings);
         } catch (InvalidSettingsException ise) {
@@ -466,11 +488,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
-    
+
         // load internals
         if (m_hasContent) {
             try {
-                m_nodeInternDirectory = 
+                m_nodeInternDirectory =
                     loadNodeInternDirectory(settings, m_nodeDirectory);
             } catch (InvalidSettingsException ise) {
                 String e = "Unable to load internals directory";
@@ -489,7 +511,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 getLogger().error("Unexpected \"" + e.getClass().getSimpleName()
                         + "\" encountered");
             }
-            String err = "Unable to load port content for node \"" 
+            String err = "Unable to load port content for node \""
                 + node.getName() + "\": " + e.getMessage();
             loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
@@ -509,7 +531,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 getLogger().error("Unexpected \"" + e.getClass().getSimpleName()
                         + "\" encountered");
             }
-            String err = "Unable to load internally held tables for node \"" 
+            String err = "Unable to load internally held tables for node \""
                 + node.getName() + "\": " + e.getMessage();
             loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
@@ -544,7 +566,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         String message = "Loaded node " + node + status;
         exec.setProgress(1.0, message);
     }
-    
+
     /** {@inheritDoc} */
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         // we explicitly return null here as the node decides on how
@@ -552,7 +574,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         // state of the node at this point)
         return null;
     }
-    
+
     public ReferencedFile getNodeDirectory() {
         return m_nodeDirectory;
     }
@@ -566,7 +588,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public NodeSettingsRO getSettings() {
         return m_modelSettings;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getWarningMessage() {
@@ -577,7 +599,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public PortObject getPortObject(final int outportIndex) {
         return m_portObjects[outportIndex];
     }
-    
+
     /**
      * @param idx The outport index.
      * @param portObject the portObjects to set
@@ -585,7 +607,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setPortObject(final int idx, final PortObject portObject) {
         m_portObjects[idx] = portObject;
     }
-    
+
     /** {@inheritDoc} */
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         return m_portObjectSpecs[outportIndex];
@@ -599,28 +621,28 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final int idx, final PortObjectSpec portObjectSpec) {
         m_portObjectSpecs[idx] = portObjectSpec;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getPortObjectSummary(final int outportIndex) {
         return m_portObjectSummaries[outportIndex];
     }
-    
+
     /**
      * @param idx port for which to set summary
      * @param portObjectSummary the portObjectSummary to set
      */
-    public void setPortObjectSummary(final int idx, 
+    public void setPortObjectSummary(final int idx,
             final String portObjectSummary) {
         m_portObjectSummaries[idx] = portObjectSummary;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public BufferedDataTable[] getInternalHeldTables() {
         return m_internalHeldTables;
     }
-    
+
     /**
      * @param internalHeldTables the internalHeldTables to set
      */
@@ -628,5 +650,5 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final BufferedDataTable[] internalHeldTables) {
         m_internalHeldTables = internalHeldTables;
     }
-    
+
 }

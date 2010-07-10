@@ -307,6 +307,13 @@ public class SingleNodeContainerPersistorVersion1xx
         return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
 
+    /** Load factory name.
+     * @param parentSettings settings of outer workflow (old style workflows
+     *        have it in there)
+     * @param settings settings of this node, ignored in this implementation
+     * @return Name of factory
+     * @throws InvalidSettingsException If that fails for any reason.
+     */
     protected String loadNodeFactoryClassName(
             final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -349,11 +356,23 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
+    /** Load Name of file containing node settings.
+     * @param settings to load from, used in sub-classes, ignored here.
+     * @return "settings.xml"
+     * @throws InvalidSettingsException If that fails for any reason.
+     */
     protected String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return SETTINGS_FILE_NAME;
     }
 
+    /** Load configuration of node.
+     * @param settings to load from (used in sub-classes)
+     * @param nodePersistor persistor to allow this implementation to load
+     *        old-style
+     * @return node config
+     * @throws InvalidSettingsException if that fails for any reason.
+     */
     protected SingleNodeContainerSettings loadSNCSettings(
             final NodeSettingsRO settings,
             final NodePersistorVersion1xx nodePersistor)
@@ -389,6 +408,12 @@ public class SingleNodeContainerPersistorVersion1xx
         return sncs;
     }
 
+    /** Load from variables.
+     * @param settings to load from, ignored in this implementation
+     *        (flow variables added in later versions)
+     * @return an empty list.
+     * @throws InvalidSettingsException if that fails for any reason.
+     */
     protected List<FlowObject> loadFlowObjects(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();

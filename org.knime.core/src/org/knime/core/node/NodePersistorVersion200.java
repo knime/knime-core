@@ -191,7 +191,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final ExecutionMonitor exec, final boolean saveData)
             throws IOException, CanceledExecutionException {
         BufferedDataTable[] internalTbls = node.getInternalHeldTables();
-        if (internalTbls == null) {
+        if (internalTbls == null && !saveData) {
             return;
         }
         final int internalTblsCount = internalTbls.length;
@@ -336,6 +336,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
+    /** Sub-class hook to save location of internal directory.
+     * @param node Node
+     * @param nodeInternDir Directory
+     * @param settings Ignored (possibly not in sub-classes)
+     * @param exec exec mon.
+     * @throws CanceledExecutionException If canceled.
+     */
     protected void saveNodeInternDirectory(final Node node,
             final File nodeInternDir, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws CanceledExecutionException {

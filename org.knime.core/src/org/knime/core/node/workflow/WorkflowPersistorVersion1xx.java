@@ -835,20 +835,43 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         uiInfo.load(settings);
     }
 
+    /** Sub class hook o read port bar info.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected String loadInPortsBarUIInfoClassName(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return null;
     }
 
+    /** Sub-class hook to load port bar info.
+     * @param uiInfo Ignored.
+     * @param settings Ignored.
+     * @throws InvalidSettingsException Not actually thrown
+     */
     protected void loadInPortsBarUIInfo(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
+        // sub classes override this
     }
 
+    /** Sub-class hook to load port bar info.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown
+     */
     protected String loadOutPortsBarUIInfoClassName(
             final NodeSettingsRO settings) throws InvalidSettingsException {
+        // sub classes override this
         return null;
     }
 
+    /** Load output port bars. This implementation does nothing, sub-classes
+     * override this metho.d
+     * @param uiInfo Ignored here.
+     * @param settings Ignored here.
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected void loadOutPortsBarUIInfo(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
     }
@@ -941,6 +964,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return set.getNodeSettings(KEY_NODES);
     }
 
+    /** Sub class hook o read workflow name.
+     * @param set Ignored.
+     * @return "Workflow Manager"
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return "Workflow Manager";
@@ -968,38 +996,73 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return Collections.emptyList();
     }
 
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return null;
     }
 
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected NodeSettingsRO loadInPortsSettingsEnum(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return null;
     }
 
-    protected WorkflowPortTemplate loadInPortTemplate(final NodeSettingsRO settings)
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
+    protected WorkflowPortTemplate loadInPortTemplate(
+            final NodeSettingsRO settings)
             throws InvalidSettingsException {
         throw new InvalidSettingsException(
                 "No ports for meta nodes in version 1.x.x");
     }
 
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected NodeSettingsRO loadOutPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return null;
     }
 
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
     protected NodeSettingsRO loadOutPortsSettingsEnum(
             final NodeSettingsRO settings) throws InvalidSettingsException  {
         return null;
     }
 
-    protected WorkflowPortTemplate loadOutPortTemplate(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    /** Sub class hook o read port settings.
+     * @param settings Ignored.
+     * @return null
+     * @throws InvalidSettingsException Not actually thrown here.
+     */
+    protected WorkflowPortTemplate loadOutPortTemplate(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         throw new InvalidSettingsException(
             "No ports for meta nodes in version 1.x.x");
     }
 
+    /** Sub class hook to check whether there is a "loaded with no data" file.
+     * @param workflowFile Ignored here
+     * @return true
+     */
     protected boolean loadIfMustWarnOnDataLoadError(final File workflowFile) {
         return true;
     }

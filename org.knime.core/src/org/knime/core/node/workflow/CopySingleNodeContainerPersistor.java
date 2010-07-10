@@ -61,7 +61,6 @@ import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -74,9 +73,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
-
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(CopySingleNodeContainerPersistor.class);
 
     private final NodeFactory<NodeModel> m_nodeFactory;
     private final CopyNodePersistor m_nodePersistor;

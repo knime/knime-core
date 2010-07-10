@@ -369,11 +369,20 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
     }
 
+    /** Load messages that were set on the node.
+     * @param settings to load from.
+     * @return null in this class, sub-classes overwrite this method.
+     * @throws InvalidSettingsException If this fails.
+     */
     protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return null;
     }
 
+    /** Load whether this node is deletable.
+     * @param settings to load from
+     * @return true in this implementation, sub-classes overwrite this behavior
+     */
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
         return true;
     }
