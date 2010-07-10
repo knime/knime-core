@@ -80,6 +80,7 @@ import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
@@ -271,6 +272,9 @@ public class WorkflowExportWizard extends ExportWizard
                 if (name.startsWith(NodePersistor.INTERN_FILE_DIR)) {
                     return true;
                 }
+                if (name.startsWith(SingleNodeContainer.DROP_DIR_NAME)) {
+                    return true;
+                }
                 break;
             case IResource.FILE:
                 if (name.startsWith(WorkflowPersistor.SAVED_WITH_DATA_FILE)) {
@@ -357,7 +361,7 @@ public class WorkflowExportWizard extends ExportWizard
     /**
      *
      * @param resourceList list of resources to export
-     * @param resource the resource representing the workflow directory 
+     * @param resource the resource representing the workflow directory
      * @param excludeData true if KNIME data files should be excluded
      */
     public static void addResourcesFor(
@@ -365,11 +369,11 @@ public class WorkflowExportWizard extends ExportWizard
             final IResource resource, final boolean excludeData) {
         if (resource instanceof IWorkspaceRoot) {
             // ignore the workspace root in order to avoid adding all workflows
-            // method should be called for every workflow that should be 
+            // method should be called for every workflow that should be
             // exported
             return;
         }
-        
+
         // if this resource must be excluded do not add to resource list and
         // return
         if (excludeData && excludeResource(resource)) {
