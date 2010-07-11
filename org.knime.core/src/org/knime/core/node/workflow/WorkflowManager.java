@@ -76,6 +76,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -1377,8 +1379,19 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
+    /** Resets and freshly configures all nodes in this workflow.
+     * @deprecated Use {@link #resetAndConfigureAll()} instead
+     */
+    @Deprecated
     public void resetAll() {
-	this.resetAllNodesInWFM();
+        resetAndConfigureAll();
+    }
+
+    /** Resets and freshly configures all nodes in this workflow. */
+    public void resetAndConfigureAll() {
+        // TODO this does not reset connected outports (which it should as this
+        // is a public methods. (see resetAndReconfigureAllNodesInWFM)
+        resetAndReconfigureAllNodesInWFM();
     }
 
     /**
@@ -2587,30 +2600,62 @@ public final class WorkflowManager extends NodeContainer {
         if (this == ROOT) {
             throw new IllegalStateException("Can't execute ROOT workflow");
         }
-        final Object mySemaphore = new Object();
-        this.addNodeStateChangeListener(new NodeStateChangeListener() {
-            /** {@inheritDoc} */
-            public void stateChanged(final NodeStateEvent state) {
-                synchronized (mySemaphore) {
-                    mySemaphore.notifyAll();
-                }
-            }
-        });
         // let parent execute this node (important if job manager is assigned)
         // see also bug 2217
         getParent().executeUpToHere(getID());
-
-        synchronized (mySemaphore) {
-            while (getState().executionInProgress()) {
-                try {
-                    mySemaphore.wait();
-                } catch (InterruptedException ie) {
-                    cancelExecution();
-                    return false;
-                }
-            }
+        try {
+            waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            LOGGER.warn(
+                    "Thread interrupted while waiting for finishing execution");
         }
         return this.getState().equals(State.EXECUTED);
+    }
+
+    /** Causes the current thread to wait until the the workflow has reached
+     * a non-executing state unless a given timeout elapsed.
+     * @param time the maximum time to wait
+     *       (0 or negative for waiting infinitely)
+     * @param unit the time unit of the {@code time} argument
+     * @return {@code false} if the waiting time detectably elapsed
+     *         before return from the method, else {@code true}. It returns
+     *         {@code true} if the time argument is 0 or negative.
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    public boolean waitWhileInExecution(final long time, final TimeUnit unit)
+        throws InterruptedException {
+        State state = getState();
+        if (!state.executionInProgress()) {
+            return true;
+        }
+        // lock supporting timeout
+        final ReentrantLock lock = new ReentrantLock();
+        final Condition condition = lock.newCondition();
+        NodeStateChangeListener listener = new NodeStateChangeListener() {
+            public void stateChanged(final NodeStateEvent stateEvent) {
+                lock.lock();
+                try {
+                    if (!stateEvent.getState().executionInProgress()) {
+                        condition.signalAll();
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            }
+        };
+        lock.lockInterruptibly();
+        addNodeStateChangeListener(listener);
+        try {
+            if (time > 0) {
+                return condition.await(time, unit);
+            } else {
+                condition.await();
+                return true;
+            }
+        } finally {
+            lock.unlock();
+            removeNodeStateChangeListener(listener);
+        }
     }
 
     /** Convenience method: (Try to) Execute all nodes in the workflow.

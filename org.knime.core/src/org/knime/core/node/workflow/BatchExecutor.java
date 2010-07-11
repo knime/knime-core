@@ -368,7 +368,7 @@ public final class BatchExecutor {
         }
 
         if (reset) {
-            wfm.resetAllNodesInWFM();
+            wfm.resetAndConfigureAll();
             LOGGER.debug("Workflow reset done.");
         }
 
@@ -377,6 +377,7 @@ public final class BatchExecutor {
         LOGGER.debug("Status of workflow before execution:");
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
+        LOGGER.debug("------------------------------------");
         boolean successful = true;
         final MutableBoolean executionCanceled = new MutableBoolean(false);
         if (!noExecute) {
@@ -458,6 +459,7 @@ public final class BatchExecutor {
         }
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
+        LOGGER.debug("------------------------------------");
         return successful ? 0 : 1;
     }
 
