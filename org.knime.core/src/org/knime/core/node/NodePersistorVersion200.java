@@ -191,7 +191,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final ExecutionMonitor exec, final boolean saveData)
             throws IOException, CanceledExecutionException {
         BufferedDataTable[] internalTbls = node.getInternalHeldTables();
-        if (internalTbls == null && !saveData) {
+        if (internalTbls == null || !saveData) {
             return;
         }
         final int internalTblsCount = internalTbls.length;
