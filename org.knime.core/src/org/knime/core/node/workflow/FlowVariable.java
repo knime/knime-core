@@ -62,7 +62,10 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public final class FlowVariable extends FlowObject {
 
-    /** reserved prefix for global flow variables. */
+    /** reserved prefix for global flow variables.
+     * @deprecated Use {@link Scope#getPrefix()} of enum constant
+     * {@link Scope#Global} instead. */
+    @Deprecated
     public static final String GLOBAL_CONST_ID = "knime";
 
     /** Type of a variable, supports currently only scalars. */
@@ -82,15 +85,18 @@ public final class FlowVariable extends FlowObject {
         /** Ordinary workflow or flow variable. */
         Flow(""),
         /** Node local flow variable, e.g. node drop location. */
-        Local("node.local");
+        Local("knime.node");
 
         private final String m_prefix;
 
-        /**
-         *
-         */
+        /** Create scope with given prefix. */
         private Scope(final String prefix) {
             m_prefix = prefix;
+        }
+
+        /** @return the prefix */
+        public String getPrefix() {
+            return m_prefix;
         }
 
         /** Throws IllegalFlowObjectStackException if the name of the variable

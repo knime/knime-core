@@ -1084,7 +1084,8 @@ public final class SingleNodeContainer extends NodeContainer {
                 for (String f : files) {
                     File child = new File(directory, f);
                     try {
-                        st.push(new FlowVariable("node.local." + f,
+                        st.push(new FlowVariable(
+                                Scope.Local.getPrefix() + "(drop) " + f,
 //                                child.getAbsolutePath(), Scope.Local));
                                 child.toURI().toURL().toString(), Scope.Local));
 //                    } catch (Exception mue) {
