@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 
 /**
  * Let the user add or edit a workflow variable with name, type and default
@@ -115,11 +116,15 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
             @Override
             public void modifyText(final ModifyEvent arg0) {
-                if (m_varNameCtrl.getText().startsWith(
-                        FlowVariable.GLOBAL_CONST_ID)) {
-                    showError("Scope variables must not start with \""
-                            + FlowVariable.GLOBAL_CONST_ID + "\"!");
-                    m_varNameCtrl.setText("");
+                String text = m_varNameCtrl.getText();
+                for (Scope s : FlowVariable.Scope.values()) {
+                    if (!Scope.Flow.equals(s)) {
+                        if (text.startsWith(s.getPrefix())) {
+                            showError("Flow variables must not start with \""
+                                    + s.getPrefix() + "\"!");
+                            m_varNameCtrl.setText("");
+                        }
+                    }
                 }
             }
 
