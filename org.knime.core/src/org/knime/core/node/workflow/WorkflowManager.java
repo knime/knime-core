@@ -2864,8 +2864,7 @@ public final class WorkflowManager extends NodeContainer {
         boolean wasExecuting = oldState.equals(State.EXECUTINGREMOTELY)
             || oldState.equals(State.EXECUTING);
         if (wasExecuting) {
-            boolean isExecuting = newState.equals(State.EXECUTINGREMOTELY)
-                || newState.equals(State.EXECUTING);
+            boolean isExecuting = newState.executionInProgress();
             if (newState.equals(State.EXECUTED)) {
                 // we just successfully executed this WFM: check if any
                 // loops were waiting for this one in the parent workflow!
@@ -2878,8 +2877,10 @@ public final class WorkflowManager extends NodeContainer {
                     clearWaitingLoopList();
                 }
             } else if (!isExecuting) {
-                // something went wrong - if other any loops were waiting
+                // if something went wrong and any others loops were waiting
                 // for this node: clean them up!
+                // (most likely this is just an IDLE node, however, which
+                // had other flows that were not executed (such as ROOT!)
                 for (FlowObject so : getWaitingLoops()) {
                     getParent().disableNodeForExecution(so.getOwner());
                 }
