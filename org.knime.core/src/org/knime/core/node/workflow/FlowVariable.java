@@ -80,9 +80,9 @@ public final class FlowVariable extends FlowObject {
         /** (VM-)Global constant, such as workspace location. */
         Global("knime"),
         /** Ordinary workflow or flow variable. */
-        Flow("node.local"),
+        Flow(""),
         /** Node local flow variable, e.g. node drop location. */
-        Local("");
+        Local("node.local");
 
         private final String m_prefix;
 
@@ -95,7 +95,7 @@ public final class FlowVariable extends FlowObject {
 
         /** Throws IllegalFlowObjectStackException if the name of the variable
          * is inconsistent for this scope.
-         * @param name Nam to test
+         * @param name Name to test
          * @throws IllegalFlowObjectStackException If name is invalid
          */
         public void verifyName(final String name) {
@@ -113,6 +113,7 @@ public final class FlowVariable extends FlowObject {
                             "Invalid flow variable, invalid prefix: "
                             + name);
                 }
+                break;
             default:
                 // ignore
             }
