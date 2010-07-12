@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   11.01.2007 (sieb): created
  */
 package org.knime.workbench.editor2;
 
@@ -64,13 +62,13 @@ import org.knime.core.node.workflow.NodeProgressListener;
  * A runnable which is the abstract super class used by the
  * {@link WorkflowEditor} to Load/save a workflow with a progress bar. NOTE: As
  * the {@link UIManager} holds a reference to this runnable an own class file is
- * necessary sucht that all references to the created workflow manager can be
- * deleted, otherwise the manager can not be deleted later and the memeory can
+ * necessary such that all references to the created workflow manager can be
+ * deleted, otherwise the manager can not be deleted later and the memory can
  * not be freed.
  *
  * @author Christoph Sieb, University of Konstanz
  */
-abstract class PersistWorflowRunnable implements IRunnableWithProgress {
+abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
 
     class CheckThread extends Thread {
 
@@ -88,7 +86,7 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
          * @param pm
          *            the eclipse progress monitor
          * @param progressMonitor
-         *            the knime progress monitor
+         *            the KNIME progress monitor
          * @param cancelable
          *            if true the progress is cancelable by the user if false a
          *            dialog informs the user that the progress is not

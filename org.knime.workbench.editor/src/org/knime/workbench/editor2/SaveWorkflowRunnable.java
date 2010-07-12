@@ -71,7 +71,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-class SaveWorkflowRunnable extends PersistWorflowRunnable {
+class SaveWorkflowRunnable extends PersistWorkflowRunnable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(SaveWorkflowRunnable.class);

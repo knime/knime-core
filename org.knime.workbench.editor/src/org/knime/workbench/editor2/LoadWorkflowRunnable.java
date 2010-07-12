@@ -69,23 +69,27 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.CredentialLoader;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
+
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow
  * with a progress bar. NOTE: As the {@link UIManager} holds a reference to this
- * runnable an own class file is necessary sucht that all references to the
+ * runnable an own class file is necessary such that all references to the
  * created workflow manager can be deleted, otherwise the manager can not be
- * deleted later and the memeory can not be freed.
+ * deleted later and the memory can not be freed.
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
-class LoadWorkflowRunnable extends PersistWorflowRunnable {
+class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(LoadWorkflowRunnable.class);
@@ -147,9 +151,25 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
             checkThread.start();
 
+            final Display d = Display.getDefault();
             final WorkflowLoadResult result = WorkflowManager.loadProject(
                     m_workflowFile.getParentFile(), 
-                    new ExecutionMonitor(progressMonitor));
+                    new ExecutionMonitor(progressMonitor),
+                    new CredentialLoader() {
+                	@Override
+                	public void load(final WorkflowManager wf) {
+                	    // run in UI thread 
+                	    d.syncExec(new Runnable() {
+                		@Override
+                		public void run() {
+                		    CredentialVariablesDialog dialog = 
+                			new CredentialVariablesDialog(
+                				d.getActiveShell(), wf);
+                		    dialog.open();
+                		}
+                	    });
+                	}
+                    });
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
@@ -194,7 +214,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 LOGGER.info("New workflow created.");
                 // this is the only place to set this flag to true: we have an 
                 // empty workflow file, i.e. a new project was created
-                // bugfix 1555: if an expection is thrown DO NOT create empty 
+                // bugfix 1555: if an exception is thrown DO NOT create empty 
                 // workflow 
                 createEmptyWorkflow = true;
             } else {
@@ -206,7 +226,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                     + m_workflowFile.getName(), ise);
             m_throwable = ise;
         } catch (CanceledExecutionException cee) {
-            LOGGER.info("Canceled loading worflow: " 
+            LOGGER.info("Canceled loading workflow: " 
                     + m_workflowFile.getName());
             m_editor.setWorkflowManager(null);
             m_editor.setLoadingCanceled(true);
