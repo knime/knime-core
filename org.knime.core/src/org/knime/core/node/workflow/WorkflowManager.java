@@ -2349,13 +2349,16 @@ public final class WorkflowManager extends NodeContainer {
                         invokeResetOnSingleNodeContainer(
                                 (SingleNodeContainer)nc);
                     } else {
-                        assert nc instanceof WorkflowManager;
+                        WorkflowManager wfm = (WorkflowManager)nc;
                         // this is ok, since we will never call this again
                         // while traversing a flow - this is the main entry
-                        // point from the outside and should reset all kids.
+                        // point from the outside and should reset all children
                         // (resetSuccessors() follows ports and will be
                         // called throughout subsequent calls...)
-                        ((WorkflowManager)nc).resetAllNodesInWFM();
+
+                        // TODO this configures the meta node already, which
+                        // is done 2nd time two lines below
+                        wfm.resetAndReconfigureAllNodesInWFM();
                     }
                     nc.resetJobManagerViews();
                     // and launch configure starting with this node
