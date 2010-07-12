@@ -70,10 +70,6 @@ import java.util.Map;
  * @author Tobias Koetter, University of Konstanz
  */
 class NumericalAttributeModel extends AttributeModel {
-    /**
-     * Pre calculated factor used to calculate the standard deviation.
-     */
-    static final double PROB_FACT_DEN = Math.sqrt(2 * Math.PI);
 
     /**
      * The unique type of this model used for saving/loading.
@@ -109,8 +105,6 @@ class NumericalAttributeModel extends AttributeModel {
         private double m_mean;
 
         private double m_stdDeviation;
-
-        private double m_probabilityFactor;
 
         private double m_probabilityDenominator;
 
@@ -219,12 +213,9 @@ class NumericalAttributeModel extends AttributeModel {
                 return (double)m_missingValueRecs.intValue() / m_noOfRows;
             }
             final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
-            if (m_noOfRows == 1 && attrValue == m_sum) {
-                return 1;
-            }
             final double diff = attrValue - m_mean;
             if (m_stdDeviation == 0) {
-                //if the standard deviation is also 0 which means that
+                //if the standard deviation is 0 which means that
                 //the probability is 1 if this attribute value
                 //is equal the mean (which is equal to the only observed)
                 //otherwise it is 0
@@ -239,8 +230,15 @@ class NumericalAttributeModel extends AttributeModel {
                         + "probability for attribute " + getAttributeName()
                         + ": Probability denominator was zero");
             }
-            final double prob = m_probabilityFactor
-                * Math.exp(-(diff * diff
+            //we do not use the probability factor
+            //1 / (PROB_FACT_DEN * m_stdDeviation) which ensures that the area
+            //under the distribution function is 1 to have a probability result
+            //between 1 and 0. If we use the probability factor for columns
+            //with a very low variance the probability is > 1 which might result
+            //in a number overflow for many of such columns like described
+            //in forum post http://www.knime.org/node/949
+            final double prob =
+                Math.exp(-(diff * diff
                         / m_probabilityDenominator));
             return prob;
         }
@@ -256,22 +254,7 @@ class NumericalAttributeModel extends AttributeModel {
                 throw new InvalidSettingsException("Model for attribute "
                         + getAttributeName() + " contains no rows.");
             }
-//            if (m_noOfRows <= 1) {
-//                setInvalidCause("Model has only one row");
-//                throw new IllegalStateException("Model for attribute "
-//                    + getAttributeName() + " has only one row.");
-//            }
             calculateProbabilityValues();
-//            if (getStdDeviation() == 0) {
-//                setInvalidCause("Standard deviation was 0 for class value "
-//                        + m_classValue);
-//                throw new IllegalStateException("Model for attribute "
-//                    + getAttributeName() + " has a standard deviation of 0."
-//                    + " Change column type to nominal.");
-//            }
-//            if the standard deviation is 0 return probability 1 if the
-//            attribute has the same value as the observed one for this
-//            class value otherwise return probability 0
         }
 
         private void calculateProbabilityValues() {
@@ -279,7 +262,8 @@ class NumericalAttributeModel extends AttributeModel {
                 throw new IllegalStateException("Model for attribute "
                         + getAttributeName() + " contains no rows.");
             }
-            int noOfRowsNonMissing = m_noOfRows - m_missingValueRecs.intValue();
+            final int noOfRowsNonMissing =
+                m_noOfRows - m_missingValueRecs.intValue();
             // TODO Verify this! What if training data only contains missings
             if (noOfRowsNonMissing == 0) {
                 throw new IllegalStateException("Model for attribute "
@@ -301,10 +285,8 @@ class NumericalAttributeModel extends AttributeModel {
                 }
             }
             if (m_stdDeviation == 0) {
-                m_probabilityFactor = 0;
                 m_probabilityDenominator = 0;
             } else {
-                m_probabilityFactor = 1 / (PROB_FACT_DEN * m_stdDeviation);
                 m_probabilityDenominator = 2 * m_stdDeviation * m_stdDeviation;
             }
             m_recompute = false;
@@ -343,9 +325,6 @@ class NumericalAttributeModel extends AttributeModel {
             buf.append("\n");
             buf.append("SquareSum: ");
             buf.append(m_squareSum);
-            buf.append("\n");
-            buf.append("Probability factor: ");
-            buf.append(m_probabilityFactor);
             buf.append("\n");
             buf.append("Probability denominator: ");
             buf.append(m_probabilityDenominator);
