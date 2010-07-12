@@ -232,7 +232,7 @@
             class="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
             icon="icons/knime_export.png"
             id="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
-            name="Export Knime Workflow"/>
+            name="Export KNIME Workflow"/>
    </extension>
    <extension
          point="org.eclipse.ui.importWizards">
@@ -240,7 +240,7 @@
             class="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
             icon="icons/knime_import.png"
             id="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
-            name="Import Knime Workflow"/>
+            name="Import KNIME Workflow"/>
    </extension>
    
    <extension
