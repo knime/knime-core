@@ -61,7 +61,7 @@ package org.knime.core.node.workflow;
  */
 public interface ICredentials {
 
-    /** The (worflow-global) unique identifier of this credentials object.
+    /** The (workflow-global) unique identifier of this credentials object.
      * @return The identifier.
      */
     public String getName();
