@@ -250,8 +250,7 @@ public class CommandExecution extends Observable {
             exec.setProgress("Starting command");
             Runtime rt = Runtime.getRuntime();
 
-            // Go go go !
-            LOGGER.info("Launching command: '" + getCmdString() + "'");
+            LOGGER.debug("Launching command: '" + getCmdString() + "'");
             exec.setProgress("External command is running...");
 
             final Process proc;
@@ -291,8 +290,13 @@ public class CommandExecution extends Observable {
 
             exec.checkCanceled();
             exec.setProgress("External command done.");
-            LOGGER.info("External commands terminated with exit code: "
-                    + exitVal);
+            String message = "External commands terminated with exit code: "
+                + exitVal;
+            if (exitVal == 0) {
+                LOGGER.debug(message);
+            } else {
+                LOGGER.info(message);
+            }
         } catch (InterruptedException ie) {
             throw ie;
         } catch (Exception e) {
