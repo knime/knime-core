@@ -1082,7 +1082,7 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Get reference to the table repository that this buffer was initially
      * instantiated with. Used for blob reading/writing.
-     * @return (Worflow-) global table repository.
+     * @return (Workflow-) global table repository.
      */
     Map<Integer, ContainerTable> getGlobalRepository() {
         return m_globalRepository;
@@ -1091,7 +1091,7 @@ class Buffer implements KNIMEStreamConstants {
     /** Get reference to the local table repository that this buffer was
      * initially instantiated with. Used for blob reading/writing. This
      * may be null.
-     * @return (Worflow-) global table repository.
+     * @return (Workflow-) global table repository.
      */
     Map<Integer, ContainerTable> getLocalRepository() {
         return m_localRepository;
