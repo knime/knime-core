@@ -47,6 +47,13 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
+import org.knime.core.data.DataTableSpec;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramProperties;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
 import java.awt.Dimension;
 import java.util.Collection;
 
@@ -55,12 +62,6 @@ import javax.swing.Box;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.border.EtchedBorder;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramProperties;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataTableSpec;
 
 
 /**
@@ -74,10 +75,10 @@ import org.knime.core.data.DataTableSpec;
  * <li>hide empty bars</li>
  * <li>show missing value bar</li>
  * </ol>
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedHistogramProperties extends 
+public class FixedHistogramProperties extends
     AbstractHistogramProperties {
 
     /**
@@ -89,18 +90,18 @@ public class FixedHistogramProperties extends
 
     private static final String X_COLUMN_LABEL = "Binning column:";
 
-    private static final String AGGREGATION_COLUMN_LABEL = 
+    private static final String AGGREGATION_COLUMN_LABEL =
         "Aggregation column:";
-    
+
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
-    
+
     private final JLabel m_xCol;
-    
+
     private final JEditorPane m_aggrCol;
-    
+
     /**
      * Constructor for class FixedColumnHistogramProperties.
-     * 
+     *
      * @param tableSpec the {@link DataTableSpec} to initialize the column
      * @param vizModel the {@link AbstractHistogramVizModel}
      */
@@ -109,18 +110,19 @@ public class FixedHistogramProperties extends
         super(tableSpec, vizModel);
         m_xCol = new JLabel();
         m_aggrCol = new JEditorPane("text/html", "");
+        m_aggrCol.setEditable(false);
         m_aggrCol.setBackground(getBackground());
         super.addColumnTab(createColumnSettingsBox());
     }
 
     /**
-     * The column information panel which contains the x column 
+     * The column information panel which contains the x column
      * and aggregation column information.
-     * 
+     *
      * @return the column information panel
      */
     private Box createColumnSettingsBox() {
-//the x column box        
+//the x column box
         final Box xColumnBox = Box.createHorizontalBox();
 //        xColumnBox.setBorder(BorderFactory
 //                .createEtchedBorder(EtchedBorder.RAISED));
@@ -130,7 +132,7 @@ public class FixedHistogramProperties extends
         xColumnBox.add(Box.createHorizontalGlue());
         xColumnBox.add(m_xCol);
         xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        
+
 //the aggregation column box
         final Box aggrColumnBox = Box.createHorizontalBox();
         final JLabel aggrColumnLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
@@ -159,13 +161,13 @@ public class FixedHistogramProperties extends
     protected void onSelectAggrMethod(final String actionCommand) {
         //nothing to do
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, final Collection<ColorColumn> aggrColumns, 
+    public void updateColumnSelection(final DataTableSpec spec,
+            final String xColName, final Collection<ColorColumn> aggrColumns,
             final AggregationMethod aggrMethod) {
         m_xCol.setText(xColName);
         m_aggrCol.setText(createAggrColTable(aggrColumns));
@@ -176,11 +178,11 @@ public class FixedHistogramProperties extends
         if (cols == null || cols.size() < 1) {
             return "no columns selected";
         }
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
         buf.append("<br>");
         buf.append("<table cellspacing='5'>");
         int i = 0;
-        for (ColorColumn col : cols) {
+        for (final ColorColumn col : cols) {
             if (i % NO_OF_AGGR_COLS_PER_ROW == 0) {
                 buf.append("<tr>");
             }
