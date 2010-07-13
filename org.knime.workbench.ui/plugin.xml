@@ -68,6 +68,12 @@
                relationship="right"
                relative="org.eclipse.ui.editorss"/>
          <view
+               id="com.knime.enterprise.client.repositoryview.views.RemoteRepositoryView"
+               ratio="0.55"
+               relationship="bottom"
+               relative="org.knime.workbench.helpview">
+         </view>
+         <view
                closeable="true"
                id="org.knime.workbench.ui.favorites"
                moveable="true"
@@ -90,8 +96,7 @@
          </viewShortcut>
          <viewShortcut id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
-         <viewShortcut
-               id="org.knime.workbench.ui.favorites">
+         <viewShortcut id="org.knime.workbench.ui.favorites">
          </viewShortcut>
       </perspectiveExtension>
       <perspectiveExtension
