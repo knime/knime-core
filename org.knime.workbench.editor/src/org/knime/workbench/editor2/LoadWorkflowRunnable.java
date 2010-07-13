@@ -148,7 +148,6 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             checkThread.start();
 
-            final Display d = Display.getDefault();
             final WorkflowLoadResult result = WorkflowManager.loadProject(
                     m_workflowFile.getParentFile(), 
                     new ExecutionMonitor(progressMonitor));
