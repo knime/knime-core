@@ -271,7 +271,7 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id, persistor.getMetaPersistor());
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
-        m_loadVersion = persistor.getLoadVersion();
+        m_loadVersion = persistor.getLoadVersionString();
         m_workflowVariables =
             new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore =
@@ -3843,7 +3843,7 @@ public final class WorkflowManager extends NodeContainer {
             new InsertWorkflowPersistor(persistor);
         Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
         synchronized (mutex) {
-            m_loadVersion = persistor.getLoadVersion();
+            m_loadVersion = persistor.getLoadVersionString();
             NodeID[] newIDs = loadContent(insertPersistor, tblRep, null,
                     exec, result, keepNodeMessages);
             if (newIDs.length != 1) {

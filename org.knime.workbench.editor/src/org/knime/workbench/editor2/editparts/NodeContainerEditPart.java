@@ -225,18 +225,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return nodeFigure;
     }
 
-
-    /**
-     * Return the content pane for the model children (= ports).
-     *
-     * @see org.eclipse.gef.GraphicalEditPart#getContentPane()
-     */
-    @Override
-    public IFigure getContentPane() {
-        return ((NodeContainerFigure)getFigure()).getContentFigure();
-
-    }
-
     private void performDirectEdit() {
 
         if (m_directEditManager == null) {
@@ -350,7 +338,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void messageChanged(final NodeMessageEvent messageEvent) {
@@ -454,7 +442,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         /*
          * If the figure wasn't yet initialized (has relative coords)
-         * convert from absolute to take scrolling into account 
+         * convert from absolute to take scrolling into account
          */
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
         int[] b = uiInfo.getBounds(); // this is a copy
@@ -469,7 +457,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
         m_figureInitialized = true;
-        
+
         // String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
         NodeType type = getNodeContainer().getType();
@@ -682,7 +670,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
 
     public void openSubWorkflowEditor() {
-        
+
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
         try {
@@ -694,25 +682,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     (WorkflowManager)container, parent);
             PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage().openEditor(input,
-                        "org.knime.workbench.editor.WorkflowEditor");        
+                        "org.knime.workbench.editor.WorkflowEditor");
         } catch (PartInitException e) {
             LOGGER.error("Error while opening new editor", e);
             e.printStackTrace();
         }
         return;
     }
-    
+
     @Override
     public void jobManagerChanged(final JobManagerChangedEvent e) {
         URL iconURL = getNodeContainer().findJobManager().getIcon();
         setJobManagerIcon(iconURL);
     }
-    
+
     private void setJobManagerIcon(final URL iconURL) {
         Image icon = null;
         if (iconURL != null) {
             icon = ImageDescriptor.createFromURL(iconURL).createImage();
-        } 
+        }
         ((NodeContainerFigure)getFigure()).setJobExecutorIcon(icon);
     }
 

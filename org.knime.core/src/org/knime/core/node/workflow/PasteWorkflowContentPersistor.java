@@ -114,7 +114,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getLoadVersion() {
+    public String getLoadVersionString() {
         throwUnsupportedOperationException();
         return null;
     }

@@ -92,7 +92,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** A Version representing a specific workflow format. This enum covers only
      * the version that this specific class can read (or write).
      * Ordinal numbering is important. */
-    static enum LoadVersion {
+    public static enum LoadVersion {
         // Don't modify order, ordinal number are important.
         /** Version 2.0.0 - 2.0.x. */
         V200("2.0.0"),
@@ -100,9 +100,10 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
          * server prototypes. Obsolete since 2009-08-12. */
         V210_Pre("2.0.1"),
         /** Version 2.1.x. */
-        V210("2.1.0");
-        // TODO change config name for flow variables (was/is scope_stack)
-        // in SNCPV200#saveFlowObjectStack to flow_stack
+        V210("2.1.0"),
+        /** Version 2.2.x, introduces optional inputs, flow variable input
+         * credentials, node local drop directory. */
+        V220("2.2.0");
 
         private final String m_versionString;
 
@@ -128,23 +129,40 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return null;
         }
     }
-    static final String VERSION_LATEST = LoadVersion.V210.getVersionString();
+    static final String VERSION_LATEST = LoadVersion.V220.getVersionString();
 
     static boolean canReadVersion(final String versionString) {
         return LoadVersion.get(versionString) != null;
     }
 
+    /** Create persistor for save. */
     WorkflowPersistorVersion200() {
         super(null, VERSION_LATEST);
     }
 
+    /** Create persistor for load.
+     * @param tableRep Table repository
+     * @param versionString Version string,
+     * must pass {@link #canReadVersion(String)}
+     * @throws IllegalStateException If version string is unsupported.
+     */
     WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
             final String versionString) {
         super(tableRep, versionString);
+        if (LoadVersion.get(versionString) == null) {
+            throw new IllegalStateException("Unsupported version \""
+                    + versionString + "\" in " + getClass().getName());
+        }
     }
 
+    /** @return version that is saved, {@value #VERSION_LATEST}. */
     protected String getSaveVersion() {
         return VERSION_LATEST;
+    }
+
+    /** @return version being loaded, never null. */
+    public LoadVersion getLoadVersion() {
+        return LoadVersion.get(super.getLoadVersionString());
     }
 
     /** {@inheritDoc} */
@@ -172,8 +190,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     @Override
     protected List<Credentials> loadCredentials(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO fix version strings
-        if (!settings.containsKey(CFG_CREDENTIALS)) {
+        // no credentials in v2.1 and before
+        if (getLoadVersion().ordinal() < LoadVersion.V220.ordinal()) {
             return Collections.emptyList();
         }
         NodeSettingsRO sub = settings.getNodeSettings(CFG_CREDENTIALS);
@@ -205,6 +223,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return null; // only used in 1.3.x
     }
 
+    /** {@inheritDoc} */
     @Override
     protected boolean loadIsMetaNode(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -244,7 +263,42 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     @Override
     protected int loadConnectionDestPort(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // possibly port index correction in fixDestPort method
         return settings.getInt("destPort");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void fixDestPortIfNecessary(
+            final NodeContainerPersistor destPersistor,
+            final ConnectionContainerTemplate c) {
+        // v2.1 and before did not have flow variable ports (index 0)
+        if (getLoadVersion().ordinal() < LoadVersion.V220.ordinal()) {
+            if (destPersistor
+                    instanceof SingleNodeContainerPersistorVersion1xx) {
+                // correct port index only for ordinary nodes (no new flow
+                // variable ports on meta nodes)
+                int index = c.getDestPort();
+                c.setDestPort(index + 1);
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void fixSourcePortIfNecessary(
+            final NodeContainerPersistor sourcePersistor,
+            final ConnectionContainerTemplate c) {
+        // v2.1 and before did not have flow variable ports (index 0)
+        if (getLoadVersion().ordinal() < LoadVersion.V220.ordinal()) {
+            if (sourcePersistor
+                    instanceof SingleNodeContainerPersistorVersion1xx) {
+                // correct port index only for ordinary nodes (no new flow
+                // variable ports on meta nodes)
+                int index = c.getSourcePort();
+                c.setSourcePort(index + 1);
+            }
+        }
     }
 
     @Override

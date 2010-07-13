@@ -74,7 +74,7 @@ public class WorkflowPortLocator extends PortLocator {
      */
     public WorkflowPortLocator(final PortType type, final int portIndex,
             final boolean isInPort, final int nrPorts) {
-        super(type, portIndex, isInPort, nrPorts);
+        super(type, portIndex, isInPort, nrPorts, false);
     }
 
     /**
@@ -88,14 +88,14 @@ public class WorkflowPortLocator extends PortLocator {
         if (isInPort()) {
             xPos += parent.width - AbstractPortFigure.WF_PORT_SIZE;
         }
-        int yPos = (int)(parent.y + (((double)parent.height 
+        int yPos = (int)(parent.y + (((double)parent.height
                 / (double) (getNrPorts() + 1)) * (getPortIndex() + 1)));
         yPos -= (AbstractPortFigure.WF_PORT_SIZE / 2);
-        Rectangle portBounds = new Rectangle(new Point(xPos, yPos), 
+        Rectangle portBounds = new Rectangle(new Point(xPos, yPos),
                 new Dimension(
-                        AbstractPortFigure.WF_PORT_SIZE, 
+                        AbstractPortFigure.WF_PORT_SIZE,
                         AbstractPortFigure.WF_PORT_SIZE));
-        
+
         LOGGER.debug("workflow port locator#relocate " + portBounds);
         target.setBounds(portBounds);
         target.repaint();

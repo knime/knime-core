@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
@@ -58,15 +58,13 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeInPort;
-
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeInPortFigure;
 
 /**
- * Edit Part for a {@link NodeInPort}.
- * Model: {@link NodeInPort}
- * View: {@link NodeInPortFigure}
- * Controller: {@link NodeInPortEditPart}
- * 
+ * Edit Part for a {@link NodeInPort}. Model: {@link NodeInPort} View:
+ * {@link NodeInPortFigure} Controller: {@link NodeInPortEditPart}
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeInPortEditPart extends AbstractPortEditPart {
@@ -78,7 +76,6 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         super(type, portID, true);
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -87,28 +84,31 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         // Create the figure, we need the number of ports from the parent
         // container
         NodeContainer container = getNodeContainer();
-        NodeInPortFigure portFigure = new NodeInPortFigure(getType(),
-                getIndex(), container.getNrInPorts(),
-                container.getInPort(getIndex()).getPortName());
-
+        boolean isMetaNode = !(container instanceof SingleNodeContainer);
+        NodeInPortFigure portFigure =
+                new NodeInPortFigure(getType(), getIndex(), container
+                        .getNrInPorts(), isMetaNode, container.getInPort(
+                        getIndex()).getPortName());
+        portFigure.setIsConnected(isConnected());
         return portFigure;
     }
 
     /**
      * This returns the (single !) connection that has this in-port as a target.
-     * 
+     *
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
-     * 
-     * {@inheritDoc}
+     *
+     *         {@inheritDoc}
      */
     @Override
     public List<ConnectionContainer> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        ConnectionContainer container = getManager().getIncomingConnectionFor(
-                getNodeContainer().getID(), getIndex());
+        ConnectionContainer container =
+                getManager().getIncomingConnectionFor(
+                        getNodeContainer().getID(), getIndex());
 
         if (container != null) {
             return Collections.singletonList(container);
@@ -119,11 +119,12 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
 
     /**
      * @return empty list, as in-ports are never source for connections
-     * 
-     * {@inheritDoc}
+     *
+     *         {@inheritDoc}
      */
     @Override
     protected List<ConnectionContainer> getModelSourceConnections() {
         return EMPTY_LIST;
     }
+
 }

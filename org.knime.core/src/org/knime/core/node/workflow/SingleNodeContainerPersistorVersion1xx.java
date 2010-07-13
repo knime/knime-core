@@ -176,7 +176,7 @@ public class SingleNodeContainerPersistorVersion1xx
     }
 
     protected NodePersistorVersion1xx createNodePersistor() {
-        return new NodePersistorVersion1xx(this);
+        return new NodePersistorVersion1xx(this, null);
     }
 
     /** {@inheritDoc} */

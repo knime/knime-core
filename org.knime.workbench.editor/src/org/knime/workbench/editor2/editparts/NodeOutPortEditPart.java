@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
@@ -59,18 +59,17 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
- * Edit part for a {@link NodeOutPort}.
- * Model: {@link NodeOutPort}
- * View: {@link NodeOutPortFigure}
- * Controller: {@link NodeOutPortEditPart}
- * 
+ * Edit part for a {@link NodeOutPort}. Model: {@link NodeOutPort} View:
+ * {@link NodeOutPortFigure} Controller: {@link NodeOutPortEditPart}
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortEditPart extends AbstractPortEditPart {
-    
+
     /**
      * @param type the port type
      * @param portIndex the port index
@@ -89,9 +88,11 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         NodeContainer container = getNodeContainer();
         NodeOutPort port = container.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
+        boolean isMetaNode = !(container instanceof SingleNodeContainer);
         NodeOutPortFigure portFigure =
                 new NodeOutPortFigure(getType(), getIndex(), container
-                        .getNrOutPorts(), tooltip);
+                        .getNrOutPorts(), isMetaNode, tooltip);
+        portFigure.setIsConnected(isConnected());
         return portFigure;
     }
 
@@ -101,7 +102,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
      *
-     * {@inheritDoc}
+     *         {@inheritDoc}
      */
     @Override
     public List<ConnectionContainer> getModelSourceConnections() {
@@ -110,9 +111,8 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         }
         Set<ConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
-                        getNodeContainer().getID(),
-                        getIndex());
-        List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
+                        getNodeContainer().getID(), getIndex());
+        List<ConnectionContainer> conns = new ArrayList<ConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -120,10 +120,10 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * 
+     *
      * @return empty list, as out-ports are never target for connections
-     * 
-     * {@inheritDoc}
+     *
+     *         {@inheritDoc}
      */
     @Override
     protected List<ConnectionContainer> getModelTargetConnections() {

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   09.06.2008 (Fabian Dill): created
  */
@@ -57,43 +57,43 @@ import org.knime.workbench.editor2.ImageRepository;
 
 
 /**
- * 
- * 
+ *
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class SubworkflowFigure extends NodeContainerFigure {
-    
+
     // load images
     private static final Image IDLE_STATE = ImageRepository.getImage(
             "icons/meta/meta_idle2.png");
-    
+
     private static final Image EXECUTING_STATE = ImageRepository.getImage(
             "icons/meta/meta_executing5.png");
-    
+
     private static final Image EXECUTED_STATE = ImageRepository.getImage(
             "icons/meta/meta_executed.png");
-    
-    
+
+
     private static final Image BACKGROUND_ICON = ImageRepository.getImage(
             "icons/meta/meta_node.png");
-    
+
     /**
      * Everything like the {@link NodeContainerFigure} but without the status
      * traffic light, state is reflected by icons on the node.
-     * 
+     *
      * @param progress progress figure for super contructor
      */
     public SubworkflowFigure(final ProgressFigure progress) {
         super(progress);
         remove(getStatusFigure());
-        ((NodeContainerFigure.ContentFigure)
-                getContentFigure()).setBackgroundIcon(BACKGROUND_ICON);
+        ((NodeContainerFigure.SymbolFigure)
+                getSymbolFigure()).setBackgroundIcon(BACKGROUND_ICON);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      * Only reflects three different states: idle, executing, executed.
      */
     @Override
@@ -101,7 +101,7 @@ public class SubworkflowFigure extends NodeContainerFigure {
         switch (state) {
         case IDLE:
         case CONFIGURED:
-            ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
+            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
                     IDLE_STATE);
             break;
         case MARKEDFOREXEC:
@@ -109,16 +109,16 @@ public class SubworkflowFigure extends NodeContainerFigure {
         case QUEUED:
         case EXECUTING:
         case EXECUTINGREMOTELY:
-            ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
+            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
                     EXECUTING_STATE);
             break;
         case EXECUTED:
-            ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
+            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
                     EXECUTED_STATE);
         }
         revalidate();
     }
-    
+
     /**
      * {@inheritDoc}
      * Ignores it - since the type is fix.

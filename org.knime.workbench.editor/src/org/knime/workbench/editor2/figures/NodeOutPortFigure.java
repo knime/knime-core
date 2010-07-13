@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,14 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.figures;
 
+import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.BufferedDataTable;
@@ -59,60 +61,50 @@ import org.knime.core.node.port.PortType;
 
 /**
  * Figure for displaying a <code>NodeOutPort</code> inside a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortFigure extends AbstractPortFigure {
-    private final int m_id;
 
     /**
-     * 
+     *
      * @param id The id of the port, needed to determine the position inside the
      *            surrounding node visual
      * @param type the port type
      * @param numPorts total number of ports
      * @param tooltip the tooltip for the node
      */
-    public NodeOutPortFigure(final PortType type,
-            final int id,
-            final int numPorts, final String tooltip) {
+    public NodeOutPortFigure(final PortType type, final int id,
+            final int numPorts, final boolean isMetaNodePort,
+            final String tooltip) {
 
-        super(type, numPorts);
-        m_id = id;
-//        setOpaque(false);
+        super(type, numPorts, id, isMetaNodePort);
         setToolTip(new NewToolTipFigure(tooltip));
-//        setFill(true);
-//        setOutline(true);
+        setOpaque(true);
+        setFill(true);
+        setOutline(true);
     }
 
     /**
      * Create a point list for the triangular figure (a polygon).
-     * 
+     *
      * @param r The bounds
-     * @return the pointlist (size=3)
-     * {@inheritDoc}
+     * @return the pointlist (size=3) {@inheritDoc}
      */
     @Override
     protected PointList createShapePoints(final Rectangle r) {
         if (getType().equals(BufferedDataTable.TYPE)) {
             PointList points = new PointList(3);
-            points.addPoint(r.getLeft().getCopy().translate(NODE_PORT_SIZE,
-                    -(NODE_PORT_SIZE / 2)));
-            points.addPoint(r.getLeft().getCopy().translate(
-                    NODE_PORT_SIZE * 2, 0));
-            points.addPoint(r.getLeft().getCopy()
-                    .translate(NODE_PORT_SIZE, (NODE_PORT_SIZE / 2)));
+            points.addPoint(new Point(r.x, r.y));
+            points.addPoint(new Point(r.x + r.width - 1, r.y + (r.height / 2)));
+            points.addPoint(new Point(r.x, r.y + r.height - 1));
             return points;
-        } 
+        }
         PointList points = new PointList(4);
-        points.addPoint(r.getLeft().getCopy().translate(NODE_PORT_SIZE,
-                -(NODE_PORT_SIZE / 2 - 0)));
-        points.addPoint(r.getLeft().getCopy().translate(NODE_PORT_SIZE * 2,
-                -(NODE_PORT_SIZE / 2 - 0)));
-        points.addPoint(r.getLeft().getCopy().translate(NODE_PORT_SIZE * 2,
-                (NODE_PORT_SIZE / 2 + 0)));
-        points.addPoint(r.getLeft().getCopy().translate(NODE_PORT_SIZE,
-                (NODE_PORT_SIZE / 2 + 0)));
+        points.addPoint(new Point(r.x, r.y));
+        points.addPoint(new Point(r.x + r.width - 1, r.y));
+        points.addPoint(new Point(r.x + r.width - 1, r.y + r.height - 1));
+        points.addPoint(new Point(r.x, r.y + r.height - 1));
         return points;
     }
 
@@ -120,16 +112,12 @@ public class NodeOutPortFigure extends AbstractPortFigure {
      * Returns the preffered size of a port. A port is streched in length,
      * depending on the number of ports. Always try to fill up as much height as
      * possible.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        Dimension d = new Dimension();
-
-        d.height = (getParent().getBounds().height) / getNrPorts();
-        d.width = getParent().getBounds().width / 4;
-        return d;
+        return new Dimension(NODE_PORT_SIZE, NODE_PORT_SIZE);
     }
 
     /**
@@ -138,8 +126,16 @@ public class NodeOutPortFigure extends AbstractPortFigure {
      */
     @Override
     public Locator getLocator() {
-        return new NodePortLocator(
-                (NodeContainerFigure)getParent().getParent(),
-            false, getNrPorts(), m_id, getType());
+        return new NodePortLocator((NodeContainerFigure)getParent(), false,
+                getNrPorts(), getPortIndex(), getType(), isMetaNodePort());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void paintFigure(final Graphics graphics) {
+        // TODO Auto-generated method stub
+        super.paintFigure(graphics);
     }
 }

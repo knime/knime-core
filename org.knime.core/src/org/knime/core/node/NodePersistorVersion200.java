@@ -74,6 +74,7 @@ import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -91,10 +92,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     public static final String INTERNAL_TABLE_FOLDER_PREFIX = "internalTables";
 
     /** Invokes super constructor.
-     * @param sncPersistor Forwared.*/
+     * @param sncPersistor Forwarded.
+     * @param loadVersion Version, must not be null. */
     public NodePersistorVersion200(
-            final SingleNodeContainerPersistorVersion200 sncPersistor) {
-        super(sncPersistor);
+            final SingleNodeContainerPersistorVersion200 sncPersistor,
+            final LoadVersion loadVersion) {
+        super(sncPersistor, loadVersion);
+        if (loadVersion == null) {
+            throw new NullPointerException("Version arg must not be null.");
+        }
     }
 
     /**
@@ -154,7 +160,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         final int portCount = node.getNrOutPorts();
         NodeSettingsWO portSettings = settings.addNodeSettings("ports");
         exec.setMessage("Saving outport data");
-        for (int i = 0; i < portCount; i++) {
+        // starting at port 1 (ignore default flow variable output)
+        for (int i = 1; i < portCount; i++) {
             String portName = PORT_FOLDER_PREFIX + i;
             ExecutionMonitor subProgress =
                     exec.createSubProgress(1.0 / portCount);
@@ -443,7 +450,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
-        if (node.getNrOutPorts() == 0) {
+        if (node.getNrOutPorts() == 1) {
+            // only the mandatory flow variable port
             return;
         }
         final int portCount = node.getNrOutPorts();
@@ -454,7 +462,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     portSettings.getNodeSettings(key);
             ExecutionMonitor subProgress =
                     exec.createSubProgress(1 / (double)portCount);
-            int index = singlePortSetting.getInt("index");
+            int index = loadPortIndex(singlePortSetting);
             if (index < 0 || index >= node.getNrOutPorts()) {
                 throw new InvalidSettingsException(
                         "Invalid outport index in settings: " + index);
@@ -469,6 +477,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             }
             subProgress.setProgress(1.0);
         }
+    }
+
+    protected int loadPortIndex(final NodeSettingsRO singlePortSetting)
+        throws InvalidSettingsException {
+        int index = singlePortSetting.getInt("index");
+        // KNIME v2.1 and before had no optional flow variable input port
+        // port 0 in v2.1 is port 1 now.
+        if (getLoadVersion().ordinal() < LoadVersion.V220.ordinal()) {
+            index = index + 1;
+        }
+        return index;
     }
 
     protected void loadPort(final Node node, final ReferencedFile portDir,
@@ -486,8 +505,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(
                         objectClass) && BufferedDataTable.TYPE
                         .getPortObjectSpecClass().getName().equals(specClass))
-                        || node.getOutputType(portIdx).equals(
-                                BufferedDataTable.TYPE);
+                        || designatedType.equals(BufferedDataTable.TYPE);
         if (isBDT) {
             if (specClass != null
                     && !specClass.equals(BufferedDataTable.TYPE

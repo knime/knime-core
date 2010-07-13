@@ -147,7 +147,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
-    public String getLoadVersion() {
+    public String getLoadVersionString() {
         return getVersionString();
     }
 
@@ -649,32 +649,24 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 continue;
             }
             int sourceIDSuffix = c.getSourceSuffix();
-            if (!m_nodeContainerLoaderMap.containsKey(sourceIDSuffix)
-                    && sourceIDSuffix != -1) {
+            NodeContainerPersistor sourceNodePersistor =
+                m_nodeContainerLoaderMap.get(sourceIDSuffix);
+            if (sourceNodePersistor == null && sourceIDSuffix != -1) {
                 setDirtyAfterLoad();
                 loadResult.addError("Unable to load node connection " + c
                         + ", source node does not exist");
             }
-            int targetIDSuffix = c.getDestSuffix();
-            NodeContainerPersistor targetNodePersistor =
-                m_nodeContainerLoaderMap.get(targetIDSuffix);
-            if (targetNodePersistor == null && targetIDSuffix != -1) {
+            fixSourcePortIfNecessary(sourceNodePersistor, c);
+
+            int destIDSuffix = c.getDestSuffix();
+            NodeContainerPersistor destNodePersistor =
+                m_nodeContainerLoaderMap.get(destIDSuffix);
+            if (destNodePersistor == null && destIDSuffix != -1) {
                 setDirtyAfterLoad();
                 loadResult.addError("Unable to load node connection " + c
                         + ", destination node does not exist");
-            } else if (targetNodePersistor
-                    instanceof SingleNodeContainerPersistorVersion1xx) {
-                /* workflows saved with 1.x.x have misleading port indices for
-                 * incoming ports. Data ports precede the model ports (in
-                 * their index), although the GUI and the true ordering is
-                 * the other way around. */
-                if (((SingleNodeContainerPersistorVersion1xx)
-                        targetNodePersistor).shouldFixModelPortOrder()) {
-                    Node node = ((SingleNodeContainerPersistorVersion1xx)
-                            targetNodePersistor).getNode();
-                    fixDestPortIfNecessary(node, c);
-                }
             }
+            fixDestPortIfNecessary(destNodePersistor, c);
 
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
@@ -751,6 +743,59 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_outPortsBarUIInfo = outPortsBarUIInfo;
         exec.setProgress(1.0);
     }
+
+    /** Fixes source port index if necessary. Subclasses will overwrite this
+     * method (e.g. to enable loading flows, which did not have the mandatory
+     * flow variable port object).
+     * @param sourcePersistor The persistor of the destination node.
+     * @param c The connection template to be fixed.
+     */
+    protected void fixSourcePortIfNecessary(
+            final NodeContainerPersistor sourcePersistor,
+            final ConnectionContainerTemplate c) {
+        // nothing to do here
+    }
+
+    /** Fixes destination port index if necessary. For v1.x flows, e.g.,
+     * the indices of model and data ports were swapped.
+     * Subclasses will overwrite this method (e.g. to enable loading flows,
+     * which did not have the mandatory flow variable port object).
+     * @param destPersistor The persistor of the destination node.
+     * @param c The connection template to be fixed.
+     */
+    protected void fixDestPortIfNecessary(
+            final NodeContainerPersistor destPersistor,
+            final ConnectionContainerTemplate c) {
+        if (destPersistor instanceof SingleNodeContainerPersistorVersion1xx) {
+            SingleNodeContainerPersistorVersion1xx pers =
+                (SingleNodeContainerPersistorVersion1xx)destPersistor;
+            /* workflows saved with 1.x.x have misleading port indices for
+             * incoming ports. Data ports precede the model ports (in their
+             * index), although the GUI and the true ordering is the other
+             * way around. */
+            if (pers.shouldFixModelPortOrder()) {
+                Node node = pers.getNode();
+                int modelPortCount = 0;
+                for (int i = 0; i < node.getNrInPorts(); i++) {
+                    if (!node.getInputType(i).getPortObjectClass().
+                            isAssignableFrom(BufferedDataTable.class)) {
+                        modelPortCount += 1;
+                    }
+                }
+                if (modelPortCount == node.getNrInPorts()) {
+                    return;
+                }
+                int destPort = c.getDestPort();
+                if (destPort < modelPortCount) { // c represent data connection
+                    c.setDestPort(destPort + modelPortCount);
+                } else { // c represents model connection
+                    c.setDestPort(destPort - modelPortCount);
+                }
+            }
+        }
+    }
+
+
 
     protected NodeSettingsRO readParentSettings() throws IOException {
         NodeSettings result = new NodeSettings("generated_wf_settings");
@@ -867,7 +912,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     /** Load output port bars. This implementation does nothing, sub-classes
-     * override this metho.d
+     * override this method.
      * @param uiInfo Ignored here.
      * @param settings Ignored here.
      * @throws InvalidSettingsException Not actually thrown here.
@@ -922,7 +967,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             throws InvalidSettingsException {
         int sourceID = settings.getInt("sourceID");
         int destID = loadConnectionDestID(settings);
-        int sourcePort = settings.getInt("sourcePort");
+        int sourcePort = loadConnectionSourcePort(settings);
         int destPort = loadConnectionDestPort(settings);
         // this attribute is in most cases not present (not saved)
         boolean isDeletable = settings.getBoolean("isDeletable", true);
@@ -957,6 +1002,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected int loadConnectionDestPort(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return settings.getInt("targetPort");
+    }
+
+    protected int loadConnectionSourcePort(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        return settings.getInt("sourcePort");
     }
 
     protected NodeSettingsRO loadSettingsForNodes(final NodeSettingsRO set)
@@ -1090,26 +1140,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             nodeIDSuffix += 1;
         }
         return nodeIDSuffix;
-    }
-
-    private void fixDestPortIfNecessary(final Node node,
-            final ConnectionContainerTemplate c) {
-        int modelPortCount = 0;
-        for (int i = 0; i < node.getNrInPorts(); i++) {
-            if (!node.getInputType(i).getPortObjectClass().isAssignableFrom(
-                    BufferedDataTable.class)) {
-                modelPortCount += 1;
-            }
-        }
-        if (modelPortCount == node.getNrInPorts()) {
-            return;
-        }
-        int destPort = c.getDestPort();
-        if (destPort < modelPortCount) { // c represent data connection
-            c.setDestPort(destPort + modelPortCount);
-        } else { // c represents model connection
-            c.setDestPort(destPort - modelPortCount);
-        }
     }
 
 }

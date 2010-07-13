@@ -65,8 +65,11 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 public class NodePersistorVersion1xx implements NodePersistor {
 
@@ -101,6 +104,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private String m_warningMessage;
 
+    /** Load Version, see {@link #getLoadVersion()} for details. */
+    private final LoadVersion m_loadVersion;
+
     /** List of factories (only the simple class name), which were
      * auto-executable in 1.3.x and need to be restored as configured only. */
     public static final List<String> OLD_AUTOEXECUTABLE_NODEFACTORIES =
@@ -115,16 +121,29 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return MODEL_FILE_PREFIX + index + ".pmml.gz";
     }
 
-    /** Constructor that should be used when node is saved. It's not been used
-     * for loading, i.e. all getXXX() methods will return invalid values.
+    /** Creates persistor for both load and save.
+     * @param sncPersistor The corresponding SNC persistor.
+     * @param version The version string, see
+     * {@link #getLoadVersion()} for details
      */
     public NodePersistorVersion1xx(
-            final SingleNodeContainerPersistorVersion1xx sncPersistor) {
+            final SingleNodeContainerPersistorVersion1xx sncPersistor,
+            final LoadVersion version) {
         m_sncPersistor = sncPersistor;
+        m_loadVersion = version;
     }
 
     protected NodeLogger getLogger() {
         return m_logger;
+    }
+
+    /** Version being loaded. This is given by the SNC-Persistor. If this
+     * persistor is used for saving, the value of this field is unimportant
+     * (will be the latest version).
+     * @return Version being loaded (or saved). Can also be null unless
+     * enforced in constructor of subclass. */
+    public LoadVersion getLoadVersion() {
+        return m_loadVersion;
     }
 
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -169,10 +188,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     protected void loadPorts(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
-            final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep)
+            final Map<Integer, BufferedDataTable> loadTblRep,
+            final HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
         for (int i = 0; i < node.getNrOutPorts(); i++) {
+            int truePortIndex = getTruePortIndex(i);
             ExecutionMonitor execPort = execMon
                     .createSubProgress(1.0 / node.getNrOutPorts());
             execMon.setMessage("Port " + i);
@@ -182,7 +203,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             if (m_isConfigured) {
                 PortObjectSpec spec =
                     loadPortObjectSpec(node, settings, i);
-                setPortObjectSpec(i, spec);
+                setPortObjectSpec(truePortIndex, spec);
             }
             if (m_isExecuted) {
                 PortObject object;
@@ -194,11 +215,20 @@ public class NodePersistorVersion1xx implements NodePersistor {
                             + "old 1.x workflows. Execute node again.");
                 }
                 String summary = object != null ? object.getSummary() : null;
-                setPortObject(i, object);
-                setPortObjectSummary(i, summary);
+                setPortObject(truePortIndex, object);
+                setPortObjectSummary(truePortIndex, summary);
             }
             execPort.setProgress(1.0);
         }
+    }
+
+    /** Adds one to the argument. As of v2.2 KNIME has an additional output
+     * port (index 0) carrying flow variables (mickey mouse oehrchen).
+     * @param loaded Index of port in any version before v2.2
+     * @return Actual port index (0 becomes 1, etc)
+     */
+    private int getTruePortIndex(final int loaded) {
+        return loaded + 1;
     }
 
     /** Sub class hook to read internal tables.
@@ -596,7 +626,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public PortObject getPortObject(final int outportIndex) {
+        if (outportIndex == 0) {
+            return FlowVariablePortObject.INSTANCE;
+        }
         return m_portObjects[outportIndex];
     }
 
@@ -605,11 +639,23 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param portObject the portObjects to set
      */
     public void setPortObject(final int idx, final PortObject portObject) {
+        checkPortIndexOnSet(idx);
         m_portObjects[idx] = portObject;
     }
 
+    private void checkPortIndexOnSet(final int index) {
+        if (index == 0) {
+            throw new IllegalStateException("Must not set content of port 0;"
+                    + "it's the framework port");
+        }
+    }
+
     /** {@inheritDoc} */
+    @Override
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
+        if (outportIndex == 0) {
+            return FlowVariablePortObjectSpec.INSTANCE;
+        }
         return m_portObjectSpecs[outportIndex];
     }
 
@@ -619,12 +665,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
      */
     public void setPortObjectSpec(
             final int idx, final PortObjectSpec portObjectSpec) {
+        checkPortIndexOnSet(idx);
         m_portObjectSpecs[idx] = portObjectSpec;
     }
 
     /** {@inheritDoc} */
     @Override
     public String getPortObjectSummary(final int outportIndex) {
+        if (outportIndex == 0) {
+            return FlowVariablePortObject.INSTANCE.getSummary();
+        }
         return m_portObjectSummaries[outportIndex];
     }
 
@@ -634,6 +684,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      */
     public void setPortObjectSummary(final int idx,
             final String portObjectSummary) {
+        checkPortIndexOnSet(idx);
         m_portObjectSummaries[idx] = portObjectSummary;
     }
 

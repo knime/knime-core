@@ -51,10 +51,9 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.geometry.Dimension;
-import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
  * Locator for port figures. Makes sure that the ports are "near" the centered
@@ -66,9 +65,8 @@ public class NodePortLocator extends PortLocator {
 
     private final NodeContainerFigure m_parent;
 
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            NodePortLocator.class);
+    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
+    // NodePortLocator.class);
 
     /**
      * Creates a new locator.
@@ -78,11 +76,12 @@ public class NodePortLocator extends PortLocator {
      * @param maxPorts max number of data ports to locate
      * @param portIndex The port index
      * @param portType type of the port
+     * @param isMetaNodePort if port belongs to a meta node
      */
     public NodePortLocator(final NodeContainerFigure parent,
             final boolean isInport, final int maxPorts, final int portIndex,
-            final PortType portType) {
-        super(portType, portIndex, isInport, maxPorts);
+            final PortType portType, final boolean isMetaNodePort) {
+        super(portType, portIndex, isInport, maxPorts, isMetaNodePort);
         m_parent = parent;
     }
 
@@ -91,25 +90,102 @@ public class NodePortLocator extends PortLocator {
      */
     @Override
     public void relocate(final IFigure fig) {
-        Rectangle parentBounds = m_parent.getContentFigure().getBounds()
-                .getCopy();
-        int portHeight = (parentBounds.height - 10)
-                / (getNrPorts());
-        int portWidth = parentBounds.width / 2;
-        int x = 0;
-        int y = 0;
-        if (isInPort()) {
-            x = parentBounds.getLeft().x - 1;
-            int position = getPortIndex();
-            y = parentBounds.getTopLeft().y  + 5 + (position * portHeight);
-        } else {
-            x = parentBounds.getCenter().x + 4;
-            y = parentBounds.getTopRight().y + 5
-                + (getPortIndex() * portHeight);
-        }
-        Rectangle portBounds = new Rectangle(new Point(x, y), new Dimension(
-                portWidth, portHeight));
+        /*
+         * Coordinates are relative to the symbol of the node figure!
+         */
+        Rectangle symbolBounds =
+                m_parent.getSymbolFigure().getBounds().getCopy();
+        Rectangle parentBounds = m_parent.getBounds().getCopy();
 
-        fig.setBounds(portBounds);
+        // try not to cover the node's symbol (that's used to move node)
+        // we need like 5 pixels for the icon at a MetaNodeOutPortFigure
+        int width = (parentBounds.width - symbolBounds.width) / 2 + 5;
+        int height = AbstractPortFigure.NODE_PORT_SIZE;
+        int x = 0;
+        if (isInPort()) {
+            x = parentBounds.x;
+            if (isImplVariablePort()) {
+                // move the mickey mouse ears to the center a bit
+                x += 5;
+            }
+        } else {
+            x = parentBounds.x + parentBounds.width - width;
+            if (isImplVariablePort()) {
+                // move the mickey mouse ears to the center a bit
+                x -= 5;
+            }
+        }
+        int y;
+        // Y position:
+        // Implicit flow variable ports are always at the very top.
+        // Meta nodes don't have implicit flow variable ports.
+        // With port count one or two we spread evenly
+        // Multiple ports (more than 2) hang off the top of the icon
+        if (isImplVariablePort()) {
+            y = symbolBounds.y;
+        } else {
+            int portNr = getNrPorts();
+            int portPos = getPortIndex();
+            int iconHeight = 38; // the size of the icon use din 2.1.2
+            int iconOffset = 5;  // from the top of the icon figure (in 2.1.2)
+            if (!isMetaNodePort()) {
+                // the implicit ports don't count in, when we spread ports
+                portNr--;
+                portPos--;
+            }
+            if (portNr > 2) {
+                // hang them off the top
+                y = symbolBounds.y + height + (portPos * (height + 1));
+            } else {
+                // spread them evenly
+                double d = iconHeight / (double)portNr / 2;
+                int middle = (int)((portPos * 2 + 1) * d);
+                y = symbolBounds.y + iconOffset + middle - (height / 2) - 1;
+            }
+        }
+        Rectangle bounds = new Rectangle(x, y, width, height);
+        fig.setBounds(bounds);
     }
+//
+//    private void relocateMultiPortFigure(final IFigure fig) {
+//        /*
+//         * Coordinates are relative to the symbol of the node figure!
+//         */
+//        Rectangle symbolBounds =
+//                m_parent.getSymbolFigure().getBounds().getCopy();
+//        Rectangle parentBounds = m_parent.getBounds().getCopy();
+//
+//        int height = AbstractPortFigure.NODE_PORT_SIZE;
+//        // try not to cover the node's symbol (that's used to move node)
+//        // we need like 5 pixels for the icon at a MetaNodeOutPortFigure
+//        int width = (parentBounds.width - symbolBounds.width) / 2 + 5;
+//        int x = 0;
+//        int position = getPortIndex();
+//        if (isMetaNodePort()) {
+//            position++; // meta nodes don't have implicit variable ports
+//        }
+//        int y = symbolBounds.y + (position * (height + 1));
+//        if (isInPort()) {
+//            x = parentBounds.x;
+//            if (isImplVariablePort()) {
+//                // move the mickey mouse ears to the center a bit
+//                x += 5;
+//            }
+//        } else {
+//            x = parentBounds.x + parentBounds.width - width;
+//            if (isImplVariablePort()) {
+//                // move the mickey mouse ears to the center a bit
+//                x -= 5;
+//            }
+//        }
+//        Rectangle bounds = new Rectangle(x, y, width, height);
+//        fig.setBounds(bounds);
+//
+//    }
+
+    private boolean isImplVariablePort() {
+        return (!isMetaNodePort() && (getPortIndex() == 0) && getType().equals(
+                FlowVariablePortObject.TYPE));
+    }
+
 }

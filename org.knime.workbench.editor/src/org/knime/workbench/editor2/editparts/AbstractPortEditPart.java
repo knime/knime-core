@@ -83,9 +83,9 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 /**
  * Abstract base class for the edit parts that control the ports. This editpart
  * returns a <code>DragTracker</code> for starting connections between in- and
- * out ports. Note that all(!) ports  are registered as listener for workflow
- * events on the underlying {@link WorkflowManager}. This is necessary
- * because we need de be able to react on connection changes.
+ * out ports. Note that all(!) ports are registered as listener for workflow
+ * events on the underlying {@link WorkflowManager}. This is necessary because
+ * we need de be able to react on connection changes.
  *
  * @author Florian Georg, University of Konstanz
  * @author Fabian Dill, University of Konstanz
@@ -94,18 +94,21 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         implements NodeEditPart, WorkflowListener, ZoomListener {
 
     private final int m_index;
+
     private final PortType m_type;
+
     private final boolean m_isInPort;
-    
+
     /**
      * Instead of using the Collections.EMPTY_LIST we have our own typed empty
      * list if no connections are available.
+     *
      * @see WorkflowOutPortEditPart#getModelSourceConnections()
      * @see WorkflowOutPortEditPart#getModelTargetConnections()
-     * 
-     */ 
-    protected static final List<ConnectionContainer> EMPTY_LIST 
-        = new LinkedList<ConnectionContainer>();
+     *
+     */
+    protected static final List<ConnectionContainer> EMPTY_LIST =
+            new LinkedList<ConnectionContainer>();
 
     /**
      * Subclasses must call this with the appropriate port type, port index and
@@ -122,9 +125,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         m_isInPort = inPort;
     }
 
-    
     /**
-     * 
+     *
      * @return true if it is an in port, false if it is an out port
      */
     public boolean isInPort() {
@@ -145,16 +147,33 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public int getIndex() {
         return m_index;
     }
-    
+
     /**
      * Convenience, returns the id of the hosting container.
-     * 
+     *
      * @return node id of hosting container
      */
     public NodeID getID() {
         return getNodeContainer().getID();
     }
-    
+
+    /**
+     * @return true, if the underlying port is connected.
+     */
+    public boolean isConnected() {
+        if (m_isInPort) {
+            ConnectionContainer cc =
+                    getManager().getIncomingConnectionFor(getID(), getIndex());
+            boolean result = (cc != null);
+            return result;
+        } else {
+            boolean result =
+                    getManager().getOutgoingConnectionsFor(getID(), getIndex())
+                            .size() > 0;
+            return result;
+        }
+    }
+
     /**
      * Convenience, returns the hosting container.
      *
@@ -163,9 +182,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     protected NodeContainer getNodeContainer() {
         if (getParent().getModel() instanceof WorkflowPortBar) {
             return ((WorkflowPortBar)getParent().getModel())
-                .getWorkflowManager();
+                    .getWorkflowManager();
         }
-        return (NodeContainer) getParent().getModel();
+        return (NodeContainer)getParent().getModel();
     }
 
     /**
@@ -176,10 +195,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     protected WorkflowManager getManager() {
         // should be no problem to return null
         // but avoid NullPointerException by calling methods on null object
-        if (getParent() != null 
-                && getParent().getParent() != null) {
-        return ((WorkflowRootEditPart) getParent().getParent())
-                .getWorkflowManager();
+        if (getParent() != null && getParent().getParent() != null) {
+            return ((WorkflowRootEditPart)getParent().getParent())
+                    .getWorkflowManager();
         }
         return null;
     }
@@ -196,9 +214,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         if (getManager() != null) {
             getManager().addListener(this);
         }
-//      // register as zoom listener to adapt the line width
+        // // register as zoom listener to adapt the line width
         ZoomManager zoomManager =
-                (ZoomManager) getRoot().getViewer().getProperty(
+                (ZoomManager)getRoot().getViewer().getProperty(
                         ZoomManager.class.toString());
 
         zoomManager.addZoomListener(this);
@@ -241,9 +259,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     protected void refreshVisuals() {
         // get the figure and update the constraint for it - locator is provided
         // by the figure itself
-        AbstractWorkflowEditPart parent 
-            = (AbstractWorkflowEditPart)getParent();
-        AbstractPortFigure f = (AbstractPortFigure) getFigure();
+        AbstractWorkflowEditPart parent = (AbstractWorkflowEditPart)getParent();
+        AbstractPortFigure f = (AbstractPortFigure)getFigure();
         parent.setLayoutConstraint(this, f, f.getLocator());
     }
 
@@ -255,14 +272,14 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      */
     public void workflowChanged(final WorkflowEvent event) {
         if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)
-                || event.getType().equals(
-                        WorkflowEvent.Type.CONNECTION_REMOVED)) {
+                || event.getType()
+                        .equals(WorkflowEvent.Type.CONNECTION_REMOVED)) {
             // only enqueue runnable if we are interested in this event
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     ConnectionContainer c = null;
-    
+
                     if (event.getType().equals(
                             WorkflowEvent.Type.CONNECTION_ADDED)) {
                         c = (ConnectionContainer)event.getNewValue();
@@ -270,7 +287,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
                             WorkflowEvent.Type.CONNECTION_REMOVED)) {
                         c = (ConnectionContainer)event.getOldValue();
                     }
-    
+
                     // if we have a connection to refresh...
                     if (c != null && getNodeContainer() != null) {
                         // only refresh if we are actually involved in the
@@ -278,6 +295,10 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
                         if (c.getSource().equals(getNodeContainer().getID())
                                 || c.getDest().equals(
                                         getNodeContainer().getID())) {
+                            AbstractPortFigure fig =
+                                    (AbstractPortFigure)getFigure();
+                            fig.setIsConnected(isConnected());
+                            fig.repaint();
                             refreshChildren();
                             refreshSourceConnections();
                             refreshTargetConnections();
@@ -301,8 +322,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
             newZoomValue = 1.0;
         }
         double connectionWidth = Math.round(newZoomValue);
-        ((AbstractPortFigure) getFigure())
-                .setLineWidth((int)connectionWidth);
+        ((AbstractPortFigure)getFigure()).setLineWidth((int)connectionWidth);
     }
 
     /**
@@ -320,7 +340,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
             // we need to select the parent edit part !
             // Be sure to preserve already selected nodes, so check for keyboard
             // modifiers
-            SelectionRequest req = (SelectionRequest) request;
+            SelectionRequest req = (SelectionRequest)request;
             if (req.isControlKeyPressed() || req.isShiftKeyPressed()
                     || req.isAltKeyPressed()) {
                 // append parent to current selection
@@ -364,7 +384,6 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
         return new InPortConnectionAnchor(getFigure());
     }
-
 
     /**
      *

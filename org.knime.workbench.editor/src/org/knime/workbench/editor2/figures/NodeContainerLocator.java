@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,48 +40,73 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   24.01.2008 (Fabian Dill): created
+ *   Jul 2, 2010 (ohl): created
  */
 package org.knime.workbench.editor2.figures;
 
-import org.knime.core.node.port.PortType;
+import java.util.List;
+
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Locator;
+import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Rectangle;
 
 /**
- * TODO: make this class obsolete
- * 
- * @author Fabian Dill, University of Konstanz
+ *
+ * @author ohl, University of Konstanz
  */
-public abstract class AbstractWorkflowPortFigure extends AbstractPortFigure {
+public class NodeContainerLocator implements Locator {
 
-    /** Constant for the width and height of the port figure. */
-    protected static final int SIZE = 20;
-    private final int m_portIndex;
+    private final NodeContainerFigure m_container;
 
     /**
+     * Places the components in the node figure. (I.e. the Node Name, the icon
+     * (symbol figure), the custom name and the status or progress indicator.
+     * Ports have their own locators.
      *
-     * @param type port type
-     * @param nrOfPorts total number of ports
-     * @param portIndex port index
+     * @param container the node to layout
      */
-    public AbstractWorkflowPortFigure(final PortType type,
-            final int nrOfPorts, final int portIndex) {
-        super(type, nrOfPorts);
-        m_portIndex = portIndex;
+    NodeContainerLocator(final NodeContainerFigure container) {
+        m_container = container;
     }
-    
+
     /**
-     *
-     * @return index of this port
+     * {@inheritDoc}
      */
-    protected int getPortIndex() {
-        return m_portIndex;
+    @SuppressWarnings("unchecked")
+    public void relocate(final IFigure fig) {
+        // lets assume the figure above got layouted already
+        Dimension pref = fig.getPreferredSize();
+        // place the figure one pixel below the above figure
+        int y = 0;
+        // as components change (status bar gets replaced by progress)
+        // we need to find the component above us
+        List<IFigure> children = m_container.getChildren();
+        IFigure above = m_container;
+        for (IFigure f : children) {
+            if (f == fig) {
+                break;
+            }
+            above = f;
+        }
+
+        Rectangle r = above.getBounds().getCopy();
+        if (above == m_container) {
+            // we are the first component in the container
+            y = r.y + 1;
+        } else {
+            y = r.y + r.height + 1;
+        }
+        // center it
+        int wDiff = r.width - fig.getPreferredSize().width;
+        int x = r.x + (wDiff / 2);
+        Rectangle bounds = new Rectangle(x, y, pref.width, pref.height);
+        fig.setBounds(bounds);
     }
-
-
 }

@@ -52,6 +52,7 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.BufferedDataTable;
@@ -63,7 +64,6 @@ import org.knime.core.node.port.PortType;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeInPortFigure extends AbstractPortFigure {
-    private final int m_id;
 
     /**
      *
@@ -71,14 +71,15 @@ public class NodeInPortFigure extends AbstractPortFigure {
      * @param id The id of the port, needed to determine the position inside the
      *            surrounding node visual
      * @param numPorts the total ports
+     * @param isMetaNodePort true if this is a port of a metanode
      * @param tooltip the tooltip text
      */
     public NodeInPortFigure(final PortType type, final int id,
-            final int numPorts, final String tooltip) {
-        super(type, numPorts);
-        m_id = id;
+            final int numPorts, final boolean isMetaNodePort,
+            final String tooltip) {
+        super(type, numPorts, id, isMetaNodePort);
         setToolTip(new NewToolTipFigure(tooltip));
-        setOpaque(false);
+        setOpaque(true);
         setFill(true);
     }
 
@@ -95,29 +96,16 @@ public class NodeInPortFigure extends AbstractPortFigure {
     protected PointList createShapePoints(final Rectangle r) {
         if (getType().equals(BufferedDataTable.TYPE)) {
             PointList points = new PointList(3);
-            points.addPoint(r.getRight().getCopy().translate(
-                    -NODE_PORT_SIZE * 2 - 3,
-                    -(NODE_PORT_SIZE / 2)));
-            points.addPoint(r.getRight().getCopy().translate(
-                    -NODE_PORT_SIZE - 3, 0));
-            points.addPoint(r.getRight().getCopy().translate(
-                    -NODE_PORT_SIZE * 2 - 3,
-                    (NODE_PORT_SIZE / 2)));
+            points.addPoint(new Point(r.x, r.y));
+            points.addPoint(new Point(r.x + r.width - 1, r.y + (r.height / 2)));
+            points.addPoint(new Point(r.x, r.y + r.height - 1));
             return points;
         }
         PointList points = new PointList(4);
-        points.addPoint(r.getRight().getCopy().translate(
-                -NODE_PORT_SIZE * 2 - 3,
-                -((NODE_PORT_SIZE - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(
-                -NODE_PORT_SIZE - 3,
-                -((NODE_PORT_SIZE - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(
-                -NODE_PORT_SIZE - 3,
-                ((NODE_PORT_SIZE - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(
-                -NODE_PORT_SIZE * 2 - 3,
-                ((NODE_PORT_SIZE - 1) / 2)));
+        points.addPoint(new Point(r.x, r.y));
+        points.addPoint(new Point(r.x + r.width - 1, r.y));
+        points.addPoint(new Point(r.x + r.width - 1, r.y + r.height - 1));
+        points.addPoint(new Point(r.x, r.y + r.height - 1));
         return points;
     }
 
@@ -130,23 +118,19 @@ public class NodeInPortFigure extends AbstractPortFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        Dimension d = new Dimension();
-//        System.out.println("parent: " + getParent());
-//        System.out.println("parent's bounds: " + getParent().getBounds());
-        d.height = (getParent().getBounds().height) / getNrPorts();
-        d.width = NODE_PORT_SIZE;
-        return d;
+        return new Dimension(NODE_PORT_SIZE, NODE_PORT_SIZE);
     }
 
     /**
      * @return The <code>RelativeLocator</code> that places this figure on the
      *         left side (y offset corresponds to the number of the port).
-     * {@inheritDoc}
+     *         {@inheritDoc}
      */
     @Override
     public Locator getLocator() {
-        return new NodePortLocator((NodeContainerFigure)getParent().getParent(),
-                true, getNrPorts(),
-                m_id, getType());
+        return new NodePortLocator(
+                (NodeContainerFigure)getParent(), true,
+                getNrPorts(), getPortIndex(), getType(), isMetaNodePort());
     }
+
 }

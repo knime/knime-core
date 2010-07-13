@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Locator;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -61,11 +62,10 @@ import org.knime.core.node.port.PortType;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
+public class WorkflowOutPortFigure extends AbstractPortFigure {
 
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowOutPortFigure.class);
-    
+    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
+    // WorkflowOutPortFigure.class);
 
     /**
      *
@@ -74,25 +74,14 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
      * @param portIndex port index
      * @param wfmName name of the subworkflow for tooltip
      */
-    public WorkflowOutPortFigure(final PortType type,
-            final int nrOfPorts, final int portIndex, final String wfmName) {
-        super(type, nrOfPorts, portIndex);
+    public WorkflowOutPortFigure(final PortType type, final int nrOfPorts,
+            final int portIndex, final String wfmName) {
+        super(type, nrOfPorts, portIndex, false);
         setToolTip(new NewToolTipFigure(wfmName + " out port: " + portIndex));
     }
-    
-    
-//    @Override
-//    protected void outlineShape(Graphics graphics) {
-//        Rectangle r = getBounds().getCopy();
-//        PointList list = new PointList(3);
-//        list.addPoint(r.x, r.y);
-//        list.addPoint(r.x + r.width, r.y + (r.height / 2));
-//        list.addPoint(r.x, r.y + r.height);
-//        graphics.drawPolygon(list);
-//    }
-//    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -115,15 +104,31 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
             return list;
         }
     }
-    
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public Locator getLocator() {
-        return new WorkflowPortLocator(getType(), getPortIndex(),
-                false, getNrPorts());
+        return new WorkflowPortLocator(getType(), getPortIndex(), false,
+                getNrPorts());
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Dimension getPreferredSize(final int hint, final int hint2) {
+        return new Dimension(WF_PORT_SIZE, WF_PORT_SIZE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Rectangle computePortShapeBounds(final Rectangle bounds) {
+        return bounds;
+    }
+
 }

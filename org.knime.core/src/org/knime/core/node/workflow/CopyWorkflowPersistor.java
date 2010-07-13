@@ -205,7 +205,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getLoadVersion() {
+    public String getLoadVersionString() {
         return "Unknown";
     }
 

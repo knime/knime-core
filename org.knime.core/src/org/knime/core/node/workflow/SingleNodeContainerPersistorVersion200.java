@@ -85,16 +85,30 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     private static final String NODE_FILE = "node.xml";
 
+    /** Creates persistor for both load & save.
+     * @param workflowPersistor Parent persistor
+     * @param versionString The version string
+     */
     public SingleNodeContainerPersistorVersion200(
             final WorkflowPersistorVersion200 workflowPersistor,
             final String versionString) {
         super(workflowPersistor, versionString);
+        if (LoadVersion.get(versionString) == null) {
+            throw new IllegalStateException("Unsupported version \""
+                    + versionString + "\" in " + getClass().getName());
+        }
+    }
+
+    /** @return load version, never null. */
+    LoadVersion getLoadVersion() {
+        // returns non-null version (asserted in constructor)
+        return LoadVersion.get(getVersionString());
     }
 
     /** {@inheritDoc} */
     @Override
     protected NodePersistorVersion200 createNodePersistor() {
-        return new NodePersistorVersion200(this);
+        return new NodePersistorVersion200(this, getLoadVersion());
     }
 
     /** {@inheritDoc} */
@@ -116,7 +130,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             final NodeSettingsRO settings,
             final NodePersistorVersion1xx nodePersistor)
     throws InvalidSettingsException {
-        if (LoadVersion.V200.equals(LoadVersion.get(getVersionString()))) {
+        if (LoadVersion.V200.equals(getLoadVersion())) {
             return super.loadSNCSettings(settings, nodePersistor);
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
@@ -151,7 +165,13 @@ public class SingleNodeContainerPersistorVersion200 extends
             final NodeSettingsRO settings)
         throws InvalidSettingsException {
         List<FlowObject> result = new ArrayList<FlowObject>();
-        NodeSettingsRO stackSet = settings.getNodeSettings("scope_stack");
+        LoadVersion loadVersion = getLoadVersion();
+        NodeSettingsRO stackSet;
+        if (loadVersion.ordinal() < LoadVersion.V220.ordinal()) {
+            stackSet = settings.getNodeSettings("scope_stack");
+        } else {
+            stackSet = settings.getNodeSettings("flow_stack");
+        }
         for (String key : stackSet.keySet()) {
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
             String type = sub.getString("type");
@@ -274,7 +294,7 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     protected void saveFlowObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
-        NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");
+        NodeSettingsWO stackSet = settings.addNodeSettings("flow_stack");
         FlowObjectStack stack = nc.getFlowObjectStack();
         @SuppressWarnings("unchecked")
         Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST

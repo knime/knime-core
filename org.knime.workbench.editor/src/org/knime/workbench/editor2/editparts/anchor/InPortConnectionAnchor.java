@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   15.08.2005 (Florian Georg): created
  */
@@ -54,12 +54,11 @@ import org.eclipse.draw2d.ChopboxAnchor;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
  * Anchor that lets the connection end
- * 
- * TODO hardcoded pixel constants ....
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class InPortConnectionAnchor extends ChopboxAnchor {
@@ -75,32 +74,29 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
      */
     @Override
     protected Rectangle getBox() {
-        Rectangle b = getOwner().getBounds().getCopy();
 
-        // set width
-        b.setSize(16, b.height);
+        IFigure owner = getOwner();
+        if (!(owner instanceof AbstractPortFigure)) {
+            return super.getBox();
+        }
 
-        // shrik height to center of the figure
-        b.shrink(0, Math.max(0, (b.height / 2) - 5));
-
-        b.translate(getOwner().getBounds().width - 24, 0);
-        return b;
+        AbstractPortFigure port = (AbstractPortFigure)owner;
+        Rectangle box = port.computePortShapeBounds(port.getBounds());
+        return box;
     }
-    
+
     /**
      * The point where the connection is set to the input port is
      * the middle left point of the input port.
-     * 
+     *
      * @param reference The reference point
      * @return The anchor location
      */
     @Override
     public Point getLocation(final Point reference) {
-//        int lineWidth = ((Shape)getOwner()).getLineWidth();
-        Point point = getBox().getLeft().getCopy(); //.getTranslated(0, 0);
+        Point point = getBox().getLeft().getCopy();
+        // needed for zoomed views
         getOwner().translateToAbsolute(point);
-        // get the box of the input port and get the left middle point
-        // translate it one pixel to the left to better see the arrow
         return point;
     }
 }

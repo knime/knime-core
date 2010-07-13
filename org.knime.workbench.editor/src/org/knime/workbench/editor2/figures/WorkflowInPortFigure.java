@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Locator;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -61,11 +62,11 @@ import org.knime.core.node.port.PortType;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
+public class WorkflowInPortFigure extends AbstractPortFigure {
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowInPortFigure.class);
-    
+
 
 
     /**
@@ -77,10 +78,10 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
      */
     public WorkflowInPortFigure(final PortType type,
             final int nrOfPorts, final int portIndex, final String tooltip) {
-        super(type, nrOfPorts, portIndex);
+        super(type, nrOfPorts, portIndex, false);
         setToolTip(new NewToolTipFigure(tooltip));
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -92,13 +93,13 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
 
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected PointList createShapePoints(final Rectangle r) {
 //        Rectangle parent = getParent().getBounds().getCopy();
-//        int yPos = (parent.height / (getNrPorts() + 1)) 
+//        int yPos = (parent.height / (getNrPorts() + 1))
 //            * (getPortIndex() + 1);
         Rectangle rect = getBounds().getCopy();
         if (getType().equals(BufferedDataTable.TYPE)) {
@@ -117,6 +118,22 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
             list.addPoint(new Point(rect.x, rect.y + rect.height));
             return list;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Rectangle computePortShapeBounds(final Rectangle bounds) {
+        return bounds;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Dimension getPreferredSize(final int hint, final int hint2) {
+        return new Dimension(WF_PORT_SIZE, WF_PORT_SIZE);
     }
 
 }

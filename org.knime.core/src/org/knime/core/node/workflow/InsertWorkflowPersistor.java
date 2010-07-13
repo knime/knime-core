@@ -108,8 +108,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getLoadVersion() {
-        return m_wfmPersistor.getLoadVersion();
+    public String getLoadVersionString() {
+        return m_wfmPersistor.getLoadVersionString();
     }
 
     /** {@inheritDoc} */

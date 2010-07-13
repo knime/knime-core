@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   28.04.2008 (Fabian Dill): created
  */
@@ -70,17 +70,17 @@ import org.knime.workbench.ui.SyncExecQueueDispatcher;
  * with a bubble indicating the node state).
  * @author Fabian Dill, University of Konstanz
  */
-public class MetaNodeOutPortEditPart extends AbstractPortEditPart 
+public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     implements NodeStateChangeListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MetaNodeOutPortEditPart.class);
-    
+
     /**
      * @param type type of port (data, db, model)
      * @param portIndex index of the port
      */
-    public MetaNodeOutPortEditPart(final PortType type, 
+    public MetaNodeOutPortEditPart(final PortType type,
             final int portIndex) {
         super(type, portIndex, false);
         LOGGER.debug("created sub workflow out port edit part with type "
@@ -98,20 +98,21 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
                 + " and tooltip " + getNodeContainer().getOutPort(getIndex())
                 .getPortName());
         WorkflowOutPort model = (WorkflowOutPort)getModel();
-        LOGGER.debug("model: " + getModel() 
+        LOGGER.debug("model: " + getModel()
                 + " state: " + model.getNodeState());
 
         NodeOutPort port = getNodeContainer().getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
-        
+
         MetaNodeOutPortFigure f = new MetaNodeOutPortFigure(
-                getType(), getIndex(), 
-                getNodeContainer().getNrOutPorts(), 
+                getType(), getIndex(),
+                getNodeContainer().getNrOutPorts(),
                 tooltip, model.getNodeState());
         model.addNodeStateChangeListener(this);
+        f.setIsConnected(isConnected());
         return f;
     }
-    
+
     /**
      * This returns the (single !) connection that has this in-port as a target.
      *
@@ -137,18 +138,18 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     }
 
     /**
-     * 
+     *
      * @return empty list, as out-ports are never target for connections
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected List<ConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -159,7 +160,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

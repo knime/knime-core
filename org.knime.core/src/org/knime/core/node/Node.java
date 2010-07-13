@@ -83,6 +83,8 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -166,8 +168,14 @@ public final class Node implements NodeModelWarningListener {
 
     /** Keeps information about incoming connectors (type and name). */
     static class Input {
-        String name;
-        PortType type;
+        Input(final String n, final PortType t) {
+            m_name = n;
+            m_type = t;
+        }
+        private final String m_name;
+        private final PortType m_type;
+        public String getName() { return m_name; }
+        public PortType getType() { return m_type; }
     }
     private final Input[] m_inputs;
 
@@ -231,22 +239,32 @@ public final class Node implements NodeModelWarningListener {
         m_model.addWarningListener(this);
         m_logger = NodeLogger.getLogger(m_name);
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
-        m_inputs = new Input[m_model.getNrInPorts()];
-        for (int i = 0; i < m_inputs.length; i++) {
-            m_inputs[i] = new Input();
-            m_inputs[i].type = m_model.getInPortType(i);
-            m_inputs[i].name = m_factory.getInportName(i);
+        // create an extra input port (index: 0) for the optional variables.
+        m_inputs = new Input[m_model.getNrInPorts() + 1];
+        m_inputs[0] = new Input("Variable Inport",
+                new PortType(FlowVariablePortObject.class, true));
+        for (int i = 1; i < m_inputs.length; i++) {
+            m_inputs[i] = new Input(m_factory.getInportName(i - 1),
+                                            m_model.getInPortType(i - 1));
         }
 
-        m_outputs = new Output[m_model.getNrOutPorts()];
-        for (int i = 0; i < m_outputs.length; i++) {
+        // create an extra output port (index: 0) for the variables.
+        m_outputs = new Output[m_model.getNrOutPorts() + 1];
+        m_outputs[0] = new Output();
+        m_outputs[0].type = new PortType(FlowVariablePortObject.class, true);
+        m_outputs[0].name = "Variable Outport";
+        m_outputs[0].spec = null;
+        m_outputs[0].object = null;
+        m_outputs[0].summary = null;
+        m_outputs[0].hiliteHdl = null;
+        for (int i = 1; i < m_outputs.length; i++) {
             m_outputs[i] = new Output();
-            m_outputs[i].type = m_model.getOutPortType(i);
-            m_outputs[i].name = m_factory.getOutportName(i);
+            m_outputs[i].type = m_model.getOutPortType(i - 1);
+            m_outputs[i].name = m_factory.getOutportName(i - 1);
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
             m_outputs[i].summary = null;
-            m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
+            m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i - 1);
         }
 
         m_localTempTables = new HashSet<ContainerTable>();
@@ -407,7 +425,7 @@ public final class Node implements NodeModelWarningListener {
                     loader.setNeedsResetAfterLoad();
                 }
                 m_outputs[i].spec = spec;
-                m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
+                m_outputs[i].hiliteHdl = (i == 0) ? null : m_model.getOutHiLiteHandler(i - 1);
             }
         }
         m_model.restoreWarningMessage(loader.getWarningMessage());
@@ -531,14 +549,14 @@ public final class Node implements NodeModelWarningListener {
      * @return The total number of input ports.
      */
     public int getNrInPorts() {
-        return m_model.getNrInPorts();
+        return m_model.getNrInPorts() + 1;
     }
 
     /**
      * @return The total number of output ports.
      */
     public int getNrOutPorts() {
-        return m_model.getNrOutPorts();
+        return m_model.getNrOutPorts() + 1;
     }
 
     /**
@@ -549,7 +567,7 @@ public final class Node implements NodeModelWarningListener {
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
     public String getInportName(final int index) {
-        return m_inputs[index].name;
+        return m_inputs[index].getName();
     }
 
     /**
@@ -560,7 +578,7 @@ public final class Node implements NodeModelWarningListener {
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
     public PortType getInputType(final int index) {
-        return m_inputs[index].type;
+        return m_inputs[index].getType();
     }
 
     /**
@@ -611,7 +629,11 @@ public final class Node implements NodeModelWarningListener {
     }
 
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
-        m_model.setNewInHiLiteHandler(index, hdl);
+        assert 0 <= index && index < getNrInPorts();
+        if (index > 0) {
+            // ignore HiLiteHandler on optional variable input port
+            m_model.setNewInHiLiteHandler(index - 1, hdl);
+        }
     }
 
     /**
@@ -644,7 +666,7 @@ public final class Node implements NodeModelWarningListener {
      *         <code>false</code>.
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
-    public boolean execute(final PortObject[] data,
+    public boolean execute(final PortObject[] rawData,
             final ExecutionContext exec) {
         // reset the message object
         createResetMessageAndNotify();
@@ -653,11 +675,13 @@ public final class Node implements NodeModelWarningListener {
         // notifyStateListeners(new NodeStateChangedEvent(
         // NodeStateChangedEvent.Type.START_EXECUTE));
 
+        // copy input port objects, ignoring the 0-variable port:
+        PortObject[] data = Arrays.copyOfRange(rawData, 1, rawData.length);
+
         PortObject[] inData = new PortObject[data.length];
         // check for existence of all input tables
-        // TODO allow for optional inputs
         for (int i = 0; i < data.length; i++) {
-            if (data[i] == null && !m_inputs[i].type.isOptional()) {
+            if (data[i] == null && !m_inputs[i].getType().isOptional()) {
                 m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
@@ -689,12 +713,12 @@ public final class Node implements NodeModelWarningListener {
 
         // check for compatible input PortObjects
         for (int i = 0; i < inData.length; i++) {
-            PortType thisType = m_inputs[i].type;
+            PortType thisType = m_inputs[i + 1].getType();
             if (thisType.isOptional() && inData[i] == null) {
                 // ignore non-populated optional input
             } else if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
                 createErrorMessageAndNotify("Connection Error: Mismatch"
-                        + " of input port types (port " + i + ").");
+                        + " of input port types (port " + (i + 1) + ").");
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
@@ -702,11 +726,11 @@ public final class Node implements NodeModelWarningListener {
             }
         }
 
-        PortObject[] newOutData; // the new DTs from the model
+        PortObject[] rawOutData; // the new DTs from the model
         try {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
-            newOutData = m_model.executeModel(inData, exec);
+            rawOutData = m_model.executeModel(inData, exec);
         } catch (Throwable th) {
             boolean isCanceled = th instanceof CanceledExecutionException;
             isCanceled = isCanceled || th instanceof InterruptedException;
@@ -735,14 +759,19 @@ public final class Node implements NodeModelWarningListener {
             createErrorMessageAndNotify(message, th);
             return false;
         }
+        // add variable port at index 0
+        PortObject[] newOutData = new PortObject[rawOutData.length + 1];
+        System.arraycopy(rawOutData, 0, newOutData, 1, rawOutData.length);
+        newOutData[0] = new FlowVariablePortObject();
+
         // check if we see a loop status in the NodeModel
         FlowLoopContext slc = m_model.getLoopStatus();
         boolean continuesLoop = (slc != null);
         if (!setOutPortObjects(newOutData, continuesLoop)) {
             return false;
         }
-        for (int p = 0; p < getNrOutPorts(); p++) {
-            m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
+        for (int p = 1; p < getNrOutPorts(); p++) {
+            m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
         }
 
         if (m_model instanceof BufferedDataTableHolder) {
@@ -793,7 +822,7 @@ public final class Node implements NodeModelWarningListener {
         }
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
-            PortType thisType = m_model.getOutPortType(i);
+            PortType thisType = m_outputs[i].type;
             if (newOutData[i] == null && !continuesLoop) {
                 createErrorMessageAndNotify("Output at port " + i + " is null");
                 return false;
@@ -848,7 +877,6 @@ public final class Node implements NodeModelWarningListener {
             } else {
                 m_outputs[p].object = newOutData[p];
                 if (newOutData[p] != null) {
-                    assert !continuesLoop;
                     m_outputs[p].spec = newOutData[p].getSpec();
                     m_outputs[p].summary = newOutData[p].getSummary();
                 } else {
@@ -1225,15 +1253,19 @@ public final class Node implements NodeModelWarningListener {
      *            specs
      * @return true if configure finished successfully.
      */
-    public boolean configure(final PortObjectSpec[] inSpecs,
+    public boolean configure(final PortObjectSpec[] rawInSpecs,
             final NodePostConfigure postConfigure) {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
             createResetMessageAndNotify();
+            // copy input port object specs, ignoring the 0-variable port:
+            PortObjectSpec[] inSpecs =
+                Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
+
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
-            PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
+            PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts() - 1];
             Map<String, FlowVariable> newVariables = Collections.emptyMap();
             try {
                 if (m_variablesSettings != null) {
@@ -1242,9 +1274,9 @@ public final class Node implements NodeModelWarningListener {
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
                     if (BufferedDataTable.class.isAssignableFrom(
-                            m_inputs[i].type.getPortObjectClass())
+                            m_inputs[i + 1].getType().getPortObjectClass())
                             && (inSpecs[i] == null)) {
-                        if (m_inputs[i].type.isOptional()) {
+                        if (m_inputs[i + 1].getType().isOptional()) {
                             // ignore, unconnected optional input
                         } else {
                             return false;
@@ -1279,8 +1311,9 @@ public final class Node implements NodeModelWarningListener {
             } finally {
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
-                    m_outputs[p].spec = newOutSpec[p];
+                    m_outputs[p + 1].spec = newOutSpec[p];
                 }
+                m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
             }
         }
         if (success) {
@@ -1684,7 +1717,7 @@ public final class Node implements NodeModelWarningListener {
     @Override
     public String toString() {
         return "Node @" + hashCode() + " [" + m_name + ";in="
-                + m_model.getNrInPorts() + ";out=" + m_outputs.length + "]";
+                + m_inputs.length + ";out=" + m_outputs.length + "]";
     }
 
     /**

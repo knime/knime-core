@@ -64,14 +64,11 @@ import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.jface.resource.CompositeImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -80,14 +77,14 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
- * Figure displaying a <code>NodeContainer</code> in a workflow. This serves
- * as a container for <code>NodeInPortFigure</code>s and
+ * Figure displaying a <code>NodeContainer</code> in a workflow. This serves as
+ * a container for <code>NodeInPortFigure</code>s and
  * <code>NodeOutPortFigure</code>s
  *
  * This figure is composed of the following sub-figures:
  * <ul>
- * <li><code>ContentFigure</code> - hosts the child visuals (port figures)
- * and the center icon</li>
+ * <li><code>ContentFigure</code> - hosts the child visuals (port figures) and
+ * the center icon</li>
  * <li><code>StatusFigure</code> - contains description text and some color
  * codes</li>
  * <li><code>ProgressFigure</code> - displaying the execution progress</li>
@@ -140,7 +137,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_USER_NAME;
 
-//     private static final Font FONT_EXECUTING;
+    // private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -159,7 +156,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
         FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
-//        FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+        // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
         FONT_NORMAL = FONT_EXECUTED;
 
@@ -170,7 +167,7 @@ public class NodeContainerFigure extends RectangleFigure {
     private final NewToolTipFigure m_headingTooltip;
 
     /** content pane, contains the port visuals and the icon. * */
-    private final ContentFigure m_contentFigure;
+    private final SymbolFigure m_symbolFigure;
 
     /** contains the the "traffic light". * */
     private final StatusFigure m_statusFigure;
@@ -226,12 +223,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // setBorder(SimpleEtchedBorder.singleton);
 
         // add sub-figures
-        ToolbarLayout layout = new ToolbarLayout(false);
-        layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
-        layout.setSpacing(1);
-        layout.setStretchMinorAxis(true);
-        layout.setVertical(true);
-        setLayoutManager(layout);
+        setLayoutManager(new DelegatingLayout());
 
         // Heading (Label)
         m_heading = new Label();
@@ -251,12 +243,11 @@ public class NodeContainerFigure extends RectangleFigure {
         //
         // m_nameTextField = new Text();
 
-        // Content (Ports and icon)
-        m_contentFigure = new ContentFigure();
+        // icon
+        m_symbolFigure = new SymbolFigure();
 
         // Status: traffic light
         m_statusFigure = new StatusFigure();
-
         // progress bar
         if (progressFigure != null) {
             m_progressFigure = progressFigure;
@@ -265,14 +256,38 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         m_progressFigure.setCurrentDisplay(Display.getCurrent());
         m_progressFigure.setOpaque(true);
-
         // Additional status (warning/error sign)
         m_infoWarnErrorPanel = new InfoWarnErrorPanel();
 
+        // the locators depend on the order!
         add(m_heading);
-        add(m_contentFigure);
+        add(m_symbolFigure);
         add(m_infoWarnErrorPanel);
         add(m_statusFigure);
+
+        // layout the components
+        setConstraint(m_heading, new NodeContainerLocator(this));
+        setConstraint(m_symbolFigure, new NodeContainerLocator(this));
+        setConstraint(m_infoWarnErrorPanel, new NodeContainerLocator(this));
+        setConstraint(m_statusFigure, new NodeContainerLocator(this));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void add(final IFigure figure, final Object constraint,
+            final int index) {
+        // the only one who is allowed to add objects at a certain index
+        // are we (with the method addAtIndex).
+        // Ports are added by the framework with index - but we need them
+        // at the end of the list (the layouter depends on it).
+        // We ignore any index provided.
+        super.add(figure, constraint, getChildren().size());
+    }
+
+    private void addAtIndex(final IFigure figure, final int index) {
+        super.add(figure, null, index);
     }
 
     /**
@@ -290,13 +305,17 @@ public class NodeContainerFigure extends RectangleFigure {
         return m_statusFigure;
     }
 
+    Label getHeader() {
+        return m_heading;
+    }
+
     /**
      * Sets the icon.
      *
      * @param icon the icon
      */
     public void setIcon(final Image icon) {
-        m_contentFigure.setIcon(icon);
+        m_symbolFigure.setIcon(icon);
     }
 
     /**
@@ -305,13 +324,13 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param type the type
      */
     public void setType(final NodeType type) {
-        m_contentFigure.setType(type);
+        m_symbolFigure.setType(type);
 
     }
 
     public void setJobExecutorIcon(final Image jobExecIcon) {
         m_jobExec = jobExecIcon;
-        m_contentFigure.refreshJobManagerIcon();
+        m_symbolFigure.refreshJobManagerIcon();
     }
 
     /**
@@ -378,7 +397,9 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name.setText(name);
         if (!(m_name.getParent() == this)) {
 
-            add(m_name, getChildren().size());
+            add(m_name, 4);
+            setConstraint(m_name,
+                    new NodeContainerLocator(this));
         }
 
         // if the tooltip (description) contains
@@ -454,7 +475,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
             // reset the progress first
             m_progressFigure.reset();
-            add(m_progressFigure, 3);
+            addAtIndex(m_progressFigure, 3);
+            setConstraint(m_progressFigure, new NodeContainerLocator(this));
+
         } else {
             // if already set, remember this
             alreadySet = true;
@@ -492,7 +515,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // and set the progress bar
         if (!isChild(m_statusFigure)) {
-            add(m_statusFigure, 3);
+            addAtIndex(m_statusFigure, 3);
+            setConstraint(m_statusFigure, new NodeContainerLocator(this));
         }
     }
 
@@ -554,7 +578,6 @@ public class NodeContainerFigure extends RectangleFigure {
         m_statusFigure.repaint();
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -570,18 +593,10 @@ public class NodeContainerFigure extends RectangleFigure {
     public Dimension getPreferredSize(final int wHint, final int hHint) {
         // TODO: rewrite. We have to take into account:
         /*
-         * WIDTH: max of
-         * m_contentFigure
-         * m_heading
-         * m_status figure
-         * m_name
+         * WIDTH: max of m_contentFigure m_heading m_status figure m_name
          *
-         * HEIGHT:
-         * m_contentFigure
-         * m_infoWarnErrorPanel constant height?
-         * m_statusFigure
-         * m_name
-         *
+         * HEIGHT: m_contentFigure m_infoWarnErrorPanel constant height?
+         * m_statusFigure m_name
          */
 
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
@@ -589,9 +604,10 @@ public class NodeContainerFigure extends RectangleFigure {
         // the label
         prefWidth += 10;
 
-        int prefHeight = m_heading.getPreferredSize().height
-                        + m_contentFigure.getPreferredSize().height
-                        //+ m_infoWarnErrorPanel.getPreferredSize().height
+        int prefHeight =
+                m_heading.getPreferredSize().height
+                        + m_symbolFigure.getPreferredSize().height
+                        // + m_infoWarnErrorPanel.getPreferredSize().height
                         // replace with a fixed size of 16? pixel
                         + m_progressFigure.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
@@ -602,26 +618,22 @@ public class NodeContainerFigure extends RectangleFigure {
         return new Dimension(prefWidth, prefHeight);
 
         /*
-        Rectangle parentBounds = getBounds();
-        int prefWidth = Math.max(WIDTH, m_heading.getPreferredSize().width);
-        if (parentBounds.width > 0) {
-            prefWidth = parentBounds.width;
-        }
-
-        int widthOfHeading = m_heading.getPreferredSize().width;
-
-        prefWidth = Math.max(WIDTH, widthOfHeading);
-
-        int prefHeight = 110;
-        /*
-                m_heading.getPreferredSize().height
-                        + m_contentFigure.getPreferredSize().height
-                        + m_infoWarnErrorPanel.getPreferredSize().height
-                        + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height + 5;
-                        *
-        return new Dimension(prefWidth, prefHeight);
-        */
+         * Rectangle parentBounds = getBounds(); int prefWidth = Math.max(WIDTH,
+         * m_heading.getPreferredSize().width); if (parentBounds.width > 0) {
+         * prefWidth = parentBounds.width; }
+         *
+         * int widthOfHeading = m_heading.getPreferredSize().width;
+         *
+         * prefWidth = Math.max(WIDTH, widthOfHeading);
+         *
+         * int prefHeight = 110; /* m_heading.getPreferredSize().height +
+         * m_contentFigure.getPreferredSize().height +
+         * m_infoWarnErrorPanel.getPreferredSize().height +
+         * m_statusFigure.getPreferredSize().height +
+         * m_name.getPreferredSize().height + 5;
+         *
+         * return new Dimension(prefWidth, prefHeight);
+         */
     }
 
     /**
@@ -643,8 +655,8 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * @return The content figure (= content pane for port visuals)
      */
-    public IFigure getContentFigure() {
-        return m_contentFigure;
+    public IFigure getSymbolFigure() {
+        return m_symbolFigure;
     }
 
     /**
@@ -679,7 +691,12 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @author Florian Georg, University of Konstanz
      */
-    protected class ContentFigure extends Figure {
+    protected class SymbolFigure extends Figure {
+
+        private static final int SYMBOL_FIG_HEIGHT = 48;
+
+        private static final int SYMBOL_FIG_WIDTH = 32;
+
         private final Label m_iconFigure;
 
         private final Label m_deleteIcon;
@@ -715,7 +732,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 "icons/node/background_looper_start.png";
 
         private static final String BACKGROUND_LOOPER_END =
-            "icons/node/background_looper_end.png";
+                "icons/node/background_looper_end.png";
 
         private final Label m_backgroundIcon;
 
@@ -729,10 +746,11 @@ public class NodeContainerFigure extends RectangleFigure {
         private Label m_jobExecutorLabel;
 
         /**
-         * Creates a new content figure.
-         *
+         * Creates a new figure containing the symbol. That is the background
+         * icon (depending on the type of the node) and the node's icon. Also
+         * the jab manager indicator and the mark for deletion.
          */
-        public ContentFigure() {
+        public SymbolFigure() {
             // delegating layout, children provide a Locator as constraint
             DelegatingLayout layout = new DelegatingLayout();
             setLayoutManager(layout);
@@ -759,13 +777,11 @@ public class NodeContainerFigure extends RectangleFigure {
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new DelegatingLayout());
             m_backgroundIcon.add(m_iconFigure);
-            m_backgroundIcon.setConstraint(m_iconFigure,
-                    new RelativeLocator(m_backgroundIcon, 0.5, 0.5));
+            m_backgroundIcon.setConstraint(m_iconFigure, new RelativeLocator(
+                    m_backgroundIcon, 0.5, 0.5));
 
-            setConstraint(m_backgroundIcon,
-                    new RelativeLocator(this, 0.5, 0.5));
+            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
         }
-
 
         protected void refreshJobManagerIcon() {
             // do we have to remove it?
@@ -784,7 +800,6 @@ public class NodeContainerFigure extends RectangleFigure {
                 repaint();
             }
         }
-
 
         /**
          * This determines the background image according to the "type" of the
@@ -838,34 +853,6 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * Overlays the warning sign to indicate a problem or info.
-         *
-         * @param message the message to display
-         * @param type the concrete promblem type to display (info/warn/error)
-         */
-        public void setWarning(final String message, final int type) {
-            // overlay the image with the warning sign
-            Image icon = m_baseIcon;
-
-            OverlayImage overlayImage =
-                    new OverlayImage(icon, WARNING_SIGN);
-
-            // parameters are only dummy values. not needed!
-            overlayImage.drawCompositeImage(0, 0);
-            m_iconFigure.setIcon(overlayImage.createImage());
-
-            m_iconFigure.setToolTip(new WarnErrorToolTip(message, type));
-        }
-
-        /**
-         * Removes the warning sign.
-         */
-        public void removeWarningSign() {
-            m_iconFigure.setIcon(m_baseIcon);
-            m_iconFigure.setToolTip(null);
-        }
-
-        /**
          * Sets the icon for the node (now provided from the factory class).
          *
          * @param icon Image to display as icon
@@ -892,7 +879,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(-1, HEIGHT);
+            return new Dimension(SYMBOL_FIG_WIDTH, SYMBOL_FIG_HEIGHT);
         }
 
     }
@@ -1006,7 +993,6 @@ public class NodeContainerFigure extends RectangleFigure {
                         WarnErrorToolTip.WARNING);
             }
 
-
             repaint();
         }
 
@@ -1061,7 +1047,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public StatusFigure() {
             // status figure must have exact same dimensions as progress bar
-            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH,
+            setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
             ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
@@ -1100,8 +1086,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(getBounds().width,
-                    getBounds().height);
+            return new Dimension(getBounds().width, getBounds().height);
         }
 
     }
@@ -1164,7 +1149,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * Switche off warning or error.
+         * Switch off warning or error.
          */
         void switchOff() {
             m_label.setIcon(null);
@@ -1187,54 +1172,9 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return super.getPreferredSize(WIDTH,
-                    m_label.getPreferredSize().height);
-        }
-
-    }
-
-    private class OverlayImage extends CompositeImageDescriptor {
-
-        private final Image m_baseImage;
-
-        private final Image m_overlayImage;
-
-        /**
-         * Creates an overlay image descriptor.
-         *
-         * @param baseImage the background base image
-         * @param overlayImage the image to overlay
-         */
-        public OverlayImage(final Image baseImage, final Image overlayImage) {
-            m_baseImage = baseImage;
-            m_overlayImage = overlayImage;
-
-            getImageData();
-        }
-
-        @Override
-        protected void drawCompositeImage(final int width, final int height) {
-            // To draw a composite image, the base image should be
-            // drawn first (first layer) and then the overlay image
-            // (second layer)
-
-            // Draw the base image using the base image's image data
-            drawImage(m_baseImage.getImageData(), 2, 2);
-
-            // Method to create the overlay image data
-            // Get the image data from the Image store or by other means
-            ImageData overlayImageData = m_overlayImage.getImageData();
-
-            // Overlaying the icon in the top left corner i.e. x and y
-            // coordinates are both zero
-            int xValue = 0;
-            int yValue = 0;
-            drawImage(overlayImageData, xValue, yValue);
-        }
-
-        @Override
-        protected Point getSize() {
-            return new Point(18, 18);
+            return super.getPreferredSize(NodeContainerFigure.this
+                    .getSymbolFigure().getPreferredSize().width, m_label
+                    .getPreferredSize().height);
         }
 
     }
@@ -1261,11 +1201,10 @@ public class NodeContainerFigure extends RectangleFigure {
      * @see NodeContainerFigure#unmark()
      */
     public void mark() {
-        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon);
-        m_contentFigure.m_backgroundIcon.setConstraint(
-                m_contentFigure.m_deleteIcon,
-                new RelativeLocator(m_contentFigure.m_backgroundIcon,
-                        0.5, 0.5));
+        m_symbolFigure.m_backgroundIcon.add(m_symbolFigure.m_deleteIcon);
+        m_symbolFigure.m_backgroundIcon.setConstraint(
+                m_symbolFigure.m_deleteIcon, new RelativeLocator(
+                        m_symbolFigure.m_backgroundIcon, 0.5, 0.5));
     }
 
     /**
@@ -1275,7 +1214,7 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void unmark() {
 
-        m_contentFigure.m_backgroundIcon.remove(m_contentFigure.m_deleteIcon);
+        m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_deleteIcon);
     }
 
 }

@@ -53,7 +53,6 @@ package org.knime.workbench.editor2.editparts;
 import java.util.ArrayList;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
-import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
@@ -67,41 +66,46 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
+import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
- * workflow.
- * Model: {@link ConnectionContainer}
- * View: {@link PolylineConnection} created in {@link #createFigure()}
- * Controller: {@link ConnectionContainerEditPart}
- * 
+ * workflow. Model: {@link ConnectionContainer} View: {@link PolylineConnection}
+ * created in {@link #createFigure()} Controller:
+ * {@link ConnectionContainerEditPart}
+ *
  *
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         implements ZoomListener, ConnectionUIInformationListener {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            ConnectionContainerEditPart.class);
-    
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(ConnectionContainerEditPart.class);
+
     /** {@inheritDoc} */
     @Override
     public ConnectionContainer getModel() {
         return (ConnectionContainer)super.getModel();
     }
-    
 
-    /** Returns the parent WFM. This method may also return null if the target
+    /**
+     * Returns the parent WFM. This method may also return null if the target
      * edit part has no parent assigned.
+     *
      * @return The hosting WFM
      */
     public WorkflowManager getWorkflowManager() {
@@ -115,33 +119,65 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         return null;
     }
 
-    
+    /**
+     * Returns the node with the corresponding id. If the passed wfm is null, it
+     * traverses the hierarchy to find it. If the wfm is passed, it must contain
+     * the node - or be the node itself (that happens in metanodes and outgoing
+     * connectinos).
+     *
+     *
+     * @param wfm if not null, the node is taken from there
+     * @param node id of the node to return
+     * @return the node with the specified id.
+     */
+    private NodeContainer getNode(final WorkflowManager wfm, final NodeID node) {
+        if (wfm != null) {
+            if (wfm.getID().equals(node)) {
+                return wfm;
+            } else {
+                return wfm.getNodeContainer(node);
+            }
+        }
+
+        // follow the hierarchy
+        NodeID prefix = node.getPrefix();
+        if (prefix.equals(WorkflowManager.ROOT.getID())) {
+            return WorkflowManager.ROOT.getNodeContainer(node);
+        } else {
+            NodeContainer nc = getNode(null, prefix);
+            if (!(nc instanceof WorkflowManager)) {
+                return null;
+            }
+            WorkflowManager parent = (WorkflowManager)nc;
+            return parent.getNodeContainer(node);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void activate() {
         getModel().addUIInformationListener(this);
         super.activate();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void deactivate() {
         getModel().removeUIInformationListener(this);
         super.deactivate();
     }
-    
+
     /**
      * Creates a GEF command to shift the connections bendpoints.
      *
-     * @param request
-     *            the underlying request holding information about the shift
+     * @param request the underlying request holding information about the shift
      * @return the command to change the bendpoint locations
      */
     public Command getBendpointAdaptionCommand(final Request request) {
-        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest) request;
+        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest)request;
 
         ZoomManager zoomManager =
-                (ZoomManager) (getRoot().getViewer()
+                (ZoomManager)(getRoot().getViewer()
                         .getProperty(ZoomManager.class.toString()));
 
         Point moveDelta = boundsRequest.getMoveDelta();
@@ -168,7 +204,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected IFigure createFigure() {
-        PolylineConnection conn = (PolylineConnection) super.createFigure();
+        PolylineConnection conn = (PolylineConnection)super.createFigure();
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
                 new SnapOffBendPointConnectionRouter();
@@ -176,14 +212,36 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         conn.setRoutingConstraint(new ArrayList());
         // register as zoom listener to adapt the line width
         ZoomManager zoomManager =
-                (ZoomManager) getRoot().getViewer().getProperty(
+                (ZoomManager)getRoot().getViewer().getProperty(
                         ZoomManager.class.toString());
         zoomManager.addZoomListener(this);
-        conn.setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
+        conn
+                .setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
                         .getZoom()));
+
+        // make flow variable port connections look red.
+        ConnectionContainer connCon = getModel();
+        NodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
+        if (node != null) {
+            NodeOutPort srcPort;
+            if (node instanceof WorkflowManager) {
+                // then this is a workflow port
+                srcPort =
+                        ((WorkflowManager)node).getWorkflowIncomingPort(connCon
+                                .getSourcePort());
+            } else {
+                srcPort = node.getOutPort(connCon.getSourcePort());
+            }
+            if (srcPort != null
+                    && srcPort.getPortType()
+                            .equals(FlowVariablePortObject.TYPE)) {
+                conn.setForegroundColor(AbstractPortFigure
+                        .getFlowVarPortColor());
+            }
+        }
         return conn;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void connectionUIInformationChanged(
@@ -193,19 +251,18 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
     /**
      * Forwards the ui information to the model and refreshes the connection.
-     * 
-     * @param uiInfo the information about the connection (used only if 
-     * bendpoints are used)
+     *
+     * @param uiInfo the information about the connection (used only if
+     *            bendpoints are used)
      */
     public void setUIInformation(final UIInformation uiInfo) {
         getModel().setUIInfo(uiInfo);
     }
-    
-    
+
     /**
-     * 
-     * @return the ui information of this connection (may be null if no 
-     *  bendpoints are involved)
+     *
+     * @return the ui information of this connection (may be null if no
+     *         bendpoints are involved)
      */
     public UIInformation getUIInformation() {
         return (getModel()).getUIInfo();
@@ -219,15 +276,21 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         super.refreshVisuals();
         LOGGER.debug("refreshing visuals for: " + getModel());
         ConnectionUIInformation ei = null;
-        ei =
-                (ConnectionUIInformation) (getModel())
-                        .getUIInfo();
+        ei = (ConnectionUIInformation)(getModel()).getUIInfo();
         LOGGER.debug("modelling info: " + ei);
         if (ei == null) {
             return;
         }
 
-        Connection fig = (Connection) getFigure();
+        // make flow variable port connections look red.
+        PolylineConnection fig = (PolylineConnection)getFigure();
+        ConnectionContainer conn = getModel();
+        NodeContainer node = getNode(getWorkflowManager(), conn.getSource());
+        if (node.getOutPort(conn.getSourcePort()).getPortType().equals(
+                FlowVariablePortObject.TYPE)) {
+            fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
+        }
+
         // recreate list of bendpoints
         int[][] p = ei.getAllBendpoints();
         ArrayList<AbsoluteBendpoint> constraint =
@@ -248,7 +311,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             newZoomValue = 1.0;
         }
         double connectinWidth = Math.round(newZoomValue);
-        return (int) connectinWidth;
+        return (int)connectinWidth;
     }
 
     /**
@@ -257,14 +320,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @param zoom the zoom level from the zoom manager
      */
     public void zoomChanged(final double zoom) {
-        double newZoomValue = zoom;
-        // if the zoom level is larger than 100% the width
-        // is adapted accordingly
-        if (zoom < 1.0) {
-            newZoomValue = 1.0;
-        }
-        double lineWidth = Math.round(newZoomValue);
-        ((PolylineConnection) getFigure())
-                .setLineWidth((int)lineWidth);
+        ((PolylineConnection)getFigure())
+                .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
     }
 }

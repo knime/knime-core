@@ -66,21 +66,26 @@ public abstract class PortLocator implements Locator {
 
     private final int m_portIndex;
 
-    private final PortType m_portType;
+    private final boolean m_isMetaNodePort;
+
+    private final PortType m_type;
 
     /**
      *
      * @param type port type
      * @param portIndex port index
      * @param isInPort true if it's an in port, false if it's an out port
-     * @param nrPorts total number of  ports
+     * @param nrPorts total number of ports
+     * @param isMetaNodePort whether this is hanging off a meta node
      */
     public PortLocator(final PortType type, final int portIndex,
-            final boolean isInPort, final int nrPorts) {
+            final boolean isInPort, final int nrPorts,
+            final boolean isMetaNodePort) {
         m_isInport = isInPort;
-        m_portType = type;
         m_maxPorts = nrPorts;
         m_portIndex = portIndex;
+        m_isMetaNodePort = isMetaNodePort;
+        m_type = type;
     }
 
     /**
@@ -88,7 +93,7 @@ public abstract class PortLocator implements Locator {
      * @return type of the port (data, model, database)
      */
     protected PortType getType() {
-        return m_portType;
+        return m_type;
     }
 
     /**
@@ -113,6 +118,13 @@ public abstract class PortLocator implements Locator {
      */
     protected boolean isInPort() {
         return m_isInport;
+    }
+
+    /**
+     * @return true if port is hanging off a meta node.
+     */
+    protected boolean isMetaNodePort() {
+        return m_isMetaNodePort;
     }
 
     /**

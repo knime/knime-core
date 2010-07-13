@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 17, 2008 (wiswedel): created
  */
@@ -63,34 +63,37 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class FlowVariablePortObject implements PortObject {
-    
-    public static final PortType TYPE = 
+
+    public static final PortType TYPE =
         new PortType(FlowVariablePortObject.class);
-    
-    public static PortObjectSerializer<FlowVariablePortObject> 
+
+    public static final FlowVariablePortObject INSTANCE =
+        new FlowVariablePortObject();
+
+    public static PortObjectSerializer<FlowVariablePortObject>
     getPortObjectSerializer() {
         return new PortObjectSerializer<FlowVariablePortObject>() {
 
             @Override
             public FlowVariablePortObject loadPortObject(
-                    final PortObjectZipInputStream in, 
-                    final PortObjectSpec spec, final ExecutionMonitor exec) 
+                    final PortObjectZipInputStream in,
+                    final PortObjectSpec spec, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-                return new FlowVariablePortObject();
+                return INSTANCE;
             }
 
             @Override
             public void savePortObject(final FlowVariablePortObject portObject,
-                    final PortObjectZipOutputStream out, 
+                    final PortObjectZipOutputStream out,
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                
+
             }
-            
+
         };
     }
 
@@ -105,13 +108,13 @@ public class FlowVariablePortObject implements PortObject {
     public String getSummary() {
         return "Variables connection";
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
         return null;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -123,7 +126,7 @@ public class FlowVariablePortObject implements PortObject {
         }
         return getClass().equals(obj.getClass());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {

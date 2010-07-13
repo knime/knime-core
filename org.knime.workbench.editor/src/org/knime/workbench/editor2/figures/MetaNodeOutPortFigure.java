@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   28.04.2008 (Fabian Dill): created
  */
@@ -52,7 +52,6 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.BufferedDataTable;
@@ -67,7 +66,7 @@ import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
  * @author Fabian Dill, University of Konstanz
  */
 public class MetaNodeOutPortFigure extends NodeOutPortFigure {
-    
+
     /** Red traffic light. * */
     public static final Image RED =
             ImageRepository.getImage("icons/ports/port_idle.png");
@@ -89,10 +88,10 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
      * @param tooltip the tooltip for this port
      * @param state the loaded state of the underlying node
      */
-    public MetaNodeOutPortFigure(final PortType type, 
+    public MetaNodeOutPortFigure(final PortType type,
             final int id, final int numPorts,
             final String tooltip, final NodeContainer.State state) {
-        super(type, id, numPorts, tooltip);
+        super(type, id, numPorts, true, tooltip);
         if (state != null) {
             m_currentState = state;
         } else {
@@ -100,24 +99,24 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
         }
         m_currentImage = RED;
     }
-    
+
     /**
-     * Called by the 
-     * {@link MetaNodeOutPortEditPart#stateChanged(NodeStateEvent)} in order 
-     * to provide a correct tooltip and icon. 
-     * 
+     * Called by the
+     * {@link MetaNodeOutPortEditPart#stateChanged(NodeStateEvent)} in order
+     * to provide a correct tooltip and icon.
+     *
      * @param state current state of the port (idle/spec/data)
      */
     public void setState(final NodeContainer.State state) {
-        m_currentState = state; 
+        m_currentState = state;
     }
 
-    
+
     /**
-     * Outlines the shape, the points of the actual shape are set in 
-     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and 
+     * Outlines the shape, the points of the actual shape are set in
+     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and
      * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
-     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other 
+     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other
      * port types are filled.
      *
      * {@inheritDoc}
@@ -129,26 +128,23 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
         super.outlineShape(graphics);
         if (m_currentState.equals(NodeContainer.State.IDLE)) {
             m_currentImage = RED;
-//            graphics.setBackgroundColor(ColorConstants.red);
         } else if (m_currentState.equals(NodeContainer.State.CONFIGURED)) {
             m_currentImage = YELLOW;
         } else if (m_currentState.equals(NodeContainer.State.EXECUTED)) {
             m_currentImage = GREEN;
         }
-        Rectangle r = getBounds().getCopy().shrink(3, 3);
-        PointList points = createShapePoints(r);
-//        graphics.fillPolygon(points);
-        Point p1 = points.getPoint(0);
-        graphics.drawImage(m_currentImage, new Point(p1.x + 7, p1.y - 5));
+
+        Rectangle r = computePortShapeBounds(getBounds().getCopy());
+        graphics.drawImage(m_currentImage, new Point(r.x - 4, r.y + 1));
     }
-    
-    
-    // TODO implement a listener interface which gets informed about state 
-    // changes in the underlying node port 
-    // render 
+
+
+    // TODO implement a listener interface which gets informed about state
+    // changes in the underlying node port
+    // render
     // red: no spec, no data
     // yellow: node data, spec
     // green: data, spec
-    
+
 
 }

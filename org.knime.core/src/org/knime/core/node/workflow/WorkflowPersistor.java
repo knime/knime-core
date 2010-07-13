@@ -85,7 +85,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * exported with the "exclude data" flag being set. */
     public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
 
-    String getLoadVersion();
+    String getLoadVersionString();
 
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
 
@@ -133,9 +133,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
-        private final int m_sourcePort;
+        private int m_sourcePort;
         private final int m_destSuffix;
-        // not final, may be fixed later (puzzling port IDs in 1.x.x)
         private int m_destPort;
         private boolean m_isDeletable;
         private final UIInformation m_uiInfo;
@@ -230,6 +229,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** @param destPort the destPort to set */
         public void setDestPort(final int destPort) {
             m_destPort = destPort;
+        }
+
+        /** @param sourcePort the sourcePort to set */
+        public void setSourcePort(final int sourcePort) {
+            m_sourcePort = sourcePort;
         }
 
         /** @return the uiInfo */
