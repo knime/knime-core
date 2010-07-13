@@ -69,14 +69,11 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.CredentialLoader;
-import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 
 /**
@@ -154,22 +151,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             final Display d = Display.getDefault();
             final WorkflowLoadResult result = WorkflowManager.loadProject(
                     m_workflowFile.getParentFile(), 
-                    new ExecutionMonitor(progressMonitor),
-                    new CredentialLoader() {
-                	@Override
-                	public void load(final WorkflowManager wf) {
-                	    // run in UI thread 
-                	    d.syncExec(new Runnable() {
-                		@Override
-                		public void run() {
-                		    CredentialVariablesDialog dialog = 
-                			new CredentialVariablesDialog(
-                				d.getActiveShell(), wf);
-                		    dialog.open();
-                		}
-                	    });
-                	}
-                    });
+                    new ExecutionMonitor(progressMonitor));
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
