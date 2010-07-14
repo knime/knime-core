@@ -81,7 +81,7 @@ public class InvokeInstallSiteAction extends Action {
         // FIXME: as of Eclipse 3.5 the update sites defined in the features
         // should be added automatically to the p2 update/install dialog
         // then this hack becomes obsolete
-        String urlString = "http://www.knime.org/update/2.1/";
+        String urlString = "http://www.knime.org/update/2.2/";
         try {
             // very similar to run() we use reflection to overcome compile errors
             // eclipse 3.5
