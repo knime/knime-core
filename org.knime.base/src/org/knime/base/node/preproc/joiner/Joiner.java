@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.knime.base.data.sort.MemoryService;
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.CompositionMode;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.DuplicateHandling;

@@ -68,8 +68,9 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Heiko Hofer
  */
-final class MemoryService {
-    private static NodeLogger LOGGER = NodeLogger.getLogger(MemoryService.class);
+public final class MemoryService {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(MemoryService.class);
 
     /** The threshold for the low memory condition. */
     private long m_threshold;
