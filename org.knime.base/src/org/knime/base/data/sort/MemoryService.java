@@ -59,6 +59,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Used to query if memory on the heap is low. Observed are the memory pools
@@ -68,6 +69,8 @@ import org.knime.core.node.ExecutionContext;
  * @author Heiko Hofer
  */
 final class MemoryService {
+    private static NodeLogger LOGGER = NodeLogger.getLogger(MemoryService.class);
+
     /** The threshold for the low memory condition. */
     private long m_threshold;
 
@@ -114,6 +117,9 @@ final class MemoryService {
                 }
             }
         }
+        // When memory pool could not be found. This happens with sun's jvm with
+        // g1gc or a jvm from another vendor is used.
+
 
         // Get the GarbageCollectorMXBeans associated with the observed
         // MemoryPoolMXBean
@@ -128,8 +134,50 @@ final class MemoryService {
         }
 
         // Compute the threshold in bytes
-        long maxMem = m_memPool.getUsage().getMax();
-        long usedMem = m_memPool.getUsage().getUsed();
+        long maxMem = null != m_memPool ? m_memPool.getUsage().getMax()
+                : Runtime.getRuntime().maxMemory();
+        long usedMem = null != m_memPool ? m_memPool.getUsage().getUsed()
+                : Runtime.getRuntime().totalMemory()
+                - Runtime.getRuntime().freeMemory();
+
+
+        // Workaround for a bug in G1 garbage collector:
+        // http://bugs.sun.com/view_bug.do?bug_id=6880903
+        List<String> jvmArgs
+        = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        if (jvmArgs.contains("-XX:+UseG1GC")) {
+            boolean xmxArgSet = false;
+            for (String arg : jvmArgs) {
+                if (arg.startsWith("-Xmx")) {
+                    xmxArgSet = true;
+                    boolean factorPresent = false;
+                    int factor = -1;
+                    if (arg.toLowerCase().endsWith("k")) {
+                        factorPresent = true;
+                        factor = 1000;
+                    } else if (arg.toLowerCase().endsWith("m")) {
+                        factorPresent = true;
+                        factor = 1000000;
+                    } else if (arg.toLowerCase().endsWith("g")) {
+                        factorPresent = true;
+                        factor = 1000000000;
+                    }
+                    if (factorPresent) {
+                        maxMem = Integer.parseInt(
+                              arg.substring(4, arg.length() - 1)) * factor;
+                    } else {
+                        maxMem = Integer.parseInt(arg.substring(4));
+                    }
+                    break;
+                }
+            }
+            if (!xmxArgSet) {
+                LOGGER.error("Please, set -Xmx jvm argument " +
+                        "due to a bug in G1GC. Otherwise, memory " +
+                        "intensive nodes might not work correctly.");
+            }
+        }
+
 
         m_threshold = (long)(usedMemoryThreshold * maxMem);
 
@@ -138,26 +186,34 @@ final class MemoryService {
             // try to free memory
             Runtime.getRuntime().gc();
             Runtime.getRuntime().gc();
-            usedMem = m_memPool.getUsage().getUsed();
+            usedMem = null != m_memPool ? m_memPool.getUsage().getUsed()
+                    : Runtime.getRuntime().totalMemory()
+                    - Runtime.getRuntime().freeMemory();
             m_threshold = Math.min(usedMem + minAvailableMemory, maxMem);
         }
 
         m_waitForNextGC = false;
-        m_useCollectionUsage = useCollectionUsage;
+        m_lastCount = -1;
+        m_useCollectionUsage = null != m_memPool
+            && null != m_memPool.getCollectionUsage() ? useCollectionUsage
+                    : false;
     }
 
     /**
      * This is a stateful method return true in the low memory condition. Note,
      * that this method only returns true at most once between two garbage
-     * collections. All listeners are notified by this method if it returns
-     * true.
+     * collections.
      *
      * @param exec The {@link ExecutionContext}
      * @return True if memory is low.
      */
     public boolean isMemoryLow(final ExecutionContext exec) {
-        if (m_waitForNextGC && m_useCollectionUsage) {
-            long thisCount = m_gcBean.iterator().next().getCollectionCount();
+        if (m_waitForNextGC) {
+            long thisCount = null != m_memPool
+                ? m_gcBean.iterator().next().getCollectionCount()
+                : Runtime.getRuntime().totalMemory()
+                            - Runtime.getRuntime().freeMemory();
+
             if (thisCount == m_lastCount) {
                 return false;
             } else {
@@ -169,7 +225,7 @@ final class MemoryService {
         if (m_useCollectionUsage) {
             usage = m_memPool.getCollectionUsage();
         }
-        if (null == usage) {
+        if (null == usage && null != m_memPool) {
             usage = m_memPool.getUsage();
         }
         if (null != usage) {
@@ -182,8 +238,16 @@ final class MemoryService {
                 return false;
             }
         } else {
-            throw new IllegalStateException(
-                    "The memory pool is not valid.");
+            long used = Runtime.getRuntime().totalMemory()
+                            - Runtime.getRuntime().freeMemory();
+            boolean memoryIsLow = used > m_threshold;
+            if (memoryIsLow) {
+                m_waitForNextGC = true;
+                m_lastCount = used;
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
