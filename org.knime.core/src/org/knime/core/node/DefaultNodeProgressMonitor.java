@@ -227,7 +227,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public synchronized void setProgress(final double progress,
             final String message) {
-        if (setProgressIntern(progress) | setMessageIntern(message, null)) {
+        if (setProgressIntern(progress) || setMessageIntern(message, null)) {
             m_changed = true;
         }
     }
