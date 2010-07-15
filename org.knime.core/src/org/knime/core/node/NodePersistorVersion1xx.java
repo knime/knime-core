@@ -226,10 +226,19 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /** Subtracts one from the argument. As of v2.2 KNIME has an additional
      * output port (index 0) carrying flow variables.
      * @param loaded Index of port in current version
-     * @return Actual port index (1 becomes 0, etc)
+     * @return Old port index (1 becomes 0, etc)
      */
     private int getOldPortIndex(final int loaded) {
         return loaded - 1;
+    }
+
+    /** Adds one to the argument. As of v2.2 KNIME has an additional
+     * output port (index 0) carrying flow variables.
+     * @param loaded Index of port in version 1.x
+     * @return New port index (0 becomes 1, etc)
+     */
+    private int getNewPortIndex(final int old) {
+        return old + 1;
     }
 
     /** Sub class hook to read internal tables.
@@ -319,7 +328,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private PortObjectSpec loadPortObjectSpec(final Node node,
             final NodeSettingsRO settings, final int index)
             throws InvalidSettingsException, IOException {
-        PortType type = node.getOutputType(index);
+        int newIndex = getNewPortIndex(index);
+        PortType type = node.getOutputType(newIndex);
         boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                 .getPortObjectClass());
         if (!isDataPort) {
