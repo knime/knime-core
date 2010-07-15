@@ -319,6 +319,14 @@ public class SettingsModelFilterString extends SettingsModel {
         return notify;
     }
 
+    /**
+     * Apply new list of inclusion and exclusion columns on the settings model
+     * and notifies all registered listeners (e.g. the model).
+     * @param incl list of inclusion columns
+     * @param excl list of exclusion columns
+     * @param keepAll <code>true</code> if the 'Keep all' box is available;
+     *        otherwise <code>false</code>
+     */
     public final void setNewValues(final Collection<String> incl,
             final Collection<String> excl, final boolean keepAll) {
         boolean notify = setKeepAllSelectedNO(keepAll);
@@ -337,8 +345,7 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * set the value of the stored exclude list.
-     *
+     * Set the value of the stored exclude list.
      * @param newValue the new value to store as exclude list.
      */
     public void setExcludeList(final String[] newValue) {
@@ -346,8 +353,7 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * set the value of the stored exclude list.
-     *
+     * Set the value of the stored exclude list.
      * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
@@ -358,7 +364,7 @@ public class SettingsModelFilterString extends SettingsModel {
         }
     }
 
-    private boolean setExcludeListNO(final Collection<String> newValue){
+    private boolean setExcludeListNO(final Collection<String> newValue) {
         // figure out if we need to notify listeners
         boolean notify = (newValue.size() != m_exclList.size());
         if (!notify) {
