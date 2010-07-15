@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -84,7 +84,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Provider for the Workflow editor's context menus.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -99,7 +99,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     /**
      * Creates a new context menu provider, that is, registers some actions from
      * the action registry.
-     * 
+     *
      * @param actionRegistry The action registry of the editor
      * @param viewer The graphical viewer
      */
@@ -119,7 +119,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
      */
     @Override
     public void buildContextMenu(final IMenuManager manager) {
-        
+
         LOGGER.debug("Building up context menu...");
         manager.add(new Separator(IWorkbenchActionConstants.GROUP_APP));
         GEFActionConstants.addStandardActionGroups(manager);
@@ -178,7 +178,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
-        
+
         // depending on the current selection: add the actions for the port
         // views and the node views
         // also check wether this node part is a meta-node
@@ -210,7 +210,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // meta node -> add to template repository action
                 SubworkflowEditPart metaNode = (SubworkflowEditPart)p;
                 action = new CreateMetaNodeTemplateAction(
-                        metaNode.getWorkflowManager(), 
+                        metaNode.getWorkflowManager(),
                         metaNode.getNodeContainer());
                 manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                         action);
@@ -231,7 +231,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }
-                
+
                 if (container instanceof WorkflowManager) {
                     action = new OpenSubworkflowEditorAction(
                             (NodeContainerEditPart)p);
@@ -246,6 +246,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
                 int numOutPorts = container.getNrOutPorts();
                 for (int i = 0; i < numOutPorts; i++) {
+                    if (i == 0 && !(container instanceof WorkflowManager)) {
+                        // skip the implicit flow var ports on "normal" nodes
+                        continue;
+                    }
                     action = new OpenPortViewAction(container, i);
                     manager.appendToGroup("outPortViews", action);
                 }

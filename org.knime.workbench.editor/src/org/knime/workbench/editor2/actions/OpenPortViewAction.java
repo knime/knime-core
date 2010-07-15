@@ -55,6 +55,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -67,8 +68,8 @@ public class OpenPortViewAction extends Action {
 
     private final int m_index;
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(OpenPortViewAction.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(OpenPortViewAction.class);
 
     /**
      * New action to opne view on a port.
@@ -79,7 +80,20 @@ public class OpenPortViewAction extends Action {
     public OpenPortViewAction(final NodeContainer nodeContainer,
             final int portIndex) {
         m_nodeContainer = nodeContainer;
-        m_index = portIndex;
+        // the port index specified is the index including the implicit
+        // flow var port. In this class we need the index used within the node,
+        // that minus one - unless it is a meta node, (they don't have implicit
+        // ports).
+        if (!(m_nodeContainer instanceof WorkflowManager)) {
+            assert portIndex > 0;
+            if (portIndex > 0) {
+                m_index = portIndex - 1;
+            } else {
+                m_index = portIndex;
+            }
+        } else {
+            m_index = portIndex;
+        }
     }
 
     protected int getPortIndex() {
@@ -111,8 +125,8 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public String getText() {
-        return m_index + " " 
-            + m_nodeContainer.getOutPort(m_index).getPortName();
+        return m_index + " "
+                + m_nodeContainer.getOutPort(m_index).getPortName();
     }
 
     /**
