@@ -291,13 +291,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final ConnectionContainerTemplate c) {
         // v2.1 and before did not have flow variable ports (index 0)
         if (getLoadVersion().ordinal() < LoadVersion.V220.ordinal()) {
-            if (sourcePersistor
-                    instanceof SingleNodeContainerPersistorVersion1xx) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on meta nodes)
-                int index = c.getSourcePort();
-                c.setSourcePort(index + 1);
-            }
+            super.fixSourcePortIfNecessary(sourcePersistor, c);
         }
     }
 

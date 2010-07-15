@@ -744,16 +744,21 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         exec.setProgress(1.0);
     }
 
-    /** Fixes source port index if necessary. Subclasses will overwrite this
-     * method (e.g. to enable loading flows, which did not have the mandatory
-     * flow variable port object).
-     * @param sourcePersistor The persistor of the destination node.
+    /** Fixes source port index if necessary. Fixes the mandatory
+     * flow variable port object.
+     * @param sourcePersistor The persistor of the source node.
      * @param c The connection template to be fixed.
      */
     protected void fixSourcePortIfNecessary(
             final NodeContainerPersistor sourcePersistor,
             final ConnectionContainerTemplate c) {
-        // nothing to do here
+        if (sourcePersistor
+                instanceof SingleNodeContainerPersistorVersion1xx) {
+            // correct port index only for ordinary nodes (no new flow
+            // variable ports on meta nodes)
+            int index = c.getSourcePort();
+            c.setSourcePort(index + 1);
+        }
     }
 
     /** Fixes destination port index if necessary. For v1.x flows, e.g.,
@@ -776,7 +781,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             if (pers.shouldFixModelPortOrder()) {
                 Node node = pers.getNode();
                 int modelPortCount = 0;
-                for (int i = 0; i < node.getNrInPorts(); i++) {
+                // first port is flow variable input port
+                for (int i = 1; i < node.getNrInPorts(); i++) {
                     if (!node.getInputType(i).getPortObjectClass().
                             isAssignableFrom(BufferedDataTable.class)) {
                         modelPortCount += 1;
@@ -792,6 +798,10 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     c.setDestPort(destPort - modelPortCount);
                 }
             }
+            // correct port index only for ordinary nodes (no new flow
+            // variable ports on meta nodes)
+            int index = c.getDestPort();
+            c.setDestPort(index + 1);
         }
     }
 

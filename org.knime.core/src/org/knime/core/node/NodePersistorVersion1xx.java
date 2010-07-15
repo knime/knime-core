@@ -192,43 +192,44 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
-        for (int i = 0; i < node.getNrOutPorts(); i++) {
-            int truePortIndex = getTruePortIndex(i);
+        // skip flow variables port (introduced in v2.2)
+        for (int i = 1; i < node.getNrOutPorts(); i++) {
+            int oldIndex = getOldPortIndex(i);
             ExecutionMonitor execPort = execMon
                     .createSubProgress(1.0 / node.getNrOutPorts());
-            execMon.setMessage("Port " + i);
+            execMon.setMessage("Port " + oldIndex);
             PortType type = node.getOutputType(i);
             boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                     .getPortObjectClass());
             if (m_isConfigured) {
                 PortObjectSpec spec =
-                    loadPortObjectSpec(node, settings, i);
-                setPortObjectSpec(truePortIndex, spec);
+                    loadPortObjectSpec(node, settings, oldIndex);
+                setPortObjectSpec(i, spec);
             }
             if (m_isExecuted) {
                 PortObject object;
                 if (isDataPort) {
-                    object = loadBufferedDataTable(
-                            node, settings, execPort, loadTblRep, i, tblRep);
+                    object = loadBufferedDataTable(node, settings, execPort,
+                            loadTblRep, oldIndex, tblRep);
                 } else {
                     throw new IOException("Can't restore model ports of "
                             + "old 1.x workflows. Execute node again.");
                 }
                 String summary = object != null ? object.getSummary() : null;
-                setPortObject(truePortIndex, object);
-                setPortObjectSummary(truePortIndex, summary);
+                setPortObject(i, object);
+                setPortObjectSummary(i, summary);
             }
             execPort.setProgress(1.0);
         }
     }
 
-    /** Adds one to the argument. As of v2.2 KNIME has an additional output
-     * port (index 0) carrying flow variables (mickey mouse oehrchen).
-     * @param loaded Index of port in any version before v2.2
-     * @return Actual port index (0 becomes 1, etc)
+    /** Subtracts one from the argument. As of v2.2 KNIME has an additional
+     * output port (index 0) carrying flow variables.
+     * @param loaded Index of port in current version
+     * @return Actual port index (1 becomes 0, etc)
      */
-    private int getTruePortIndex(final int loaded) {
-        return loaded + 1;
+    private int getOldPortIndex(final int loaded) {
+        return loaded - 1;
     }
 
     /** Sub class hook to read internal tables.
