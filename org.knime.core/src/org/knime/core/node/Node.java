@@ -1450,8 +1450,8 @@ public final class Node implements NodeModelWarningListener {
             final PortObjectSpec[] inSpecs, final NodeSettingsRO settings)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
-        PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length];
-        for (int i = 0; i < inSpecs.length; i++) {
+        PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
+        for (int i = 1; i < inSpecs.length; i++) {
             PortType t = getInputType(i);
             if (!t.acceptsPortObjectSpec(inSpecs[i])) {
                 throw new IllegalArgumentException(
@@ -1461,9 +1461,9 @@ public final class Node implements NodeModelWarningListener {
                                 + t.getPortObjectSpecClass().getSimpleName()
                                 + "\"");
             } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t)) {
-                corrInSpecs[i] = new DataTableSpec();
+                corrInSpecs[i - 1] = new DataTableSpec();
             } else {
-                corrInSpecs[i] = inSpecs[i];
+                corrInSpecs[i - 1] = inSpecs[i];
             }
         }
         dialogPane.internalLoadSettingsFrom(settings, corrInSpecs,
