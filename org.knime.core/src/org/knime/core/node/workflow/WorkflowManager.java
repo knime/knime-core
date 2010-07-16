@@ -3034,6 +3034,27 @@ public final class WorkflowManager extends NodeContainer {
         return true;
     }
 
+    /** Returns true if the argument represents a source node in the workflow.
+     * A source node is a node, which has (i) no predecessors and (ii) only
+     * optional inputs.
+     * @param id The node to test -- must exist in workflow
+     * @return If argument is a source node (configure can start from there)
+     */
+    private boolean isSourceNode(final NodeID id) {
+        NodeContainer nc = getNodeContainer(id);
+        NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
+        for (int i = 0; i < predPorts.length; i++) {
+            NodeInPort inPort = nc.getInPort(i);
+            boolean isOptional = inPort.getPortType().isOptional();
+            if (predPorts[i] != null) { // has connected predecessor
+                return false;
+            } else if (!isOptional) {   // not connected but required
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** Attempts to configure all nodes in the workflow. It will also try to
      * configure nodes whose predecessors did not change their output specs.
      * This method checks the new state of the meta node but
@@ -3074,7 +3095,8 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             NodeMessage oldMessage = snc.getNodeMessage();
             final int inCount = snc.getNrInPorts();
-            NodeOutPort[] predPorts = assemblePredecessorOutPorts(snc.getID());
+            NodeID sncID = snc.getID();
+            NodeOutPort[] predPorts = assemblePredecessorOutPorts(sncID);
             final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
             final FlowObjectStack[] sos = new FlowObjectStack[inCount];
             final HiLiteHandler[] hiliteHdls = new HiLiteHandler[inCount];
@@ -3115,18 +3137,18 @@ public final class WorkflowManager extends NodeContainer {
                 FlowObjectStack oldFOS = snc.getFlowObjectStack();
                 FlowObjectStack scsc;
                 boolean flowStackConflict = false;
-                if (inCount == 0) {
+                if (isSourceNode(sncID)) {
                     // no input ports - create new stack, prefilled with
                     // Workflow variables:
-                    scsc = new FlowObjectStack(snc.getID(),
+                    scsc = new FlowObjectStack(sncID,
                             getWorkflowVariableStack());
                 } else {
                     try {
-                        scsc = new FlowObjectStack(snc.getID(), sos);
+                        scsc = new FlowObjectStack(sncID, sos);
                     } catch (IllegalFlowObjectStackException e) {
                         LOGGER.warn("Unable to merge flow object stacks: "
                                 + e.getMessage(), e);
-                        scsc = new FlowObjectStack(snc.getID());
+                        scsc = new FlowObjectStack(sncID);
                         flowStackConflict = true;
                     }
                 }
@@ -3154,7 +3176,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (flowStackConflict) {
                     // can't configured due to stack clash
                     // make sure execution from here on is canceled
-                    disableNodeForExecution(snc.getID());
+                    disableNodeForExecution(sncID);
                     // and reset node if it's not reset already
                     // (ought to be red with this type of error!)
                     if (!snc.getState().equals(State.IDLE)) {
@@ -3995,9 +4017,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             FlowObjectStack inStack;
             try {
-                // if source node with unconnected control port
-                // (first port is mandatory)
-                if (predCount == 1 && predStacks[0] == null) {
+                if (isSourceNode(bfsID)) {
                     predStacks =
                         new FlowObjectStack[]{getWorkflowVariableStack()};
                 }
