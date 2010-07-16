@@ -55,6 +55,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -67,11 +68,13 @@ public class OpenPortViewAction extends Action {
 
     private final int m_index;
 
+    private final int m_userIndex;
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(OpenPortViewAction.class);
 
     /**
-     * New action to opne view on a port.
+     * New action to open view on a port.
      *
      * @param nodeContainer The node
      * @param portIndex The index of the out-port
@@ -80,6 +83,16 @@ public class OpenPortViewAction extends Action {
             final int portIndex) {
         m_nodeContainer = nodeContainer;
         m_index = portIndex;
+        /* in normal nodes (not meta nodes) we have an additional port (the
+         * implicit flow variable port). The index for the user is still the
+         * old index though (w/o implicit port)
+         */
+        if (!(nodeContainer instanceof WorkflowManager)) {
+            m_userIndex = m_index - 1;
+        } else {
+            m_userIndex = m_index;
+        }
+
     }
 
     protected int getPortIndex() {
@@ -111,7 +124,7 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public String getText() {
-        return m_index + " "
+        return m_userIndex + " "
                 + m_nodeContainer.getOutPort(m_index).getPortName();
     }
 
