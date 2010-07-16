@@ -3995,7 +3995,9 @@ public final class WorkflowManager extends NodeContainer {
             }
             FlowObjectStack inStack;
             try {
-                if (predCount == 0) { // source node
+                // if source node with unconnected control port
+                // (first port is mandatory)
+                if (predCount == 1 && predStacks[0] == null) {
                     predStacks =
                         new FlowObjectStack[]{getWorkflowVariableStack()};
                 }
