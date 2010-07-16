@@ -220,11 +220,18 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
                         .getZoom()));
 
         // make flow variable port connections look red.
+        if (isFlowVariablePortConnection()) {
+            conn.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
+        }
+        return conn;
+    }
+
+    private boolean isFlowVariablePortConnection() {
         ConnectionContainer connCon = getModel();
         NodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
         if (node != null) {
             NodeOutPort srcPort;
-            if (node instanceof WorkflowManager) {
+            if (isIncomingConnection(connCon)) {
                 // then this is a workflow port
                 srcPort =
                         ((WorkflowManager)node).getWorkflowIncomingPort(connCon
@@ -235,11 +242,31 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             if (srcPort != null
                     && srcPort.getPortType()
                             .equals(FlowVariablePortObject.TYPE)) {
-                conn.setForegroundColor(AbstractPortFigure
-                        .getFlowVarPortColor());
+                return true;
             }
         }
-        return conn;
+        return false;
+    }
+
+    /**
+     * Returns true, if the connection is a connection from a metanode incoming
+     * port to a node inside the metanode.
+     *
+     * @param conn
+     * @return
+     */
+    private boolean isIncomingConnection(final ConnectionContainer conn) {
+        if (conn.getDest().getPrefix().equals(conn.getSource())) {
+            // if the destination is contained in the source - its incoming
+            assert getNode(null, conn.getSource()) instanceof WorkflowManager;
+            return true;
+        }
+        if (conn.getDest().equals(conn.getSource())) {
+            // source and dest is equal it must be a through connection
+            assert getNode(null, conn.getSource()) instanceof WorkflowManager;
+            return true;
+        }
+        return false;
     }
 
     /** {@inheritDoc} */
@@ -284,10 +311,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         // make flow variable port connections look red.
         PolylineConnection fig = (PolylineConnection)getFigure();
-        ConnectionContainer conn = getModel();
-        NodeContainer node = getNode(getWorkflowManager(), conn.getSource());
-        if (node.getOutPort(conn.getSourcePort()).getPortType().equals(
-                FlowVariablePortObject.TYPE)) {
+        if (isFlowVariablePortConnection()) {
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
 
