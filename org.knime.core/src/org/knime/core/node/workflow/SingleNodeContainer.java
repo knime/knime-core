@@ -169,10 +169,10 @@ public final class SingleNodeContainer extends NodeContainer {
 
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
-            getOutPort(i).setPortName(m_node.getFactory().getOutportName(i));
+            getOutPort(i).setPortName(m_node.getOutportDescriptionName(i));
         }
         for (int i = 0; i < getNrInPorts(); i++) {
-            getInPort(i).setPortName(m_node.getFactory().getInportName(i));
+            getInPort(i).setPortName(m_node.getInportDescriptionName(i));
         }
     }
 

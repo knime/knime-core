@@ -571,6 +571,19 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * Return the name of the port as specified by the node factory (which
+     * takes it from the node description).
+     * @param index the port index
+     * @return the name of the port as specified by the node factory.
+     */
+    public String getInportDescriptionName(final int index) {
+        if (index <= 0) {
+            return "Variable Inport";
+        }
+        return m_factory.getInportName(index - 1);
+    }
+
+    /**
      * Return type of input connector.
      *
      * @param index of the connector
@@ -590,6 +603,19 @@ public final class Node implements NodeModelWarningListener {
      */
     public String getOutportName(final int index) {
         return m_outputs[index].name;
+    }
+
+    /**
+     * Return the name of the port as specified by the node factory (which
+     * takes it from the node description).
+     * @param index the port index
+     * @return the name of the port as specified by the node factory.
+     */
+    public String getOutportDescriptionName(final int index) {
+        if (index <= 0) {
+            return "Variable Outport";
+        }
+        return m_factory.getOutportName(index - 1);
     }
 
     /**
@@ -1721,8 +1747,15 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * NOTE: it is not recommended to call this method anywhere else than in the
+     * core. The port indices in the factory don't encounter for the implicit
+     * flow variable ports!
+     *
      * @return the <code>NodeFactory</code> that constructed this node.
+     * @deprecated don't use the factory directly - all calls should be
+     *             delegated through this class (the node).
      */
+    @Deprecated
     public NodeFactory<NodeModel> getFactory() {
         return m_factory;
     }
