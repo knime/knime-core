@@ -55,7 +55,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -80,20 +79,7 @@ public class OpenPortViewAction extends Action {
     public OpenPortViewAction(final NodeContainer nodeContainer,
             final int portIndex) {
         m_nodeContainer = nodeContainer;
-        // the port index specified is the index including the implicit
-        // flow var port. In this class we need the index used within the node,
-        // that minus one - unless it is a meta node, (they don't have implicit
-        // ports).
-        if (!(m_nodeContainer instanceof WorkflowManager)) {
-            assert portIndex > 0;
-            if (portIndex > 0) {
-                m_index = portIndex - 1;
-            } else {
-                m_index = portIndex;
-            }
-        } else {
-            m_index = portIndex;
-        }
+        m_index = portIndex;
     }
 
     protected int getPortIndex() {
