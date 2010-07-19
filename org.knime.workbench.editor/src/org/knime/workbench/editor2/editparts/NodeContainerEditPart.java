@@ -142,6 +142,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     private NodeEditManager m_directEditManager;
 
+    private boolean m_showFlowVarPorts = false;
+
     /**
      * @return The <code>NodeContainer</code>(= model)
      */
@@ -156,6 +158,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public WorkflowManager getWorkflowManager() {
         return (WorkflowManager)getParent().getModel();
+    }
+
+    public boolean getShowImplFlowVarPorts() {
+        return m_showFlowVarPorts;
+    }
+
+    public void setShowImplFlowVarPorts(final boolean showEm) {
+        m_showFlowVarPorts = showEm;
+        ((NodeContainerFigure)getFigure()).setShowFlowVarPorts(showEm);
+        getFigure().repaint();
     }
 
     /**

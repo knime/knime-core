@@ -62,6 +62,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -77,6 +78,7 @@ import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -107,7 +109,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             final GraphicalViewer viewer) {
         super(viewer);
         m_viewer = viewer;
-
         assert actionRegistry != null : "WorkflowContextMenuProvider "
                 + "needs an action registry !";
 
@@ -178,7 +179,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
-
         // depending on the current selection: add the actions for the port
         // views and the node views
         // also check wether this node part is a meta-node
@@ -196,26 +196,26 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
-                        action = new OpenWorkflowPortViewAction(
-                                ((WorkflowPortBar)root.getModel())
-                                    .getWorkflowManager(),
-                                ((WorkflowInPortEditPart)child).getIndex());
+                        action =
+                                new OpenWorkflowPortViewAction(
+                                        ((WorkflowPortBar)root.getModel())
+                                                .getWorkflowManager(),
+                                        ((WorkflowInPortEditPart)child)
+                                                .getIndex());
                         manager.appendToGroup("outPortViews", action);
                         ((WorkflowInPortEditPart)child).setSelected(false);
                     }
                 }
             }
             /*
-            if (p instanceof SubworkflowEditPart) {
-                // meta node -> add to template repository action
-                SubworkflowEditPart metaNode = (SubworkflowEditPart)p;
-                action = new CreateMetaNodeTemplateAction(
-                        metaNode.getWorkflowManager(),
-                        metaNode.getNodeContainer());
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
-                        action);
-            }
-            */
+             * if (p instanceof SubworkflowEditPart) { // meta node -> add to
+             * template repository action SubworkflowEditPart metaNode =
+             * (SubworkflowEditPart)p; action = new
+             * CreateMetaNodeTemplateAction( metaNode.getWorkflowManager(),
+             * metaNode.getNodeContainer());
+             * manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
+             * action); }
+             */
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;
@@ -233,12 +233,24 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 if (container instanceof WorkflowManager) {
-                    action = new OpenSubworkflowEditorAction(
-                            (NodeContainerEditPart)p);
+                    action =
+                            new OpenSubworkflowEditorAction(
+                                    (NodeContainerEditPart)p);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }
 
+                if (!(container instanceof WorkflowManager)) {
+                    // in expert mode you can switch display of the flow var
+                    // ports
+                    if (Boolean.parseBoolean(System.getProperty(
+                            KNIMEConstants.PROPERTY_EXPERT_MODE, "false"))) {
+                        manager.add(new Separator("Flow Variable Ports"));
+                        manager.appendToGroup("Flow Variable Ports",
+                                new ToggleFlowVarPortsAction(
+                                        (NodeContainerEditPart)p));
+                    }
+                }
                 // add port views
                 LOGGER.debug("adding open port-view action(s) "
                         + "to context menu...");

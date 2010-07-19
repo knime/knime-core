@@ -204,6 +204,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private Image m_jobExec;
 
+    private boolean m_showFlowVarPorts;
+
+
     /**
      * Creates a new node figure.
      *
@@ -212,6 +215,7 @@ public class NodeContainerFigure extends RectangleFigure {
     public NodeContainerFigure(final ProgressFigure progressFigure) {
 
         m_backgroundColor = ColorConstants.white;
+        m_showFlowVarPorts = false;
 
         m_description = null;
 
@@ -270,6 +274,14 @@ public class NodeContainerFigure extends RectangleFigure {
         setConstraint(m_symbolFigure, new NodeContainerLocator(this));
         setConstraint(m_infoWarnErrorPanel, new NodeContainerLocator(this));
         setConstraint(m_statusFigure, new NodeContainerLocator(this));
+    }
+
+    boolean getShowFlowVarPorts() {
+        return m_showFlowVarPorts;
+    }
+
+    public void setShowFlowVarPorts(final boolean showPorts) {
+        m_showFlowVarPorts = showPorts;
     }
 
     /**

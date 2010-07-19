@@ -84,8 +84,7 @@ public abstract class AbstractPortFigure extends Shape {
                     .min(255, c.getRed() + d), Math.min(255, c.getGreen() + d),
                     Math.min(255, c.getBlue() + d));
         } catch (Throwable t) {
-            t.printStackTrace();
-            return Display.getCurrent().getSystemColor(SWT.COLOR_MAGENTA);
+            return c;
         }
 
     }
@@ -117,9 +116,9 @@ public abstract class AbstractPortFigure extends Shape {
             final int portIdx, final boolean metaNodePort) {
         m_portType = type;
         m_nrOfPorts = nrOfPorts;
-        m_isConnected = false;
         m_portIdx = portIdx;
         m_isMetaNodePort = metaNodePort;
+        m_isConnected = false;
         setFill(true);
         setOutline(true);
         setOpaque(true);
@@ -196,13 +195,16 @@ public abstract class AbstractPortFigure extends Shape {
         } else if (getType().equals(FlowVariablePortObject.TYPE)) {
             // variable ports created by the framework are of different color
             // as long as they are not connected
-            if (!m_isMetaNodePort && m_portIdx == 0 && !m_isConnected) {
-                color = new Color(Display.getCurrent(), 80, 80, 80);
+            if (!m_isMetaNodePort && m_portIdx == 0 && !m_isConnected
+                    && !showFlowVarPorts()) {
+                color = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE);
+                // color = new Color(Display.getCurrent(), 80, 80, 80);
             } else {
                 color = getFlowVarPortColor();
             }
         }
-        if (getType().isOptional()) {
+        if (getType().isOptional() && (this instanceof NodeInPortFigure)
+                && !isImplFlowVarPort()) {
             color = lightenColor(color);
         }
 
@@ -258,6 +260,11 @@ public abstract class AbstractPortFigure extends Shape {
     @Override
     protected void fillShape(final Graphics graphics) {
 
+        if (isImplFlowVarPort() && !showFlowVarPorts() && !m_isConnected) {
+            // do not draw implicit flow ports if we are not supposed to
+            return;
+        }
+
         // Data ports and unconnected implicit flowVar ports are not filled.
         if (isFilled()) {
             Rectangle r = computePortShapeBounds(getBounds().getCopy());
@@ -294,10 +301,11 @@ public abstract class AbstractPortFigure extends Shape {
         if (getType().equals(BufferedDataTable.TYPE)) {
             return false;
         }
-        if (isImplFlowVarPort() && !m_isConnected) {
-            return false;
-        }
         return true;
+    }
+
+    private boolean showFlowVarPorts() {
+        return ((NodeContainerFigure)getParent()).getShowFlowVarPorts();
     }
 
     public Rectangle computePortShapeBounds(final Rectangle bounds) {
@@ -338,6 +346,10 @@ public abstract class AbstractPortFigure extends Shape {
      */
     @Override
     protected void outlineShape(final Graphics graphics) {
+        if (isImplFlowVarPort() && !showFlowVarPorts() && !m_isConnected) {
+            // do not draw implicit flow ports if we are not supposed to
+            return;
+        }
         if (!isFilled()) {
             Rectangle r = computePortShapeBounds(getBounds().getCopy());
             PointList points = createShapePoints(r);
