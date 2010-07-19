@@ -146,7 +146,7 @@ public class AppendedRowsNodeModel extends NodeModel {
         }
         PortType[] result = new PortType[nrIns];
         Arrays.fill(result, new PortType(BufferedDataTable.class, true));
-//        result[0] = BufferedDataTable.TYPE;
+        result[0] = BufferedDataTable.TYPE;
         return result;
     }
 
