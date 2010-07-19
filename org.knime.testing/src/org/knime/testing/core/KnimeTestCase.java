@@ -154,7 +154,7 @@ public class KnimeTestCase extends TestCase {
 
             WorkflowLoadResult loadRes = WorkflowManager.loadProject(
                     m_knimeWorkFlow.getParentFile(),
-                    new ExecutionMonitor());
+                    new ExecutionMonitor(), null);
 
             boolean mustReportErrors;
             switch (loadRes.getType()) {

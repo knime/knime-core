@@ -80,7 +80,7 @@ public class WorkflowTestCase extends TestCase {
                     + workflowDirString);
         }
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
-                workflowDir, new ExecutionMonitor(), false);
+                workflowDir, new ExecutionMonitor(), null, false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: "
