@@ -137,7 +137,7 @@ public final class CredentialsStore implements Observer {
     /**
      * Checks, if a {@link CredentialsStore} is contained in this store under
      * the given name.
-     * @param name credential name to check
+     * @param name credential's name to check
      * @return true, if a credentials exists, otherwise false
      */
     public synchronized boolean contains(final String name) {
@@ -175,7 +175,7 @@ public final class CredentialsStore implements Observer {
 
     /** Add a new credentials object to this store. Its name must be unique
      * across all credentials in this store.
-     * @param cred The new credentials to add.#
+     * @param cred The new credentials to add.
      * @throws NullPointerException If the argument is null
      * @throws IllegalArgumentException If the the argument's name is already
      * in use
