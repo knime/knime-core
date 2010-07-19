@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 12, 2006 (wiswedel): created
  */
@@ -80,33 +80,33 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class DomainNodeModel extends NodeModel {
-    
-    /** Config identifier for columns for which possible values 
+
+    /** Config identifier for columns for which possible values
      * must be determined. */
     static final String CFG_POSSVAL_COLS = "possible_values_columns";
-    
+
     /** Config identifier whether possible value domain should be retained
      * for non-selected columns (will otherwise be dropped). */
-    static final String CFG_POSSVAL_RETAIN_UNSELECTED = 
+    static final String CFG_POSSVAL_RETAIN_UNSELECTED =
         "possible_values_unselected_retain";
-    
-    /** Config identifier for columns for which min and max values 
+
+    /** Config identifier for columns for which min and max values
      * must be determined. */
     static final String CFG_MIN_MAX_COLS = "min_max_columns";
-    
+
     /** Config identifier whether min/max values should be retained
      * for non-selected columns (will otherwise be dropped). */
-    static final String CFG_MIN_MAX_RETAIN_UNSELECTED = 
+    static final String CFG_MIN_MAX_RETAIN_UNSELECTED =
         "min_max_unselected_retain";
-    
-    /** Config identifier for columns for which min and max values 
+
+    /** Config identifier for columns for which min and max values
      * must be determined. */
     static final String CFG_MAX_POSS_VALUES = "max_poss_values";
-    
+
     private String[] m_possValCols;
     private boolean m_possValRetainUnselected = true; // added in 2.1.2
     private String[] m_minMaxCols;
@@ -124,20 +124,17 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_possValCols.length == 0 && m_minMaxCols.length == 0) {
-            return inData;
-        }
         final DataTableSpec oldSpec = inData[0].getDataTableSpec();
         final int colCount = oldSpec.getNumColumns();
-        HashSet<String> possValColsHash = 
+        HashSet<String> possValColsHash =
             new HashSet<String>(Arrays.asList(m_possValCols));
-        HashSet<String> minMaxColsHash = 
+        HashSet<String> minMaxColsHash =
             new HashSet<String>(Arrays.asList(m_minMaxCols));
         @SuppressWarnings("unchecked")
         LinkedHashSet<DataCell>[] possVals = new LinkedHashSet[colCount];
         DataCell[] mins = new DataCell[colCount];
         DataCell[] maxs = new DataCell[colCount];
-        DataValueComparator[] comparators = new DataValueComparator[colCount]; 
+        DataValueComparator[] comparators = new DataValueComparator[colCount];
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec col = oldSpec.getColumnSpec(i);
             if (possValColsHash.contains(col.getName())) {
@@ -155,7 +152,7 @@ public class DomainNodeModel extends NodeModel {
                 comparators[i] = null;
             }
         }
-        
+
         int row = 0;
         final double rowCount = inData[0].getRowCount();
         for (RowIterator it = inData[0].iterator(); it.hasNext(); row++) {
@@ -164,7 +161,7 @@ public class DomainNodeModel extends NodeModel {
                 DataCell c = r.getCell(i);
                 if (!c.isMissing() && possVals[i] != null) {
                     possVals[i].add(c);
-                    if (m_maxPossValues >= 0 
+                    if (m_maxPossValues >= 0
                             && possVals[i].size() > m_maxPossValues) {
                         possVals[i] = null;
                     }
@@ -184,7 +181,7 @@ public class DomainNodeModel extends NodeModel {
                 }
             }
             exec.checkCanceled();
-            exec.setProgress(row / rowCount, "Processed row #" 
+            exec.setProgress(row / rowCount, "Processed row #"
                     + (row + 1) + " (\"" + r.getKey() + "\")");
         }
         DataColumnSpec[] colSpec = new DataColumnSpec[colCount];
@@ -193,7 +190,7 @@ public class DomainNodeModel extends NodeModel {
             String name = original.getName();
             DataColumnDomainCreator domainCreator =
                 new DataColumnDomainCreator(original.getDomain());
-            
+
             if (possValColsHash.contains(name)) {
                 domainCreator.setValues(possVals[i]);
             } else if (m_possValRetainUnselected) {
@@ -201,7 +198,7 @@ public class DomainNodeModel extends NodeModel {
             } else {
                 domainCreator.setValues(null);
             }
-            
+
             if (minMaxColsHash.contains(name)) {
                 DataCell min = !mins[i].isMissing() ? mins[i] : null;
                 DataCell max = !maxs[i].isMissing() ? maxs[i] : null;
@@ -213,8 +210,8 @@ public class DomainNodeModel extends NodeModel {
                 domainCreator.setLowerBound(null);
                 domainCreator.setUpperBound(null);
             }
-            
-            DataColumnSpecCreator specCreator = 
+
+            DataColumnSpecCreator specCreator =
                 new DataColumnSpecCreator(original);
             specCreator.setDomain(domainCreator.createDomain());
             colSpec[i] = specCreator.createSpec();
@@ -238,18 +235,18 @@ public class DomainNodeModel extends NodeModel {
             m_possValCols = getAllCols(NominalValue.class, oldSpec);
             m_maxPossValues = 60;
         }
-        Set<String> possValColSet = 
+        Set<String> possValColSet =
             new HashSet<String>(Arrays.asList(m_possValCols));
-        Set<String> minMaxColSet = 
+        Set<String> minMaxColSet =
             new HashSet<String>(Arrays.asList(m_minMaxCols));
         int colCount = oldSpec.getNumColumns();
         DataColumnSpec[] colSpec = new DataColumnSpec[colCount];
         for (int i = 0; i < colSpec.length; i++) {
             DataColumnSpec original = oldSpec.getColumnSpec(i);
             String name = original.getName();
-            DataColumnSpecCreator specCreator = 
+            DataColumnSpecCreator specCreator =
                 new DataColumnSpecCreator(original);
-            DataColumnDomainCreator domainCreator = 
+            DataColumnDomainCreator domainCreator =
                 new DataColumnDomainCreator(original.getDomain());
             if (possValColSet.contains(name)) {
                 // will be set to concrete values in execute
@@ -322,7 +319,7 @@ public class DomainNodeModel extends NodeModel {
         m_maxPossValues = settings.getInt(CFG_MAX_POSS_VALUES);
         // fields added in 2.1.2 (default is "false" to imitate old behavior
         // in nodes saved in 2.1.1)
-        m_minMaxRetainUnselected = 
+        m_minMaxRetainUnselected =
             settings.getBoolean(CFG_MIN_MAX_RETAIN_UNSELECTED, false);
         m_possValRetainUnselected =
             settings.getBoolean(CFG_POSSVAL_RETAIN_UNSELECTED, false);
@@ -336,7 +333,7 @@ public class DomainNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -345,7 +342,7 @@ public class DomainNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
     }
-    
+
     /** Finds all columns in a spec whose type is compatible to cl.
      * @param cl The value to be compatible to.
      * @param spec The spec to query.
