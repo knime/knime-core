@@ -1050,7 +1050,7 @@ public abstract class NodeModel {
     private CredentialsProvider m_credentialsProvider;
 
     /** Framework method to update credentials provider before
-     * configure/execute
+     * configure/execute.
      * @param provider The provider for credentials. */
     final void setCredentialsProvider(final CredentialsProvider provider) {
         m_credentialsProvider = provider;
