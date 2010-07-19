@@ -279,10 +279,12 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     return CLOSED_WORKFLOW;
                 }
             }
-            if (isMetaNode(container)) {
-                return NODE;
-            } else if (container.exists(METAINFO_FILE)) {
-                return WORKFLOW_GROUP;
+            if (projectNode == null) {
+                if (isMetaNode(container)) {
+                    return NODE;
+                } else if (container.exists(METAINFO_FILE)) {
+                    return WORKFLOW_GROUP;
+                }
             }
         } else if (element instanceof NodeContainer) {
                 projectNode = (NodeContainer)element;
