@@ -18,7 +18,12 @@
  */
 package org.knime.workbench.ui.navigator.actions;
 
+import java.util.List;
+
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.Credentials;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
@@ -43,10 +48,18 @@ public class OpenCredentialVariablesDialogAction
         d.asyncExec(new Runnable() {
             @Override
             public void run() {
-                // and put it into the workflow variables dialog
+                CredentialsStore store = wf.getCredentialsStore();
                 CredentialVariablesDialog dialog = 
-                    new CredentialVariablesDialog(d.getActiveShell(), wf);
-                dialog.open();
+                    new CredentialVariablesDialog(d.getActiveShell(), store);
+                if (dialog.open() == Dialog.OK) {
+                    for (Credentials cred : store.getCredentials()) {
+                        store.remove(cred.getName());
+                    }
+                    List<Credentials> credentials = dialog.getCredentials();
+                    for (Credentials cred : credentials) {
+                        store.add(cred);
+                    }
+                }
             }
         });
     }

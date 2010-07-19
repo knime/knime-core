@@ -71,7 +71,8 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
      * Create query dialog with text box to enter table name.
      */
     DBColumnFilterNodeDialogPane() {
-        m_panel = new DialogComponentColumnFilter(createColumnFilterModel(), 0);
+        m_panel = new DialogComponentColumnFilter(
+            createColumnFilterModel(), 0, false);
         super.addTab("Column Filter", m_panel.getComponentPanel());
     }
 

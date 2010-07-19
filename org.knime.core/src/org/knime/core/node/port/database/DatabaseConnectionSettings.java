@@ -74,6 +74,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
 
 /**
@@ -107,7 +109,7 @@ public class DatabaseConnectionSettings {
     private static int initLoginTimeout() {
         String tout = System.getProperty(
                 KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
-        int timeout = 5; // default
+        int timeout = 15; // default
         if (tout != null) {
             try {
                 int t = Integer.parseInt(tout);
@@ -151,7 +153,8 @@ public class DatabaseConnectionSettings {
     private String m_dbName;
     private String m_user = null;
     private String m_pass = null;
-
+    private String m_credName = null;
+    
     /**
      * Create a default settings connection object.
      */
@@ -175,10 +178,11 @@ public class DatabaseConnectionSettings {
      */
     public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
         this();
-        m_driver = conn.m_driver;
-        m_dbName = conn.m_dbName;
-        m_user   = conn.m_user;
-        m_pass   = conn.m_pass;
+        m_driver   = conn.m_driver;
+        m_dbName   = conn.m_dbName;
+        m_user     = conn.m_user;
+        m_pass     = conn.m_pass;
+        m_credName = conn.m_credName;
     }
 
     /**
@@ -206,9 +210,9 @@ public class DatabaseConnectionSettings {
                     + "\" does not accept URL: " + m_dbName);
         }
 
-        final String password = KnimeEncryption.decrypt(m_pass);
-        final String user = m_user;
         final String dbName = m_dbName;
+        final String password = m_pass;
+        final String user = m_user;
 
         Callable<Connection> callable = new Callable<Connection>() {
             /** {@inheritDoc} */
@@ -236,8 +240,12 @@ public class DatabaseConnectionSettings {
     public void saveConnection(final ConfigWO settings) {
         settings.addString("driver", m_driver);
         settings.addString("database", m_dbName);
-        settings.addString("user", m_user);
-        settings.addString("password", m_pass);
+        if (m_credName == null) {
+            settings.addString("user", m_user);
+            settings.addString("password", m_pass);
+        } else {
+            settings.addString("credential_name", m_credName);
+        }
         final File driverFile =
             DatabaseDriverLoader.getDriverFileForDriverClass(m_driver);
         settings.addString("loaded_driver",
@@ -249,50 +257,80 @@ public class DatabaseConnectionSettings {
     /**
      * Validate settings.
      * @param settings to validate
+     * @param cp <code>CredentialProvider</code> used to get user name/password
      * @throws InvalidSettingsException if the settings are not valid
      */
-    public void validateConnection(final ConfigRO settings)
+    public void validateConnection(final ConfigRO settings,
+            final CredentialsProvider cp)
             throws InvalidSettingsException {
-        loadConnection(settings, false);
+        loadConnection(settings, false, cp);
     }
 
     /**
      * Load validated settings.
      * @param settings to load
+     * @param cp <code>CredentialProvider</code> used to get user name/password
      * @return true, if settings have changed
      * @throws InvalidSettingsException if settings are invalid
      */
-    public boolean loadValidatedConnection(final ConfigRO settings)
+    public boolean loadValidatedConnection(final ConfigRO settings,
+            final CredentialsProvider cp)
             throws InvalidSettingsException {
-        return loadConnection(settings, true);
+        return loadConnection(settings, true, cp);
     }
 
     private boolean loadConnection(final ConfigRO settings,
-            final boolean write) throws InvalidSettingsException {
+            final boolean write, final CredentialsProvider cp) 
+            throws InvalidSettingsException {
         if (settings == null) {
             throw new InvalidSettingsException(
                     "Connection settings not available!");
         }
         String driver = settings.getString("driver");
         String database = settings.getString("database");
-        String user = settings.getString("user");
-        // password
-        String password = settings.getString("password", "");
+        
+        String user;
+        String password;
+        String credName = null;
+        boolean useCredential = settings.containsKey("credential_name");
+        if (useCredential) {
+            credName = settings.getString("credential_name");
+            ICredentials cred = cp.get(credName);
+            user = cred.getLogin();
+            password = cred.getPassword();
+        } else {
+            // user and password
+            user = settings.getString("user");
+            password = "";
+            try {
+                password = KnimeEncryption.decrypt(
+                    settings.getString("password", ""));
+            } catch (Exception e) {
+                LOGGER.error("Password could not be decrypted, reason: "
+                    + e.getMessage());
+            }
+        }
         // write settings or skip it
         if (write) {
             m_driver = driver;
             DRIVER_ORDER.add(m_driver);
             boolean changed = false;
-            if (m_user != null && m_dbName != null && m_pass != null) {
-                if (!user.equals(m_user) || !database.equals(m_dbName)
-                        || !password.equals(m_pass)) {
-                    changed = true;
+            if (useCredential) {
+                changed = m_credName != null && credName.equals(m_credName);
+                m_credName = credName;
+            } else {
+                if (m_user != null && m_dbName != null && m_pass != null) {
+                    if (!user.equals(m_user) || !database.equals(m_dbName)
+                            || !password.equals(m_pass)) {
+                        changed = true;
+                    }
                 }
+                m_credName = null;
             }
-            m_dbName = database;
-            DATABASE_URLS.add(m_dbName);
             m_user = user;
             m_pass = password;
+            m_dbName = database;
+            DATABASE_URLS.add(m_dbName);
             // loaded driver
             String loadedDriver = settings.getString("loaded_driver", null);
             if (loadedDriver != null) {
@@ -319,7 +357,8 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    public void execute(final String statement) throws InvalidKeyException,
+    public void execute(final String statement) 
+                throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
             SQLException, IOException {
@@ -360,9 +399,55 @@ public class DatabaseConnectionSettings {
     }
     
     /**
-     * @return database name used to access the db URL
+     * @return database name used to access the database URL
      */
     public final String getDBName() {
         return m_dbName;
+    }
+    
+    /**
+     * @return user name used to login to the database
+     */
+    public final String getUserName() {
+        return m_user;
+    }
+    
+    /**
+     * @return password (decrypted) used to login to the database
+     */
+    public final String getPassword() {
+        return m_pass;
+    }
+    
+    /**
+     * Set a new database driver.
+     * @param driver used to open the connection
+     */
+    public final void setDriver(final String driver) {
+        m_driver = driver;
+    }
+    
+    /**
+     * Set a new database name.
+     * @param databaseName used to access the database URL
+     */
+    public final void setDBName(final String databaseName) {
+        m_dbName = databaseName;
+    }
+    
+    /**
+     * Set a new user name.
+     * @param userName used to login to the database
+     */
+    public final void setUserName(final String userName) {
+         m_user = userName;
+    }
+    
+    /**
+     * Set a new password.
+     * @param password (decrypted) used to login to the database
+     */
+    public final void setPassword(final String password) {
+        m_pass = password;
     }
 }

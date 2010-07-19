@@ -241,7 +241,7 @@ public final class RepositoryFactory {
                 File f = new File(FileLocator.toFileURL(url).getFile());
                 LOGGER.debug("meta node template name: " + f.getName());
                 WorkflowManager metaNode = META_NODE_ROOT.load(f, 
-                        new ExecutionMonitor(), false).getWorkflowManager();
+                        new ExecutionMonitor(), null, false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
                 LOGGER.error("Unexpected canceled execution exception", 

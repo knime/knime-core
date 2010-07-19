@@ -201,7 +201,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult)
+            final NodeSettingsRO parentSettings, final LoadResult loadResult,
+            final CredentialLoader credentialLoader)
             throws InvalidSettingsException, IOException {
         throw new IllegalStateException("root can't be loaded");
     }

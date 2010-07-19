@@ -129,7 +129,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                dbObj.getConnectionModel());
+                dbObj.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
@@ -151,7 +151,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         }
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel());
+                spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(

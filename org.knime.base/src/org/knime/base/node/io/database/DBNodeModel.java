@@ -68,7 +68,8 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 class DBNodeModel extends NodeModel {
     
     /** The logger instance used for this and all derived classes. */
-    NodeLogger LOGGER = NodeLogger.getLogger(DBNodeModel.class);
+    protected final NodeLogger m_logger = 
+        NodeLogger.getLogger(DBNodeModel.class);
     
     /**
      * Creates a new database reader.
@@ -144,7 +145,8 @@ class DBNodeModel extends NodeModel {
             final DatabasePortObjectSpec spec, final String newQuery) 
     		throws InvalidSettingsException {
     	DatabaseQueryConnectionSettings conn = 
-    		new DatabaseQueryConnectionSettings(spec.getConnectionModel());
+    		new DatabaseQueryConnectionSettings(
+    			spec.getConnectionModel(), getCredentialsProvider());
         return new DatabaseQueryConnectionSettings(conn, newQuery);
     }
         

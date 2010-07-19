@@ -18,9 +18,11 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.List;
+
 /**
  * Class is used as a callback handler to load credentials during loading
- * a workflow. 
+ * of a workflow. 
  * @author Thomas Gabriel, KNIME GmbH, Germany
  */
 public interface CredentialLoader {
@@ -28,9 +30,9 @@ public interface CredentialLoader {
     /**
      * Caller method invoked when credentials are needed during loading
      * of a workflow.
-     * @param wf underlying <code>WorkflowManager</code> for a paraticular
-     *        workflow
+     * @param credentials to be initialized
+     * @return a list of new <code>Credentials</code>
      */
-    void load(final WorkflowManager wf);
+    List<Credentials> load(final List<Credentials> credentials);
     
 }

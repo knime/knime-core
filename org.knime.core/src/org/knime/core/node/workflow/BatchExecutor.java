@@ -59,7 +59,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
 
 import org.eclipse.core.resources.IWorkspace;
@@ -132,6 +134,8 @@ public final class BatchExecutor {
               "Usage: The following options are available:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
             + " -reset => reset workflow prior to execution\n"
+            + " -credential=name[;login[;password]] => for each credential enter credential\n"
+            + "                 name and optional login/password, otherwise its prompted for\n"
             + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
             + "                 if provided with argument, use argument instead of prompting\n"
             + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
@@ -205,6 +209,8 @@ public final class BatchExecutor {
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
         List<FlowVariable> wkfVars = new ArrayList<FlowVariable>();
+        final Map<String, Credentials> credentialMap = 
+            new LinkedHashMap<String, Credentials>();
 
         for (String s : args) {
             String[] parts = s.split("=", 2);
@@ -225,6 +231,37 @@ public final class BatchExecutor {
                     masterKey = parts[1];
                 } else {
                     isPromptForPassword = true;
+                }
+            } else if ("-credential".equals(parts[0])) {
+                if (parts.length > 1) {
+                    if (parts[1].length() == 0) {
+                        System.err.println("Credential name must not be empty.");
+                        return 1;
+                    }
+                    String credential = parts[1];
+                    String[] credParts = credential.split(";", 3);
+                    if (credParts.length > 0) {
+                        String credName = credParts[0].trim();
+                        if (credName.length() == 0) {
+                            System.err.println(
+                                "Credentials must not be empty.");
+                            return 1;
+                        }
+                        if (credParts.length > 1) {
+                            String credLogin = null;
+                            String credPassword = null;
+                            if (credParts[1].trim().length() > 0) {
+                                credLogin = credParts[1].trim();
+                            }
+                            if (credParts.length > 2) {
+                                credPassword = credParts[2];
+                            }
+                            credentialMap.put(credName, new Credentials(
+                                credName, credLogin, credPassword));
+                        } else {
+                            credentialMap.put(credName, null);
+                        }
+                    }
                 }
             } else if ("-preferences".equals(parts[0])) {
                 if (parts.length != 2) {
@@ -353,7 +390,47 @@ public final class BatchExecutor {
         }
 
         WorkflowLoadResult loadResult = WorkflowManager.loadProject(
-                workflowDir, new ExecutionMonitor());
+                workflowDir, new ExecutionMonitor(), new CredentialLoader() {
+                    @Override
+                    public List<Credentials> load(
+                	    final List<Credentials> credentials) {
+                	List<Credentials> newCredentials = new ArrayList<Credentials>();
+                	Console cons = null;
+                	for (Credentials cred : credentials) {
+                	    String login = null;
+                	    String password = null;
+                	    if (credentialMap.containsKey(cred.getName())) {
+                		Credentials currCred = credentialMap.get(cred
+                			.getName());
+                		if (currCred != null) {
+                		    login = currCred.getLogin();
+                		    password = currCred.getPassword();
+                		}
+                	    }
+                	    if (login == null || password == null) {
+                		if (cons == null) {
+                		    if ((cons = System.console()) == null) {
+                			System.err
+                			.println("No console for "
+                				+ "credential prompt available");
+                			return credentials;
+                		    }
+                		}
+                		cons.printf("Enter for credential %s ", cred
+                			.getName());
+                		if (login == null) {
+                		    login = cons
+                		         .readLine("%s", "Enter login: ");
+                		}
+                		char[] pwd = getPasswordFromConsole(cons);
+                		password = new String(pwd);
+                	    }
+                	    newCredentials.add(new Credentials(cred.getName(),
+                		    login, password));
+                	}
+                	return newCredentials;
+                    }
+                });
         if (failOnLoadError && loadResult.hasErrors()) {
             System.err.println("Error(s) during workflow loading. "
                     + "Check log file for details.");
@@ -563,28 +640,34 @@ public final class BatchExecutor {
             if ((cons = System.console()) == null) {
                 System.err.println("No console for password prompt available");
             } else {
-                char[] first, second;
-                boolean areEqual;
-                do {
-                    first = cons.readPassword("%s", "Password:");
-                    second = cons.readPassword("%s", "Reenter Password:");
-                    areEqual = Arrays.equals(first, second);
-                    if (!areEqual) {
-                        System.out.println("Passwords don't match");
-                    }
-                } while (!areEqual);
-                masterKey = new String(first);
+                char[] password = getPasswordFromConsole(cons);
+                masterKey = new String(password);
             }
         }
         if (masterKey != null) {
             final String encryptionKey = masterKey;
-            KnimeEncryption.setEncryptionKeySupplier(new EncryptionKeySupplier() {
+            KnimeEncryption.setEncryptionKeySupplier(
+                    new EncryptionKeySupplier() {
                 /** {@inheritDoc} */
                 public String getEncryptionKey() {
                     return encryptionKey;
                 }
             });
         }
+    }
+    
+    private static char[] getPasswordFromConsole(final Console cons) {
+        char[] first, second;
+        boolean areEqual;
+        do {
+            first = cons.readPassword("%s", "Password:");
+            second = cons.readPassword("%s", "Reenter Password:");
+            areEqual = Arrays.equals(first, second);
+            if (!areEqual) {
+                 System.out.println("Passwords don't match");
+            }
+        } while (!areEqual);
+        return first;
     }
 
     private static String[] splitOption(String option) {

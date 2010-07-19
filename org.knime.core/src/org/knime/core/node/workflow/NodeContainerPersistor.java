@@ -85,7 +85,8 @@ public interface NodeContainerPersistor {
     boolean mustComplainIfStateDoesNotMatch();
     
     void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, LoadResult loadResult)
+            final NodeSettingsRO parentSettings, LoadResult loadResult,
+            final CredentialLoader credentialLoader)
             throws InvalidSettingsException, IOException;
 
     void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 

@@ -97,7 +97,7 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-        new DatabaseQueryConnectionSettings(settings);
+        new DatabaseQueryConnectionSettings(settings, getCredentialsProvider());
     }
 
     /**
@@ -108,7 +108,8 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         DatabaseQueryConnectionSettings conn = 
-            new DatabaseQueryConnectionSettings(settings);
+            new DatabaseQueryConnectionSettings(settings,
+                getCredentialsProvider());
         try {
             m_load.setDBQueryConnection(conn);
         } catch (Exception e) {

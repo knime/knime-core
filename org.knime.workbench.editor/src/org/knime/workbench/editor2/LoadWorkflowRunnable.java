@@ -53,6 +53,8 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.swing.UIManager;
@@ -62,6 +64,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.CanceledExecutionException;
@@ -69,11 +72,14 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.CredentialLoader;
+import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 
 /**
@@ -148,9 +154,34 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             checkThread.start();
 
+            final Display d = Display.getDefault();
             final WorkflowLoadResult result = WorkflowManager.loadProject(
                     m_workflowFile.getParentFile(), 
-                    new ExecutionMonitor(progressMonitor));
+                    new ExecutionMonitor(progressMonitor),
+                    new CredentialLoader() {
+                        @Override
+                        public List<Credentials> load(
+                            final List<Credentials> credentials) {
+                                final List<Credentials> newCredentials = 
+                                    new ArrayList<Credentials>();
+                                // run sync'ly in UI thread 
+                                d.syncExec(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        CredentialVariablesDialog dialog = 
+                                            new CredentialVariablesDialog(
+                                               d.getActiveShell(), credentials);
+                                        if (dialog.open() == Dialog.OK) {
+                                            newCredentials.addAll(
+                                                dialog.getCredentials());
+                                        } else {
+                                            newCredentials.addAll(credentials);
+                                        }
+                                    }
+                                });
+                                return newCredentials;
+                        }
+                    });
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
@@ -167,7 +198,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 break;
             case IStatus.WARNING:
                 message = "Warnings during load";
-                logPreseveLineBreaks("Warning during load: " 
+                logPreseveLineBreaks("Warnings during load: " 
                         + result.getFilteredError(
                                 "", LoadResultEntryType.Warning), false);
                 break;
@@ -184,7 +215,6 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                             Display.getDefault().getActiveShell(), 
                             "Workflow Load", message, status);
                 }
-                
             });
         } catch (FileNotFoundException fnfe) {
             m_throwable = fnfe;

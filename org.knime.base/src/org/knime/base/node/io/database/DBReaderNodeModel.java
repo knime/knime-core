@@ -204,7 +204,7 @@ class DBReaderNodeModel extends NodeModel {
                     + ") not replaced.");
         }
         // validates the current settings on a temp. connection
-        new DatabaseQueryConnectionSettings(settings);
+        new DatabaseQueryConnectionSettings(settings, getCredentialsProvider());
     }
 
     /**
@@ -216,12 +216,14 @@ class DBReaderNodeModel extends NodeModel {
         String query = settings.getString(
                 DatabaseConnectionSettings.CFG_STATEMENT);
         DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn == null || !conn.loadValidatedConnection(settings)
+        if (conn == null || !conn.loadValidatedConnection(settings,
+                    getCredentialsProvider())
                 || query == null || m_query == null || !query.equals(m_query)) {
             m_lastSpec = null;
             try {
                 m_load.setDBQueryConnection(
-                        new DatabaseQueryConnectionSettings(settings));
+                        new DatabaseQueryConnectionSettings(settings,
+                            getCredentialsProvider()));
             } catch (Throwable t) {
                 throw new InvalidSettingsException(t);
             }

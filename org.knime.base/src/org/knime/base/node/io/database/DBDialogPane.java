@@ -57,10 +57,12 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -97,6 +99,9 @@ final class DBDialogPane extends JPanel {
 
     private boolean m_passwordChanged = false;
     
+    private final JCheckBox m_credCheckBox = new JCheckBox();
+    private final JComboBox m_credBox = new JComboBox();
+        
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
     
@@ -108,6 +113,7 @@ final class DBDialogPane extends JPanel {
         m_driver.setEditable(false);
         m_driver.setFont(FONT);
         m_driver.setPreferredSize(new Dimension(400, 20));
+        m_driver.setMaximumSize(new Dimension(400, 20));
         JPanel driverPanel = new JPanel(new BorderLayout());
         driverPanel.setBorder(BorderFactory
                 .createTitledBorder(" Database driver "));
@@ -120,6 +126,7 @@ final class DBDialogPane extends JPanel {
                 " Database URL "));
         m_db.setFont(FONT);
         m_db.setPreferredSize(new Dimension(400, 20));
+        m_db.setMaximumSize(new Dimension(400, 20));
         m_db.setEditable(true);
         m_driver.addItemListener(new ItemListener() {
             @Override
@@ -131,6 +138,23 @@ final class DBDialogPane extends JPanel {
         });
         dbPanel.add(m_db);
         super.add(dbPanel);
+        
+        JPanel credPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        credPanel.setBorder(BorderFactory.createTitledBorder(
+            " Workflow Credentials "));
+        credPanel.add(m_credCheckBox);
+        m_credCheckBox.addItemListener(new ItemListener() {
+           @Override
+           public void itemStateChanged(final ItemEvent ie) {
+                enableCredentials(m_credCheckBox.isSelected());        
+           } 
+        });
+        m_credBox.setEditable(false);
+        m_credBox.setFont(FONT);
+        m_credBox.setPreferredSize(new Dimension(375, 20));
+        credPanel.add(m_credBox);
+        super.add(credPanel);
+                
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
@@ -163,14 +187,33 @@ final class DBDialogPane extends JPanel {
         passPanel.add(m_pass);
         super.add(passPanel);
     }
+    
+    private void enableCredentials(final boolean flag) {
+        m_credBox.setEnabled(flag);
+        m_pass.setEnabled(!flag);
+        m_user.setEnabled(!flag);
+    }
 
     /**
      * Load settings.
      * @param settings to load
      * @param specs input spec
+     * @param creds credentials
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) {
+            final PortObjectSpec[] specs, final Collection<String> creds) {
+        // update credentials
+        m_credBox.removeAllItems();
+        if (creds.isEmpty()) {
+            m_credCheckBox.setEnabled(false);
+            m_credBox.setEnabled(false);
+        } else {
+            m_credCheckBox.setEnabled(true);
+            m_credBox.setEnabled(true);
+            for (String c : creds) {
+                m_credBox.addItem(c);
+            }
+        }
         // database driver and name
         m_driver.removeAllItems();
         // update list of registered driver
@@ -190,13 +233,23 @@ final class DBDialogPane extends JPanel {
         } else {
             m_db.setSelectedItem(dbName);
         }
-        // user
-        String user = settings.getString("user", null);
-        m_user.setText(user == null ? "" : user);
-        // password
-        String password = settings.getString("password", null);
-        m_pass.setText(password == null ? "" : password);
-        m_passwordChanged = false;
+        
+        boolean useCredential = settings.containsKey("credential_name");
+        enableCredentials(useCredential);
+        if (useCredential) {
+            String credName = settings.getString("credential_name", null);
+            m_credBox.setSelectedItem(credName);
+            m_credCheckBox.setSelected(true);
+        } else {
+            // user
+            String user = settings.getString("user", null);
+            m_user.setText(user == null ? "" : user);
+            // password
+            String password = settings.getString("password", null);
+            m_pass.setText(password == null ? "" : password);
+            m_passwordChanged = false;
+            m_credCheckBox.setSelected(false);
+        }
     }
 
     private void updateDriver() {
@@ -224,17 +277,24 @@ final class DBDialogPane extends JPanel {
         settings.addString("driver", driverName);
         String url = m_db.getEditor().getItem().toString();
         settings.addString("database", url);     
-        settings.addString("user", m_user.getText().trim());
-        if (m_passwordChanged) {
-            try {
-                settings.addString("password", KnimeEncryption.encrypt(
-                        m_pass.getPassword()));
-            } catch (Throwable t) {
-                LOGGER.warn("Could not encrypt password, reason: " 
-                        + t.getMessage(), t);
-            }
+        boolean useCredential = m_credCheckBox.isSelected();
+        if (useCredential) {
+            settings.addString("credential_name", 
+                (String) m_credBox.getSelectedItem());
         } else {
-            settings.addString("password", new String(m_pass.getPassword()));
+            settings.addString("user", m_user.getText().trim());
+            if (m_passwordChanged) {
+                try {
+                    settings.addString("password", KnimeEncryption.encrypt(
+                            m_pass.getPassword()));
+                } catch (Throwable t) {
+                    LOGGER.warn("Could not encrypt password, reason: " 
+                            + t.getMessage(), t);
+                }
+            } else {
+                settings.addString("password", 
+                    new String(m_pass.getPassword()));
+            }
         }
     }
 }

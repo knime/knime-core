@@ -113,7 +113,8 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     /** {@inheritDoc} */
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult result) 
+            final NodeSettingsRO parentSettings, final LoadResult result,
+            final CredentialLoader credentialLoader) 
     throws IOException, InvalidSettingsException {
         File setFile = nodeFileRef.getFile();
         if (!setFile.getName().equals("settings.xml")) {
@@ -149,7 +150,8 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         NodeSettingsRO modelSet = settings.getNodeSettings("model");
         m_dataInNodeIDs = modelSet.getIntArray("dataInContainerIDs");
         m_dataOutNodeIDs = modelSet.getIntArray("dataOutContainerIDs");
-        super.preLoadNodeContainer(workflowKnimeRef, parentSettings, result);
+        super.preLoadNodeContainer(workflowKnimeRef, parentSettings, result,
+        	credentialLoader);
         String name = "Looper";
         switch (m_metaNodeType) {
         case CROSSVALIDATION:

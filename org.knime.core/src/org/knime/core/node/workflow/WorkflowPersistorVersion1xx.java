@@ -266,7 +266,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult)
+            final NodeSettingsRO parentSettings, final LoadResult loadResult,
+            final CredentialLoader credentialLoader)
     throws InvalidSettingsException, IOException {
         if (nodeFileRef == null || !nodeFileRef.getFile().isFile()) {
             setDirtyAfterLoad();
@@ -332,6 +333,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
         try {
             m_credentials = loadCredentials(m_workflowSett);
+            // request to initialize credentials - if available
+            if (credentialLoader != null) {
+                if (m_credentials != null && !m_credentials.isEmpty()) {
+                    m_credentials = credentialLoader.load(m_credentials);
+                }
+            }
         } catch (InvalidSettingsException e) {
             String error =
                 "Unable to load credentials: " + e.getMessage();
@@ -585,7 +592,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 LoadResult childResult = new LoadResult((isMeta ? "meta " : "")
                         + "node with ID suffix " + nodeIDSuffix);
                 persistor.preLoadNodeContainer(
-                        nodeFile, nodeSetting, childResult);
+                        nodeFile, nodeSetting, childResult, null);
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error = "Unable to load node with ID suffix "
@@ -884,7 +891,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             return null;
         }
     }
-
+    
     protected void loadUIInfoSettings(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         uiInfo.load(settings);

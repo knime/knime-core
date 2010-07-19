@@ -222,7 +222,7 @@ public final class MetaNodeTemplateRepositoryManager {
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
                         WorkflowManager metaNode = m_workflowmanager.load(f, 
-                                new ExecutionMonitor(), false)
+                                new ExecutionMonitor(), null, false)
                                 .getWorkflowManager();
                         MetaNodeTemplateRepositoryItem preItem 
                             = new MetaNodeTemplateRepositoryItem(f.getName(), 
@@ -272,7 +272,7 @@ public final class MetaNodeTemplateRepositoryManager {
         try {
             WorkflowManager wfm = WorkflowManager.loadProject(
                     new File(METANODE_TEMPLATE_REPOSITORY), 
-                    new ExecutionMonitor()).getWorkflowManager();
+                    new ExecutionMonitor(), null).getWorkflowManager();
             return wfm;
         } catch (IOException e) {
             LOGGER.error("Couldn't load WorkflowManager. " 

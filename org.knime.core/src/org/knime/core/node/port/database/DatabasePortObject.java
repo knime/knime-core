@@ -126,7 +126,7 @@ public class DatabasePortObject implements PortObject {
         try {
             DatabaseReaderConnection load = new DatabaseReaderConnection(
                 new DatabaseQueryConnectionSettings(
-                       m_spec.getConnectionModel()));
+                       m_spec.getConnectionModel(), null /* FIXME */));
             return load.createTable(cacheNoRows);
         } catch (Throwable t) {
             LOGGER.error("Could not fetch data from database, reason: "
@@ -234,7 +234,7 @@ public class DatabasePortObject implements PortObject {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof DatabasePortObjectSpec)) {
+        if (!(obj instanceof DatabasePortObject)) {
             return false;
         }
         DatabasePortObject dbPort = (DatabasePortObject) obj;

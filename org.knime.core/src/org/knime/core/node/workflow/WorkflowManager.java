@@ -450,7 +450,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param inPorts types of external inputs (going into this workflow)
      * @param outPorts types of external outputs (exiting this workflow)
      * @param name Name of the workflow (null values will be handled)
-     * @return newly created WorflowManager
+     * @return newly created <code>WorkflowManager</code>
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
@@ -476,7 +476,7 @@ public final class WorkflowManager extends NodeContainer {
     /** Creates new meta node from a persistor instance.
      * @param persistor to read from
      * @param newID new id to be used
-     * @return newly created WorflowManager
+     * @return newly created <code>WorkflowManager</code>
      */
     WorkflowManager createSubWorkflow(final WorkflowPersistor persistor,
             final NodeID newID) {
@@ -3695,9 +3695,11 @@ public final class WorkflowManager extends NodeContainer {
     static final String CFG_CREATED_BY = "created_by";
 
     public static WorkflowLoadResult loadProject(final File directory,
-            final ExecutionMonitor exec) throws IOException,
-            InvalidSettingsException, CanceledExecutionException {
-        return ROOT.load(directory, exec, false);
+            final ExecutionMonitor exec, 
+            final CredentialLoader credentialLoader) 
+            throws IOException, InvalidSettingsException, 
+                CanceledExecutionException {
+        return ROOT.load(directory, exec, credentialLoader, false);
     }
 
     /** {@inheritDoc} */
@@ -3783,6 +3785,8 @@ public final class WorkflowManager extends NodeContainer {
      * {@link WorkflowManager#loadProject(File, ExecutionMonitor)}.
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
+     * @param credentialLoader callback to load credentials (if available)
+     *        during load of the underlying <code>SingleNodeContainer</code>
      * @param keepNodeMessages Whether to keep the messages that are associated
      * with the nodes in the loaded workflow (mostly false but true when
      * remotely computed results are loaded).
@@ -3794,6 +3798,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public WorkflowLoadResult load(final File directory,
             final ExecutionMonitor exec,
+            final CredentialLoader credentialLoader,
             final boolean keepNodeMessages) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
@@ -3856,7 +3861,8 @@ public final class WorkflowManager extends NodeContainer {
             new HashMap<Integer, BufferedDataTable>();
         WorkflowLoadResult result = new WorkflowLoadResult(
                 workflowDirRef.getFile().getName());
-        persistor.preLoadNodeContainer(workflowknimeRef, settings, result);
+        persistor.preLoadNodeContainer(workflowknimeRef, settings, result,
+        	credentialLoader);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
         boolean isIsolatedProject = persistor.getInPortTemplates().length == 0
@@ -3985,6 +3991,11 @@ public final class WorkflowManager extends NodeContainer {
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
                         persistorMap.keySet(), true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
+            // initialize node container with CredentialsStore
+            if (cont instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer) cont;
+                snc.setCredentialsStore(m_credentialsStore);
+            }
             LoadResult subResult = new LoadResult(cont.getNameWithID());
             boolean isFullyConnected = isFullyConnected(bfsID);
             boolean needsReset;
@@ -4006,7 +4017,7 @@ public final class WorkflowManager extends NodeContainer {
             for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
                 if (cont instanceof SingleNodeContainer && p != null) {
-                    SingleNodeContainer snc = (SingleNodeContainer)cont;
+                    SingleNodeContainer snc = (SingleNodeContainer) cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
                 if (p != null) {
@@ -4523,13 +4534,13 @@ public final class WorkflowManager extends NodeContainer {
     /** Renames the underlying workflow directory to the new name.
      * @param newName The name of the directory.
      * @return Whether that was successful.
-     * @throws IllegalStateException If the worklow has not been saved yet
+     * @throws IllegalStateException If the workflow has not been saved yet
      * (has no corresponding node directory).
      */
     public boolean renameWorkflowDirectory(final String newName) {
         ReferencedFile file = getNodeContainerDirectory();
         if (file == null) {
-            throw new IllegalStateException("Worklow has not been saved yet.");
+            throw new IllegalStateException("Workflow has not been saved yet.");
         }
         return file.rename(newName);
     }

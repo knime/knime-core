@@ -49,6 +49,7 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
+import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
@@ -100,8 +101,9 @@ class DBReaderDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] ports) throws NotConfigurableException {
-        m_loginPane.loadSettingsFrom(settings, ports);
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+	Collection<String> creds = super.getCredentialsNames();
+        m_loginPane.loadSettingsFrom(settings, specs, creds);
         // statement
         String statement = 
             settings.getString(DatabaseConnectionSettings.CFG_STATEMENT, null); 

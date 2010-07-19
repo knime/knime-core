@@ -135,7 +135,7 @@ final class DBWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadSettings(settings, false);
-        m_conn.validateConnection(settings);
+        m_conn.validateConnection(settings, getCredentialsProvider());
     }
 
     /**
@@ -145,7 +145,7 @@ final class DBWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadSettings(settings, true);
-        m_conn.loadValidatedConnection(settings);
+        m_conn.loadValidatedConnection(settings, getCredentialsProvider());
     }
 
     private void loadSettings(

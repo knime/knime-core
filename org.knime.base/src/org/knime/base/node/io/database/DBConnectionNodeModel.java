@@ -106,7 +106,7 @@ final class DBConnectionNodeModel extends NodeModel {
             DatabasePortObject dbObj = (DatabasePortObject) inData[0];
             DatabaseQueryConnectionSettings conn = 
                 new DatabaseQueryConnectionSettings(
-                    dbObj.getConnectionModel());
+                    dbObj.getConnectionModel(), getCredentialsProvider());
             m_load = new DatabaseReaderConnection(conn);
         }
         m_lastSpec = m_load.getDataTableSpec();
@@ -176,7 +176,8 @@ final class DBConnectionNodeModel extends NodeModel {
         }
         try {
             DatabaseQueryConnectionSettings conn = 
-                new DatabaseQueryConnectionSettings(newConn);
+                new DatabaseQueryConnectionSettings(newConn, 
+                    getCredentialsProvider());
             m_load = new DatabaseReaderConnection(conn);
             m_lastSpec = m_load.getDataTableSpec();
             return new DataTableSpec[]{m_lastSpec};

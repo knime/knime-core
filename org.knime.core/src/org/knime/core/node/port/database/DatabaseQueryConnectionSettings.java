@@ -53,6 +53,7 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  * 
@@ -69,13 +70,15 @@ public final class DatabaseQueryConnectionSettings
     /**
      * Create a new connection with an empty query object.
      * @param settings settings to load from
+     * @param cp credential store used to get user name and password
      * @throws InvalidSettingsException if settings could not be loaded
      */
-    public DatabaseQueryConnectionSettings(final ConfigRO settings) 
+    public DatabaseQueryConnectionSettings(final ConfigRO settings,
+            final CredentialsProvider cp) 
             throws InvalidSettingsException {
         super();
         m_query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
-        super.loadValidatedConnection(settings);
+        super.loadValidatedConnection(settings, cp);
     }
     
     /**
@@ -95,7 +98,8 @@ public final class DatabaseQueryConnectionSettings
      * {@inheritDoc}
      */
     @Override
-    public void validateConnection(final ConfigRO settings)
+    public void validateConnection(final ConfigRO settings,
+            final CredentialsProvider cp)
             throws InvalidSettingsException {
         String query = settings.getString(CFG_STATEMENT);
         if (query != null && query.contains(TABLE_PLACEHOLDER)) {
@@ -103,7 +107,7 @@ public final class DatabaseQueryConnectionSettings
                     + TABLE_PLACEHOLDER + ") not replaced in query:\n"
                     + query);
         }
-        super.validateConnection(settings);
+        super.validateConnection(settings, cp);
     }
     
     /**

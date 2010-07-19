@@ -96,7 +96,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         String tableName = m_tableName.getStringValue();
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                dbObj.getConnectionModel());
+                dbObj.getConnectionModel(), getCredentialsProvider());
         try {
             conn.execute("DROP TABLE " + tableName);
         } catch (Exception e) {
@@ -148,7 +148,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
             DatabaseQueryConnectionSettings conn = 
                 new DatabaseQueryConnectionSettings(
-                    spec.getConnectionModel());
+                    spec.getConnectionModel(), getCredentialsProvider());
             conn.createConnection();
         } catch (InvalidSettingsException ise) {
             throw ise;

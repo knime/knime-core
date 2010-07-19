@@ -249,7 +249,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
+            final NodeSettingsRO parentSettings, final LoadResult loadResult,
+            final CredentialLoader credentialLoader) {
     }
 
     /** {@inheritDoc} */

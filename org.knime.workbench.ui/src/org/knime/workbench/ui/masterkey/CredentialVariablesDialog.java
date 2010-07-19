@@ -19,11 +19,9 @@
 package org.knime.workbench.ui.masterkey;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -41,7 +39,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.CredentialsStore;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Dialog that let the user add, edit or remove credentials. Existing
@@ -55,26 +52,43 @@ public class CredentialVariablesDialog extends Dialog {
 
     private CredentialVariableTable m_table;
 
-    private final WorkflowManager m_workflow;
+    private List<Credentials> m_credentials;
 
     private Button m_addVarBtn;
 
     private Button m_editVarBtn;
 
     private Button m_removeVarBtn;
+    
+   /**
+    * Create a new dialog instance to edit credentials.
+    * @param shell parent shell
+    * @param store holding the current <code>Credentials</code>
+    */
+   public CredentialVariablesDialog(final Shell shell,
+           final CredentialsStore store) {
+       super(shell);
+       m_credentials = new ArrayList<Credentials>();
+       if (store != null) {
+           for (Credentials cred : store.getCredentials()) {
+               m_credentials.add(cred);
+           }
+       }
+   }
 
     /**
-     *
+     * Create a new dialog instance to edit credentials.
      * @param shell parent shell
-     * @param workflow selected workflow to create the workflow variables for
+     * @param credentials list of current <code>Credentials</code>
      */
     public CredentialVariablesDialog(final Shell shell,
-            final WorkflowManager workflow) {
+            final List<Credentials> credentials) {
         super(shell);
-        if (workflow == null) {
-            throw new IllegalArgumentException("Workflow must not be null!");
+        if (credentials == null) {
+            m_credentials = new ArrayList<Credentials>();
+        } else {
+            m_credentials = new ArrayList<Credentials>(credentials);
         }
-        m_workflow = workflow;
     }
 
     /**
@@ -107,8 +121,7 @@ public class CredentialVariablesDialog extends Dialog {
         tableComp.setLayout(new FillLayout());
         tableComp.setLayoutData(gridData);
         m_table = new CredentialVariableTable(tableComp);
-        for (Credentials cred 
-                : m_workflow.getCredentialsStore().getCredentials()) {
+        for (Credentials cred : m_credentials) {
             m_table.add(cred);
         }
         m_table.getViewer().refresh();
@@ -168,7 +181,7 @@ public class CredentialVariablesDialog extends Dialog {
                     .getSelectionIndex();
                 if (selectionIdx < 0) {
                     MessageDialog.openWarning(getShell(), "Empty selection",
-                    "Please select the credential you want to edit.");
+                        "Please select the credential you want to edit.");
                     return;
                 }
                 Credentials selectedCred = m_table.get(selectionIdx);
@@ -202,19 +215,6 @@ public class CredentialVariablesDialog extends Dialog {
         return composite;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void create() {
-        // we have to override the create contents method, since the dialog area
-        // is created before the button bar at the bottom is created, where we
-        // have to disable the OK button in case the workflow is running
-        super.create();
-        // update button state...
-        setEditable(!m_workflow.getState().executionInProgress());
-    }
-
     private void addCredential() {
         CredentialVariablesEditDialog dialog = 
             new CredentialVariablesEditDialog();
@@ -240,18 +240,15 @@ public class CredentialVariablesDialog extends Dialog {
 
     private void editCredentials(final Credentials cred,
             final int selectionIdx) {
-        CredentialVariablesEditDialog dialog = 
-            new CredentialVariablesEditDialog();
-        dialog.create();
-        dialog.loadFrom(cred);
-        if (dialog.open() == Dialog.CANCEL) {
-            // if the user has canceled the dialog there is nothing left to do
-            return;
-        } // else replace it...
-        Credentials var = dialog.getCredential();
-        if (var != null) {
-            m_table.replace(selectionIdx, var);
-            m_table.getViewer().refresh();
+        CredentialVariablesEditDialog dlg = new CredentialVariablesEditDialog();
+        dlg.create();
+        dlg.loadFrom(cred);
+        if (dlg.open() == Dialog.OK) {
+            Credentials var = dlg.getCredential();
+            if (var != null) {
+                m_table.replace(selectionIdx, var);
+                m_table.getViewer().refresh();
+            }
         }
     }
 
@@ -260,74 +257,21 @@ public class CredentialVariablesDialog extends Dialog {
         m_table.getViewer().refresh();
     }
 
-    private boolean hasChanges() {
-        Iterable<Credentials> credList = 
-            m_workflow.getCredentialsStore().getCredentials();
-        ArrayList<Credentials> credArray = new ArrayList<Credentials>();
-        for (Credentials c : credList) {
-            credArray.add(c);
-        }
-        List<Credentials> dialogList = m_table.getCredentials();
-        return !Arrays.equals(credArray.toArray(new Credentials[0]), 
-            dialogList.toArray(new Credentials[0]));
-    }
-
     /**
      *
      * {@inheritDoc}
      */
     @Override
     protected void okPressed() {
-        // if one or more variables were added or edited
-        if (hasChanges()) {
-            CredentialsStore store = m_workflow.getCredentialsStore();
-            for (Credentials c : m_table.getCredentials()) {
-                if (store.contains(c.getName())) {
-                    store.update(c);
-                } else {
-                    store.add(c);
-                }
-            }
-        }
-        // no changes -> close dialog
+        m_credentials = m_table.getCredentials();
         super.okPressed();
     }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void cancelPressed() {
-        // if has changes -> open confirmation dialog "discard changes?"
-        if (hasChanges()) {
-            if (!MessageDialog.openConfirm(getShell(),
-                    "Discard Changes",
-                    "Do you really want to discard your changes?")) {
-                // leave it open
-                return;
-            }
-        }
-        super.cancelPressed();
-    }
-
-    private void setEditable(final boolean isEditable) {
-        Shell shell = getShell();
-        if (shell == null) {
-            // in case the method is called before the dialog was actually open
-            return;
-        }
-        Button okBtn = getButton(IDialogConstants.OK_ID);
-        if (okBtn != null && !okBtn.isDisposed()) {
-            okBtn.setEnabled(isEditable);
-        }
-        if (m_addVarBtn != null && !m_addVarBtn.isDisposed()) {
-            m_addVarBtn.setEnabled(isEditable);
-        }
-        if (m_editVarBtn != null && !m_editVarBtn.isDisposed()) {
-            m_editVarBtn.setEnabled(isEditable);
-        }
-        if (m_removeVarBtn != null && !m_removeVarBtn.isDisposed()) {
-            m_removeVarBtn.setEnabled(isEditable);
-        }
-        getShell().redraw();
+    
+    /**
+     * @return a list of <code>Credentials</code> entered in the dialog
+     */
+    public List<Credentials> getCredentials() {
+        return m_credentials;
     }
 
 }

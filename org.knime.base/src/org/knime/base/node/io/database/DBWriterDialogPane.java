@@ -51,6 +51,7 @@ package org.knime.base.node.io.database;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -119,7 +120,9 @@ final class DBWriterDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_loginPane.loadSettingsFrom(settings, specs);
+	// get workflow credentials
+	Collection<String> creds = super.getCredentialsNames();
+        m_loginPane.loadSettingsFrom(settings, specs, creds);
         // table name
         m_table.setText(settings.getString("table", "<table_name>"));
         // append data flag

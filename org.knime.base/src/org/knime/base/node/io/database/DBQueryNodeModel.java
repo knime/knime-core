@@ -128,7 +128,7 @@ final class DBQueryNodeModel extends DBNodeModel {
     	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
     	DatabaseQueryConnectionSettings conn = 
     		new DatabaseQueryConnectionSettings(
-    				spec.getConnectionModel());
+    		    spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
@@ -153,7 +153,7 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = 
                 new DatabaseQueryConnectionSettings(
-                dbObj.getSpec().getConnectionModel());
+                dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(dbObj.getSpec(),	newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
