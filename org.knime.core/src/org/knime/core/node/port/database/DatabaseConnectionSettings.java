@@ -242,7 +242,13 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_dbName);
         if (m_credName == null) {
             settings.addString("user", m_user);
-            settings.addString("password", m_pass);
+            try {
+               settings.addString("password", 
+                   KnimeEncryption.encrypt(m_pass.toCharArray()));
+            } catch (Throwable t) {
+                LOGGER.error("Could not encrypt password, reason: " 
+                        + t.getMessage(), t);
+            }
         } else {
             settings.addString("credential_name", m_credName);
         }

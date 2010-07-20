@@ -288,7 +288,7 @@ final class DBDialogPane extends JPanel {
                     settings.addString("password", KnimeEncryption.encrypt(
                             m_pass.getPassword()));
                 } catch (Throwable t) {
-                    LOGGER.warn("Could not encrypt password, reason: " 
+                    LOGGER.error("Could not encrypt password, reason: " 
                             + t.getMessage(), t);
                 }
             } else {
