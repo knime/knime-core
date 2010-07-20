@@ -223,7 +223,8 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-        if ((name.equals("Indices") || name.equals("REAL-Entries"))
+        if ((name.equals("Indices") || name.equals("REAL-Entries") 
+                || name.equals("Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             m_buffer = new StringBuffer();
         } else if (name.equals("PolynomialKernelType")) {
