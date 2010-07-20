@@ -98,8 +98,8 @@ public class NodePortLocator extends PortLocator {
         Rectangle parentBounds = m_parent.getBounds().getCopy();
 
         // try not to cover the node's symbol (that's used to move node)
-        // we need like 5 pixels for the icon at a MetaNodeOutPortFigure
-        int width = (parentBounds.width - symbolBounds.width) / 2 + 5;
+        // we need like 7 pixels for the icon at a MetaNodeOutPortFigure
+        int width = (parentBounds.width - symbolBounds.width) / 2 + 7;
         int height = AbstractPortFigure.NODE_PORT_SIZE;
         int x = 0;
         if (isInPort()) {

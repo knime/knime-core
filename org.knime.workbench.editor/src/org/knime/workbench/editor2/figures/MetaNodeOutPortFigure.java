@@ -135,7 +135,7 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
         }
 
         Rectangle r = computePortShapeBounds(getBounds().getCopy());
-        graphics.drawImage(m_currentImage, new Point(r.x - 4, r.y + 1));
+        graphics.drawImage(m_currentImage, new Point(r.x - 5, r.y + 1));
     }
 
 
