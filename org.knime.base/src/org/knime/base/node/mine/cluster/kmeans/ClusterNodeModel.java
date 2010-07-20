@@ -380,12 +380,11 @@ public class ClusterNodeModel extends NodeModel {
      * that are extremely similar to the first n patterns...
      *
      * {@inheritDoc}
-     *
-     * @FIXME actually do something useful with missing values!
      */
     @Override
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
+        // FIXME actually do something useful with missing values!
         assert (data.length == 1);
         BufferedDataTable inData = (BufferedDataTable)data[0];
         m_spec = inData.getDataTableSpec();

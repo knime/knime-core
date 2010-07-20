@@ -686,8 +686,8 @@ public final class Node implements NodeModelWarningListener {
      * method also returns false without executing this node or any further
      * connected node.
      *
+     * @param rawData the data from the predecessor.
      * @param exec The execution monitor.
-     * @param data the data from the predecessor.
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
@@ -1274,7 +1274,7 @@ public final class Node implements NodeModelWarningListener {
      * {@link NodeModel}, for example in case the node is wrapped and the
      * output is modified.
      *
-     * @param inSpecs table specs from the predecessors
+     * @param rawInSpecs table specs from the predecessors
      * @param postConfigure object called after node model calculated output
      *            specs
      * @return true if configure finished successfully.
@@ -1459,12 +1459,11 @@ public final class Node implements NodeModelWarningListener {
     /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
      *            {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}.
-     * @param foStack The stack of variables.
+     * @param settings The current settings of this node. The settings object
+     *        will also contain the settings of the outer SNC.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
-     * @param settings The current settings of this node. The settings object
-     *        will also contain the settings of the outer SNC.
      * @throws NotConfigurableException if the dialog cannot be opened because
      *             of real invalid settings or if any preconditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in

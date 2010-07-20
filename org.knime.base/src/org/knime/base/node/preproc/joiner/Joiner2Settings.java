@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.preproc.joiner;
 
+import org.knime.base.data.sort.MemoryService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
