@@ -61,8 +61,10 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
+import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
 import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryView;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.BundleContext;
@@ -110,10 +112,15 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
         
+        // create a knime encryption supplier that reads in an encryption key
+        // from the user via a dialog or directly from the preference page
+        KnimeEncryption.setEncryptionKeySupplier(
+                MasterKeyPreferencePage.SUPPLIER);
+
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID,
                         "/icons/knime_default.png"));
-        
+
         IPreferenceStore prefStore = getPreferenceStore();
         int freqHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
