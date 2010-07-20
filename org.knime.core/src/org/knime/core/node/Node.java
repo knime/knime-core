@@ -707,7 +707,7 @@ public final class Node implements NodeModelWarningListener {
         PortObject[] inData = new PortObject[data.length];
         // check for existence of all input tables
         for (int i = 0; i < data.length; i++) {
-            if (data[i] == null && !m_inputs[i].getType().isOptional()) {
+            if (data[i] == null && !m_inputs[i + 1].getType().isOptional()) {
                 m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
