@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.Shape;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -305,7 +306,12 @@ public abstract class AbstractPortFigure extends Shape {
     }
 
     private boolean showFlowVarPorts() {
-        return ((NodeContainerFigure)getParent()).getShowFlowVarPorts();
+        IFigure p = getParent();
+        if (p instanceof NodeContainerFigure) {
+            return ((NodeContainerFigure)getParent()).getShowFlowVarPorts();
+        } else {
+            return true;
+        }
     }
 
     public Rectangle computePortShapeBounds(final Rectangle bounds) {
