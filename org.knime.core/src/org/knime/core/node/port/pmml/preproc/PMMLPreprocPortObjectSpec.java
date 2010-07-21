@@ -60,18 +60,18 @@ import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
- * Dummy singleton port object instance. 
+ * Dummy singleton port object instance.
  * TODO: It should be investigated which
  * information can be provided to successor nodes before execution, e.g.
  * effected columns for column based operations.
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
-public final class PMMLPreprocPortObjectSpec implements PortObjectSpec {
+public class PMMLPreprocPortObjectSpec implements PortObjectSpec {
     /**  */
     public static final PMMLPreprocPortObjectSpec INSTANCE
             = new PMMLPreprocPortObjectSpec();
 
-    private PMMLPreprocPortObjectSpec() {
+    public PMMLPreprocPortObjectSpec() {
         super();
     }
 
