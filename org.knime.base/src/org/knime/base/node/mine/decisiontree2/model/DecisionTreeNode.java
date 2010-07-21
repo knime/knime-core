@@ -321,7 +321,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         /* If the winner count equals the class count of the majority class of
            this node, the majority class is the winner to avoid inconsistencies
             on ties. */
-        if (winnerCount == classCounts.get(m_class)) {
+        if (classCounts.get(m_class) != null &&
+                winnerCount == classCounts.get(m_class)) {
             winner = m_class;
         }
         if (winner == null) {

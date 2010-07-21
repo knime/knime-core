@@ -71,6 +71,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -247,7 +248,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
             if (m_showDistribution.getBooleanValue()) {
                 for (int i = numInCells; i < newCells.length - 1; i++) {
                     String predClass = outSpec.getColumnSpec(i).getName();
-                    newCells[i] = new DoubleCell(classDistrib.get(predClass));
+                    if (classDistrib != null) {
+                        newCells[i] = new DoubleCell(
+                                classDistrib.get(predClass));
+                    } else {
+                        newCells[i] = DataType.getMissingCell();
+                    }
                 }
             }
             newCells[newCells.length - 1] = cl;

@@ -103,7 +103,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         IGNORED.add("Targets");
         IGNORED.add("ModelVerification");
         IGNORED.add("Interval");
-        IGNORED.add("Value");
 
         KNOWN.add("PMML");
         KNOWN.add("Header");
