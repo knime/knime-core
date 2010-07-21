@@ -121,8 +121,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     @Override
     public void buildContextMenu(final IMenuManager manager) {
 
+        final String FLOW_VAR_PORT_GRP = "Flow Variable Ports";
         LOGGER.debug("Building up context menu...");
+
+        // add the groups (grouped by separators) in their order first
         manager.add(new Separator(IWorkbenchActionConstants.GROUP_APP));
+        manager.add(new Separator(FLOW_VAR_PORT_GRP));
         GEFActionConstants.addStandardActionGroups(manager);
 
         IAction action;
@@ -222,6 +226,17 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 container =
                         (NodeContainer)((NodeContainerEditPart)p).getModel();
 
+                if (!(container instanceof WorkflowManager)) {
+                    // in expert mode you can switch display of the flow var
+                    // ports
+                    if (Boolean.parseBoolean(System.getProperty(
+                            KNIMEConstants.PROPERTY_EXPERT_MODE, "false"))) {
+                        manager.appendToGroup(FLOW_VAR_PORT_GRP,
+                                new ToggleFlowVarPortsAction(
+                                        (NodeContainerEditPart)p));
+                    }
+                }
+
                 // add for node views option if applicable
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
@@ -240,17 +255,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                             action);
                 }
 
-                if (!(container instanceof WorkflowManager)) {
-                    // in expert mode you can switch display of the flow var
-                    // ports
-                    if (Boolean.parseBoolean(System.getProperty(
-                            KNIMEConstants.PROPERTY_EXPERT_MODE, "false"))) {
-                        manager.add(new Separator("Flow Variable Ports"));
-                        manager.appendToGroup("Flow Variable Ports",
-                                new ToggleFlowVarPortsAction(
-                                        (NodeContainerEditPart)p));
-                    }
-                }
                 // add port views
                 LOGGER.debug("adding open port-view action(s) "
                         + "to context menu...");
