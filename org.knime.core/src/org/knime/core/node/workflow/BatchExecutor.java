@@ -233,7 +233,7 @@ public final class BatchExecutor {
                     isPromptForPassword = true;
                 }
             } else if ("-credential".equals(parts[0])) {
-                if (parts.length > 1) {
+                if (parts.length == 2) {
                     if (parts[1].length() == 0) {
                         System.err.println("Credential name must not be empty.");
                         return 1;
@@ -262,6 +262,10 @@ public final class BatchExecutor {
                             credentialMap.put(credName, null);
                         }
                     }
+                } else {
+                    System.err.println(
+                	    "Couldn't parse -credential argument: " + s);
+                    return 1;
                 }
             } else if ("-preferences".equals(parts[0])) {
                 if (parts.length != 2) {
