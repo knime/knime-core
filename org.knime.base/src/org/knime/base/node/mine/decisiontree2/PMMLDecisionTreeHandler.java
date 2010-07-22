@@ -103,7 +103,8 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         IGNORED.add("Targets");
         IGNORED.add("ModelVerification");
         IGNORED.add("Interval");
-
+        IGNORED.add("Value");
+        
         KNOWN.add("PMML");
         KNOWN.add("Header");
         KNOWN.add("Application");
@@ -340,7 +341,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         }
         m_tree = new DecisionTree(m_childStack.pop(), m_classColumn,
                 m_mvStrategy, m_ntcStrategy);
-        LOGGER.info("Decision tree with missing value strateg: '"
+        LOGGER.info("Decision tree with missing value strategy: '"
                 + m_mvStrategy + "' and no true child strategy: '"
                 + m_ntcStrategy + "' created.");
     }
