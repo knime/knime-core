@@ -1289,9 +1289,14 @@ public final class Node implements NodeModelWarningListener {
             PortObjectSpec[] inSpecs =
                 Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
 
-            // need to init here as there may be an exception being thrown and
-            // then we copy the null elements of this array to their destination
-            PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts() - 1];
+            // clean output spec
+            for (int p = 0; p < m_outputs.length; p++) {
+                // update data table spec
+                m_outputs[p].spec = null;
+            }
+
+            PortObjectSpec[] newOutSpec =
+                new PortObjectSpec[getNrOutPorts() - 1];
             Map<String, FlowVariable> newVariables = Collections.emptyMap();
             try {
                 if (m_variablesSettings != null) {
@@ -1321,6 +1326,11 @@ public final class Node implements NodeModelWarningListener {
                     newOutSpec = postConfigure.configure(inSpecs, newOutSpec);
                 }
                 pushOntoStack(newVariables);
+                for (int p = 0; p < newOutSpec.length; p++) {
+                    // update data table spec
+                    m_outputs[p + 1].spec = newOutSpec[p];
+                }
+                m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
                 success = true;
             } catch (InvalidSettingsException ise) {
                 Throwable cause = ise.getCause();
@@ -1334,12 +1344,6 @@ public final class Node implements NodeModelWarningListener {
                     + t.getClass().getSimpleName() + "): "
                     + t.getMessage();
                 createErrorMessageAndNotify(error, t);
-            } finally {
-                for (int p = 0; p < newOutSpec.length; p++) {
-                    // update data table spec
-                    m_outputs[p + 1].spec = newOutSpec[p];
-                }
-                m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
             }
         }
         if (success) {
