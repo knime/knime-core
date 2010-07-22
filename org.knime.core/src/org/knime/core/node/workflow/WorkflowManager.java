@@ -663,6 +663,15 @@ public final class WorkflowManager extends NodeContainer {
                 // successors one layer up!
                 getParent().configureNodeAndSuccessors(dest, false);
                 checkForNodeStateChanges(true);
+            } else if (destNC instanceof WorkflowManager) {
+                // connection enters a meta node
+                // (can't have optional ins -- no reset required)
+                WorkflowManager destWFM = (WorkflowManager)destNC;
+                destWFM.configureNodesConnectedToPortInWFM(destPort);
+                Set<Integer> outPorts =
+                    destWFM.getWorkflow().connectedOutPorts(destPort);
+                configureNodeAndPortSuccessors(dest, outPorts,
+                        /* do not configure dest itself */false, true);
             } else {
                 assert m_workflow.containsNodeKey(dest);
                 // ...make sure the destination node is configured again (and
@@ -891,21 +900,22 @@ public final class WorkflowManager extends NodeContainer {
             }
             // handle special cases with port reference chains (WFM border
             // crossing connections:
+            int destPort = cc.getDestPort();
             if ((source.equals(getID()))
                 && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
                 assert cc.getType() == ConnectionType.WFMTHROUGH;
-                getOutPort(cc.getDestPort()).setUnderlyingPort(null);
+                getOutPort(destPort).setUnderlyingPort(null);
             } else if ((!dest.equals(getID()))
                     && (destNC instanceof WorkflowManager)) {
                 // we are feeding data into a subworkflow
                 WorkflowInPort wfmIPort
-                        = ((WorkflowManager)destNC).getInPort(cc.getDestPort());
+                        = ((WorkflowManager)destNC).getInPort(destPort);
                 wfmIPort.setUnderlyingPort(null);
             } else if (dest.equals(getID())) {
                 // we are feeding data out of the subworkflow
                 assert cc.getType() == ConnectionType.WFMOUT;
-                getOutPort(cc.getDestPort()).setUnderlyingPort(null);
+                getOutPort(destPort).setUnderlyingPort(null);
             }
             // and finally reset the destination node - since it has incomplete
             // incoming connections now...
@@ -918,6 +928,17 @@ public final class WorkflowManager extends NodeContainer {
                         false);
                 // make sure to reflect state changes
                 checkForNodeStateChanges(true);
+            } else if (destNC instanceof WorkflowManager) {
+                // connection entered a meta node
+                WorkflowManager destWFM = (WorkflowManager)destNC;
+                destWFM.resetNodesInWFMConnectedToInPorts(
+                        Collections.singleton(destPort));
+                destWFM.configureNodesConnectedToPortInWFM(destPort);
+                Set<Integer> outPorts =
+                    destWFM.getWorkflow().connectedOutPorts(destPort);
+                for (int i : outPorts) {
+                    resetSuccessors(dest, i);
+                }
             } else {
                 // otherwise just reset successor, rest will be handled by WFM
                 resetAndConfigureNode(cc.getDest());
@@ -3695,9 +3716,9 @@ public final class WorkflowManager extends NodeContainer {
     static final String CFG_CREATED_BY = "created_by";
 
     public static WorkflowLoadResult loadProject(final File directory,
-            final ExecutionMonitor exec, 
-            final CredentialLoader credentialLoader) 
-            throws IOException, InvalidSettingsException, 
+            final ExecutionMonitor exec,
+            final CredentialLoader credentialLoader)
+            throws IOException, InvalidSettingsException,
                 CanceledExecutionException {
         return ROOT.load(directory, exec, credentialLoader, false);
     }
