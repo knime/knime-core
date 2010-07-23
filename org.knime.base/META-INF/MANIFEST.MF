@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-ManifestVersion: 2
-Bundle-Version: 2.2.0.0026141
+Bundle-Version: 2.2.0.0026408
 Bundle-ClassPath: knime-base-patches.jar,
  knime-base.jar,
  lib/Jama-1.0.2.jar
