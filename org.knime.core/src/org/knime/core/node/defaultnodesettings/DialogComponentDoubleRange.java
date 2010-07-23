@@ -161,7 +161,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
         });
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinnerMin.getEditor();
-        editor.getTextField().setColumns(new String("" + lowerMax).length());
+        editor.getTextField().setColumns(10);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         m_spinnerMax =
                 new JSpinner(new SpinnerNumberModel(model.getMaxRange(),
@@ -172,11 +172,12 @@ public class DialogComponentDoubleRange extends DialogComponent {
             }
         });
         editor = (JSpinner.DefaultEditor)m_spinnerMax.getEditor();
-        editor.getTextField().setColumns(new String("" + upperMax).length());
+        editor.getTextField().setColumns(10);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         myPanel.add(m_label);
         myPanel.add(m_labelMin);
         myPanel.add(m_spinnerMin);
+
         myPanel.add(m_labelMax);
         myPanel.add(m_spinnerMax);
         //call this method to be in sync with the settings model
