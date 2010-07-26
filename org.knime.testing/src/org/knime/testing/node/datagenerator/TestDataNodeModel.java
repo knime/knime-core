@@ -34,11 +34,11 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -179,7 +179,8 @@ public class TestDataNodeModel extends NodeModel {
     }
 
     private DataCell getTimestampVal(final int rowIdx) {
-        return new TimestampCell(dateVals[rowIdx % dateVals.length]);
+        return new DateAndTimeCell(
+                dateVals[rowIdx % dateVals.length].getTime(), true, true, true);
     }
 
     private DataCell getTimestampSetVal(final int rowIdx, final int i) {
@@ -320,13 +321,13 @@ public class TestDataNodeModel extends NodeModel {
         specs[i++] = creator.createSpec();
 
         creator.setName("TimestampCol");
-        creator.setType(TimestampCell.TYPE);
+        creator.setType(DateAndTimeCell.TYPE);
         specs[i++] = creator.createSpec();
         creator.setName("TimestampListCol");
-        creator.setType(ListCell.getCollectionType(TimestampCell.TYPE));
+        creator.setType(ListCell.getCollectionType(DateAndTimeCell.TYPE));
         specs[i++] = creator.createSpec();
         creator.setName("TimestampSetCol");
-        creator.setType(SetCell.getCollectionType(TimestampCell.TYPE));
+        creator.setType(SetCell.getCollectionType(DateAndTimeCell.TYPE));
         specs[i++] = creator.createSpec();
 
         creator.setName("MissingValStringCol");
