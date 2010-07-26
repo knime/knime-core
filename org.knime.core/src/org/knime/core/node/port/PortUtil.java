@@ -28,39 +28,39 @@ import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 
 /**
- * Contains framework methods that are used to persist or read 
+ * Contains framework methods that are used to persist or read
  * {@link PortObject} and {@link PortObjectSpec} objects.
- * 
+ *
  * <p>Methods in this class are not meant to be used by node developers. This
  * class and its methods may change in future versions.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PortUtil {
-   
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PortUtil.class);
-    
-    private static final Map<Class<? extends PortObjectSpec>, 
-    PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP = 
-        new HashMap<Class<? extends PortObjectSpec>, 
+
+    private static final Map<Class<? extends PortObjectSpec>,
+    PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP =
+        new HashMap<Class<? extends PortObjectSpec>,
         PortObjectSpecSerializer<?>>();
-    
+
     private PortUtil() {
     }
 
     /**
      * Get the globally used serializer for {@link PortObjectSpec} objects
-     * represented by the class argument. 
-     * 
+     * represented by the class argument.
+     *
      * @param <T> The specific PortObjectSpec class of interest.
      * @param cl Class argument.
      * @return The serializer to be used. Will throw an undeclared runtime
-     * exception if retrieving the type causes problems (suggests a coding 
+     * exception if retrieving the type causes problems (suggests a coding
      * problem)
      */
     @SuppressWarnings("unchecked")
     // access to CLASS_TO_SERIALIZER_MAP
-    public static <T extends PortObjectSpec> PortObjectSpecSerializer<T> 
+    public static <T extends PortObjectSpec> PortObjectSpecSerializer<T>
     getPortObjectSpecSerializer(final Class<T> cl) {
         if (PORT_SPEC_SERIALIZER_MAP.containsKey(cl)) {
             return PortObjectSpecSerializer.class.cast(PORT_SPEC_SERIALIZER_MAP
@@ -80,23 +80,23 @@ public final class PortUtil {
         return result;
     }
 
-    private static final Map<Class<? extends PortObject>, 
+    private static final Map<Class<? extends PortObject>,
     PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP =
         new HashMap<Class<? extends PortObject>, PortObjectSerializer<?>>();
 
     /**
      * Get the globally used serializer for {@link PortObject} objects
-     * represented by the class argument. 
-     * 
+     * represented by the class argument.
+     *
      * @param <T> The specific PortObject class of interest.
      * @param cl Class argument.
      * @return The serializer to be used. Will throw an undeclared runtime
-     * exception if retrieving the type causes problems (suggests a coding 
+     * exception if retrieving the type causes problems (suggests a coding
      * problem)
      */
     @SuppressWarnings("unchecked")
     // access to CLASS_TO_SERIALIZER_MAP
-    public static <T extends PortObject> PortObjectSerializer<T> 
+    public static <T extends PortObject> PortObjectSerializer<T>
     getPortObjectSerializer(final Class<T> cl) {
         if (PORT_OBJECT_SERIALIZER_MAP.containsKey(cl)) {
             return PortObjectSerializer.class.cast(PORT_OBJECT_SERIALIZER_MAP
@@ -114,26 +114,26 @@ public final class PortUtil {
         PORT_OBJECT_SERIALIZER_MAP.put(cl, result);
         return result;
     }
-    
+
     public static PortObjectSpecZipOutputStream getPortObjectSpecZipOutputStream(
             final OutputStream in) throws IOException {
-        PortObjectSpecZipOutputStream zipOut = 
+        PortObjectSpecZipOutputStream zipOut =
             new PortObjectSpecZipOutputStream(in);
         zipOut.putNextEntry(new ZipEntry("portSpec.file"));
         return zipOut;
     }
-    
+
     public static PortObjectZipOutputStream getPortObjectZipOutputStream(
             final OutputStream in) throws IOException {
-        PortObjectZipOutputStream zipOut = 
+        PortObjectZipOutputStream zipOut =
             new PortObjectZipOutputStream(in);
         zipOut.putNextEntry(new ZipEntry("portObject.file"));
         return zipOut;
     }
-    
+
     public static PortObjectSpecZipInputStream getPortObjectSpecZipInputStream(
             final InputStream in) throws IOException {
-        PortObjectSpecZipInputStream zipIn = 
+        PortObjectSpecZipInputStream zipIn =
             new PortObjectSpecZipInputStream(in);
         ZipEntry entry = zipIn.getNextEntry();
         if (!"portSpec.file".equals(entry.getName())) {
@@ -142,10 +142,10 @@ public final class PortUtil {
         }
         return zipIn;
     }
-    
+
     public static PortObjectZipInputStream getPortObjectZipInputStream(
             final InputStream in) throws IOException {
-        PortObjectZipInputStream zipIn = 
+        PortObjectZipInputStream zipIn =
             new PortObjectZipInputStream(in);
         ZipEntry entry = zipIn.getNextEntry();
         if (!"portObject.file".equals(entry.getName())) {
@@ -154,9 +154,9 @@ public final class PortUtil {
         }
         return zipIn;
     }
-    
-    public static void writeObjectToFile(final PortObject po, final File file, 
-            final ExecutionMonitor exec) 
+
+    public static void writeObjectToFile(final PortObject po, final File file,
+            final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         PortObjectSpec spec = po.getSpec();
         final ZipOutputStream out = new ZipOutputStream(
@@ -169,35 +169,35 @@ public final class PortUtil {
         toc.addString("port_spec_class", spec.getClass().getName());
         toc.addString("port_object_class", po.getClass().getName());
         toc.saveToXML(new NonClosableOutputStream.Zip(out));
-        
+
         out.putNextEntry(new ZipEntry("objectSpec.file"));
-        PortObjectSpecZipOutputStream specOut = 
+        PortObjectSpecZipOutputStream specOut =
             getPortObjectSpecZipOutputStream(
                     new NonClosableOutputStream.Zip(out));
-        PortObjectSpecSerializer specSer = 
+        PortObjectSpecSerializer specSer =
             getPortObjectSpecSerializer(spec.getClass());
         specSer.savePortObjectSpec(spec, specOut);
         specOut.close(); // will propagate as closeEntry
-        
+
         out.putNextEntry(new ZipEntry("object.file"));
         PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(
                 new NonClosableOutputStream.Zip(out));
         PortObjectSerializer objSer = getPortObjectSerializer(po.getClass());
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
-        
+
         out.close();
     }
 
-    public static PortObject readObjectFromFile(final File file, 
-            final ExecutionMonitor exec) 
+    public static PortObject readObjectFromFile(final File file,
+            final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         ZipInputStream in = new ZipInputStream(
                 new BufferedInputStream(new FileInputStream(file)));
-        
+
         ZipEntry entry = in.getNextEntry();
         if (!"content.xml".equals(entry.getName())) {
-            throw new IOException("Invalid stream, expected zip entry " 
+            throw new IOException("Invalid stream, expected zip entry "
                     + "\"content.xml\", got \"" + entry.getName() + "\"");
         }
         ModelContentRO toc = ModelContent.loadFromXML(
@@ -214,7 +214,7 @@ public final class PortUtil {
 
         entry = in.getNextEntry();
         if (!"object.file".equals(entry.getName())) {
-            throw new IOException("Invalid stream, expected zip entry " 
+            throw new IOException("Invalid stream, expected zip entry "
                     + "\"object.file\", got \"" + entry.getName() + "\"");
         }
         Class<?> cl;
@@ -229,7 +229,7 @@ public final class PortUtil {
                     + "\" does not a sub-class \""
                     + PortObject.class.getSimpleName() + "\"");
         }
-        PortObjectZipInputStream objIn = 
+        PortObjectZipInputStream objIn =
             PortUtil.getPortObjectZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSerializer<?> objSer =
@@ -239,15 +239,18 @@ public final class PortUtil {
         in.close();
         return po;
     }
-    
-    public static PortObjectSpec readObjectSpecFromFile(final File file) 
+
+    public static PortObjectSpec readObjectSpecFromFile(final File file)
     throws IOException {
         ZipInputStream in = new ZipInputStream(
                 new BufferedInputStream(new FileInputStream(file)));
-        
+
         ZipEntry entry = in.getNextEntry();
+        if (entry == null) {
+            throw new IOException("Invalid file: No zip entry found");
+        }
         if (!"content.xml".equals(entry.getName())) {
-            throw new IOException("Invalid stream, expected zip entry " 
+            throw new IOException("Invalid stream, expected zip entry "
                     + "\"content.xml\", got \"" + entry.getName() + "\"");
         }
         ModelContentRO toc = ModelContent.loadFromXML(
@@ -262,13 +265,13 @@ public final class PortUtil {
         in.close();
         return spec;
     }
-    
-    private static PortObjectSpec readObjectSpec(final String specClassName, 
-            final ZipInputStream in) 
+
+    private static PortObjectSpec readObjectSpec(final String specClassName,
+            final ZipInputStream in)
     throws IOException {
         ZipEntry entry = in.getNextEntry();
         if (!"objectSpec.file".equals(entry.getName())) {
-            throw new IOException("Invalid stream, expected zip entry " 
+            throw new IOException("Invalid stream, expected zip entry "
                     + "\"objectSpec.file\", got \"" + entry.getName() + "\"");
         }
         Class<?> cl;
@@ -283,7 +286,7 @@ public final class PortUtil {
                     + "\" does not a sub-class \""
                     + PortObjectSpec.class.getSimpleName() + "\"");
         }
-        PortObjectSpecZipInputStream specIn = 
+        PortObjectSpecZipInputStream specIn =
             PortUtil.getPortObjectSpecZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSpecSerializer<?> serializer =
@@ -293,5 +296,5 @@ public final class PortUtil {
         specIn.close();
         return spec;
     }
-    
+
 }
