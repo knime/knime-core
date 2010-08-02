@@ -373,7 +373,9 @@ public abstract class NodeDialogPane {
         } catch (InvalidSettingsException ise) {
             throw ise;
         } catch (Throwable e) {
-            m_logger.error("Failed to save dialog settings", e);
+            m_logger.coding("Wrong exception type thrown "
+                    + "while saving dialog settings", e);
+            throw new InvalidSettingsException(e);
         }
         NodeSettings variables;
         if (m_flowVariablesModelChanged) {
