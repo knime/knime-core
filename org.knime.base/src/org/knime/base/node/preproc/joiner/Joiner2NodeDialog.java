@@ -266,7 +266,7 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         c.gridx = 0;
         c.gridy = 0;
 
-        p.add(new JLabel("Row ID separtor in joined table:"), c);
+        p.add(new JLabel("Row ID separator in joined table:"), c);
         c.gridx++;
         m_rowKeySeparator.setPreferredSize(new Dimension(50,
                 m_rowKeySeparator.getPreferredSize().height));

@@ -38,8 +38,6 @@
             match if they match in at least one specified column pairs.            
         </option>
         <option name="Performance Tuning">
-            <b>Buffer Size:</b> The maximum number of cells that will in memory
-            at the same time. Increase it for better performance.
             <b>Maximum number of open files:</b> The maximum number of opened
             temporary files. Increase it for better performance.
             <b>Enable hiliting:</b> Select, if hiliting is enabled between 
