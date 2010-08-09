@@ -265,7 +265,9 @@ public class SingleNodeContainerPersistorVersion200 extends
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
         if (sncWorkingDirRef == null) {
-            snc.setNodeContainerDirectory(nodeDirRef);
+            // set working dir so that we can unset the dirty flag
+            sncWorkingDirRef = nodeDirRef;
+            snc.setNodeContainerDirectory(sncWorkingDirRef);
         }
         if (nodeDirRef.equals(sncWorkingDirRef)) {
             snc.unsetDirty();
