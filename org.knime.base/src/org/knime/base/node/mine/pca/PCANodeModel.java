@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.pca;
 
@@ -86,7 +86,7 @@ import Jama.Matrix;
 
 /**
  * The model class that implements the PCA on the input table.
- * 
+ *
  * @author Uwe Nagel, University of Konstanz
  */
 public class PCANodeModel extends NodeModel {
@@ -97,7 +97,7 @@ public class PCANodeModel extends NodeModel {
     static final String FAIL_MISSING = "failMissing";
 
     /**
-     * 
+     *
      */
     static final String INPUT_COLUMNS = "input_columns";
 
@@ -162,7 +162,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * select all compatible columns as input.
-     * 
+     *
      * @param inSpecs in specs
      */
     private void selectDefaultColumns(final PortObjectSpec[] inSpecs) {
@@ -180,9 +180,9 @@ public class PCANodeModel extends NodeModel {
     /**
      * All {@link org.knime.core.data.def.IntCell} columns are converted to
      * {@link org.knime.core.data.def.DoubleCell} columns.
-     * 
+     *
      * {@inheritDoc}
-     * 
+     *
      */
 
     @Override
@@ -262,7 +262,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * create table spec for output of spectral decomposition.
-     * 
+     *
      * @param dimensions number of dimension of input
      * @return table spec (first col for eigenvalues, others for components of
      *         eigenvectors)
@@ -287,7 +287,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * get column indices for all double compatible columns.
-     * 
+     *
      * @param dataTableSpec table spec
      * @return array of indices
      */
@@ -309,7 +309,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * create part of table spec to be added to the input table.
-     * 
+     *
      * @param inSpecs input specs (for unique column names)
      * @param resultDimensions number of dimensions in output
      * @return part of table spec to be added to input table
@@ -333,7 +333,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * Performs the PCA.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -448,7 +448,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * create a table containing the given spectral decomposition.
-     * 
+     *
      * @param exec execution context for table creation
      * @param evs eigenvalues
      * @param eigenvectors (column contains an eigenvector)
@@ -478,7 +478,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * reduce a single input row to the principal components.
-     * 
+     *
      * @param eigenvectors transposed matrix of eigenvectors (eigenvectors in
      *            rows, number of eigenvectors corresponds to dimensions to be
      *            projected to)
@@ -535,9 +535,9 @@ public class PCANodeModel extends NodeModel {
     /**
      * Converts a {@link DataTable} to the 2D-double array representing its
      * covariance matrix. Only numeric attributes are included.
-     * 
+     *
      * @param exec the execution context for progress report (a subcontext)
-     * 
+     *
      * @param dataTable the {@link DataTable} to convert
      * @param numericIndices indices of input columns
      * @param means mean values of columns
@@ -604,8 +604,9 @@ public class PCANodeModel extends NodeModel {
             exec.checkCanceled();
         }
         if (counter < 2) {
-            new IllegalArgumentException(
-                    "Input table has to few rows with valid values!");
+            throw new IllegalArgumentException(
+                    "Input table has too few rows with valid values! "
+                    + "Do some columns only contain missing values?");
         }
         for (int i = 0; i < dataMatrix.length; i++) {
             for (int j = 0; j < dataMatrix[i].length; j++) {
@@ -617,7 +618,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * calculate means of all columns.
-     * 
+     *
      * @param dataTable input table
      * @param numericIndices indices of columns to use
      * @param failOnMissingValues if true, throw exception if missing values are
@@ -737,7 +738,7 @@ public class PCANodeModel extends NodeModel {
 
     /**
      * create data table from covariance matrix.
-     * 
+     *
      * @param exec execution context
      * @param m covariance matrix
      * @param inputColumnNames names of input columns the matrix was created
