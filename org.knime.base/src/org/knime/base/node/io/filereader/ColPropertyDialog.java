@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.06.2005 (ohl): created
  */
@@ -84,7 +84,7 @@ import org.knime.core.data.def.StringCell;
 
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public final class ColPropertyDialog extends JDialog {
@@ -95,11 +95,11 @@ public final class ColPropertyDialog extends JDialog {
     private static final int TYPE_INT = 1;
 
     private static final int TYPE_STRING = 2;
-    
+
     private static final int TYPE_SMILES = 3;
 
     private static final String[] TYPES;
-    
+
     static {
         if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
             TYPES = new String[] {"Double", "Integer", "String", "Smiles"};
@@ -107,7 +107,7 @@ public final class ColPropertyDialog extends JDialog {
             TYPES = new String[] {"Double", "Integer", "String"};
         }
     }
-    
+
 
     // the index of the column to change settings for
     private int m_colIdx;
@@ -117,7 +117,7 @@ public final class ColPropertyDialog extends JDialog {
 
     // the components to read new user settings from
     private JCheckBox m_skipColumn;
-    
+
     private JTextField m_colNameField;
 
     private JComboBox m_typeChooser;
@@ -163,7 +163,7 @@ public final class ColPropertyDialog extends JDialog {
         skipPanel.add(Box.createHorizontalGlue());
         skipPanel.add(m_skipColumn);
         skipPanel.add(Box.createHorizontalGlue());
-        
+
         // column name goes first
         JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 5));
         m_colNameField = new JTextField(8);
@@ -250,7 +250,7 @@ public final class ColPropertyDialog extends JDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
     }
- 
+
     private void skipColumnHasChanged() {
         boolean useIt = !m_skipColumn.isSelected();
         m_colNameField.setEnabled(useIt);
@@ -258,7 +258,7 @@ public final class ColPropertyDialog extends JDialog {
         m_typeChooser.setEnabled(useIt);
         setEnableStatusOfDomainButton();
     }
-    
+
     /**
      * Called when "domain..." button is pressed. Opens the dialog for domain
      * settings, with components depending on the currently selected type.
@@ -299,25 +299,25 @@ public final class ColPropertyDialog extends JDialog {
             m_userDomainSettings = null;
             m_warnLabel.setText("Domain settings were reset!!");
         }
-        
+
         setEnableStatusOfDomainButton();
-        
+
     }
-    
+
     private void setEnableStatusOfDomainButton() {
-        
+
         if (m_skipColumn.isSelected()) {
             m_domainButton.setEnabled(false);
             return;
         }
-        
+
         DataType selectedType =
                 getTypeFromComboIndex(m_typeChooser.getSelectedIndex());
-        
+
         if (selectedType == null) {
             m_domainButton.setEnabled(false);
             return;
-        } 
+        }
             // if (selectedType.isCompatible(StringValue.class)
         // || selectedType.isCompatible(IntValue.class)) {
         /*
@@ -334,7 +334,7 @@ public final class ColPropertyDialog extends JDialog {
         }
     }
 
-    
+
     /**
      * Opens a Dialog to receive user settings for column name, type, missing
      * value pattern, and domain. If the user cancels the dialog no changes will
@@ -346,7 +346,7 @@ public final class ColPropertyDialog extends JDialog {
      * If the column type has changed, domain values will be cleared. On success
      * the 'set by user' flag is set. If user's settings are incorrect an error
      * dialog pops up and the user values are discarded.
-     * 
+     *
      * @param parent frame who owns this dialog
      * @param colIdx the index of the column user changes settings for. Must be
      *            an index of the vector of <code>allColProps</code>.
@@ -357,7 +357,7 @@ public final class ColPropertyDialog extends JDialog {
      *         properties. (Currently only the index colIdx will be changed). Or
      *         null if the user canceled, or entered invalid settings.
      */
-    static Vector<ColProperty> openUserDialog(final Frame parent,
+    public static Vector<ColProperty> openUserDialog(final Frame parent,
             final int colIdx, final Vector<ColProperty> allColProps) {
 
         assert colIdx < allColProps.size();
@@ -454,9 +454,9 @@ public final class ColPropertyDialog extends JDialog {
         // if he says okay its always user settings (even if nothing changed)
         newColProp.setUserSettings(true);
         newColProp.setSkipThisColumn(m_skipColumn.isSelected());
-        
-        // check name for uniqueness 
-            
+
+        // check name for uniqueness
+
         // only if we include the column in the table
         if (!newColProp.getSkipThisColumn()) {
             /* user changed column name. */
@@ -572,5 +572,5 @@ public final class ColPropertyDialog extends JDialog {
             return TYPE_STRING;
         }
     }
-    
+
 }
