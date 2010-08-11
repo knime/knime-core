@@ -62,7 +62,6 @@ import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.base.node.viz.roc.ROCNodeModel.ROCCurve;
-import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.node.NodeView;
 
 /**
@@ -70,7 +69,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ROCNodeView extends NodeView {
+public class ROCNodeView extends NodeView<ROCNodeModel> {
     private static final Color[] COLORS =
             {Color.red, Color.blue, Color.green, Color.magenta, Color.orange,
                     Color.cyan, Color.black};
@@ -82,10 +81,10 @@ public class ROCNodeView extends NodeView {
          * {@inheritDoc}
          */
         @Override
-        public void paintContent(final Graphics g) {
+        public synchronized void paintContent(final Graphics g) {
             super.paintContent(g);
 
-            ROCNodeModel mod = (ROCNodeModel)getNodeModel();
+            ROCNodeModel mod = getNodeModel();
             final int height = g.getFontMetrics().getHeight();
 
             List<ROCCurve> curves = mod.getCurves();
@@ -131,7 +130,7 @@ public class ROCNodeView extends NodeView {
             super.updatePaintModel();
             reset();
 
-            ROCNodeModel mod = (ROCNodeModel)getNodeModel();
+            ROCNodeModel mod = getNodeModel();
 
             List<ROCCurve> curves = mod.getCurves();
 
@@ -155,11 +154,6 @@ public class ROCNodeView extends NodeView {
 
             addLine(new double[]{0, maxX}, new double[]{0, maxY},
                     Color.lightGray, st);
-
-            ((NumericCoordinate)getXAxis().getCoordinate())
-                    .setMaxDomainValue(1.01);
-            ((NumericCoordinate)getYAxis().getCoordinate())
-                    .setMaxDomainValue(1.01);
         }
     }
 
