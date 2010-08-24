@@ -334,7 +334,12 @@ public class DatabaseConnectionSettings {
                 m_credName = null;
             }
             m_user = user;
-            m_pass = password;
+            if (password != null) {
+                m_pass = password;
+            } else {
+                LOGGER.warn("Password has not been set, using empty one.");
+                m_pass = "";
+            }
             m_dbName = database;
             DATABASE_URLS.add(m_dbName);
             // loaded driver
