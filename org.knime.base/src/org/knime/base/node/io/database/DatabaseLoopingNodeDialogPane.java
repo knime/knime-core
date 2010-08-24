@@ -53,12 +53,12 @@ package org.knime.base.node.io.database;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -68,14 +68,13 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DatabaseLoopingNodeDialogPane extends NodeDialogPane {
-    
-    private final DBReaderDialogPane m_dialog;
+public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
     
     private final DialogComponentColumnNameSelection m_columns;
     
@@ -86,11 +85,9 @@ public class DatabaseLoopingNodeDialogPane extends NodeDialogPane {
     private final DialogComponentNumber m_noValues;
 
     /**
-     * 
-     *
+     * Creates a new dialog for the Database Looping node.
      */
     DatabaseLoopingNodeDialogPane() {
-        m_dialog = new DBReaderDialogPane();
         m_columns = new DialogComponentColumnNameSelection(createColumnModel(), 
                 "Column selection: ", 0, NominalValue.class);
         m_aggregatebyRow = new DialogComponentBoolean(createAggregateModel(), 
@@ -99,15 +96,15 @@ public class DatabaseLoopingNodeDialogPane extends NodeDialogPane {
             "Append grid column");
         m_noValues = new DialogComponentNumber(
                 createNoValuesModel(), "No of Values per Query", 1);
-        JPanel columnPanel = new JPanel(new BorderLayout());
-        columnPanel.add(m_dialog.getPanel(), BorderLayout.CENTER);
         JPanel southPanel = new JPanel(new GridLayout(4, 1));
+        southPanel.setBorder(BorderFactory.createTitledBorder(
+            " Loop Settings "));
         southPanel.add(m_columns.getComponentPanel());
         southPanel.add(m_aggregatebyRow.getComponentPanel());
         southPanel.add(m_appendGridColumn.getComponentPanel());
         southPanel.add(m_noValues.getComponentPanel());
+        JPanel columnPanel = super.getPanel();
         columnPanel.add(southPanel, BorderLayout.SOUTH);
-        addTab("Database Query", columnPanel);
     }
     
     /** @return string model for column selection */
@@ -136,12 +133,13 @@ public class DatabaseLoopingNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        m_dialog.loadSettingsFrom(settings, specs);
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+            // super.getCredentialsNames());
         m_columns.loadSettingsFrom(settings, specs);
         m_aggregatebyRow.loadSettingsFrom(settings, specs);
         m_appendGridColumn.loadSettingsFrom(settings, specs);
         m_noValues.loadSettingsFrom(settings, specs);
+        super.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -150,7 +148,7 @@ public class DatabaseLoopingNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        m_dialog.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
         m_columns.saveSettingsTo(settings);
         m_aggregatebyRow.saveSettingsTo(settings);
         m_appendGridColumn.saveSettingsTo(settings);
