@@ -97,6 +97,7 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -267,6 +268,20 @@ public abstract class NodeDialogPane {
             return Collections.emptyList();
         }
         return m_credentialsProvider.listNames();
+    }
+    
+    /** Accessor to credentials defined on a workflow. The method will return
+     * a non-null provider. Sub-classes can read out credentials here. 
+     * Any invocation of the {@link CredentialsProvider#get(String)} method will
+     * register this node as client to the requested credentials. 
+     * The credentials identifier (its {@link ICredentials#getName()} should be 
+     * part of the configuration, i.e. chosen by the user in the configuration 
+     * dialog.
+     *
+     * @return A provider for credentials available in this workflow.
+     */
+    protected final CredentialsProvider getCredentialsProvider() {
+        return m_credentialsProvider;
     }
 
     /** Method being called from the node when the dialog shall load the
