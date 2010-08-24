@@ -50,7 +50,8 @@ public class OpenCredentialVariablesDialogAction
             public void run() {
                 CredentialsStore store = wf.getCredentialsStore();
                 CredentialVariablesDialog dialog = 
-                    new CredentialVariablesDialog(d.getActiveShell(), store);
+                    new CredentialVariablesDialog(d.getActiveShell(), store, 
+                        wf.getName());
                 if (dialog.open() == Dialog.OK) {
                     for (Credentials cred : store.getCredentials()) {
                         store.remove(cred.getName());

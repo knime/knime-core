@@ -154,10 +154,10 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             checkThread.start();
 
+            final File parentFile = m_workflowFile.getParentFile();
             final Display d = Display.getDefault();
             final WorkflowLoadResult result = WorkflowManager.loadProject(
-                    m_workflowFile.getParentFile(), 
-                    new ExecutionMonitor(progressMonitor),
+                    parentFile, new ExecutionMonitor(progressMonitor),
                     new CredentialLoader() {
                         @Override
                         public List<Credentials> load(
@@ -170,7 +170,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                                     public void run() {
                                         CredentialVariablesDialog dialog = 
                                             new CredentialVariablesDialog(
-                                               d.getActiveShell(), credentials);
+                                               d.getActiveShell(), credentials, 
+                                               parentFile.getName());
                                         if (dialog.open() == Dialog.OK) {
                                             newCredentials.addAll(
                                                 dialog.getCredentials());

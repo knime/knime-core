@@ -35,6 +35,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.knime.core.node.workflow.Credentials;
@@ -53,6 +54,8 @@ public class CredentialVariablesDialog extends Dialog {
     private CredentialVariableTable m_table;
 
     private List<Credentials> m_credentials;
+    
+    private final String m_workflowName;
 
     private Button m_addVarBtn;
 
@@ -67,7 +70,29 @@ public class CredentialVariablesDialog extends Dialog {
     */
    public CredentialVariablesDialog(final Shell shell,
            final CredentialsStore store) {
+       this(shell, store, null);
+   }
+
+    /**
+     * Create a new dialog instance to edit credentials.
+     * @param shell parent shell
+     * @param credentials list of current <code>Credentials</code>
+     */
+    public CredentialVariablesDialog(final Shell shell,
+            final List<Credentials> credentials) {
+        this(shell, credentials, null);
+    }
+    
+   /**
+    * Create a new dialog instance to edit credentials.
+    * @param shell parent shell
+    * @param store holding the current <code>Credentials</code>
+    * @param workflowName the name of the workflow to edit credentials
+    */
+   public CredentialVariablesDialog(final Shell shell,
+           final CredentialsStore store, final String workflowName) {
        super(shell);
+       m_workflowName = workflowName;
        m_credentials = new ArrayList<Credentials>();
        if (store != null) {
            for (Credentials cred : store.getCredentials()) {
@@ -80,10 +105,12 @@ public class CredentialVariablesDialog extends Dialog {
      * Create a new dialog instance to edit credentials.
      * @param shell parent shell
      * @param credentials list of current <code>Credentials</code>
+     * @param workflowName the name of the workflow to edit credentials 
      */
     public CredentialVariablesDialog(final Shell shell,
-            final List<Credentials> credentials) {
+            final List<Credentials> credentials, final String workflowName) {
         super(shell);
+        m_workflowName = workflowName;
         if (credentials == null) {
             m_credentials = new ArrayList<Credentials>();
         } else {
@@ -106,14 +133,20 @@ public class CredentialVariablesDialog extends Dialog {
     protected Control createDialogArea(final Composite parent) {
         parent.getShell().setText("Workflow Credentials...");
         Composite composite = new Composite(parent, SWT.NONE);
+        if (m_workflowName != null) {
+            Label label = new Label(composite, SWT.NONE);
+            label.setText("Edit Credentials for Workflow '" 
+                + m_workflowName + "'.");
+        }
+        
         composite.setLayout(new GridLayout(1, false));
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
-        // composite contains:
 
         // first row (new composite):
         Composite tableAndBtnsComp = new Composite(composite, SWT.NONE);
         tableAndBtnsComp.setLayoutData(new GridData(GridData.FILL_BOTH));
         tableAndBtnsComp.setLayout(new GridLayout(2, false));
+        
         // first column: table
         Composite tableComp = new Composite(tableAndBtnsComp, SWT.NONE);
         GridData gridData = new GridData(GridData.FILL_BOTH);

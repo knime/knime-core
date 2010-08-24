@@ -51,14 +51,10 @@ public class CredentialVariablesEditDialog extends Dialog {
     }
 
 
-    /**
-     * It is resizable.
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected boolean isResizable() {
-        return true;
+        return false;
     }
 
     /**
@@ -73,6 +69,11 @@ public class CredentialVariablesEditDialog extends Dialog {
         m_login.setText(login == null ? "" : login);
         String password = credential.getPassword();
         m_pass.setText(password == null ? "" : password);
+        if (login == null || login.isEmpty()) {
+            m_login.setFocus();
+        } else {
+            m_pass.setFocus();
+        }
     }
 
     /**
@@ -89,20 +90,20 @@ public class CredentialVariablesEditDialog extends Dialog {
 
         // first row: name
         Label nameLabel = new Label(twoColComp, SWT.NONE);
-        nameLabel.setText("Identifier: ");
+        nameLabel.setText("Credential Identifier: ");
         m_name = new Text(twoColComp, SWT.BORDER);
         m_name.setLayoutData(horizontalFill);
 
         // second row: login
         Label loginLabel = new Label(twoColComp, SWT.NONE);
-        loginLabel.setText("Login: ");
+        loginLabel.setText("User Login: ");
 
         m_login = new Text(twoColComp, SWT.BORDER);
         m_login.setLayoutData(horizontalFill);
         
         // third row: password
         Label passwordLabel = new Label(twoColComp, SWT.NONE);
-        passwordLabel.setText("Password: ");
+        passwordLabel.setText("User Password: ");
 
         m_pass = new Text(twoColComp, SWT.BORDER | SWT.PASSWORD);
         m_pass.setLayoutData(horizontalFill);
