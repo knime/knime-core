@@ -24,12 +24,18 @@
         Enter the database name here, for example 
         jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
 	</option>
+	<option name="Workflow credentials: ">
+        If checked, the credentials (user and password) are used as defined on 
+        the workflow. The credential name links to the specified user and 
+        password. Those can be replaced or edit using the 'Workflow Credentials'
+        menu available in the workflow context menu.
+    </option>
 	<option name="User name: ">
         Your log-in user name for the database.
 	</option>
 	<option name="Password: ">
         Your log-in password for the database. Note, the password is
-        de- and encryted everytime before handling it internally.
+        de- and encrypted before handling it internally.
 	</option>
 	<option name="SQL statement: ">
         Enter the SQL-like query here, for example SELECT * FROM table
