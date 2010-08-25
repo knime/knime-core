@@ -104,9 +104,18 @@ public class NodeContainerLocator implements Locator {
             y = r.y + r.height + 1;
         }
         // center it
-        int wDiff = r.width - fig.getPreferredSize().width;
-        int x = r.x + (wDiff / 2);
-        Rectangle bounds = new Rectangle(x, y, pref.width, pref.height);
-        fig.setBounds(bounds);
+        Rectangle contBounds = m_container.getBounds().getCopy();
+        if (m_container.getBounds().width > pref.width) {
+            int wDiff = contBounds.width - pref.width;
+            int x = contBounds.x + (wDiff / 2);
+            Rectangle bounds = new Rectangle(x, y, pref.width, pref.height);
+            fig.setBounds(bounds);
+        } else {
+            // container is too narrow
+            Rectangle bounds =
+                    new Rectangle(contBounds.x, y, contBounds.width,
+                            pref.height);
+            fig.setBounds(bounds);
+        }
     }
 }

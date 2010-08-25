@@ -680,8 +680,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * We need to set the color before invoking super.
-     *
-     * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
      */
     @Override
     protected void fillShape(final Graphics graphics) {
@@ -699,7 +698,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Subfigure, hosts the in/out port figures and the icon.
+     * Subfigure, hosts the icon and the job manager icon.
      *
      * @author Florian Georg, University of Konstanz
      */
@@ -760,7 +759,7 @@ public class NodeContainerFigure extends RectangleFigure {
         /**
          * Creates a new figure containing the symbol. That is the background
          * icon (depending on the type of the node) and the node's icon. Also
-         * the jab manager indicator and the mark for deletion.
+         * the job manager indicator and the mark for deletion.
          */
         public SymbolFigure() {
             // delegating layout, children provide a Locator as constraint
@@ -1098,7 +1097,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(getBounds().width, getBounds().height);
+            return new Dimension(ProgressFigure.WIDTH, ProgressFigure.HEIGHT);
         }
 
     }
