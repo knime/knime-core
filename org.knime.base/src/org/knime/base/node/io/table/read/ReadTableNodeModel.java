@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   May 19, 2006 (wiswedel): created
  */
@@ -54,6 +54,9 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -80,17 +83,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeModel extends NodeModel {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(ReadTableNodeModel.class);
-    
+
     /** Identifier for the node settings object. */
     static final String CFG_FILENAME = "filename";
-    
+
     /** The extension of the files to store, \".knime\". */
     public static final String PREFERRED_FILE_EXTENSION = ".table";
-    
-    private final SettingsModelString m_fileName = 
+
+    private final SettingsModelString m_fileName =
         new SettingsModelString(CFG_FILENAME, null);
 
     /**
@@ -135,10 +138,21 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        File f = new File(m_fileName.getStringValue());
-        DataTable table = DataContainer.readFromZip(f);
-        BufferedDataTable out = exec.createBufferedDataTable(table, exec);
-        return new BufferedDataTable[]{out};
+        InputStream in = null;
+        try {
+            in = openInputStream();
+            DataTable table = DataContainer.readFromStream(in);
+            BufferedDataTable out = exec.createBufferedDataTable(table, exec);
+            return new BufferedDataTable[]{out};
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
+        }
     }
 
     /**
@@ -157,17 +171,16 @@ public class ReadTableNodeModel extends NodeModel {
         if (m_fileName.getStringValue() == null) {
             throw new InvalidSettingsException("No file set.");
         }
+        InputStream in = null;
         try {
-            File f = new File(m_fileName.getStringValue());
-            if (!f.isFile()) {
-                throw new InvalidSettingsException(
-                        "No such file: " + m_fileName.getStringValue());
-            }
-            DataTableSpec spec = peekDataTableSpec(f);
+            in = openInputStream();
+            DataTableSpec spec = peekDataTableSpec(in);
             if (spec == null) { // if written with 1.3.x and before
-                LOGGER.debug("Table spec is not first entry in input file, " 
+                in.close();
+                in = openInputStream();
+                LOGGER.debug("Table spec is not first entry in input file, "
                         + "need to deflate entire file");
-                DataTable outTable = DataContainer.readFromZip(f);
+                DataTable outTable = DataContainer.readFromStream(in);
                 spec = outTable.getDataTableSpec();
             }
             return new DataTableSpec[]{spec};
@@ -178,35 +191,42 @@ public class ReadTableNodeModel extends NodeModel {
                     + "no detailed message available.";
             }
             throw new InvalidSettingsException(message);
-            
+
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // ignore
+                }
+            }
         }
     }
-    
+
     /** Opens the zip file and checks whether the first entry is the spec. If
      * so, the spec is parsed and returned. Otherwise null is returned.
-     * 
+     *
      * <p> This method is used to fix bug #1141: Dialog closes very slowly.
-     * @param file To read from.
+     * @param in Input stream
      * @return The spec or null (null will be returned when the file was
      * written with a version prior 2.0)
      * @throws IOException If that fails for any reason.
      */
-    private DataTableSpec peekDataTableSpec(final File file) 
+    private DataTableSpec peekDataTableSpec(final InputStream in)
         throws IOException {
         // must not use ZipFile here as it is known to have memory problems
-        // on large files, see e.g. 
+        // on large files, see e.g.
         // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5077277
-        ZipInputStream zipIn = new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(file)));
+        ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(in));
         ZipEntry entry = zipIn.getNextEntry();
         try {
-            // hardcoded constants here as we do not want additional 
+            // hardcoded constants here as we do not want additional
             // functionality to DataContainer ... at least not yet.
             if ("spec.xml".equals(entry != null ? entry.getName() : "")) {
                 NodeSettingsRO settings = NodeSettings.loadFromXML(
                         new NonClosableInputStream.Zip(zipIn));
                 try {
-                    NodeSettingsRO specSettings = 
+                    NodeSettingsRO specSettings =
                         settings.getNodeSettings("table.spec");
                     return DataTableSpec.load(specSettings);
                 } catch (InvalidSettingsException ise) {
@@ -223,6 +243,29 @@ public class ReadTableNodeModel extends NodeModel {
         }
     }
 
+    private InputStream openInputStream()
+        throws IOException, InvalidSettingsException {
+        String loc = m_fileName.getStringValue();
+        if (loc == null || loc.length() == 0) {
+            throw new InvalidSettingsException("No location provided");
+        }
+        if (loc.matches("^[a-zA-Z]+:/.*")) { // URL style, added in v2.2.1
+            URL url;
+            try {
+                url = new URL(loc);
+            } catch (MalformedURLException ex) {
+                throw new InvalidSettingsException("Invalid URL: " + loc, ex);
+            }
+            return url.openStream();
+        } else {
+            File file = new File(loc);
+            if (!file.exists()) {
+                throw new InvalidSettingsException("No such file: " + loc);
+            }
+            return new BufferedInputStream(new FileInputStream(file));
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -233,7 +276,7 @@ public class ReadTableNodeModel extends NodeModel {
         // no internals to load
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
