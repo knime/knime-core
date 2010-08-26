@@ -1,32 +1,19 @@
 Manifest-Version: 1.0
-Bundle-Name: KNIME Konstanz Information Miner
-Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 2.2.0.0026408
-Bundle-ClassPath: knime-product-patches.jar,
- knime-product.jar
-Bundle-Activator: org.knime.product.ProductPlugin
+Export-Package: org.knime.product,org.knime.product.headless,org.knime
+ .product.rcp
+Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.co
+ re.resources,org.eclipse.ui.ide,org.knime.base,org.knime.core,org.kni
+ me.workbench,org.knime.workbench.core,org.knime.workbench.editor,org.
+ knime.workbench.repository,org.knime.workbench.ui,org.knime.workbench
+ .help,org.eclipse.swt,org.eclipse.jface,org.eclipse.ui.workbench,org.
+ eclipse.ui.intro,org.eclipse.core.net,org.eclipse.ui.net,org.eclipse.
+ ui.console
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime,
- org.eclipse.core.resources,
- org.eclipse.ui.ide,
- org.knime.base,
- org.knime.core,
- org.knime.workbench,
- org.knime.workbench.core,
- org.knime.workbench.editor,
- org.knime.workbench.repository,
- org.knime.workbench.ui,
- org.knime.workbench.help,
- org.eclipse.swt,
- org.eclipse.jface,
- org.eclipse.ui.workbench,
- org.eclipse.ui.intro,
- org.eclipse.core.net,
- org.eclipse.ui.net,
- org.eclipse.ui.console
 Eclipse-LazyStart: false
+Bundle-ClassPath: knime-product-patches.jar,knime-product.jar
+Bundle-Version: 2.2.1.0026408
+Bundle-Name: KNIME Konstanz Information Miner
 Bundle-ManifestVersion: 2
-Export-Package: org.knime.product,
- org.knime.product.headless,
- org.knime.product.rcp
+Bundle-Activator: org.knime.product.ProductPlugin
+Bundle-SymbolicName: org.knime.product;singleton:=true
+

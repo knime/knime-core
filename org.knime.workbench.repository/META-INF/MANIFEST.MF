@@ -1,20 +1,16 @@
 Manifest-Version: 1.0
-Bundle-Name: KNIME Workbench Repository
-Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
-Bundle-Version: 2.2.0.0026408
-Bundle-ClassPath: workbench-repository-patches.jar,
- workbench-repository.jar
-Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
+Export-Package: org.knime.workbench.repository,org.knime.workbench.rep
+ ository.model,org.knime.workbench.repository.model.props,org.knime.wo
+ rkbench.repository.view
+Require-Bundle: org.eclipse.core.runtime,org.eclipse.ui,org.eclipse.ui
+ .views,org.knime.workbench.core,org.eclipse.gef,org.eclipse.ui.ide
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.ui,
- org.eclipse.ui.views,
- org.knime.workbench.core,
- org.eclipse.gef,
- org.eclipse.ui.ide
-Bundle-ManifestVersion: 2
-Export-Package: org.knime.workbench.repository,
- org.knime.workbench.repository.model,
- org.knime.workbench.repository.model.props,
- org.knime.workbench.repository.view
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: workbench-repository-patches.jar,workbench-repositor
+ y.jar
+Bundle-Version: 2.2.1.0026408
+Bundle-Name: KNIME Workbench Repository
+Bundle-ManifestVersion: 2
+Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
+Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
+
