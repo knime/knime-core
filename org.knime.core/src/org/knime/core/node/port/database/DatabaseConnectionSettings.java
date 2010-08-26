@@ -243,8 +243,12 @@ public class DatabaseConnectionSettings {
         if (m_credName == null) {
             settings.addString("user", m_user);
             try {
-               settings.addString("password", 
-                   KnimeEncryption.encrypt(m_pass.toCharArray()));
+                if (m_pass == null) {
+                    settings.addString("password", null);
+                } else {
+                    settings.addString("password",
+                        KnimeEncryption.encrypt(m_pass.toCharArray()));
+                }
             } catch (Throwable t) {
                 LOGGER.error("Could not encrypt password, reason: " 
                         + t.getMessage(), t);
@@ -296,7 +300,7 @@ public class DatabaseConnectionSettings {
         String database = settings.getString("database");
         
         String user;
-        String password;
+        String password = null;
         String credName = null;
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
@@ -304,13 +308,18 @@ public class DatabaseConnectionSettings {
             ICredentials cred = cp.get(credName);
             user = cred.getLogin();
             password = cred.getPassword();
+            if (password == null) {
+                LOGGER.warn("Credentials/Password has not been set, "
+                    + "using empty password.");
+            }
         } else {
             // user and password
             user = settings.getString("user");
-            password = "";
             try {
-                password = KnimeEncryption.decrypt(
-                    settings.getString("password", ""));
+                String pw = settings.getString("password", "");
+                if (pw != null) {
+                    password = KnimeEncryption.decrypt(pw);
+                }
             } catch (Exception e) {
                 LOGGER.error("Password could not be decrypted, reason: "
                     + e.getMessage());
@@ -334,12 +343,7 @@ public class DatabaseConnectionSettings {
                 m_credName = null;
             }
             m_user = user;
-            if (password != null) {
-                m_pass = password;
-            } else {
-                LOGGER.warn("Password has not been set, using empty one.");
-                m_pass = "";
-            }
+            m_pass = (password == null ? "" : password);
             m_dbName = database;
             DATABASE_URLS.add(m_dbName);
             // loaded driver
