@@ -74,6 +74,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabasePortObject.DatabaseOutPortPanel;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -190,10 +191,12 @@ public class OutPortView extends JFrame {
      * @param portObject a data table, model content or other
      * @param portObjectSpec data table spec or model content spec or other spec
      * @param stack The {@link FlowObjectStack} of the node.
+     * @param credentials the {@link CredenialsProvider} used in out-port view
      */
     void update(final PortObject portObject,
             final PortObjectSpec portObjectSpec,
-            final FlowObjectStack stack) {
+            final FlowObjectStack stack,
+            final CredentialsProvider credentials) {
         // TODO: maybe store the objects, compare them
         // and only remove and add them if they are different...
         // add all port object tabs
@@ -206,6 +209,14 @@ public class OutPortView extends JFrame {
                     JComponent[] poViews = portObject.getViews();
                     if (poViews != null) {
                         for (JComponent comp : poViews) {
+                            // fix 2379: CredentialsProvider needed in
+                            // DatabasePortObject to create db connection
+                            // while accessing data for preview
+                            if (comp instanceof DatabaseOutPortPanel) {
+                                DatabaseOutPortPanel dbcomp
+                                    = (DatabaseOutPortPanel) comp;
+                                dbcomp.setCredentialsProvider(credentials);
+                            }
                             views.put(comp.getName(), comp);
                         }
                     }

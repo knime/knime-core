@@ -53,6 +53,7 @@ package org.knime.core.node.port.database;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -74,6 +75,7 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.BufferedDataTableView;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  * Class used as database port object holding a {@link BufferedDataTable}
@@ -126,7 +128,7 @@ public class DatabasePortObject implements PortObject {
         try {
             DatabaseReaderConnection load = new DatabaseReaderConnection(
                 new DatabaseQueryConnectionSettings(
-                       m_spec.getConnectionModel(), null /* FIXME */));
+                       m_spec.getConnectionModel(), m_credentials));
             return load.createTable(cacheNoRows);
         } catch (Throwable t) {
             LOGGER.error("Could not fetch data from database, reason: "
@@ -169,6 +171,30 @@ public class DatabasePortObject implements PortObject {
             }
         };
     }
+    
+    /** Credentials to connect to the database while previewing the data. */
+    private CredentialsProvider m_credentials;
+    
+    /**
+     * Override this panel in order to set the CredentialsProvider
+     * into this class.
+     */
+    public final class DatabaseOutPortPanel extends JPanel {
+        /**
+         * Create new database provider.
+         * @param lm using this layout manager
+         */
+        public DatabaseOutPortPanel(final LayoutManager lm) {
+            super(lm);
+        }
+        /**
+         * Set provider.
+         * @param cp {@link CredentialsProvider} 
+         */
+        public void setCredentialsProvider(final CredentialsProvider cp) {
+            m_credentials = cp;
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -190,7 +216,7 @@ public class DatabasePortObject implements PortObject {
         cacheRows.setPreferredSize(new Dimension(50, 20));
         p.add(b);
         p.add(cacheRows);
-        panels[0] = new JPanel(new BorderLayout());
+        panels[0] = new DatabaseOutPortPanel(new BorderLayout());
         panels[0].setName(dataView.getName());
         panels[0].add(p, BorderLayout.NORTH);
         panels[0].add(dataView, BorderLayout.CENTER);
