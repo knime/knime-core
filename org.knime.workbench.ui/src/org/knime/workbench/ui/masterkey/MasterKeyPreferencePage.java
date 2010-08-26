@@ -108,30 +108,34 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                 }
             }
         };
+        
+    private static final String OBSOLETE_MASTERKEY =
+        "Starting with KNIME 2.2 the master key becomes obsolete and is\n"
+        + "replaced by the Workflow Credentials. Those credentials with\n"
+        + "user name and password can be defined independently for each\n"
+        + "workflow (available in the Workflow Projects' context menu).\n\n";
 
+    /** Description used when a master key was already used. */
     private static final String NEW_DESCRIPTION =
         "A master key was entered in a previous session which\n"
         + "has been used to encrypt passwords, those passwords can\n"
         + "only be decrypted with the same master key.\n\n";
 
-    /**
-     * Description used within the master key preference page and dialog.
-     */
+    /** Description used within the master key preference page and dialog. */
     private static final String DESCRIPTION =
-            "KNIME requires an encryption key to encrypt/decrypt passwords,\n"
-            + "mainly for database passwords in nodes connecting to databases\n"
-            + "(e.g. database reader/writer nodes).\n"
-            + "This avoids having to enter passwords for each new session\n"
-            + "and each node individually. In order to avoid storing those\n"
-            + "passwords in plain text, a central master key is used.\n\n";
-
+        "The master key is used to encrypt/decrypt passwords,\n"
+        + "mainly for database passwords in nodes connecting to databases\n"
+        + "(e.g. database reader/writer nodes).\n"
+        + "This avoids having to enter passwords for each new session\n"
+        + "and each node individually. In order to avoid storing those\n"
+        + "passwords in plain text, a central master key is used.\n\n";
 
     /**
      * Create a new master key preference page.
      */
     public MasterKeyPreferencePage() {
         super(GRID);
-        setDescription(DESCRIPTION);
+        setDescription(OBSOLETE_MASTERKEY + DESCRIPTION);
     }
 
     /**
@@ -141,9 +145,9 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     MasterKeyPreferencePage(final boolean flag) {
         super(GRID);
         if (SUPPLIER.m_wasSet) {
-            setDescription(NEW_DESCRIPTION + DESCRIPTION);
+            setDescription(OBSOLETE_MASTERKEY + NEW_DESCRIPTION + DESCRIPTION);
         } else {
-            setDescription(DESCRIPTION);
+            setDescription(OBSOLETE_MASTERKEY + DESCRIPTION);
         }
     }
 
