@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Require-Bundle: org.knime.core
+Export-Package: org.knime.base.node.io.filereader,org.knime.base.node.
+ mine.decisiontree.predictor,org.knime.base.node.mine.mds,org.knime.ba
+ se.node.mine.scorer,org.knime.base.node.mine.scorer.entrop,org.knime.
+ base.node.mine.scorer.hilitescorer,org.knime.base.node.mine.sota,org.
+ knime.base.node.preproc.discretization.caim.modelapply,org.knime.base
+ .node.preproc.discretization.caim.modelcreator,org.knime.base.node.pr
+ eproc.join,org.knime.base.node.preproc.joiner,org.knime.base.node.pre
+ proc.nominal,org.knime.base.node.preproc.normalize,org.knime.base.nod
+ e.viz.enrich,org.knime.base.node.viz.parcoord,org.knime.base.node.viz
+ .parcoord.visibility,org.knime.base.node.viz.plotter2D,org.knime.base
+ .node.viz.property.color,org.knime.base.node.viz.property.size,org.kn
+ ime.base.node.viz.rulevis2d,org.knime.base.node.viz.scatterplot,org.k
+ nime.base.node.viz.statistics,org.knime.core.node.defaultnodedialog
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Fragment-Host: org.knime.base;bundle-version="2.0.0"
+Bundle-ClassPath: knime-deprecated.jar
+Bundle-Version: 2.2.1.0026408
+Bundle-Name: KNIME Deprecated Nodes
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.deprecated
+

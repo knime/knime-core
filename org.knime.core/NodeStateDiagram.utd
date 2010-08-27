@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<editmodel:StateDiagramEditModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:editmodel="editmodel.xmi" xmlns:options="options.xmi" name="NodeStateDiagram" size="1041,702" metadata="nsuml-1.4" initialized="true" scrolledX="-190" scrolledY="-55" tag="5" key="3230303430373139204861646573554D4C">
+  <children xsi:type="editmodel:EndEditModel" targetConnections="//@children.6/@sourceConnections.3" location="1030,-20" size="21,21"/>
+  <children xsi:type="editmodel:StartEditModel" location="-90,705" size="20,20">
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.1" target="//@children.2" targetEnd="//@children.1/@sourceConnections.0/@children.1" label="//@children.1/@sourceConnections.0/@children.2" sourceEnd="//@children.1/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan" eventName="Drag on editor" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="20,0" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,75"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="Drag on editor" location="-71,700" size="69,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-7.0" distanceFromWire="8.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.2/@sourceConnections.3 //@children.2/@sourceConnections.2 //@children.1/@sourceConnections.0 //@children.3/@sourceConnections.2" location="10,640" size="174,151" itemName="New or Partly connected (red)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.2" target="//@children.4" targetEnd="//@children.2/@sourceConnections.0/@children.1" label="//@children.2/@sourceConnections.0/@children.2" sourceEnd="//@children.2/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan" eventName="configure" condition="if config is independent from missing in-port">
+      <children xsi:type="editmodel:StateEndEditModel" location="174,48" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="20,69"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="configure [if config is independent from missing in-port]" location="525,670" size="266,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="161.0" distanceFromWire="11.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.2" target="//@children.3" targetEnd="//@children.2/@sourceConnections.1/@children.1" label="//@children.2/@sourceConnections.1/@children.2" sourceEnd="//@children.2/@sourceConnections.1/@children.0" connectionRouterKind="Manhattan" eventName="connect in port" eventArgument="" condition="if last missing connection" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="15,0" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="56,69"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="connect in port [if last missing connection]" location="-179,407" size="197,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="80.00000000000001" distanceFromWire="105.99999999999999" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.2" target="//@children.2" targetEnd="//@children.2/@sourceConnections.2/@children.1" label="//@children.2/@sourceConnections.2/@children.2" sourceEnd="//@children.2/@sourceConnections.2/@children.0" connectionRouterKind="Manhattan" eventName="connect in-port" condition="if not last missing connection">
+      <children xsi:type="editmodel:StateEndEditModel" location="174,73" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="174,119"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="connect in-port [if not last missing connection]" location="228,731" size="222,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="2.0" distanceFromWire="120.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.2" target="//@children.2" targetEnd="//@children.2/@sourceConnections.3/@children.1" label="//@children.2/@sourceConnections.3/@children.2" sourceEnd="//@children.2/@sourceConnections.3/@children.0" connectionRouterKind="Manhattan" eventName="delete in-port connection">
+      <children xsi:type="editmodel:StateEndEditModel" location="109,151" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="59,150"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete in-port connection" location="38,830" size="120,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-4.0" distanceFromWire="11.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.2" target="//@children.3" targetEnd="//@children.2/@sourceConnections.4/@children.1" label="//@children.2/@sourceConnections.4/@children.2" sourceEnd="//@children.2/@sourceConnections.4/@children.0" connectionRouterKind="Manhattan" eventName="make connection" eventArgument="" condition="if last missing connection" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="117,0" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="158,69"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="make connection [if last missing connection]" location="129,590" size="212,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-103.0" distanceFromWire="-108.99999999999999" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.2/@sourceConnections.1 //@children.7/@sourceConnections.0 //@children.2/@sourceConnections.4" location="-31,280" size="255,69" itemName="Inports fully connected but not configured (red)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.3" target="//@children.5" targetEnd="//@children.3/@sourceConnections.0/@children.1" label="//@children.3/@sourceConnections.0/@children.2" sourceEnd="//@children.3/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan" autoLocated="true" eventName="configure" eventArgument="" condition="previous nodes executable or executed" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="255,20" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="20,141"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="configure [previous nodes executable or executed]" location="90,180" size="248,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-68.0" distanceFromWire="113.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.3" target="//@children.9" targetEnd="//@children.3/@sourceConnections.1/@children.1" label="//@children.3/@sourceConnections.1/@children.2" sourceEnd="//@children.3/@sourceConnections.1/@children.0" connectionRouterKind="Manhattan" eventName="configure" eventArgument="" condition="previous nodes not executable or executed" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="186,69" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,20"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="configure [previous nodes not executable or executed]" size="266,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.3" target="//@children.2" targetEnd="//@children.3/@sourceConnections.2/@children.1" label="//@children.3/@sourceConnections.2/@children.2" sourceEnd="//@children.3/@sourceConnections.2/@children.0" connectionRouterKind="Manual" eventName="delete in-port connectin" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="106,69" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="65,0"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete in-port connectin" location="80,490" size="114,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="3.0000000000000004" distanceFromWire="62.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.2/@sourceConnections.0 //@children.4/@sourceConnections.0 //@children.5/@sourceConnections.1 //@children.4/@sourceConnections.2 //@children.6/@sourceConnections.2 //@children.8/@sourceConnections.0" location="790,330" size="282,69" itemName="Configured but in-ports only partially connected (red)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.4" target="//@children.4" targetEnd="//@children.4/@sourceConnections.0/@children.1" label="//@children.4/@sourceConnections.0/@children.2" sourceEnd="//@children.4/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan" eventName="delete in-port connection" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="140,69" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="48,69"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete in-port connection" location="827,439" size="120,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-3.0" distanceFromWire="13.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.4" target="//@children.5" targetEnd="//@children.4/@sourceConnections.1/@children.1" label="//@children.4/@sourceConnections.1/@children.2" sourceEnd="//@children.4/@sourceConnections.1/@children.0" connectionRouterKind="Manhattan" eventName="connect in-port" condition="if last missing connection and previous nodes executable or executed">
+      <children xsi:type="editmodel:StateEndEditModel" location="61,0" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="152,141"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="connect in-port [if last missing connection and previous nodes executable or executed]" location="480,189" size="420,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-29.0" distanceFromWire="-13.000000000000004" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.4" target="//@children.4" targetEnd="//@children.4/@sourceConnections.2/@children.1" label="//@children.4/@sourceConnections.2/@children.2" sourceEnd="//@children.4/@sourceConnections.2/@children.0" connectionRouterKind="Manhattan" eventName="connect in-port" eventArgument="" condition="if not last missing connection" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="241,69" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="170,69"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="connect in-port [if not last missing connection]" location="957,440" size="222,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-73.0" distanceFromWire="13.000000000000036" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.4" target="//@children.9" targetEnd="//@children.4/@sourceConnections.3/@children.1" label="//@children.4/@sourceConnections.3/@children.2" sourceEnd="//@children.4/@sourceConnections.3/@children.0" connectionRouterKind="Manhattan" eventName="connect in-port" eventArgument="" condition="if last missing connection and previous nodes not executable or executed" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="0,40" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="151,109"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="connect in-port [if last missing connection and previous nodes not executable or executed]" location="340,550" size="438,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="108.0" distanceFromWire="-95.99999999999999" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.5/@sourceConnections.0 //@children.3/@sourceConnections.0 //@children.9/@sourceConnections.0 //@children.4/@sourceConnections.1 //@children.6/@sourceConnections.0 //@children.6/@sourceConnections.1" location="320,-50" size="251,141" itemName="Executable (yellow)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.5" target="//@children.5" targetEnd="//@children.5/@sourceConnections.0/@children.1" label="//@children.5/@sourceConnections.0/@children.2" sourceEnd="//@children.5/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan" eventName="configure" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="0,44" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,74"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="configure" size="47,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.5" target="//@children.4" targetEnd="//@children.5/@sourceConnections.1/@children.1" label="//@children.5/@sourceConnections.1/@children.2" sourceEnd="//@children.5/@sourceConnections.1/@children.0" connectionRouterKind="Manhattan" eventName="delete in-port connection (also from previous)" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="251,125" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="152,0"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete in-port connection (also from previous)" size="221,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.5" target="//@children.6" targetEnd="//@children.5/@sourceConnections.2/@children.1" label="//@children.5/@sourceConnections.2/@children.2" sourceEnd="//@children.5/@sourceConnections.2/@children.0" connectionRouterKind="Manual" eventName="execute" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="251,50" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,51"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="execute" size="40,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.5/@sourceConnections.2" location="800,-50" size="111,101" itemName="Executed (green)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.6" target="//@children.5" targetEnd="//@children.6/@sourceConnections.0/@children.1" label="//@children.6/@sourceConnections.0/@children.2" sourceEnd="//@children.6/@sourceConnections.0/@children.0" connectionRouterKind="Manual" eventName="configure (also previous nodes)" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="0,25" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="251,24"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="configure (also previous nodes)" location="600,0" size="156,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="6.999999999999999" distanceFromWire="-7.000000000000001" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.6" target="//@children.5" targetEnd="//@children.6/@sourceConnections.1/@children.1" label="//@children.6/@sourceConnections.1/@children.2" sourceEnd="//@children.6/@sourceConnections.1/@children.0" connectionRouterKind="Manual" eventName="reset (also previous nodes)" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="0,77" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="251,78"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="reset (also previous nodes)" size="135,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.6" target="//@children.4" targetEnd="//@children.6/@sourceConnections.2/@children.1" label="//@children.6/@sourceConnections.2/@children.2" sourceEnd="//@children.6/@sourceConnections.2/@children.0" connectionRouterKind="Manhattan" eventName="delete in port connection (also from previous nodes)" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="111,76" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="222,0"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete in port connection (also from previous nodes)" location="1020,159" size="253,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="185.00000000000003" distanceFromWire="-140.99999999999997" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.6" target="//@children.0" targetEnd="//@children.6/@sourceConnections.3/@children.1" label="//@children.6/@sourceConnections.3/@children.2" sourceEnd="//@children.6/@sourceConnections.3/@children.0" connectionRouterKind="Manual" eventName="delete node" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="111,39" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,11"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="delete node" size="57,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StartEditModel" location="-190,304" size="20,20">
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.7" target="//@children.3" targetEnd="//@children.7/@sourceConnections.0/@children.1" label="//@children.7/@sourceConnections.0/@children.2" sourceEnd="//@children.7/@sourceConnections.0/@children.0" connectionRouterKind="Manual" eventName="Drag on editor" eventArgument="" condition="no in-ports" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="20,10" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="0,34"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="Drag on editor [no in-ports]" location="-171,291" size="130,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-5.0" distanceFromWire="16.0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StartEditModel" location="1240,360" size="20,20">
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.8" target="//@children.4" targetEnd="//@children.8/@sourceConnections.0/@children.1" label="//@children.8/@sourceConnections.0/@children.2" sourceEnd="//@children.8/@sourceConnections.0/@children.0" connectionRouterKind="Manual" autoLocated="true" eventName="Drag on editor" eventArgument="" condition="pre-configured" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="0,10" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="282,40"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="Drag on editor [pre-configured]" location="1089,377" size="150,14" fontInfo="Arial-8-0" automaticRelocationAllowed="false" locationOnWireFromSource="-8.700158629645522" distanceFromWire="14.188278254214095" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <children xsi:type="editmodel:StateEditModel" targetConnections="//@children.3/@sourceConnections.1 //@children.4/@sourceConnections.3" location="370,420" size="151,131" itemName="Executable (red)" content="">
+    <children xsi:type="editmodel:CompartmentEditModel"/>
+    <sourceConnections xsi:type="editmodel:TransitionEditModel" source="//@children.9" target="//@children.5" targetEnd="//@children.9/@sourceConnections.0/@children.1" label="//@children.9/@sourceConnections.0/@children.2" sourceEnd="//@children.9/@sourceConnections.0/@children.0" connectionRouterKind="Manual" autoLocated="true" eventName="make previous nodes executable or execute them" eventArgument="" condition="" action="">
+      <children xsi:type="editmodel:StateEndEditModel" location="75,0" attachSource="true"/>
+      <children xsi:type="editmodel:StateEndEditModel" location="125,141"/>
+      <children xsi:type="editmodel:WireLabelEditModel" name="make previous nodes executable or execute them" size="241,14" fontInfo="Arial-8-0" anchorKind="MiddlePart"/>
+    </sourceConnections>
+  </children>
+  <diagramOptions xsi:type="options:StateDiagramOptions" autoName="false"/>
+  <boardSetting snapToGeometry="true" gridEnabled="true" gridSpacing="10,10" gridOrigin="0,0" rulerUnit="pixel">
+    <leftRuler/>
+    <topRuler/>
+  </boardSetting>
+</editmodel:StateDiagramEditModel>

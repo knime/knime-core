@@ -1,0 +1,439 @@
+/*
+ * ------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2003 - 2010
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ------------------------------------------------------------------------
+ */
+package org.knime.base.node.mine.cluster;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.sax.TransformerHandler;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+
+
+/**
+ *
+ * @author Fabian Dill, University of Konstanz
+ */
+public class PMMLClusterPortObject extends PMMLPortObject {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            PMMLClusterPortObject.class);
+
+    private List<DataColumnSpec> m_usedColumns;
+    private double[][]m_prototypes;
+    private int m_nrOfClusters;
+    private int[] m_clusterCoverage;
+    private String[] m_labels;
+
+    /**
+     * Constants indicating whether the squared euclidean or the euclidean
+     * comparison measure should be used.
+     */
+    public enum ComparisonMeasure {
+        /** Squared Euclidean distance. */
+        squaredEuclidean,
+        /** Euclidean distance. */
+        euclidean
+    }
+
+    private ComparisonMeasure m_measure = ComparisonMeasure.squaredEuclidean;
+
+    /**
+     * PMML Cluster port type.
+     */
+    public static final PortType TYPE
+        = new PortType(PMMLClusterPortObject.class);
+
+    /**
+     * Default constructor necessary for loading.
+     */
+    public PMMLClusterPortObject() {
+        // nothing to do
+    }
+
+    /**
+     *
+     * @param prototypes the unnormalized prototypes of clusters
+     * @param nrOfClusters number of clusters
+     * @param portSpec the {@link PMMLPortObjectSpec} holding information of the
+     *  PMML DataDictionary and the PMML MiningSchema
+     */
+    public PMMLClusterPortObject(
+            final double[][] prototypes,
+            final int nrOfClusters,
+            final PMMLPortObjectSpec portSpec) {
+        super(portSpec, PMMLModelType.ClusteringModel);
+        m_nrOfClusters = nrOfClusters;
+        m_usedColumns = getColumnSpecsFor(portSpec.getLearningFields(),
+                portSpec.getDataTableSpec());
+        m_labels = new String[m_nrOfClusters];
+        for (int i = 0; i < m_nrOfClusters; i++) {
+            m_labels[i] = "cluster_" + i;
+        }
+        m_prototypes = prototypes;
+        for (int i = 0; i < prototypes.length; i++) {
+            m_prototypes[i] = prototypes[i];
+        }
+    }
+
+
+    private List<DataColumnSpec> getColumnSpecsFor(final List<String> colNames,
+            final DataTableSpec tableSpec) {
+        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
+        for (String colName : colNames) {
+            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
+            if (colName == null) {
+                throw new IllegalArgumentException(
+                        "Column " + colName + " not found in data table spec!");
+            }
+            colSpecs.add(colSpec);
+        }
+        return colSpecs;
+    }
+
+    /**
+     *
+     * @param labels cluster labels
+     */
+    public void setClusterLabels(final String[] labels) {
+        m_labels = labels;
+    }
+
+    /**
+     *
+     * @param clusterCoverage how many data points are in each cluster
+     */
+    public void setClusterCoverage(final int[] clusterCoverage) {
+        m_clusterCoverage = clusterCoverage;
+    }
+
+
+    /**
+     *
+     * @param measure the used comparison measure
+     */
+    public void setComparisonMeasure(final ComparisonMeasure measure) {
+        m_measure = measure;
+    }
+
+    /**
+     *
+     * @return the used comparison measure
+     */
+    public ComparisonMeasure getComparisonMeasure() {
+        return m_measure;
+    }
+
+    /**
+     *
+     * @return used columns
+     */
+    public List<DataColumnSpec> getUsedColumns() {
+        return m_usedColumns;
+    }
+
+
+    /**
+     *
+     * @return <em>normalized</em> prototypes
+     */
+    public double[][] getPrototypes() {
+        return m_prototypes;
+    }
+
+
+    /**
+     *
+     * @return number of clusters
+     */
+    public int getNrOfClusters() {
+        return m_nrOfClusters;
+    }
+
+    /**
+     *
+     * @return number of covered data points per cluster
+     */
+    public int[] getClusterCoverage() {
+        return m_clusterCoverage;
+    }
+
+
+    /**
+     *
+     * @return cluster names
+     */
+    public String[] getLabels() {
+        return m_labels;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writePMMLModel(final TransformerHandler handler)
+        throws SAXException {
+        // create the cluster model
+        // with the attributes...
+        AttributesImpl atts = new AttributesImpl();
+        // modelName
+        atts.addAttribute(null, null, "modelName", CDATA, "k-means");
+        // functionName
+        atts.addAttribute(null, null, "functionName", CDATA, "clustering");
+        // modelClass
+        atts.addAttribute(null, null, "modelClass", CDATA, "centerBased");
+        // numberOfClusters
+        atts.addAttribute(null, null, "numberOfClusters", CDATA,
+                "" + m_nrOfClusters);
+        handler.startElement(null, null, "ClusteringModel", atts);
+        if (m_usedColumns != null) {
+            PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler,
+                    getWriteVersion());
+            writeLocalTransformations(handler);
+            addUsedDistanceMeasure(handler);
+            addClusteringFields(handler, m_usedColumns);
+            addClusters(handler, m_prototypes);
+        }
+        handler.endElement(null, null, "ClusteringModel");
+    }
+
+    /**
+     * Writes the used distance measure - so far it is euclidean.
+     * @param handler to write to
+     * @throws SAXException if something goes wrong
+     */
+    protected void addUsedDistanceMeasure(final TransformerHandler handler)
+        throws SAXException {
+        // add kind="distance" to ComparisonMeasure element
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "kind", CDATA, "distance");
+        handler.startElement(null, null, "ComparisonMeasure", atts);
+        // for now hard-coded squared euclidean
+        handler.startElement(null, null,
+                m_measure.name(), null);
+        handler.endElement(null, null, m_measure.name());
+        handler.endElement(null, null, "ComparisonMeasure");
+    }
+
+    /**
+     * Writes the clustering fields (name).
+     *
+     * @param handler to write to
+     * @param colSpecs column specs of used columns
+     * @throws SAXException if something goes wrong
+     */
+    protected void addClusteringFields(final TransformerHandler handler,
+            final List<DataColumnSpec> colSpecs) throws SAXException {
+        for (DataColumnSpec colSpec : colSpecs) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "field", CDATA, colSpec.getName());
+            atts.addAttribute(null, null, "compareFunction", CDATA, "absDiff");
+            handler.startElement(null, null, "ClusteringField", atts);
+            handler.endElement(null, null, "ClusteringField");
+        }
+    }
+
+    /*
+     * Writes the center fields (name, minimum, and maximum).
+     *
+     * @param handler to write to
+     * @param colSpecs used columns in correct order
+     * @throws SAXException if something goes wrong
+     *
+    protected void addCenterFields(final TransformerHandler handler,
+            final Set<DataColumnSpec> colSpecs) throws SAXException {
+        handler.startElement(null, null, "CenterFields", null);
+        int i = 0;
+        // for each column add
+        for (DataColumnSpec colSpec : colSpecs) {
+            // a derived field with name "normalized-[columnName]"
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "name", CDATA,
+                    "normalized-" + colSpec.getName());
+            atts.addAttribute(null, null, "optype", CDATA, "continuous");
+            atts.addAttribute(null, null, "dataType", CDATA,
+                    PMMLPortObjectSpec.getDataType(colSpec));
+            handler.startElement(null, null, "DerivedField", atts);
+            // NormContinuous field="[columnName]"
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "field", CDATA,
+                        colSpec.getName());
+                handler.startElement(null, null, "NormContinuous", atts);
+                    // LinearNorm orig="[lowerBound]" norm="0"
+                    atts = new AttributesImpl();
+                    atts.addAttribute(null, null, "orig", CDATA,
+                            "" + m_mins[i]);
+                    atts.addAttribute(null, null, "norm", CDATA, "0");
+                    handler.startElement(null, null, "LinearNorm", atts);
+                    handler.endElement(null, null, "LinearNorm");
+                    // LinearNorm orig="[upperBound]" norm="1"
+                    atts = new AttributesImpl();
+                    atts.addAttribute(null, null, "orig", CDATA,
+                            "" + m_maxs[i]);
+                    atts.addAttribute(null, null, "norm", CDATA, "1");
+                    handler.startElement(null, null, "LinearNorm", atts);
+                    handler.endElement(null, null, "LinearNorm");
+                handler.endElement(null, null, "NormContinuous");
+           handler.endElement(null, null, "DerivedField");
+           i++;
+        }
+        handler.endElement(null, null, "CenterFields");
+    }
+    */
+
+    /**
+     * Writes the actual cluster prototypes.
+     *
+     * @param handler to write to
+     * @param prototypes the normalized prototypes
+     * @throws SAXException if something goes wrong
+     */
+    protected void addClusters(final TransformerHandler handler,
+            final double[][] prototypes) throws SAXException {
+        int i = 0;
+        for (double[] prototype : prototypes) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "name", CDATA, "cluster_" + i);
+            if (m_clusterCoverage != null
+                    && m_clusterCoverage.length == m_prototypes.length) {
+            atts.addAttribute(null, null, "size", CDATA,
+                    "" + m_clusterCoverage[i]);
+            }
+            i++;
+            handler.startElement(null, null, "Cluster", atts);
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "n", CDATA,
+                            "" + prototype.length);
+                atts.addAttribute(null, null, "type", CDATA, "real");
+                handler.startElement(null, null, "Array", atts);
+                StringBuffer buff = new StringBuffer();
+                for (double d : prototype) {
+                    buff.append(d + " ");
+                }
+                char[] chars = buff.toString().toCharArray();
+                handler.characters(chars, 0, chars.length);
+                handler.endElement(null, null, "Array");
+            handler.endElement(null, null, "Cluster");
+        }
+    }
+
+    /*
+    private double[] normalizePrototype(final double[] prototype,
+            final double min, final double max) {
+        double[] normalized = new double[prototype.length];
+        for (int i = 0; i < prototype.length; i++) {
+            normalized[i] = (prototype[i] - min) / (max - min);
+        }
+        return normalized;
+    }
+    */
+
+    /** {@inheritDoc} */
+    @Override
+    public void loadFrom(final PMMLPortObjectSpec spec,
+            final InputStream in, final String version)
+        throws ParserConfigurationException, SAXException, IOException {
+        PMMLClusterHandler hdl = new PMMLClusterHandler();
+        super.addPMMLContentHandler("clusterModel", hdl);
+        super.loadFrom(spec, in, version);
+        hdl = (PMMLClusterHandler)super.getPMMLContentHandler(
+                "clusterModel");
+        if (hdl.getClusterCoverage() != null) {
+            m_clusterCoverage = hdl.getClusterCoverage();
+        }
+        m_nrOfClusters = hdl.getNrOfClusters();
+        m_prototypes = hdl.getPrototypes();
+        m_labels = hdl.getLabels();
+        m_measure = hdl.getComparisonMeasure();
+        m_usedColumns = getColumnSpecsFor(spec.getLearningFields(),
+                spec.getDataTableSpec());
+        LOGGER.info("loaded cluster port object");
+        LOGGER.debug("number of clusters: " + m_nrOfClusters);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public String getSummary() {
+        String labels = "";
+        if (m_labels == null) {
+            return "ClusteringModel";
+        }
+        for (int i = 0; i < m_labels.length; i++) {
+            if (i < m_labels.length - 1) {
+                labels += m_labels[i] + ", ";
+            } else {
+                labels += m_labels[i];
+            }
+        }
+        return "ClusteringModel with " + m_nrOfClusters
+            + " cluster: " + labels;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getWriteVersion() {
+        return PMML_V3_2;
+    }
+}

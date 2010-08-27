@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.workbench.ui" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.workbench.ui" id="org.knime.workbench.ui.multipleInstanceViews" name="KNIME multiple instances views"/>
+      </appInfo>
+      <documentation>
+         Views (Eclipse views defined for KNIME) that can be opened multiple times (multiple instances) should be registered here (and not with the viewShortcut extension point).
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <choice>
+               <element ref="multipleInstanceView"/>
+            </choice>
+         </sequence>
+      </complexType>
+   </element>
+
+   <element name="multipleInstanceView">
+      <complexType>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Specify the id of the view that can be instantiated multiple times. Make sure &quot;allowMultiple&quot; is set true!
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         2.1
+      </documentation>
+   </annotation>
+
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         Views registered here are added to the &quot;Views&quot; menu and are opened with an action allowing for multiple instances of the view.
+      </documentation>
+   </annotation>
+
+
+</schema>

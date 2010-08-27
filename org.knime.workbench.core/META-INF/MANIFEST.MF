@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Export-Package: org.knime.workbench.core,org.knime.workbench.core.pref
+ erences
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.3.0",org.ec
+ lipse.jface,org.knime.core;visibility:=reexport,org.eclipse.platform;
+ visibility:=reexport,org.eclipse.ui;visibility:=reexport,org.eclipse.
+ ui.console
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: workbench-core-patches.jar,workbench-core.jar
+Bundle-Version: 2.2.1.0026408
+Bundle-Name: KNIME Workbench Core
+Bundle-Activator: org.knime.workbench.core.KNIMECorePlugin
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.workbench.core;singleton:=true
+

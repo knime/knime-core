@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source" icon="./db_reader.png">
+	<name>Database Reader</name>
+	
+	<shortDescription>
+	    Establishes and opens a database access connection from which to read data.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Establishes and opens a database access connection from which to read data. 
+	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional drivers from Zip or Jar archives.
+		</intro>
+		
+	<option name="Database driver: ">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		Additional driver can be registered via KNIME's preference page
+		(Database drivers).
+	</option>
+	<option name="Database name: ">
+        Enter the database name here, for example 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="Workflow credentials: ">
+        If checked, the credentials (user and password) are used as defined on 
+        the workflow. The credential name links to the specified user and 
+        password. Those can be replaced or edit using the 'Workflow Credentials'
+        menu available in the workflow context menu.
+    </option>
+	<option name="User name: ">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password: ">
+        Your log-in password for the database. Note, the password is
+        de- and encrypted before handling it internally.
+	</option>
+	<option name="SQL statement: ">
+        Enter the SQL-like query here, for example SELECT * FROM table
+	</option>
+	</fullDescription>
+	
+	<ports>
+		<outPort index="0" name="Data from Database">Table with data read from the database</outPort>
+	</ports>	
+</knimeNode>

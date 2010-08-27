@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source" icon="db_looper.png">
+	<name>Database Looping</name>
+	
+	<shortDescription>
+	    Establishes and opens a database access connection from which to read 
+	    data by a modified, looping WHERE statement.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Establishes and opens a database access connection from which to read 
+	     data. The node appends a WHERE statement to the entered SQL query so 
+	     that only rows whose values in the given database column match the 
+	     possible values in the selected column of the node's input table. The
+         place holder in brackets for
+	     table name and table column need to be entered by the user, while the
+	     possible value place holder in percent must not be edit and will be 
+	     resolved during execution of this node.
+	     Make sure you have your personal database driver registered. 
+	     The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional 
+	     drivers from Zip or Jar archives.
+		</intro>
+		
+	<option name="Database driver: ">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		 Additional driver can be registered via KNIME's preference page
+        (Database drivers).
+	</option>
+	<option name="Database name: ">
+        Enter the database name here, for example 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="Workflow credentials: ">
+	    If checked, the credentials (user and password) are used as defined on 
+	    the workflow. The credential name links to the specified user and 
+	    password. Those can be replaced or edit using the 'Workflow Credentials'
+	    menu available in the workflow context menu.
+	</option>
+	<option name="User name: ">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password: ">
+        Your log-in password for the database. Note, the password is
+        de- and encrypted before handling it internally.
+	</option>
+	<option name="SQL statement: ">
+        Enter the SQL-like query here, for example SELECT * FROM table. The 
+        WHERE statement is automatically adjusted according to the possible
+        values of the selected column.
+	</option>
+    <option name="Column selection: ">
+        Select one column whose possible (distinct) values are used to constrain the
+        SQL WHERE clause.
+	</option>
+	<option name="Aggregate by row: ">
+        If this option is selected, the final output table will only contain one
+        row per value of the aggregated column. All other column values
+        are aggregated and separated by comma.
+	</option>
+	<option name="Append grid column: ">
+        If this option is selected, the grid column from the input table is
+        appended to the end of the resulting output table which is case of a
+        more than one value per query, will contain the set of values.
+	</option>
+	   <option name="No. of Values per Query: ">
+        Specifies the number of elements executed in each SQL query.
+    </option>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data with possible values">Data column with possible values used to constrain the database SQL query</inPort>
+		<outPort index="0" name="Data from Database">Table with data read from the database</outPort>
+	</ports>
+    
+</knimeNode>

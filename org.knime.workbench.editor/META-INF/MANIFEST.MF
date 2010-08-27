@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Export-Package: org.knime.workbench,org.knime.workbench.editor2,org.kn
+ ime.workbench.editor2.actions,org.knime.workbench.editor2.actions.del
+ egates,org.knime.workbench.editor2.commands,org.knime.workbench.edito
+ r2.directnodeedit,org.knime.workbench.editor2.editparts,org.knime.wor
+ kbench.editor2.editparts.anchor,org.knime.workbench.editor2.editparts
+ .policy,org.knime.workbench.editor2.editparts.snap,org.knime.workbenc
+ h.editor2.figures,org.knime.workbench.editor2.meta,org.knime.workbenc
+ h.editor2.model
+Require-Bundle: org.eclipse.core.resources,org.eclipse.core.runtime,or
+ g.eclipse.draw2d,org.eclipse.gef,org.eclipse.jface,org.eclipse.osgi,o
+ rg.eclipse.swt,org.eclipse.ui,org.eclipse.ui.ide,org.eclipse.ui.views
+ ,org.eclipse.ui.workbench,org.knime.workbench.core,org.knime.workbenc
+ h.repository,org.knime.workbench.ui
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: workbench-editor-patches.jar,workbench-editor.jar
+Bundle-Version: 2.2.1.0026408
+Bundle-Name: KNIME Workbench Flow-Editor
+Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
+Eclipse-RegisterBuddy: org.knime.base
+

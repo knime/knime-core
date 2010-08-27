@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+
+  
+  <title>SettingsModel listeners</title>
+</head>
+
+
+<body>
+
+
+<h3>Changing a component
+depending on the value of another one:</h3>
+
+
+You can tie components together with listeners to the SettingsModel.
+You can change the value of a component or en-/disable it depending on the value of another. <br>
+
+
+You always go through the SettingsModels to do that. If a SettingsModel
+is disabled the corresponding component is disabled too (in the
+dialog). The settings model stores the enable status and if the workflow is loaded and the dialog
+is opened again, the enable status is
+restored. <br>
+
+
+<br>
+
+
+Lets look at the
+following example:<br>
+
+
+<br>
+
+
+This is the dialog we are creating. It has a selection box with three
+choices. Depending on the selection we want to set a value in the
+parameter field. The parameter is only user editable, if the
+corresponding box is checked. Otherwise the editfield is disabled.<br>
+
+
+<img style="width: 290px; height: 320px;" alt="The dialog of this example" title="The dialog of this example" src="TestDialogShot.png"><br>
+
+
+<br>
+
+<span style="font-weight: bold;">Creating the dialog:</span><br>
+
+
+We need three SettingsModels to store the three values. In the
+NodeModel (we named the class <span style="font-family: monospace;">TestNodeModel</span>)
+we create factory methods:<br>
+
+
+<br>
+
+
+<tt>&nbsp;&nbsp;&nbsp; <span style="color: rgb(153, 0, 0);">static</span>
+SettingsModelString
+createSettingsModelSelection() {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">return</span> <span style="color: rgb(153, 0, 0);">new</span>
+SettingsModelString(<span style="color: rgb(102, 51, 255);">"SELECTION"</span>,
+<span style="color: rgb(102, 51, 255);">""</span>);<br>
+
+
+&nbsp;&nbsp;&nbsp; }&nbsp;&nbsp;&nbsp;<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="color: rgb(153, 0, 0);">static</span>
+SettingsModelInteger
+createSettingsModelValue() {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">return</span></tt><tt>
+<span style="color: rgb(153, 0, 0);">new</span>
+SettingsModelInteger(<span style="color: rgb(102, 51, 255);">"VALUE"</span>,
+0);</tt><tt><br>
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+&nbsp;&nbsp;&nbsp; <span style="color: rgb(153, 0, 0);">static</span>
+SettingsModelBoolean
+createSettingsModelEnabled() {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">return new</span>
+SettingsModelBoolean(<span style="color: rgb(102, 51, 255);">"ENABLE"</span>,
+<span style="color: rgb(153, 0, 0);">false</span>);<br>
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+</tt><br>
+
+
+In the NodeDialog's constructor we instantiate the three settings models
+and assign them to local variables, because we need to register
+listeners with them later on:<br>
+
+<br>
+
+
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;SettingsModelString
+selection =
+TestNodeModel.createSettingsModelSelection();<br>
+
+
+&nbsp;&nbsp;&nbsp;
+SettingsModelBoolean enabled =
+TestNodeModel.createSettingsModelEnabled();<br>
+
+
+&nbsp;&nbsp;&nbsp;
+SettingsModelInteger parameter =
+TestNodeModel.createSettingsModelValue();<br>
+
+<br>
+
+We use these settings models with a StringSelection component (a
+ComboBox), a Boolean component (a CheckBox), and with a NumberEdit
+component (a text field to enter numbers). We create two groups and
+also change the orientation to arrange them nicely:<br>
+
+<br>
+
+
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;createNewGroup(<span style="color: rgb(102, 51, 255);">"Your choice"</span>);<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;addDialogComponent(<span style="color: rgb(153, 0, 0);">new</span> DialogComponentStringSelection(selection,
+<span style="color: rgb(102, 51, 255);">"Select one:"</span>, TestNodeModel.<span style="color: rgb(51, 0, 153);">SELECTION</span>));<br>
+
+
+&nbsp;&nbsp;&nbsp;
+createNewGroup(<span style="color: rgb(102, 51, 255);">"Parameter"</span>);<br>
+
+&nbsp;&nbsp;&nbsp;
+setHorizontalPlacement(<span style="color: rgb(153, 0, 0);">true</span>);<br>
+
+&nbsp;&nbsp;&nbsp;
+addDialogComponent(<span style="color: rgb(153, 0, 0);">new</span> DialogComponentBoolean(enabled, <span style="color: rgb(102, 51, 255);">"edit
+manually"</span>));<br>
+
+&nbsp;&nbsp;&nbsp;
+addDialogComponent(<span style="color: rgb(153, 0, 0);">new</span> DialogComponentNumberEdit(parameter, <span style="color: rgb(102, 51, 255);">""</span>, 15));</tt><br>
+
+
+</tt><br>
+
+<span style="font-weight: bold;">Adding listeners to the SettingsModel:</span><br>
+
+Now, in order to enable the parameter edit field if (and
+only if) the checkbox is marked, add a listener to the boolean settings
+model:<br>
+
+<br>
+
+
+<tt>&nbsp;&nbsp;&nbsp;
+enabled.addChangeListener(<span style="color: rgb(153, 0, 0);">new</span> ChangeListener() {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">public void</span> stateChanged(<span style="color: rgb(153, 0, 0);">final</span> ChangeEvent e) {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(0, 102, 0);">// if enabled is true, the parameter field should be enabled</span><br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+parameter.setEnabled(enabled.getBooleanValue());<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+
+
+</tt><br>
+
+When notified (i.e. when the user changes the checkbox) it
+reads the value from the boolean settings
+model and enables the parameter settings model accordingly. Whenever
+the settings model changes (the value or the enable status) it is being
+forwarded to the dialog component. <br>
+
+
+<br>
+
+
+You can not only change the enable status of a component in a listener
+- you can also change another component's value depending on the value
+of the notifier, e. g.:<br>
+
+<br>
+
+
+<tt>&nbsp;&nbsp;&nbsp;
+selection.addChangeListener(<span style="color: rgb(153, 0, 0);">new</span> ChangeListener() {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">public void</span> stateChanged(<span style="color: rgb(153, 0, 0);">final</span> ChangeEvent e) {<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(153, 0, 0);">int</span> param = selection.getStringValue().hashCode();<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: rgb(0, 102, 0);">// we override any previously entered value!</span><br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+parameter.setIntValue(param);<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+});<br>
+
+
+</tt><br>
+
+
+Whenever the selection changes, this listener is called and sets a new
+parameter value depending on the current selection. (To make the code
+simple we just set the hash code...which fails, if the string value is
+null, btw.)<br>
+
+
+<br>
+
+<span style="font-weight: bold; text-decoration: underline;">Important Note:</span><br>
+
+There is a very important detail, that, if you forget it it will cause
+the
+components to appear in the dialog in an "invalid" state (in the
+example the edit field might be enabled even though the checkbox is not
+marked): You must
+maintain dependencies at all time.
+<br>
+
+That is, whenever a value is set in the settings model and no listener
+is (yet) installed the enable status or value of the settings model
+that should be tight&nbsp;to the first one must be adapted. In the
+example that is the case at construction time of the settings models.
+We instantiate the settings model for the boolean value with the
+initial value <span style="font-family: monospace;">false</span>.
+Thus, the parameter settings model should be disabled at the same time.
+If you run the example with the code from above and open the dialog for
+the first time, you will notice that the parameter editfield is
+enabled, even though the check mark is not set. Only after you changed
+the checkbox it maintains the correct status dependency.<br>
+
+To fix this, we can either initialize the settings model in a consistent way (e. g. init the enable model with <span style="font-family: monospace;">true</span>, or disable the parameter value model in its factory method), or set the correct states when we use them (in the constructors).<br>
+
+<span style="text-decoration: underline;">It is also very important to do this in the NodeModel</span>.
+If you are not planning on modifying the values in your node model (if
+you just want to read user settings from them), then there is no real
+need to install listeners in the settings models instances used in your
+NodeModel. But you&nbsp;need to make sure that they are initialized
+consistently. If you find - when you open the dialog for the first time
+- that your
+component is enabled, even though the check mark that should disable it
+is set, then your settings in the NodeModel &nbsp;probably don't
+reflect the dependencies in the correct way.<br>
+
+<br>
+
+(Even though the values are loaded into the node dialog each time it opens
+you must maintain this. You may expect that if the values are loaded
+the listeners will take care of setting the correct status - which is true. But the
+order in which the values are loaded is not defined. It happens that
+the value determining the status of another component is loaded before
+the (wrong) status of the dependant is loaded, overloading the correct
+status.)<br>
+
+
+<br>
+
+Get the fragmentary source code of the example here: <a href="exampleSource.zip">exampleSource.zip</a>
+</body>
+</html>

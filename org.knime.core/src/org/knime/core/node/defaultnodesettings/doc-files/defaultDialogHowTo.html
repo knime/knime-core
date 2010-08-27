@@ -1,0 +1,2313 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!--
+====================================================================
+* This source code, its documentation and all appendant files
+* are protected by copyright law. All rights reserved.
+*
+* Copyright, 2003 - 2010
+* University of Konstanz, Germany
+* Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+* and KNIME GmbH, Konstanz, Germany
+*
+* You may not modify, publish, transmit, transfer or sell, reproduce,
+* create derivative works from, distribute, perform, display, or in
+* any way exploit any of the content, in whole or in part, except as
+* otherwise expressly permitted in writing by the copyright owner or
+* as specified in the license file distributed with this product.
+*
+* If you have any questions please contact the copyright holder:
+* website: www.knime.org
+* email: contact@knime.org
+====================================================================
+-->
+
+
+
+
+  
+  
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+
+
+
+  
+  
+  
+  <title>DefaultDialog HowTo</title>
+</head>
+
+
+<body>
+
+
+
+
+<div style="text-align: center;"><big style="font-weight: bold;">How to create a default dialog.</big><br>
+
+
+
+
+</div>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold; text-decoration: underline;">Content:<br>
+
+
+
+
+</span>
+<ol>
+
+
+
+
+  <li><a href="#intro">Introduction</a></li>
+
+
+
+
+  <li><a href="#dlgCode">NodeDialog code example</a></li>
+
+
+
+
+  <li><a href="#modelCode">NodeModel code example</a></li>
+
+
+
+
+  <li><a href="#table">Table of all default dialog
+components</a></li>
+
+
+
+
+  <li><a href="#disable">Disabling components</a></li>
+
+
+
+
+  <li><a href="#rename">Renaming the default tab</a></li>
+
+
+
+
+  <li><a href="#newtabs">Creating new tabs</a></li>
+
+
+
+
+  <li><a href="#faq">Using DialogComponents in a
+custom NodeDialogPane</a></li>
+
+
+
+
+  <li><a href="#faq">FAQs</a></li>
+
+
+
+
+</ol>
+
+
+
+
+<br>
+
+
+
+
+<a name="intro"></a><span style="font-weight: bold;">Introduction </span><br>
+
+
+
+
+<br>
+
+
+
+
+"Default dialog components" provide a convenient way to get user input
+for a few basic settings through a dialog that can be easily created,
+without going through the pain of creating swing components and
+layouts. <br>
+
+
+
+
+<br>
+
+
+
+
+We provide a couple of components that can be added to a default
+settings
+pane, and that allow the user to enter values. These values can be
+easily
+retrieved in the <code>NodeModel</code> then. There
+is no way (and no need) to layout these components - they will
+automatically show in the dialog below each other (or next to each
+other, depending on the currently active orientation, see <a href="#placement">setHorizontalPlacement</a>), in the
+order they
+have been added. You can surround them with a border to make the dialog
+look nicer and you can create new tabs to organize them. But that's all.<br>
+
+
+
+
+Well, there is also support for enabling/disabling the components
+through the mechanism of registered ChangeListeners.<br>
+
+
+
+
+<br>
+
+
+
+
+Each default component uses a swing component (like a JTextField or
+JSpinner) as input field, and allows for adding a label to that field,
+to add an explanatory text for the user. Besides that each dialog
+component needs a SettingsModel. This
+settings model holds the actual value of the component and does the
+storing, loading and validation. When you instantiate the
+component you must provide a settings model - when you want to load the
+entered value in your NodeModel, you use an instance of that same
+SettingsModel. To identify the value handled by the settings model, you
+must provide a unique configName (i.e. a string ID).<br>
+
+
+
+
+<br>
+
+
+
+
+Here is an example of a default dialog with a few components grouped
+into two groups:<br>
+
+
+
+
+<div style="text-align: center; margin-left: 156px; width: 459px;"><img style="width: 415px; height: 451px;" alt="an example default dialog" src="dlg1.png"><br>
+
+
+
+
+An example of a default dialog. It shows a selection of available
+components, grouped into two groups, each surrounded by titled border.<br>
+
+
+
+
+</div>
+
+
+
+
+<br>
+
+
+
+
+For a complete list of available components (and settings models they
+require), please refer to the <a href="#table">table below</a>.<br>
+
+
+
+
+<br>
+
+
+
+
+<a name="dlgCode"></a><span style="font-weight: bold;">Code example NodeDialog</span><br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;Here is the code that creates the above dialog:<br>
+
+
+
+
+<br>
+
+
+
+
+<tt>
+/**<br>
+
+
+
+
+&nbsp;* The new default dialog class must be derived from
+DefaultNodeSettingsPane.<br>
+
+
+
+
+&nbsp;*/<br>
+
+
+
+
+public class DemoNodeDialogPane extends DefaultNodeSettingsPane {<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * Instantiate and add all
+needed components here in the constructor.<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * (The suppress warnings is
+used to avoid compiler warnings from the<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * constructor with generic
+varargs.)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @SuppressWarnings("unchecked")<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; DemoNodeDialogPane() {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+createNewGroup("Group 1:"); // following components are bordered<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentString(new SettingsModelString(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DemoNodeModel.STR, null), "Enter a string value:"));<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DemoNodeModel.INT, 3), "Enter an integer (1-17):", 1));<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentNumber(new SettingsModelDouble(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DemoNodeModel.DBL, 3.0),<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"Enter a floating point number:", 0.1));<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+createNewGroup("Group 2:"); // closes the prev group, opens a new one<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DemoNodeModel.BOOL, false), "Checkit or leave it:"));<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentStringSelection(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelString(DemoNodeModel.STRSEL, null),<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"Your choice:", "First", "Second", "Third"));<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; closeCurrentGroup();<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new DialogComponentColumnNameSelection(<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelString(DemoNodeModel.COLSEL, ""), <br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"Select a column", 0, true, IntValue.class, DoubleValue.class));<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+}<br>
+
+
+
+
+</tt>The code adds 6 components grouped by two borders. All
+components following the <code>createNewGroup(&lt;Title&gt;)</code>
+command
+will be put into the frame. The next <code>createNewGroup</code>
+command closes the
+previous group and opens a new one. If you want to add components below
+the last border, you can use <code>closeCurrentGroup</code>.
+Components added after
+this command will be placed outside any border.<br>
+
+
+
+
+<br>
+
+
+
+
+Each component's constructor requires a new instance of a <code>SettingsModel</code>.
+The settings model expects a string identifier that it uses to store
+and load the value of the component, and a default value which it holds
+until a new value is loaded. Additional parameters are necessary,
+depending on the type of component, most require a string, that will be
+displayed in front of the component as label. For more details, please
+refer to the documentation of the specific component.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="modelCode"></a>Code
+example NodeModel</span><br>
+
+
+
+
+<br>
+
+
+
+
+The following code reads the user input through <code>SettingsModels</code>
+into the
+<code>NodeModel</code>:<br>
+
+
+
+
+<tt>
+/**<br>
+
+
+
+
+&nbsp;* The node model to the demo default dialog. <br>
+
+
+
+
+&nbsp;*/<br>
+
+
+
+
+public class DemoNodeModel extends NodeModel {<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /** <br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;* The following strings are used by the
+dialog and the model<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;* as key to store settings in the
+settings object. <br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;*/<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String STR = "str";<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String INT = "int";<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String DBL = "dbl";<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String BOOL = "bool";<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String STRSEL = "selStr";<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; static final String COLSEL = "selCol";<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;* these are the members storing user
+settings.<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;* Use the same settings model (but a
+new instance) as in<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;* the node dialog for that value.<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp;*/<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final SettingsModelString m_str =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelString(STR, null);<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final
+SettingsModelIntegerBounded m_intBounded =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelIntegerBounded(INT, 4, 1, 17);<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final SettingsModelDouble m_dbl =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelDouble(DBL, .4);<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final SettingsModelBoolean
+m_bool =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelBoolean(BOOL, true);<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final SettingsModelString
+m_selStr =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelString(STRSEL, null);<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; private final SettingsModelString
+m_colSel =<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new SettingsModelString(COLSEL, "none");<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /** The constructor */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; DemoNodeModel() {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+super(1, 0);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp; &nbsp; [....]<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * @see
+org.knime.core.node.NodeModel<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @Override<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; protected void
+loadValidatedSettingsFrom(final NodeSettingsRO settings)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+throws InvalidSettingsException {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_bool.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_dbl.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_intBounded.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_selStr.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_str.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_colSel.loadSettingsFrom(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * @see
+org.knime.core.node.NodeModel<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#saveSettingsTo(org.knime.core.node.NodeSettingsWO)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @Override<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; protected void saveSettingsTo(final
+NodeSettingsWO settings) {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_bool.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_dbl.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_intBounded.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_selStr.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_str.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_colSel.saveSettingsTo(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * @see
+org.knime.core.node.NodeModel<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#validateSettings(org.knime.core.node.NodeSettingsRO)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @Override<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; protected void validateSettings(final
+NodeSettingsRO settings)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+throws InvalidSettingsException {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_bool.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_dbl.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_intBounded.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_selStr.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_str.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_colSel.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * @see
+org.knime.core.node.NodeModel<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#execute(org.knime.core.node.BufferedDataTable[],<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+org.knime.core.node.ExecutionContext)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @Override<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; protected BufferedDataTable[]
+execute(final BufferedDataTable[] inData,<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+final ExecutionContext exec) throws Exception {<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if
+(m_bool.getBooleanValue()) {<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; double d = m_dbl.getDoubleValue() * 2.5;<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; int i =
+m_intBounded.getIntValue(); <br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // i is
+larger than 0 and smaller than 18 (because the model used<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; // is a
+SettingsModelIntBounded with these limits).<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if
+(m_selStr.getStringValue() != null) {<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+m_str.setStringValue(m_colSel.getStringValue());<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return new BufferedDataTable[0];<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+</tt><br>
+
+
+
+
+For each component/setting value add a member holding the corresponding
+SettingsModel. Use exactly the same type of SettingsModel as the
+component in the dialog. The SettingsModels provide load, save, and
+validate methods that just need to be called in the corrsponding method
+of the NodeModel. This takes care of the saving and loading of these
+values and also transfers them into the dialog and the new user values
+back from the dialog. To access the current value in the SettingsModel,
+call the coresponding getter-method. SettingModels also provide a
+public setter-method to change their value.<br>
+
+
+
+
+<br>
+
+
+
+
+If &nbsp;there are dependencies to check between two settings
+values, the validateSettings method becomes a bit more complicated: If
+a settings model validates a value, it does not store that value, thus
+you have no access to that value you are supposed to validate. If you
+need to check some values against each other (like, to ensure that the
+new minimum is smaller than the specified maximum, for example), you
+need to create new temporary settings models, load the new values in,
+read and verify them, and release the settings models at the end. Here
+is a code example:<br>
+
+
+
+
+<tt>&nbsp;&nbsp;&nbsp; /**<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; * @see
+org.knime.core.node.NodeModel<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#validateSettings(org.knime.core.node.NodeSettingsRO)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp; */<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; @Override<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; protected void validateSettings(final
+NodeSettingsRO settings)<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+throws InvalidSettingsException {<br>
+
+
+
+
+<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; // create&nbsp;new
+(temp)
+settings models <br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; // (if m_min and m_max are
+fields of the&nbsp;NodeModel)<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>SettingsModelInteger
+min</tt><tt> = <br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp;m_min.createCloneWithValidatedValue(MIN,
+settings);<br>
+
+
+
+
+</tt><tt>
+&nbsp; &nbsp; &nbsp; &nbsp; </tt><tt>SettingsModelInteger
+max</tt><tt> = <br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp;m_max.createCloneWithValidatedValue(MAX,
+settings);<br>
+
+
+
+
+</tt><br>
+
+
+
+
+<tt>&nbsp; &nbsp; &nbsp; &nbsp; if
+(min.getIntValue() &gt;= max.getIntValue())
+{<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; throw new InvalidSettingsException("The
+specified minimum "<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;+ "must be smaller than the
+maximum value.");<br>
+
+
+
+
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+
+
+
+
+</tt><tt><br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_dbl.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_intBounded.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_selStr.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_colSel.validateSettings(settings);<br>
+
+
+
+
+&nbsp;&nbsp;&nbsp; }<br>
+
+
+
+
+<br>
+
+
+
+
+</tt>With the <code>createCloneWithValidatedValue</code>
+method,
+create a temporary settings model with the new value from
+a NodeSettings object. Use this temporary object to access the new
+value, but make sure not to change any permanent variables in the
+NodeModel. Release the clone models after <code>validateSettings</code>
+finishes.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;">Use static create-methods
+to instantiate SettingsModels</span>: <br>
+
+
+
+
+Because you
+need instances of identical SettingsModels in two places (in the
+NodeModel and the NodeDialog constructor) it is probably a good idea to
+implement static methods that create these instances and to just call
+these methods in both places. For example, add the following method to
+your NodeModel:<br>
+
+
+
+
+<tt>static SettingsModelIntegerBounded createRangeSettingsModel()
+{<br>
+
+
+
+
+&nbsp; &nbsp; return new SettingsModelIntegerBounded("Range",
+4, 1,
+17);<br>
+
+
+
+
+}<br>
+
+
+
+
+</tt>Now, your dialog constructor looks like:<br>
+
+
+
+
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new
+DialogComponentNumber(MyNodeModel.createRangeSettingsModel());<br>
+
+
+
+
+</tt>and the node model:<br>
+
+
+
+
+<tt>&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; private final
+SettingsModelIntegerBounded m_intBounded = createRangeSettingsModel();</tt><br>
+
+
+
+
+The code is simpler, and more importantly, it is ensured that
+you really use the same SettingsModels with the same parameters and
+same IDs.<br>
+
+
+
+
+<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="table"></a>Table
+of all default dialog components</span><br>
+
+
+
+
+<br>
+
+
+
+
+Here is a list of all currently available default components.<br>
+
+
+
+
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+
+
+
+
+  <tbody>
+
+
+
+
+    <tr>
+
+
+
+
+      <td style="font-weight: bold;">Looks</td>
+
+
+
+
+      <td style="font-weight: bold;">Default Component
+Class</td>
+
+
+
+
+      <td style="font-weight: bold;">Accepted
+SettingsModels</td>
+
+
+
+
+      <td style="font-weight: bold;">Getter Methods</td>
+
+
+
+
+      <td style="font-weight: bold;">Notes</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 66px; height: 21px;" alt="ScreenShot DlgCompBoolean" src="bool.png"></td>
+
+
+
+
+      <td>DialogComponentBoolean</td>
+
+
+
+
+      <td>SettingsModelBoolean</td>
+
+
+
+
+      <td style="white-space: nowrap;">boolean
+getBooleanValue()</td>
+
+
+
+
+      <td>Stores a boolean value according to the state of the
+checkbox.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 663px; height: 288px;" alt="ScreenShot ColFilter" src="colFilter.png"></td>
+
+
+
+
+      <td>DialogComponentColumnFilter</td>
+
+
+
+
+      <td>SettingsModelFilterString</td>
+
+
+
+
+      <td style="white-space: nowrap;">List&lt;String&gt;
+getIncludeList()<br>
+
+
+
+
+List&lt;String&gt; getExcludeList()</td>
+
+
+
+
+      <td>Implements support for an include and exclude list.
+Mainly used for column filtering.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 166px; height: 31px;" alt="ScreenShot DlgComp ColSelect" src="colSelect.png"></td>
+
+
+
+
+      <td>DialogComponentColumnNameSelection</td>
+
+
+
+
+      <td>SettingsModelString<br>
+
+
+      <br>
+
+
+SettingsModelColumnName</td>
+
+
+
+
+      <td style="white-space: nowrap;">String
+getStringValue()<br>
+
+
+      <br>
+
+
+ String getColumnName() <br>
+
+
+boolean useRowID()</td>
+
+
+
+
+      <td>Stores the name of the selected column. Uses the
+renderer of the type of the corresponding column.<br>
+
+
+
+Using the SettingsModelColumnName will add a RowID option to the select list.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 412px; height: 60px;" alt="ScreenShot DlgComp FileChooser" src="fileSelect.png"></td>
+
+
+
+
+      <td>DialogComponentFileChooser</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>The stored string is the (absolut) filename of the
+selected file.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 138px; height: 29px;" alt="ScreenShot DlgComp number" src="number.png"></td>
+
+
+
+
+      <td>DialogComponentNumber</td>
+
+
+
+
+      <td>SettingsModelDouble<br>
+
+
+
+
+SettingsModelInteger<br>
+
+
+
+
+SettingsModelDoubleBounded<br>
+
+
+
+
+SettingsModelIntegerBounded</td>
+
+
+
+
+      <td>double getDoubleValue()<br>
+
+
+
+
+int getIntValue()</td>
+
+
+
+
+      <td>Accepts a number (double or integer) in an editable
+spinner.
+The bounded models will not accept values outside the specified range. </td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 107px; height: 26px;" alt="ScreenShot DlgComp NumberEdit" src="numberEdit.png"></td>
+
+
+
+
+      <td>DialogComponentNumberEdit</td>
+
+
+
+
+      <td>SettingsModelDouble<br>
+
+
+
+
+SettingsModelInteger<br>
+
+
+
+
+SettingsModelDoubleBounded<br>
+
+
+
+
+SettingsModelIntegerBounded</td>
+
+
+
+
+      <td>double getDoubleValue()<br>
+
+
+
+
+int getIntValue()</td>
+
+
+
+
+      <td>Accepts a number (double or integer) in an EditField.
+The
+bounded models will not accept values outside the specified range.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 322px; height: 27px;" alt="component with two spinners for min and max" src="dblRange.png"></td>
+
+
+
+
+      <td>DialogComponentDoubleRange</td>
+
+
+
+
+      <td>SettingsModelDoubleRange</td>
+
+
+
+
+      <td>double getMaxRange()<br>
+
+
+
+
+double getMinRange()</td>
+
+
+
+
+      <td>Stores a min and a max floating point number.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 304px; height: 38px;" alt="ScreenShot DlgComp Password" src="passwd.png"></td>
+
+
+
+
+      <td>DialogComponentPasswordField</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>Accepts any string in a textfield. The entered string
+will
+not be echoed - a dot appears for each character. The string stored in
+the settings model is the encrypted password. The component provides
+static encryption and decryption methods.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 299px; height: 29px;" alt="ScreenShot DlgComp String" src="string.png"></td>
+
+
+
+
+      <td>DialogComponentString</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>Stores any string entered in the field.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 409px; height: 117px;" alt="Screenshot DlgComponentMultiLineString" src="multiLine.png"></td>
+
+
+
+
+      <td>DialogComponentMultiLineString</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>Stores a string, that could contain multiple lines.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 116px; height: 31px;" alt="ScreenShot DlgComp stringSelect" src="stringSelect.png"></td>
+
+
+
+
+      <td>DialogComponentStringSelection</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>The user can select a string from the list. The
+combobox is not editable.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 129px; height: 59px;" alt="ScreenShot DlgComp stringListSelect" src="stringListSelect.png"></td>
+
+
+
+
+      <td>DialogComponentStringListSelection</td>
+
+
+
+
+      <td>SettingsModelStringArray</td>
+
+
+
+
+      <td>String getStringArrayValue()</td>
+
+
+
+
+      <td>The user can select multiple strings from the list. The
+select box is not editable.</td>
+
+
+
+
+    </tr>
+
+
+
+
+    <tr>
+
+
+
+
+      <td><img style="width: 159px; height: 57px;" alt="ScreenShot DlgComp buttonGroup" src="buttonGroup.png"></td>
+
+
+
+
+      <td>DialogComponentButtonGroup</td>
+
+
+
+
+      <td>SettingsModelString</td>
+
+
+
+
+      <td>String getStringValue()</td>
+
+
+
+
+      <td>The user can choose one option. The action command of
+the selected RadioButton is stored in the SettingsModelString.</td>
+
+
+
+
+    </tr>
+
+
+
+
+  
+  
+  
+  </tbody>
+</table>
+
+
+
+
+<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="disable"></a>Disabling
+components</span><br>
+
+
+
+
+<br>
+
+
+
+
+All components can be disabled (grayed-out) by calling
+<code>setEnabled(false)</code> on their <code>SettingsModel</code>.
+You can register a <code>ChangeListener</code>
+with a <code>SettingsModel</code> and
+change the enable status of another one depending on the value of the
+first one, for example. Disabled <code>SettingsModel</code>s
+still store, save and
+load their value (this way a value entered in the enabled component is
+preserved). When you start using the values from the <code>SettingsModel</code>s
+in your
+<code>NodeModel</code> implementation, you need to check
+the enable status by
+calling <code>isEnabled()</code>.
+When changing the values in the SettingsModels (or when instantiating
+them and assigning an initial value), you need to carefully maintain a
+consistent state between those SettingsModels whose state depend on
+each other. For example, if you have a Model that holds a string value
+and whose enable status depends on a boolean SettingsModel, you need to
+make sure that you disable the string model, whenever you assign false
+to the boolean model (and, if you initialize the boolean model with
+false, disable the string model!). An example is available <a href="SettingsModelListeners.html">here</a>.<br>
+
+
+
+
+<br>
+
+
+
+
+<a name="rename"></a><span style="font-weight: bold;">Renaming the default tab</span><br>
+
+
+
+
+<br>
+
+
+
+
+You can set a new title&nbsp;on the default "Options" tab, the one
+that is always created and the components are added to by default. Call <code>setDefaultTabTitle(String)</code>
+in your <code>NodeDialogPane</code> (that is derived from
+the
+<code>DefaultNodeSettingsPane</code>). The specified string
+appears in the tab's
+title.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="newtabs"></a>Creating
+new tabs</span><br>
+
+
+
+
+<br>
+
+
+
+
+Additional tabs can be created by calling <code>createNewTab(String)</code>.
+The specified string is displayed as title of the new tab. Components
+added after this call will be placed into the new tab. Also groups work
+in the new tab. Previous tabs are not accessible anymore. New tabs are
+placed right of and behind already existing tabs. Or, you can call <span style="font-family: monospace;">createNewTab(String, int)</span> to specify the position the new tab should be placed at. The specified title must
+be unique. A specific tab can be selected (brought to front) by calling &nbsp;<span style="font-family: monospace;">selectedTab(String)</span>.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="placement"></a>Placement
+of dialog components</span><br>
+
+
+
+
+<br>
+
+
+
+
+The placement (horizontal/vertical) of the dialog components can be
+changed by calling <code>setHorizontalPlacement(boolean)</code>.
+If set
+to <code>true</code> the next components will be added
+next to each other. If set to <code>false</code> the next
+component is place below the previous one.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="reuse"></a>Using
+DialogComponents in a custom NodeDialogPane</span><br>
+
+
+
+
+<br>
+
+
+
+
+The provided DefaultNodeSettingsPane is a convenient way to build
+simple dialogs without the need to implement any additional methods or
+arranging components. Its layout is very restricted though, components
+can be&nbsp;arranged only below/next to each other. If you need a
+more
+complex dialog with a different layout, you need to create your own
+swing panel (directly derived from <code>NodeDialogPane</code>).
+You can still use
+the
+DialogComponents, arrange them in your custom panel and benefit from
+their loading and saving capabilities: Each component provides a <code>getComponentPanel()</code>
+method that returns the panel holding the component. This panel can be
+placed into your dialog pane. In the dialog's <tt>loadSettingsFrom</tt> and
+<tt>saveSettingsTo</tt> methods, you need to call the component's
+<tt>loadSettingsFrom</tt> and <tt>saveSettingsTo</tt>
+respectively. The usage of the
+corresponding <code>SettingsModels</code> in the <code>NodeModel</code>
+is the same as if they
+were used in a <code>DefaultNodeSettingsPane</code>.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="font-weight: bold;"><a name="faq"></a>
+FAQs</span><br>
+
+
+
+
+<br>
+
+
+
+
+<span style="text-decoration: underline;">
+Q</span>: <span style="text-decoration: underline;">There
+are two places to specify a default value (with the settings
+model, when adding a component, and in the one used
+in the NodeModel). Which one is used?</span><br>
+
+
+
+
+<span style="text-decoration: underline;">
+A</span>: The one specified in the settings model &nbsp;used
+by the
+NodeModel. Before the dialog opens, the NodeModel's settings are
+transfered into the dialog. In some cases the default value in
+the dialog constructor is used to determine the components width, if it
+is not set explicitly.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="text-decoration: underline;">Q</span>: <span style="text-decoration: underline;">When the user enters an
+invalid value some components are colored red, others aren't. Why?</span><br>
+
+
+
+
+<span style="text-decoration: underline;">A</span>:
+If you use the same
+SettingsModel in the dialog and the NodeModel it should work.
+Especially if you expect numbers in a certain range, make sure you use
+bounded models in the dialog and the NodeModel - with the same upper
+and lower bounds! The coloring doesn't work if the NodeModel has a more
+restricted settings model than the dialog component, if it is the
+NodeModel
+that rejects the value.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="text-decoration: underline;">
+Q</span>: <span style="text-decoration: underline;">Why
+do I need to instantiate two SettingsModels for each component,
+why can't I just transfer the object from the NodeModel to the
+NodeDialog and get the user input stored in there?</span><br>
+
+
+
+
+<span style="text-decoration: underline;">
+A</span>: That's how the Nodes in KNIME are designed. The
+<code>NodeModel</code> doesn't
+know it's dialog, and vice versa. Values are transfered through
+settings objects. You need to implement a mechanism to store and load
+your current settings anyway - we re-use it to transfer the current
+values into the dialog. Also, the <code>NodeModel</code>
+must be able to reject
+invalid/inconsistent&nbsp;values (in the <code>validateSettings</code>
+method).
+If we would have only one object, the invalid settings would be set to
+let the <code>NodeModel</code> validate them&nbsp;and
+canceling the dialog then
+would leave these&nbsp; invalid or inconsistent values in the
+<code>NodeModel</code>.<br>
+
+
+
+
+<br>
+
+
+
+
+<span style="text-decoration: underline;">
+Q</span>: <span style="text-decoration: underline;">How
+can I influence the width of the components?</span><br>
+
+
+
+
+<span style="text-decoration: underline;">
+A</span>: There are some components that calculate there width
+automatically
+(like ComboBoxes). Others have a constructor that allow setting the
+width (in columns/characters) explicitly. If you don't use this
+constructor, the value in the <code>SettingsModel</code>
+passed will be used to
+determine the width.<br>
+
+
+
+
+</body>
+</html>
