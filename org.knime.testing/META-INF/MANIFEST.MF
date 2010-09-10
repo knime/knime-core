@@ -1,16 +1,16 @@
 Manifest-Version: 1.0
-Export-Package: org.knime.testing,org.knime.testing.algorithms,org.kni
- me.testing.core,org.knime.testing.guiTests,org.knime.testing.node.dif
- ferNode,org.knime.testing.stacktracedumper
 Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.core,org.
  knime.workbench.repository,org.knime.base,org.junit,org.junit4,org.ec
  lipse.core.resources,org.apache.log4j
+Export-Package: org.knime.testing,org.knime.testing.algorithms,org.kni
+ me.testing.core,org.knime.testing.guiTests,org.knime.testing.node.dif
+ ferNode,org.knime.testing.stacktracedumper
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Eclipse-LazyStart: true
 Bundle-ClassPath: knime-testing.jar
-Bundle-Version: 2.2.1.0026408
-Bundle-Localization: plugin
+Bundle-Version: 2.2.2.0026408
 Bundle-Name: Test-Node extension for KNIME Workbench
+Bundle-Localization: plugin
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.testing; singleton:=true
 Eclipse-RegisterBuddy: org.knime.base
