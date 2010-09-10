@@ -1,12 +1,12 @@
 Manifest-Version: 1.0
-Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.repositor
- y,org.knime.base
 Export-Package: com.sun.tools.javac.api,org.knime.ext.sun.nodes.script
  ,org.knime.ext.sun.nodes.script.expression
+Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.repositor
+ y,org.knime.base
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: knime-sun-patches.jar,knime-sun.jar,lib/tools.jar
-Bundle-Version: 2.2.1.0026408
+Bundle-Version: 2.2.2.0026408
 Bundle-Name: KNIME JavaScripting node
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true

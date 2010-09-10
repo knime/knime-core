@@ -1,15 +1,15 @@
 Manifest-Version: 1.0
+Export-Package: org.knime.workbench.help.intro
 Require-Bundle: org.eclipse.core.runtime,org.eclipse.help,org.eclipse.
  help.base,org.eclipse.ui,org.eclipse.ui.intro,org.knime.workbench.ui,
  org.eclipse.ui.ide,org.eclipse.help.ui,org.eclipse.equinox.p2.ui.sdk,
  org.eclipse.equinox.p2.core,org.eclipse.equinox.p2.ui,org.knime.core
-Export-Package: org.knime.workbench.help.intro
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: workbench-help-patches.jar,workbench-help.jar
-Bundle-Version: 2.2.1.0026408
-Bundle-Name: KNIME Workbench Help
+Bundle-Version: 2.2.2.0026408
 Bundle-Localization: plugin
+Bundle-Name: KNIME Workbench Help
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
 

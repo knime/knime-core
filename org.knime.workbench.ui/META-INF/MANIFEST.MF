@@ -1,7 +1,4 @@
 Manifest-Version: 1.0
-Require-Bundle: org.eclipse.core.runtime,org.eclipse.ui,org.eclipse.co
- re.resources,org.eclipse.ui.ide;bundle-version="3.4.2",org.knime.work
- bench.core,org.knime.workbench.repository,org.eclipse.ui.forms
 Export-Package: com.swtdesigner,org.knime.workbench.ui.metainfo.editor
  ,org.knime.workbench.ui,org.knime.workbench.ui.builder,org.knime.work
  bench.ui.favorites,org.knime.workbench.ui.favorites.actions,org.knime
@@ -12,12 +9,15 @@ Export-Package: com.swtdesigner,org.knime.workbench.ui.metainfo.editor
  .knime.workbench.ui.preferences,org.knime.workbench.ui.wizards.export
  ,org.knime.workbench.ui.wizards.imports,org.knime.workbench.ui.wizard
  s.project,org.knime.workbench.ui.wrapper
+Require-Bundle: org.eclipse.core.runtime,org.eclipse.ui,org.eclipse.co
+ re.resources,org.eclipse.ui.ide;bundle-version="3.4.2",org.knime.work
+ bench.core,org.knime.workbench.repository,org.eclipse.ui.forms
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: workbench-ui-patches.jar,workbench-ui.jar
-Bundle-Version: 2.2.1.0026408
+Bundle-Version: 2.2.2.0026408
 Bundle-Name: KNIME Workbench UI
-Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
 Bundle-ManifestVersion: 2
+Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
 Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
 

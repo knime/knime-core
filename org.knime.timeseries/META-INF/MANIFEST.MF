@@ -1,18 +1,18 @@
 Manifest-Version: 1.0
-Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)
- ";visibility:=reexport,org.knime.workbench.repository;bundle-version=
- "[2.0.0,3.0.0)";visibility:=reexport,org.knime.base;bundle-version="[
- 2.0.0,3.0.0)";visibility:=reexport
 Export-Package: org.knime.timeseries,org.knime.timeseries.node.diff,or
  g.knime.timeseries.node.filter.extract,org.knime.timeseries.node.gene
  rator,org.knime.timeseries.node.movavg,org.knime.timeseries.node.stri
  ngtotimestamp,org.knime.timeseries.util
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)
+ ";visibility:=reexport,org.knime.workbench.repository;bundle-version=
+ "[2.0.0,3.0.0)";visibility:=reexport,org.knime.base;bundle-version="[
+ 2.0.0,3.0.0)";visibility:=reexport
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: knime-timeseries-patches.jar,knime-timeseries.jar
-Bundle-Version: 2.2.1.0026408
-Bundle-Name: KNIME Time Series Nodes
+Bundle-Version: 2.2.2.0026408
 Bundle-Localization: plugin
+Bundle-Name: KNIME Time Series Nodes
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.timeseries; singleton:=true
 

@@ -1,4 +1,6 @@
 Manifest-Version: 1.0
+Export-Package: org.knime.product,org.knime.product.headless,org.knime
+ .product.rcp
 Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.co
  re.resources,org.eclipse.ui.ide,org.knime.base,org.knime.core,org.kni
  me.workbench,org.knime.workbench.core,org.knime.workbench.editor,org.
@@ -6,14 +8,12 @@ Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.co
  .help,org.eclipse.swt,org.eclipse.jface,org.eclipse.ui.workbench,org.
  eclipse.ui.intro,org.eclipse.core.net,org.eclipse.ui.net,org.eclipse.
  ui.console
-Export-Package: org.knime.product,org.knime.product.headless,org.knime
- .product.rcp
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Eclipse-LazyStart: false
 Bundle-ClassPath: knime-product-patches.jar,knime-product.jar
-Bundle-Version: 2.2.1.0026408
+Bundle-Version: 2.2.2.0026408
 Bundle-Name: KNIME Konstanz Information Miner
-Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-ManifestVersion: 2
+Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-SymbolicName: org.knime.product;singleton:=true
 

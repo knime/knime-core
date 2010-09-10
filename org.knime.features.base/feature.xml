@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="%featureName" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.2.1.0026408">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="%featureName" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.2.2.0026408">
 
    <description url="http://www.knime.org/">
       %description

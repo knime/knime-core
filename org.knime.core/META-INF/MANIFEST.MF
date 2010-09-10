@@ -22,7 +22,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,org.apac
  he.log4j,org.eclipse.core.resources
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-Version: 2.2.1.0026408
+Bundle-Version: 2.2.2.0026408
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.core;singleton:=true
