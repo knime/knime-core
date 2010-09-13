@@ -504,6 +504,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         predParams.addDouble("ownClassFreq", m_ownClassFreq);
         predParams.addInt("ownIndex", m_ownIndex);
         predParams.addString("prefix", m_prefix);
+        predParams.addBoolean("newColors", m_newColors);
         // also write out frequencies of all classes
         DataCell[] keys = new DataCell[m_classCounts.size()];
         double[] values = new double[m_classCounts.size()];
@@ -570,6 +571,9 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         m_ownClassFreq = predParams.getDouble("ownClassFreq");
         m_ownIndex = predParams.getInt("ownIndex");
         m_prefix = predParams.getString("prefix");
+        if (predParams.containsKey("newColors")) {
+            m_newColors = predParams.getBoolean("newColors");
+        }
         DataCell[] keys = predParams.getDataCellArray("classes");
         double[] values = predParams.getDoubleArray("frequencies");
         if (keys.length != values.length) {
