@@ -462,9 +462,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         // add highlight patterns and color information
         exec.setMessage("Adding hilite and color info to tree...");
         addHiliteAndColorInfo(inData);
-        LOGGER.info("Decision tree consisting of " 
-                + m_decisionTree.getNumberNodes() 
-                + " nodes created with pruning method " 
+        LOGGER.info("Decision tree consisting of "
+                + m_decisionTree.getNumberNodes()
+                + " nodes created with pruning method "
                 + m_pruningMethod.getStringValue());
         // set the warning message if available
         if (warningMessageSb.length() > 0) {
@@ -511,8 +511,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             int maxRowsForHiliting = m_numberRecordsStoredForView.getIntValue();
             int count = 0;
             Iterator<DataRow> rowIterator = inData.iterator();
+            // get class column index
+            int classColumnIndex = inData.getDataTableSpec().findColumnIndex(
+                    m_classifyColumn.getStringValue());
             while (rowIterator.hasNext() && maxRowsForHiliting > count) {
                 DataRow row = rowIterator.next();
+                if (row.getCell(classColumnIndex).isMissing()) {
+                    continue;
+                }
                 m_decisionTree.addCoveredPattern(row,
                         inData.getDataTableSpec());
                 count++;
@@ -520,6 +526,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             // add the rest just for coloring
             while (rowIterator.hasNext()) {
                 DataRow row = rowIterator.next();
+                if (row.getCell(classColumnIndex).isMissing()) {
+                    continue;
+                }
                 m_decisionTree.addCoveredColor(row, inData.getDataTableSpec());
             }
         } catch (Exception e) {
