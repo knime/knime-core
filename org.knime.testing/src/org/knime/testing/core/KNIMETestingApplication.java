@@ -47,7 +47,6 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.core.util.LogfileAppender;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
 
@@ -89,7 +88,7 @@ public class KNIMETestingApplication implements IApplication {
         // }
 
         // make sure the logfile doesn't get split.
-        System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "-1");
+        System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
 
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
