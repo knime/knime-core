@@ -1215,7 +1215,11 @@ public final class SingleNodeContainer extends NodeContainer {
         // if-statement fixes bug 1777: ensureOpen can cause trouble if there
         // is a deep hierarchy of BDTs
         if (!isDirty()) {
-            m_node.ensureOutputDataIsRead();
+            try {
+                m_node.ensureOutputDataIsRead();
+            } catch (Exception e) {
+                LOGGER.error("Unable to read output data", e);
+            }
         }
         super.setDirty();
     }

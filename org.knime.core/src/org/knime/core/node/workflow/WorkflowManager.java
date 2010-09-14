@@ -205,7 +205,6 @@ public final class WorkflowManager extends NodeContainer {
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
 
-
     /**
      * Semaphore to make sure we never deal with inconsistent nodes within the
      * workflow. Changes to state or outputs (port/data) need to synchronize
@@ -558,7 +557,7 @@ public final class WorkflowManager extends NodeContainer {
         // must not set it in the private method (see below), as the private
         // one is also called from the load routine
         setDirty();
-        return addConnection(source, sourcePort, dest, destPort, true);
+        return addConnection(source, sourcePort, dest, destPort, false);
     }
 
     /** Add new connection - throw Exception if the same connection
@@ -568,13 +567,16 @@ public final class WorkflowManager extends NodeContainer {
      * @param sourcePort port index at source node
      * @param dest destination node id
      * @param destPort port index at destination node
-     * @param configure if true, configure destination node after insertions
+     * @param currentlyLoadingFlow True if the flow is currently loading
+     *        its content, it will then skip the configuration of the
+     *        destination node and allow node insertion in case the dest
+     *        node is currently (remotely!) executing.
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */
     private ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
-            final int destPort, final boolean configure) {
+            final int destPort, final boolean currentlyLoadingFlow) {
         assert source != null;
         assert dest != null;
         assert sourcePort >= 0;
@@ -584,8 +586,8 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer sourceNC;
         NodeContainer destNC;
         synchronized (m_workflowMutex) {
-            if (!canAddConnection(source, sourcePort, dest, destPort)) {
-                canAddConnection(source, sourcePort, dest, destPort);
+            if (!canAddConnection(
+                    source, sourcePort, dest, destPort, currentlyLoadingFlow)) {
                 throw new IllegalArgumentException("Can not add connection!");
             }
             // check for existence of a connection to the destNode/Port
@@ -655,8 +657,7 @@ public final class WorkflowManager extends NodeContainer {
                         sourceNC.getOutPort(sourcePort));
             }
         }
-        // if so desired...
-        if (configure) {
+        if (!currentlyLoadingFlow) { // user adds connnection -> configure
             if (newConn.getType().isLeavingWorkflow()) {
                 assert !m_workflow.containsNodeKey(dest);
                 // if the destination was the WFM itself, only configure its
@@ -700,6 +701,16 @@ public final class WorkflowManager extends NodeContainer {
     public boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        return canAddConnection(source, sourcePort, dest, destPort, false);
+    }
+
+    /** see {@link #canAddConnection(NodeID, int, NodeID, int)}. If the flag
+     * is set it will skip the check whether the destination node is
+     * executing (the node may be executing remotely during load)
+     */
+    private boolean canAddConnection(final NodeID source,
+            final int sourcePort, final NodeID dest,
+            final int destPort, final boolean currentlyLoadingFlow) {
         if (source == null || dest == null) {
             return false;
         }
@@ -729,22 +740,29 @@ public final class WorkflowManager extends NodeContainer {
             if (destNode.getNrInPorts() <= destPort) {
                 return false;  // dest Node index exists
             }
-            // destination node may have optional inputs
-            if (hasSuccessorInProgress(dest)) {
-                return false;
-            }
-            if (m_workflow.getNode(dest).getState().executionInProgress()) {
-                return false;
+            // omit execution checks during loading (dest node may
+            // be executing remotely -- SGE execution)
+            if (!currentlyLoadingFlow) {
+                // destination node may have optional inputs
+                if (hasSuccessorInProgress(dest)) {
+                    return false;
+                }
+                if (destNode.getState().executionInProgress()) {
+                    return false;
+                }
             }
         } else { // leaving workflow connection
             assert dest.equals(getID());
             if (this.getNrOutPorts() <= destPort) {
                 return false;  // WFM outport index exists
             }
-            // nodes with optional inputs may have executing successors
-            // note it is ok if the WFM itself is executing...
-            if (getParent().hasSuccessorInProgress(getID())) {
-                return false;
+            // node may be executing during load (remote cluster execution)
+            if (!currentlyLoadingFlow) {
+                // nodes with optional inputs may have executing successors
+                // note it is ok if the WFM itself is executing...
+                if (getParent().hasSuccessorInProgress(getID())) {
+                    return false;
+                }
             }
         }
         // check if we are about to replace an existing connection
@@ -2742,8 +2760,14 @@ public final class WorkflowManager extends NodeContainer {
         for (int i = 0; i < ports.length; i++) {
             if (ports[i] != null) {
                 inData[i] = ports[i].getPortObject();
+                // if connected but no data, set to false
+                if (inData[i] == null) {
+                    allDataAvailable = false;
+                }
+            } else if (!nc.getInPort(i).getPortType().isOptional()) {
+                // unconnected non-optional port ... abort
+                allDataAvailable = false;
             }
-            allDataAvailable &= inData[i] != null;
         }
         if (allDataAvailable && nc.getState().equals(State.EXECUTINGREMOTELY)) {
             nc.continueExecutionOnLoad(inData, execJobSettings);
@@ -3709,6 +3733,15 @@ public final class WorkflowManager extends NodeContainer {
     ///////// LOAD & SAVE /////////
     ///////////////////////////////
 
+
+    /** Get working folder associated with this WFM. May be null if
+     * not saved yet.
+     * @return working directory.
+     */
+    public ReferencedFile getWorkingDir() {
+        return getNodeContainerDirectory();
+    }
+
     /** Workflow version, indicates the "oldest"
       * version that is compatible to the current workflow format. */
     static final String CFG_VERSION = "version";
@@ -4290,14 +4323,14 @@ public final class WorkflowManager extends NodeContainer {
                 source = translationMap.get(sourceSuffix);
             }
             if (!canAddConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort())) {
+                    source, c.getSourcePort(), dest, c.getDestPort(), true)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);
                 loadResult.addError(warn);
                 continue;
             }
             ConnectionContainer cc = addConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort(), false);
+                    source, c.getSourcePort(), dest, c.getDestPort(), true);
             cc.setUIInfo(c.getUiInfo());
             cc.setDeletable(c.isDeletable());
             assert cc.getType().equals(type);

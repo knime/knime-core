@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Arrays;
+
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
@@ -91,8 +93,8 @@ public abstract class NodeExecutionJob implements Runnable {
         for (int i = 0; i < data.length; i++) {
             PortType type = nc.getInPort(i).getPortType();
             if (data[i] == null && !type.isOptional()) {
-                throw new NullPointerException("Array arg must not contain " +
-                		"null for non-optional ports");
+                throw new NullPointerException("Array arg must not contain "
+                        + "null for non-optional ports");
             }
         }
         m_nc = nc;
@@ -215,6 +217,22 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected final PortObject[] getPortObjects() {
         return m_data;
+    }
+
+    /** Get the input objects, excluding the mandatory flow variable input
+     * port (added in v2.2.0). If this job represents the execution of a
+     * workflow manager (possibly for remote execution), this method
+     * returns the whole input object array. (Meta nodes do not have an
+     * flow variable input)
+     * @return The input objects, excluding the flow variable port.
+     */
+    protected final PortObject[] getPortObjectsExcludeFlowVariablePort() {
+        PortObject[] data = getPortObjects();
+        if (m_nc instanceof WorkflowManager) {
+            return data;
+        } else {
+            return Arrays.copyOfRange(data, 1, data.length);
+        }
     }
 
     /** Access method for the accompanying node container.
