@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,68 +40,50 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   22.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.List;
 
 /**
- * The Factory for the {@link DecisionTreeLearnerNodeModel} algorithm.
+ * A factory for creating {@link NodeWidget}s for a single element. The
+ * elements are supposed to be organized in a tree. There are furthermore
+ * methods to retrieve information about the tree structure.
  *
- * @author Christoph Sieb, University of Konstanz
+ * @author Heiko Hofer
+ * @param <K> The type of a {@link NodeWidget} the in graph
  */
-public class DecisionTreeLearnerNodeFactory 
-        extends NodeFactory<DecisionTreeLearnerNodeModel> {
+public interface NodeWidgetFactory<K> {
+    /**
+     * Create a {@link NodeWidget} which is a visual representation of the
+     * given object.
+     *
+     * @param object the model of the created view
+     * @return a view for the given object
+     */
+    public NodeWidget<K> createGraphNode(K object);
+
 
     /**
-     * {@inheritDoc}
+     * Returns true when the given object is a leaf.
+     *
+     * @param object the object
+     * @return true when the given object is a leaf
      */
-    @Override
-    public DecisionTreeLearnerNodeModel createNodeModel() {
-        return new DecisionTreeLearnerNodeModel();
-    }
+    public boolean isLeaf(K object);
 
     /**
-     * {@inheritDoc}
+     * Returns the children of the object or null when object is a leaf.
+     *
+     * @param object the object
+     * @return the children of the object or null when object is a leaf
      */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
-                final int i, final DecisionTreeLearnerNodeModel nodeModel) {
-        if (i == 0) {
-            return new DecTreeNodeView(nodeModel);
-        } else {
-            return new DecTreeLearnerGraphView(nodeModel);
-        }
-    }
-
-    /**
-     * @return <b>true</b>.
-     * @see org.knime.core.node.NodeFactory#hasDialog()
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DecisionTreeLearnerNodeDialog();
-    }
+    public List<K> getChildren(K object);
 }
