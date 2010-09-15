@@ -142,7 +142,6 @@ public final class DecTreeNodeWidget
         DataCell majorityClass = getUserObject().getMajorityClass();
         List<Double> classFreqList = new ArrayList<Double>();
         int i = 0;
-        getUserObject().getEntireClassCount();
         for (DataCell cell : classCounts.keySet()) {
             JLabel classLabel = new JLabel(cell.toString());
             c.gridy++;

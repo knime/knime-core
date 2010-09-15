@@ -91,8 +91,8 @@ final class DecTreePredictorGraphView
      */
     public DecTreePredictorGraphView(final DecTreePredictorNodeModel model) {
         super(model);
-        DecisionTreeNode root = null != model.getDecisionTree() ?
-                model.getDecisionTree().getRootNode() : null;
+        DecisionTreeNode root = null != model.getDecisionTree()
+                ? model.getDecisionTree().getRootNode() : null;
         m_graph = new DecTreeGraphView(root);
         JScrollPane treeView = new JScrollPane(m_graph.getView());
         Dimension prefSize = treeView.getPreferredSize();
@@ -213,7 +213,7 @@ final class DecTreePredictorGraphView
     *
     * @author Heiko Hofer
     */
-   private static class DecTreeGraphView 
+   private static class DecTreeGraphView
            extends HierarchicalGraphView<DecisionTreeNode> {
 
        /**
