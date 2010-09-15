@@ -708,7 +708,6 @@ public abstract class HierarchicalGraphView<K> {
     /** Constants for the layout. */
     private static class LayoutInfo {
         private int m_levelGap = 100;
-        private int m_nodeGap = 20;
         private int m_branchGap = 20;
         private Dimension m_nodeSize;
         private Dimension m_signSize;

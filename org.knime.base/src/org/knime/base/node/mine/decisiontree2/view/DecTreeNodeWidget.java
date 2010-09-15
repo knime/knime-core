@@ -247,20 +247,19 @@ public final class DecTreeNodeWidget
     }
 
 
-
-    private Color getColor(final int i) {
-        Color[] colors = new Color[] {
-                new Color(0, 0, 210),
-                new Color(210, 0, 0),
-                new Color(0, 210, 0),
-                new Color(220, 220, 0),
-                new Color(15, 0, 121),
-                new Color(121, 0, 0),
-                new Color(0, 121, 47),
-                new Color(121, 0, 221)
-        };
-        return colors[i % colors.length];
-    }
+//    private Color getColor(final int i) {
+//        Color[] colors = new Color[] {
+//                new Color(0, 0, 210),
+//                new Color(210, 0, 0),
+//                new Color(0, 210, 0),
+//                new Color(220, 220, 0),
+//                new Color(15, 0, 121),
+//                new Color(121, 0, 0),
+//                new Color(0, 121, 47),
+//                new Color(121, 0, 221)
+//        };
+//        return colors[i % colors.length];
+//    }
 
 
     private static class MyJSeparator extends JComponent {
