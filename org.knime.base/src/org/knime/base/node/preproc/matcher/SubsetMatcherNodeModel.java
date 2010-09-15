@@ -76,8 +76,10 @@ import org.knime.core.util.ThreadPool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -94,6 +96,10 @@ public class SubsetMatcherNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(SubsetMatcherNodeModel.class);
+
+    /**Processing the subset matching take {@value} times longer than the
+     * subset matcher creation.**/
+    private static final int SET_PROCESSING_FACTOR = 100;
 
     private final SettingsModelColumnName m_setIDCol =
         createSetIDColNameModel();
@@ -260,23 +266,24 @@ public class SubsetMatcherNodeModel extends NodeModel {
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
-        final double totalRowCount = subsetRowCount + setRowCount;
+        final double totalRowCount = subsetRowCount
+                                        + setRowCount * SET_PROCESSING_FACTOR;
         final ExecutionMonitor subsetExec =
             exec.createSubProgress(subsetRowCount / totalRowCount);
 
         //create the rule model
         exec.setMessage("Generating subset base...");
-        final Map<DataCell, SubsetMatcher> matcherMap =
-            createMatcherMap(subsetExec, subsetTable, subsetColIdx, comparator);
+        final SubsetMatcher[] sortedMatcher = createSortedMatcher(subsetExec,
+                subsetTable, subsetColIdx, comparator);
         subsetExec.setProgress(1.0);
-        if (matcherMap.isEmpty()) {
+        if (sortedMatcher.length < 1) {
             setWarningMessage("No item sets found");
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
 
-        final ExecutionMonitor setExec =
-            exec.createSubProgress(setRowCount / totalRowCount);
+        final ExecutionMonitor setExec = exec.createSubProgress(
+                (setRowCount * SET_PROCESSING_FACTOR) / totalRowCount);
         //create the matching processes
         exec.setMessage("Processing sets... ");
         // initialize the thread pool for parallelization of the set
@@ -311,7 +318,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             }
             // submit for each set a job in the thread pool
             pool.enqueue(createRunnable(setExec, setRowCount, setIDCell,
-                    setList, appendSetCol, comparator, matcherMap));
+                    setList, appendSetCol, comparator, sortedMatcher));
         }
         // wait until all jobs are finished before closing the container
         // and returning the method
@@ -331,7 +338,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             final int noOfSets, final DataCell setIDCell,
             final CollectionDataValue setCell, final boolean appendSetCol,
             final Comparator<DataCell> comparator,
-            final Map<DataCell, SubsetMatcher> matcherMap) {
+            final SubsetMatcher[] sortedMatcher) {
         return new Runnable() {
             @Override
             public void run() {
@@ -350,35 +357,53 @@ public class SubsetMatcherNodeModel extends NodeModel {
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    final DataCell[] items = collectionCell2SortedArray(
+                    final DataCell[] sortedItems = collectionCell2SortedArray(
                             setCell, comparator);
-                    if (items.length < 1) {
+                    if (sortedItems.length < 1) {
                         exec.setProgress(
                                 transCounter / (double)noOfSets);
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    int idx = 0;
-                    //try to find all matching matcher for the given
-                    //transaction if any
-                    final Collection<DataCell> subSets =
+                    //try to match the sorted transaction items and the sorted
+                    //matcher until all items or all matchers are processed
+                    int matcherStartIdx = 0;
+                    int itemIdx = 0;
+                    final Collection<DataCell> matchingSets =
                         new LinkedList<DataCell>();
-                    while (idx < items.length) {
-                        final DataCell item = items[idx];
-                        final SubsetMatcher matcher = matcherMap.get(item);
-                        if (matcher != null) {
-                            matcher.match(items, idx, subSets,
-                                    new LinkedList<DataCell>());
+                    while (itemIdx < sortedItems.length
+                            && matcherStartIdx < sortedMatcher.length) {
+                        final DataCell subItem = sortedItems[itemIdx];
+                        //match the current item with all remaining matchers
+                        for (int i = matcherStartIdx;
+                                i < sortedMatcher.length; i++) {
+                            final SubsetMatcher matcher = sortedMatcher[i];
+                            final int result = matcher.compare(subItem);
+                            if (result > 0) {
+                                //the smallest matcher is bigger then this item
+                                //exit the loop and continue with the next item
+                                break;
+                            } else if (result == 0) {
+                                matcher.match(sortedItems, itemIdx,
+                                    matchingSets, new LinkedList<DataCell>());
+                            }
+                            //this matcher has matched this time
+                            //                  or
+                            //the subItem is bigger than the matcher thus all
+                            //subsequent items will be bigger as well
+                            //-> start the next time with the next child matcher
+                            matcherStartIdx++;
                         }
-                        idx++;
+                        //go to the next index
+                        itemIdx++;
                     }
-                    if (subSets.size() < 1) {
+                    if (matchingSets.size() < 1) {
                         exec.setProgress(
                                 transCounter / (double)noOfSets);
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    for (final DataCell subSet : subSets) {
+                    for (final DataCell matchingSet : matchingSets) {
                         exec.checkCanceled();
                         //create for each matching subset a result row
                         final List<DataCell> cells = new LinkedList<DataCell>();
@@ -387,11 +412,12 @@ public class SubsetMatcherNodeModel extends NodeModel {
                             cells.add((DataCell)setCell);
                         }
                         //the subset column
-                        cells.add(subSet);
+                        cells.add(matchingSet);
                         final RowKey rowKey =
                             RowKey.createRowKey(m_rowId.getAndIncrement());
                         final DefaultRow row = new DefaultRow(rowKey, cells);
                         synchronized (m_dc) {
+                            exec.checkCanceled();
                             m_dc.addRowToTable(row);
                         }
                     }
@@ -406,7 +432,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         };
     }
 
-    private Map<DataCell, SubsetMatcher> createMatcherMap(
+    private SubsetMatcher[] createSortedMatcher(
             final ExecutionMonitor exec, final BufferedDataTable table,
             final int colIdx, final Comparator<DataCell> comparator)
             throws CanceledExecutionException {
@@ -414,7 +440,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             new HashMap<DataCell, SubsetMatcher>();
         final int rowCount = table.getRowCount();
         if (rowCount < 1) {
-            return map;
+            return new SubsetMatcher[0];
         }
         int counter = 1;
         for (final DataRow row : table) {
@@ -444,7 +470,10 @@ public class SubsetMatcherNodeModel extends NodeModel {
             matcher.appendChildMatcher(itemSet, 1);
             counter++;
         }
-        return map;
+        final ArrayList<SubsetMatcher> matchers =
+            new ArrayList<SubsetMatcher>(map.values());
+        Collections.sort(matchers);
+        return matchers.toArray(new SubsetMatcher[0]);
     }
 
     /**

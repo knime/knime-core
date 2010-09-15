@@ -51,10 +51,12 @@ package org.knime.base.node.preproc.matcher;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -67,16 +69,19 @@ import java.util.LinkedList;
  * A->B->D; B->C->E.
  * @author Tobias Koetter, University of Konstanz
  */
-public class SubsetMatcher {
+public class SubsetMatcher implements Comparable<SubsetMatcher> {
 
     private final Comparator<DataCell> m_comparator;
 
-    private final Collection<SubsetMatcher> m_children =
-        new LinkedList<SubsetMatcher>();
+    private final List<SubsetMatcher> m_children =
+        new ArrayList<SubsetMatcher>(2);
 
     private boolean m_end = false;
 
     private final DataCell m_item;
+
+    private boolean m_sortChildren = true;
+
     /**Constructor for class ItemSetMatcher.
      * @param item the item this matcher matches
      * @param comparator the comparator to use
@@ -117,6 +122,7 @@ public class SubsetMatcher {
         final SubsetMatcher newChildMatcher =
             new SubsetMatcher(subItem, m_comparator);
         m_children.add(newChildMatcher);
+        m_sortChildren = true;
         newChildMatcher.appendChildMatcher(itemSet, idx);
     }
 
@@ -134,6 +140,17 @@ public class SubsetMatcher {
      * @return the children {@link SubsetMatcher} of this matcher if any
      */
     public Collection<SubsetMatcher> getChildren() {
+        return Collections.unmodifiableCollection(m_children);
+    }
+
+    /**
+     * @return the children sorted
+     */
+    private synchronized List<SubsetMatcher> getSortedChildren() {
+        if (m_sortChildren) {
+            Collections.sort(m_children);
+            m_sortChildren = false;
+        }
         return m_children;
     }
 
@@ -155,11 +172,11 @@ public class SubsetMatcher {
     /**
      * @param val the value to compare with the one this matcher matches
      * @return a negative integer, zero, or a positive integer as the
-     *         given value is less than, equal to, or greater than the
-     *         matching item.
+     *         matching item is less than, equal to, or greater than the
+     *         given value.
      */
     public int compare(final DataCell val) {
-        return m_comparator.compare(val, m_item);
+        return m_comparator.compare(m_item, val);
     }
 
     /**
@@ -171,6 +188,8 @@ public class SubsetMatcher {
     public void match(final DataCell[] transactionItems, final int idx,
             final Collection<DataCell> itemSets,
             final Collection<DataCell> items) {
+        //use this method to ensure that the children are sorted
+        final List<SubsetMatcher> sortedChildren = getSortedChildren();
         final int itemSize = transactionItems.length;
         if (idx >= itemSize) {
             return;
@@ -185,32 +204,31 @@ public class SubsetMatcher {
                 //previous items an this item
                 itemSets.add(CollectionCellFactory.createSetCell(items));
             }
-            final Collection<SubsetMatcher> processedMatcher =
-                new HashSet<SubsetMatcher>(m_children.size());
-            //try to match the transaction items until all items or all
-            //matchers are processed
+            //try to match the sorted transaction items and the sorted children
+            //until all items or all matchers are processed
+            int matcherStartIdx = 0;
             while (itemIdx < itemSize
-                    && processedMatcher.size() != m_children.size()) {
+                    && matcherStartIdx < sortedChildren.size()) {
                 final DataCell subItem = transactionItems[itemIdx];
                 //try to match the current item with all remaining
                 //child matchers
-                for (final SubsetMatcher matcher : m_children) {
-                    if (processedMatcher.contains(matcher)) {
-                        continue;
-                    }
+                for (int i = matcherStartIdx; i < sortedChildren.size(); i++) {
+                    final SubsetMatcher matcher = sortedChildren.get(i);
                     final int result = matcher.compare(subItem);
-                    if (result == 0) {
-                        //we have found the only matching matcher and can return
+                    if (result > 0) {
+                        //the smallest matcher is bigger then this item
+                        //exit the loop and continue with the next bigger item
+                        break;
+                    } else if (result == 0) {
                         matcher.match(transactionItems, itemIdx, itemSets,
                                 new LinkedList<DataCell>(items));
-                        return;
-                    } else if (result > 0) {
-                        //the sub item is bigger than the match
-                        //since all subsequent items are bigger than the
-                        //current one the matcher will match none of the
-                        //following
-                        processedMatcher.add(matcher);
                     }
+                    //this matcher has matched this time
+                    //                  or
+                    //the subItem is bigger than the matcher thus all subsequent
+                    //items will be bigger as well
+                    //-> start the next time with the next child matcher
+                    matcherStartIdx++;
                 }
                 //go to the next index
                 itemIdx++;
@@ -280,5 +298,21 @@ public class SubsetMatcher {
         buf.append(" Item set count: ");
         buf.append(getItemSetCount());
         return buf.toString();
+    }
+
+    /**
+     * Compares two {@link SubsetMatcher} objects based on the item they match
+     * using their comparator.
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo(final SubsetMatcher o) {
+        if (o == this) {
+            return 0;
+        }
+        if (o == null) {
+            return 1;
+        }
+        return compare(o.getItem());
     }
 }
