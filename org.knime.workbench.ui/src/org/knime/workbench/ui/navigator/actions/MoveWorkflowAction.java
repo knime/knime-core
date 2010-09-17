@@ -33,29 +33,26 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
 import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
-import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class MoveWorkflowAction extends Action 
-    implements IRunnableWithProgress {
+public class MoveWorkflowAction extends Action implements IRunnableWithProgress {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(MoveWorkflowAction.class);
-    
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(MoveWorkflowAction.class);
+
     private final IPath m_source;
 
     private final IPath m_target;
-    
+
     /**
-     * 
+     *
      * @param source path to the source (which sould be moved)
      * @param target target to which the source should be moved
      */
@@ -65,7 +62,7 @@ public class MoveWorkflowAction extends Action
     }
 
     /**
-     * 
+     *
      * @return path to the source (which sould be transfered)
      */
     public IPath getSource() {
@@ -73,7 +70,7 @@ public class MoveWorkflowAction extends Action
     }
 
     /**
-     * 
+     *
      * @return target to which the source should be transfered
      */
     public IPath getTarget() {
@@ -81,7 +78,7 @@ public class MoveWorkflowAction extends Action
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -103,14 +100,13 @@ public class MoveWorkflowAction extends Action
         }
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public void run(final IProgressMonitor monitor) 
-        throws InvocationTargetException, InterruptedException {
+    public void run(final IProgressMonitor monitor)
+            throws InvocationTargetException, InterruptedException {
         final IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         final IResource source = root.findMember(getSource());
         IPath target = getTarget();
@@ -125,23 +121,22 @@ public class MoveWorkflowAction extends Action
             if (!ResourcesPlugin.getWorkspace().getRoot().getLocation()
                     .isPrefixOf(loc)) {
                 showUnsupportedLinkedProject(source.getName());
-                return;                    
+                return;
             }
         }
-        // check whether the target is contained in source 
+        // check whether the target is contained in source
         if (getSource().isPrefixOf(getTarget())) {
-            LOGGER.debug("Operation not allowed. " + source.getName() 
-                    + " is parent resource of target " 
-                    + getTarget());
+            LOGGER.debug("Operation not allowed. " + source.getName()
+                    + " is parent resource of target " + getTarget());
             showIsParent(source.getName(), targetRes.getName());
-            return;            
+            return;
         }
         // check if the source is an opened workflow
-        if (isOpenedWorkflow(source)) {
+        if (KnimeResourceUtil.isOpenedWorkflow(source)) {
             showWorkflowIsOpenMessage();
             return;
         }
-        
+
         if (source != null && !source.isLinked()) {
             final File sourceFile = new File(source.getLocationURI());
             if (!sourceFile.exists()) {
@@ -151,105 +146,99 @@ public class MoveWorkflowAction extends Action
             File targetFile = new File(targetRes.getLocationURI());
             LOGGER.debug("target path: " + targetFile);
             // create path here
-            target = target.append(getSource());
-            File targetDir = new File(targetFile, getSource().toFile()
-                    .getName());
+            File targetDir =
+                    new File(targetFile, getSource().toFile().getName());
             if (!targetDir.mkdir()) {
-                LOGGER.debug("target dir could not be created!");
-                showAlreadyExists(targetDir.getName(), targetFile.getName());
+                // don't complain if target dir is parent of source...
+                if (!targetFile.equals(sourceFile.getParentFile())) {
+                    LOGGER.debug("target dir could not be created!");
+                    showAlreadyExists(targetDir.getName(), targetFile.getName());
+                }
                 return;
             }
             copyFiles(sourceFile, targetDir);
             try {
                 if (targetRes instanceof IWorkspaceRoot) {
-                    IProject newProject = ((IWorkspaceRoot)targetRes)
-                            .getProject(sourceFile.getName());
+                    IProject newProject =
+                            ((IWorkspaceRoot)targetRes).getProject(sourceFile
+                                    .getName());
                     if (newProject.exists()) {
                         // exception handling -> project already exists
                         LOGGER.warn("A workflow " + sourceFile.getName()
                                 + " already exists in /");
-                        showAlreadyExists(newProject.getName(), 
+                        showAlreadyExists(newProject.getName(),
                                 "workspace root");
                         return;
                     }
                     // check whether this is a workflow or a workflow group
                     String natureId = KNIMEWorkflowSetProjectNature.ID;
                     if (KnimeResourceUtil.isWorkflow(source)) {
-                        natureId = KNIMEProjectNature.ID; 
-                    } 
-                    newProject = MetaInfoFile.createKnimeProject(
-                                        newProject.getName(), natureId);
+                        natureId = KNIMEProjectNature.ID;
+                    }
+                    newProject =
+                            MetaInfoFile.createKnimeProject(newProject
+                                    .getName(), natureId);
                 }
                 // exception handling
                 source.delete(true, monitor);
                 targetRes.refreshLocal(IResource.DEPTH_INFINITE, monitor);
             } catch (Exception e) {
-                LOGGER.error("Error while moving resource " + source,  e);
+                LOGGER.error("Error while moving resource " + source, e);
                 throw new InvocationTargetException(e);
             }
         }
     }
-    
+
     private void showWorkflowIsOpenMessage() {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog.openInformation(
-                        Display.getDefault().getActiveShell(),
-                        "Open Workflow",
-                        "Cannot move opened workflows. Please save and close " 
-                        + "the open workflow editor.");
+                MessageDialog.openInformation(Display.getDefault()
+                        .getActiveShell(), "Open Workflow",
+                        "Cannot move opened workflows. Please save and close "
+                                + "the open workflow editor.");
             }
-        });    
+        });
     }
 
-    private boolean isOpenedWorkflow(final IResource source) {
-        NodeContainer nc = ProjectWorkflowMap.getWorkflow(
-                source.getFullPath());
-        if (nc != null) {
-            return true;
-        }
-        return false;
-    }
-    
     private void showUnsupportedLinkedProject(final String name) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog.openInformation(
-                        Display.getDefault().getActiveShell(),
-                        "Unsupported Linked Project",
-                        "\"" + name + "\" is a linked resource. " 
-                        + "Linked resources are only linked to the workspace " 
-                        + "but located elsewhere. They are not supported by " 
+                MessageDialog.openInformation(Display.getDefault()
+                        .getActiveShell(), "Unsupported Linked Project", "\""
+                        + name + "\" is a linked resource. "
+                        + "Linked resources are only linked to the workspace "
+                        + "but located elsewhere. They are not supported by "
                         + "this operation.");
             }
-        });    
+        });
     }
-    
+
     private void showAlreadyExists(final String name, final String target) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog.openWarning(Display.getDefault()
-                        .getActiveShell(), "Resource already exists", 
-                        "A folder \"" + name + "\" already exists in \""
-                        + target + "\". Please rename before moving.");
+                MessageDialog.openWarning(
+                        Display.getDefault().getActiveShell(),
+                        "Resource already exists", "A folder \"" + name
+                                + "\" already exists in \"" + target
+                                + "\". Please rename before moving.");
             }
         });
     }
-    
+
     private void showIsParent(final String source, final String target) {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog.openWarning(Display.getDefault()
-                        .getActiveShell(), "Cannot Move Resource",
-                        "Operation not allowed. \"" + source 
-                    + "\" is parent resource of target \"" + target + "\"");
+                MessageDialog.openWarning(
+                        Display.getDefault().getActiveShell(),
+                        "Cannot Move Resource", "Operation not allowed. \""
+                                + source + "\" is parent resource of target \""
+                                + target + "\"");
             }
-        });        
+        });
     }
-
 
 }

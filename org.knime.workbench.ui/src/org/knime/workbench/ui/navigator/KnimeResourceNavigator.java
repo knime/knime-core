@@ -61,7 +61,6 @@ import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
@@ -69,7 +68,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
@@ -80,6 +78,7 @@ import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.actions.RefreshAction;
+import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.KNIMEConstants;
@@ -111,26 +110,25 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
- * from the tree. Such files include the data files and files being
- * used to save the internals of a node.
+ * from the tree. Such files include the data files and files being used to save
+ * the internals of a node.
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        NodeStateChangeListener, NodeMessageListener,
-        JobManagerChangedListener {
+        NodeStateChangeListener, NodeMessageListener, JobManagerChangedListener {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(KnimeResourceNavigator.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(KnimeResourceNavigator.class);
 
     /** ID as defined in plugin.xml. */
-    public static final String ID
-        = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
+    public static final String ID =
+            "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
 
     /** Id for the group to add menu items to the context menu. */
-    public static final String KNIME_ADDITIONS
-        = "org.knime.workbench.ui.knimeadditions";
+    public static final String KNIME_ADDITIONS =
+            "org.knime.workbench.ui.knimeadditions";
 
     /**
      * Creates a new <code>KnimeResourceNavigator</code> with an final
@@ -207,7 +205,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         doRefresh(state.getSource());
     }
 
-
     /**
      *
      * {@inheritDoc}
@@ -230,21 +227,24 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             public void run() {
                 try {
                     IPath path =
-                        ProjectWorkflowMap.findProjectFor(nodeResource);
+                            ProjectWorkflowMap.findProjectFor(nodeResource);
                     if (path != null) {
                         // we have to find the resource again, hence we cannot
                         // put the project's name with toLowercase into the map
-                        IResource rsrc = ResourcesPlugin.getWorkspace()
-                                .getRoot().findMember(path);
+                        IResource rsrc =
+                                ResourcesPlugin.getWorkspace().getRoot()
+                                        .findMember(path);
                         if (rsrc != null) {
                             getTreeViewer().update(rsrc, null);
                         }
                     } else {
-                        /* this is a meta node used in a project. Currently we
-                         * don't need to refresh the tree because meta node 
-                         * states are not shown in the tree */
-                        //LOGGER.debug("didn't find project name - do refresh");
-                        //getTreeViewer().refresh();
+                        /*
+                         * this is a meta node used in a project. Currently we
+                         * don't need to refresh the tree because meta node
+                         * states are not shown in the tree
+                         */
+                        // LOGGER.debug("didn't find project name - do refresh");
+                        // getTreeViewer().refresh();
                     }
                 } catch (IllegalArgumentException iae) {
                     // node couldn't be found -> so we don't make a refresh
@@ -258,21 +258,22 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected TreeViewer createViewer(final Composite parent) {
-        TreeViewer viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL
-                | SWT.V_SCROLL) {
-            @Override
-            protected void handleDoubleSelect(final SelectionEvent event) {
-                // we have to consume this event in order to avoid
-                // expansion/collaps of the double clicked project
-                // strangly enough it opens anyway and the collopased or
-                // expanded state remains
-                // Update: 2.0.3 call handle open in order to enable
-                // open on double-click on the Mac. So far no side-effects on
-                // Windows
-                KnimeResourceNavigator.this.handleOpen(new OpenEvent(this,
-                        getSelection()));
-            }
-        };
+        TreeViewer viewer =
+                new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL) {
+                    @Override
+                    protected void handleDoubleSelect(final SelectionEvent event) {
+                        // we have to consume this event in order to avoid
+                        // expansion/collaps of the double clicked project
+                        // strangly enough it opens anyway and the collopased or
+                        // expanded state remains
+                        // Update: 2.0.3 call handle open in order to enable
+                        // open on double-click on the Mac. So far no
+                        // side-effects on
+                        // Windows
+                        KnimeResourceNavigator.this.handleOpen(new OpenEvent(
+                                this, getSelection()));
+                    }
+                };
         viewer.setUseHashlookup(true);
         initContentProvider(viewer);
         initLabelProvider(viewer);
@@ -300,13 +301,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     @Override
     protected void initDragAndDrop() {
         TreeViewer viewer = getViewer();
-        viewer.addDragSupport(DND.DROP_MOVE, new Transfer[]{
-                LocalSelectionTransfer.getTransfer(),
-                FileTransfer.getInstance()}, new WorkflowMoveDragListener());
+        viewer.addDragSupport(DND.DROP_MOVE, new Transfer[]{ResourceTransfer
+                .getInstance()}, new WorkflowMoveDragListener(viewer));
         viewer.addDropSupport(DND.DROP_MOVE, new Transfer[]{
-                LocalSelectionTransfer.getTransfer(),
-                FileTransfer.getInstance()},
-                new WorkflowMoveDropListener());
+                ResourceTransfer.getInstance(), RemoteFileTransfer.getInstance()},
+                new WorkflowMoveDropListener(viewer));
     }
 
     /**
@@ -354,8 +353,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     @Override
     protected void handleOpen(final OpenEvent event) {
 
-        Object selection = ((IStructuredSelection)event.getSelection())
-                .getFirstElement();
+        Object selection =
+                ((IStructuredSelection)event.getSelection()).getFirstElement();
 
         if (selection instanceof IContainer) {
             IContainer container = (IContainer)selection;
@@ -364,8 +363,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             if (container.exists(wfPath)) {
                 if (container.getParent() != null
                         && !container.getParent().exists(wfPath)) {
-                    file = (IFile)container
-                            .findMember(WorkflowPersistor.WORKFLOW_FILE);
+                    file =
+                            (IFile)container
+                                    .findMember(WorkflowPersistor.WORKFLOW_FILE);
                     LOGGER.debug("opening: " + container.getName());
                 }
             } else {
@@ -378,9 +378,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             if (file != null && file.exists()) {
                 StructuredSelection selection2 = new StructuredSelection(file);
 
-                OpenFileAction action = new OpenFileAction(PlatformUI
-                        .getWorkbench().getActiveWorkbenchWindow()
-                        .getActivePage());
+                OpenFileAction action =
+                        new OpenFileAction(PlatformUI.getWorkbench()
+                                .getActiveWorkbenchWindow().getActivePage());
                 action.selectionChanged(selection2);
                 action.run();
             }
@@ -417,8 +417,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
                     menu.remove(aItem);
-                } else if (aItem.getAction()
-                        instanceof CloseUnrelatedProjectsAction) {
+                } else if (aItem.getAction() instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
 
@@ -464,7 +463,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new ConfigureWorkflowAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new OpenCredentialVariablesDialogAction());
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             menu.insertAfter(ExportKnimeWorkflowAction.ID,
@@ -472,10 +471,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         }
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
-
-
-        menu.insertBefore(RefreshAction.ID,
-                new GroupMarker(KNIME_ADDITIONS));
+        menu.insertBefore(RefreshAction.ID, new GroupMarker(KNIME_ADDITIONS));
         menu.insertBefore(RefreshAction.ID, new Separator());
 
         menu.insertBefore(id, new Separator());
@@ -507,4 +503,5 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     protected void initContentProvider(final TreeViewer viewer) {
         viewer.setContentProvider(new KnimeResourceContentProvider());
     }
+
 }
