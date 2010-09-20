@@ -22,7 +22,7 @@
         the new column containing the parsed and converted date/times. 
         </option>
         <option name="Date format">
-            A format string as required by the <tt>java.text.SimeDateFormat</tt>.
+            A format string as required by the <tt>java.text.SimpleDateFormat</tt>.
             <b>Examples:</b>
             <ul>
             <li>"yyyy.MM.dd HH:mm:ss.SSS" parses dates like "2001.07.04 12:08:56.000"</li>
