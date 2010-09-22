@@ -55,6 +55,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import javax.swing.JCheckBox;
@@ -145,7 +146,11 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         String urlS;
         if (url != null) {
             if ("file".equals(url.getProtocol())) {
-                urlS = url.getFile();
+                try {
+                    urlS = new File(url.toURI()).getAbsolutePath();
+                } catch (URISyntaxException e) {
+                    urlS = url.toString();
+                }
             } else {
                 urlS = url.toString();
             }
