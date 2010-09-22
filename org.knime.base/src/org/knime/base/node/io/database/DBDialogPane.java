@@ -57,6 +57,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -296,6 +297,13 @@ final class DBDialogPane extends JPanel {
                     new String(m_pass.getPassword()));
             }
         }
+        // fix 2416: for backward compatible reason the loaded_driver still
+        // needs to be added to the NodeSettings; dialog and model setting
+        // must hold the same properties (see DatabaseConnectionSettings)
+        final File driverFile =
+            DatabaseDriverLoader.getDriverFileForDriverClass(driverName);
+        settings.addString("loaded_driver",
+                (driverFile == null ? null : driverFile.getAbsolutePath()));
     }
 }
 
