@@ -54,14 +54,13 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.aggregation.AggregationMethod;
@@ -74,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -147,6 +147,8 @@ public abstract class GroupByTable {
         m_maxUniqueVals = maxUniqueValues;
         m_colNamePolicy = colNamePolicy;
         m_retainOrder = retainOrder;
+        final Set<String> workingCols =
+            getWorkingCols(groupByCols, colAggregators);
         final BufferedDataTable dataTable;
         final ColumnAggregator[] aggrs;
         final ExecutionContext subExec;
@@ -154,8 +156,10 @@ public abstract class GroupByTable {
             exec.setMessage("Memorize row order...");
             final String retainOrderCol = DataTableSpec.getUniqueColumnName(
                     inDataTable.getDataTableSpec(), RETAIN_ORDER_COL_NAME);
+            //add the retain order column to the working columns as well
+            workingCols.add(retainOrderCol);
             dataTable = appendOrderColumn(exec.createSubExecutionContext(0.1),
-                    inDataTable, retainOrderCol);
+                    inDataTable, workingCols, retainOrderCol);
             final DataColumnSpec retainOrderColSpec =
                 dataTable.getSpec().getColumnSpec(retainOrderCol);
             aggrs = new ColumnAggregator[colAggregators.length + 1];
@@ -166,7 +170,11 @@ public abstract class GroupByTable {
             subExec = exec.createSubExecutionContext(0.5);
         } else {
             subExec = exec;
-            dataTable = inDataTable;
+            final ColumnRearranger columnRearranger =
+                new ColumnRearranger(inDataTable.getDataTableSpec());
+            columnRearranger.keepOnly(workingCols.toArray(new String[0]));
+            dataTable = exec.createColumnRearrangeTable(inDataTable,
+                    columnRearranger, exec.createSubExecutionContext(0.01));
             aggrs = colAggregators;
         }
         final DataTableSpec inTableSpec = dataTable.getDataTableSpec();
@@ -216,6 +224,20 @@ public abstract class GroupByTable {
             m_resultTable = resultTable;
         }
         exec.setProgress(1.0);
+    }
+
+    /**
+     * @param groupByCols the group by column names
+     * @param colAggregators the aggregation columns
+     * @return {@link Set} with the name of all columns to work with
+     */
+    private Set<String> getWorkingCols(final List<String> groupByCols,
+            final ColumnAggregator[] colAggregators) {
+        final Set<String> colNames = new HashSet<String>(groupByCols);
+        for (final ColumnAggregator aggr : colAggregators) {
+            colNames.add(aggr.getColName());
+        }
+        return colNames;
     }
 
     /**
@@ -279,38 +301,26 @@ public abstract class GroupByTable {
     /**
      * @param exec the {@link ExecutionContext}
      * @param dataTable the {@link BufferedDataTable} to add the order column to
+     * @param workingCols the names of all columns needed for grouping
      * @param retainOrderCol the name of the order column
      * @return the given table with the appended order column
      * @throws CanceledExecutionException if the operation has been canceled
      */
     public static BufferedDataTable appendOrderColumn(
             final ExecutionContext exec, final BufferedDataTable dataTable,
-            final String retainOrderCol) throws CanceledExecutionException {
+            final Set<String> workingCols, final String retainOrderCol)
+    throws CanceledExecutionException {
         final ColumnRearranger rearranger =
             new ColumnRearranger(dataTable.getSpec());
-        rearranger.append(new CellFactory() {
-
+        rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(
+                retainOrderCol, IntCell.TYPE).createSpec()) {
             private int m_id = 0;
-            /**
-             * {@inheritDoc}
-             */
             @Override
-            public DataCell[] getCells(final DataRow row) {
-                return new DataCell[] {new IntCell(m_id++)};
-            }
-
-            @Override
-            public DataColumnSpec[] getColumnSpecs() {
-                return new DataColumnSpec[] {new DataColumnSpecCreator(
-                        retainOrderCol, IntCell.TYPE).createSpec()};
-            }
-
-            @Override
-            public void setProgress(final int curRowNr, final int rowCount,
-                    final RowKey lastKey, final ExecutionMonitor inExec) {
-                exec.setProgress(curRowNr / (double) rowCount);
+            public DataCell getCell(final DataRow row) {
+                return new IntCell(m_id++);
             }
         });
+        rearranger.keepOnly(workingCols.toArray(new String[0]));
         return exec.createColumnRearrangeTable(dataTable, rearranger, exec);
     }
 
