@@ -66,6 +66,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.part.ResourceTransfer;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
 
@@ -115,9 +116,6 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
             if (!(r instanceof IFolder || r instanceof IProject)) {
                 return false;
             } else {
-                if (isWorkflow(r)) {
-                    return false;
-                }
                 // the target must not be a node
                 if (isNode(r)) {
                     return false;
@@ -130,6 +128,11 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
         }
 
         if (data instanceof IResource[]) {
+            // move should only allow drops on groups
+            if (isWorkflow(ResourcesPlugin.getWorkspace().getRoot().findMember(
+                    targetPath))) {
+                return false;
+            }
             // thats a move of workflows/groups inside the navigator
             // (ResourceTransfer)
             // elements to move are in a sorted map to move short paths first
@@ -195,11 +198,17 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                             targetPath);
             assert r != null;
             assert (r instanceof IWorkspaceRoot)
-                    || KnimeResourceUtil.isWorkflowGroup(r);
-            // add the workflow name to the target path
-            IPath newWF =
-                    targetPath.append(new Path(uriData[0].getPath())
-                            .lastSegment());
+                    || KnimeResourceUtil.isWorkflowGroup(r)
+                    || KnimeResourceUtil.isWorkflow(r);
+            IPath newWF;
+            String wfSimplename = new Path(uriData[0].getPath()).lastSegment();
+            if (KnimeResourceUtil.isWorkflow(r)) {
+                // if dropped on a workflow we store it in the parent group
+                newWF = targetPath.removeLastSegments(1).append(wfSimplename);
+            } else {
+                // add the workflow name to the target path
+                newWF = targetPath.append(wfSimplename);
+            }
             IResource newWFres =
                     ResourcesPlugin.getWorkspace().getRoot().findMember(newWF);
             if (newWFres != null) {
@@ -214,7 +223,9 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                     labels = new String[]{"Overwrite", "New Name", "Cancel"};
                     defaultIdx = 0;
                     msg =
-                            "The target workflow exists. Please select:\n"
+                            "The target workflow exists\n\t'"
+                                    + newWF.toString()
+                                    + "'.\n\nPlease select:\n"
                                     + "\n- \"Overwrite\" to replace the "
                                     + "existing with the downloaded flow\n"
                                     + "\n- \"New Name\" to save downloaded "
@@ -225,12 +236,14 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                                     + "the flow";
                     dlgType = MessageDialog.QUESTION;
                 } else {
-                    labels = new String[]{"Overwrite", "New Name", "Cancel"};
+                    labels = new String[]{"Discard and Overwrite", "New Name", "Cancel"};
                     defaultIdx = 1;
                     msg =
-                            "The target workflow exists and is modified in an "
-                                    + "editor! Please select:\n"
-                                    + "\n- \"Overwrite and Discard\" to discard"
+                            "The target workflow exists\n\t'"
+                                    + newWF.toString()
+                                    + "'\n and is modified in an editor!\n\n"
+                                    + "Please select:\n"
+                                    + "\n- \"Discard and Overwrite\" to discard"
                                     + " your changes and replace the existing"
                                     + " flow with the downloaded one\n"
                                     + "\n- \"New Name\" to save downloaded "
@@ -259,6 +272,7 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
                                     .findMember(newWF);
                 }
             }
+            // let the target download the flow now
             String[] fileNames =
                     RemoteFileTransfer.getInstance().requestFileContent(
                             (URI[])data);
@@ -291,24 +305,29 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
             // drop on the root
             return true;
         }
-        if ((target instanceof IResource)
-                && !(target instanceof IWorkspaceRoot)) {
-            IResource r = (IResource)target;
-            // TODO: check this for workspace root
-            if (!(r instanceof IFolder || r instanceof IProject)) {
-                return false;
-            } else {
-                IContainer c = (IContainer)r;
-                if (isWorkflow(c)) {
-                    return false;
-                }
-                // the target must not be a node
-                if (isNode(r)) {
-                    return false;
-                }
-                return true;
-            }
+        if (!(target instanceof IResource) || target instanceof IWorkspaceRoot) {
+            return false;
         }
+        IResource r = (IResource)target;
+        if (!(r instanceof IFolder || r instanceof IProject)) {
+            return false;
+        }
+        IContainer c = (IContainer)r;
+        // the target must not be a node
+        if (isNode(r)) {
+            return false;
+        }
+
+        if (ResourceTransfer.getInstance().isSupportedType(transferType)) {
+            // Resources are dragged when moving flows or groups
+            // they can only be dropped on groups
+            return !isWorkflow(c);
+        }
+        if (RemoteFileTransfer.getInstance().isSupportedType(transferType)) {
+            // remote flows can be dropped on flows and groups
+            return true;
+        }
+
         return false;
     }
 
