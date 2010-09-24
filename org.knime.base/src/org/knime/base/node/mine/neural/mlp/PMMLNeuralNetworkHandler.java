@@ -52,7 +52,9 @@ package org.knime.base.node.mine.neural.mlp;
 
 import java.util.EmptyStackException;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import org.knime.base.data.neural.Architecture;
@@ -66,6 +68,7 @@ import org.knime.base.data.neural.SigmoidPerceptron;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -267,6 +270,18 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
                     + "supported in KNIME MLP.");
         }
         m_elementStack.push(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

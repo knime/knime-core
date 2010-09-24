@@ -57,6 +57,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
@@ -66,6 +67,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 import org.xml.sax.Attributes;
@@ -104,7 +106,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         IGNORED.add("ModelVerification");
         IGNORED.add("Interval");
         IGNORED.add("Value");
-        
+
         KNOWN.add("PMML");
         KNOWN.add("Header");
         KNOWN.add("Application");
@@ -389,6 +391,18 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             return (PMMLSimpleSetPredicate)m_predStack.peek()
                     .getLastPredicate();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getSupportedVersions() {
+        TreeSet<String> versions = new TreeSet<String>();
+        versions.add(PMMLPortObject.PMML_V3_0);
+        versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        return versions;
     }
 
 }

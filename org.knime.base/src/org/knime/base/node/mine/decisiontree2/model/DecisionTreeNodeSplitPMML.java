@@ -274,7 +274,8 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
                         return this;
                     default:
                         throw new UnsupportedOperationException(
-                                "not implemented");
+                                "Missing value strategy '" + getMVStrategy()
+                                + "' is not supported yet.");
                 }
             }
         }
