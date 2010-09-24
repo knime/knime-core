@@ -218,7 +218,9 @@ public class VariableFileReaderNodeModel extends NodeModel {
         }
 
         // see if settings are good enough for execution
-        SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
+        // don't check file existence. File location is set with variable
+        // in execute. (bug2415)
+        SettingsStatus status = m_frSettings.getStatusOfSettings(false, null);
         if (status.getNumOfErrors() == 0) {
             VariableFileReaderNodeSettings withLoc;
             try {

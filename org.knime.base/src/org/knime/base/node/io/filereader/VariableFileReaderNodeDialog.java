@@ -105,17 +105,17 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.tableview.TableView;
-import org.knime.core.node.util.ConvenientComboBoxRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
-import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.tokenizer.Comment;
 import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.SettingsStatus;
 import org.knime.core.util.tokenizer.TokenizerException;
 import org.knime.core.util.tokenizer.TokenizerSettings;
-import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  *
@@ -272,15 +272,13 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(false);
-        m_urlCombo.setRenderer(new ConvenientComboBoxRenderer());
+        m_urlCombo.setRenderer(new FlowVariableListCellRenderer());
         m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, buttonHeight));
         m_urlCombo.setMinimumSize(new Dimension(350, buttonHeight));
         m_urlCombo.setPreferredSize(new Dimension(350, buttonHeight));
-        m_urlCombo
-                .setToolTipText("Select a variable whose value is a file URL");
 
         fileBox.add(Box.createHorizontalGlue());
-        fileBox.add(new JLabel("Scope Variable Name:"));
+        fileBox.add(new JLabel("Flow Variable Name:"));
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(m_urlCombo);
         fileBox.add(Box.createVerticalStrut(50));
@@ -1109,8 +1107,8 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         m_urlCombo.removeAllItems();
         Map<String, FlowVariable> stack = getAvailableFlowVariables();
-        for (String str : stack.keySet()) {
-            m_urlCombo.addItem(str);
+        for (FlowVariable fv : stack.values()) {
+            m_urlCombo.addItem(fv);
         }
 
         m_urlCombo.addItemListener(this);
@@ -1155,7 +1153,9 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             m_frSettings.setDataFileLocationAndUpdateTableName(null);
 
         }
-        m_urlCombo.setSelectedItem(m_frSettings.getVariableName());
+        FlowVariable fv =
+                getAvailableFlowVariables().get(m_frSettings.getVariableName());
+        m_urlCombo.setSelectedItem(fv);
 
         // transfer settings from the structure in the dialog's components
         if ((m_frSettings.getDataFileLocation() != null)
@@ -1164,10 +1164,6 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 && (m_frSettings.getColumnProperties() != null)
                 && (m_frSettings.getColumnProperties().size() > 0)) {
             // do not analyze file if we got settings to use
-            m_urlCombo.setSelectedItem(m_frSettings.getVariableName());
-            m_urlCombo.setToolTipText(m_frSettings.getDataFileLocation()
-                    .toString());
-
             loadSettings(false);
         } else {
             // load settings and analyze file
@@ -1203,7 +1199,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs: " + errLabel);
         }
-        if (m_previewTable.getErrorOccurred()) {
+        if (m_previewTable != null && m_previewTable.getErrorOccurred()) {
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
@@ -1285,7 +1281,11 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      */
     private boolean takeOverNewFileLocation() throws InvalidSettingsException {
 
-        String varName = (String)m_urlCombo.getSelectedItem();
+        FlowVariable sel = (FlowVariable)m_urlCombo.getSelectedItem();
+        String varName = null;
+        if (sel != null) {
+            varName = sel.getName();
+        }
 
         if (getAvailableFlowVariables().get(varName) == null) {
             // oops.
@@ -1584,6 +1584,15 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                     updatePreview();
                     setAnalWarningText("I/O Error while analyzing file: ");
                     return;
+                } catch (InvalidSettingsException ise) {
+                    setPreviewTable(null);
+                    String msg = ise.getMessage();
+                    if ((msg == null) || (msg.length() == 0)) {
+                        msg = "No details, sorry.";
+                    }
+                    updatePreview();
+                    setAnalWarningText("Invalid Settings: ");
+                    return;
                 } catch (TokenizerException fte) {
                     updatePreview();
                     String msg = fte.getMessage();
@@ -1799,7 +1808,12 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      */
     private void saveSettings(final VariableFileReaderNodeSettings settings)
             throws InvalidSettingsException {
-        settings.setVariableName((String)m_urlCombo.getSelectedItem());
+        FlowVariable sel = (FlowVariable)m_urlCombo.getSelectedItem();
+        if (sel == null) {
+            throw new InvalidSettingsException(
+                    "Please select a flow variable to read filename from");
+        }
+        settings.setVariableName(sel.getName());
         try {
             VariableFileReaderNodeSettings tmp =
                     settings.createSettingsFrom(getAvailableFlowVariables());

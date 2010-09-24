@@ -98,8 +98,8 @@ class VariableFileReaderNodeSettings extends FileReaderNodeSettings {
     }
 
     /**
-     * Create new settings object for the variable file reader based on the 
-     * given settings object. 
+     * Create new settings object for the variable file reader based on the
+     * given settings object.
      * @param clonee clone this settings object
      */
     public VariableFileReaderNodeSettings(final FileReaderNodeSettings clonee) {
@@ -143,27 +143,27 @@ class VariableFileReaderNodeSettings extends FileReaderNodeSettings {
      *            their values
      * @return a copy of this settings object with the file location replaced by
      *         the value of the variable
-     * @throws IllegalArgumentException if the variable is not on the stack
+     * @throws InvalidSettingsException if the variable is not on the stack
      * @throws MalformedURLException if the value of the variable is not a valid
      *             URL
      */
     VariableFileReaderNodeSettings createSettingsFrom(
             final Map<String, FlowVariable> stack)
-            throws MalformedURLException {
+            throws MalformedURLException, InvalidSettingsException {
         VariableFileReaderNodeSettings result =
                 new VariableFileReaderNodeSettings(this);
         FlowVariable var = stack.get(m_variableName);
         if (var == null) {
-            throw new IllegalArgumentException("File location variable ("
+            throw new InvalidSettingsException("File location variable ("
                     + m_variableName + ") is not on the stack.");
         }
         if (!var.getType().equals(FlowVariable.Type.STRING)) {
-            throw new IllegalArgumentException(
+            throw new InvalidSettingsException(
                     "Selected file location variable (" + m_variableName
                             + ") is not of type string.");
         }
         if (var.getStringValue() == null || var.getStringValue().isEmpty()) {
-            throw new IllegalArgumentException("File location variable ("
+            throw new InvalidSettingsException("File location variable ("
                     + m_variableName + ") is not set. Execute predecessor.");
         }
         URL loc = FileReaderNodeDialog.textToURL(var.getStringValue());
