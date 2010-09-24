@@ -63,6 +63,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -276,10 +277,9 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         return p;
     }
 
-    private JPanel createColumnSelectionTab() {
+    private JComponent createColumnSelectionTab() {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.NORTHWEST;
         c.insets = new Insets(2, 2, 2, 2);
@@ -299,7 +299,7 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         p.add(m_rightFilterPanel, c);
         c.gridy++;
         p.add(createDuplicateColumnHandlingUIConstrols(), c);
-        return p;
+        return new JScrollPane(p);
     }
 
     private JPanel createDuplicateColumnHandlingUIConstrols() {
