@@ -247,7 +247,7 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
         setSplitAttribute(conf.getString(PMMLPredicate.ATTRIBUTE_KEY));
         int numPredicates = conf.getInt(NUM_PREDICATES);
         for (int i = 0; i < numPredicates; i++) {
-            Config pconf = conf.getConfig(PRED + i++);
+            Config pconf = conf.getConfig(PRED + i);
             PMMLPredicate pred = PMMLPredicate.getPredicateForConfig(pconf);
             m_predicates.add(pred);
         }
