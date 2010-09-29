@@ -56,7 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class DecisionTreeLearnerNodeFactory 
+public class DecisionTreeLearnerNodeFactory
         extends NodeFactory<DecisionTreeLearnerNodeModel> {
 
     /**
@@ -72,7 +72,7 @@ public class DecisionTreeLearnerNodeFactory
      */
     @Override
     public int getNrNodeViews() {
-        return 2;
+        return 1;
     }
 
     /**
@@ -81,11 +81,7 @@ public class DecisionTreeLearnerNodeFactory
     @Override
     public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
                 final int i, final DecisionTreeLearnerNodeModel nodeModel) {
-        if (i == 0) {
             return new DecTreeNodeView(nodeModel);
-        } else {
-            return new DecTreeLearnerGraphView(nodeModel);
-        }
     }
 
     /**

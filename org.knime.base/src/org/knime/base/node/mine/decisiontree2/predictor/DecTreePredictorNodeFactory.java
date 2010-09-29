@@ -79,7 +79,7 @@ public class DecTreePredictorNodeFactory
      */
     @Override
     public int getNrNodeViews() {
-        return 2;
+        return 1;
     }
 
     /**
@@ -88,11 +88,7 @@ public class DecTreePredictorNodeFactory
     @Override
     public NodeView<DecTreePredictorNodeModel> createNodeView(
             final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
-        if (viewIndex == 0) {
-            return new DecTreePredictorNodeView(nodeModel);
-        } else {
-            return new DecTreePredictorGraphView(nodeModel);
-        }
+        return new DecTreePredictorNodeView(nodeModel);
     }
 
     /**
