@@ -6,11 +6,11 @@ Require-Bundle: org.eclipse.core.runtime,org.eclipse.ui,org.eclipse.ui
  .views,org.knime.workbench.core,org.eclipse.gef,org.eclipse.ui.ide
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: workbench-repository-patches.jar,workbench-repositor
- y.jar
-Bundle-Version: 2.2.2.0026408
+Bundle-ClassPath: workbench-repository.jar
+Bundle-Version: 2.3.0.qualifier
 Bundle-Name: KNIME Workbench Repository
 Bundle-ManifestVersion: 2
 Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
 Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

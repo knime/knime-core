@@ -1,0 +1,8 @@
+This package contains Eclipse Software licensed under the 
+Eclipse Public License (EPL) and separate KNIME plug-ins licensed 
+under the General Public License (GPL), Version 3 (including certain 
+additional permissions according to Sec. 7 of the GPL). 
+
+Please see the license notices in the source files and the LICENSE 
+files in the respective folders for more detailed information on the 
+applicable license terms.

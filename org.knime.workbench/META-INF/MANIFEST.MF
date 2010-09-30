@@ -1,7 +1,8 @@
 Manifest-Version: 1.0
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-Version: 2.2.2.0026408
+Bundle-Version: 2.3.0.qualifier
 Bundle-Name: KNIME Workbench
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.workbench;singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

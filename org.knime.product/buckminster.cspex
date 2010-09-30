@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
+	<actions>
+		<!-- Updates the build date in the splash screen if this is a nightly build. -->
+		<public name="knime.splash.setDate" actor="knime.splashDate">
+			<prerequisites alias="action.requirements">
+				<attribute name="knime.splashFile.svg" />
+			</prerequisites>
+			<products alias="action.output" base="${buckminster.output}/knime.splash/"
+				upToDatePolicy="ACTOR">
+				<path path="splash.bmp" />
+			</products>
+		</public>
+	</actions>
+	<artifacts>
+		<private name="knime.splashFile.svg" path="splash.svg" />
+		<private name="knime.splashFile.bmp" path="splash.bmp" />
+	</artifacts>
+	<alterGroups>
+		<private name="jar.contents">
+			<attribute name="knime.splash.setDate" filter="(knime.nightly=true)"/>
+			<attribute name="knime.splashFile.bmp" filter="(!(knime.nightly=true))"/>
+		</private>
+	</alterGroups>
+	<alterArtifacts>
+		<private name="bin.includes">
+			<!-- The splash.bmp is automatically created, see above -->
+			<removePath path="splash.bmp" />
+		</private>
+	</alterArtifacts>
+</cspecExtension>

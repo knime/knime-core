@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+Require-Bundle: org.knime.core;visibility:=reexport
 Export-Package: Jama,Jama.examples,Jama.test,Jama.util,org.knime.base.
  collection.list.create,org.knime.base.collection.list.split,org.knime
  .base.data.aggregation,org.knime.base.data.aggregation.collection,org
@@ -118,11 +119,9 @@ Export-Package: Jama,Jama.examples,Jama.test,Jama.util,org.knime.base.
  .knime.base.node.viz.table,org.knime.base.util,org.knime.base.util.co
  ordinate,org.knime.base.util.kdtree,org.knime.base.util.math,org.knim
  e.base.util.pmml.samples
-Require-Bundle: org.knime.core;visibility:=reexport
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-ClassPath: knime-base-patches.jar,knime-base.jar,lib/Jama-1.0.2
- .jar
-Bundle-Version: 2.2.2.0026408
+Bundle-ClassPath: knime-base.jar,lib/Jama-1.0.2.jar
+Bundle-Version: 2.3.0.qualifier
 Bundle-Name: KNIME Base Nodes
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.base;singleton:=true

@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.knime.features.base"
-      label="KNIME Core"
+      id="org.knime.product.desktop"
+      label="KNIME Desktop"
       version="2.3.0.qualifier"
-      provider-name="KNIME GmbH, Konstanz, Germany"
-      plugin="org.knime.product"
-      image="icons/knime64.gif">
+      provider-name="KNIME GmbH, Konstanz, Germany">
 
-   <description url="http://www.knime.org/">
-      This features contains KNIME. All plugins needed to run the information mining workbench are included. Note that there are additional features available.
+   <description>
+      KNIME Desktop feature
    </description>
 
    <copyright>
       Copyright, 2003 - 2010
-      University of Konstanz, Germany
-      KNIME GmbH, Konstanz, Germany
+University of Konstanz, Germany
+KNIME GmbH, Konstanz, Germany
    </copyright>
 
    <license>
@@ -731,93 +729,38 @@ propagated with or for interoperation with KNIME.
 
    <url>
       <update label="KNIME Update Site" url="http://www.knime.org/update/2.3"/>
-      <discovery label="KNIME" url="http://www.knime.org/update/2.2"/>
    </url>
 
-   <requires>
-      <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>
-      <import feature="org.eclipse.platform" version="3.4.2.R342_v20090122-9I96EiWElHi8lheoJKJIvhM3JfVsYbRrgVIWL" match="compatible"/>
-      <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
-      <import plugin="org.apache.log4j"/>
-   </requires>
-
-   <plugin
-         id="org.knime.base"
-         download-size="0"
-         install-size="0"
+   <includes
+         id="org.knime.features.base"
          version="0.0.0"/>
 
-   <plugin
-         id="org.knime.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.editor"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.helpview"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.repository"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.workbench.help"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.ext.sun"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.product"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.knime.deprecated"
-         download-size="0"
-         install-size="0"
+   <includes
+         id="org.knime.binary.jre.linux.gtk.x86"
          version="0.0.0"
-         fragment="true"/>
+         os="linux"
+         arch="x86"/>
 
-   <plugin
-         id="org.knime.timeseries"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
+   <includes
+         id="org.knime.binary.jre.linux.gtk.x86_64"
+         version="0.0.0"
+         os="linux"
+         arch="x86_64"/>
+
+   <includes
+         id="org.knime.binary.jre.win32.win32.x86"
+         version="0.0.0"
+         os="win32"
+         arch="x86"/>
+
+   <includes
+         id="org.knime.binary.jre.win32.win32.x86_64"
+         version="0.0.0"
+         os="win32"
+         arch="x86_64"/>
+
+   <requires>
+      <import feature="com.knime.features.enterprise.client.exampleserver" version="2.2.0.qualifier"/>
+   </requires>
 
 </feature>

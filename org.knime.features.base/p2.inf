@@ -1,3 +1,0 @@
-instructions.configure=\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:0,location:http${#58}//www.knime.org/update/2.2);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:1,location:http${#58}//www.knime.org/update/2.2);

@@ -9,10 +9,11 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)
  2.0.0,3.0.0)";visibility:=reexport
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: knime-timeseries-patches.jar,knime-timeseries.jar
-Bundle-Version: 2.2.2.0026408
+Bundle-ClassPath: knime-timeseries.jar
+Bundle-Version: 2.3.0.qualifier
 Bundle-Localization: plugin
 Bundle-Name: KNIME Time Series Nodes
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.timeseries; singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

@@ -6,10 +6,11 @@ Require-Bundle: org.eclipse.core.runtime,org.eclipse.help,org.eclipse.
  org.eclipse.equinox.p2.core,org.eclipse.equinox.p2.ui,org.knime.core
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: workbench-help-patches.jar,workbench-help.jar
-Bundle-Version: 2.2.2.0026408
+Bundle-ClassPath: workbench-help.jar
+Bundle-Version: 2.3.0.qualifier
 Bundle-Localization: plugin
 Bundle-Name: KNIME Workbench Help
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

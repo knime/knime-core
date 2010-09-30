@@ -5,10 +5,11 @@ Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.repositor
  y,org.knime.base
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: knime-sun-patches.jar,knime-sun.jar,lib/tools.jar
-Bundle-Version: 2.2.2.0026408
+Bundle-ClassPath: knime-sun.jar,lib/tools.jar
+Bundle-Version: 2.3.0.qualifier
 Bundle-Name: KNIME JavaScripting node
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
 Eclipse-RegisterBuddy: org.knime.base
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 
