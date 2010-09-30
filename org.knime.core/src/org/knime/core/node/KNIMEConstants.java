@@ -135,6 +135,12 @@ public final class KNIMEConstants {
     public static final String KNIME_DATABASE_FETCHSIZE =
         "knime.database.fetchsize";
 
+    /** Java property, which allows one to change the default
+     * log file size. Values must be integer, possibly succeeded by "m" or "k"
+     * to denote that the given value is in mega or kilo byte. */
+    public static final String PROPERTY_MAX_LOGFILESIZE = "knime.logfile.maxsize";
+
+
 
     /** KNIME home directory. */
     private static File knimeHomeDir;

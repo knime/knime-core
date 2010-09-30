@@ -47,6 +47,8 @@
  */
 package org.knime.core.util;
 
+import static org.knime.core.node.KNIMEConstants.PROPERTY_MAX_LOGFILESIZE;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -69,12 +71,6 @@ import org.knime.core.node.KNIMEConstants;
  */
 public class LogfileAppender extends FileAppender {
     private final File m_logFile;
-
-    /** Name of the environment variable, which allows one to change the default
-     * log file size. Values must be integer, possibly succeeded by "m" or "k"
-     * to denote that the given value is in mega or kilo byte. */
-    public static final String MAX_SIZE_ENV_VARIABLE = "knime.logfile.maxsize";
-
     /** Maximum size of log file before it is split (in bytes). */
     public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
     private long m_maxLogSize;
@@ -83,7 +79,7 @@ public class LogfileAppender extends FileAppender {
      * Creates a new LogfileAppender.
      */
     public LogfileAppender() {
-        String maxSizeString = System.getProperty(MAX_SIZE_ENV_VARIABLE);
+        String maxSizeString = System.getProperty(PROPERTY_MAX_LOGFILESIZE);
         if (maxSizeString == null) {
             m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
         } else {
@@ -103,9 +99,9 @@ public class LogfileAppender extends FileAppender {
             try {
                 m_maxLogSize = multiplier * Long.parseLong(maxSizeString);
             } catch (Throwable e) {
-                System.err.println("Unable to parse maximum log size variable "
-                        + MAX_SIZE_ENV_VARIABLE + " (\""
-                        + System.getProperty(MAX_SIZE_ENV_VARIABLE) + "\"), "
+                System.err.println("Unable to parse maximum log size property "
+                        + PROPERTY_MAX_LOGFILESIZE + " (\""
+                        + System.getProperty(PROPERTY_MAX_LOGFILESIZE) + "\"), "
                         + "using default size");
                 m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
             }
