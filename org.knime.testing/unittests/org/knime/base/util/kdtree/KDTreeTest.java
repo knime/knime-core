@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- *
  */
-package org.knime.testing.algorithms;
+package org.knime.base.util.kdtree;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,10 +31,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import junit.framework.TestCase;
-
-import org.knime.base.util.kdtree.KDTree;
-import org.knime.base.util.kdtree.KDTreeBuilder;
-import org.knime.base.util.kdtree.NearestNeighbour;
 
 /**
  * This testcase checks if the k-d tree implementation is correct.
@@ -55,10 +51,6 @@ public class KDTreeTest extends TestCase {
             m_dist = computeDist(query);
         }
 
-        public double[] getCoords() {
-            return m_coords;
-        }
-
         public int getId() {
             return m_id;
         }
@@ -76,6 +68,7 @@ public class KDTreeTest extends TestCase {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int compareTo(final Helper o) {
             return (int)Math.signum(this.m_dist - o.m_dist);
         }
@@ -191,7 +184,8 @@ public class KDTreeTest extends TestCase {
             t = System.currentTimeMillis();
             PriorityQueue<Helper> pq =
                     new PriorityQueue<Helper>(size, new Comparator<Helper>() {
-                        public int compare(Helper o1, Helper o2) {
+                        @Override
+                        public int compare(final Helper o1, final Helper o2) {
                             return (int)Math.signum(o1.computeDist(query)
                                     - o2.computeDist(query));
                         }
@@ -247,6 +241,7 @@ public class KDTreeTest extends TestCase {
 
         for (final double[] q : queries) {
             Collections.sort(list, new Comparator<Helper2<Integer>>() {
+                @Override
                 public int compare(final Helper2<Integer> o1, final Helper2<Integer> o2) {
                     return (int)Math.signum(o1.dist(q) - o2.dist(q));
                 }
@@ -298,6 +293,7 @@ public class KDTreeTest extends TestCase {
 
         for (final double[] q : queries) {
             Collections.sort(list, new Comparator<Helper2<String>>() {
+                @Override
                 public int compare(final Helper2<String> o1, final Helper2<String> o2) {
                     return (int)Math.signum(o1.dist(q) - o2.dist(q));
                 }

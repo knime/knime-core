@@ -58,10 +58,10 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  * Holds the config of a test case. That is, the settings that should be applied
@@ -993,21 +993,22 @@ public class TestingConfig extends AppenderSkeleton {
      * caught by the appender.
      */
     public void checkMessages() {
+        StringBuilder buf = new StringBuilder();
 
         boolean unexpectedErrors = false;
 
         if (m_unexpectedErrors.size() > 0) {
-            Collection<String> errMsgs = m_unexpectedErrors;
-            for (String msg : errMsgs) {
+            for (String msg : m_unexpectedErrors) {
                 LOGGER.info("Got error: " + msg);
+                buf.append("\t * Got error: ").append(msg).append('\n');
             }
             LOGGER.error("Unexpected error messages during test run.");
             unexpectedErrors = true;
         }
         if (m_exceptions.size() > 0) {
-            Collection<String> excMsgs = m_exceptions;
-            for (String e : excMsgs) {
+            for (String e : m_exceptions) {
                 LOGGER.info("Got exception: " + e);
+                buf.append("\t * Got exception: ").append(e).append('\n');
             }
             LOGGER.error("Exceptions during test run.");
             unexpectedErrors = true;
@@ -1019,6 +1020,7 @@ public class TestingConfig extends AppenderSkeleton {
             missingMessages = true;
             for (MsgPattern msg : m_requiredDebugs) {
                 LOGGER.info("Missing DEBUG msg: \"" + msg + "\"");
+                buf.append("\t * Missing DEBUG msg: ").append(msg).append('\n');
             }
             LOGGER.error("Missing required DEBUG messages in the test output");
         }
@@ -1026,6 +1028,7 @@ public class TestingConfig extends AppenderSkeleton {
             missingMessages = true;
             for (MsgPattern msg : m_requiredInfos) {
                 LOGGER.info("Missing INFO msg: \"" + msg + "\"");
+                buf.append("\t * Missing INFO msg: ").append(msg).append('\n');
             }
             LOGGER.error("Missing required INFO messages in the test output");
         }
@@ -1033,6 +1036,7 @@ public class TestingConfig extends AppenderSkeleton {
             missingMessages = true;
             for (MsgPattern msg : m_requiredWarnings) {
                 LOGGER.info("Missing WARNING msg: \"" + msg + "\"");
+                buf.append("\t * Missing WARNING msg: ").append(msg).append('\n');
             }
             LOGGER.error("Missing required WARNING messages in the "
                     + "test output");
@@ -1041,6 +1045,7 @@ public class TestingConfig extends AppenderSkeleton {
             missingMessages = true;
             for (MsgPattern msg : m_requiredErrors) {
                 LOGGER.info("Missing ERROR msg: \"" + msg + "\"");
+                buf.append("\t * Missing ERROR msg: ").append(msg).append('\n');
             }
             LOGGER.error("Missing required ERROR messages in the test output");
         }
@@ -1050,21 +1055,22 @@ public class TestingConfig extends AppenderSkeleton {
         if (unexpectedErrors && missingMessages) {
             // that's the message log file analyzers pick up
             LOGGER.fatal("Unexpected and missing messages" + FAIL_MSG);
+
             Assert.fail("Failing due to unexpected errors "
-                    + "and missing messages in the log file.");
+                    + "and missing messages in the log file.\n" + buf);
         }
         if (unexpectedErrors) {
             LOGGER.fatal("Unexpected error messages" + FAIL_MSG);
             Assert.fail("Failing due to unexpected errors "
-                    + "in the log file.");
+                    + "in the log file.\n" + buf);
         }
         if (missingMessages) {
             LOGGER.fatal("Missing required messages" + FAIL_MSG);
-            Assert.fail("Failing due to missing messages in the log file.");
+            Assert.fail("Failing due to missing messages in the log file.\n"
+                    + buf);
         }
 
         LOGGER.info(SUCCESS_MSG);
-
     }
 
     private final class MsgPattern {
@@ -1136,15 +1142,6 @@ public class TestingConfig extends AppenderSkeleton {
                 m_patternPart1 = null;
                 m_patternPart3 = null;
             }
-        }
-
-        /**
-         * Returns the stored message pattern.
-         *
-         * @return the stored message pattern.
-         */
-        public String getPattern() {
-            return m_msg;
         }
 
         /**
