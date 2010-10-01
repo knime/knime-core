@@ -760,7 +760,7 @@ propagated with or for interoperation with KNIME.
          arch="x86_64"/>
 
    <requires>
-      <import feature="com.knime.features.enterprise.client.exampleserver" version="2.2.0.qualifier"/>
+      <import feature="com.knime.features.enterprise.client.exampleserver" version="2.3.0"/>
    </requires>
 
 </feature>
