@@ -731,7 +731,6 @@ propagated with or for interoperation with KNIME.
 
    <url>
       <update label="KNIME Update Site" url="http://www.knime.org/update/2.3"/>
-      <discovery label="KNIME" url="http://www.knime.org/update/2.2"/>
    </url>
 
    <requires>
