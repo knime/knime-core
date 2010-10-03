@@ -761,6 +761,7 @@ propagated with or for interoperation with KNIME.
 
    <requires>
       <import feature="com.knime.features.enterprise.client.exampleserver" version="2.3.0"/>
+      <import feature="org.eclipse.equinox.p2.user.ui" version="2.0.1" match="greaterOrEqual"/>
    </requires>
 
 </feature>
