@@ -87,7 +87,7 @@
    <extension point="org.eclipse.ui.intro.configExtension">
     <action name="createProjectFromIntro" replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.NewProjectWizardIntroAction">
     </action>
-    <action name="launchUpdateWizard" replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction">
+    <action name="launchInstallWizard" replaces="runAction?pluginId=org.knime.workbench.ui&amp;class=org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction">
     </action>
     </extension>
 </plugin>

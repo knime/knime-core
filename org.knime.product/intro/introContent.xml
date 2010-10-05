@@ -14,8 +14,8 @@
             </link>
             
                  
-            <link label="Get additional nodes" url="http://org.eclipse.ui.intro/launchUpdateWizard" 
-                id="update">
+            <link label="Get additional nodes" url="http://org.eclipse.ui.intro/launchInstallWizard" 
+                id="install">
                 <text>Launches the install wizard to get additional KNIME features (Weka, R, Chemistry...). </text>
             </link>
             

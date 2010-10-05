@@ -75,16 +75,17 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
+import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDEActionFactory;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
-import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
+import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
 import org.knime.workbench.ui.preferences.ExportPreferencesAction;
 import org.knime.workbench.ui.preferences.ImportPreferencesAction;
 
@@ -141,6 +142,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IAction m_updateKnimeAction;
 
+    private IAction m_installFeaturesAction;
+
     private IAction m_exportWorkflowAction;
 
     private IAction m_importWorkflowAction;
@@ -192,8 +195,10 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_changeWorkspaceAction =
                 IDEActionFactory.OPEN_WORKSPACE.create(window);
         register(m_changeWorkspaceAction);
-        m_updateKnimeAction = new InvokeInstallSiteAction();
+        m_updateKnimeAction = new InvokeUpdateAction();
         register(m_updateKnimeAction);
+        m_installFeaturesAction = new InvokeInstallSiteAction();
+        register(m_installFeaturesAction);
         m_preferencesAction = ActionFactory.PREFERENCES.create(window);
         register(m_preferencesAction);
         m_exportPrefAction = new ExportPreferencesAction(window);
@@ -306,6 +311,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_exportPrefAction);
         fileMenu.add(m_importPrefAction);
         fileMenu.add(new Separator());
+        fileMenu.add(m_installFeaturesAction);
         fileMenu.add(m_updateKnimeAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_exitAction);

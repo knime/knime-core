@@ -36,13 +36,13 @@ a .text {
 	padding-left: 75px;
 	}
 	
-#update {
-	background: url(img/update.png) no-repeat 5px center;
+#install {
+	background: url(img/install.png) no-repeat 5px center;
     height: 64px;
 
 	}
-#update:hover {
-    background: #eee url(img/update_hover.png) no-repeat 5px center;
+#install:hover {
+    background: #eee url(img/install_hover.png) no-repeat 5px center;
     height: 64px; 
     }
 
