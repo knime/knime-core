@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?><fileset-config file-format-version="1.1.0" simple-config="false">
+<fileset name="Java Files" enabled="true" check-config-name="UniKN KNIME" type="project" location="../org.knime.core/KNIMECheckstyle3.1.xml" description="Checkstyle configuration for KNIME Java source code files. Works with Checkstyle Ver4.0"><file-match-pattern match-pattern=".java$" include-pattern="true"/>
+</fileset>
+</fileset-config>

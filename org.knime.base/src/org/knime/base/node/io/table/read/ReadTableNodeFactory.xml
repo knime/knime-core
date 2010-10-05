@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./tableread.png" type="Source">
+	<name>Table Reader</name>
+	
+	<shortDescription>
+		Reads table written by the Table Writer node.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			This node reads files that have been written using the Table Writer node 
+			(which uses an internal format). It retains all meta information such as 
+			domain, properties, colors, size.
+		</intro>
+		<option name="File Chooser">
+			Choose the file to read.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<outPort name="Read table" index="0">The table contained in the selected file.</outPort>
+	</ports>	
+</knimeNode>

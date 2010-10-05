@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./csvreader.png" type="Source">
+	<name>CSV Reader</name>
+	<shortDescription>
+		Reads CSV files.
+	</shortDescription>
+	<fullDescription>
+		<intro>
+		<p>
+		  Reads CSV files. Use this node if the workflow is used in a server
+		  or batch environment and the input files structure change between
+		  different invocations. In particular, this includes a variable number
+		  of input columns. Upon executing the node will scan the input file
+		  to determine number and types of the columns and output a table with
+		  the auto-guessed structure.  
+        </p>
+        <p>
+          <b>Note:</b> If you are only using the desktop version of KNIME and
+          your workflow is not meant to be used in a batch or server environment
+          use the <b>File Reader</b> node. The file reader node has more
+          configuration options and guesses meaningful default settings as it
+          scans the input file during node configuration (in the dialog).
+        </p>
+		</intro>
+		<option name="Column Delimiter">
+		  The character string delimiting columns. Use '\t' for tab character. 
+		</option>
+		<option name="Row Delimiter">
+          The character string delimiting rows. Use '\n' for new line character.  
+		</option>
+		<option name="Quote Char">
+          The quote character.  
+		</option>
+		<option name="Comment Char">
+          A character indicating line comments.  
+		</option>
+		<option name="Has Column Header">
+          Select this box if the first row contains column name headers.  
+		</option>
+		<option name="Has Row Header">
+          Select this box if the first column contains row name headers 
+          (no duplicates allowed).  
+		</option>
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="File Table">
+		  File being read with number and types of columns guessed automatically.
+		</outPort>
+	</ports>
+</knimeNode>   
+        
+        
+        
+        

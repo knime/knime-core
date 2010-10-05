@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Export-Package: com.sun.tools.javac.api,org.knime.ext.sun.nodes.script
+ ,org.knime.ext.sun.nodes.script.expression
+Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.repositor
+ y,org.knime.base
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: knime-sun.jar,lib/tools.jar
+Bundle-Version: 2.3.0.qualifier
+Bundle-Name: KNIME JavaScripting node
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
+Eclipse-RegisterBuddy: org.knime.base
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+

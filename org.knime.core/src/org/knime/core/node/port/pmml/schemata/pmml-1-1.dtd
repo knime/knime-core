@@ -1,0 +1,596 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<!ENTITY % A-PMML-MODEL '(TreeModel | NeuralNetwork | ClusteringModel | 
+                             RegressionModel | GeneralRegressionModel | 
+                             AssociationModel )' >
+
+   <!ELEMENT PMML   ( Header,  DataDictionary, (%A-PMML-MODEL;)+,  Extension* ) >
+
+
+   <!ATTLIST PMML
+        version CDATA #REQUIRED
+    >
+
+   <!ELEMENT Extension ANY >
+   <!ATTLIST Extension  
+         extender CDATA #IMPLIED
+         name CDATA #IMPLIED 
+         value CDATA #IMPLIED 
+   >      
+
+
+   <!ENTITY  % NUMBER  "CDATA" >
+   <!ENTITY  % INT-NUMBER  "CDATA">
+         <!-- content must be an integer, no fractions or exponent -->
+   <!ENTITY  % REAL-NUMBER  "CDATA">
+         <!-- content can be any number 
+              covers C/C++ types 'float','long','double'
+              scientific notation, eg 1.23e4, is allowed  -->
+   <!ENTITY  % PROB-NUMBER  "CDATA">
+         <!-- a REAL-NUMBER between 0.0 and 1.0
+              usually describing a probability  -->
+   <!ENTITY  % PERCENTAGE-NUMBER  "CDATA">
+         <!-- a REAL-NUMBER between 0.0 and 100.0  -->
+
+
+
+    <!ENTITY % FIELD-NAME  "CDATA">
+
+
+   <!ELEMENT Array (#PCDATA) >
+   <!ATTLIST Array
+      n   %INT-NUMBER;  #IMPLIED
+      type  ( int| real| string ) #IMPLIED
+   >
+
+
+   <!ENTITY  % NUM-ARRAY  "Array">
+         <!-- an array of numbers -->
+   <!ENTITY  % INT-ARRAY  "Array">
+         <!-- an array of integers -->
+   <!ENTITY  % REAL-ARRAY  "Array">
+         <!-- an array of reals -->
+   <!ENTITY  % STRING-ARRAY  "Array">
+         <!-- an array of strings -->
+
+
+
+
+<!-- =========      Header        ================================== -->
+
+   <!ELEMENT Header (Application?, Annotation*, Timestamp?)> 
+
+   <!ATTLIST Header 
+       copyright    CDATA #REQUIRED 
+       description  CDATA #IMPLIED 
+   > 
+
+   <!-- describes the software application that generated the PMML--> 
+   <!ELEMENT Application EMPTY> 
+
+   <!ATTLIST Application 
+       name       CDATA #REQUIRED 
+       version    CDATA #IMPLIED 
+   > 
+
+   <!ELEMENT Annotation (#PCDATA)> 
+
+   <!-- a timestamp in the format YYYY-MM-DD hh:mm:ss GMT +/- xx:xx --> 
+   <!ELEMENT Timestamp (#PCDATA)> 
+     
+
+
+
+<!-- =========      Data Dictionary      =========================== -->
+
+
+
+<!ELEMENT DataDictionary (Extension*, DataField+) >
+<!ATTLIST DataDictionary
+    numberOfFields    %INT-NUMBER;  #IMPLIED
+>
+<!ELEMENT DataField  ( Extension*, (Interval*| Value*) ) >
+<!ATTLIST DataField
+    name         %FIELD-NAME;  #REQUIRED
+    displayName  CDATA         #IMPLIED 
+    optype       ( categorical | ordinal | continuous )  #REQUIRED
+    isCyclic     ( 0 | 1 )     "0" 
+>
+
+<!ELEMENT Value (Extension* ) >
+<!ATTLIST Value
+    value         CDATA #REQUIRED
+    displayValue CDATA #IMPLIED
+    property     (valid | invalid | missing ) "valid"
+>
+
+
+   <!ELEMENT Interval  EMPTY>
+   <!ATTLIST Interval 
+       closure     ( openClosed | openOpen | closedOpen | closedClosed )  #REQUIRED
+       leftMargin   %NUMBER;   #IMPLIED
+       rightMargin  %NUMBER;   #IMPLIED
+   >
+
+
+
+
+
+
+<!-- =========      Mining Schema      =========================== -->
+
+
+<!ELEMENT MiningSchema (Extension*, MiningField+) >
+
+<!ENTITY  % FIELD-USAGE-TYPE "(active | predicted | supplementary)" >
+
+<!ENTITY  % OUTLIER-TREATMENT-METHOD "(asIs | asMissingValues | asExtremeValues)" >
+
+<!ELEMENT MiningField (Extension*) >
+<!ATTLIST MiningField
+        name            %FIELD-NAME;                    #REQUIRED
+        usageType       %FIELD-USAGE-TYPE;              "active"
+        outliers        %OUTLIER-TREATMENT-METHOD;      "asIs"
+        lowValue        %NUMBER;                        #IMPLIED
+        highValue       %NUMBER;                        #IMPLIED
+>
+
+
+
+
+<!-- =========      Statistics      =========================== -->
+
+
+<!ELEMENT ModelStats     (UnivariateStats+) >
+
+
+<!ENTITY  % AGGREGATE "(Counts?, NumericInfo?)" >
+
+<!ELEMENT UnivariateStats ( (%AGGREGATE;)?, DiscrStats?, ContStats? ) >
+<!ATTLIST UnivariateStats
+     field   %FIELD-NAME;   #IMPLIED
+>
+
+
+<!ELEMENT Counts EMPTY>
+<!ATTLIST Counts
+        totalFreq          %NUMBER;  #REQUIRED
+        missingFreq        %NUMBER;  #IMPLIED
+        invalidFreq        %NUMBER;  #IMPLIED
+>
+
+<!ELEMENT NumericInfo (Quantile*) >
+<!ATTLIST NumericInfo
+        minimum                 %NUMBER;  #IMPLIED
+        maximum                 %NUMBER;  #IMPLIED
+        mean                    %NUMBER;  #IMPLIED
+        standardDeviation       %NUMBER;  #IMPLIED
+        median                  %NUMBER;  #IMPLIED
+        interQuartileRange      %NUMBER;  #IMPLIED
+>
+
+<!ELEMENT Quantile EMPTY>
+<!ATTLIST Quantile
+        quantileLimit   %PERCENTAGE-NUMBER;  #REQUIRED
+        quantileValue   %NUMBER;  #REQUIRED
+>
+
+<!ELEMENT DiscrStats (Extension*, (%STRING-ARRAY;)?, (%INT-ARRAY;)? ) >
+<!ATTLIST DiscrStats
+        modalValue              CDATA     #IMPLIED
+>
+
+
+<!ELEMENT ContStats ( Extension*, Interval*, (%INT-ARRAY;)?, (%NUM-ARRAY;)?, (%NUM-ARRAY;)? )>
+<!ATTLIST ContStats
+        totalValuesSum  %NUMBER;   #IMPLIED
+        totalSquaresSum %NUMBER;   #IMPLIED
+>
+
+
+<!ELEMENT Partition (PartitionFieldStats+) >
+<!ATTLIST Partition
+        name    CDATA    #REQUIRED
+        size    %NUMBER; #IMPLIED
+>
+
+<!ELEMENT PartitionFieldStats (%AGGREGATE;, (%NUM-ARRAY;)*) >
+<!ATTLIST PartitionFieldStats
+        field        %FIELD-NAME; #REQUIRED
+>
+
+
+<!-- =========      Normalization     =========================== -->
+
+<!ENTITY  % NORM-INPUT  "( NormContinuous | NormDiscrete)" >
+
+<!ELEMENT NormContinuous  ( Extension*, LinearNorm* ) >
+<!ATTLIST NormContinuous  
+   field    %FIELD-NAME;  #REQUIRED 
+>
+
+<!ELEMENT LinearNorm EMPTY >
+<!ATTLIST LinearNorm
+   orig    %NUMBER;  #REQUIRED
+   norm    %NUMBER;  #REQUIRED
+>
+
+<!ELEMENT NormDiscrete ( Extension* ) >
+<!ATTLIST NormDiscrete 
+    field  %FIELD-NAME;  #REQUIRED
+    method       ( indicator | thermometer ) #FIXED "indicator"
+    value  CDATA  #REQUIRED 
+>
+
+
+
+<!-- =========      Neural network      =========================== -->
+
+<!ENTITY  % ACTIVATION-FUNCTION "(threshold | logistic | tanh)" >
+
+<!ELEMENT NeuralNetwork (Extension*, MiningSchema, ModelStats?, NeuralInputs, (NeuralLayer+), NeuralOutputs?) >
+<!ATTLIST NeuralNetwork
+    modelName         CDATA           #IMPLIED
+    activationFunction    %ACTIVATION-FUNCTION; #REQUIRED
+    threshold   %REAL-NUMBER;   #IMPLIED
+>
+<!ELEMENT NeuralInputs ( NeuralInput+ ) >
+<!ELEMENT NeuralLayer ( Neuron+ ) >
+<!ELEMENT NeuralOutputs ( NeuralOutput+ ) >
+
+
+
+
+<!ENTITY % NN-NEURON-ID  "CDATA" >
+<!ENTITY % NN-NEURON-IDREF  "CDATA" >
+
+<!ELEMENT NeuralInput (Extension*, ( NormContinuous | NormDiscrete)) >
+
+<!ATTLIST NeuralInput
+    id  %NN-NEURON-ID;  #REQUIRED
+> 
+
+<!ELEMENT Neuron (Extension*, Con+) >
+
+<!ATTLIST Neuron
+    id                  %NN-NEURON-ID;       #REQUIRED
+    bias                %REAL-NUMBER;      #IMPLIED
+    activationFunction %ACTIVATION-FUNCTION;   #IMPLIED
+    threshold           %REAL-NUMBER;      #IMPLIED 
+>
+
+
+<!ELEMENT Con (Extension*) >
+<!ATTLIST Con
+    from                %NN-NEURON-IDREF;    #REQUIRED
+    weight              %REAL-NUMBER;   #REQUIRED
+>
+
+
+<!ELEMENT NeuralOutput ( Extension*, ( NormContinuous | NormDiscrete) ) >
+
+<!ATTLIST NeuralOutput
+    outputNeuron           %NN-NEURON-IDREF;    #REQUIRED
+>
+
+
+
+
+<!-- =========      Clustering Model    =========================== -->
+
+
+<!ELEMENT ClusteringModel   
+    ( Extension*, MiningSchema, ModelStats?,
+      ComparisonMeasure, ClusteringField*, CenterFields?, Cluster+) >
+<!ATTLIST ClusteringModel
+    modelName                   CDATA           #IMPLIED
+    modelClass  ( centerBased | distributionBased )     #REQUIRED
+    numberOfClusters              %INT-NUMBER;    #REQUIRED
+>
+
+<!ELEMENT CenterFields ( (%NORM-INPUT;)+ ) >
+
+<!ELEMENT Cluster (Extension*, (%NUM-ARRAY;)?, Partition?, Covariances?)>
+<!ATTLIST Cluster
+    name                CDATA           #IMPLIED
+>
+
+
+<!ELEMENT Covariances  (Matrix) >
+
+<!ENTITY % CMP-FCT "(absDiff | gaussSim | delta | equal | table)" >
+
+<!ELEMENT ClusteringField ( Extension*, Comparisons? ) >
+<!ATTLIST ClusteringField
+        field           %FIELD-NAME;    #REQUIRED
+        fieldWeight     %REAL-NUMBER;   #IMPLIED
+        similarityScale %REAL-NUMBER;   #IMPLIED
+        compareFunction %CMP-FCT;       #IMPLIED
+>
+
+
+<!ELEMENT Comparisons ( Extension*, Matrix ) >
+
+<!ELEMENT Matrix   ( ((%NUM-ARRAY;)+ ) | ( MatCell+ ) )? >
+<!ATTLIST Matrix 
+    kind        ( diagonal | symmetric | any )  "any"
+    nbRows              %INT-NUMBER;    #IMPLIED
+    nbCols              %INT-NUMBER;    #IMPLIED
+    diagDefault         %REAL-NUMBER;   #IMPLIED
+    offDiagDefault      %REAL-NUMBER;   #IMPLIED
+>
+
+
+<!ELEMENT MatCell (#PCDATA)>
+<!ATTLIST MatCell 
+    row                 %INT-NUMBER;           #REQUIRED 
+    col                 %INT-NUMBER;           #REQUIRED
+> 
+
+
+<!ELEMENT ComparisonMeasure (Extension*, 
+        ( euclidean      | squaredEuclidean    | chebychev
+        | cityBlock      | minkowski            | simpleMatching
+        | jaccard        | tanimoto             | binarySimilarity ) )
+>
+
+<!ATTLIST ComparisonMeasure     
+        kind            (distance |similarity)  #REQUIRED
+        compareFunction %CMP-FCT;               #IMPLIED
+        minimum         %NUMBER;                #IMPLIED
+        maximum         %NUMBER;                #IMPLIED
+>
+
+<!ELEMENT euclidean             EMPTY>
+
+<!ELEMENT squaredEuclidean      EMPTY>
+
+<!ELEMENT cityBlock     EMPTY>
+
+<!ELEMENT chebychev             EMPTY>
+
+<!ELEMENT minkowski             EMPTY>
+<!ATTLIST minkowski     
+        p-parameter     %NUMBER; #REQUIRED
+>
+
+<!ELEMENT simpleMatching        EMPTY>
+
+<!ELEMENT jaccard               EMPTY>
+
+<!ELEMENT tanimoto              EMPTY>
+
+<!ELEMENT binarySimilarity      EMPTY>
+<!ATTLIST binarySimilarity
+        c00-parameter   %NUMBER; #REQUIRED
+        c01-parameter   %NUMBER; #REQUIRED
+        c10-parameter   %NUMBER; #REQUIRED
+        c11-parameter   %NUMBER; #REQUIRED
+        d00-parameter   %NUMBER; #REQUIRED
+        d01-parameter   %NUMBER; #REQUIRED
+        d10-parameter   %NUMBER; #REQUIRED
+        d11-parameter   %NUMBER; #REQUIRED
+>
+
+
+
+
+<!-- =========      Associantion Rules    =========================== -->
+
+ <!ENTITY % ELEMENT-ID   "CDATA">
+
+
+<!ELEMENT AssociationModel (Extension*, AssocInputStats, AssocItem+, AssocItemset+, AssocRule+) >
+<!ATTLIST AssociationModel
+      modelName  CDATA    #IMPLIED
+>
+
+      <!ELEMENT AssocInputStats EMPTY>
+          <!ATTLIST AssocInputStats
+            numberOfTransactions  %INT-NUMBER;  #REQUIRED
+            maxNumberOfItemsPerTA %INT-NUMBER;  #IMPLIED
+            avgNumberOfItemsPerTA %REAL-NUMBER; #IMPLIED
+            minimumSupport        %PROB-NUMBER; #REQUIRED
+            minimumConfidence     %PROB-NUMBER; #REQUIRED
+            lengthLimit           %INT-NUMBER;  #IMPLIED
+            numberOfItems         %INT-NUMBER;  #REQUIRED
+            numberOfItemsets      %INT-NUMBER;  #REQUIRED
+            numberOfRules         %INT-NUMBER;  #REQUIRED
+          >
+
+
+<!ELEMENT AssocItem EMPTY>
+     <!ATTLIST AssocItem
+       id                    %ELEMENT-ID;  #REQUIRED
+       value         CDATA         #REQUIRED
+       mappedValue           CDATA         #IMPLIED
+       weight                %REAL-NUMBER; #IMPLIED
+     >
+
+
+
+<!ELEMENT AssocItemset (Extension*, AssocItemRef+)>
+     <!ATTLIST AssocItemset
+       id                    %ELEMENT-ID;  #REQUIRED
+       support               %PROB-NUMBER; #REQUIRED
+       numberOfItems         %INT-NUMBER;  #REQUIRED
+     >
+
+
+
+               <!ELEMENT AssocItemRef EMPTY>
+               <!ATTLIST AssocItemRef
+                 itemRef     %ELEMENT-ID;  #REQUIRED
+               >
+
+
+<!ELEMENT AssocRule ( Extension* ) >
+     <!ATTLIST AssocRule
+       support               %PROB-NUMBER; #REQUIRED
+       confidence            %PROB-NUMBER; #REQUIRED
+       antecedent            %ELEMENT-ID;  #REQUIRED
+       consequent            %ELEMENT-ID;  #REQUIRED
+     >
+
+
+
+
+
+<!-- =========      Tree Classifcation  =========================== -->
+
+
+<!ENTITY % PREDICATES
+
+          "(Predicate | CompoundPredicate | True | False)" 
+
+          >
+
+          <!ELEMENT TreeModel (Extension*, MiningSchema, ModelStats?, Node)>
+
+          <!ATTLIST TreeModel
+
+          modelName CDATA #IMPLIED
+
+          >
+
+          <!ELEMENT Node ( Extension*, (%PREDICATES;), Node*, ScoreDistribution*)>
+
+          <!ATTLIST Node
+
+          score CDATA #REQUIRED
+
+          recordCount %NUMBER; #IMPLIED
+
+          >
+
+          <!ELEMENT Predicate EMPTY>
+
+          <!ATTLIST Predicate
+
+          field  %FIELD-NAME; #REQUIRED
+
+          operator (equal | lessThan | notEqual | lessOrEqual | greaterThan | greaterOrEqual) #REQUIRED
+
+          value CDATA #REQUIRED
+
+          >
+
+          <!ELEMENT CompoundPredicate ( %PREDICATES; , (%PREDICATES;)+ )>
+
+          <!ATTLIST CompoundPredicate
+
+          booleanOperator (or | and | xor | cascade) #REQUIRED
+
+          >
+
+          <!ELEMENT True EMPTY>
+
+          <!ELEMENT False EMPTY>
+
+          <!ELEMENT ScoreDistribution EMPTY>
+
+          <!ATTLIST ScoreDistribution
+
+          value CDATA #REQUIRED
+
+          recordCount %NUMBER; #REQUIRED
+          >
+
+
+
+
+
+
+<!-- =========      Simple Regression   =========================== -->
+
+
+
+<!ELEMENT RegressionModel (Extension*, RegressionTable) > 
+<!ATTLIST RegressionModel 
+    modelName                     CDATA                                                #IMPLIED 
+    modelType                     (linearRegression | stepwisePolynomialRegression)    #REQUIRED 
+    targetVariableName                   %FIELD-NAME;                                         #REQUIRED 
+>
+  
+
+<!ELEMENT RegressionTable ((NumericPredictor*), (CategoricalPredictor*))> 
+<!ATTLIST RegressionTable 
+    intercept                      %REAL-NUMBER;        #REQUIRED 
+> 
+
+<!ELEMENT NumericPredictor EMPTY> 
+<!ATTLIST NumericPredictor 
+    name                           %FIELD-NAME;         #REQUIRED 
+    exponent                       %INT-NUMBER;         #REQUIRED 
+    coefficient                    %REAL-NUMBER;        #REQUIRED 
+    mean                           %REAL-NUMBER;        #IMPLIED 
+> 
+<!ELEMENT CategoricalPredictor EMPTY> 
+<!ATTLIST CategoricalPredictor 
+    name                           %FIELD-NAME;         #REQUIRED 
+    value                          CDATA                #REQUIRED 
+    coefficient                    %REAL-NUMBER;        #REQUIRED 
+> 
+
+
+<!-- =========      General Regression   =========================== -->
+
+
+<!ELEMENT GeneralRegressionModel ( 
+    Extension*, 
+    ParameterList, 
+    FactorList?, 
+    CovariateList?, 
+    PPMatrix?, 
+    PCovMatrix?, 
+    ParamMatrix)> 
+<!ATTLIST GeneralRegressionModel 
+    targetVariableName      %FIELD-NAME;                                                      #REQUIRED 
+    modelType             (regression | generalLinear | logLinear | multinomialLogistic) #REQUIRED 
+>
+
+<!ELEMENT ParameterList (Parameter+)> 
+<!ELEMENT Parameter EMPTY> 
+<!ATTLIST Parameter 
+    name                           CDATA           #REQUIRED 
+    label                          CDATA           #IMPLIED 
+> 
+
+<!ELEMENT FactorList (Predictor*)> 
+<!ELEMENT CovariateList (Predictor*)> 
+<!ELEMENT Predictor EMPTY> 
+<!ATTLIST Predictor 
+    name                           %FIELD-NAME;    #REQUIRED 
+> 
+
+<!ELEMENT PPMatrix (PPCell+)> 
+<!ATTLIST PPCell 
+    value                          CDATA           #REQUIRED 
+    predictorName                  %FIELD-NAME;    #REQUIRED 
+    parameterName                  CDATA           #REQUIRED 
+    targetCategory                 CDATA           #IMPLIED
+> 
+
+<!ELEMENT PCovMatrix (PCovCell+)> 
+<!ELEMENT PCovCell EMPTY> 
+<!ATTLIST PCovCell 
+    pRow                           CDATA           #REQUIRED 
+    pCol                           CDATA           #REQUIRED 
+    tRow                           CDATA           #REQUIRED 
+    tCol                           CDATA           #REQUIRED 
+    value                          %REAL-NUMBER;   #REQUIRED 
+    targetCategory                 CDATA           #IMPLIED
+> 
+
+ 
+
+<!ELEMENT ParamMatrix (PCell+)> 
+<!ELEMENT PCell EMPTY> 
+<!ATTLIST PCell 
+    targetCategory                 CDATA           #REQUIRED 
+    parameterName                  CDATA           #REQUIRED 
+    beta                           %REAL-NUMBER;   #REQUIRED 
+    df                             %INT-NUMBER;    #IMPLIED
+> 
+
+

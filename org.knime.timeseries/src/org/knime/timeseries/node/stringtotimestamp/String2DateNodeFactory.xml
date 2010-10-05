@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="string2date.png">
+    <name>String to Date/Time</name>
+    <shortDescription>
+        Parses date and/or time strings into date/time cells.
+    </shortDescription>
+    <fullDescription>
+        <intro>
+            Parses the strings in the selected String column and converts them 
+            into date/time cells by using the entered format pattern.  
+        </intro>
+        <option name="Select column">
+        Select the input column containing the timestamp string.
+        </option>
+        <option name="Replace selected column">
+            Check if the string column is not needed anymore and should be 
+            replaced by the parsed and converted date/time values.
+        </option>
+        <option name="New column name">
+        If the string column should not be replaced enter here the name for 
+        the new column containing the parsed and converted date/times. 
+        </option>
+        <option name="Date format">
+            A format string as required by the <tt>java.text.SimpleDateFormat</tt>.
+            <b>Examples:</b>
+            <ul>
+            <li>"yyyy.MM.dd HH:mm:ss.SSS" parses dates like "2001.07.04 12:08:56.000"</li>
+            <li>"yyyy-MM-dd'T'HH:mm:ss.SSSZ" parses dates like "2001-07-04T12:08:56.235-0700"</li>
+            </ul>
+            <b>Valid pattern elements are:</b>
+            <ul>
+            <li>G: era designator</li>
+            <li>y: year</li>
+            <li>M: month in year</li>
+            <li>w: Week in year</li>
+            <li>W: week in month</li>
+            <li>D: Day in year</li>
+            <li>d: day in month</li>
+            <li>F: Day of week in month</li>
+            <li>E: day in week</li>
+            <li>a: Am/pm marker</li>
+            <li>H: hour in day (0-23)</li>
+            <li>k: hour in day (1-24)</li>
+            <li>K: hour in am/pm (0-11)</li>
+            <li>h: hour in am/pm (1-12)</li>
+            <li>m: minute in hour</li>
+            <li>s: Second in minute</li>
+            <li>S: millisecond</li>
+            <li>z: Timezone (General time zone)</li>
+            <li>Z: RFC 822 time zone</li>
+            </ul>
+        </option>
+        <option name="Abort execution">If checked the node will abort the 
+        execution after the maximum number of unparsable rows is reached. 
+        Check in order to test whether the entered 
+        pattern can be applied to the input data. </option>
+        <option name="Maximum number of unresolved rows">
+            The maximum number of rows where the dates could not be parsed with
+            the entered pattern before the node cancels its execution.
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Input column">
+        Table containing timestamp strings.</inPort>
+        <outPort index="0" name="Parsed time">
+        Table with replaced column holding date/time cells.</outPort>
+    </ports>
+</knimeNode>

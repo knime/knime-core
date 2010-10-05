@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="stringreplace.png" type="Manipulator">
+    <name>String Replacer</name>
+
+    <shortDescription>Replaces values in string cells if they match a certain wildcard pattern.</shortDescription>
+
+    <fullDescription>
+        <intro>Replaces values in string cells if they match a certain wildcard pattern.</intro>
+        <option name="Target column">Name of the column whose cells should be processed</option>
+        <option name="Wildcard pattern">
+            A wildcard expression (i.e. containing <b>*</b> and <b>?</b> as meta characters) that is tested against all cells in
+            the selected target column. The meta character <b>*</b> matches a variable range of characters whereas 
+            <b>?</b> matches exactly one character.
+        </option>
+        <option name="Replacement text">
+            The text that replaces that previous value in the cell if the pattern matched the previous value.
+        </option>
+        <option name="Replace whole string">
+        	The entire string (i.e. the entire cell content) is replaced when it matches the search pattern 
+        	(including the meta characters <b>*</b> and <b>?</b>). 
+        </option>
+        <option name="Replace all substrings">
+            All occurrences of the entered string are replaced in the target column. The meta
+            characters <b>*</b> and <b>?</b> are not allowed in the pattern in this case. 
+        </option>
+        <option name="Case sensitive search">Check this if the pattern should be case sensitive</option>
+        <option name="Append new column">
+            Creates a new column with the name entered in the text field instead of replacing the values in the original column.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Input">Arbitrary input data.</inPort>
+        <outPort index="0" name="Input with replaced values">
+            Input table with replaced values or an additional column.
+        </outPort>
+    </ports>
+</knimeNode>

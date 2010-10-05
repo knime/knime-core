@@ -1,0 +1,86 @@
+<!--
+========================================================================
+ *
+ *  Copyright (C) 2003 - 2010
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+====================================================================
+-->
+<HTML>
+<BODY>
+<P> Node implementation of a table view. This node is used in the KNIME workflow
+	to display a <CODE>DataTable,</CODE> thus it has one inport and no outports.
+</P>
+
+<P> In order to provide a reasonably fast view the key class of this package,
+	i.e. <CODE>TableContentModel</CODE>, uses a caching strategy that reads rows
+	from the <CODE>DataTable</CODE> on request and (ring-)buffers only the last 
+	accessed sequence of rows. For further details refer to the description of
+	<a href="TableContentModel.html"><CODE>TableContentModel</CODE></a>.
+</P>
+
+	<H3 id="relation">Class relationship</H3>
+	The following figure summarizes the role of the different classes in this 
+	package. For simplicity we ignore the general node classes 
+	<CODE>TableNodeFactory</CODE>, <CODE>TableNodeModel</CODE> and 
+	<CODE>TableNodeView</CODE> as they provide the usual node functionality.
+	<BR><BR>
+	<CENTER>
+		<IMG title="Relationship between DataTable and classes in this package" 
+			src="doc-files/table.png">
+	</CENTER>
+	
+	<CODE>TableContentModel</CODE> is certainly the class containing most of
+	the functionality. It is the <CODE>TableModel</CODE> for the 
+	<CODE>TableContentView</CODE> and has a reference to the 
+	<CODE>DataTable</CODE> to be displayed. It contains the row cache and also
+	serves as the <CODE>HiLiteListener</CODE> (as it knows which rows it has 
+	to care about). <br>
+	<CODE>TableHeaderModel</CODE> is also a class implementing 
+	<CODE>javax.swing.TableModel</CODE>. It keeps a reference to its 
+	<CODE>TableContentModel</CODE> and encapsulates the keys for each row in 
+	the <CODE>DataTable</CODE>. Hence, it always has exactly one column. We had
+	to detach this model from the content model since the main view, i.e.
+	<CODE>TableView</CODE> displays the row head in separate panel.
+
+</BODY>
+</HTML>

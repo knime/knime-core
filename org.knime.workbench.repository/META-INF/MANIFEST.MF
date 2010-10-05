@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Export-Package: org.knime.workbench.repository,org.knime.workbench.rep
+ ository.model,org.knime.workbench.repository.model.props,org.knime.wo
+ rkbench.repository.view
+Require-Bundle: org.eclipse.core.runtime,org.eclipse.ui,org.eclipse.ui
+ .views,org.knime.workbench.core,org.eclipse.gef,org.eclipse.ui.ide
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: workbench-repository.jar
+Bundle-Version: 2.3.0.qualifier
+Bundle-Name: KNIME Workbench Repository
+Bundle-ManifestVersion: 2
+Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
+Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+
