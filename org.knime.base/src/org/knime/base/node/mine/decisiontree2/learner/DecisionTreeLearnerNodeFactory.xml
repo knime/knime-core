@@ -24,7 +24,7 @@
 			Most of the techniques used in this decision tree implementation
 			can be found in "C4.5 Programs for machine learning", by J.R. Quinlan
 			and in "SPRINT: A Scalable Parallel Classifier for Data Mining", by
-			J. Shafer, R. Agrawal, M. Mehta (<a href="http://citeseer.ist.psu.edu/shafer96sprint.html">http://citeseer.ist.psu.edu/shafer96sprint.html</a>)
+			J. Shafer, R. Agrawal, M. Mehta (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf">http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf</a>)
 		</intro>
 		<option name="Class column">To select the target attribute. 
 			Only nominal attributes are allowed</option>
