@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 17, 2008 (wiswedel): created
  */
@@ -57,13 +57,18 @@ import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
- * 
- * @author wiswedel, University of Konstanz
+ * Spec to the {@link FlowVariablePortObject}. Similar to the associated
+ * port object, this class does not contain any fields. It is used as singleton.
+ *
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FlowVariablePortObjectSpec implements PortObjectSpec {
 
-    public static PortObjectSpecSerializer<FlowVariablePortObjectSpec> 
-    getPortObjectSpecSerializer() { 
+    /** Serializer as required by {@link PortObjectSpec} super class.
+     * @return Serializer.
+     */
+    public static PortObjectSpecSerializer<FlowVariablePortObjectSpec>
+    getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<FlowVariablePortObjectSpec>() {
 
             @Override
@@ -76,17 +81,19 @@ public final class FlowVariablePortObjectSpec implements PortObjectSpec {
             public void savePortObjectSpec(
                     final FlowVariablePortObjectSpec portObjectSpec,
                     final PortObjectSpecZipOutputStream out) {
+                // no op
             }
         };
     }
-    
-    public static final FlowVariablePortObjectSpec INSTANCE = 
+
+    /** Singleton instance to be used. */
+    public static final FlowVariablePortObjectSpec INSTANCE =
         new FlowVariablePortObjectSpec();
-    
+
     private FlowVariablePortObjectSpec() {
-        
+        // no fields
     }
-    
+
     /**
      * {@inheritDoc}
      */

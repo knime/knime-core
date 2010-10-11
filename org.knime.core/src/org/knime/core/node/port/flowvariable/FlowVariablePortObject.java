@@ -63,17 +63,43 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 
 /**
+ * A singleton port object representing a variable input. Flow Variables ports
+ * and their connections carry no data, nor variables but just represent a
+ * connection. Variables are propagated through the workflow using framework
+ * methods, each node can read and write variables using methods in the
+ * NodeModel (as opposed to have these methods defined on the port object).
  *
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class FlowVariablePortObject implements PortObject {
 
+    /** Type representing this port object. */
     public static final PortType TYPE =
         new PortType(FlowVariablePortObject.class);
 
+    /** Type representing this port object as optional. */
+    public static final PortType TYPE_OPTIONAL =
+        new PortType(FlowVariablePortObject.class, true);
+
+    /** Singleton instance to be used. */
     public static final FlowVariablePortObject INSTANCE =
         new FlowVariablePortObject();
 
+    /** Constructor, not to be used.
+     * @deprecated There is only one
+     * {@link FlowVariablePortObject#INSTANCE instance} to this class. Future
+     * versions of KNIME will reduce the scope of this constructor and declare
+     * this class final.
+     */
+    @Deprecated
+    public FlowVariablePortObject() {
+        // declared deprecated in v2.3
+    }
+
+    /** Serializer for this port object. It will return the singleton upon
+     * read.
+     * @return The serializer as required by the PortObject class.
+     */
     public static PortObjectSerializer<FlowVariablePortObject>
     getPortObjectSerializer() {
         return new PortObjectSerializer<FlowVariablePortObject>() {
@@ -91,7 +117,7 @@ public class FlowVariablePortObject implements PortObject {
                     final PortObjectZipOutputStream out,
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-
+                // no op
             }
 
         };
