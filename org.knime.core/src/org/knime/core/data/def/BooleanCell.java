@@ -45,15 +45,12 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   07.07.2005 (mb): created
- *   21.06.06 (bw & po): reviewed
- *   27.02.07 (po): implements ComplexNumberValue now
  */
 package org.knime.core.data.def;
 
 import java.io.IOException;
 
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
@@ -69,37 +66,47 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 
 /**
- * A data cell implementation holding an integer value by storing this value in
- * a private <code>int</code> member. It provides an int value, a double
+ * A data cell implementation holding a boolean value by storing this value in
+ * a private <code>boolean</code> member. It provides an boolean value, a double
  * value, a fuzzy number value, as well as a fuzzy interval value.
  *
- * @author Michael Berthold, University of Konstanz
+ * <p>This class is not to be instantiated; use the singleton representing
+ * the true and false state.
+ *
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class IntCell extends DataCell implements IntValue, LongValue,
-    DoubleValue, ComplexNumberValue, FuzzyNumberValue,
+@SuppressWarnings("serial")
+public final class BooleanCell extends DataCell implements BooleanValue,
+        IntValue, LongValue, DoubleValue, ComplexNumberValue, FuzzyNumberValue,
         FuzzyIntervalValue, BoundedValue {
+
+    /** TRUE instance. */
+    public static final BooleanCell TRUE = new BooleanCell(true);
+
+    /** FALSE instance. */
+    public static final BooleanCell FALSE = new BooleanCell(false);
 
     /**
      * Convenience access member for
-     * <code>DataType.getType(IntCell.class)</code>.
+     * <code>DataType.getType(BooleanCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = DataType.getType(IntCell.class);
+    public static final DataType TYPE = DataType.getType(BooleanCell.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
      * method is called per reflection to determine which is the preferred
      * renderer, comparator, etc.
      *
-     * @return IntValue.class;
+     * @return BooleanValue.class;
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
-        return IntValue.class;
+        return BooleanValue.class;
     }
 
-    private static final DataCellSerializer<IntCell> SERIALIZER =
-            new IntSerializer();
+    private static final DataCellSerializer<BooleanCell> SERIALIZER =
+            new BooleanSerializer();
 
     /**
      * Returns the factory to read/write DataCells of this class from/to a
@@ -108,85 +115,102 @@ public class IntCell extends DataCell implements IntValue, LongValue,
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
-    public static final DataCellSerializer<IntCell> getCellSerializer() {
+    public static final DataCellSerializer<BooleanCell> getCellSerializer() {
         return SERIALIZER;
     }
 
-    private final int m_int;
+    private final boolean m_boolean;
 
     /**
-     * Creates new cell for a generic int value.
+     * Creates new cell for a generic boolean value.
      *
-     * @param i The integer value to store.
+     * @param b The boolean value to store.
      */
-    public IntCell(final int i) {
-        m_int = i;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getIntValue() {
-        return m_int;
+    private BooleanCell(final boolean i) {
+        m_boolean = i;
     }
 
     /** {@inheritDoc} */
+    @Override
+    public boolean getBooleanValue() {
+        return m_boolean;
+    }
+
+    /** Returns 1 if value is true or 0 for false.
+     * {@inheritDoc}
+     */
+    @Override
+    public int getIntValue() {
+        return m_boolean ? 1 : 0;
+    }
+
+    /** Returns 1 if value is true or 0 for false.
+     * {@inheritDoc} */
+    @Override
     public long getLongValue() {
-        return m_int;
+        return getIntValue();
     }
 
-    /**
+    /** Returns 1 if value is true or 0 for false.
      * {@inheritDoc}
      */
+    @Override
     public double getDoubleValue() {
-        return m_int;
+        return m_boolean ? 1.0 : 0.0;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCore() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxSupport() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinSupport() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxCore() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinCore() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCenterOfGravity() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getImaginaryValue() {
         return 0.0;
     }
@@ -194,8 +218,9 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRealValue() {
-        return m_int;
+        return getDoubleValue();
     }
 
     /**
@@ -203,7 +228,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((IntCell)dc).m_int == m_int;
+        return ((BooleanCell)dc).m_boolean == m_boolean;
     }
 
     /**
@@ -211,7 +236,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
      */
     @Override
     public int hashCode() {
-        return m_int;
+        return getIntValue();
     }
 
     /**
@@ -219,27 +244,30 @@ public class IntCell extends DataCell implements IntValue, LongValue,
      */
     @Override
     public String toString() {
-        return Integer.toString(m_int);
+        return Boolean.toString(m_boolean);
     }
 
-    /** Factory for (de-)serializing a IntCell. */
-    private static class IntSerializer implements DataCellSerializer<IntCell> {
+    /** Factory for (de-)serializing a BooleanCell. */
+    private static class BooleanSerializer
+        implements DataCellSerializer<BooleanCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final IntCell cell,
+        @Override
+        public void serialize(final BooleanCell cell,
                 final DataCellDataOutput output) throws IOException {
-            output.writeInt(cell.m_int);
+            output.writeBoolean(cell.m_boolean);
         }
 
         /**
          * {@inheritDoc}
          */
-        public IntCell deserialize(
+        @Override
+        public BooleanCell deserialize(
                 final DataCellDataInput input) throws IOException {
-            int i = input.readInt();
-            return new IntCell(i);
+            boolean b = input.readBoolean();
+            return b ? TRUE : FALSE;
         }
     }
 
