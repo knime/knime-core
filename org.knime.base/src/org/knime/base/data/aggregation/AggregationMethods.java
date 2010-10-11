@@ -77,12 +77,14 @@ import org.knime.base.data.aggregation.general.LastValueOperator;
 import org.knime.base.data.aggregation.general.ListCellOperator;
 import org.knime.base.data.aggregation.general.MaxOperator;
 import org.knime.base.data.aggregation.general.MinOperator;
+import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
 import org.knime.base.data.aggregation.general.SetCellOperator;
 import org.knime.base.data.aggregation.general.SortedListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
+import org.knime.base.data.aggregation.general.ValueCountOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
@@ -99,8 +101,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
@@ -218,6 +220,10 @@ public final class AggregationMethods {
             addOperator(new UniqueCountOperator(0));
               /**Counts the number of group members.*/
             addOperator(new CountOperator());
+            /**Counts the number of values excl. missing per group.*/
+            addOperator(new ValueCountOperator());
+            /**Counts the number of missing values per group.*/
+            addOperator(new MissingValueCountOperator());
               /** List collection.*/
             addOperator(new ListCellOperator(0));
             /** Sorted list collection.*/
