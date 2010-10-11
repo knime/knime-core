@@ -50,14 +50,17 @@
  */
 package org.knime.core.data.collection;
 
-import java.util.Collection;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.node.BufferedDataTable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * Factory class used to create {@link DataCell}s that contain a collection of
@@ -86,7 +89,7 @@ public final class CollectionCellFactory {
      */
     public static ListCell createListCell(
             final Collection<? extends DataCell> coll) {
-        BlobSupportDataCellList l = BlobSupportDataCellList.create(coll);
+        final BlobSupportDataCellList l = BlobSupportDataCellList.create(coll);
         return new ListCell(l);
     }
 
@@ -102,8 +105,112 @@ public final class CollectionCellFactory {
      * @throws IndexOutOfBoundsException If the indices are invalid.
      */
     public static ListCell createListCell(final DataRow row, final int[] cols) {
-        BlobSupportDataCellList l = BlobSupportDataCellList.create(row, cols);
+        final BlobSupportDataCellList l =
+            BlobSupportDataCellList.create(row, cols);
         return new ListCell(l);
+    }
+
+    /**
+     * Creates a new {@link ListCell} based on selected cells from a
+     * {@link DataRow}. This method will check if the row is returned by
+     * a {@link BufferedDataTable} and will handle blobs appropriately.
+     * Only the values that are different from the given default value are
+     * stored in the sparse list.
+     *
+     * @param row The underlying row
+     * @param cols The indices of interest.
+     * @param defaultElement The default element to use.
+     * @return A newly created {@link SparseListCell}.
+     * @throws NullPointerException If either argument is null.
+     * @throws IndexOutOfBoundsException If the indices are invalid.
+     */
+    public static SparseListCell createSparseListCell(final DataRow row,
+            final int[] cols, final DataCell defaultElement) {
+        if (row == null) {
+            throw new NullPointerException("row must not be null");
+        }
+        if (cols == null || cols.length < 1) {
+            throw new NullPointerException("cols must not be null or empty");
+        }
+        if (defaultElement == null) {
+            throw new NullPointerException("defaultElement must not be null");
+        }
+        final int[] idxs = new int[cols.length];
+        int idxIdx = 0;
+        final ArrayList<DataCell> coll = new ArrayList<DataCell>(cols.length);
+        for (int i = 0; i < cols.length; i++) {
+            DataCell c;
+            if (row instanceof BlobSupportDataRow) {
+                c = ((BlobSupportDataRow)row).getRawCell(cols[i]);
+            } else {
+                c = row.getCell(cols[i]);
+            }
+            // equals will unwrap the blob, if necessary
+            if (!defaultElement.equals(c)) {
+                coll.add(c);
+                idxs[idxIdx++] = i;
+            }
+        }
+        final BlobSupportDataCellList elements =
+            new BlobSupportDataCellList(coll);
+        int[] elementIdxs;
+        if (idxIdx == idxs.length) {
+            //all values are unequal to the given default element
+            elementIdxs = idxs;
+        } else {
+            elementIdxs = Arrays.copyOf(idxs, idxIdx);
+        }
+        return new SparseListCell(cols.length,
+                elements, elementIdxs, defaultElement);
+    }
+
+
+    /**
+     * Factory method to create a {@link SparseListCell} based on a collection.
+     * The {@link SparseListCell} stores only the values that are different
+     * from the default value.
+     * <p>
+     * If the underlying collection stems from a {@link DataRow} (as read from a
+     * any table), consider to use {@link #createListCell(DataRow, int[])} in
+     * order to minimize cell access.
+     *
+     * @param cells The underlying collection.
+     * @param defaultElement The default element to use.
+     * @return The newly created {@link ListCell}.
+     * @throws NullPointerException If the argument is null or contains null
+     *             values.
+     */
+    public static SparseListCell createSparseListCell(
+            final Collection<? extends DataCell> cells,
+            final DataCell defaultElement) {
+        if (cells == null || cells.isEmpty()) {
+            throw new IllegalArgumentException("coll must not be empty");
+        }
+        if (defaultElement == null) {
+            throw new NullPointerException("defaultElement must not be null");
+        }
+        final int[] idxs = new int[cells.size()];
+        int idxIdx = 0;
+        final ArrayList<DataCell> coll = new ArrayList<DataCell>(cells.size());
+        int colIdx = 0;
+        for (final DataCell cell : cells) {
+            if (!defaultElement.equals(cell)) {
+                coll.add(cell);
+                idxs[idxIdx++] = colIdx;
+            }
+            colIdx++;
+        }
+        final BlobSupportDataCellList elements =
+            new BlobSupportDataCellList(coll);
+        int[] elementIdxs;
+        if (idxIdx == idxs.length) {
+            //all values are unequal to the given default element
+            elementIdxs = idxs;
+        } else {
+            elementIdxs = Arrays.copyOf(idxs, idxIdx);
+        }
+        return new SparseListCell(coll.size(), elements,
+                elementIdxs, defaultElement);
     }
 
     /**
@@ -121,7 +228,7 @@ public final class CollectionCellFactory {
      */
     public static SetCell createSetCell(
             final Collection<? extends DataCell> coll) {
-        BlobSupportDataCellSet l = BlobSupportDataCellSet.create(coll);
+        final BlobSupportDataCellSet l = BlobSupportDataCellSet.create(coll);
         return new SetCell(l);
     }
 
@@ -137,7 +244,8 @@ public final class CollectionCellFactory {
      * @throws IndexOutOfBoundsException If the indices are invalid.
      */
     public static SetCell createSetCell(final DataRow row, final int[] cols) {
-        BlobSupportDataCellSet l = BlobSupportDataCellSet.create(row, cols);
+        final BlobSupportDataCellSet l =
+            BlobSupportDataCellSet.create(row, cols);
         return new SetCell(l);
     }
 
@@ -156,9 +264,9 @@ public final class CollectionCellFactory {
      */
     public static DataType getElementType(final DataTableSpec tableSpec,
             final int[] cols) {
-        DataType[] colType = new DataType[cols.length];
+        final DataType[] colType = new DataType[cols.length];
         for (int i = 0; i < cols.length; i++) {
-            DataColumnSpec colSpec = tableSpec.getColumnSpec(cols[i]);
+            final DataColumnSpec colSpec = tableSpec.getColumnSpec(cols[i]);
             colType[i] = colSpec.getType();
         }
         return getElementType(colType);
@@ -176,7 +284,7 @@ public final class CollectionCellFactory {
      */
     public static DataType getElementType(final DataType[] colType) {
         DataType result = null;
-        for (DataType cT : colType) {
+        for (final DataType cT : colType) {
             if (result == null) {
                 result = cT;
             } else {
