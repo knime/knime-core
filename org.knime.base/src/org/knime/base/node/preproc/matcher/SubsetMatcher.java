@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.matcher;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.SetCell;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -182,11 +183,11 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
     /**
      * @param transactionItems the sorted transaction item list
      * @param idx the index to process
-     * @param itemSets all matching item sets
+     * @param matchingSets all matching item sets
      * @param items all processed items
      */
     public void match(final DataCell[] transactionItems, final int idx,
-            final Collection<DataCell> itemSets,
+            final Collection<SetCell> matchingSets,
             final Collection<DataCell> items) {
         //use this method to ensure that the children are sorted
         final List<SubsetMatcher> sortedChildren = getSortedChildren();
@@ -202,7 +203,7 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
             if (isEnd()) {
                 //this is an end item create an item set with all
                 //previous items an this item
-                itemSets.add(CollectionCellFactory.createSetCell(items));
+                matchingSets.add(CollectionCellFactory.createSetCell(items));
             }
             //try to match the sorted transaction items and the sorted children
             //until all items or all matchers are processed
@@ -220,7 +221,7 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
                         //exit the loop and continue with the next bigger item
                         break;
                     } else if (result == 0) {
-                        matcher.match(transactionItems, itemIdx, itemSets,
+                        matcher.match(transactionItems, itemIdx, matchingSets,
                                 new LinkedList<DataCell>(items));
                     }
                     //this matcher has matched this time

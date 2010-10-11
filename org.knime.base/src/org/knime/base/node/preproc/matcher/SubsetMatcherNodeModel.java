@@ -56,6 +56,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -369,8 +370,8 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     //matcher until all items or all matchers are processed
                     int matcherStartIdx = 0;
                     int itemIdx = 0;
-                    final Collection<DataCell> matchingSets =
-                        new LinkedList<DataCell>();
+                    final Collection<SetCell> matchingSets =
+                        new LinkedList<SetCell>();
                     while (itemIdx < sortedItems.length
                             && matcherStartIdx < sortedMatcher.length) {
                         final DataCell subItem = sortedItems[itemIdx];
@@ -403,7 +404,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    for (final DataCell matchingSet : matchingSets) {
+                    for (final SetCell matchingSet : matchingSets) {
                         exec.checkCanceled();
                         //create for each matching subset a result row
                         final List<DataCell> cells = new LinkedList<DataCell>();
@@ -493,6 +494,14 @@ public class SubsetMatcherNodeModel extends NodeModel {
     private DataTableSpec createTableSpec(final DataColumnSpec setIDCol,
             final DataColumnSpec setCol, final DataColumnSpec subsetCol,
             final boolean appendSetListCol) {
+        if (subsetCol == null) {
+            throw new IllegalArgumentException(
+                    "subset column must not be null");
+        }
+        if (setCol == null) {
+            throw new IllegalArgumentException(
+                    "set column must not be null");
+        }
         final List<DataColumnSpec> specs = new LinkedList<DataColumnSpec>();
         if (setIDCol != null) {
             specs.add(setIDCol);
@@ -502,8 +511,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             specs.add(specCreator.createSpec());
         }
         if (appendSetListCol) {
-            if (subsetCol != null && setCol != null
-                    && subsetCol.getName().equals(setCol.getName())) {
+            if (subsetCol.getName().equals(setCol.getName())) {
                 //check for a duplicate name
                 final DataColumnSpecCreator creator =
                     new DataColumnSpecCreator(setCol);
@@ -513,7 +521,11 @@ public class SubsetMatcherNodeModel extends NodeModel {
                 specs.add(setCol);
             }
         }
-        specs.add(subsetCol);
+        final DataColumnSpecCreator creator =
+            new DataColumnSpecCreator(subsetCol);
+        creator.setType(SetCell.getCollectionType(
+                subsetCol.getType().getCollectionElementType()));
+        specs.add(creator.createSpec());
         return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
     }
 
