@@ -17,15 +17,12 @@
 package org.knime.product.rcp;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.Platform;
@@ -44,7 +41,6 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
-import org.osgi.framework.Bundle;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -63,10 +59,6 @@ public class KNIMEApplication implements IApplication {
     private static final String WORKSPACE_VERSION_VALUE = "1"; //$NON-NLS-1$
 
     private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
-
-    private static final String XUL = "org.eclipse.swt.browser.XULRunnerPath";
-
-    private static final String[] XUL_BINS = {"xulrunner", "xulrunner-bin"};
 
     /**
      * A special return code that will be recognized by the launcher and used to
@@ -88,16 +80,6 @@ public class KNIMEApplication implements IApplication {
 
             try {
                 if (!checkInstanceLocation(shell)) {
-                    Platform.endSplash();
-                    return EXIT_OK;
-                }
-                boolean xulOk = true;
-                try {
-                    xulOk = checkXULRunner();
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-                if (!xulOk) {
                     Platform.endSplash();
                     return EXIT_OK;
                 }
@@ -460,151 +442,6 @@ public class KNIMEApplication implements IApplication {
             // cannot log because instance area has not been set
             return null;
         }
-    }
-
-    /**
-     * Checks whether a compatible xulrunner version is installed on a linux
-     * system and sets java property appropriately. It will also popup a dialog
-     * to warn the user before a crash. This all is done to address bug
-     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22 (eclipse 3.3.2
-     * crashes on linux with firefox 3.0 installed).
-     */
-    private boolean checkXULRunner() throws Exception {
-        if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
-            return true;
-        }
-
-        if (System.getProperty(XUL) != null) {
-            return true;
-        }
-
-        File libDir;
-        if ("amd64".equals(System.getProperty("os.arch"))) {
-            libDir = new File("/usr/lib64");
-        } else {
-            libDir = new File("/usr/lib32");
-            if (!libDir.isDirectory()) {
-                libDir = new File("/usr/lib");
-            }
-        }
-        File[] xulLocations = libDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(final File pathname) {
-                return pathname.isDirectory()
-                        && (pathname.getName().startsWith("xulrunner")
-                                || pathname.getName().startsWith("firefox")
-                                || pathname.getName().startsWith("seamonkey")
-                                || pathname.getName().startsWith("mozilla"));
-            }
-        });
-        if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            xulLocations = Arrays.copyOf(xulLocations, xulLocations.length + 1);
-            xulLocations[xulLocations.length - 1] =
-                    new File(System.getenv("MOZILLA_FIVE_HOME"));
-        }
-
-        File xul191Location = null;
-        File xul19Location = null;
-        File xul18Location = null;
-
-        for (File dir : xulLocations) {
-            File libXPCom = new File(dir, "libxpcom.so");
-            if (!libXPCom.exists()) {
-                continue;
-            }
-
-            for (String s : XUL_BINS) {
-                File xulrunner = new File(dir, s);
-                if (xulrunner.canExecute()) {
-                    ProcessBuilder pb =
-                            new ProcessBuilder("bash", "-c", xulrunner
-                                    .getAbsolutePath()
-                                    + " -v");
-                    pb.redirectErrorStream(true);
-                    Map<String, String> env = pb.environment();
-                    String ldPath = env.get("LD_LIBRARY_PATH");
-                    String xulDir = xulrunner.getParentFile().getAbsolutePath();
-
-                    if (ldPath == null) {
-                        ldPath = xulDir;
-                    } else if (ldPath.indexOf(xulDir) < 0) {
-                        ldPath = ldPath + ":" + xulDir;
-                    }
-                    pb.environment().put("LD_LIBRARY_PATH", ldPath);
-
-                    Process p = pb.start();
-
-                    byte[] buf = new byte[4096];
-                    int r = p.getInputStream().read(buf);
-                    if (r >= 0) {
-                        // remove "\n"
-                        String version = new String(buf, 0, r).trim();
-                        // xul 1.9.1 causes problems:
-                        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194
-                        if (version.matches(".* 1\\.9\\.[1-9].*")) {
-                            xul191Location = dir;
-                        } else if (version.matches(".* 1\\.9\\.0.*")) {
-                            xul19Location = dir;
-                        } else {
-                            xul18Location = dir;
-                        }
-
-                        while (p.getInputStream().read(buf) >= 0) {
-                        }
-                    }
-                    p.waitFor();
-                }
-            }
-        }
-
-        if (xul19Location != null) {
-            System.setProperty(XUL, xul19Location.getAbsolutePath());
-            System.out.println("Using xulrunner at '"
-                    + xul19Location.getAbsolutePath()
-                    + "' as internal web browser. If you want to change this,"
-                    + " add '-D" + XUL + "=...' to knime.ini");
-        } else if (xul18Location != null) {
-            System.setProperty(XUL, xul18Location.getAbsolutePath());
-            System.out.println("Using xulrunner at '"
-                    + xul18Location.getAbsolutePath()
-                    + "' as internal web browser. If you want to change this,"
-                    + " add '-D" + XUL + "=...' to knime.ini");
-        } else if (xul191Location != null) {
-            Bundle eclipseCore = Platform.getBundle("org.eclipse.core.runtime");
-            String version = (String)eclipseCore.getHeaders().get("Bundle-Version");
-            String[] parts = version.split("\\.");
-            int major = Integer.parseInt(parts[0]);
-            int minor = Integer.parseInt(parts[1]);
-
-            if ((major == 3) && (minor < 5)) {
-                System.setProperty(XUL, "");
-                System.out.println("Rejecting xulrunner '"
-                        + xul191Location.getAbsolutePath() + "' as internal web "
-                        + "browser due to version incompatibility (see bug "
-                        + "https://bugs.eclipse.org/bugs/show_bug.cgi?id=213194 )."
-                        + " Node description window may not work, consider to "
-                        + "install xulrunner [version 1.8.x - 1.9.0].");
-            } else {
-                System.setProperty(XUL, xul191Location.getAbsolutePath());
-                System.out.println("Using xulrunner at '"
-                        + xul191Location.getAbsolutePath()
-                        + "' as internal web browser. If you want to change this,"
-                        + " add '-D" + XUL + "=...' to knime.ini");
-            }
-        } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            System.out.println("Using xulrunner at '"
-                    + System.getenv("MOZILLA_FIVE_HOME")
-                    + "' as internal web browser. If you want to change this,"
-                    + " change the value of the MOZILLA_FIVE_HOME environment"
-                    + " variable");
-        } else {
-            System.out.println("No xulrunner found, Node descriptions and "
-                    + "online help will possibly not work. If you have "
-                    + "xulrunner installed at an unusual location, add '-D"
-                    + XUL + "=...' to knime.ini.");
-        }
-
-        return true;
     }
 
     /*
