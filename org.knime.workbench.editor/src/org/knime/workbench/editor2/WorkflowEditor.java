@@ -124,6 +124,7 @@ import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
@@ -132,7 +133,6 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
@@ -177,10 +177,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
-    // private static final int LINE_WIDTH_FOR_SELECTED_NODES = 2;
-    //
-    // private static final int LINE_WIDTH_FOR_UNSELECTED_NODES = 1;
-
     /**
      * The static clipboard for copy/cut/paste.
      */
@@ -189,8 +185,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManager m_manager;
 
-    /** The main graphical viewer embeded in this editor * */
-    // private GraphicalViewer m_graphicalViewer;
     /** the editor's action registry. */
     private ActionRegistry m_actionRegistry;
 
@@ -205,7 +199,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private GraphicalViewer m_graphicalViewer;
 
-    // private File m_file;
     private IFile m_fileResource;
 
     // if we are a subworkflow editor, we have to store the parent for saving
@@ -268,13 +261,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the clipboard for this editor
      */
     public ClipboardObject getClipboardContent() {
-
         return clipboard;
-        // if (m_clipboard == null) {
-        // m_clipboard = new Clipboard(getSite().getShell().getDisplay());
-        // }
-        //
-        // return m_clipboard;
     }
 
     /**
@@ -383,7 +370,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void createActions() {
         LOGGER.debug("creating editor actions...");
 
-        // super already does someting for us...
+        // super already does something for us...
         super.createActions();
 
         // Stack actions
@@ -562,7 +549,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Configurs the graphical viewer.
+     * Configures the graphical viewer.
      *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#configureGraphicalViewer()
      */
@@ -646,6 +633,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 if (m_manager == null) {
                     if (m_loadingCanceled) {
                         Display.getDefault().asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 getEditorSite().getPage().closeEditor(
                                         WorkflowEditor.this, false);
@@ -695,7 +683,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         setTitleToolTip(getTitleToolTip());
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void setTitleToolTip(final String toolTip) {
         m_manuallySetToolTip = toolTip;
@@ -704,7 +694,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
 
     /**
-     *
      * {@inheritDoc}
      */
     @Override
@@ -861,27 +850,6 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Sets the snap functionality.
      */
     protected void loadProperties() {
-
-        // Ruler properties
-        // LogicRuler ruler =
-        // getLogicDiagram().getRuler(PositionConstants.WEST);
-        // RulerProvider provider = null;
-        // if (ruler != null) {
-        // provider = new LogicRulerProvider(ruler);
-        // }
-        // getGraphicalViewer().setProperty(RulerProvider.PROPERTY_VERTICAL_RULER,
-        // provider);
-        // ruler = getLogicDiagram().getRuler(PositionConstants.NORTH);
-        // provider = null;
-        // if (ruler != null) {
-        // provider = new LogicRulerProvider(ruler);
-        // }
-        // getGraphicalViewer().setProperty(
-        // RulerProvider.PROPERTY_HORIZONTAL_RULER, provider);
-        // getGraphicalViewer().setProperty(
-        // RulerProvider.PROPERTY_RULER_VISIBILITY,
-        // new Boolean(getLogicDiagram().getRulerVisibility()));
-
         // Snap to Geometry property
         getGraphicalViewer().setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
                 new Boolean(true));
@@ -895,7 +863,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         // We keep grid visibility and enablement in sync
         getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
                 new Boolean(false));
-
     }
 
     /** Whether the dialog has passed the {@link #promptToSaveOnClose()} method.
@@ -946,17 +913,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
 
-        // // create progress monitor
-        // EventLoopProgressMonitor monitor2 =
-        // (EventLoopProgressMonitor)monitor;
-        //
-        // ProgressHandler progressHandler = new ProgressHandler(monitor,
-        // m_manager.getNodes().size());
-        // DefaultNodeProgressMonitor progressMonitor = new
-        // DefaultNodeProgressMonitor();
-        // progressMonitor.addProgressListener(progressHandler);
-        // ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
-
         // Exception messages from the inner thread
         final StringBuffer exceptionMessage = new StringBuffer();
 
@@ -964,6 +920,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_parentEditor.doSave(monitor);
             m_isDirty = false;
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
@@ -1013,7 +970,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         Display.getDefault().asyncExec(new Runnable() {
-
+            @Override
             public void run() {
                 try {
                     String projectName = m_fileResource.getProject().getName();
@@ -1037,6 +994,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             final WorkflowEditor editor = (WorkflowEditor)subEditor;
             ((WorkflowEditor)subEditor).setIsDirty(false);
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     editor.firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
@@ -1087,7 +1045,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Shwos a simple information message.
+     * Shows a simple information message.
      *
      * @param message the info message to display
      */
@@ -1156,85 +1114,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void selectionChanged(final IWorkbenchPart part,
             final ISelection selection) {
-
         // update available actions
         updateActions();
-
-        // paint the incoming and outgoing connections of all
-        // selected nodes "bold" (helps to differentiate the connections)
-        // and paint the connections or the not any more selected nodes
-        // normal
-        // StructuredSelection structuredSelection = null;
-        // if (selection instanceof StructuredSelection) {
-        //
-        // structuredSelection = (StructuredSelection)selection;
-        //
-        // // revert the bold connections for all old selections
-        // // if available
-        // if (m_boldNodeParts != null) {
-        // for (Object element : m_boldNodeParts.toList()) {
-        //
-        // if (element instanceof NodeContainerEditPart) {
-        //
-        // // make the connections normal
-        // makeConnectionsNormal((NodeContainerEditPart)element);
-        // } else if (element instanceof ConnectionContainerEditPart) {
-        //
-        // makeConnectionNormal((ConnectionContainerEditPart)element);
-        // }
-        //
-        // }
-        // }
-        //
-        // // paint the connections of the new selection bold
-        // for (Object element : structuredSelection.toList()) {
-        //
-        // if (element instanceof NodeContainerEditPart) {
-        //
-        // // make the connections bold
-        // makeConnectionsBold((NodeContainerEditPart)element);
-        // } else if (element instanceof ConnectionContainerEditPart) {
-        //
-        // makeConnectionBold((ConnectionContainerEditPart)element);
-        // }
-        // }
-        // }
-
-        // remember the new selection as the old one
-        // m_boldNodeParts = structuredSelection;
-
     }
-
-    // private void makeConnectionNormal(
-    // final ConnectionContainerEditPart connectionPart) {
-    // ((PolylineConnection)connectionPart.getFigure())
-    // .setLineWidth(LINE_WIDTH_FOR_UNSELECTED_NODES);
-    // }
-    //
-    // private void makeConnectionBold(
-    // final ConnectionContainerEditPart connectionPart) {
-    // ((PolylineConnection)connectionPart.getFigure())
-    // .setLineWidth(LINE_WIDTH_FOR_SELECTED_NODES);
-    // }
-
-    // private void makeConnectionsBold(final NodeContainerEditPart nodePart) {
-    //
-    // for (ConnectionContainerEditPart connectionPart : nodePart
-    // .getAllConnections()) {
-    //
-    // makeConnectionBold(connectionPart);
-    // }
-    // }
-    //
-    // private void makeConnectionsNormal(final NodeContainerEditPart nodePart)
-    // {
-    //
-    // for (ConnectionContainerEditPart connectionPart : nodePart
-    // .getAllConnections()) {
-    //
-    // makeConnectionNormal(connectionPart);
-    // }
-    // }
 
     /**
      * Called when the command stack has changed, that is, a GEF command was
@@ -1263,6 +1145,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * {@inheritDoc}
      */
+    @Override
     public void workflowChanged(final WorkflowEvent event) {
         LOGGER.debug("Workflow event triggered: " + event.toString());
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
@@ -1284,6 +1167,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_manager.setDirty();
 
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
@@ -1298,9 +1182,9 @@ public class WorkflowEditor extends GraphicalEditor implements
      * we need to listen for resource changes to get informed if the currently
      * opened file in the navigator is renamed or deleted.
      *
-     * @see org.eclipse.core.resources.IResourceChangeListener
-     *      #resourceChanged(org.eclipse.core.resources.IResourceChangeEvent)
+     * {@inheritDoc}
      */
+    @Override
     public void resourceChanged(final IResourceChangeEvent event) {
         try {
             if (event == null || event.getDelta() == null) {
@@ -1323,12 +1207,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean visit(final IResourceDelta delta) throws CoreException {
-
-//            LOGGER.debug("Path: " + delta.getResource().getName() + "Parent: "
-//                    + m_fileResource.getProject() + " Deltat type: "
-//                    + getTypeString(delta));
-            // Parent project removed? close this editor....
+            // Parent project removed? close this editor
             if (m_fileResource.equals(delta.getResource())) {
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     // remove workflow.knime from moved to path
@@ -1342,6 +1223,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     ProjectWorkflowMap.replace(newDirPath,
                             WorkflowEditor.this.m_manager, oldPath);
                     Display.getDefault().syncExec(new Runnable() {
+                        @Override
                         public void run() {
                             String newTitle = m_manager.getID()
                                 .getIDWithoutRoot() + ": " + newName;
@@ -1368,6 +1250,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 // close the editor
                 Display.getDefault().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         getEditorSite().getPage().closeEditor(
                                 WorkflowEditor.this, false);
@@ -1379,17 +1262,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    /**
-     * Creates the underlying <code>WorkflowManager</code> for this editor.
-     * Therefore the settings are loaded and the editor registeres itself as
-     * listener to get workflow events.
-     *
-     * @param settings the settings representing this workflow
-     */
-    // void createWorkflowManager(final NodeSettings settings) {
-    // m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
-    // m_manager.addListener(this);
-    // }
     /**
      * Sets the underlying workflow manager for this editor.
      *
@@ -1446,7 +1318,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         double zoomLevel = zoomManager.getZoom();
 
-        // adapt the location accordint to the zoom level
+        // adapt the location according to the zoom level
         pointToAdapt.x = (int)(pointToAdapt.x * (1.0 / zoomLevel));
         pointToAdapt.y = (int)(pointToAdapt.y * (1.0 / zoomLevel));
     }
@@ -1516,6 +1388,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * {@inheritDoc}
      */
+    @Override
     public void stateChanged(final NodeStateEvent state) {
         markDirty();
     }
