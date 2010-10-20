@@ -55,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -63,6 +64,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -85,6 +88,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -92,9 +96,10 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * JFace implementation of a dialog containing the wrapped Panel from the
  * original node dialog.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz, Germany
  */
 public class WrappedNodeDialog extends Dialog {
+
     private Composite m_container;
 
     private final NodeContainer m_nodeContainer;
@@ -117,7 +122,7 @@ public class WrappedNodeDialog extends Dialog {
      * @param parentShell The parent shell
      * @param nodeContainer The node.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * of real invalid settings or if any pre-conditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      */
     public WrappedNodeDialog(final Shell parentShell,
@@ -128,7 +133,7 @@ public class WrappedNodeDialog extends Dialog {
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
         m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -139,7 +144,7 @@ public class WrappedNodeDialog extends Dialog {
         m_dialogPane.onClose();
         super.handleShellCloseEvent();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -233,8 +238,6 @@ public class WrappedNodeDialog extends Dialog {
         gridLayout.horizontalSpacing = 0;
         m_container.setLayout(gridLayout);
         m_container.setLayoutData(new GridData(GridData.FILL_BOTH));
-        // setMessage("Please change the settings below in order to configure"
-        // + " the '" + m_nodeContainer.getNodeName() + "' node.");
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
         getShell().setText("Dialog - " + m_nodeContainer.getDisplayLabel());
@@ -242,26 +245,20 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-
         m_wrapper.addFocusListener(new FocusAdapter() {
-
             /**
-             *
              * @param e focus event passed to the underlying AWT component
              */
             @Override
             public void focusGained(final FocusEvent e) {
                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-
+                    @Override
                     public void run() {
                         m_wrapper.getAwtPanel().requestFocus();
                     }
-
                 });
             }
         });
-
 
         return area;
     }
@@ -289,7 +286,38 @@ public class WrappedNodeDialog extends Dialog {
         // always closes the dialog, regardless if the settings couldn't be
         // applied.
         final Button btnOK = createButton(parent,
-                IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
+              IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
+
+        m_wrapper.addKeyListener(new KeyListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void keyReleased(final KeyEvent ke) {
+                if (ke.keyCode == SWT.CTRL) {
+                    btnOK.setText("OK");
+                }
+                if (ke.keyCode == SWT.ESC) {
+                    // close dialog on ESC
+                    doCancel();
+                }
+            }
+            /** {@inheritDoc} */
+            @Override
+            public void keyPressed(final KeyEvent ke) {
+                if (ke.keyCode == SWT.CTRL) {
+                    // change OK button label, when CTRL is pressed
+                    btnOK.setText("OK - Execute");
+                }
+                if (ke.keyCode == SWT.CR) {
+                    if (ke.stateMask == SWT.CTRL
+                            || ke.stateMask == SWT.SHIFT + SWT.CTRL) {
+                        // force OK - Execute when CTRL and ENTER is pressed
+                        // open first out-port view if SHIFT is pressed
+                        doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
+                    }
+                }
+            }
+        });
+
         final Button btnApply = createButton(parent,
                 IDialogConstants.FINISH_ID, "Apply", false);
         final Button btnCancel = createButton(parent,
@@ -300,43 +328,83 @@ public class WrappedNodeDialog extends Dialog {
         // in turn notify the dialog about the particular event.
         btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(final SelectionEvent e) {
-                doOK(e);
+            public void widgetSelected(final SelectionEvent se) {
+                if (se.stateMask == SWT.SHIFT + SWT.CTRL) {
+                    // OK plus execute and open first out-port view
+                    doOK(se, true, true);
+                } else if (se.stateMask == SWT.CTRL) {
+                    // OK plus execute only
+                    doOK(se, true, false);
+                } else {
+                    // OK only
+                    doOK(se, false, false);
+                }
             }
         });
 
         btnApply.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(final SelectionEvent e) {
-                doApply(e);
+            public void widgetSelected(final SelectionEvent se) {
+                se.doit = doApply();
             }
         });
 
         btnCancel.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(final SelectionEvent e) {
-                doCancel(e);
+            public void widgetSelected(final SelectionEvent se) {
+                doCancel();
             }
         });
     }
 
-    private void doCancel(final SelectionEvent e) {
+    private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
         m_dialogPane.onCancel();
         m_dialogPane.onClose();
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
 
-    private void doOK(final SelectionEvent e) {
+    private void doOK(final KeyEvent ke, final boolean execute,
+            final boolean openView) {
         // simulate doApply
-        if (doApply(e)) {
-            // send close action to underlying dialog pane
-            m_dialogPane.onClose();
-            buttonPressed(IDialogConstants.OK_ID);
+        ke.doit = doApply();
+        if (ke.doit) {
+            runOK(execute, openView);
         }
     }
 
-    private boolean doApply(final SelectionEvent e) {
+    private void doOK(final SelectionEvent se, final boolean execute,
+            final boolean openView) {
+        // simulate #doApply
+        se.doit = doApply();
+        if (se.doit) {
+            runOK(execute, openView);
+        }
+    }
+
+    private void runOK(final boolean execute, final boolean openView) {
+        // send close action to underlying dialog pane
+        m_dialogPane.onClose();
+        buttonPressed(IDialogConstants.OK_ID);
+        if (execute) {
+            m_nodeContainer.getParent().executeUpToHere(
+                    m_nodeContainer.getID());
+            if (openView) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    /** {inheritDoc} */
+                    @Override
+                    public void run() {
+                        if (m_nodeContainer.getNrOutPorts() >= 1) {
+                            NodeOutPort port = m_nodeContainer.getOutPort(1);
+                            port.openPortView(port.getPortName());
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    private boolean doApply() {
         // event.doit = false cancels the SWT selection event, so that the
         // dialog is not closed on errors.
         try {
@@ -348,7 +416,6 @@ public class WrappedNodeDialog extends Dialog {
                 if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
                     // settings not changed
                     informNothingChanged();
-                    e.doit = true;
                     return true;
                 } else {
                     // settings have changed
@@ -357,12 +424,10 @@ public class WrappedNodeDialog extends Dialog {
                         if (confirmApply()) {
                             // apply settings
                             m_nodeContainer.applySettingsFromDialog();
-                            e.doit = true;
                             return true;
                         } else {
                             // user canceled reset and apply
                             // let the dialog open
-                            e.doit = false;
                             return false;
                         }
                     } else {
@@ -379,7 +444,6 @@ public class WrappedNodeDialog extends Dialog {
             } else {
                 // not executed
                 m_nodeContainer.applySettingsFromDialog();
-                e.doit = true;
                 return true;
             }
         } catch (InvalidSettingsException ise) {
@@ -399,7 +463,6 @@ public class WrappedNodeDialog extends Dialog {
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
         }
-        e.doit = false;
         return false;
     }
 
@@ -484,7 +547,7 @@ public class WrappedNodeDialog extends Dialog {
         return super.close();
     }
 
-    // (tg) these are extra height and width value since the parent dialog
+    // these are extra height and width value since the parent dialog
     // does not return the right sizes for the underlying dialog pane
     private static final int EXTRA_WIDTH  = 25;
     private static final int EXTRA_HEIGHT = 20;
