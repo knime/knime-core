@@ -84,7 +84,7 @@
             table.
         </option>
         <option name="Joining columns handling">
-            The option allows to filer the left/right joining columns, i.e. the
+            The option allows filtering the left/right joining columns, i.e. the
             joining columns defined in the Joiner Settings tab will not show up
             in the output table.
         </option>
