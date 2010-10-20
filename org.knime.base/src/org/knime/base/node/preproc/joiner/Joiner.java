@@ -72,8 +72,11 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -230,10 +233,45 @@ public final class Joiner {
             if (!leftType.equals(rightType)) {
                 String left = leftJoinAttrIsRowKey ? "Row ID" : leftJoinAttr;
                 String right = rightJoinAttrIsRowKey ? "Row ID" : rightJoinAttr;
-                m_configWarnings.add("Type mismatch found of "
+                // check different cases here to give meaningful error messages
+                if (leftType.equals(DoubleCell.TYPE)
+                        && rightType.equals(IntCell.TYPE)) {
+                    throw new InvalidSettingsException("Type mismatch found of "
+                            + "Joining Column Pair \""
+                            + left + "\" and \"" + right + "\"."
+                            + " Use \"Double to Int node\" to "
+                            + "convert the type of \""
+                            + left + "\" to integer.");
+                } else if (leftType.equals(IntCell.TYPE)
+                        && rightType.equals(DoubleCell.TYPE)) {
+                    throw new InvalidSettingsException("Type mismatch found of "
+                            + "Joining Column Pair \""
+                            + left + "\" and \"" + right + "\"."
+                            + " se \"Double to Int node\" to "
+                            + "convert the type of \""
+                            + right + "\" to integer.");
+                } else if (leftType.isCompatible(DoubleValue.class)
+                        && rightType.equals(StringCell.TYPE)) {
+                    throw new InvalidSettingsException("Type mismatch found of "
+                            + "Joining Column Pair \""
+                            + left + "\" and \"" + right + "\"."
+                            + " Use \"Number to String node\" to "
+                            + "convert the type of \""
+                            + left + "\" to string.");
+                } else if (leftType.equals(StringCell.TYPE)
+                        && rightType.isCompatible(DoubleValue.class)) {
+                    throw new InvalidSettingsException("Type mismatch found of "
+                            + "Joining Column Pair \""
+                            + left + "\" and \"" + right + "\"."
+                            + " Use \"Number to String node\" to "
+                            + "convert the type of \""
+                            + right + "\" to string.");
+                } else {
+                    throw new InvalidSettingsException("Type mismatch found of "
                         + "Joining Column Pair \""
                         + left + "\" and \"" + right + "\"."
-                        + "This may cause an empty output table.");
+                        + "This causes an empty output table.");
+                }
             }
         }
 
