@@ -449,8 +449,11 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         } else if (m_dontExecute.isSelected()) {
             m_settings.setDuplicateHandling(DuplicateHandling.DontExecute);
         } else {
+            String suffix = m_suffix.getText().trim().isEmpty() ? ""
+                    : m_suffix.getText();
             m_settings.setDuplicateHandling(DuplicateHandling.AppendSuffix);
-            m_settings.setDuplicateColumnSuffix(m_suffix.getText());
+            m_settings.setDuplicateColumnSuffix(suffix);
+
         }
 
         m_settings.setLeftIncludeCols(
