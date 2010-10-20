@@ -178,7 +178,6 @@ public class WorkflowVariablesDialog extends Dialog {
         });
         gridData = new GridData();
         gridData.widthHint = 80;
-        gridData.heightHint = 20;
         m_addVarBtn.setLayoutData(gridData);
 
         m_editVarBtn = new Button(btnsComp, SWT.PUSH);
