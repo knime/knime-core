@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,90 +40,83 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   27.07.2005 (mb): created
+ *   22.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.predictor;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Map;
+
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 /**
+ * This is a {@link JComponent} which displays a {@link HierarchicalGraphView}.
  *
- * @author Michael Berthold, University of Konstanz
+ * @author Heiko Hofer
+ * @param <K> The type of the graphs user objects
  */
-public class DecTreePredictorNodeFactory
-        extends NodeFactory<DecTreePredictorNodeModel> {
+final class HierarchicalGraphComponent<K> extends JPanel {
+    private static final long serialVersionUID = -8435691901973256733L;
+    private HierarchicalGraphView<K> m_graph;
 
     /**
-     * {@inheritDoc}
+     * @param graph the graph view
      */
-    @Override
-    public DecTreePredictorNodeModel createNodeModel() {
-        return new DecTreePredictorNodeModel();
+    public HierarchicalGraphComponent(final HierarchicalGraphView<K> graph) {
+        m_graph = graph;
+        setLayout(null);
+        setDoubleBuffered(true);
+        setOpaque(true);
+        setBackground(Color.white);
+        addMouseListener(new MyMouseListener());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(
-            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
-        if (viewIndex == 0) {
-            return new DecTreePredictorNodeView(nodeModel);
+    public void paint(final Graphics g) {
+        Graphics2D g2 = (Graphics2D)g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Map desktopHints =
+            (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+        if (desktopHints != null) {
+            g2.addRenderingHints(desktopHints);
         } else {
-            return new DecTreePredictorGraphView(nodeModel);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         }
+        super.paint(g2);
+        m_graph.paint(g2);
     }
 
     /**
-     * {@inheritDoc}
+     * Just forward mouse events to the graph.
+     *
+     * @author Heiko Hofer
      */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            {
-                addDialogComponent(new DialogComponentNumber(
-                        new SettingsModelIntegerBounded(
-              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-              /* default */50000,
-                      /* min: */0,
-                      /* max: */100000),
-                   /* label: */"Maximum number of stored patterns "
-                                + "for HiLite-ing: ", 100));
-                addDialogComponent(new DialogComponentBoolean(
-                        new SettingsModelBoolean(
-                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
-                             false),
-                     "Append columns with normalized class distribution"));
-            }
-        };
+    public class MyMouseListener extends MouseAdapter {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            m_graph.mousePressed(e);
+        }
     }
 }

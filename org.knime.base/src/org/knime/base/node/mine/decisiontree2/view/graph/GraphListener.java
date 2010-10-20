@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,68 +40,24 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   28.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
 /**
- * The Factory for the {@link DecisionTreeLearnerNodeModel} algorithm.
+ * Currently only used for the outline view.
  *
- * @author Christoph Sieb, University of Konstanz
+ * @author Heiko Hofer
  */
-public class DecisionTreeLearnerNodeFactory 
-        extends NodeFactory<DecisionTreeLearnerNodeModel> {
-
+interface GraphListener {
     /**
-     * {@inheritDoc}
+     * Called after graph has been repainted.
      */
-    @Override
-    public DecisionTreeLearnerNodeModel createNodeModel() {
-        return new DecisionTreeLearnerNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
-                final int i, final DecisionTreeLearnerNodeModel nodeModel) {
-        if (i == 0) {
-            return new DecTreeNodeView(nodeModel);
-        } else {
-            return new DecTreeLearnerGraphView(nodeModel);
-        }
-    }
-
-    /**
-     * @return <b>true</b>.
-     * @see org.knime.core.node.NodeFactory#hasDialog()
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DecisionTreeLearnerNodeDialog();
-    }
+    public void graphRepaint();
 }

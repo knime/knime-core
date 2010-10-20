@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,90 +40,68 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   27.07.2005 (mb): created
+ *   22.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.predictor;
+package org.knime.base.node.mine.decisiontree2.view;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import java.util.Arrays;
+import java.util.List;
+
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
+import org.knime.base.node.mine.decisiontree2.view.graph.HierarchicalGraphView;
+import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidget;
+import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidgetFactory;
 
 /**
  *
- * @author Michael Berthold, University of Konstanz
+ * @author Heiko Hofer
  */
-public class DecTreePredictorNodeFactory
-        extends NodeFactory<DecTreePredictorNodeModel> {
+public final class DecTreeNodeWidgetFactory
+        implements NodeWidgetFactory<DecisionTreeNode> {
+
+    private HierarchicalGraphView<DecisionTreeNode> m_graph;
 
     /**
-     * {@inheritDoc}
+     * Creates a new instance.
+     *
+     * @param graph the graph
      */
-    @Override
-    public DecTreePredictorNodeModel createNodeModel() {
-        return new DecTreePredictorNodeModel();
+    public DecTreeNodeWidgetFactory(
+            final HierarchicalGraphView<DecisionTreeNode> graph) {
+        m_graph = graph;
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
+    public NodeWidget<DecisionTreeNode> createGraphNode(
+            final DecisionTreeNode object) {
+        return new DecTreeNodeWidget(m_graph, object);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(
-            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
-        if (viewIndex == 0) {
-            return new DecTreePredictorNodeView(nodeModel);
+    public List<DecisionTreeNode> getChildren(final DecisionTreeNode object) {
+        if (!object.isLeaf()) {
+            return Arrays.asList(((DecisionTreeNodeSplit)object).getChildren());
         } else {
-            return new DecTreePredictorGraphView(nodeModel);
+            return null;
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public boolean hasDialog() {
-        return true;
+    public boolean isLeaf(final DecisionTreeNode object) {
+        return object.isLeaf();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            {
-                addDialogComponent(new DialogComponentNumber(
-                        new SettingsModelIntegerBounded(
-              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-              /* default */50000,
-                      /* min: */0,
-                      /* max: */100000),
-                   /* label: */"Maximum number of stored patterns "
-                                + "for HiLite-ing: ", 100));
-                addDialogComponent(new DialogComponentBoolean(
-                        new SettingsModelBoolean(
-                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
-                             false),
-                     "Append columns with normalized class distribution"));
-            }
-        };
-    }
 }

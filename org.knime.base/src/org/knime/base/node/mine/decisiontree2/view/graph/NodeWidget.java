@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,90 +40,98 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   27.07.2005 (mb): created
+ *   22.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.predictor;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 
 /**
+ * The visual representation of a node in an {@link  HierarchicalGraphView}.
  *
- * @author Michael Berthold, University of Konstanz
+ * @author Heiko Hofer
+ * @param <K> The type of the user object.
  */
-public class DecTreePredictorNodeFactory
-        extends NodeFactory<DecTreePredictorNodeModel> {
+public abstract class NodeWidget<K> {
+    private Dimension m_size;
+    private HierarchicalGraphView<K> m_graph;
+    private K m_object;
 
     /**
-     * {@inheritDoc}
+     * Creates a new instance.
+     *
+     * @param graph the graph where this {@link NodeWidget} is element of
+     * @param object the user object
      */
-    @Override
-    public DecTreePredictorNodeModel createNodeModel() {
-        return new DecTreePredictorNodeModel();
+    public NodeWidget(final HierarchicalGraphView<K> graph, final K object) {
+        m_graph = graph;
+        m_object = object;
+        m_size = new Dimension(0, 0);
     }
 
     /**
-     * {@inheritDoc}
+     * Get the preferred size.
+     * @return the preferred size
      */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
+    protected abstract Dimension getPreferredSize();
+
+    /**
+     * Paint this {@link NodeWidget} using the given {@link Graphics2D}.
+     * @param g the graphics
+     */
+    protected abstract void paint(Graphics2D g);
+
+    /**
+     * Get the label that should be painted on the connector above the
+     * {@link NodeWidget}.
+     * @return the label painted above
+     */
+    public abstract String getConnectorLabelAbove();
+
+    /**
+     * Get the label that should be painted on the connector below the
+     * {@link NodeWidget}.
+     * @return the label painted below
+     */
+    public abstract String getConnectorLabelBelow();
+
+    /**
+     * Get the current size.
+     * @return the size
+     */
+    final Dimension getSize() {
+        return m_size;
     }
 
     /**
-     * {@inheritDoc}
+     * Set the size of this {@link NodeWidget}.
+     * @param size the size to set
      */
-    @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(
-            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
-        if (viewIndex == 0) {
-            return new DecTreePredictorNodeView(nodeModel);
-        } else {
-            return new DecTreePredictorGraphView(nodeModel);
-        }
+    final void setSize(final Dimension size) {
+        m_size = size;
+    }
+
+
+    /**
+     * Get the graph where this {@link NodeWidget} is element of.
+     * @return the graph
+     */
+    protected final HierarchicalGraphView<K> getGraphView() {
+        return m_graph;
     }
 
     /**
-     * {@inheritDoc}
+     * Get the user object of this {@link NodeWidget}.
+     * @return the user object
      */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            {
-                addDialogComponent(new DialogComponentNumber(
-                        new SettingsModelIntegerBounded(
-              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-              /* default */50000,
-                      /* min: */0,
-                      /* max: */100000),
-                   /* label: */"Maximum number of stored patterns "
-                                + "for HiLite-ing: ", 100));
-                addDialogComponent(new DialogComponentBoolean(
-                        new SettingsModelBoolean(
-                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
-                             false),
-                     "Append columns with normalized class distribution"));
-            }
-        };
+    protected final  K getUserObject() {
+        return m_object;
     }
 }
