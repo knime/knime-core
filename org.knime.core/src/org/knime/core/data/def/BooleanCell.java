@@ -49,6 +49,7 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.io.ObjectStreamException;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.BoundedValue;
@@ -64,6 +65,7 @@ import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.NominalValue;
 
 /**
  * A data cell implementation holding a boolean value by storing this value in
@@ -75,10 +77,11 @@ import org.knime.core.data.LongValue;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-@SuppressWarnings("serial")
 public final class BooleanCell extends DataCell implements BooleanValue,
         IntValue, LongValue, DoubleValue, ComplexNumberValue, FuzzyNumberValue,
-        FuzzyIntervalValue, BoundedValue {
+        FuzzyIntervalValue, BoundedValue, NominalValue {
+
+    private static final long serialVersionUID = -3240706690088236437L;
 
     /** TRUE instance. */
     public static final BooleanCell TRUE = new BooleanCell(true);
@@ -245,6 +248,13 @@ public final class BooleanCell extends DataCell implements BooleanValue,
     @Override
     public String toString() {
         return Boolean.toString(m_boolean);
+    }
+
+    /** Recommended by java.io.Serializable to return singletons.
+     * @throws ObjectStreamException Never actually thrown.
+     */
+    private Object readResolve() throws ObjectStreamException {
+        return m_boolean ? TRUE : FALSE;
     }
 
     /** Factory for (de-)serializing a BooleanCell. */

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,9 +44,9 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *   19.01.2006(sieb, ohl): reviewed 
+ *   19.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node.config;
 
@@ -76,22 +76,26 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.ComplexNumberCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.FuzzyIntervalCell;
 import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config.DataCellEntry.BooleanCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.ComplexNumberCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.DateAndTimeCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.DoubleCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.FuzzyIntervalCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.FuzzyNumberCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
+import org.knime.core.node.config.Config.DataCellEntry.LongCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
 import org.xml.sax.SAXException;
@@ -103,7 +107,7 @@ import sun.misc.BASE64Encoder;
  * Supports a mechanism to save settings by their type and a key. Furthermore,
  * it provides a method to recursively add new sub <code>Config</code> objects
  * to this Config object, which then results in a tree-like structure.
- * 
+ *
  * <p>
  * This class provides several types of settings which are int, double, char,
  * short, byte, boolean, java.lang.String, java.lang.Class, DataCell, and
@@ -111,14 +115,14 @@ import sun.misc.BASE64Encoder;
  * array or retrieve them back by throwing an
  * <code>InvalidSettingsException</code> or passing a default valid in advance
  * have been implemented.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class Config extends AbstractConfigEntry 
+public abstract class Config extends AbstractConfigEntry
         implements Serializable, ConfigRO, ConfigWO {
 
     private static final long serialVersionUID = -1823858289784818403L;
-   
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
 
     private static final String CFG_ARRAY_SIZE = "array-size";
@@ -127,7 +131,7 @@ public abstract class Config extends AbstractConfigEntry
     private static final String CFG_DATA_CELL_SER = "datacell_serialized";
 
     private final LinkedHashMap<String, AbstractConfigEntry> m_map;
-    
+
     private void put(final AbstractConfigEntry e) {
         m_map.put(e.getKey(), e);
         e.setParent(this); // (tg)
@@ -150,7 +154,32 @@ public abstract class Config extends AbstractConfigEntry
          * @throws InvalidSettingsException If the cell could not be loaded.
          */
         DataCell createCell(ConfigRO config) throws InvalidSettingsException;
-        
+
+        /**
+         * <code>BooleanCell</code> entry.
+         */
+        public static final class BooleanCellEntry implements DataCellEntry {
+            /**
+             * <code>BooleanCell.class</code>.
+             */
+            public static final Class<BooleanCell> CLASS = BooleanCell.class;
+            /**
+             * {@inheritDoc}
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                config.addBoolean(CLASS.getSimpleName(),
+                        ((BooleanCell) cell).getBooleanValue());
+            }
+            /**
+             * {@inheritDoc}
+             */
+            public DataCell createCell(final ConfigRO config)
+            throws InvalidSettingsException {
+                boolean b = config.getBoolean(CLASS.getSimpleName());
+                return b ? BooleanCell.TRUE : BooleanCell.FALSE;
+            }
+        };
+
         /**
          * <code>StringCell</code> entry.
          */
@@ -163,18 +192,18 @@ public abstract class Config extends AbstractConfigEntry
              * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addString(CLASS.getSimpleName(), 
+                config.addString(CLASS.getSimpleName(),
                         ((StringCell) cell).getStringValue());
             }
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new StringCell(config.getString(CLASS.getSimpleName()));
             }
         };
-        
+
         /**
          * <code>DoubleCell</code> entry.
          */
@@ -187,18 +216,42 @@ public abstract class Config extends AbstractConfigEntry
              * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addDouble(CLASS.getSimpleName(), 
+                config.addDouble(CLASS.getSimpleName(),
                         ((DoubleCell) cell).getDoubleValue());
             }
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new DoubleCell(config.getDouble(CLASS.getSimpleName()));
             }
         };
-        
+
+        /**
+         * <code>LongCell</code> entry.
+         */
+        public static final class LongCellEntry implements DataCellEntry {
+            /**
+             * <code>LongCell.class</code>.
+             */
+            public static final Class<LongCell> CLASS = LongCell.class;
+            /**
+             * {@inheritDoc}
+             */
+            public void saveToConfig(final DataCell cell, final Config config) {
+                config.addLong(CLASS.getSimpleName(),
+                        ((LongCell) cell).getLongValue());
+            }
+            /**
+             * {@inheritDoc}
+             */
+            public DataCell createCell(final ConfigRO config)
+            throws InvalidSettingsException {
+                return new LongCell(config.getLong(CLASS.getSimpleName()));
+            }
+        };
+
         /**
          * <code>IntCell</code> entry.
          */
@@ -211,18 +264,18 @@ public abstract class Config extends AbstractConfigEntry
              * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addInt(CLASS.getSimpleName(), 
+                config.addInt(CLASS.getSimpleName(),
                         ((IntCell) cell).getIntValue());
             }
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new IntCell(config.getInt(CLASS.getSimpleName()));
             }
         };
-        
+
         /**
          * <code>DateAndTimeCell</code> entry.
          */
@@ -230,7 +283,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>DateAndTimeCell.class</code>.
              */
-            public static final Class<DateAndTimeCell> CLASS = 
+            public static final Class<DateAndTimeCell> CLASS =
                 DateAndTimeCell.class;
             /**
              * {@inheritDoc}
@@ -241,12 +294,12 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
             throws InvalidSettingsException {
                 return DateAndTimeCell.load(config);
             }
         };
-        
+
         /**
          * Entry for missing <code>DataCell</code>.
          */
@@ -254,7 +307,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * <code>DataType.getMissingCell().getClass()</code>.
              */
-            public static final Class<? extends DataCell> CLASS = 
+            public static final Class<? extends DataCell> CLASS =
                 DataType.getMissingCell().getClass();
             /**
              * {@inheritDoc}
@@ -265,23 +318,23 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return DataType.getMissingCell();
             }
         };
-        
+
         /**
          * <code>ComplexNumberCell</code> entry.
          */
-        public static final class ComplexNumberCellEntry 
+        public static final class ComplexNumberCellEntry
                 implements DataCellEntry {
             private static final String CFG_REAL = "real";
             private static final String CFG_IMAG = "imaginary";
             /**
              * <code>ComplexNumberCell.class</code>.
              */
-            public static final Class<ComplexNumberCell> CLASS = 
+            public static final Class<ComplexNumberCell> CLASS =
                 ComplexNumberCell.class;
             /**
              * {@inheritDoc}
@@ -294,31 +347,31 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double r = config.getDouble(CFG_REAL);
                 double i = config.getDouble(CFG_IMAG);
                 return new ComplexNumberCell(r, i);
             }
         };
-        
+
         /**
          * <code>FuzzyIntervalCell</code> entry.
          */
-        public static final class FuzzyIntervalCellEntry 
+        public static final class FuzzyIntervalCellEntry
                 implements DataCellEntry {
             private static final String CFG_MIN_SUPP = "min_supp";
             private static final String CFG_MIN_CORE = "min_core";
             private static final String CFG_MAX_CORE = "max_core";
             private static final String CFG_MAX_SUPP = "max_supp";
             /** <code>FuzzyIntervalCell.class</code>. */
-            public static final Class<FuzzyIntervalCell> CLASS = 
+            public static final Class<FuzzyIntervalCell> CLASS =
                 FuzzyIntervalCell.class;
             /**
              * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
-                FuzzyIntervalCell ocell = 
+                FuzzyIntervalCell ocell =
                     (FuzzyIntervalCell) cell;
                 config.addDouble(CFG_MIN_SUPP, ocell.getMinSupport());
                 config.addDouble(CFG_MIN_CORE, ocell.getMinCore());
@@ -328,7 +381,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double minSupp = config.getDouble(CFG_MIN_SUPP);
                 double minCore = config.getDouble(CFG_MIN_CORE);
@@ -338,17 +391,17 @@ public abstract class Config extends AbstractConfigEntry
                         minSupp, minCore, maxCore, maxSupp);
             }
         };
-        
+
         /**
          * <code>FuzzyNumberCell</code> entry.
          */
-        public static final class FuzzyNumberCellEntry 
+        public static final class FuzzyNumberCellEntry
                 implements DataCellEntry {
             private static final String CFG_LEFT = "left";
             private static final String CFG_CORE = "core";
             private static final String CFG_RIGHT = "right";
             /** <code>FuzzyNumberCell.class</code>. */
-            public static final Class<FuzzyNumberCell> CLASS = 
+            public static final Class<FuzzyNumberCell> CLASS =
                 FuzzyNumberCell.class;
             /**
              * {@inheritDoc}
@@ -363,7 +416,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
-            public DataCell createCell(final ConfigRO config) 
+            public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double left  = config.getDouble(CFG_LEFT);
                 double core  = config.getDouble(CFG_CORE);
@@ -372,7 +425,7 @@ public abstract class Config extends AbstractConfigEntry
             }
         };
     }
-    
+
     /**
      * Keeps all registered <code>DataCell</code> objects which are mapped
      * to <code>DataCellEntry</code> values in order to save and load them.
@@ -381,26 +434,29 @@ public abstract class Config extends AbstractConfigEntry
         = new HashMap<String, DataCellEntry>();
 
     static {
-        DATACELL_MAP.put(StringCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(BooleanCellEntry.CLASS.getName(),
+                new BooleanCellEntry());
+        DATACELL_MAP.put(StringCellEntry.CLASS.getName(),
                 new StringCellEntry());
         DATACELL_MAP.put(DoubleCellEntry.CLASS.getName(),
                 new DoubleCellEntry());
         DATACELL_MAP.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
-        DATACELL_MAP.put(DateAndTimeCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(LongCellEntry.CLASS.getName(), new LongCellEntry());
+        DATACELL_MAP.put(DateAndTimeCellEntry.CLASS.getName(),
                 new DateAndTimeCellEntry());
-        DATACELL_MAP.put(MissingCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(MissingCellEntry.CLASS.getName(),
                 new MissingCellEntry());
-        DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(),
                 new ComplexNumberCellEntry());
-        DATACELL_MAP.put(FuzzyIntervalCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(FuzzyIntervalCellEntry.CLASS.getName(),
                 new FuzzyIntervalCellEntry());
-        DATACELL_MAP.put(FuzzyNumberCellEntry.CLASS.getName(), 
+        DATACELL_MAP.put(FuzzyNumberCellEntry.CLASS.getName(),
                 new FuzzyNumberCellEntry());
     }
-    
+
     /**
      * Creates a new, empty config object with the given key.
-     * 
+     *
      * @param key The key for this Config.
      */
     protected Config(final String key) {
@@ -410,7 +466,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Creates a new Config of this type.
-     * 
+     *
      * @param key The new Config's key.
      * @return A new instance of this Config.
      */
@@ -418,7 +474,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Creates a new Config with the given key and returns it.
-     * 
+     *
      * @param key An identifier.
      * @return A new Config object.
      */
@@ -427,19 +483,19 @@ public abstract class Config extends AbstractConfigEntry
         put(config);
         return config;
     }
-    
+
     /**
-     * Appends the given Config to this Config which has to directly derived 
+     * Appends the given Config to this Config which has to directly derived
      * from this class.
-     * 
+     *
      * @param config The Config to append.
-     * @throws NullPointerException If <code>config</code> is null. 
+     * @throws NullPointerException If <code>config</code> is null.
      * @throws IllegalArgumentException If <code>config</code> is not instance
      *         of this class.
      */
     protected final void addConfig(final Config config) {
         if (getClass() != config.getClass()) {
-            throw new IllegalArgumentException("This " + getClass() 
+            throw new IllegalArgumentException("This " + getClass()
                     + " is not equal to " + config.getClass());
         }
         put(config);
@@ -447,12 +503,12 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Retrieves Config by key.
-     * 
+     *
      * @param key The key.
      * @return A Config object.
      * @throws InvalidSettingsException If the key is not available.
      */
-    public final Config getConfig(final String key) 
+    public final Config getConfig(final String key)
         throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof Config)) {
@@ -464,7 +520,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds an int.
-     * 
+     *
      * @param key The key.
      * @param value The int value.
      */
@@ -474,7 +530,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return int for key.
-     * 
+     *
      * @param key The key.
      * @return A generic int.
      * @throws InvalidSettingsException If the key is not available.
@@ -490,7 +546,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds a double by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The double value to add.
      */
@@ -500,7 +556,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return double for key.
-     * 
+     *
      * @param key The key.
      * @return A generic double.
      * @throws InvalidSettingsException If the key is not available.
@@ -513,10 +569,10 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigDoubleEntry)o).getDouble();
     }
-    
+
     /**
      * Adds a float by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The float value to add.
      */
@@ -526,7 +582,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return float for key.
-     * 
+     *
      * @param key The key.
      * @return A generic float.
      * @throws InvalidSettingsException If the key is not available.
@@ -542,7 +598,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this char value to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The char to add.
      */
@@ -552,7 +608,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return char for key.
-     * 
+     *
      * @param key The key.
      * @return A generic char.
      * @throws InvalidSettingsException If the key is not available.
@@ -568,7 +624,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this short value to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The short to add.
      */
@@ -578,7 +634,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return short for key.
-     * 
+     *
      * @param key The key.
      * @return A generic short.
      * @throws InvalidSettingsException If the key is not available.
@@ -591,10 +647,10 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigShortEntry)o).getShort();
     }
-    
-    /** 
+
+    /**
      * Adds this long value to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The long to add.
      */
@@ -604,7 +660,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return long for key.
-     * 
+     *
      * @param key The key.
      * @return A generic long.
      * @throws InvalidSettingsException If the key is not available.
@@ -617,11 +673,11 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigLongEntry)o).getLong();
     }
-    
+
 
     /**
      * Adds this byte value to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The byte to add.
      */
@@ -631,7 +687,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return byte for key.
-     * 
+     *
      * @param key The key.
      * @return A generic byte.
      * @throws InvalidSettingsException If the key is not available.
@@ -648,7 +704,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this String object to the Config by the given key. The String can be
      * null.
-     * 
+     *
      * @param key The key.
      * @param value The boolean to add.
      */
@@ -658,7 +714,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return String for key.
-     * 
+     *
      * @param key The key.
      * @return A String object.
      * @throws InvalidSettingsException If the key is not available.
@@ -675,7 +731,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this DataCell object to the Config by the given key. The cell can be
      * null.
-     * 
+     *
      * @param key The key.
      * @param cell The DataCell to add.
      */
@@ -691,11 +747,11 @@ public abstract class Config extends AbstractConfigEntry
                DataCellEntry e = (DataCellEntry) o;
                Config cellConfig = config.addConfig(className);
                e.saveToConfig(cell, cellConfig);
-            } else { 
+            } else {
                 try {
                     // serialize DataCell
                     config.addString(CFG_DATA_CELL, className);
-                    config.addString(CFG_DATA_CELL_SER, 
+                    config.addString(CFG_DATA_CELL_SER,
                             Config.writeObject(cell));
                 } catch (IOException ioe) {
                     LOGGER.warn("Could not write DataCell: " + cell);
@@ -708,7 +764,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this DataType object value to the Config by the given key. The type
      * can be null.
-     * 
+     *
      * @param key The key.
      * @param type The DataType object to add.
      */
@@ -724,7 +780,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return DataCell for key.
-     * 
+     *
      * @param key The key.
      * @return A DataCell.
      * @throws InvalidSettingsException If the key is not available.
@@ -737,7 +793,7 @@ public abstract class Config extends AbstractConfigEntry
             return null;
         }
 
-        
+
         Object o = null;
         if (className.startsWith("de.unikn.knime.")) {
             o = DATACELL_MAP.get(className.replace("de.unikn.knime.",
@@ -748,8 +804,8 @@ public abstract class Config extends AbstractConfigEntry
         if (o == null) {
             o = DATACELL_MAP.get(className);
         }
-        
-         
+
+
         if (o != null) {
             Config cellConfig = config.getConfig(className);
             DataCellEntry e = (DataCellEntry) o;
@@ -777,7 +833,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return DataType for key.
-     * 
+     *
      * @param key The key.
      * @return A DataType.
      * @throws InvalidSettingsException If the key is not available.
@@ -794,7 +850,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Returns an unmodifiable Set of keys in this Config.
-     * 
+     *
      * @return A Set of keys.
      */
     public Set<String> keySet() {
@@ -807,14 +863,14 @@ public abstract class Config extends AbstractConfigEntry
      */
     @Override
     public boolean hasIdenticalValue(final AbstractConfigEntry otherConfig) {
-        
+
         // this should be save as the super ensures identical classes
         Config otherCfg = (Config)otherConfig;
 
         if (this.m_map.size() != otherCfg.m_map.size()) {
            return false;
         }
-        
+
         for (String myKey : this.m_map.keySet()) {
             // The other config must contain all keys we've stored.
             if (!otherCfg.m_map.containsKey(myKey)) {
@@ -833,14 +889,14 @@ public abstract class Config extends AbstractConfigEntry
                 }
             }
         }
-        
+
         return true;
 
     }
 
     /**
      * Checks if this key for a particular type is in this Config.
-     * 
+     *
      * @param key The key.
      * @return <b>true</b> if available, <b>false</b> if key is
      *         <code>null</code> or not available.
@@ -851,12 +907,12 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return boolean for key.
-     * 
+     *
      * @param key The key.
      * @return A generic boolean.
      * @throws InvalidSettingsException If the key is not available.
      */
-    public boolean getBoolean(final String key) 
+    public boolean getBoolean(final String key)
             throws InvalidSettingsException {
         Object o = m_map.get(key);
         if (o == null || !(o instanceof ConfigBooleanEntry)) {
@@ -868,7 +924,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this boolean value to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param value The boolean to add.
      */
@@ -878,7 +934,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return int for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic int.
@@ -894,7 +950,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return int array which can be null for key, or the default array if the
      * key is not available.
-     * 
+     *
      * @param key The key.
      * @return An int array.
      * @throws InvalidSettingsException If the key is not available.
@@ -915,7 +971,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return int array which can be null for key, or the default array if the
      * key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return An int array.
@@ -930,7 +986,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this int array to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param values The int array to add.
      */
@@ -946,7 +1002,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return double for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic double.
@@ -961,7 +1017,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return double array for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @return An array of double values.
      * @throws InvalidSettingsException If the key is not available.
@@ -983,7 +1039,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return double array which can be null for key, or the default array if
      * the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A double array.
@@ -995,10 +1051,10 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
-    
+
     /**
      * Return float for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic float.
@@ -1013,7 +1069,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return float array for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @return An array of float values.
      * @throws InvalidSettingsException If the key is not available.
@@ -1035,7 +1091,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return float array which can be null for key, or the default array if
      * the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A float array.
@@ -1051,7 +1107,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this double array value to the Config by the given key. The array
      * can be null.
-     * 
+     *
      * @param key The key.
      * @param values The double array to add.
      */
@@ -1064,11 +1120,11 @@ public abstract class Config extends AbstractConfigEntry
             }
         }
     }
-    
+
     /**
      * Adds this float array value to the Config by the given key. The array
      * can be null.
-     * 
+     *
      * @param key The key.
      * @param values The float array to add.
      */
@@ -1084,7 +1140,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return char for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic char.
@@ -1099,7 +1155,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return char array which can be null for key.
-     * 
+     *
      * @param key The key.
      * @return A char array.
      * @throws InvalidSettingsException If the the key is not available.
@@ -1121,7 +1177,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return byte array which can be null for key, or the default value if not
      * available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A byte array.
@@ -1136,7 +1192,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return byte array which can be null for key.
-     * 
+     *
      * @param key The key.
      * @return A byte array.
      * @throws InvalidSettingsException If the the key is not available.
@@ -1158,7 +1214,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this byte array to the Config by the given key. The array can be
      * null.
-     * 
+     *
      * @param key The key.
      * @param values The byte array to add.
      */
@@ -1174,7 +1230,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return byte for key.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic byte.
@@ -1190,7 +1246,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return a short array which can be null for key, or the default value if
      * not available.
-     * 
+     *
      * @param key The key.
      * @return A short array.
      * @throws InvalidSettingsException If the key is not available.
@@ -1212,7 +1268,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return short array which can be null for key, or the default array if the
      * key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A short array.
@@ -1224,11 +1280,11 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
-    
+
     /**
      * Return a long array which can be null for key, or the default value if
      * not available.
-     * 
+     *
      * @param key The key.
      * @return A long array.
      * @throws InvalidSettingsException If the key is not available.
@@ -1250,7 +1306,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return long array which can be null for key, or the default array if the
      * key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A long array.
@@ -1265,7 +1321,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this short array to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param values The short to add.
      */
@@ -1281,7 +1337,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return short value for key or the default if the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default values returned if the key is not available.
      * @return A short value.
@@ -1293,10 +1349,10 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigShortEntry)o).getShort();
     }
-    
+
     /**
      * Adds this long array to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param values The long arry to add.
      */
@@ -1312,7 +1368,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return long value for key or the default if the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default values returned if the key is not available.
      * @return A long value.
@@ -1328,7 +1384,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return char array which can be null for key, or the default array if the
      * key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A char array.
@@ -1343,7 +1399,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this char array to the Config by the given key.
-     * 
+     *
      * @param key The key.
      * @param values The char array to add.
      */
@@ -1359,7 +1415,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return boolean for key or the default value if not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A generic boolean.
@@ -1374,7 +1430,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return a boolean array for key which can be null.
-     * 
+     *
      * @param key The key.
      * @return A boolean or null.
      * @throws InvalidSettingsException If the key is not available.
@@ -1396,7 +1452,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return a boolean array which can be null for key, or the default value if
      * not available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A boolean array.
@@ -1412,7 +1468,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this boolean values to the Config by the given key. The array can be
      * null.
-     * 
+     *
      * @param key The key.
      * @param values The boolean array to add.
      */
@@ -1429,7 +1485,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return String object which can be null, or the default array if the key
      * is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default String returned if the key is not available.
      * @return A String.
@@ -1444,7 +1500,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return String array which can be null for key.
-     * 
+     *
      * @param key The key.
      * @return A String array.
      * @throws InvalidSettingsException If the key is not available.
@@ -1466,7 +1522,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return String array which can be null for key, or the default array if
      * the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A String array.
@@ -1482,7 +1538,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds this array of String object to the Config by the given key. The
      * array and the elements can be null.
-     * 
+     *
      * @param key The key.
      * @param values The String array to add.
      */
@@ -1499,7 +1555,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return a DataCell which can be null, or the default value if the key is
      * not available.
-     * 
+     *
      * @param key The key.
      * @param def The default value, returned id the key is not available.
      * @return A DataCell object.
@@ -1515,7 +1571,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return a DataType elements or null for key, or the default value if not
      * available.
-     * 
+     *
      * @param key The key.
      * @param def Returned if no value available for the given key.
      * @return A DataType object or null, or the def value. generic boolean.
@@ -1530,7 +1586,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Return DataCell array. The array an the elements can be null.
-     * 
+     *
      * @param key The key.
      * @return A DataCell array.
      * @throws InvalidSettingsException If the the key is not available.
@@ -1552,12 +1608,12 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Return DataCell array which can be null for key, or the default array if
      * the key is not available.
-     * 
+     *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A char array.
      */
-    public DataCell[] getDataCellArray(final String key, 
+    public DataCell[] getDataCellArray(final String key,
             final DataCell... def) {
         try {
             return getDataCellArray(key);
@@ -1565,7 +1621,7 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1600,12 +1656,12 @@ public abstract class Config extends AbstractConfigEntry
            addString(key, rowKey.getString());
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public RowKey[] getRowKeyArray(final String key) 
+    public RowKey[] getRowKeyArray(final String key)
             throws InvalidSettingsException {
         String[] strs = getStringArray(key);
         return RowKey.toRowKeys(strs);
@@ -1620,7 +1676,7 @@ public abstract class Config extends AbstractConfigEntry
         if (def == null) {
             strs = getStringArray(key, (String[]) null);
         } else {
-            String[] defStrs = RowKey.toStrings(def); 
+            String[] defStrs = RowKey.toStrings(def);
             strs = getStringArray(key, defStrs);
         }
         return (strs == null ? null : RowKey.toRowKeys(strs));
@@ -1641,7 +1697,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Returns an array of DataType objects which can be null.
-     * 
+     *
      * @param key The key.
      * @return An array of DataType objects.
      * @throws InvalidSettingsException The the object is not available for the
@@ -1664,7 +1720,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Returns the array of DataType objects for the given key or if not
      * available the given array.
-     * 
+     *
      * @param key The key.
      * @param v The default array, returned if no entry available for the key.
      * @return An array of DataType objects.
@@ -1680,7 +1736,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds an array of DataCell objects to this Config. The array and all
      * elements can be null.
-     * 
+     *
      * @param key The key.
      * @param values The data cells, elements can be null.
      */
@@ -1697,7 +1753,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Adds an array of DataType objects to this Config. The array and all
      * elements can be null.
-     * 
+     *
      * @param key The key.
      * @param values The data types, elements can be null.
      */
@@ -1713,7 +1769,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Returns Config entry for a key.
-     * 
+     *
      * @param key The key.
      * @return The Config entry for the key.
      */
@@ -1723,7 +1779,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds the given Config entry to this Config.
-     * 
+     *
      * @param entry The Config entry to add.
      */
     void addEntry(final AbstractConfigEntry entry) {
@@ -1747,14 +1803,14 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this and all children String representations to the given buffer.
-     * @param buf The string buffer to which this Config's String all all 
+     * @param buf The string buffer to which this Config's String all all
      *        children String representation is added.
      */
     public final void toString(final StringBuffer buf) {
         toString(0, buf);
         buf.trimToSize();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1762,9 +1818,9 @@ public abstract class Config extends AbstractConfigEntry
     public String toString() {
         return super.getKey();
     }
-    
+
     private static final int TAB_SIZE = 2;
-    
+
     private static final String SPACE = " ";
     private static final String KEYEQ = "key=";
     private static final String COMMA_TYPEEQ = ",type=";
@@ -1807,7 +1863,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Writes this Config into the given stream.
-     * 
+     *
      * @param oos Write Config to this stream.
      * @throws IOException If the file can not be accessed.
      */
@@ -1820,7 +1876,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Creates new Config from the given file using the serialized object
      * stream.
-     * 
+     *
      * @param ois Read Config from this stream.
      * @return The new Config.
      * @throws IOException Problem opening the file or content is not a Config.
@@ -1841,7 +1897,7 @@ public abstract class Config extends AbstractConfigEntry
     /**
      * Writes this Config to the given stream as XML. The stream will be closed
      * when finished.
-     * 
+     *
      * @param os The stream to write into.
      * @throws IOException If this Config could be stored to the stream.
      */
@@ -1855,7 +1911,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Reads Config from XML into a new Config object.
-     * 
+     *
      * @param config Depending on the readRoot, we write into this Config and
      *            return it.
      * @param in The stream to read XML Config from.
@@ -1870,7 +1926,7 @@ public abstract class Config extends AbstractConfigEntry
         config.load(in);
         return config;
     }
-    
+
     /**
      * Read config entries from an XML file into this object.
      * @param is The XML inputstream storing the configuration to read
@@ -1902,7 +1958,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Serializes the given object to space-separated integer.
-     * 
+     *
      * @param o Object to serialize.
      * @return The serialized String.
      * @throws IOException if an I/O error occurs during serializing the object
@@ -1911,7 +1967,7 @@ public abstract class Config extends AbstractConfigEntry
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
-            LOGGER.debug("Class " + o.getClass() 
+            LOGGER.debug("Class " + o.getClass()
                     + " not yet supported in Config, serializing it.");
         }
         // serialize object
@@ -1924,15 +1980,15 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Reads and creates a new Object from the given serialized object stream.
-     * 
+     *
      * @param string The serialized object's stream.
      * @return A new instance of this object.
      * @throws IOException if an I/O error occurs during reading the object
      * @throws ClassNotFoundException if the class of the serialized object
-     *  cannot be found. 
+     *  cannot be found.
      */
-    private static final Object readObject(final String className, 
-            final String serString) 
+    private static final Object readObject(final String className,
+            final String serString)
             throws IOException, ClassNotFoundException {
         byte[] bytes = new BASE64Decoder().decodeBuffer(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
@@ -1946,7 +2002,7 @@ public abstract class Config extends AbstractConfigEntry
             }
             ois = new GlobalObjectInputStream(bais) {
                 @Override
-                protected Class<?> resolveClass(final ObjectStreamClass desc) 
+                protected Class<?> resolveClass(final ObjectStreamClass desc)
                         throws IOException, ClassNotFoundException {
                     ClassLoader clLoader = cl.getClassLoader();
                     try {
@@ -1955,17 +2011,17 @@ public abstract class Config extends AbstractConfigEntry
                         // ignore and let super try to do it.
                     }
                     return super.resolveClass(desc);
-                }  
+                }
             };
         }
         return ois.readObject();
     }
-    
-    
+
+
 
     /**
      * Makes a deep copy of this Config and all sub-configs.
-     * 
+     *
      * @param dest the destination this Config object is copied to.
      */
     public void copyTo(final ConfigWO dest) {
@@ -1979,9 +2035,9 @@ public abstract class Config extends AbstractConfigEntry
             }
         }
     }
-    
+
     // tree node methods
-    
+
     /**
      * The TreeNode for the given index.
      * @param childIndex The index to retrieve the TreeNode for.
@@ -2032,7 +2088,7 @@ public abstract class Config extends AbstractConfigEntry
     public final boolean isLeaf() {
         return m_map.isEmpty();
     }
-    
+
     /**
      * An enumeration of a values.
      * @return All elements of this Config.
@@ -2042,5 +2098,5 @@ public abstract class Config extends AbstractConfigEntry
     public final Enumeration<TreeNode> children() {
         return new Vector<TreeNode>(m_map.values()).elements();
     }
-    
+
 } // Config
