@@ -53,7 +53,9 @@ package org.knime.base.node.mine.decisiontree2.predictor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -70,13 +72,16 @@ import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidgetFactory;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
+import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
  *
  * @author Heiko Hofer
  */
 final class DecTreePredictorGraphView
-            extends NodeView<DecTreePredictorNodeModel> {
+            extends NodeView<DecTreePredictorNodeModel>
+            implements HiLiteListener {
     private DecTreeGraphView m_graph;
 
     private HiLiteHandler m_hiLiteHdl;
@@ -113,6 +118,8 @@ final class DecTreePredictorGraphView
         m_hiLiteMenu = this.createHiLiteMenu();
         this.getJMenuBar().add(m_hiLiteMenu);
         m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
+        m_hiLiteHdl.addHiLiteListener(this);
+        recreateHiLite();
     }
 
     /**
@@ -137,24 +144,29 @@ final class DecTreePredictorGraphView
     @Override
     protected void modelChanged() {
         DecTreePredictorNodeModel model = this.getNodeModel();
-        DecisionTree dt = model.getDecisionTree();
-        if (dt != null) {
-            m_graph.setRootNode(dt.getRootNode());
+        if (model != null) {
+            m_hiLiteHdl.removeHiLiteListener(this);
+            DecisionTree dt = model.getDecisionTree();
+            if (dt != null) {
+                m_graph.setRootNode(dt.getRootNode());
 
-            // retrieve HiLiteHandler from Input port
-            m_hiLiteHdl = model.getInHiLiteHandler(
-                    DecTreePredictorNodeModel.INDATAPORT);
-            // and adjust menu entries for HiLite-ing
-            m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
-        } else {
-            m_graph.setRootNode(null);
+                // retrieve HiLiteHandler from Input port
+                m_hiLiteHdl = model.getInHiLiteHandler(
+                        DecTreePredictorNodeModel.INDATAPORT);
+                // and adjust menu entries for HiLite-ing
+                m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
+                m_hiLiteHdl.addHiLiteListener(this);
+                recreateHiLite();
+            } else {
+                m_graph.setRootNode(null);
+            }
         }
     }
 
 
 
     private void updateHiLite(final boolean state) {
-        List<DecisionTreeNode> selected = m_graph.getSelectedSubtree();
+        List<DecisionTreeNode> selected = m_graph.getSelected();
         Set<RowKey> covPat = new HashSet<RowKey>();
         for (DecisionTreeNode node : selected) {
             covPat.addAll(node.coveredPattern());
@@ -174,13 +186,12 @@ final class DecTreePredictorGraphView
     private JMenu createHiLiteMenu() {
         final JMenu result = new JMenu(HiLiteHandler.HILITE);
         result.setMnemonic('H');
-        JMenuItem item = new JMenuItem(HiLiteHandler.HILITE_SELECTED
-                + " Branch");
+        JMenuItem item =
+                new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
-                m_graph.hiliteSelectedBranch(true);
                 updateHiLite(true);
             }
         });
@@ -190,7 +201,6 @@ final class DecTreePredictorGraphView
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
-                m_graph.hiliteSelectedBranch(false);
                 updateHiLite(false);
             }
         });
@@ -210,25 +220,90 @@ final class DecTreePredictorGraphView
     }
 
     /**
-    *
-    * @author Heiko Hofer
-    */
-   private static class DecTreeGraphView
-           extends HierarchicalGraphView<DecisionTreeNode> {
+     *
+     * @author Heiko Hofer
+     */
+    private static class DecTreeGraphView extends
+            HierarchicalGraphView<DecisionTreeNode> {
 
-       /**
-        * @param root
-        */
-       public DecTreeGraphView(final DecisionTreeNode root) {
-           super(root);
-       }
+        /**
+         * @param root
+         */
+        public DecTreeGraphView(final DecisionTreeNode root) {
+            super(root);
+        }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public NodeWidgetFactory<DecisionTreeNode> getNodeWidgetFactory() {
-           return new DecTreeNodeWidgetFactory(this);
-       }
-   }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NodeWidgetFactory<DecisionTreeNode> getNodeWidgetFactory() {
+            return new DecTreeNodeWidgetFactory(this);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void hiLite(final KeyEvent event) {
+        if (!event.isEmpty()) {
+            recreateHiLite();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unHiLite(final KeyEvent event) {
+        if (!event.isEmpty()) {
+            recreateHiLite();
+        }
+    }
+
+    private void recreateHiLite() {
+        Set<RowKey> hilited = m_hiLiteHdl.getHiLitKeys();
+        Set<DecisionTreeNode> toHilite = new HashSet<DecisionTreeNode>();
+        DecisionTreeNode root = m_graph.getRootNode();
+
+        List<DecisionTreeNode> toProcess = new LinkedList<DecisionTreeNode>();
+        toProcess.add(0, root);
+        // Traverse the tree breadth first
+        while (!toProcess.isEmpty()) {
+            DecisionTreeNode curr = toProcess.remove(0);
+            if (hilited.containsAll(curr.coveredPattern())) {
+                // hilite subtree starting from curr
+                toHilite.addAll(getSubtree(curr));
+            } else {
+                for (int i = 0; i < curr.getChildCount(); i++) {
+                    toProcess.add(0, curr.getChildAt(i));
+                }
+            }
+        }
+        m_graph.hiLite(toHilite);
+    }
+
+    private List<DecisionTreeNode> getSubtree(final DecisionTreeNode node) {
+        List<DecisionTreeNode> subTree = new ArrayList<DecisionTreeNode>();
+        List<DecisionTreeNode> toProcess = new LinkedList<DecisionTreeNode>();
+        toProcess.add(0, node);
+        // Traverse the tree breadth first
+        while (!toProcess.isEmpty()) {
+            DecisionTreeNode curr = toProcess.remove(0);
+            subTree.add(curr);
+            for (int i = 0; i < curr.getChildCount(); i++) {
+                toProcess.add(0, curr.getChildAt(i));
+            }
+        }
+        return subTree;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unHiLiteAll(final KeyEvent event) {
+        m_graph.clearHilite();
+    }
 }

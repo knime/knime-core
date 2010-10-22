@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.swing.JComponent;
@@ -93,11 +94,11 @@ public abstract class HierarchicalGraphView<K> {
     private Map<Rectangle, DefaultMutableTreeNode> m_collapseSign;
     private Map<Rectangle, DefaultMutableTreeNode> m_expandSign;
     private DefaultMutableTreeNode m_root;
-    private HashSet<DefaultMutableTreeNode> m_collapsed;
+    private Set<DefaultMutableTreeNode> m_collapsed;
     private JComponent m_component;
     private LayoutInfo m_layoutInfo;
-    private HashSet<DefaultMutableTreeNode> m_selected;
-    private HashSet<DefaultMutableTreeNode> m_hilited;
+    private Set<DefaultMutableTreeNode> m_selected;
+    private Set<K> m_hilited;
     private List<GraphListener> m_graphListeners;
 
     /**
@@ -121,7 +122,7 @@ public abstract class HierarchicalGraphView<K> {
         m_collapseSign = new HashMap<Rectangle, DefaultMutableTreeNode>();
         m_expandSign = new HashMap<Rectangle, DefaultMutableTreeNode>();
         m_selected = new HashSet<DefaultMutableTreeNode>();
-        m_hilited = new HashSet<DefaultMutableTreeNode>();
+        m_hilited = new HashSet<K>();
         m_graphListeners = new ArrayList<GraphListener>();
 
         m_component = new HierarchicalGraphComponent<K>(this);
@@ -273,8 +274,8 @@ public abstract class HierarchicalGraphView<K> {
                 new Dimension(m_layoutInfo.getLeftGap()
                         + graphBounds.width + m_layoutInfo.getRightGap(),
                         m_layoutInfo.getTopGap() + graphBounds.height
-                        + m_layoutInfo.m_levelGap / 2 +
-                        m_layoutInfo.getBottomGap()));
+                        + m_layoutInfo.m_levelGap / 2
+                        + m_layoutInfo.getBottomGap()));
     }
 
     /**
@@ -451,14 +452,14 @@ public abstract class HierarchicalGraphView<K> {
             } else if (visibleChilds.isEmpty()) {
                 // draw line to the plus sign
                 int x = bounds.x + bounds.width / 2;
-                int y = bounds.y + bounds.height +
-                            m_layoutInfo.getLevelGap() / 2;
+                int y = bounds.y + bounds.height
+                            + m_layoutInfo.getLevelGap() / 2;
                 g.drawLine(x, bounds.y + bounds.height, x, y);
             } else {
                 // draw connections to the children
                 int x = bounds.x + bounds.width / 2;
-                int y = bounds.y + bounds.height +
-                            m_layoutInfo.getLevelGap() / 2;
+                int y = bounds.y + bounds.height
+                            + m_layoutInfo.getLevelGap() / 2;
                 g.drawLine(x, bounds.y + bounds.height, x, y);
 
                 Rectangle firstChild = visibleChilds.get(0);
@@ -571,7 +572,7 @@ public abstract class HierarchicalGraphView<K> {
         NodeWidget<K> widget = m_widgets.get(node);
         Rectangle bounds = m_visible.get(node);
         boolean selected = m_selected.contains(node);
-        boolean hilited = m_hilited.contains(node);
+        boolean hilited = m_hilited.contains((node.getUserObject()));
         if (selected && hilited) {
             g.setPaint(ColorAttr.SELECTED_HILITE);
             g.fillRoundRect(bounds.x, bounds.y,
@@ -783,46 +784,24 @@ public abstract class HierarchicalGraphView<K> {
       }
 
     /**
-     * Hilite (unhilite) the subtree of the currently selected node.
-     * @param hilite whether to hilite or unhilite
+     * Get the selected nodes.
+     * @return the selected nodes
      */
-    public void hiliteSelectedBranch(final boolean hilite) {
-        if (hilite) {
-            for (DefaultMutableTreeNode node : m_selected) {
-                List<Object> subtree =
-                    Collections.list(node.breadthFirstEnumeration());
-                for (Object o : subtree) {
-                    DefaultMutableTreeNode n = (DefaultMutableTreeNode)o;
-                    m_hilited.add(n);
-                }
-            }
-        } else {
-            for (DefaultMutableTreeNode node : m_selected) {
-                List<Object> subtree =
-                    Collections.list(node.breadthFirstEnumeration());
-                for (Object o : subtree) {
-                    DefaultMutableTreeNode n = (DefaultMutableTreeNode)o;
-                    m_hilited.remove(n);
-                }
-            }
+    public List<K> getSelected() {
+        List<K> selected = new ArrayList<K>();
+        for (DefaultMutableTreeNode node : m_selected) {
+            selected.add((K)node.getUserObject());
         }
-        m_component.repaint();
+        return selected;
     }
 
     /**
-     * @return the user objects in the subtree of the currently selected node
+     * HiLite the given nodes.
      */
-    public List<K> getSelectedSubtree() {
-        List<K> selected = new ArrayList<K>();
-        for (DefaultMutableTreeNode node : m_selected) {
-            List<Object> subtree =
-                Collections.list(node.breadthFirstEnumeration());
-            for (Object o : subtree) {
-                DefaultMutableTreeNode n = (DefaultMutableTreeNode)o;
-                selected.add((K)n.getUserObject());
-            }
-        }
-        return selected;
+    public void hiLite(final Set<K> toHiLite) {
+        m_hilited.clear();
+        m_hilited.addAll(toHiLite);
+        m_component.repaint();
     }
 
     /**
