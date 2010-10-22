@@ -82,6 +82,14 @@ public class PMMLSimplePredicate extends PMMLPredicate {
 
     /**
      * Build a new simple predicate.
+     */
+    public PMMLSimplePredicate() {
+		super();
+		// for usage with loadFromPredParams(Config)
+	}
+
+	/**
+     * Build a new simple predicate.
      *
      * @param attribute the field the predicate is applied on
      * @param operator the string representation of the operator

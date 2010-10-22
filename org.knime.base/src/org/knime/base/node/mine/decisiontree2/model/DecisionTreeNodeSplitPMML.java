@@ -363,7 +363,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
-        m_splitPred = new PMMLPredicate[getChildCount()];
+    	m_splitPred = new PMMLPredicate[pConf.getInt("nrChildren")];
         for (int i = 0; i < m_splitPred.length; i++) {
             Config predConfig = pConf.getConfig("pred" + i);
             m_splitPred[i] = PMMLPredicate.getPredicateForConfig(predConfig);

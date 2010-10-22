@@ -122,6 +122,14 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
 
     /**
      * Build a new simple set predicate without values.
+     */
+    public PMMLSimpleSetPredicate() {
+		super();
+		// for usage with loadFromPredParams(Config)
+	}
+    
+    /**
+     * Build a new simple set predicate without values.
      *
      * @param attribute the field the predicate is applied on
      * @param operator the string representation of the set operator

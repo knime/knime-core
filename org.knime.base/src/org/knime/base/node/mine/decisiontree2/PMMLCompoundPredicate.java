@@ -82,6 +82,14 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
 
     /**
      * Build a new PMMLCompoundPredicate.
+     */
+    public PMMLCompoundPredicate() {
+		super();
+		// for usage with loadFromPredParams(Config)
+	}
+    
+    /**
+     * Build a new PMMLCompoundPredicate.
      * @param operator the string representation of the operator
      */
     public PMMLCompoundPredicate(final String operator) {

@@ -263,7 +263,7 @@ public abstract class PMMLPredicate {
             pred = getPredicateForType(type);
         } catch (InstantiationException e) {
             throw new InvalidSettingsException("Invalid type " + type
-                    + "provided in config. Predicate cannot be instantiated.",
+                    + " provided in config. Predicate cannot be instantiated.",
                     e);
         } catch (IllegalAccessException e) {
             throw new InvalidSettingsException("Invalid type " + type
