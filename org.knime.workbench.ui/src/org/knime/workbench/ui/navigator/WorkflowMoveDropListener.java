@@ -168,7 +168,7 @@ public class WorkflowMoveDropListener extends ViewerDropAdapter {
             if (showOpenFlowError) {
                 MessageDialog.openInformation(Display.getDefault()
                         .getActiveShell(), "Open Workflow(s)",
-                        "Workflows curently opened in an editor can't "
+                        "Workflows currently opened in an editor can't "
                                 + "be moved\nPlease save and close the open "
                                 + "workflow editor(s) and try again.");
                 return false;
