@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -58,14 +58,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Action to set the custom name and description of a node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SetNameAndDescriptionAction extends AbstractNodeAction {
@@ -97,7 +96,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Node name and description";
+        return "Edit Node Name and Description...";
     }
 
     /**
@@ -119,7 +118,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
 
     /**
      * @return <code>true</code>, if just one node part is selected.
-     * 
+     *
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
@@ -139,7 +138,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * Opens a dialog and collects the user name and description. After the
      * dialog is closed the new name and description are set to the node
      * container if applicable.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -154,8 +153,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
 
         final NodeContainer container = nodeParts[0].getNodeContainer();
 
-        LOGGER.debug("Opening 'Set name and description' dialog"
-                + " for one node ...");
+        LOGGER.debug("Opening 'Edit Node Name and Description' dialog"
+                + " for the node '" + container.getCustomName() + "'");
 
         // open name and description dialog
         try {
@@ -178,7 +177,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             dialogTitle += " - " + container.getCustomName();
         }
         NameDescriptionDialog dialog =
-            new NameDescriptionDialog(parent, dialogTitle, 
+            new NameDescriptionDialog(parent, dialogTitle,
                     initialName, initialDescr,
                     // (bugfix 1402)
                     container.getID());

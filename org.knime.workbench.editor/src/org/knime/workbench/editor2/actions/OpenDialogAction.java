@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   25.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.actions;
 
@@ -95,7 +93,7 @@ public class OpenDialogAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Configure";
+        return "Configure...";
     }
 
     /**
@@ -159,7 +157,7 @@ public class OpenDialogAction extends AbstractNodeAction {
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
-            mb.open();            
+            mb.open();
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
@@ -172,6 +170,6 @@ public class OpenDialogAction extends AbstractNodeAction {
                     + container.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName()
                     + "'. That is most likely an implementation error.", t);
-        } 
+        }
     }
 }

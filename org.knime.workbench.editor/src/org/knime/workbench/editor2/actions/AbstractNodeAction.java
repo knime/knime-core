@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   25.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.actions;
 
@@ -93,25 +91,12 @@ public abstract class AbstractNodeAction extends SelectionAction {
 
     }
 
-    // /**
-    // * Unhook workflow listener when disposed
-    // *
-    // * @see org.eclipse.gef.Disposable#dispose()
-    // */
-    // public void dispose() {
-    // super.dispose();
-    // if (getManager() != null) {
-    // getManager().removeListener(this);
-    // m_registered = false;
-    // }
-    // }
-
     /**
      * @return The manager that is edited by the current editor. Subclasses may
      *         want to have a reference to this.
      *
      * Note that this value may be <code>null</code> if the editor has not
-     * already been created completly !
+     * already been created completely !
      *
      */
     protected final WorkflowManager getManager() {
@@ -133,7 +118,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
 
         // call implementation of this action in the SWT UI thread
         Display.getCurrent().syncExec(new Runnable() {
-
+            @Override
             public void run() {
                 runOnNodes(parts);
             }
@@ -228,97 +213,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
             final int[] nodeIds, final int[] connectionIds) {
 
         throw new UnsupportedOperationException("This method no longer exist!");
-        /*
-        // the result
-        ArrayList<AbstractWorkflowEditPart> parts = new ArrayList<AbstractWorkflowEditPart>();
-
-        // get the parent from the reference part and then the children
-        List<EditPart> allParts = m_editor.getViewer().getRootEditPart()
-                .getContents().getChildren();
-
-        // check all parts for the given ids
-        // if a part has the appropriate id add it to the result
-        for (EditPart part : allParts) {
-            // get the underlying container (either connection or node)
-            // representing the model of the part
-            Object container = part.getModel();
-
-            // if this is a node or connection container check the ids
-            if (container instanceof NodeContainer) {
-                NodeContainer nodeContainer = (NodeContainer)container;
-
-                if (isInArray(nodeContainer.getID(), nodeIds)) {
-                    parts.add((AbstractWorkflowEditPart)part);
-                }
-            } else if (container instanceof ConnectionContainer) {
-                ConnectionContainer connectionContainer = (ConnectionContainer)container;
-
-                if (isInArray(connectionContainer.getID(), connectionIds)) {
-                    parts.add((AbstractWorkflowEditPart)part);
-                }
-            }
-        }
-
-        return parts;
-        */
-
     }
-
-    /**
-     * Determines if the given value is included in the given array. Both is
-     * integer typed. Helper method.
-     *
-     * @param value the int value to check
-     * @param array the int array to check if value is included
-     *
-     * @return true if value is included in array
-     *
-    private static boolean isInArray(final int value, final int[] array) {
-        if (array == null) {
-            return false;
-        }
-
-        for (int arrayValue : array) {
-            if (arrayValue == value) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // /**
-    // * On first update we try to hook into as workflow listener.
-    // *
-    // * @see org.eclipse.gef.ui.actions.UpdateAction#update()
-    // */
-    // public final void update() {
-    // if (!m_registered) {
-    // if (getManager() != null) {
-    // getManager().addListener(this);
-    // m_registered = true;
-    // }
-    // // register correct selection provider !
-    // setSelectionProvider(m_editor.getSite().getSelectionProvider());
-    // }
-    // // call implementation of this action in the SWT UI thread
-    // Display.getDefault().syncExec(new Runnable() {
-    // public void run() {
-    // AbstractNodeAction.super.update();
-    // }
-    // });
-    //
-    // }
-
-    // /**
-    // * We must update the action on every change
-    // *
-    // * @see org.knime.core.node.workflow.WorkflowListener
-    // * #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
-    // */
-    // public void workflowChanged(final WorkflowEvent event) {
-    // update();
-    // }
 
     /**
      * This normally needs to be overridden by subclasses.

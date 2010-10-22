@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   25.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.actions;
 
@@ -96,7 +94,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute and open view";
+        return "Execute and Open View";
     }
 
     /**
@@ -165,47 +163,15 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         LOGGER.debug("Executing and opening view for one node");
 
         final NodeContainer cont = nodeParts[0].getNodeContainer();
-
-        // for interruptible nodes the view is opened immediatly
-        // for all other nodes the view should first opened if the execution is
-        // over
-        // if (cont.isInterruptible()) {
-        // getManager().executeUpToNode(cont.getID(), false);
-        // // interruptible nodes are always displayed in a jframe
-        // cont.showView(0);
-        // } else {
-        // register at the node container to receive the executed event
-        // thus it is time to start the view
-        // in case a cancel event is received the listener is deregistered
-        // cont.addListener(new NodeStateListener() {
-        // public void stateChanged(final NodeStatus state, final int id) {
-        // if (state instanceof NodeStatus.EndExecute) {
-        // cont.removeListener(this);
-        // if (cont.isExecuted()) {
-        // Display.getDefault().syncExec(new Runnable() {
-        // public void run() {
-        // m_viewAction.run();
-        // };
-        //
-        // });
-        //
-        // }
-        // } else if (state instanceof NodeStatus.ExecutionCanceled) {
-        // cont.removeListener(this);
-        // }
-        // }
-        // });
         // another listener must be registered at the workflow manager
-        // to receive also thos events from nodes that have just
+        // to receive also those events from nodes that have just
         // been queued.
         cont.addNodeStateChangeListener(new NodeStateChangeListener() {
+            @Override
             public void stateChanged(final NodeStateEvent state) {
 
                 // check if the node has finished (either executed or
                 // removed from the queue)
-                // LOGGER.error("Event: " + event.getID() + " Node: "
-                // + cont.getID() + "node Referenz: "
-                // + System.identityHashCode(cont));
                 if (state.getSource() == cont.getID()
                         && state.getState().equals(
                                 NodeContainer.State.EXECUTED)) {
@@ -214,6 +180,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     // start the view
                     if (cont.getState().equals(NodeContainer.State.EXECUTED)) {
                         Display.getDefault().asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 // set the appropriate action to open the view
                                 IAction viewAction = new OpenViewAction(
@@ -231,7 +198,6 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
 
         });
         getManager().executeUpToHere(cont.getID());
-        // }
 
         // Give focus to the editor again. Otherwise the actions (selection)
         // is not updated correctly.

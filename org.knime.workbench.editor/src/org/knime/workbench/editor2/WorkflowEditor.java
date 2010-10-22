@@ -52,6 +52,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -73,7 +74,6 @@ import org.eclipse.gef.EditDomain;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.KeyHandler;
-import org.eclipse.gef.KeyStroke;
 import org.eclipse.gef.RootEditPart;
 import org.eclipse.gef.SnapToGeometry;
 import org.eclipse.gef.SnapToGrid;
@@ -82,7 +82,6 @@ import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.ui.actions.ActionRegistry;
-import org.eclipse.gef.ui.actions.GEFActionConstants;
 import org.eclipse.gef.ui.actions.PrintAction;
 import org.eclipse.gef.ui.actions.RedoAction;
 import org.eclipse.gef.ui.actions.SaveAction;
@@ -97,6 +96,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -114,7 +115,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 import org.eclipse.ui.part.FileEditorInput;
@@ -149,6 +149,7 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -450,27 +451,54 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * This hooks keys like F2 for editing, delete etc. inside the editor...
+     * This hooks keys like F2 for editing inside the editor.
      *
      * @return The common (shared) key handler.
      */
     protected KeyHandler getCommonKeyHandler() {
+        return new KeyHandler() {
+            @Override
+            public boolean keyPressed(final org.eclipse.swt.events.KeyEvent e) {
+                if (e.keyCode == SWT.F2) {
+                    NodeContainerEditPart[] parts = getNodeParts();
+                    if (parts.length == 1) {
+                        parts[0].performDirectEdit();
+                    }
+                }
+                return super.keyPressed(e);
+            }
+        };
+    }
 
-        KeyHandler sharedKeyHandler = new KeyHandler();
+    /**
+     * Returns a list of selected NodeContainerEditPart objects.
+     * @return list of node containers
+     */
+    private NodeContainerEditPart[] getNodeParts() {
+        ISelectionProvider provider = getEditorSite().getSelectionProvider();
+        if (provider == null) {
+            return new NodeContainerEditPart[0];
+        }
+        ISelection sel = provider.getSelection();
+        if (!(sel instanceof IStructuredSelection)) {
+            return new NodeContainerEditPart[0];
+        }
 
-        // Delete
-        sharedKeyHandler.put(KeyStroke.getPressed(SWT.DEL, 0),
-                getActionRegistry().getAction(ActionFactory.DELETE.getId()));
+        ArrayList<NodeContainerEditPart> objects =
+            new ArrayList<NodeContainerEditPart>(
+                    ((IStructuredSelection)sel).toList());
+        // remove all objects that are not instance of NodeContainerEditPart
+        for (Iterator iter = objects.iterator(); iter.hasNext();) {
+            Object element = iter.next();
+            if (!(element instanceof NodeContainerEditPart)) {
+                iter.remove();
+                continue;
+            }
+        }
+        final NodeContainerEditPart[] parts = objects
+                .toArray(new NodeContainerEditPart[objects.size()]);
 
-        // Edit
-        sharedKeyHandler.put(KeyStroke.getPressed(SWT.F2, 0),
-                getActionRegistry().getAction(GEFActionConstants.DIRECT_EDIT));
-
-        // Open Dialog on CR
-        sharedKeyHandler.put(KeyStroke.getPressed(SWT.CR, 0),
-                getActionRegistry().getAction(OpenDialogAction.ID));
-
-        return sharedKeyHandler;
+        return parts;
     }
 
     /**

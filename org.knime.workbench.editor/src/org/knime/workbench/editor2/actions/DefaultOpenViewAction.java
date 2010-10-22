@@ -165,9 +165,10 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
             if (cont.getState().equals(NodeContainer.State.EXECUTED)
                     && cont.getNrViews() > 0) {
                 SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         try {
-                            final String title = cont.getViewName(0) + " - " 
+                            final String title = cont.getViewName(0) + " - "
                                 + cont.getDisplayLabel();
                             Node.invokeOpenView(cont.getView(0), title);
                         } catch (Throwable t) {
@@ -175,15 +176,15 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                                     Display.getDefault().getActiveShell(),
                                     SWT.ICON_ERROR | SWT.OK);
                             mb.setText("View cannot be opened");
-                            mb.setMessage("The view cannot be opened for the " 
+                            mb.setMessage("The view cannot be opened for the "
                                     + "following reason:\n" + t.getMessage());
                             mb.open();
                             LOGGER.error("The view for node '"
                                     + cont.getNameWithID() + "' has thrown a '"
                                     + t.getClass().getSimpleName()
-                                    + "'. That is most likely an " 
+                                    + "'. That is most likely an "
                                     + "implementation error.", t);
-                        } 
+                        }
                     }
                 });
             }

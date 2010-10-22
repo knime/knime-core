@@ -72,9 +72,9 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
@@ -117,21 +117,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
         NodeUIInformationListener, EditPartListener, ConnectableEditPart,
         JobManagerChangedListener {
-    /**
-     * The time (in ms) within two clicks are treated as double click. TODO: get
-     * the system double click time
-     */
-    // private static final long DOUBLE_CLICK_TIME = 400;
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeContainerEditPart.class);
 
-    /**
-     * Remembers the time of the last <code>MousePressed</code> event. This is
-     * neccessary to implement manually the double click, as the
-     * <code>DoubleClick</code> event is not processed by draw2D for some
-     * reason.
-     */
-    // private long m_lastClick;
     /**
      * true, if the figure was initialized from the node extra info object.
      */
@@ -147,6 +136,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * @return The <code>NodeContainer</code>(= model)
      */
+    @Override
     public NodeContainer getNodeContainer() {
         return (NodeContainer)getModel();
     }
@@ -237,15 +227,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return nodeFigure;
     }
 
-    private void performDirectEdit() {
-
+    /**
+     * Enable direct edit: edit custom name.
+     */
+    public void performDirectEdit() {
         if (m_directEditManager == null) {
             m_directEditManager =
                     new NodeEditManager(this,
                             new UserNodeNameCellEditorLocator(
                                     (NodeContainerFigure)getFigure()));
         }
-
         m_directEditManager.show();
     }
 
@@ -265,7 +256,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Installs the COMPONENT_ROLE for this edit part.
      *
-     * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
+     * {@inheritDoc}
      */
     @Override
     protected void createEditPolicies() {
@@ -289,7 +280,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
      */
     @Override
-    protected List getModelChildren() {
+    protected List<NodePort> getModelChildren() {
         ArrayList<NodePort> ports = new ArrayList<NodePort>();
         NodeContainer container = getNodeContainer();
 
@@ -304,19 +295,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Refreshes the visuals for this node representation.
-     *
-     * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
+     * {@inheritDoc}
      */
     @Override
-    protected void refreshVisuals() {
-        // TODO Auto-generated method stub
+        protected void refreshVisuals() {
         super.refreshVisuals();
     }
 
-
-
+    /** {@inheritDoc} */
+    @Override
     public void stateChanged(final NodeStateEvent state) {
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setState(state.getState());
@@ -340,24 +330,22 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public void progressChanged(final NodeProgressEvent pe) {
         // forward the new progress to our progress figure
         ((NodeContainerFigure)getFigure()).getProgressFigure().progressChanged(
                 pe.getNodeProgress());
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public void messageChanged(final NodeMessageEvent messageEvent) {
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
@@ -368,13 +356,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         });
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
 
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
         Display.getDefault().asyncExec(new Runnable() {
-
+            @Override
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
 
@@ -477,23 +467,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         String description = getNodeContainer().getCustomDescription();
 
         // get the icon
-        Image icon = null;
-        // URL iconURL = getNodeContainer().getIcon();
-        // try {
-        // icon = new Image(Workbench.getInstance().getDisplay(),
-        // iconURL.openStream());
-        // } catch (Exception e) {
-        // try {
-        // icon = new Image(Workbench.getInstance().getDisplay(),
-        // NodeFactory.getDefaultIcon().openStream());
-        // } catch (Exception innerE) {
-        // // in this case the icon is null
-        // icon = null;
-        // }
-        // }
-        icon =
-                ImageRepository.getScaledImage(getNodeContainer().getIcon(),
-                        16, 16);
+        Image icon = ImageRepository.getScaledImage(
+                getNodeContainer().getIcon(), 16, 16);
         // get default image if null
         if (icon == null) {
             icon =
@@ -510,25 +485,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
-//        boolean isExecuted = getNodeContainer().getState().equals(
-//                NodeContainer.State.EXECUTED);
-//        if (isExecuted) {
-//            f.setState(NodeContainerFigure.STATE_EXECUTED, null);
-//        } else {
-//            if (getNodeContainer().getState().equals(
-//                    NodeContainer.State.EXECUTING)) {
-//                f.setState(NodeContainerFigure.STATE_EXECUTING, null);
-//            } else if (getNodeContainer().getState().equals(
-//                    NodeContainer.State.QUEUED)) {
-//                f.setState(NodeContainerFigure.STATE_QUEUED, null);
-//                // TODO: check this
-//            } else if (getNodeContainer().getState().equals(
-//                    NodeContainer.State.CONFIGURED)) {
-//                f.setState(NodeContainerFigure.STATE_READY, null);
-//            } else {
-//                f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
-//            }
-//        }
         f.setState(getNodeContainer().getState());
         updateNodeStatus();
     }
@@ -553,7 +509,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * @see NodeContainerEditPart#unmark()
      */
     public void mark() {
-
         ((NodeContainerFigure)getFigure()).mark();
     }
 
@@ -716,26 +671,35 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         ((NodeContainerFigure)getFigure()).setJobExecutorIcon(icon);
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void childAdded(final EditPart child, final int index) {
         // TODO Auto-generated method stub
-
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void partActivated(final EditPart editpart) {
         // TODO Auto-generated method stub
 
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void partDeactivated(final EditPart editpart) {
         // TODO Auto-generated method stub
 
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void removingChild(final EditPart child, final int index) {
         // TODO Auto-generated method stub
 
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void selectedStateChanged(final EditPart editpart) {
         LOGGER.debug(getNodeContainer().toString());
     }

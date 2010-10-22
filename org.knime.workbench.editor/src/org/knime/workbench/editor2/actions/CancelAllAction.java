@@ -93,7 +93,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Cancel all";
+        return "Cancel All";
     }
 
     /**

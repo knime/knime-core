@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   10.11.2005 (Florian Georg): created
+ *
  */
 package org.knime.workbench.editor2.actions.delegates;
 
@@ -69,25 +67,26 @@ import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Abstract base class for Editor Actions.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractEditorAction implements IEditorActionDelegate,
         NodeStateChangeListener {
-    
+
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            AbstractEditorAction.class);
 
     private WorkflowEditor m_editor;
 
     private AbstractNodeAction m_decoratedAction;
-    
-    private final List<NodeContainerEditPart> m_currentSelection 
+
+    private final List<NodeContainerEditPart> m_currentSelection
         = new ArrayList<NodeContainerEditPart>();
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void setActiveEditor(final IAction action,
             final IEditorPart targetEditor) {
 
@@ -113,6 +112,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void run(final IAction action) {
         if (m_decoratedAction != null) {
             m_decoratedAction.run();
@@ -122,6 +122,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void selectionChanged(final IAction action,
             final ISelection selection) {
         if (m_decoratedAction != null) {
@@ -144,7 +145,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
                     for (Iterator itr = sel.iterator(); itr.hasNext();) {
                         Object o = itr.next();
                         if (o instanceof NodeContainerEditPart) {
-                            NodeContainerEditPart ncEP 
+                            NodeContainerEditPart ncEP
                                 = (NodeContainerEditPart)o;
                             m_currentSelection.add(ncEP);
                             ncEP.getNodeContainer().addNodeStateChangeListener(
@@ -157,18 +158,18 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         }
 
     }
-    
+
     private final SelectionRunnable m_selectionRunnable =
         new SelectionRunnable();
 
     private class SelectionRunnable implements Runnable {
-        /** Flags to memorize if this runnable has already been queued. I 
-         * (Bernd) ran into serious problems when using meta nodes that 
-         * execute/reset nodes quickly (and frequently). There where 
+        /** Flags to memorize if this runnable has already been queued. I
+         * (Bernd) ran into serious problems when using meta nodes that
+         * execute/reset nodes quickly (and frequently). There where
          * many (> 500000) runnables in the async-queue. */
         private boolean m_isQueued;
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         @Override
@@ -177,7 +178,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
             ISelectionProvider p = m_editor.getSite().getSelectionProvider();
             p.setSelection(p.getSelection());
         }
-        
+
         private void asyncExec() {
             if (!m_isQueued) {
                 m_isQueued = true;
@@ -188,7 +189,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
 
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -198,7 +199,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
 
     /**
      * Clients must implement this method.
-     * 
+     *
      * @param editor the knime editor
      * @return Decorated action
      */

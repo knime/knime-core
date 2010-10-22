@@ -43,89 +43,26 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   10.06.2008 (Fabian Dill): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.actions.delegates;
 
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.OpenFirstOutPortViewAction;
 
 /**
+ * Delegator action to open the first out-port view of all selected nodes.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
-public class OpenSubworkflowEditorAction extends Action {
+public class OpenFirstOutPortViewEditorAction extends AbstractEditorAction {
 
-    private static final String ID = "knime.open.subworkflow.editor";
-
-
-    private final NodeContainerEditPart m_nodeContainer;
-
-    /**
-     * @param node container edit part
-     */
-    public OpenSubworkflowEditorAction(final NodeContainerEditPart node) {
-        m_nodeContainer = node;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public String getId() {
-        return ID;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "Open Subworkflow Editor";
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Opens editor for this subworkflow";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/meta/meta.png");
-    }
-
-    /**
-     * @return true, if underlying model instance of
-     *         <code>WorkflowManager</code>, otherwise false
-     */
-    protected boolean calculateEnabled() {
-        if (m_nodeContainer.getModel() instanceof WorkflowManager) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void run() {
-        m_nodeContainer.openSubWorkflowEditor();
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new OpenFirstOutPortViewAction(editor);
     }
 
 }

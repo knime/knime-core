@@ -91,7 +91,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute all";
+        return "Execute All";
     }
 
     /**

@@ -43,38 +43,44 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   10.06.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.action.Action;
+import javax.swing.SwingUtilities;
+
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
+ * Action that opens the first out-port view of all selected nodes.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Thomas Gabriel, KNIME.com GmbH, Zurich
  */
-public class OpenSubworkflowEditorAction extends Action {
+public class OpenFirstOutPortViewAction extends AbstractNodeAction {
 
-    private static final String ID = "knime.open.subworkflow.editor";
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            OpenFirstOutPortViewAction.class);
 
-
-    private final NodeContainerEditPart m_nodeContainer;
+    /** Unique id for this action. */
+    public static final String ID = "knime.action.openFirstOutPortView";
 
     /**
-     * @param node container edit part
+     *
+     * @param editor current editor
      */
-    public OpenSubworkflowEditorAction(final NodeContainerEditPart node) {
-        m_nodeContainer = node;
+    public OpenFirstOutPortViewAction(final WorkflowEditor editor) {
+        super(editor);
     }
 
     /**
+     *
      * {@inheritDoc}
      */
     @Override
@@ -83,49 +89,73 @@ public class OpenSubworkflowEditorAction extends Action {
     }
 
     /**
-     *
      * {@inheritDoc}
      */
     @Override
     public String getText() {
-        return "Open Subworkflow Editor";
+        return "Open First Out-Port View";
     }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Opens editor for this subworkflow";
-    }
-
 
     /**
      * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/meta/meta.png");
+        return ImageRepository.getImageDescriptor("icons/openPortView.png");
     }
 
+
+
     /**
-     * @return true, if underlying model instance of
-     *         <code>WorkflowManager</code>, otherwise false
+     * {@inheritDoc}
      */
-    protected boolean calculateEnabled() {
-        if (m_nodeContainer.getModel() instanceof WorkflowManager) {
-            return true;
-        }
-        return false;
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor(
+                "icons/openPortView_disabled.png");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void run() {
-        m_nodeContainer.openSubWorkflowEditor();
+    public String getToolTipText() {
+        return "Opens the first out-port view of the selected nodes.";
+    }
+
+    /**
+     * This opens the first view of all the selected nodes.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        LOGGER.debug("Creating open first out-port view job for "
+                + nodeParts.length + " node(s)...");
+        NodeContainerEditPart[] parts = getSelectedNodeParts();
+        for (NodeContainerEditPart p : parts) {
+            final NodeContainer cont = p.getNodeContainer();
+            if (cont.getNrOutPorts() >= 1) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    /** {inheritDoc} */
+                    @Override
+                    public void run() {
+                        NodeOutPort port = cont.getOutPort(1);
+                        LOGGER.debug("Open First Out-Port View "
+                           + cont.getName() + " on port " + port.getPortName());
+                        port.openPortView(port.getPortName());
+                    }
+                });
+            }
+        }
+
+        try {
+            // Give focus to the editor again. Otherwise the actions (selection)
+            // is not updated correctly.
+            getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
 }

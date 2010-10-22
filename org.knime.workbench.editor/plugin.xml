@@ -10,14 +10,29 @@
             
       <command
             categoryId="knime.command.category"
-            description="Opens the settings dialog on the selected node"
+            description="Opens the configuration dialog on the selected node"
             id="knime.commands.openDialog"
-            name="Open dialog"/>
+            name="Configure..."/>
       <command
             categoryId="knime.command.category"
-            description="Execute up to here"
+            description="Execute workflow up to here"
             id="knime.commands.execute"
-            name="Execute"/>      
+            name="Execute"/>
+      <command
+            categoryId="knime.command.category"
+            description="Execute all"
+            id="knime.commands.executeall"
+            name="Execute All"/>
+      <command
+            categoryId="knime.command.category"
+            description="Cancel"
+            id="knime.commands.cancel"
+            name="Cancel"/>
+      <command
+            categoryId="knime.command.category"
+            description="Cancel all"
+            id="knime.commands.cancelall"
+            name="Cancel All"/>  
       <command
             categoryId="knime.command.category"
             description="Reset node"
@@ -25,22 +40,29 @@
             name="Reset"/>      
       <command
             categoryId="knime.command.category"
-            description="Open View for selected node"
+            description="Open first view for selected node(s)"
             id="knime.commands.openView"
             name="Open View"/>
       <command
             categoryId="knime.command.category"
             description="Execute and open first view for selected node"
             id="knime.commands.executeAndOpenView"
-            name="Execute and open view"/>
-            
+            name="Execute and Open View"/>
       <command
             categoryId="knime.command.category"
-            description="Sets a user specified name and description for a node."
+            description="Edit custom name and description for the selected node"
             id="knime.commands.setNameAndDescription"
-            name="Set node name and description"/>
-            
- 
+            name="Edit Node Name and Description..."/>
+      <command
+            categoryId="knime.command.category"
+            description="Open first out-port view for selected node(s)"
+            id="knime.commands.openFirstOutPortView"
+            name="Open First Out-port View"/>
+      <command
+            categoryId="knime.command.category"
+            description="Open wizard to add meta node"
+            id="knime.commands.addMetaNode"
+            name="Open Meta Node Wizard..."/>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
@@ -66,45 +88,65 @@
             <groupMarker name="group1"/>
          </menu>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
-               definitionId="knime.commands.openDialog"
-               disabledIcon="icons/openDialog_disabled.gif"
-               icon="icons/openDialog.gif"
-               id="org.knime.workbench.editor.actions.openDialog"
-               label="Configure"
+               class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
+               definitionId="knime.commands.addMetaNode"
+               disabledIcon="icons/meta/meta.png"
+               icon="icons/meta/meta.png"
+               id="org.knime.workbench.editor.meta"
+               label="Open Meta Node Wizard..."
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Configure selected node"/>
+               tooltip="Opens the Add Meta Node Wizard"/>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
-               definitionId="knime.commands.execute"
-               disabledIcon="icons/execute_disabled.PNG"
-               icon="icons/execute.PNG"
-               id="org.knime.workbench.editor.actions.execute"
-               label="Execute"
+               class="org.knime.workbench.editor2.actions.delegates.DefaultOpenViewEditorAction"
+               definitionId="knime.commands.openView"
+               disabledIcon="icons/openView_disabled.gif"
+               icon="icons/openView.gif"
+               id="org.knime.workbench.editor.actions.defaultOpen"
+               label="Open First View"
                menubarPath="org.knime.workbench.editor.menu/group1"
-               style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Execute selected and executable nodes"/>        
+               tooltip="Opens the first view of the selected nodes"/>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
-               definitionId="knime.commands.executeall"
-               disabledIcon="icons/executeAll_disabled.PNG"
-               icon="icons/executeAll.PNG"
-               id="org.knime.workbench.editor.actions.executeall"
-               label="Execute all"
+               class="org.knime.workbench.editor2.actions.delegates.OpenFirstOutPortViewEditorAction"
+               definitionId="knime.commands.openFirstOutPortView"
+               disabledIcon="icons/openPortView_disabled.png"
+               icon="icons/openPortView.png"
+               id="org.knime.workbench.editor.actions.openFirstOutPortView"
+               label="Open First Out-Port View"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Opens the first out-port view of the selected nodes"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
+               definitionId="knime.commands.setNameAndDescription"
+               disabledIcon="icons/setNameDescription_disabled.PNG"
+               icon="icons/setNameDescription.PNG"
+               id="org.knime.workbench.editor.actions.setnameanddescription"
+               label="Edit Node Name and Description..."
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Execute all executable nodes"/>    
+               tooltip="Edit custom node name and node description"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
+               definitionId="knime.commands.reset"
+               disabledIcon="icons/resetNode_disabled.gif"
+               icon="icons/resetNode.gif"
+               id="org.knime.workbench.editor.actions.reset"
+               label="Reset"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Reset selected nodes"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.CancelAllEditorAction"
                definitionId="knime.commands.cancelall"
                disabledIcon="icons/cancelAll_disabled.PNG"
                icon="icons/cancelAll.PNG"
                id="org.knime.workbench.editor.actions.cancelall"
-               label="Cancel all"
+               label="Cancel All"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
@@ -126,71 +168,102 @@
                disabledIcon="icons/executeAndView_disabled.PNG"
                icon="icons/executeAndView.PNG"
                id="org.knime.workbench.editor.actions.executeAndOpenView"
-               label="ExecuteAndOpenView"
+               label="Execute and Open View"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Execute selected node and open first view"/>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
-               definitionId="knime.commands.setNameAndDescription"
-               disabledIcon="icons/setNameDescription_disabled.PNG"
-               icon="icons/setNameDescription.PNG"
-               id="org.knime.workbench.editor.actions.setnameanddescription"
-               label="SetNodeNameAndDescription"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
+               definitionId="knime.commands.executeall"
+               disabledIcon="icons/executeAll_disabled.PNG"
+               icon="icons/executeAll.PNG"
+               id="org.knime.workbench.editor.actions.executeall"
+               label="Execute All"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="To set/view the user specified node name and a context dependent description."/>
-               
+               tooltip="Execute all executable nodes"/>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
-               definitionId="knime.commands.reset"
-               disabledIcon="icons/resetNode_disabled.gif"
-               icon="icons/resetNode.gif"
-               id="org.knime.workbench.editor.actions.reset"
-               label="Reset"
+               class="org.knime.workbench.editor2.actions.delegates.ExecuteEditorAction"
+               definitionId="knime.commands.execute"
+               disabledIcon="icons/execute_disabled.PNG"
+               icon="icons/execute.PNG"
+               id="org.knime.workbench.editor.actions.execute"
+               label="Execute"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Reset selected nodes"/>
+               tooltip="Execute selected and executable nodes"/>    
          <action
-               class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
-               disabledIcon="icons/meta/meta.png"
-               icon="icons/meta/meta.png"
-               id="org.knime.workbench.editor.meta"
-               label="Add Meta Node"
+               class="org.knime.workbench.editor2.actions.delegates.OpenDialogEditorAction"
+               definitionId="knime.commands.openDialog"
+               disabledIcon="icons/openDialog_disabled.gif"
+               icon="icons/openDialog.gif"
+               id="org.knime.workbench.editor.actions.openDialog"
+               label="Configure..."
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Opens the Add Meta Node Dialog">
-         </action>
-         <action
-               class="org.knime.workbench.editor2.actions.delegates.DefaultOpenViewEditorAction"
-               disabledIcon="icons/openView_disabled.gif"
-               icon="icons/openView.gif"
-               id="org.knime.workbench.editor.actions.defaultOpen"
-               label="Default Open View"
-               menubarPath="org.knime.workbench.editor.menu/group1"
-               toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Opens the first view of the selected node(s)">
-         </action>
-         
-               
+               tooltip="Configure selected node"/>
       </editorContribution>
    </extension>
-   <extension
-         point="org.eclipse.ui.bindings">
+   <extension point="org.eclipse.ui.bindings">
+      <key
+            commandId="knime.commands.addMetaNode"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+M"/>
+      <key
+            commandId="knime.commands.setNameAndDescription"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="ALT+F2"/>
       <key
             commandId="knime.commands.openDialog"
+            contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+ENTER"/>
+            sequence="F6"/>
+      <key
+            commandId="knime.commands.openView"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F10"/>
+      <key
+            commandId="knime.commands.executeAndOpenView"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+F10"/>
       <key
             commandId="knime.commands.reset"
+            contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="Ctrl+7"/>          
-            
-            
+            sequence="F8"/>          
+      <key
+            commandId="knime.commands.execute"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F7"/>
+      <key
+            commandId="knime.commands.executeall"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+F7"/>
+      <key
+            commandId="knime.commands.cancel"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F9"/>
+      <key
+            commandId="knime.commands.cancelall"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+F9"/>
+      <key
+            commandId="knime.commands.openFirstOutPortView"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+F6"/>
    </extension>
     <extension
          id="modelProvider"

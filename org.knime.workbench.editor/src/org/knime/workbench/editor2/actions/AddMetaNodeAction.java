@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   11.01.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2.actions;
 
@@ -76,6 +74,7 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
      *
      * {@inheritDoc}
      */
+    @Override
     public void setActiveEditor(final IAction action,
             final IEditorPart targetEditor) {
         m_editor = (WorkflowEditor)targetEditor;
@@ -86,6 +85,7 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
      *
      * {@inheritDoc}
      */
+    @Override
     public void run(final IAction action) {
         Display display = Display.getCurrent();
         m_wizard = new AddMetaNodeWizard(m_editor);
@@ -100,8 +100,10 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
      *
      * {@inheritDoc}
      */
+    @Override
     public void selectionChanged(final IAction action,
             final ISelection selection) {
+        // nothing
     }
 
 

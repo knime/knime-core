@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   31.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.figures;
 
@@ -70,8 +68,8 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
@@ -136,8 +134,6 @@ public class NodeContainerFigure extends RectangleFigure {
     private static final Font FONT_SMALL;
 
     private static final Font FONT_USER_NAME;
-
-    // private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -239,13 +235,6 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name = new Label();
         m_nameTooltip = new NewToolTipFigure("");
         m_name.setFont(FONT_USER_NAME);
-
-        // register the figure as listener for click events
-        // in this case a text field enable the user to change the specific
-        // node name
-        // m_name.addMouseListener(this);
-        //
-        // m_nameTextField = new Text();
 
         // icon
         m_symbolFigure = new SymbolFigure();
@@ -471,7 +460,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * node is queued or executing.
      *
      * @param executing if true the progress bar displays a moving progress if
-     *            fals an empty progress bar is set indicating the waiting
+     *            false an empty progress bar is set indicating the waiting
      *            situation.
      */
     private void setProgressBar(final boolean executing) {
@@ -628,24 +617,6 @@ public class NodeContainerFigure extends RectangleFigure {
                         + 20;
 
         return new Dimension(prefWidth, prefHeight);
-
-        /*
-         * Rectangle parentBounds = getBounds(); int prefWidth = Math.max(WIDTH,
-         * m_heading.getPreferredSize().width); if (parentBounds.width > 0) {
-         * prefWidth = parentBounds.width; }
-         *
-         * int widthOfHeading = m_heading.getPreferredSize().width;
-         *
-         * prefWidth = Math.max(WIDTH, widthOfHeading);
-         *
-         * int prefHeight = 110; /* m_heading.getPreferredSize().height +
-         * m_contentFigure.getPreferredSize().height +
-         * m_infoWarnErrorPanel.getPreferredSize().height +
-         * m_statusFigure.getPreferredSize().height +
-         * m_name.getPreferredSize().height + 5;
-         *
-         * return new Dimension(prefWidth, prefHeight);
-         */
     }
 
     /**
@@ -699,8 +670,6 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Subfigure, hosts the icon and the job manager icon.
-     *
-     * @author Florian Georg, University of Konstanz
      */
     protected class SymbolFigure extends Figure {
 
@@ -900,8 +869,6 @@ public class NodeContainerFigure extends RectangleFigure {
      * display any combination of the signs and also provides functionality to
      * set tool tips containing one or more messages for each category
      * (info/warning/error).
-     *
-     * @author Christoph Sieb, University of Konstanz
      */
     private class InfoWarnErrorPanel extends Figure {
 
@@ -946,13 +913,6 @@ public class NodeContainerFigure extends RectangleFigure {
 
             setVisible(true);
             repaint();
-        }
-
-        /**
-         * Removes a info sign.
-         */
-        public void removeInfoSign() {
-            remove(m_infoFigure);
         }
 
         /**
@@ -1008,13 +968,6 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * Removes a warning sign.
-         */
-        public void removeWarningSign() {
-            remove(m_warningFigure);
-        }
-
-        /**
          * Sets a new error message.
          *
          * @param message the message to set
@@ -1033,20 +986,10 @@ public class NodeContainerFigure extends RectangleFigure {
 
             repaint();
         }
-
-        /**
-         * Removes a error sign.
-         */
-        public void removeErrorSign() {
-            remove(m_errorFigure);
-        }
-
     }
 
     /**
      * Subfigure, contains the "traffic light".
-     *
-     * @author Florian Georg, University of Konstanz
      */
     private class StatusFigure extends Figure {
 
@@ -1067,8 +1010,8 @@ public class NodeContainerFigure extends RectangleFigure {
             m_label = new Label();
 
             // the font is just set due to a bug in the getPreferedSize
-            // method of a lable which accesses the font somewhere
-            // if not set a nullpointer is thrown.
+            // method of a label which accesses the font somewhere
+            // if not set a NPE is thrown.
             // PO: Set a small font. The status image (as icon of the label) is
             // placed at the bottom of the label, which is too low, if the
             // font is bigger than the slot for the image.
@@ -1104,8 +1047,6 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Subfigure, contains the warning error signs.
-     *
-     * @author Christoph Sieb, University of Konstanz
      */
     private class InfoWarnErrorFigure extends Figure {
 
@@ -1134,37 +1075,6 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public void setIcon(final Image icon) {
             m_label.setIcon(icon);
-            revalidate();
-        }
-
-        /**
-         * Switches to warning mode.
-         *
-         * @param message the message to set for the tool tip
-         */
-        void setAsWarning(final String message) {
-            m_label.setIcon(WARNING_SIGN);
-            this.setToolTip(message, WarnErrorToolTip.WARNING);
-            revalidate();
-        }
-
-        /**
-         * Switches to error mode.
-         *
-         * @param message the message to set for the tool tip
-         */
-        void setAsError(final String message) {
-            m_label.setIcon(ERROR_SIGN);
-            this.setToolTip(message, WarnErrorToolTip.ERROR);
-            revalidate();
-        }
-
-        /**
-         * Switch off warning or error.
-         */
-        void switchOff() {
-            m_label.setIcon(null);
-            m_label.setToolTip(null);
             revalidate();
         }
 
@@ -1224,7 +1134,6 @@ public class NodeContainerFigure extends RectangleFigure {
      * @see NodeContainerFigure#mark()
      */
     public void unmark() {
-
         m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_deleteIcon);
     }
 

@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   Aug 5, 2005 (georg): created
  */
 package org.knime.workbench.editor2.actions;
 
@@ -108,7 +106,7 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/openView.gif");
+        return ImageRepository.getImageDescriptor("icons/openPortView.png");
     }
 
     /**
