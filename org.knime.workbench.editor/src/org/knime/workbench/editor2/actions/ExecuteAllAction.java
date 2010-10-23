@@ -52,7 +52,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -128,16 +127,8 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getAllNodeParts();
-        // enable if we have at least one executable node in our selection
-        WorkflowManager wm = getEditor().getWorkflowManager();
-        for (int i = 0; i < parts.length; i++) {
-            NodeContainer nc = parts[i].getNodeContainer();
-            if (wm.canExecuteNode(nc.getID())) {
-                return true;
-            }
-        }
-        return false;
+        WorkflowManager wm = getManager();
+        return wm.getParent().canExecuteNode(wm.getID());
     }
 
     /**
@@ -150,9 +141,8 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Starting execution of all nodes");
-        getManager().executeAll();
-
+        WorkflowManager wm = getManager();
+        wm.getParent().executeUpToHere(wm.getID());
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
