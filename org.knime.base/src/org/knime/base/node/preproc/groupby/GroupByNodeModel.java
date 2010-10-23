@@ -477,10 +477,17 @@ public class GroupByNodeModel extends NodeModel {
         }
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
+
+        //Check if no column at all has been selected as in the validate
+        //settings method. This check has to be after the explicit setting
+        //of the group columns above!!!
+        if (groupByCols.isEmpty() && m_columnAggregators2Use.isEmpty()) {
+            throw new InvalidSettingsException(
+                "Please select at least one group or aggregation column");
+        }
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
                 origSpec, groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), colNamePolicy);
-
         return new DataTableSpec[] {spec};
     }
 
