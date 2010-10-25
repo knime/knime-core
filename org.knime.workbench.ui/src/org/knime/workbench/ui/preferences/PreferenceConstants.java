@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,44 +44,52 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   12.01.2005 (Florian Georg): created
+ *
  */
 package org.knime.workbench.ui.preferences;
 
-
 /**
  * Constant definitions for plug-in preferences. Values are stored under these
- * keys in the PreferenceStore of the UI plugin.
- * 
- * 
+ * keys in the <code>PreferenceStore</code> of the UI plugin.
+ *
  * @author Florian Georg, University of Konstanz
  */
 public interface PreferenceConstants {
 
     /** Preference constant: whether user needs to confirm reset actions. */
     public static final String P_CONFIRM_RESET = "knime.confirm.reset";
-    
+
     /** Preference constant: whether user needs to confirm delete actions. */
     public static final String P_CONFIRM_DELETE = "knime.confirm.delete";
-    
+
     /** Preference constant to confirm reconnecting a node. */
     public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
-    
+
     /** Preference constant to confirm executing nodes not saved on close. */
-    public static final String P_CONFIRM_EXEC_NODES_NOT_SAVED = 
+    public static final String P_CONFIRM_EXEC_NODES_NOT_SAVED =
         "knime.confirm.exec_nodes_not_saved";
-    
-    /** Preference constant for the size of the favorite nodes frequency 
+
+    /** Preference constant for the size of the favorite nodes frequency
      * history size.
      */
-    public static final String P_FAV_FREQUENCY_HISTORY_SIZE 
-        = "knime.favorites.frequency";
+    public static final String P_FAV_FREQUENCY_HISTORY_SIZE =
+        "knime.favorites.frequency";
+
     /** Preference constant for the size of the favorite nodes last used
      * history size.
-     */    
-    public static final String P_FAV_LAST_USED_SIZE 
-        = "knime.favorites.lastused";
-   
+     */
+    public static final String P_FAV_LAST_USED_SIZE =
+        "knime.favorites.lastused";
+
+    /** Preference constant to allow setting empty node label. */
+    public static final String P_SET_NODE_LABEL = "knime.set.node_label";
+
+    /** Preference constant for default node label prefix. */
+    public static final String P_DEFAULT_NODE_LABEL =
+        "knime.default.node_label";
+
+    /** Preference constant for node name and node label to change font size. */
+    public static final String P_NODE_LABEL_FONT_SIZE =
+        "knime.node.font_size";
+
 }

@@ -64,7 +64,10 @@ import org.eclipse.gef.EditPartListener;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -100,7 +103,9 @@ import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -116,7 +121,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
         NodeUIInformationListener, EditPartListener, ConnectableEditPart,
-        JobManagerChangedListener {
+        JobManagerChangedListener, IPropertyChangeListener {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeContainerEditPart.class);
@@ -132,6 +137,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private NodeEditManager m_directEditManager;
 
     private boolean m_showFlowVarPorts = false;
+
+    /**
+     * Default constructor.
+     */
+    public NodeContainerEditPart() {
+        super();
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        store.addPropertyChangeListener(this);
+    }
 
     /**
      * @return The <code>NodeContainer</code>(= model)
@@ -176,8 +191,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         addEditPartListener(this);
 
         // If we already have extra info, init figure now
-        //
-        //
         if (getNodeContainer().getUIInformation() != null) {
             initFigureFromUIInfo((NodeUIInformation)getNodeContainer()
                     .getUIInformation());
@@ -218,7 +231,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected IFigure createFigure() {
-
         // create the visuals for the node container.
         final NodeContainerFigure nodeFigure =
                 new NodeContainerFigure(new ProgressFigure());
@@ -368,40 +380,40 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
 
-                    // case NodeContainer.EVENT_EXTRAINFO_CHANGED:
-                    LOGGER.debug("ExtraInfo changed, "
-                            + "updating bounds and visuals...");
+                // case NodeContainer.EVENT_EXTRAINFO_CHANGED:
+                LOGGER.debug("ExtraInfo changed, "
+                        + "updating bounds and visuals...");
 
-                    WorkflowRootEditPart parent = null;
-                    parent = (WorkflowRootEditPart)getParent();
+                WorkflowRootEditPart parent = null;
+                parent = (WorkflowRootEditPart)getParent();
 
-                    // provide some info from the extra info object to the
-                    // figure
-                    NodeUIInformation ei = (NodeUIInformation)
-                        getNodeContainer().getUIInformation();
+                // provide some info from the extra info object to the
+                // figure
+                NodeUIInformation ei = (NodeUIInformation)
+                    getNodeContainer().getUIInformation();
 
-                    //
-                    // if not already initialized, do this now.
-                    // Necessary 'cause the extra info is only available after
-                    // the node
-                    // has been added to the WFM via the CreateNodeCommand
-                    // All of this data is static and should not change after
-                    // creation
-                    // (icon, type)
-                    if (!m_figureInitialized) {
-                        initFigureFromUIInfo(ei);
-                        m_figureInitialized = true;
-                    }
-                    // set the new constraints in the parent edit part
-                    int[] bounds = ei.getBounds();
-                    parent.setLayoutConstraint(NodeContainerEditPart.this,
-                            getFigure(), new Rectangle(bounds[0], bounds[1],
-                                    bounds[2], bounds[3]));
+                //
+                // if not already initialized, do this now.
+                // Necessary 'cause the extra info is only available after
+                // the node
+                // has been added to the WFM via the CreateNodeCommand
+                // All of this data is static and should not change after
+                // creation
+                // (icon, type)
+                if (!m_figureInitialized) {
+                    initFigureFromUIInfo(ei);
+                    m_figureInitialized = true;
+                }
+                // set the new constraints in the parent edit part
+                int[] bounds = ei.getBounds();
+                parent.setLayoutConstraint(NodeContainerEditPart.this,
+                        getFigure(), new Rectangle(bounds[0], bounds[1],
+                                bounds[2], bounds[3]));
 
-                    // check status of node
-                    updateNodeStatus();
-                    fig.setCustomName(getCustomName());
-                    fig.setCustomDescription(evt.getDescription());
+                // check status of node
+                updateNodeStatus();
+                fig.setCustomName(getCustomName());
+                fig.setCustomDescription(evt.getDescription());
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -423,12 +435,26 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     }
 
+    /**
+     * @return custom name
+     */
     protected String getCustomName() {
         String customName = getNodeContainer().getCustomName();
-        if (customName == null) {
-            customName = "Node " + getNodeContainer().getID().getIndex();
+        if (customName != null) {
+            return customName;
         }
-        return customName;
+        String name = "Node";
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        if (store.contains(PreferenceConstants.P_SET_NODE_LABEL)) {
+            if (store.getBoolean(PreferenceConstants.P_SET_NODE_LABEL)) {
+                if (store.contains(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
+                    name = store.getString(
+                        PreferenceConstants.P_DEFAULT_NODE_LABEL);
+                }
+            }
+        }
+        return name + " " + getNodeContainer().getID().getIndex();
     }
 
     /**
@@ -702,6 +728,26 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void selectedStateChanged(final EditPart editpart) {
         LOGGER.debug(getNodeContainer().toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void propertyChange(final PropertyChangeEvent pce) {
+        if (pce.getProperty().equals(
+                PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
+            Integer fontSize = (Integer) pce.getNewValue();
+            ((NodeContainerFigure) getFigure()).setFontSize(fontSize);
+            return;
+        }
+        if (pce.getProperty().equals(PreferenceConstants.P_SET_NODE_LABEL)
+                || pce.getProperty().equals(
+                        PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
+            String newName = getCustomName();
+            ((NodeContainerFigure) getFigure()).setCustomName(newName);
+            return;
+        }
     }
 
 }

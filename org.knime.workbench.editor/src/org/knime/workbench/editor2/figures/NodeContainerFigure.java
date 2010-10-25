@@ -62,6 +62,7 @@ import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -73,6 +74,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Figure displaying a <code>NodeContainer</code> in a workflow. This serves as
@@ -92,13 +95,14 @@ import org.knime.workbench.editor2.ImageRepository;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerFigure extends RectangleFigure {
-    /** absolute width of this figure. * */
+
+    /** absolute width of this figure. */
     public static final int WIDTH = 80;
 
-    /** absolute height of this figure. * */
+    /** absolute height of this figure. */
     public static final int HEIGHT = 48;
 
-    /** Red traffic light. * */
+    /** Red traffic light. */
     public static final Image RED =
             ImageRepository.getImage("icons/ampel_red.png");
 
@@ -106,60 +110,46 @@ public class NodeContainerFigure extends RectangleFigure {
     public static final Image YELLOW =
             ImageRepository.getImage("icons/ampel_yellow.png");
 
-    /** Green traffic light. * */
+    /** Green traffic light. */
     public static final Image GREEN =
             ImageRepository.getImage("icons/ampel_green.png");
 
-    /** Info sign. * */
+    /** Info sign. */
     public static final Image INFO_SIGN =
             ImageRepository.getImage("icons/roundInfo.jpg");
 
-    /** Warning sign. * */
+    /** Warning sign. */
     public static final Image WARNING_SIGN =
             ImageRepository.getImage("icons/warning.gif");
 
-    /** Error sign. * */
+    /** Error sign. */
     public static final Image ERROR_SIGN =
             ImageRepository.getImage("icons/error.jpg");
 
-    /** Delete sign. * */
+    /** Delete sign. */
     public static final Image DELETE_SIGN =
             ImageRepository.getImage("icons/delete.png");
 
-    /** State: Node not configured. * */
+    /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
 
-    private static final Font FONT_NORMAL;
+    private static final Font NODE_FONT = new Font(Display.getCurrent(),
+            fontName(), 2, SWT.NORMAL);;
 
-    private static final Font FONT_SMALL;
-
-    private static final Font FONT_USER_NAME;
-
-    private static final Font FONT_EXECUTED;
-
-    static {
+    private static String fontName() {
         // I (Bernd) had problem using the hardcoded font "Arial" -
         // this static block derives the fonts from the system font.
         Display current = Display.getCurrent();
         Font systemFont = current.getSystemFont();
         FontData[] systemFontData = systemFont.getFontData();
         String name = "Arial"; // fallback
-        int height = 9;
         if (systemFontData.length >= 1) {
             name = systemFontData[0].getName();
-            height = systemFontData[0].getHeight();
         }
-
-        // FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
-        FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
-        // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
-        FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
-        FONT_NORMAL = FONT_EXECUTED;
-
-        FONT_SMALL = new Font(current, name, 2, SWT.NORMAL);
+        return name;
     }
 
-    /** tooltip for displaying the full heading. * */
+    /** Tooltip for displaying the full heading. */
     private final NewToolTipFigure m_headingTooltip;
 
     /** content pane, contains the port visuals and the icon. * */
@@ -174,22 +164,18 @@ public class NodeContainerFigure extends RectangleFigure {
     /** The background color to apply. */
     private final Color m_backgroundColor;
 
-    /** contains the the warning/error sign. * */
+    /** contains the the warning/error sign. */
     private final InfoWarnErrorPanel m_infoWarnErrorPanel;
 
-    /**
-     * The node name. E.g File Reader
-     */
+    /** The node name, e.g File Reader. */
     private final Label m_heading;
 
-    /**
-     * The user specified node name. E.g. Molecule Data 4
-     */
+    /** The user specified node name, e.g. Molecule Data 4. */
     private final Label m_name;
 
     /**
      * Tooltip for displaying the custom description. This tooltip is displayed
-     * with the custom name
+     * with the custom name.
      */
     private final NewToolTipFigure m_nameTooltip;
 
@@ -201,7 +187,6 @@ public class NodeContainerFigure extends RectangleFigure {
     private Image m_jobExec;
 
     private boolean m_showFlowVarPorts;
-
 
     /**
      * Creates a new node figure.
@@ -225,16 +210,24 @@ public class NodeContainerFigure extends RectangleFigure {
         // add sub-figures
         setLayoutManager(new DelegatingLayout());
 
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
+        String fontName = fontName();
+        Display current = Display.getDefault();
+        Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
+        Font boldFont = new Font(current, fontName, height, SWT.BOLD);
+
         // Heading (Label)
         m_heading = new Label();
         m_headingTooltip = new NewToolTipFigure("");
         m_heading.setToolTip(m_headingTooltip);
-        m_heading.setFont(FONT_NORMAL);
+        m_heading.setFont(boldFont);
 
         // Name (Label)
         m_name = new Label();
         m_nameTooltip = new NewToolTipFigure("");
-        m_name.setFont(FONT_USER_NAME);
+        m_name.setFont(normalFont);
 
         // icon
         m_symbolFigure = new SymbolFigure();
@@ -344,7 +337,7 @@ public class NodeContainerFigure extends RectangleFigure {
         m_headingTooltip.setText(text);
     }
 
-    public String wrapText(final String text) {
+    private String wrapText(final String text) {
         if (text == null || text.length() == 0) {
             return "";
         }
@@ -361,7 +354,8 @@ public class NodeContainerFigure extends RectangleFigure {
         // the closest space is used for a split
         int indexLeft = middle;
         int indexRight = middle + 1;
-        for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
+        for (; indexLeft >= 0 && indexRight < text.length();
+                indexLeft--, indexRight++) {
             if (text.charAt(indexLeft) == ' ') {
                 StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
@@ -381,39 +375,31 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param name The name to set.
      */
     public void setCustomName(final String name) {
-
         if (name == null || name.trim().equals("")) {
-
             try {
                 m_name.setText("");
                 remove(m_name);
             } catch (IllegalArgumentException iae) {
                 // do nothing
             }
-            return;
+        } else {
+            // if the name is not already set
+            m_name.setText(name);
+            if (!(m_name.getParent() == this)) {
+                add(m_name, 4);
+                setConstraint(m_name, new NodeContainerLocator(this));
+            }
+
+            // if the tooltip (description) contains content, set it
+            String toolTipText = m_name.getText();
+            if (m_description != null && !m_description.trim().equals("")) {
+                toolTipText = toolTipText + ":\n\n Description:\n"
+                    + m_description;
+            }
+
+            m_nameTooltip.setText(toolTipText);
+            m_name.setToolTip(m_nameTooltip);
         }
-
-        // if the name is not already set
-        // set it
-        m_name.setText(name);
-        if (!(m_name.getParent() == this)) {
-
-            add(m_name, 4);
-            setConstraint(m_name,
-                    new NodeContainerLocator(this));
-        }
-
-        // if the tooltip (description) contains
-        // content, set it
-
-        String toolTipText = m_name.getText();
-        if (m_description != null && !m_description.trim().equals("")) {
-            toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
-        }
-
-        m_nameTooltip.setText(toolTipText);
-        m_name.setToolTip(m_nameTooltip);
-
     }
 
     /**
@@ -445,7 +431,6 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     private boolean isChild(final Figure figure) {
-
         for (Object contentFigure : getChildren()) {
             if (contentFigure == figure) {
                 return true;
@@ -456,8 +441,8 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Replaces the status ampel with the progress bar. This is done once the
-     * node is queued or executing.
+     * Replaces the status traffic light with the progress bar. This is done
+     * once the node is queued or executing.
      *
      * @param executing if true the progress bar displays a moving progress if
      *            false an empty progress bar is set indicating the waiting
@@ -605,16 +590,15 @@ public class NodeContainerFigure extends RectangleFigure {
         // the label
         prefWidth += 10;
 
-        int prefHeight =
-                m_heading.getPreferredSize().height
-                        + m_symbolFigure.getPreferredSize().height
-                        // + m_infoWarnErrorPanel.getPreferredSize().height
-                        // replace with a fixed size of 16? pixel
-                        + m_progressFigure.getPreferredSize().height
-                        + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height
-                        // plus a fixed size for the info error warn panel
-                        + 20;
+        int prefHeight = m_heading.getPreferredSize().height
+                + m_symbolFigure.getPreferredSize().height
+                // + m_infoWarnErrorPanel.getPreferredSize().height
+                // replace with a fixed size of 16? pixel
+                + m_progressFigure.getPreferredSize().height
+                + m_statusFigure.getPreferredSize().height
+                + m_name.getPreferredSize().height
+                // plus a fixed size for the info error warn panel
+                + 20;
 
         return new Dimension(prefWidth, prefHeight);
     }
@@ -997,7 +981,6 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Creates a new bottom figure.
-         *
          */
         public StatusFigure() {
             // status figure must have exact same dimensions as progress bar
@@ -1009,13 +992,13 @@ public class NodeContainerFigure extends RectangleFigure {
             setLayoutManager(layout);
             m_label = new Label();
 
-            // the font is just set due to a bug in the getPreferedSize
+            // the font is just set due to a bug in the getPreferredSize
             // method of a label which accesses the font somewhere
             // if not set a NPE is thrown.
             // PO: Set a small font. The status image (as icon of the label) is
             // placed at the bottom of the label, which is too low, if the
             // font is bigger than the slot for the image.
-            m_label.setFont(FONT_SMALL);
+            m_label.setFont(NODE_FONT);
 
             // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
@@ -1111,7 +1094,6 @@ public class NodeContainerFigure extends RectangleFigure {
      * @return the user node name of this figure
      */
     public String getCustomName() {
-
         return m_name.getText();
     }
 
@@ -1135,6 +1117,21 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void unmark() {
         m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_deleteIcon);
+    }
+
+    public void setFontSize(final int fontSize) {
+        // apply new font for node name
+        Font font1 = m_heading.getFont();
+        FontData fontData1 = font1.getFontData()[0];
+        fontData1.setHeight(fontSize);
+        m_heading.setFont(new Font(Display.getDefault(), fontData1));
+        font1.dispose();
+        // apply new font for node label
+        Font font2 = m_name.getFont();
+        FontData fontData2 = font2.getFontData()[0];
+        fontData2.setHeight(fontSize);
+        m_name.setFont(new Font(Display.getDefault(), fontData2));
+        font2.dispose();
     }
 
 }

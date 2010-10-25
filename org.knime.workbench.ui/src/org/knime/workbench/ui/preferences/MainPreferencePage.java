@@ -1,4 +1,4 @@
-/*  
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   12.01.2005 (Florian Georg): created
+ *
  */
 package org.knime.workbench.ui.preferences;
 
@@ -54,6 +52,7 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -63,29 +62,31 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * This class represents a preference page that is contributed to the
- * Preferences dialog. By subclassing <samp>FieldEditorPreferencePage </samp>,
+ * Preferences dialog. By subclassing <samp>FieldEditorPreferencePage</samp>,
  * we can use the field support built into JFace that allows us to create a page
  * that is small and knows how to save, restore and apply itself.
  * <p>
  * This page is used to modify preferences only. They are stored in the
  * preference store that belongs to the main plug-in class. That way,
  * preferences can be accessed directly via the preference store.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class MainPreferencePage extends FieldEditorPreferencePage implements
-IWorkbenchPreferencePage {
+public class MainPreferencePage extends FieldEditorPreferencePage
+        implements IWorkbenchPreferencePage {
 
     private RadioGroupFieldEditor m_consoleLogEditor;
 
+    private StringFieldEditor m_nodeLabelPrefix;
+
+    private BooleanFieldEditor m_emptyNodeLabel;
+
     /**
-     * Constructor .
+     * Constructor.
      */
     public MainPreferencePage() {
         super(GRID);
-//      setDescription("KNIME GUI preferences");
     }
-
 
     /**
      * Creates the field editors. Field editors are abstractions of the common
@@ -94,27 +95,24 @@ IWorkbenchPreferencePage {
      */
     @Override
     public void createFieldEditors() {
-        Composite parent = getFieldEditorParent();
+        final Composite parent = getFieldEditorParent();
 
         // Specify the minimum log level for the console
         m_consoleLogEditor = new RadioGroupFieldEditor(
-                KNIMECorePlugin.P_LOGLEVEL_CONSOLE, 
+                KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
                 "Console View Log Level", 4,
                 new String[][] {
                         {"&DEBUG", LEVEL.DEBUG.name()},
-
-                        {"&INFO", LEVEL.INFO.name()},
-
-                        {"&WARN", LEVEL.WARN.name()},
-
-                        {"&ERROR", LEVEL.ERROR.name()} },
-                        parent);
+                        {"&INFO",  LEVEL.INFO.name()},
+                        {"&WARN",  LEVEL.WARN.name()},
+                        {"&ERROR", LEVEL.ERROR.name()}
+                }, parent);
         addField(m_consoleLogEditor);
 
-        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET, 
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET,
                 "Confirm Node Reset", parent));
 
-        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE, 
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE,
                 "Confirm Node/Connection Deletion", parent));
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
@@ -123,7 +121,7 @@ IWorkbenchPreferencePage {
         addField(new BooleanFieldEditor(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
-        
+
 
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
@@ -142,37 +140,53 @@ IWorkbenchPreferencePage {
         addField(usedHistorySizeEditor);
         addField(freqHistorySizeEditor);
 
+        m_emptyNodeLabel = new BooleanFieldEditor(
+                PreferenceConstants.P_SET_NODE_LABEL,
+                "Set node label prefix", parent) {
+            /** {@inheritDoc}  */
+            @Override
+            protected void valueChanged(final boolean old, final boolean neu) {
+                m_nodeLabelPrefix.setEnabled(neu, parent);
+            }
+        };
+
+        m_nodeLabelPrefix = new StringFieldEditor(
+                PreferenceConstants.P_DEFAULT_NODE_LABEL,
+                "Default node label (prefix): ", parent);
+
+        addField(m_emptyNodeLabel);
+        addField(m_nodeLabelPrefix);
+
+        IntegerFieldEditor fontSizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_NODE_LABEL_FONT_SIZE,
+                "Change node name and label font size", parent);
+        addField(fontSizeEditor);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public void init(final IWorkbench workbench) {
         // we use the pref store of the UI plugin
         setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
     }
-    
-    /**
-     * 
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
     protected void initialize() {
         super.initialize();
-        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault()
-                .getPreferenceStore());
+        m_consoleLogEditor.setPreferenceStore(
+                KNIMECorePlugin.getDefault().getPreferenceStore());
         m_consoleLogEditor.load();
+        m_nodeLabelPrefix.setEnabled(m_emptyNodeLabel.getBooleanValue(),
+                getFieldEditorParent());
     }
-    
-    /**
-     * 
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
     protected void performDefaults() {
         super.performDefaults();
-        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault()
-                .getPreferenceStore());
+        m_consoleLogEditor.setPreferenceStore(
+                KNIMECorePlugin.getDefault().getPreferenceStore());
         m_consoleLogEditor.loadDefault();
     }
 }

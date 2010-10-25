@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   12.01.2005 (Florian Georg): created
+ *
  */
 package org.knime.workbench.ui.preferences;
 
@@ -56,10 +54,11 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Class used to initialize default preference values.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
+
     /**
      * {@inheritDoc}
      */
@@ -68,19 +67,23 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         // get the preference store for the UI plugin
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
-        
+
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
-        
+
         store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
-        
+
         store.setDefault(PreferenceConstants.P_CONFIRM_RECONNECT, true);
-        
+
         store.setDefault(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED, true);
-        
+
         store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
-        
+
         store.setDefault(PreferenceConstants.P_FAV_LAST_USED_SIZE, 10);
-        
+
+        store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
+
+        store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, 8);
+
     }
 }
