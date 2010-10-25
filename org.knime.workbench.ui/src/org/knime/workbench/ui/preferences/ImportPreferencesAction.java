@@ -115,6 +115,7 @@ public class ImportPreferencesAction extends Action {
      * @deprecated use the constructor
      *             <code>ExportPreferencesAction(IWorkbenchWindow)</code>
      */
+    @Deprecated
     public ImportPreferencesAction(final IWorkbench workbench) {
         this(workbench.getActiveWorkbenchWindow());
     }

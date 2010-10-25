@@ -97,6 +97,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                 if (m_isEnabled) {
                     if (m_lastMasterKey == null || m_lastMasterKey.isEmpty()) {
                         Display.getDefault().syncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 MasterKeyDialog.openDialogAndReadKey();
                             }
@@ -108,7 +109,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                 }
             }
         };
-        
+
     private static final String OBSOLETE_MASTERKEY =
         "Starting with KNIME 2.2 the master key becomes obsolete and is\n"
         + "replaced by the Workflow Credentials. Those credentials with\n"
@@ -241,6 +242,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     /**
      * {@inheritDoc}
      */
+    @Override
     public void init(final IWorkbench workbench) {
         initPrefStore();
     }

@@ -86,6 +86,7 @@ public class ExportPreferencesDialog extends Dialog {
         super(parentShell);
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
@@ -100,6 +101,7 @@ public class ExportPreferencesDialog extends Dialog {
         return m_overwrite;
     }
 
+    /** {@inheritDoc} */
     @Override
     protected Control createDialogArea(final Composite parent) {
         Composite overall = new Composite(parent, SWT.NONE);
@@ -133,6 +135,7 @@ public class ExportPreferencesDialog extends Dialog {
         final Text filenameUI = new Text(panel, SWT.NONE);
         filenameUI.setLayoutData(fillBoth);
         filenameUI.addListener(SWT.Modify, new Listener() {
+            @Override
             public void handleEvent(final Event event) {
                 m_filename = filenameUI.getText().trim();
                 validate();

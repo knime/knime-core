@@ -65,14 +65,14 @@ import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
 /**
  * Preference page used to load additional database drivers.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DatabasePreferencePage extends FieldEditorPreferencePage 
+public class DatabasePreferencePage extends FieldEditorPreferencePage
 		implements IWorkbenchPreferencePage {
 
 	/**
-	 * 
+	 *
 	 */
 	public DatabasePreferencePage() {
         super("Load Database Driver File (Jar or Zip)", null, GRID);
@@ -87,7 +87,7 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 	protected void createFieldEditors() {
 		final Shell shell = Display.getDefault().getActiveShell();
         addField(new ListEditor(HeadlessPreferencesConstants.P_DATABASE_DRIVERS,
-        		"List of loaded database driver files:", 
+        		"List of loaded database driver files:",
         		getFieldEditorParent()) {
  			@Override
 			protected String[] parseString(final String string) {
@@ -111,7 +111,7 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 				}
 				return result.toArray(new String[0]);
 			}
-			
+
 			@Override
 			protected String getNewInputObject() {
 			    FileDialog dialog = new FileDialog(shell);
@@ -125,7 +125,7 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 					return null;
 				}
 			}
-			
+
 			@Override
 			protected String createList(final String[] string) {
 				String res = "";
@@ -133,16 +133,17 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 					if (i > 0) {
 						res += ";";
 					}
-					res += string[i]; 
+					res += string[i];
 				}
 				return res;
 			}
 		});
 	}
-	
+
     /**
      * {@inheritDoc}
      */
+	@Override
     public void init(final IWorkbench workbench) {
         IPreferenceStore corePrefStore =
             KNIMECorePlugin.getDefault().getPreferenceStore();

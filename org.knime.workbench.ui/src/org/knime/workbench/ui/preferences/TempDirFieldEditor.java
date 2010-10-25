@@ -1,4 +1,4 @@
-/*  
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2005 (Florian Georg): created
  */
@@ -58,14 +58,14 @@ import org.eclipse.swt.widgets.Composite;
 /**
  * Enhances the default {@link DirectoryFieldEditor} to check for validity after
  * each key stroke.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class TempDirFieldEditor extends DirectoryFieldEditor {
 
     /**
      * Creates a temp directory field editor.
-     * 
+     *
      * @param name
      *            the name of the preference this field editor works on
      * @param labelText
@@ -79,10 +79,11 @@ public class TempDirFieldEditor extends DirectoryFieldEditor {
 
         // registers a key listener
         getTextControl(parent).addKeyListener(new KeyListener() {
+            @Override
             public void keyPressed(final KeyEvent e) {
                 // do nothing
             }
-
+            @Override
             public void keyReleased(final KeyEvent e) {
                 // perform a validity check each time a key is pressed on this
                 // directory field

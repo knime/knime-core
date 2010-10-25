@@ -43,7 +43,7 @@ import org.knime.core.node.workflow.CredentialsStore;
 
 /**
  * Dialog that let the user add, edit or remove credentials. Existing
- * variables are listed in a {@link CredentialVariableTable} with name, login 
+ * variables are listed in a {@link CredentialVariableTable} with name, login
  * and password. Credentials can be added or edited with the
  * {@link CredentialVariablesEditDialog}.
  *
@@ -54,7 +54,7 @@ public class CredentialVariablesDialog extends Dialog {
     private CredentialVariableTable m_table;
 
     private List<Credentials> m_credentials;
-    
+
     private final String m_workflowName;
 
     private Button m_addVarBtn;
@@ -62,7 +62,7 @@ public class CredentialVariablesDialog extends Dialog {
     private Button m_editVarBtn;
 
     private Button m_removeVarBtn;
-    
+
    /**
     * Create a new dialog instance to edit credentials.
     * @param shell parent shell
@@ -82,7 +82,7 @@ public class CredentialVariablesDialog extends Dialog {
             final List<Credentials> credentials) {
         this(shell, credentials, null);
     }
-    
+
    /**
     * Create a new dialog instance to edit credentials.
     * @param shell parent shell
@@ -105,7 +105,7 @@ public class CredentialVariablesDialog extends Dialog {
      * Create a new dialog instance to edit credentials.
      * @param shell parent shell
      * @param credentials list of current <code>Credentials</code>
-     * @param workflowName the name of the workflow to edit credentials 
+     * @param workflowName the name of the workflow to edit credentials
      */
     public CredentialVariablesDialog(final Shell shell,
             final List<Credentials> credentials, final String workflowName) {
@@ -135,10 +135,10 @@ public class CredentialVariablesDialog extends Dialog {
         Composite composite = new Composite(parent, SWT.NONE);
         if (m_workflowName != null) {
             Label label = new Label(composite, SWT.NONE);
-            label.setText("Edit Credentials for Workflow '" 
+            label.setText("Edit Credentials for Workflow '"
                 + m_workflowName + "'.");
         }
-        
+
         composite.setLayout(new GridLayout(1, false));
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
@@ -146,7 +146,7 @@ public class CredentialVariablesDialog extends Dialog {
         Composite tableAndBtnsComp = new Composite(composite, SWT.NONE);
         tableAndBtnsComp.setLayoutData(new GridData(GridData.FILL_BOTH));
         tableAndBtnsComp.setLayout(new GridLayout(2, false));
-        
+
         // first column: table
         Composite tableComp = new Composite(tableAndBtnsComp, SWT.NONE);
         GridData gridData = new GridData(GridData.FILL_BOTH);
@@ -160,9 +160,9 @@ public class CredentialVariablesDialog extends Dialog {
         m_table.getViewer().refresh();
         m_table.getViewer().addDoubleClickListener(new IDoubleClickListener() {
             /**
-             *
              * {@inheritDoc}
              */
+            @Override
             public void doubleClick(final DoubleClickEvent event) {
                 Table table = m_table.getViewer().getTable();
                 int index = table.getSelectionIndex();
@@ -249,7 +249,7 @@ public class CredentialVariablesDialog extends Dialog {
     }
 
     private void addCredential() {
-        CredentialVariablesEditDialog dialog = 
+        CredentialVariablesEditDialog dialog =
             new CredentialVariablesEditDialog();
         if (dialog.open() == Dialog.CANCEL) {
             // if the user has canceled the dialog there is nothing left to do
@@ -299,7 +299,7 @@ public class CredentialVariablesDialog extends Dialog {
         m_credentials = m_table.getCredentials();
         super.okPressed();
     }
-    
+
     /**
      * @return a list of <code>Credentials</code> entered in the dialog
      */
