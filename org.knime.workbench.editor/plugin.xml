@@ -213,7 +213,7 @@
             commandId="knime.commands.addMetaNode"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+M"/>
+            sequence="SHIFT+F12"/>
       <key
             commandId="knime.commands.setNameAndDescription"
             contextId="org.eclipse.ui.contexts.window"
