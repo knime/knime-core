@@ -812,5 +812,19 @@ public abstract class HierarchicalGraphView<K> {
         m_component.repaint();
     }
 
-
+    /**
+     * Returns the node at a certain point.
+     *
+     * @param p the point on screen
+     * @return the node at the given point
+     */
+    public K nodeAtPoint(final Point p) {
+        for (Map.Entry<DefaultMutableTreeNode, Rectangle> entry
+                : m_visible.entrySet()) {
+            if (entry.getValue().contains(p)) {
+                return (K)(entry.getKey().getUserObject());
+            }
+        }
+        return null;
+    }
 }

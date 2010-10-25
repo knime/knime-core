@@ -53,6 +53,8 @@ package org.knime.base.node.mine.decisiontree2.predictor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -61,6 +63,7 @@ import java.util.Set;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
@@ -80,14 +83,14 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * @author Heiko Hofer
  */
 final class DecTreePredictorGraphView
-            extends NodeView<DecTreePredictorNodeModel>
-            implements HiLiteListener {
+            extends NodeView<DecTreePredictorNodeModel> implements HiLiteListener {
     private DecTreeGraphView m_graph;
 
     private HiLiteHandler m_hiLiteHdl;
 
     private JMenu m_hiLiteMenu;
 
+    private JPopupMenu m_popup;
 
     /**
      * Default constructor, taking the model as argument.
@@ -96,8 +99,9 @@ final class DecTreePredictorGraphView
      */
     public DecTreePredictorGraphView(final DecTreePredictorNodeModel model) {
         super(model);
-        DecisionTreeNode root = null != model.getDecisionTree()
-                ? model.getDecisionTree().getRootNode() : null;
+        DecisionTreeNode root =
+            null != model.getDecisionTree() ? model.getDecisionTree()
+                    .getRootNode() : null;
         m_graph = new DecTreeGraphView(root);
         JScrollPane treeView = new JScrollPane(m_graph.getView());
         Dimension prefSize = treeView.getPreferredSize();
@@ -119,7 +123,53 @@ final class DecTreePredictorGraphView
         this.getJMenuBar().add(m_hiLiteMenu);
         m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
         m_hiLiteHdl.addHiLiteListener(this);
+
+        m_popup = new JPopupMenu();
+        m_popup.add(createHiliteItem());
+        m_popup.add(createUnHiliteItem());
+        m_popup.add(createClearHiliteItem());
+
         recreateHiLite();
+
+
+        m_graph.getView().addMouseListener(new MouseAdapter() {
+            private void showPopup(final MouseEvent e) {
+                DecisionTreeNode node = m_graph.nodeAtPoint(e.getPoint());
+                if (null != node) {
+                    m_popup.show(m_graph.getView(), e.getX(), e.getY());
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void mousePressed(final MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void mouseReleased(final MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+        });
     }
 
     /**
@@ -163,8 +213,6 @@ final class DecTreePredictorGraphView
         }
     }
 
-
-
     private void updateHiLite(final boolean state) {
         List<DecisionTreeNode> selected = m_graph.getSelected();
         Set<RowKey> covPat = new HashSet<RowKey>();
@@ -186,8 +234,17 @@ final class DecTreePredictorGraphView
     private JMenu createHiLiteMenu() {
         final JMenu result = new JMenu(HiLiteHandler.HILITE);
         result.setMnemonic('H');
+
+        result.add(createHiliteItem());
+        result.add(createUnHiliteItem());
+        result.add(createClearHiliteItem());
+
+        return result;
+    }
+
+    private JMenuItem createHiliteItem() {
         JMenuItem item =
-                new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
+            new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -195,8 +252,12 @@ final class DecTreePredictorGraphView
                 updateHiLite(true);
             }
         });
-        result.add(item);
-        item = new JMenuItem(HiLiteHandler.UNHILITE_SELECTED + " Branch");
+        return item;
+    }
+
+    private JMenuItem createUnHiliteItem() {
+        JMenuItem item = new JMenuItem(
+                HiLiteHandler.UNHILITE_SELECTED + " Branch");
         item.setMnemonic('U');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -204,19 +265,20 @@ final class DecTreePredictorGraphView
                 updateHiLite(false);
             }
         });
-        result.add(item);
-        item = new JMenuItem(HiLiteHandler.CLEAR_HILITE);
+        return item;
+    }
+
+    private JMenuItem createClearHiliteItem() {
+        JMenuItem item = new JMenuItem(HiLiteHandler.CLEAR_HILITE);
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
-                m_graph.clearHilite();
+                //m_graph.clearHilite();
                 m_hiLiteHdl.fireClearHiLiteEvent();
             }
         });
-        result.add(item);
-
-        return result;
+        return item;
     }
 
     /**
