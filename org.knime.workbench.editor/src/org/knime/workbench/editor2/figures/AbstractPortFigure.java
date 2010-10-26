@@ -281,7 +281,7 @@ public abstract class AbstractPortFigure extends Shape {
                     Rectangle p =
                             new Rectangle(points.getPoint(0), points
                                     .getPoint(2));
-                    graphics.fillArc(p, 0, 360);
+                    graphics.fillOval(p);
                 } else {
                     graphics.fillPolygon(points);
                 }
@@ -365,7 +365,7 @@ public abstract class AbstractPortFigure extends Shape {
                     Rectangle p =
                             new Rectangle(points.getPoint(0), points
                                     .getPoint(2));
-                    graphics.drawArc(p, 0, 360);
+                    graphics.drawOval(p);
                 } else {
                     graphics.drawPolygon(points);
                 }
