@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="metanode_porttype" name="Port Type for Meta Node Wizard" schema="schema/metanode_portype.exsd"/>
      <extension
          point="org.eclipse.ui.commands">
       <category
@@ -277,5 +278,19 @@
 			<instanceof value="org.eclipse.core.resources.IResource"/>
       </enablement>
    </extension>
+    <extension
+          point="org.knime.workbench.editor.metanode_porttype">
+       <porttype
+             metaNodePortTypeClass="org.knime.workbench.editor2.meta.MetaNodePortType$DataMetaNodePortType">
+       </porttype>
+       <porttype
+             metaNodePortTypeClass="org.knime.workbench.editor2.meta.MetaNodePortType$DBMetaNodePortType">
+       </porttype>
+       <porttype
+             metaNodePortTypeClass="org.knime.workbench.editor2.meta.MetaNodePortType$PMMLMetaNodePortType"></porttype>
+       <porttype
+             metaNodePortTypeClass="org.knime.workbench.editor2.meta.MetaNodePortType$FlowVarMetaNodePortType">
+       </porttype>
+    </extension>
     
 </plugin>

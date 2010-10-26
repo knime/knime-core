@@ -68,10 +68,6 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * Dialog to enter the port name and type.
@@ -80,22 +76,11 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  */
 public class MetaPortDialog extends Dialog {
 
-    private enum PortTypes {
-        /** Data port. */
-        Data,
-        /** Model port. */
-        PMML,
-        /** Database port. */
-        Database,
-        /** FlowVariable port. */
-        FlowVariables;
-    }
-
     private Shell m_shell;
     private Label m_error;
     private Combo m_type;
 
-    private static final int WIDTH = 200;
+    private static final int WIDTH = 220;
     private static final int HEIGHT = 150;
 
     private Port m_port = null;
@@ -162,10 +147,12 @@ public class MetaPortDialog extends Dialog {
         label2.setText("Port Type:");
         m_type = new Combo(composite,
                 SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY | SWT.BORDER);
-        PortTypes[] values = PortTypes.values();
-        String[] names = new String[values.length];
+        AddMetaNodePortTypeCollector instance =
+            AddMetaNodePortTypeCollector.getInstance();
+        MetaNodePortType[] types = instance.getTypes();
+        String[] names = new String[types.length];
         for (int i = 0; i < names.length; i++) {
-            names[i] = values[i].name();
+            names[i] = types[i].getName();
         }
         m_type.setItems(names);
         m_type.addFocusListener(new FocusAdapter() {
@@ -194,23 +181,20 @@ public class MetaPortDialog extends Dialog {
 //                }
                 resetError();
                 String selected = m_type.getItem(m_type.getSelectionIndex());
-                switch (PortTypes.valueOf(selected)) {
-                case Data:
-                    m_port = new Port(BufferedDataTable.TYPE);
-                    break;
-                case PMML:
-                    m_port = new Port(PMMLPortObject.TYPE);
-                    break;
-                case Database:
-                    m_port = new Port(DatabasePortObject.TYPE);
-                    break;
-                case FlowVariables:
-                    m_port = new Port(FlowVariablePortObject.TYPE);
-                    break;
-                default:
+                MetaNodePortType type = null;
+                for (MetaNodePortType t
+                        : AddMetaNodePortTypeCollector.
+                        getInstance().getTypes()) {
+                    if (t.getName().equals(selected)) {
+                        type = t;
+                        break;
+                    }
+                }
+                if (type == null) {
                     throw new IllegalStateException(
                             "Unknown port type: " + selected);
                 }
+                m_port = new Port(type.getType());
                 m_shell.dispose();
             }
 

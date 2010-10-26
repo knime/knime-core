@@ -189,6 +189,13 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
+                    } else {
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_GRAY));
+                        gc.fillRectangle(
+                                left - PORT_SIZE,
+                                y,
+                                PORT_SIZE, PORT_SIZE);
                     }
                     i++;
                 }
@@ -220,6 +227,10 @@ public class AddMetaNodePage extends WizardPage {
                             FlowVariablePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_RED));
+                        gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
+                    } else {
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_GRAY));
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
                     }
                     i++;
