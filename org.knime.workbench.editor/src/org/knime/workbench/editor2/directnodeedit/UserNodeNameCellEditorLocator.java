@@ -1,4 +1,4 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.05.2005 (sieb): created
  */
@@ -54,23 +54,23 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Text;
-
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
  * The locator to locate the cell editor for the
  * <code>NodeContainerFigure</code>. The cell editor edits the user node
  * name.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class UserNodeNameCellEditorLocator implements CellEditorLocator {
+
     private NodeContainerFigure m_nodeContainerFigure;
 
     /**
      * Creates a new <code>CellEditorLocator</code> for a user node name cell
      * editor.
-     * 
+     *
      * @param containerFigure the node container figure which contains the user
      *            node name label
      */
@@ -83,8 +83,8 @@ public class UserNodeNameCellEditorLocator implements CellEditorLocator {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void relocate(final CellEditor celleditor) {
-
         Text text = (Text)celleditor.getControl();
         Rectangle rect = m_nodeContainerFigure.getNameLabelRectangle();
         m_nodeContainerFigure.translateToAbsolute(rect);
@@ -99,17 +99,15 @@ public class UserNodeNameCellEditorLocator implements CellEditorLocator {
      * @return the node container figure.
      */
     protected NodeContainerFigure getLabel() {
-
         return m_nodeContainerFigure;
     }
 
     /**
      * Sets the node container figure.
-     * 
+     *
      * @param nodeContainerFigure The stickyNote to set
      */
     protected void setLabel(final NodeContainerFigure nodeContainerFigure) {
-
         m_nodeContainerFigure = nodeContainerFigure;
     }
 }
