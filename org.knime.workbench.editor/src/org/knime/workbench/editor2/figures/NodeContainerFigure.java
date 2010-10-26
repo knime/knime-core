@@ -133,9 +133,11 @@ public class NodeContainerFigure extends RectangleFigure {
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
 
+    /** Default node font for the status figure. */
     private static final Font NODE_FONT = new Font(Display.getCurrent(),
             fontName(), 2, SWT.NORMAL);;
 
+    /** Get font name either from the system, or default "Arial". */
     private static String fontName() {
         // I (Bernd) had problem using the hardcoded font "Arial" -
         // this static block derives the fonts from the system font.
@@ -228,6 +230,7 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name = new Label();
         m_nameTooltip = new NewToolTipFigure("");
         m_name.setFont(normalFont);
+        super.setFont(normalFont);
 
         // icon
         m_symbolFigure = new SymbolFigure();
@@ -1119,6 +1122,10 @@ public class NodeContainerFigure extends RectangleFigure {
         m_symbolFigure.m_backgroundIcon.remove(m_symbolFigure.m_deleteIcon);
     }
 
+    /**
+     * Set a new font size which is applied to the node name and label.
+     * @param fontSize the new font size to ba applied.
+     */
     public void setFontSize(final int fontSize) {
         // apply new font for node name
         Font font1 = m_heading.getFont();
@@ -1130,8 +1137,20 @@ public class NodeContainerFigure extends RectangleFigure {
         Font font2 = m_name.getFont();
         FontData fontData2 = font2.getFontData()[0];
         fontData2.setHeight(fontSize);
-        m_name.setFont(new Font(Display.getDefault(), fontData2));
+        Font newFont2 = new Font(Display.getDefault(), fontData2);
+        m_name.setFont(newFont2);
+        // apply the standard node label font also to its parent figure to allow
+        // editing the node label with the same font (size)
+        super.setFont(newFont2);
         font2.dispose();
+    }
+
+    /**
+     * Set the hide flag to hide/show the node name.
+     * @param hide true, if the node name is visible, otherwise false
+     */
+    public void hideNodeName(final boolean hide) {
+        m_heading.setVisible(!hide);
     }
 
 }
