@@ -81,7 +81,7 @@ public class SubworkflowFigure extends NodeContainerFigure {
      * Everything like the {@link NodeContainerFigure} but without the status
      * traffic light, state is reflected by icons on the node.
      *
-     * @param progress progress figure for super contructor
+     * @param progress progress figure for super constructor
      */
     public SubworkflowFigure(final ProgressFigure progress) {
         super(progress);
