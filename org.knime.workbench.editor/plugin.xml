@@ -38,7 +38,12 @@
             categoryId="knime.command.category"
             description="Reset node"
             id="knime.commands.reset"
-            name="Reset"/>      
+            name="Reset"/>
+      <command
+            categoryId="knime.command.category"
+            description="Hide node names"
+            id="knime.commands.hideNodeNames"
+            name="Hide Node Names"/>
       <command
             categoryId="knime.command.category"
             description="Open first view for selected node(s)"
@@ -88,6 +93,17 @@
                path="additions">
             <groupMarker name="group1"/>
          </menu>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.HideNodeNamesEditorAction"
+               definitionId="knime.commands.hideNodeNames"
+               disabledIcon="icons/hideNodeNames_disabled.png"
+               icon="icons/hideNodeNames.png"
+               id="org.knime.workbench.editor.actions.hideNodeNames"
+               label="Hide Node Names"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="toggle"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Hide all node names"/>
          <action
                class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
                definitionId="knime.commands.addMetaNode"
@@ -239,7 +255,12 @@
             commandId="knime.commands.reset"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="F8"/>          
+            sequence="F8"/>
+      <key
+            commandId="knime.commands.hideNodeNames"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+ALT+F12"/>    
       <key
             commandId="knime.commands.execute"
             contextId="org.eclipse.ui.contexts.window"

@@ -143,6 +143,7 @@ import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
+import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.PasteAction;
@@ -384,6 +385,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new NodeConnectionContainerDeleteAction(this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction print = new PrintAction(this);
+        WorkbenchPartAction hideNodeName = new HideNodeNamesAction(this);
 
         // node actions
         //
@@ -427,6 +429,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(cut);
         m_actionRegistry.registerAction(paste);
         m_actionRegistry.registerAction(pasteContext);
+        m_actionRegistry.registerAction(hideNodeName);
 
         // remember ids for later updates via 'updateActions'
         m_editorActions = new ArrayList<String>();
@@ -443,11 +446,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(reset.getId());
         m_editorActions.add(setNameAndDescription.getId());
         m_editorActions.add(defaultOpenView.getId());
+        m_editorActions.add(hideNodeName.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
-
     }
 
     /**

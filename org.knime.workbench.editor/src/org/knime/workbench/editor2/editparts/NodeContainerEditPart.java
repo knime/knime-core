@@ -97,6 +97,7 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
+import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
@@ -236,6 +237,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
+        nodeFigure.hideNodeName(HideNodeNamesAction.HIDE_NODE_NAMES);
         return nodeFigure;
     }
 
@@ -279,7 +281,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 new PortGraphicalRoleEditPolicy());
 
         // Installs the edit policy to directly edit the user node name
-        // inside the node figture (by a CellEditor)
+        // inside the node figure (by a CellEditor)
         installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE,
                 new UserNodeNameDirectEditPolicy());
     }
@@ -404,6 +406,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     initFigureFromUIInfo(ei);
                     m_figureInitialized = true;
                 }
+
                 // set the new constraints in the parent edit part
                 int[] bounds = ei.getBounds();
                 parent.setLayoutConstraint(NodeContainerEditPart.this,
@@ -517,7 +520,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Checks the status of the this node and if there is a message in the
-     * <code>NodeStatus</code> object the messsage is set. Otherwise the
+     * <code>NodeStatus</code> object the message is set. Otherwise the
      * currently displayed message is removed.
      */
     private void updateNodeStatus() {
@@ -748,6 +751,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             ((NodeContainerFigure) getFigure()).setCustomName(newName);
             return;
         }
+    }
+
+    public void hideNodeName(final boolean hide) {
+        ((NodeContainerFigure) getFigure()).hideNodeName(hide);
     }
 
 }
