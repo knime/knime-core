@@ -737,6 +737,7 @@ propagated with or for interoperation with KNIME.
       <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>
       <import feature="org.eclipse.platform" version="3.4.2.R342_v20090122-9I96EiWElHi8lheoJKJIvhM3JfVsYbRrgVIWL" match="compatible"/>
       <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
+      <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.apache.log4j"/>
    </requires>
 

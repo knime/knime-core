@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.ext.sun.nodes.script.expression;
 
@@ -58,7 +58,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
 /**
  * An expression instance combines the compiled source code along with some
  * access method to set fields and to get the evaluation result from.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ExpressionInstance {
@@ -69,7 +69,7 @@ public class ExpressionInstance {
     /**
      * Creates new expression instance wrapping a compiled object with that has
      * fields according to the properties argument.
-     * 
+     *
      * @param compiled the object being wrapped. Must have an
      *            <code>internalEvaluate</code> method.
      * @param fieldMap map of field name to field class
@@ -82,7 +82,7 @@ public class ExpressionInstance {
 
     /**
      * The evaluation of the concrete expression instance.
-     * 
+     *
      * @return the result of the evaluation
      * @throws EvaluationFailedException if the evaluation fails for any reason
      */
@@ -97,8 +97,8 @@ public class ExpressionInstance {
         }
 
     }
-    
-    /** Is the input field denoted by the argument actually used by the 
+
+    /** Is the input field denoted by the argument actually used by the
      * expression.
      * @param inField To check for.
      * @return <code>true</code> when used, <code>false</code> otherwise.
@@ -106,7 +106,7 @@ public class ExpressionInstance {
     public boolean needsInputField(final InputField inField) {
         return m_fieldMap.containsKey(inField);
     }
-    
+
     /**
      * @return the fieldMap
      */
@@ -116,7 +116,7 @@ public class ExpressionInstance {
 
     /**
      * Sets field values.
-     * 
+     *
      * @param property2ValueMap containing properties -&gt; values
      * @throws IllegalPropertyException if a field is unkown or a value is
      *             incompatible
@@ -125,20 +125,27 @@ public class ExpressionInstance {
             throws IllegalPropertyException {
         // Prepare the values by looking at what properties where
         // specified in the constructor
-        for (Map.Entry<InputField, ExpressionField> entry 
+        for (Map.Entry<InputField, ExpressionField> entry
                 : m_fieldMap.entrySet()) {
             InputField field = entry.getKey();
             ExpressionField expressionField = entry.getValue();
             Object value = property2ValueMap.get(field);
             if (value == null) {
-                throw new IllegalPropertyException(
-                        "No value for field " + field);
+                // could be that there is no entry or the value is null
+                // this could also be an assertion
+                if (property2ValueMap.containsKey(value)) {
+                    throw new IllegalPropertyException(
+                            "No value for field " + field);
+                } else {
+                    // null represents missing value
+                }
             }
-            if (!expressionField.getFieldClass().isInstance(value)) {
+            if (value != null
+                    && !expressionField.getFieldClass().isInstance(value)) {
                 throw new IllegalPropertyException(
                         "Type for field \"" + field + "\" not matched: got "
-                                + value.getClass().getName() + " but expected "
-                                + expressionField.getFieldClass().getName());
+                        + value.getClass().getName() + " but expected "
+                        + expressionField.getFieldClass().getName());
             }
             setField(expressionField.getFieldNameInJava(), value);
         }
@@ -162,7 +169,8 @@ public class ExpressionInstance {
                     + property, e);
         } catch (IllegalArgumentException e) {
             throw new IllegalPropertyException("Field type " + fieldType
-                    + " doesn't match value type " + value.getClass().getName()
+                    + " doesn't match value type "
+                    + value != null ? value.getClass().getName() : "<null>"
                     + ".", e);
         }
     }

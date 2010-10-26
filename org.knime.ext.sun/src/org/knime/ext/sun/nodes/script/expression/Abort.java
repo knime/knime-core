@@ -40,85 +40,48 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   26.05.2005 (bernd): created
  */
-package org.knime.ext.sun.nodes.script;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDoubleType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetLongType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetStringType;
+package org.knime.ext.sun.nodes.script.expression;
 
 /**
- *
- * @author Bernd Wiswedel, University of Konstanz
+ * Thrown by the snippet to indicate an abort of the calculation.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * <p>(Currently not used.)</p>
  */
-public class JavaScriptingNodeFactory
-    extends NodeFactory<JavaScriptingNodeModel> {
+public class Abort extends RuntimeException {
 
-    private final JavaScriptingCustomizer m_customizer;
+    private static final long serialVersionUID = -531780844478898889L;
 
-    /**
-     *
-     */
-    public JavaScriptingNodeFactory() {
-        m_customizer = new JavaScriptingCustomizer();
-        m_customizer.setReturnTypes(new JavaSnippetType<?, ?, ?>[] {
-                JavaSnippetIntType.INSTANCE,
-                JavaSnippetLongType.INSTANCE,
-                JavaSnippetDoubleType.INSTANCE,
-                JavaSnippetStringType.INSTANCE
-        });
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JavaScriptingNodeModel createNodeModel() {
-        return new JavaScriptingNodeModel(m_customizer);
+    /** Delegate to super. */
+    public Abort() {
+        // no op
     }
 
-    /**
-     * {@inheritDoc}
+    /** Delegate to super.
+     * @param message - forwarded
      */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
+    public Abort(final String message) {
+        super(message);
     }
 
-    /**
-     * {@inheritDoc}
+    /** Delegate to super.
+     * @param cause - forwarded
      */
-    @Override
-    public NodeView<JavaScriptingNodeModel> createNodeView(final int viewIndex,
-            final JavaScriptingNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException();
+    public Abort(final Throwable cause) {
+        super(cause);
     }
 
-    /**
-     * {@inheritDoc}
+    /** Delegate to super.
+     * @param message - forwarded
+     * @param cause - forwarded
      */
-    @Override
-    public boolean hasDialog() {
-        return true;
+    public Abort(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new JavaScriptingNodeDialog(m_customizer);
-    }
 }

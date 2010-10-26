@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,85 +40,30 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   26.05.2005 (bernd): created
+ *   Oct 3, 2010 (wiswedel): created
  */
-package org.knime.ext.sun.nodes.script;
+package org.knime.ext.sun.nodes.script.calculator;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDoubleType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetLongType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetStringType;
 
 /**
- *
- * @author Bernd Wiswedel, University of Konstanz
+ * Provides access to flow variables.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class JavaScriptingNodeFactory
-    extends NodeFactory<JavaScriptingNodeModel> {
+public interface FlowVariableProvider {
 
-    private final JavaScriptingCustomizer m_customizer;
+    /** Reads a variable from the node.
+     * @param name The name of variable.
+     * @param type Type of variable.
+     * @return The value
+     */
+    public Object readVariable(final String name, final Class<?> type);
 
-    /**
-     *
-     */
-    public JavaScriptingNodeFactory() {
-        m_customizer = new JavaScriptingCustomizer();
-        m_customizer.setReturnTypes(new JavaSnippetType<?, ?, ?>[] {
-                JavaSnippetIntType.INSTANCE,
-                JavaSnippetLongType.INSTANCE,
-                JavaSnippetDoubleType.INSTANCE,
-                JavaSnippetStringType.INSTANCE
-        });
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JavaScriptingNodeModel createNodeModel() {
-        return new JavaScriptingNodeModel(m_customizer);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<JavaScriptingNodeModel> createNodeView(final int viewIndex,
-            final JavaScriptingNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new JavaScriptingNodeDialog(m_customizer);
-    }
+    /** @return the row count of the BDT being processed, otherwise -1. */
+    public int getRowCount();
 }

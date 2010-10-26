@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,76 +40,87 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   Oct 3, 2010 (wiswedel): created
  */
-package org.knime.ext.sun.nodes.script;
+package org.knime.ext.sun.nodes.script.node.editvar;
 
-import java.util.Map;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingJarListPanel;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingPanel;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingPanel.DialogFlowVariableProvider;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
+import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDoubleType;
+import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntType;
+import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetStringType;
 
 /**
  *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class JavaScriptingNodeDialog extends NodeDialogPane {
+public final class JavaEditVariableNodeFactory extends
+        NodeFactory<JavaEditVariableNodeModel> {
 
-    private final JavaScriptingJarListPanel m_jarPanel;
-    private final JavaScriptingPanel m_mainPanel;
     private final JavaScriptingCustomizer m_customizer;
 
-    /** Inits GUI.
-     * @param customizer The customizer to enable/disable certain fields */
-    public JavaScriptingNodeDialog(final JavaScriptingCustomizer customizer) {
-        m_customizer = customizer;
-        m_jarPanel = new JavaScriptingJarListPanel();
-        m_mainPanel = new JavaScriptingPanel(customizer,
-                new DialogFlowVariableProvider() {
+    /**
+     *
+     */
+    public JavaEditVariableNodeFactory() {
+        m_customizer = new JavaScriptingCustomizer() {
+            /** {@inheritDoc} */
             @Override
-            public Map<String, FlowVariable> getAvailableFlowVariables() {
-                return JavaScriptingNodeDialog.this.getAvailableFlowVariables();
+            public JavaScriptingSettings createSettings() {
+                JavaScriptingSettings s = super.createSettings();
+                s.setArrayReturn(false);
+                // not applicable anyway
+                s.setInsertMissingAsNull(false);
+                return s;
             }
-        });
-        addTab("Java Snippet", m_mainPanel);
-        addTab("Additional Libraries", m_jarPanel);
+        };
+        m_customizer.setShowColumnList(false);
+        m_customizer.setShowGlobalDeclarationList(false);
+        m_customizer.setOutputIsVariable(true);
+        m_customizer.setShowArrayReturn(false);
+        m_customizer.setShowInsertMissingAsNull(false);
+        m_customizer.setReturnTypes(JavaSnippetIntType.INSTANCE,
+                JavaSnippetDoubleType.INSTANCE, JavaSnippetStringType.INSTANCE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        JavaScriptingSettings s = m_customizer.createSettings();
-        s.loadSettingsInDialog(settings, specs[0]);
-        m_mainPanel.loadSettingsFrom(s, specs[0]);
-        m_jarPanel.loadSettingsFrom(s);
+    public JavaEditVariableNodeModel createNodeModel() {
+        return new JavaEditVariableNodeModel(m_customizer);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        JavaScriptingSettings s = m_customizer.createSettings();
-        m_mainPanel.saveSettingsTo(s);
-        m_jarPanel.saveSettingsTo(s);
-        s.saveSettingsTo(settings);
+    protected int getNrNodeViews() {
+        return 0;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<JavaEditVariableNodeModel> createNodeView(final int viewIndex,
+            final JavaEditVariableNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new JavaEditVariableNodeDialogPane(m_customizer);
+    }
+
 }

@@ -7,6 +7,11 @@
             category-path="/misc"
             factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
             id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
    </extension>
 
 </plugin>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,76 +40,73 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   Oct 3, 2010 (wiswedel): created
  */
-package org.knime.ext.sun.nodes.script;
+package org.knime.ext.sun.nodes.script.node.editvar;
 
 import java.util.Map;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingJarListPanel;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingPanel;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingPanel.DialogFlowVariableProvider;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
  *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class JavaScriptingNodeDialog extends NodeDialogPane {
+final class JavaEditVariableNodeDialogPane extends NodeDialogPane {
 
-    private final JavaScriptingJarListPanel m_jarPanel;
-    private final JavaScriptingPanel m_mainPanel;
     private final JavaScriptingCustomizer m_customizer;
+    private final JavaScriptingPanel m_panel;
 
-    /** Inits GUI.
-     * @param customizer The customizer to enable/disable certain fields */
-    public JavaScriptingNodeDialog(final JavaScriptingCustomizer customizer) {
+    /**
+     *
+     */
+    JavaEditVariableNodeDialogPane(final JavaScriptingCustomizer customizer) {
         m_customizer = customizer;
-        m_jarPanel = new JavaScriptingJarListPanel();
-        m_mainPanel = new JavaScriptingPanel(customizer,
+        m_panel = new JavaScriptingPanel(customizer,
                 new DialogFlowVariableProvider() {
+
             @Override
             public Map<String, FlowVariable> getAvailableFlowVariables() {
-                return JavaScriptingNodeDialog.this.getAvailableFlowVariables();
+                JavaEditVariableNodeDialogPane p = JavaEditVariableNodeDialogPane.this;
+                return p.getAvailableFlowVariables();
             }
         });
-        addTab("Java Snippet", m_mainPanel);
-        addTab("Additional Libraries", m_jarPanel);
+        addTab("Expression", m_panel);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        JavaScriptingSettings s = m_customizer.createSettings();
-        s.loadSettingsInDialog(settings, specs[0]);
-        m_mainPanel.loadSettingsFrom(s, specs[0]);
-        m_jarPanel.loadSettingsFrom(s);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        JavaScriptingSettings s = m_customizer.createSettings();
-        m_mainPanel.saveSettingsTo(s);
-        m_jarPanel.saveSettingsTo(s);
-        s.saveSettingsTo(settings);
+        JavaScriptingSettings jsSettings = m_customizer.createSettings();
+        m_panel.saveSettingsTo(jsSettings);
+        jsSettings.saveSettingsTo(settings);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        JavaScriptingSettings jsSettings = m_customizer.createSettings();
+        jsSettings.loadSettingsInDialog(
+                settings, JavaEditVariableNodeModel.EMPTY_SPEC);
+        m_panel.loadSettingsFrom(jsSettings, JavaEditVariableNodeModel.EMPTY_SPEC);
+    }
+
 }
