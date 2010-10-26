@@ -50,6 +50,9 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -83,7 +86,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
 
-        store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, 8);
+        Display current = Display.getCurrent();
+        Font systemFont = current.getSystemFont();
+        FontData[] systemFontData = systemFont.getFontData();
+        int height = 8; // default
+        if (systemFontData.length >= 1) {
+            height = systemFontData[0].getHeight();
+        }
+        store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, height);
 
     }
 }
