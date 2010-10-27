@@ -104,13 +104,9 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
 
     private final List<String> m_learningFields;
 
-    private final List<String> m_ignoredFields;
-
     private final List<String> m_targetFields;
 
     private List<DataColumnSpec> m_learningCols;
-
-    private List<DataColumnSpec> m_ignoredCols;
 
     private List<DataColumnSpec> m_targetCols;
 
@@ -138,39 +134,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * @param dataDictionary {@link DataTableSpec} describing the training data
-     * @param learningCols columns used for learning of the model
-     * @param ignoredCols columns ignored while learning the model
-     * @param targetCols columns to be predicted
-     * @deprecated This constructor will be removed in version 2.2 . Ignored
-     * columns/fields are by definition not necessary for the model and can
-     * cause problems when the types are not supported. <br/>
-     * Use a {@link PMMLPortObjectSpecCreator} to customize column sets before
-     * creating the spec.
-     */
-    @Deprecated
-    public PMMLPortObjectSpec(final DataTableSpec dataDictionary,
-            final List<String> learningCols, final List<String> ignoredCols,
-            final List<String> targetCols) {
-        m_dataTableSpec = dataDictionary;
-        if (learningCols == null) {
-            m_learningFields = new LinkedList<String>();
-        } else {
-            m_learningFields = learningCols;
-        }
-        if (ignoredCols == null) {
-            m_ignoredFields = new LinkedList<String>();
-        } else {
-            m_ignoredFields = ignoredCols;
-        }
-        if (targetCols == null) {
-            m_targetFields = new LinkedList<String>();
-        } else {
-            m_targetFields = targetCols;
-        }
-    }
-
-    /**
      * PMMLPortObjectSpec should only be created by
      * {@link PMMLPortObjectSpecCreator}.
      *
@@ -186,7 +149,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         } else {
             m_learningFields = learningCols;
         }
-        m_ignoredFields = new LinkedList<String>();
         if (targetCols == null) {
             m_targetFields = new LinkedList<String>();
         } else {
@@ -227,41 +189,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         }
         m_learningCols = learningCols;
         return m_learningCols;
-    }
-
-    /**
-     * This method will be removed in version 2.2 . Ignored columns/fields are
-     * by definition not necessary for the model and can cause problems when the
-     * types are not supported.
-     *
-     * @return those columns ignored while learning the model
-     */
-    @Deprecated
-    public List<String> getIgnoredFields() {
-        return m_ignoredFields;
-    }
-
-    /**
-     * This method will be removed in version 2.2 . Ignored columns/fields are
-     * by definition not necessary for the model and can cause problems when the
-     * types are not supported.
-     *
-     * @return those columns ignored while learning the model
-     */
-    @Deprecated
-    public List<DataColumnSpec> getIgnoredCols() {
-        if (m_ignoredCols != null) {
-            return m_ignoredCols;
-        }
-        List<DataColumnSpec> ignoredCols = new LinkedList<DataColumnSpec>();
-        for (String ignoredcol : m_ignoredFields) {
-            DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(ignoredcol);
-            assert colspec != null : "Ignored column " + ignoredcol + " not "
-                    + "found in DataTableSpec.";
-            ignoredCols.add(colspec);
-        }
-        m_ignoredCols = ignoredCols;
-        return m_ignoredCols;
     }
 
     /**
@@ -420,16 +347,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             handler.startElement(null, null, MINING_FIELD, atts);
             handler.endElement(null, null, MINING_FIELD);
         }
-        // ignored columns
-        for (String colSpec : portSpec.getIgnoredFields()) {
-            AttributesImpl atts = new AttributesImpl();
-            // name
-            atts.addAttribute(null, null, "name", CDATA, colSpec);
-            // usageType = active
-            atts.addAttribute(null, null, "usageType", CDATA, "supplementary");
-            handler.startElement(null, null, MINING_FIELD, atts);
-            handler.endElement(null, null, MINING_FIELD);
-        }
         // target columns = predicted
         for (String colSpec : portSpec.getTargetFields()) {
             AttributesImpl atts = new AttributesImpl();
@@ -471,8 +388,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         settings.saveToXML(noCloseOut);
 
         NodeSettings miningSchema = new NodeSettings(MINING_SCHEMA_KEY);
-        miningSchema.addStringArray(IGNORED_KEY, m_ignoredFields
-                .toArray(new String[0]));
         miningSchema.addStringArray(LEARNING_KEY, m_learningFields
                 .toArray(new String[0]));
         miningSchema.addStringArray(TARGET_KEY, m_targetFields
@@ -534,8 +449,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             }
             targetCols.add(colName);
         }
-        return new PMMLPortObjectSpec(dataTableSpec, learningCols, ignoredCols,
-                targetCols);
+        return new PMMLPortObjectSpec(dataTableSpec, learningCols, targetCols);
     }
 
     /**

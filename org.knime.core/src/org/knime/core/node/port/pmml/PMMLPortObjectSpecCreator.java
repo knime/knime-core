@@ -67,8 +67,6 @@ public class PMMLPortObjectSpecCreator {
 
     private final List<String> m_learningCols;
 
-    private final List<String> m_ignoredCols;
-
     private final List<String> m_targetCols;
 
     /**
@@ -77,7 +75,6 @@ public class PMMLPortObjectSpecCreator {
     public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) {
         m_dataTableSpec = tableSpec;
         m_learningCols = new LinkedList<String>();
-        m_ignoredCols = new LinkedList<String>();
         m_targetCols = new LinkedList<String>();
     }
 
@@ -143,52 +140,6 @@ public class PMMLPortObjectSpecCreator {
             colNames.add(colSpec.getName());
         }
         setLearningColsNames(colNames);
-    }
-
-
-
-    /**
-     * This method will be removed in a version 2.2 . Ignored columns/fields are
-     * by definition not necessary for the model and can cause problems when the
-     * types are not supported.
-     *
-     * @param ignoredCols the ignoredCols to set
-     */
-    @Deprecated
-    public void setIgnoredColsNames(final List<String> ignoredCols) {
-        if (ignoredCols == null) {
-            throw new IllegalArgumentException(
-                    "Ignored columns must not be null!");
-        }
-        if (isValidColumnSpecNames(ignoredCols)) {
-            m_ignoredCols.clear();
-            m_ignoredCols.addAll(ignoredCols);
-        }
-        m_learningCols.removeAll(m_ignoredCols);
-        m_targetCols.removeAll(m_ignoredCols);
-    }
-
-    /**
-     * This method will be removed in a version 2.2 . Ignored columns/fields are
-     * by definition not necessary for the model and can cause problems when the
-     * types are not supported.
-     *
-     * @param ignoredCols columns ignored during learning
-     */
-    @Deprecated
-    public void setIgnoredCols(final List<DataColumnSpec> ignoredCols) {
-        if (ignoredCols == null) {
-            throw new IllegalArgumentException(
-                    "Ignored columns must not be null!");
-        }
-        if (isValidColumnSpec(ignoredCols)) {
-            m_ignoredCols.clear();
-            for (DataColumnSpec colSpec : ignoredCols) {
-                m_ignoredCols.add(colSpec.getName());
-            }
-        }
-        m_learningCols.removeAll(m_ignoredCols);
-        m_targetCols.removeAll(m_ignoredCols);
     }
 
     /**
@@ -266,12 +217,10 @@ public class PMMLPortObjectSpecCreator {
                     colNames.add(colSpec.getName());
                 }
             }
-            colNames.removeAll(m_ignoredCols);
             colNames.removeAll(m_targetCols);
             setLearningColsNames(colNames);
         }
-        return new PMMLPortObjectSpec(m_dataTableSpec, m_learningCols,
-                m_ignoredCols, m_targetCols);
+        return new PMMLPortObjectSpec(m_dataTableSpec, m_learningCols, m_targetCols);
     }
 
     private boolean isValidColumnSpec(final List<DataColumnSpec> colSpecs) {
