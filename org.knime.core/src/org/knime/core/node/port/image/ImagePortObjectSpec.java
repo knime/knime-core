@@ -46,52 +46,34 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.core.node.port.view;
+package org.knime.core.node.port.image;
+
+import java.io.IOException;
 
 import javax.swing.JComponent;
 
-import org.knime.core.data.image.ImageContent;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-
+import org.knime.core.data.DataType;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
-public class ImagePortObject implements PortObject {
+public class ImagePortObjectSpec implements PortObjectSpec {
 
-    /** Convenience accessor for the port type. */
-    public static final PortType TYPE = new PortType(ImagePortObject.class);
+    private final DataType m_type;
 
-    private final ImageContent m_content;
-
-    private final ImagePortObjectSpec m_spec;
-
-    public ImagePortObject(final ImageContent content,
-            final ImagePortObjectSpec spec) {
-        m_content = content;
-        m_spec = spec;
-    }
-
-    public ImageContent getImageContent() {
-        return m_content;
+    public ImagePortObjectSpec(final DataType type) {
+        m_type = type;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the type
      */
-    @Override
-    public String getSummary() {
-        return m_content.toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImagePortObjectSpec getSpec() {
-        return m_spec;
+    public DataType getType() {
+        return m_type;
     }
 
     /**
@@ -99,7 +81,33 @@ public class ImagePortObject implements PortObject {
      */
     @Override
     public JComponent[] getViews() {
-        return null; // TODO
+        return null;
     }
+
+    public PortObjectSpecSerializer<ImagePortObjectSpec>
+            getPortObjectSpecSerializer() {
+        return new PortObjectSpecSerializer<ImagePortObjectSpec>() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ImagePortObjectSpec loadPortObjectSpec(
+                    final PortObjectSpecZipInputStream in) throws IOException {
+                return null;
+            }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void savePortObjectSpec(final ImagePortObjectSpec portObjectSpec,
+                    final PortObjectSpecZipOutputStream out) throws IOException {
+
+
+            }
+        };
+    }
+
+
+
 
 }
