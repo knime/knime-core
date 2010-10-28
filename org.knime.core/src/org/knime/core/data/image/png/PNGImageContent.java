@@ -52,6 +52,7 @@ import java.awt.Graphics2D;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -74,6 +75,10 @@ public class PNGImageContent implements ImageContent {
 
     public PNGImageContent(final byte[] imageBytes) {
         m_imageBytes = imageBytes;
+    }
+
+    public PNGImageContent(final InputStream is) {
+        m_imageBytes = null; // TODO
     }
 
     public static PNGImageContent loadImage(final DataInput input)

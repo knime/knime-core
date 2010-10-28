@@ -40,76 +40,67 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  */
-package org.knime.core.data.image.png;
+package org.knime.base.node.image;
 
-import javax.swing.Icon;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.StringValueRenderer;
 
 /**
- * Interface of a {@link org.knime.core.data.image.png.PNGImageBlobCell}, forces method to
- * return string and image values.
+ * Factory to create a table with one cell from an image port object. This node
+ * has not view and no dialog.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
-public interface PNGImageValue extends DataValue {
+public class ImageToTableNodeFactory
+        extends NodeFactory<ImageToTableNodeModel> {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
+    /**
+     * {@inheritDoc}
      */
-    public static final UtilityFactory UTILITY = new ImageCellUtilityFactory();
+    @Override
+    public ImageToTableNodeModel createNodeModel() {
+        return new ImageToTableNodeModel();
+    }
 
-    /** Implementations of the meta information of this value class. */
-    public static class ImageCellUtilityFactory extends UtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(PNGImageValue.class, "/imagepng.png");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
 
-        private static final PNGImageValueComparator IMAGE_COMPARATOR =
-            new PNGImageValueComparator();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<ImageToTableNodeModel> createNodeView(final int viewIndex,
+            final ImageToTableNodeModel nodeModel) {
+        return null;
+    }
 
-        /** Only subclasses are allowed to instantiate this class. */
-        protected ImageCellUtilityFactory() {
-            // empty
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return IMAGE_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE);
-        }
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
 }

@@ -52,7 +52,7 @@ import java.io.IOException;
 
 import javax.swing.JComponent;
 
-import org.knime.core.data.image.ImageContent;
+import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -63,19 +63,17 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  */
 public class ImagePortObjectSpec implements PortObjectSpec {
 
-    private final Class<? extends ImageContent> m_imageContentClass;
+    private final DataType m_type;
 
-    public ImagePortObjectSpec(
-            final Class<? extends ImageContent> imageContentClass) {
-                m_imageContentClass = imageContentClass;
-
+    public ImagePortObjectSpec(final DataType type) {
+        m_type = type;
     }
 
     /**
-     * @return the imageContentClass
+     * @return the type
      */
-    public Class<? extends ImageContent> getImageContentClass() {
-        return m_imageContentClass;
+    public DataType getType() {
+        return m_type;
     }
 
     /**
@@ -86,7 +84,8 @@ public class ImagePortObjectSpec implements PortObjectSpec {
         return null;
     }
 
-    PortObjectSpecSerializer<ImagePortObjectSpec> getPortObjectSpecSerializer() {
+    public PortObjectSpecSerializer<ImagePortObjectSpec>
+            getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<ImagePortObjectSpec>() {
             /**
              * {@inheritDoc}

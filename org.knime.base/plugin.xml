@@ -1019,6 +1019,12 @@
             factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
             id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
       </node>
+      <node
+            category-path="misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.image.ImageToTableNodeFactory"
+            id="org.knime.base.node.image.ImageToTableNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
