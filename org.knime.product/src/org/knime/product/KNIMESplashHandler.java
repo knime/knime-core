@@ -156,7 +156,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             m_installedExtensions.setText("Installed Extensions:");
             
             /* On Mac OS X the origin of the coordinate system is in the bottom 
-             * left corner. Therefor we need other y coordinates here. */
+             * left corner. Therefore we need other y coordinates here. */
             int y = 195;
             if (System.getProperty("os.name").startsWith("Mac")) {
             	y = 110;
