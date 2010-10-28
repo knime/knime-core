@@ -67,7 +67,7 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
 
     /** Convenience access method for DataType.getType(ImageCell.class).
      */
-    public static final DataType TYPE =
+    static final DataType TYPE =
         DataType.getType(PNGImageBlobCell.class);
 
     /** Preferred value class of this cell implementation is
