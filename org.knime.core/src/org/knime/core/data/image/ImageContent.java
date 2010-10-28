@@ -62,6 +62,5 @@ public interface ImageContent {
 
     public DataCell toImageCell();
 
-
 }
 

@@ -54,7 +54,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -62,7 +64,13 @@ import org.knime.core.data.image.ImageContent;
  */
 public class PNGImageContent implements ImageContent {
 
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(PNGImageContent.class);
+
     private final byte[] m_imageBytes;
+
+    /** Type for PNG cells. */
+    public static final DataType TYPE = PNGImageBlobCell.TYPE;
 
     public PNGImageContent(final byte[] imageBytes) {
         m_imageBytes = imageBytes;
@@ -95,5 +103,72 @@ public class PNGImageContent implements ImageContent {
         return null;
     }
 
+    /** Minimum size for blobs in bytes. That is, if a given string is at least
+     * as large as this value, it will be represented by a blob cell */
+    public static final int DEF_MIN_BLOB_SIZE_IN_BYTES = 8 * 1024;
+
+    private static final int MIN_BLOB_SIZE_IN_BYTES;
+
+    /** System's line separator character.
+     * System.getProperty("line.separator"); */
+    public static final String LINE_SEP;
+
+    static {
+        String lineSep;
+        try {
+            lineSep = System.getProperty("line.separator");
+            if (lineSep == null || lineSep.isEmpty()) {
+                throw new RuntimeException("line separator must not be empty");
+            }
+        } catch (Throwable e) {
+            LOGGER.error("Unable to get \"line.separator\" from system, "
+                    + "using \"\\n\"", e);
+            lineSep = "\n";
+        }
+        LINE_SEP = lineSep;
+        int size = DEF_MIN_BLOB_SIZE_IN_BYTES;
+        String envVar = "org.knime.sdfminblobsize";
+        String property = System.getProperty(envVar);
+        if (property != null) {
+            String s = property.trim();
+            int multiplier = 1;
+            if (s.endsWith("m") || s.endsWith("M")) {
+                s = s.substring(0, s.length() - 1);
+                multiplier = 1024 * 1024;
+            } else if (s.endsWith("k") || s.endsWith("K")) {
+                s = s.substring(0, s.length() - 1);
+                multiplier = 1024;
+            }
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException("Size < 0" + newSize);
+                }
+                size = newSize * multiplier;
+                LOGGER.debug("Setting min blob size for SDF cells to "
+                        + size + " bytes");
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property " + envVar
+                        + ", using default", e);
+            }
+        }
+        MIN_BLOB_SIZE_IN_BYTES = size;
+    }
+
+    /** Factory method to create {@link DataCell} representing PNGImage structures.
+     * The returned cell is either of type {@link PNGImageCell} (for small strings)
+     * or {@link PNGImageBlobCell} (otherwise, default threshold is
+     * {@value #DEF_MIN_BLOB_SIZE_IN_BYTES} bytes or larger).
+     * @param string String representing the SDF content.
+     * @return DataCell representing PNGImage content.
+     * @throws NullPointerException If argument is null. */
+    public static DataCell create(final byte[] bytes) {
+        PNGImageContent content = new PNGImageContent(bytes);
+        if (bytes.length >= MIN_BLOB_SIZE_IN_BYTES) {
+            return new PNGImageBlobCell(content);
+        } else {
+            return null; // new PNGImageCell(sdfString, /*ignored*/ true);
+        }
+    }
 
 }
