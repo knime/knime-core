@@ -53,6 +53,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.image.ImageContent;
 
 /**
@@ -84,6 +85,14 @@ public class PNGImageContent implements ImageContent {
      */
     public void paint(final Graphics2D g, final int width, final int height) {
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public DataCell toImageCell() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 

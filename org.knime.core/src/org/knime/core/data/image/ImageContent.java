@@ -49,6 +49,8 @@ package org.knime.core.data.image;
 
 import java.awt.Graphics2D;
 
+import org.knime.core.data.DataCell;
+
 
 /**
  *
@@ -57,6 +59,8 @@ import java.awt.Graphics2D;
 public interface ImageContent {
 
     public void paint(final Graphics2D g, final int width, final int height);
+
+    public DataCell toImageCell();
 
 
 }
