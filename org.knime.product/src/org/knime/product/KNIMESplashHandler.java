@@ -66,7 +66,6 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         splash.setLayout(null);
         // Force shell to inherit the splash background
         splash.setBackgroundMode(SWT.INHERIT_DEFAULT);
-
         // Get all splash handler extensions
         IExtension[] extensions =
                 Platform.getExtensionRegistry().getExtensionPoint(
@@ -155,7 +154,14 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         if (m_images.size() > 0) {
             m_installedExtensions = new Label(splash, SWT.NONE);
             m_installedExtensions.setText("Installed Extensions:");
-            m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, 195, 200, 20);
+            
+            /* On Mac OS X the origin of the coordinate system is in the bottom 
+             * left corner. Therefor we need other y coordinates here. */
+            int y = 195;
+            if (System.getProperty("os.name").startsWith("Mac")) {
+            	y = 110;
+            } 
+            m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, y, 200, 20);
         }
     }
 
@@ -167,8 +173,14 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
         int xWidth = panelSize.x;
         int yWidth = panelSize.y;
-
-        m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, 225, xWidth, yWidth);
+        
+        /* On Mac OS X the origin of the coordinate system is in the bottom 
+         * left corner. Therefor we need other y coordinates here. */
+        int y = 225;
+        if (System.getProperty("os.name").startsWith("Mac")) {
+        	y = 65;
+        } 
+        m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, y, xWidth, yWidth);
     }
 
     private int getUsableSplashScreenWidth() {
