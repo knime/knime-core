@@ -49,15 +49,20 @@
 package org.knime.core.data.image.png;
 
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.imageio.ImageIO;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  *
@@ -71,7 +76,8 @@ public class PNGImageContent implements ImageContent {
     private final byte[] m_imageBytes;
 
     /** Type for PNG cells. */
-    public static final DataType TYPE = PNGImageBlobCell.TYPE;
+    public static final DataType TYPE =
+        DataType.getType(PNGImageBlobCell.class);
 
     public PNGImageContent(final byte[] imageBytes) {
         m_imageBytes = imageBytes;
@@ -93,86 +99,35 @@ public class PNGImageContent implements ImageContent {
         output.write(m_imageBytes);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public void paint(final Graphics2D g, final int width, final int height) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public DataCell toImageCell() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /** Minimum size for blobs in bytes. That is, if a given string is at least
-     * as large as this value, it will be represented by a blob cell */
-    public static final int DEF_MIN_BLOB_SIZE_IN_BYTES = 8 * 1024;
-
-    private static final int MIN_BLOB_SIZE_IN_BYTES;
-
-    /** System's line separator character.
-     * System.getProperty("line.separator"); */
-    public static final String LINE_SEP;
-
-    static {
-        String lineSep;
+        BufferedImage image = null;
+        String error = null;
         try {
-            lineSep = System.getProperty("line.separator");
-            if (lineSep == null || lineSep.isEmpty()) {
-                throw new RuntimeException("line separator must not be empty");
+            image = ImageIO.read(new ByteArrayInputStream(m_imageBytes));
+            if (image == null) {
+                error = "ImageIO returned null";
             }
-        } catch (Throwable e) {
-            LOGGER.error("Unable to get \"line.separator\" from system, "
-                    + "using \"\\n\"", e);
-            lineSep = "\n";
+        } catch (IOException e) {
+            error = e.getMessage();
         }
-        LINE_SEP = lineSep;
-        int size = DEF_MIN_BLOB_SIZE_IN_BYTES;
-        String envVar = "org.knime.sdfminblobsize";
-        String property = System.getProperty(envVar);
-        if (property != null) {
-            String s = property.trim();
-            int multiplier = 1;
-            if (s.endsWith("m") || s.endsWith("M")) {
-                s = s.substring(0, s.length() - 1);
-                multiplier = 1024 * 1024;
-            } else if (s.endsWith("k") || s.endsWith("K")) {
-                s = s.substring(0, s.length() - 1);
-                multiplier = 1024;
-            }
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("Size < 0" + newSize);
-                }
-                size = newSize * multiplier;
-                LOGGER.debug("Setting min blob size for SDF cells to "
-                        + size + " bytes");
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property " + envVar
-                        + ", using default", e);
-            }
-        }
-        MIN_BLOB_SIZE_IN_BYTES = size;
+        // TODO
     }
 
-    /** Factory method to create {@link DataCell} representing PNGImage structures.
-     * The returned cell is either of type {@link PNGImageCell} (for small strings)
-     * or {@link PNGImageBlobCell} (otherwise, default threshold is
-     * {@value #DEF_MIN_BLOB_SIZE_IN_BYTES} bytes or larger).
-     * @param string String representing the SDF content.
-     * @return DataCell representing PNGImage content.
-     * @throws NullPointerException If argument is null. */
-    public static DataCell create(final byte[] bytes) {
-        PNGImageContent content = new PNGImageContent(bytes);
-        if (bytes.length >= MIN_BLOB_SIZE_IN_BYTES) {
-            return new PNGImageBlobCell(content);
+    /** Minimum size for blobs in bytes. That is, if a given byte[] is at least
+     * as large as this value, it will be represented by a blob cell */
+    private static final long BLOB_SIZE_THRESHOLD =
+        ConvenienceMethods.readSizeSystemProperty(
+                "org.knime.pngminblobsize", 40 * 1024);
+
+    /** {@inheritDoc} */
+    @Override
+    public DataCell toImageCell() {
+        if (m_imageBytes.length < BLOB_SIZE_THRESHOLD) {
+            return new PNGImageBlobCell(this);
         } else {
-            return null; // new PNGImageCell(sdfString, /*ignored*/ true);
+            return new PNGImageBlobCell(this);
         }
     }
 

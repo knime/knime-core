@@ -57,13 +57,14 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.StringValueRenderer;
 
-/**
- * Interface of a {@link org.knime.core.data.image.png.PNGImageBlobCell}, forces method to
- * return string and image values.
- *
+/** DataValue Interface for plain PNG image.
  * @author Thomas Gabriel, KNIME.com GmbH, Zurich
  */
 public interface PNGImageValue extends DataValue {
+
+    /** Get content of this image.
+     * @return The image content, never null. */
+    public PNGImageContent getImageContent();
 
     /** Meta information to this value type.
      * @see DataValue#UTILITY

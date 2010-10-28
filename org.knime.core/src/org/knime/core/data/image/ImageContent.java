@@ -52,14 +52,25 @@ import java.awt.Graphics2D;
 import org.knime.core.data.DataCell;
 
 
-/**
+/** Generic content of an image. Such content objects are used in
+ * (individual) data cell implementations and generic port objects.
+ *
+ * <p><b>Note:</b> Objects of this interface must be read-only!
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public interface ImageContent {
 
+    /** Render image into argument graphics object.
+     * @param g To paint to.
+     * @param width image width
+     * @param height image height
+     */
     public void paint(final Graphics2D g, final int width, final int height);
 
+    /** Factory method to generate cell implementation.
+     * @return A (likely new) cell representing this image.
+     */
     public DataCell toImageCell();
 
 }

@@ -55,14 +55,13 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.container.BlobDataCell;
 
 
-/** Blob implemenation of a PNG image cell.
+/** Default implementation of a PNG image cell.
  * @author Thomas Gabriel, KNIME.com GmbH, Zurich
  */
 @SuppressWarnings("serial")
-public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
+public class PNGImageCell extends DataCell implements PNGImageValue {
 
     /** @return PNGImageValue.class */
     public static Class<? extends DataValue> getPreferredValueClass() {
@@ -72,18 +71,18 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
     /** Serializer as required by parent class.
      * @return A serializer for reading/writing cells of this kind.
      */
-    public static DataCellSerializer<PNGImageBlobCell> getCellSerializer() {
-        return new DataCellSerializer<PNGImageBlobCell>() {
+    public static DataCellSerializer<PNGImageCell> getCellSerializer() {
+        return new DataCellSerializer<PNGImageCell>() {
 
             @Override
-            public PNGImageBlobCell deserialize(final DataCellDataInput input)
+            public PNGImageCell deserialize(final DataCellDataInput input)
                     throws IOException {
                 PNGImageContent content = PNGImageContent.loadImage(input);
-                return new PNGImageBlobCell(content);
+                return new PNGImageCell(content);
             }
 
             @Override
-            public void serialize(final PNGImageBlobCell cell,
+            public void serialize(final PNGImageCell cell,
                     final DataCellDataOutput output) throws IOException {
                 cell.m_content.saveImage(output);
             }
@@ -96,7 +95,7 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
      * {@link PNGImageContent#toImageCell()} method.
      * @param content The content to wrap.
      */
-    PNGImageBlobCell(final PNGImageContent content) {
+    PNGImageCell(final PNGImageContent content) {
         if (content == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -120,7 +119,7 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        PNGImageBlobCell ic = (PNGImageBlobCell) dc;
+        PNGImageCell ic = (PNGImageCell) dc;
         return m_content.equals(ic.m_content);
     }
 
