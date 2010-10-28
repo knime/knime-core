@@ -61,7 +61,6 @@ import javax.imageio.ImageIO;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -69,9 +68,6 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public class PNGImageContent implements ImageContent {
-
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(PNGImageContent.class);
 
     private final byte[] m_imageBytes;
 
@@ -113,6 +109,9 @@ public class PNGImageContent implements ImageContent {
             error = e.getMessage();
         }
         // TODO
+        if (error == null) {
+            return;
+        }
     }
 
     /** Minimum size for blobs in bytes. That is, if a given byte[] is at least
@@ -127,7 +126,7 @@ public class PNGImageContent implements ImageContent {
         if (m_imageBytes.length < BLOB_SIZE_THRESHOLD) {
             return new PNGImageBlobCell(this);
         } else {
-            return new PNGImageBlobCell(this);
+            return new PNGImageCell(this);
         }
     }
 
