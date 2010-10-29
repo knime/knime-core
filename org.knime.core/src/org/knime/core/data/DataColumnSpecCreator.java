@@ -52,11 +52,6 @@
  */
 package org.knime.core.data;
 
-import org.knime.core.data.property.ColorHandler;
-import org.knime.core.data.property.ShapeHandler;
-import org.knime.core.data.property.SizeHandler;
-import org.knime.core.node.NodeLogger;
-
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -64,6 +59,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ShapeHandler;
+import org.knime.core.data.property.SizeHandler;
+import org.knime.core.node.NodeLogger;
 
 /**
  * A factory class to create a {@link DataColumnSpec} (as the only way from
@@ -146,7 +146,7 @@ public final class DataColumnSpecCreator {
     public DataColumnSpecCreator(final DataColumnSpec cspec) {
         m_name = cspec.getName();
         assert m_name != null : "Column name must not be null!";
-        final List<String> elNames = cspec.getElementNames();
+        List<String> elNames = cspec.getElementNames();
         m_elementNames = elNames.toArray(new String[elNames.size()]);
         m_type = cspec.getType();
         assert m_type != null : " Column type must not be null!";
@@ -170,7 +170,6 @@ public final class DataColumnSpecCreator {
      * Color, Shape and Size-Handlers are compared (must be equal).
      *
      * @param cspec2 the second {@link DataColumnSpec}.
-     * @return the changed instance
      *
      * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      * @throws IllegalArgumentException if the structure (type and name) does
@@ -178,14 +177,14 @@ public final class DataColumnSpecCreator {
      *             Shape- or SizeHandlers are different or the sub element
      *             names are not equal.
      */
-    public DataColumnSpecCreator merge(final DataColumnSpec cspec2) {
+    public void merge(final DataColumnSpec cspec2) {
         if (!cspec2.getName().equals(m_name)
                 || !cspec2.getType().equals(m_type)) {
             throw new IllegalArgumentException("Structures of DataColumnSpecs"
                     + " do not match.");
         }
 
-        final DataColumnDomain domain2 = cspec2.getDomain();
+        DataColumnDomain domain2 = cspec2.getDomain();
         boolean hasDomainChanged = false;
         final Set<DataCell> myValues = m_domain.getValues();
         final Set<DataCell> oValues = domain2.getValues();
@@ -201,7 +200,7 @@ public final class DataColumnSpecCreator {
             hasDomainChanged = true;
         }
 
-        final DataValueComparator comparator = m_type.getComparator();
+        DataValueComparator comparator = m_type.getComparator();
 
         final DataCell myLower = m_domain.getLowerBound();
         final DataCell oLower = domain2.getLowerBound();
@@ -239,7 +238,7 @@ public final class DataColumnSpecCreator {
         }
 
         // check for redundant color handler
-        final ColorHandler colorHandler2 = cspec2.getColorHandler();
+        ColorHandler colorHandler2 = cspec2.getColorHandler();
         if ((m_colorHandler != null && !m_colorHandler.equals(colorHandler2))
                 || (m_colorHandler == null && colorHandler2 != null)) {
             LOGGER.warn("Column has already a color handler attached, "
@@ -247,7 +246,7 @@ public final class DataColumnSpecCreator {
         }
 
         // check for redundant shape handler
-        final ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
+        ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
         if ((m_shapeHandler != null && !m_shapeHandler.equals(shapeHandler2))
                 || (m_shapeHandler == null && shapeHandler2 != null)) {
             LOGGER.warn("Column has already a color handler attached, "
@@ -255,7 +254,7 @@ public final class DataColumnSpecCreator {
         }
 
         // check for redundant size handler
-        final SizeHandler sizeHandler2 = cspec2.getSizeHandler();
+        SizeHandler sizeHandler2 = cspec2.getSizeHandler();
         if ((m_sizeHandler != null && !m_sizeHandler.equals(sizeHandler2))
                 || (m_sizeHandler == null && sizeHandler2 != null)) {
             LOGGER.warn("Column has already a color handler attached, "
@@ -263,12 +262,12 @@ public final class DataColumnSpecCreator {
         }
 
         // merge properties, take intersection
-        final DataColumnProperties prop2 = cspec2.getProperties();
-        final Map<String, String> mergedProps = new HashMap<String, String>();
-        final Enumeration<String> e = m_properties.properties();
+        DataColumnProperties prop2 = cspec2.getProperties();
+        Map<String, String> mergedProps = new HashMap<String, String>();
+        Enumeration<String> e = m_properties.properties();
         while (e.hasMoreElements()) {
-            final String key = e.nextElement();
-            final String value = m_properties.getProperty(key);
+            String key = e.nextElement();
+            String value = m_properties.getProperty(key);
             if (prop2.getProperty(key) != null
                     && prop2.getProperty(key).equals(value)) {
                 mergedProps.put(key, value);
@@ -278,15 +277,13 @@ public final class DataColumnSpecCreator {
         if (mergedProps.size() != m_properties.size()) {
             setProperties(new DataColumnProperties(mergedProps));
         }
-        final List<String> elNames2 = cspec2.getElementNames();
-        final String[] elNames2Array =
-            elNames2.toArray(new String[elNames2.size()]);
-        final String[] elNamesArray =
+        List<String> elNames2 = cspec2.getElementNames();
+        String[] elNames2Array = elNames2.toArray(new String[elNames2.size()]);
+        String[] elNamesArray =
             m_elementNames == null ? new String[]{m_name} : m_elementNames;
         if (!Arrays.deepEquals(elNamesArray, elNames2Array)) {
             throw new IllegalArgumentException("Element names are not equal");
         }
-        return this;
     }
 
     /**
@@ -294,10 +291,9 @@ public final class DataColumnSpecCreator {
      * whitespaces, a warning is logged and an artificial name is created.
      *
      * @param name the (new) column name
-     * @return the changed instance
      * @throws NullPointerException if the column name is <code>null</code>
      */
-    public DataColumnSpecCreator setName(final String name) {
+    public void setName(final String name) {
         if (name == null) {
             throw new NullPointerException("Name of DataColumnSpec must not"
                     + " be null!");
@@ -309,7 +305,6 @@ public final class DataColumnSpecCreator {
                     + "replacing by \"" + validName + "\"");
         }
         m_name = validName;
-        return this;
     }
 
     /**
@@ -319,12 +314,11 @@ public final class DataColumnSpecCreator {
      * will be used when the final {@link DataColumnSpec} is created (the array
      * will contain the then-actual name of the column).
      * @param elNames The elements names/identifiers to set.
-     * @return the changed instance
      * @throws NullPointerException If the argument contains <code>null</code>
      * elements.
      * @see DataColumnSpec#getElementNames()
      */
-    public DataColumnSpecCreator setElementNames(final String[] elNames) {
+    public void setElementNames(final String[] elNames) {
         if (elNames == null) {
             m_elementNames = null;
         } else {
@@ -335,23 +329,20 @@ public final class DataColumnSpecCreator {
             m_elementNames = new String[elNames.length];
             System.arraycopy(elNames, 0, m_elementNames, 0, elNames.length);
         }
-        return this;
     }
 
     /**
      * Set (new) column type.
      *
      * @param type the (new) column type
-     * @return the changed instance
      * @throws NullPointerException if the column type is <code>null</code>
      */
-    public DataColumnSpecCreator setType(final DataType type) {
+    public void setType(final DataType type) {
         if (type == null) {
             throw new NullPointerException("Type of DataColumnSpec must not"
                     + " be null!");
         }
         m_type = type;
-        return this;
     }
 
     /**
@@ -360,15 +351,13 @@ public final class DataColumnSpecCreator {
      *
      * @param domain the (new) domain, if <code>null</code> an empty default
      *            domain will be created
-     * @return the changed instance
      */
-    public DataColumnSpecCreator setDomain(final DataColumnDomain domain) {
+    public void setDomain(final DataColumnDomain domain) {
         if (domain == null) {
             m_domain = new DataColumnDomain(null, null, null);
         } else {
             m_domain = domain;
         }
-        return this;
     }
 
     /**
@@ -377,27 +366,22 @@ public final class DataColumnSpecCreator {
      *
      * @param props the (new) properties, if <code>null</code> an empty props
      *            object is created
-     * @return the changed instance
      */
-    public DataColumnSpecCreator setProperties(
-            final DataColumnProperties props) {
+    public void setProperties(final DataColumnProperties props) {
         if (props == null) {
             m_properties = new DataColumnProperties();
         } else {
             m_properties = props;
         }
-        return this;
     }
 
     /**
      * Set (new) <code>SizeHandler</code> which can be <code>null</code>.
      *
      * @param sizeHdl the (new) <code>SizeHandler</code> or <code>null</code>
-     * @return the changed instance
      */
-    public DataColumnSpecCreator setSizeHandler(final SizeHandler sizeHdl) {
+    public void setSizeHandler(final SizeHandler sizeHdl) {
         m_sizeHandler = sizeHdl;
-        return this;
     }
 
     /**
@@ -405,11 +389,9 @@ public final class DataColumnSpecCreator {
      *
      * @param shapeHdl the (new) <code>ShapeHandler</code> or
      *            <code>null</code>
-     * @return the changed instance
      */
-    public DataColumnSpecCreator setShapeHandler(final ShapeHandler shapeHdl) {
+    public void setShapeHandler(final ShapeHandler shapeHdl) {
         m_shapeHandler = shapeHdl;
-        return this;
     }
 
     /**
@@ -417,23 +399,19 @@ public final class DataColumnSpecCreator {
      *
      * @param colorHdl the (new) <code>ColorHandler</code> or
      *            <code>null</code>
-     * @return the changed instance
      */
-    public DataColumnSpecCreator setColorHandler(final ColorHandler colorHdl) {
+    public void setColorHandler(final ColorHandler colorHdl) {
         m_colorHandler = colorHdl;
-        return this;
     }
 
     /**
      * Removes all handlers from this creator which are then set to
      * <code>null</code> for the next call of <code>#createSpec()</code>.
-     * @return the changed instance
      */
-    public DataColumnSpecCreator removeAllHandlers() {
+    public void removeAllHandlers() {
         this.setSizeHandler(null);
         this.setColorHandler(null);
         this.setShapeHandler(null);
-        return this;
     }
 
     /**
@@ -443,7 +421,7 @@ public final class DataColumnSpecCreator {
      * @return newly created <code>DataColumnSpec</code>
      */
     public DataColumnSpec createSpec() {
-        final String[] elNames =
+        String[] elNames =
             m_elementNames == null ? new String[0] : m_elementNames;
         return new DataColumnSpec(m_name, elNames, m_type, m_domain,
                 m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler);
