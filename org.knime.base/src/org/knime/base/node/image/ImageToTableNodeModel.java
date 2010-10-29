@@ -114,6 +114,7 @@ public class ImageToTableNodeModel extends NodeModel {
         BufferedDataContainer buf = exec.createDataContainer(outspec);
         buf.addRowToTable(new DefaultRow(
                 RowKey.createRowKey(0), ipo.toDataCell()));
+        buf.close();
         buf.getTable();
         return new PortObject[] {buf.getTable()};
     }
