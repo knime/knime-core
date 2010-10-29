@@ -51,48 +51,87 @@ package org.knime.core.data.image.png;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.util.FileUtil;
 
 /**
- *
+ * Content of a PNG image. It only wraps a byte[] which is supposed to be
+ * PNG content. The rendering methods will delegate all work to
+ * {@link BufferedImage}.
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public class PNGImageContent implements ImageContent {
 
-    private final byte[] m_imageBytes;
+    private byte[] m_imageBytes;
 
     /** Type for PNG cells. */
-    public static final DataType TYPE =
-        DataType.getType(PNGImageBlobCell.class);
+    public static final DataType TYPE = DataType.getType(PNGImageCell.class);
 
+    /** Framework constructor for restoring content. <b>Do not use!</b> */
+    public PNGImageContent() {
+        // no-arg, required by ImageContent
+    }
+
+    /** Creates PNG image content from byte array. Callers must ensure that
+     * the content of the byte array is valid PNG content.
+     * @param imageBytes The image bytes.
+     * @throws NullPointerException If the argument is null.
+     */
     public PNGImageContent(final byte[] imageBytes) {
+        if (imageBytes == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
         m_imageBytes = imageBytes;
     }
 
-    public PNGImageContent(final InputStream is) {
-        m_imageBytes = null; // TODO
+    /** Reads image content from a stream. The caller has to ensure that
+     * the input stream provides valid PNG input. The reader will read content
+     * until the end of the stream, it will not close the stream.
+     * @param is The input stream.
+     * @throws IOException If reading from the stream fails.
+     * @throws NullPointerException If the argument is null;
+     */
+    public PNGImageContent(final InputStream is) throws IOException {
+        this(toByteArray(is));
     }
 
-    public static PNGImageContent loadImage(final DataInput input)
-            throws IOException {
-        byte[] bytes = new byte[input.readInt()];
-        input.readFully(bytes);
-        return new PNGImageContent(bytes);
+    private static final byte[] toByteArray(final InputStream in)
+        throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        FileUtil.copy(in, out);
+        out.close();
+        // do not close in stream, see constructor doc
+        return out.toByteArray();
     }
 
-    public void saveImage(final DataOutput output) throws IOException {
-        output.writeInt(m_imageBytes.length);
-        output.write(m_imageBytes);
+    /** Get a reference to the underlying byte array. The caller must not
+     * modify the returned array but should use the {@link #getByteArray()}
+     * if necessary.
+     * @return Reference to the underyling byte array.
+     */
+    public byte[] getByteArrayReference() {
+        return m_imageBytes;
+    }
+
+    /** Get a copy of the underlying byte array.
+     * @return A new copy.
+     * @see #getByteArrayReference()
+     */
+    public byte[] getByteArray() {
+        return Arrays.copyOf(m_imageBytes, m_imageBytes.length);
     }
 
     /** {@inheritDoc} */
@@ -108,10 +147,46 @@ public class PNGImageContent implements ImageContent {
         } catch (IOException e) {
             error = e.getMessage();
         }
-        // TODO
-        if (error == null) {
-            return;
+        if (error != null) {
+            g.drawString(error, 0, 0);
+        } else {
+            g.drawImage(image, null, 0, 0);
         }
+
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void load(final InputStream input) throws IOException {
+        m_imageBytes = toByteArray(input);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void save(final OutputStream output) throws IOException {
+        output.write(m_imageBytes);
+    }
+
+    /** Deserialize method for DataCell implementation.
+     * @param input To read from.
+     * @return A new image content.
+     * @throws IOException If that fails.
+     */
+    static PNGImageContent deserialize(final DataCellDataInput input)
+        throws IOException {
+        int length = input.readInt();
+        byte[] bytes = new byte[length];
+        input.readFully(bytes);
+        return new PNGImageContent(bytes);
+    }
+
+    /** Serialize method for image content.
+     * @param output To save to.
+     * @throws IOException If that fails for any reason.
+     */
+    public void serialize(final DataCellDataOutput output) throws IOException {
+        output.write(m_imageBytes.length);
+        output.write(m_imageBytes);
     }
 
     /** Minimum size for blobs in bytes. That is, if a given byte[] is at least

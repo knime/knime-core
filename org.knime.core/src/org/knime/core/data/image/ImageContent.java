@@ -48,6 +48,9 @@
 package org.knime.core.data.image;
 
 import java.awt.Graphics2D;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.knime.core.data.DataCell;
 
@@ -56,6 +59,11 @@ import org.knime.core.data.DataCell;
  * (individual) data cell implementations and generic port objects.
  *
  * <p><b>Note:</b> Objects of this interface must be read-only!
+ *
+ * Implementations are required to provide a no-arg constructor that is used
+ * by the framework to restore the image content. As objects of this class
+ * are generally read-only, the documentation should state that access to
+ * the no-arg constructor is discouraged for client code.
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
@@ -72,6 +80,20 @@ public interface ImageContent {
      * @return A (likely new) cell representing this image.
      */
     public DataCell toImageCell();
+
+    /** Save the image content to an output stream.
+     * @param out To save to.
+     * @throws IOException If that fails.
+     */
+    public void save(final OutputStream out) throws IOException;
+
+    /** Framework method that is used along with the required no-arg
+     * constructor to restore the image content. As objects of this class are
+     * read-only, this method should not be used by client code.
+     * @param in To read from.
+     * @throws IOException If that fails for any reason.
+     */
+    public void load(final InputStream in) throws IOException;
 
 }
 

@@ -77,14 +77,13 @@ public class PNGImageCell extends DataCell implements PNGImageValue {
             @Override
             public PNGImageCell deserialize(final DataCellDataInput input)
                     throws IOException {
-                PNGImageContent content = PNGImageContent.loadImage(input);
-                return new PNGImageCell(content);
+                return new PNGImageCell(PNGImageContent.deserialize(input));
             }
 
             @Override
             public void serialize(final PNGImageCell cell,
                     final DataCellDataOutput output) throws IOException {
-                cell.m_content.saveImage(output);
+                cell.m_content.serialize(output);
             }
         };
     }

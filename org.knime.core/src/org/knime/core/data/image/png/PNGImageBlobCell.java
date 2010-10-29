@@ -78,14 +78,13 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
             @Override
             public PNGImageBlobCell deserialize(final DataCellDataInput input)
                     throws IOException {
-                PNGImageContent content = PNGImageContent.loadImage(input);
-                return new PNGImageBlobCell(content);
+                return new PNGImageBlobCell(PNGImageContent.deserialize(input));
             }
 
             @Override
             public void serialize(final PNGImageBlobCell cell,
                     final DataCellDataOutput output) throws IOException {
-                cell.m_content.saveImage(output);
+                cell.m_content.serialize(output);
             }
         };
     }
