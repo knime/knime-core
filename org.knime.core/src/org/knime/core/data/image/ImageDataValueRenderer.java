@@ -91,9 +91,7 @@ public class ImageDataValueRenderer extends AbstractPainterDataValueRenderer {
     protected void paintComponent(final Graphics g) {
         super.paintComponent(g);
         if (m_content != null) {
-            Graphics gClip =
-                g.create(getX(), getY(), getWidth(), getHeight());
-            Graphics2D g2d = (Graphics2D)gClip;
+            Graphics2D g2d = (Graphics2D)g;
             m_content.paint(g2d, getWidth(), getHeight());
         }
     }
