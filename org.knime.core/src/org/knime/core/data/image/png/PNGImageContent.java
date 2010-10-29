@@ -157,7 +157,7 @@ public class PNGImageContent implements ImageContent {
                 throw new IllegalStateException("ImageIO returned null");
             } else {
                 m_imageRef = new SoftReference<Image>(bufImage);
-                return image;
+                return bufImage;
             }
         } catch (IOException e) {
             throw new IllegalStateException("Image can't be read", e);
