@@ -49,6 +49,7 @@
 package org.knime.core.data.image.png;
 
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -134,6 +135,25 @@ public class PNGImageContent implements ImageContent {
         return Arrays.copyOf(m_imageBytes, m_imageBytes.length);
     }
 
+    /** Get the image represented by this object.
+     * @return The image.
+     * @throws IllegalStateException If the image can't be generated
+     *         (invalid input)
+     */
+    public Image getImage() {
+        try {
+            BufferedImage image =
+                ImageIO.read(new ByteArrayInputStream(m_imageBytes));
+            if (image == null) {
+                throw new IllegalStateException("ImageIO returned null");
+            } else {
+                return image;
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Image can't be read", e);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void paint(final Graphics2D g, final int width, final int height) {
@@ -152,7 +172,6 @@ public class PNGImageContent implements ImageContent {
         } else {
             g.drawImage(image, null, 0, 0);
         }
-
     }
 
     /** {@inheritDoc} */

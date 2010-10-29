@@ -40,77 +40,60 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  */
-package org.knime.core.data.image.png;
+package org.knime.core.data.image;
 
-import javax.swing.Icon;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.image.ImageDataValueRenderer;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 
-/** DataValue Interface for plain PNG image.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+/** Renderer for image content.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface PNGImageValue extends DataValue {
+@SuppressWarnings("serial")
+public class ImageDataValueRenderer extends AbstractPainterDataValueRenderer {
 
-    /** Get content of this image.
-     * @return The image content, never null. */
-    public PNGImageContent getImageContent();
+    private final String m_name;
+    private ImageContent m_content;
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    public static final UtilityFactory UTILITY = new ImageCellUtilityFactory();
-
-    /** Implementations of the meta information of this value class. */
-    public static class ImageCellUtilityFactory extends UtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(PNGImageValue.class, "/imagepng.png");
-
-        private static final PNGImageValueComparator IMAGE_COMPARATOR =
-            new PNGImageValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected ImageCellUtilityFactory() {
-            // empty
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return IMAGE_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    new ImageDataValueRenderer("PNG Image"));
-        }
+    /** Create new renderer.
+     * @param name Name of the renderer, e.g. "PNG Image". */
+    public ImageDataValueRenderer(final String name) {
+        m_name = name;
 
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setValue(final Object value) {
+        if (value instanceof ImageContent) {
+            m_content = (ImageContent)value;
+        } else {
+            m_content = null;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getDescription() {
+        return m_name;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void paintComponent(final Graphics g) {
+        super.paintComponent(g);
+        Graphics gClip =
+            g.create(getX(), getY(), getWidth(), getHeight());
+        Graphics2D g2d = (Graphics2D)gClip;
+        m_content.paint(g2d, getWidth(), getHeight());
+    }
+
 
 }
