@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 13, 2006 (wiswedel): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.node.KNIMEConstants;
  * serves as an abstraction layer to bridge from eclipse to non-GUI KNIME.
  * During startup of eclipse, the home directory is set in this class, which is
  * polled from the KNIMEConstants class to do the final initialization.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEPath {
@@ -80,11 +80,11 @@ public final class KNIMEPath {
     static void setWorkspaceDir(final File file) {
         if (file.exists()) {
             if (!file.isDirectory()) {
-                throw new IllegalArgumentException("KNIME workspace path " 
+                throw new IllegalArgumentException("KNIME workspace path "
                         + "is not a directory: " + file.getAbsolutePath());
             }
             if (!file.canWrite()) {
-                throw new IllegalArgumentException("Unable to write to " 
+                throw new IllegalArgumentException("Unable to write to "
                         + "workspace path: " + file.getAbsolutePath());
             }
         } else {
@@ -95,10 +95,10 @@ public final class KNIMEPath {
         }
         workspaceDir = file.getAbsoluteFile();
     }
-    
+
     /**
      * Getter for the workspace directory.
-     * 
+     *
      * @return The workspace directory.
      */
     public static File getWorkspaceDirPath() {
@@ -107,7 +107,7 @@ public final class KNIMEPath {
         }
         return workspaceDir;
     }
-    
+
     /**
      * Set the knime home dir.
      * @param file The file to use as home dir (should be a directory).
@@ -115,11 +115,11 @@ public final class KNIMEPath {
     static void setKNIMEHomeDir(final File file) {
         if (file.exists()) {
             if (!file.isDirectory()) {
-                throw new IllegalArgumentException("KNIME home path is not a " 
+                throw new IllegalArgumentException("KNIME home path is not a "
                         + "directory: " + file.getAbsolutePath());
             }
             if (!file.canWrite()) {
-                throw new IllegalArgumentException("Unable to write to " 
+                throw new IllegalArgumentException("Unable to write to "
                         + "KNIME home: " + file.getAbsolutePath());
             }
         } else {
@@ -133,7 +133,7 @@ public final class KNIMEPath {
 
     /**
      * Getter for the home dir of KNIME.
-     * 
+     *
      * @return The directory to use.
      */
     public static File getKNIMEHomeDirPath() {
@@ -142,11 +142,11 @@ public final class KNIMEPath {
         }
         return homeDir;
     }
-    
+
     private static void initDefaultDir() {
         // see if the home dir got set through a command line argument
         String knimePropertyHome =
-            System.getProperty(KNIMEConstants.KNIME_HOME_PROPERTYNAME);
+            System.getProperty(KNIMEConstants.PROPERTY_KNIME_HOME);
         File tempHomeDir = null;
         if (knimePropertyHome != null) {
             tempHomeDir = createUniqueDir(new File(knimePropertyHome));
@@ -160,7 +160,7 @@ public final class KNIMEPath {
         }
         homeDir = tempHomeDir;
     }
-    
+
     private static File createUniqueDir(final File file) {
         final String parent = file.getParentFile().getAbsolutePath();
         String child = file.getName();

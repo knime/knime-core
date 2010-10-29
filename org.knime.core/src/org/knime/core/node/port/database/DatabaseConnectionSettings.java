@@ -108,7 +108,7 @@ public class DatabaseConnectionSettings {
     private static final int LOGIN_TIMEOUT = initLoginTimeout();
     private static int initLoginTimeout() {
         String tout = System.getProperty(
-                KNIMEConstants.KNIME_DATABASE_LOGIN_TIMEOUT);
+                KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
         int timeout = 15; // default
         if (tout != null) {
             try {
@@ -135,7 +135,7 @@ public class DatabaseConnectionSettings {
     public static final Integer FETCH_SIZE = initFetchSize();
     private static Integer initFetchSize() {
         String fsize = System.getProperty(
-                KNIMEConstants.KNIME_DATABASE_FETCHSIZE);
+                KNIMEConstants.PROPERTY_DATABASE_FETCHSIZE);
         if (fsize != null) {
             try {
                 int fetchsize = Integer.parseInt(fsize);
@@ -154,7 +154,7 @@ public class DatabaseConnectionSettings {
     private String m_user = null;
     private String m_pass = null;
     private String m_credName = null;
-    
+
     /**
      * Create a default settings connection object.
      */
@@ -250,7 +250,7 @@ public class DatabaseConnectionSettings {
                         KnimeEncryption.encrypt(m_pass.toCharArray()));
                 }
             } catch (Throwable t) {
-                LOGGER.error("Could not encrypt password, reason: " 
+                LOGGER.error("Could not encrypt password, reason: "
                         + t.getMessage(), t);
             }
         } else {
@@ -290,7 +290,7 @@ public class DatabaseConnectionSettings {
     }
 
     private boolean loadConnection(final ConfigRO settings,
-            final boolean write, final CredentialsProvider cp) 
+            final boolean write, final CredentialsProvider cp)
             throws InvalidSettingsException {
         if (settings == null) {
             throw new InvalidSettingsException(
@@ -298,7 +298,7 @@ public class DatabaseConnectionSettings {
         }
         String driver = settings.getString("driver");
         String database = settings.getString("database");
-        
+
         String user;
         String password = null;
         String credName = null;
@@ -353,7 +353,7 @@ public class DatabaseConnectionSettings {
                     DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \""
-                            + loadedDriver + "\"" + (t.getMessage() != null 
+                            + loadedDriver + "\"" + (t.getMessage() != null
                                 ? ", reason: " + t.getMessage() : "."));
                 }
             }
@@ -372,7 +372,7 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    public void execute(final String statement) 
+    public void execute(final String statement)
                 throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
@@ -405,35 +405,35 @@ public class DatabaseConnectionSettings {
         saveConnection(cont);
         return cont;
     }
-    
+
     /**
      * @return database driver used to open the connection
      */
     public final String getDriver() {
         return m_driver;
     }
-    
+
     /**
      * @return database name used to access the database URL
      */
     public final String getDBName() {
         return m_dbName;
     }
-    
+
     /**
      * @return user name used to login to the database
      */
     public final String getUserName() {
         return m_user;
     }
-    
+
     /**
      * @return password (decrypted) used to login to the database
      */
     public final String getPassword() {
         return m_pass;
     }
-    
+
     /**
      * Set a new database driver.
      * @param driver used to open the connection
@@ -441,7 +441,7 @@ public class DatabaseConnectionSettings {
     public final void setDriver(final String driver) {
         m_driver = driver;
     }
-    
+
     /**
      * Set a new database name.
      * @param databaseName used to access the database URL
@@ -449,7 +449,7 @@ public class DatabaseConnectionSettings {
     public final void setDBName(final String databaseName) {
         m_dbName = databaseName;
     }
-    
+
     /**
      * Set a new user name.
      * @param userName used to login to the database
@@ -457,7 +457,7 @@ public class DatabaseConnectionSettings {
     public final void setUserName(final String userName) {
          m_user = userName;
     }
-    
+
     /**
      * Set a new password.
      * @param password (decrypted) used to login to the database

@@ -119,26 +119,40 @@ public final class KNIMEConstants {
      * used instead. To set the knime home dir from the command line, use
      * -Dknime.home=&lt;absolutePathToNewHomeDir&gt;.
      */
-    public static final String KNIME_HOME_PROPERTYNAME = "knime.home";
+    public static final String PROPERTY_KNIME_HOME = "knime.home";
 
-    /**
-     * Java property used to set the timeout in seconds trying to establish a
-     * connection to a database.
-     */
-    public static final String KNIME_DATABASE_LOGIN_TIMEOUT =
+    /** @deprecated Use {@link #PROPERTY_KNIME_HOME} instead. */
+    @Deprecated
+    // obsolete as of v2.3
+    public static final String KNIME_HOME_PROPERTYNAME = PROPERTY_KNIME_HOME;
+
+    /** Java property used to set the timeout in seconds trying to establish a
+     * connection to a database. */
+    public static final String PROPERTY_DATABASE_LOGIN_TIMEOUT =
             "knime.database.timeout";
 
-    /**
-     * Java property used to adjust the fetch size for retrieving data from
-     * a database.
-     */
-    public static final String KNIME_DATABASE_FETCHSIZE =
+    /** @deprecated Use #PROPERTY_DATABASE_LOGIN_TIMEOUT instead. */
+    @Deprecated
+    // obsolete as of v2.3
+    public static final String KNIME_DATABASE_LOGIN_TIMEOUT =
+        PROPERTY_DATABASE_LOGIN_TIMEOUT;
+
+    /** Java property used to adjust the fetch size for retrieving data from
+     * a database. */
+    public static final String PROPERTY_DATABASE_FETCHSIZE =
         "knime.database.fetchsize";
+
+    /** @deprecated Use #PROPERTY_DATABASE_FETCHSIZE instead. */
+    @Deprecated
+    // obsolete as of v2.3
+    public static final String KNIME_DATABASE_FETCHSIZE =
+        PROPERTY_DATABASE_FETCHSIZE;
 
     /** Java property, which allows one to change the default
      * log file size. Values must be integer, possibly succeeded by "m" or "k"
      * to denote that the given value is in mega or kilo byte. */
-    public static final String PROPERTY_MAX_LOGFILESIZE = "knime.logfile.maxsize";
+    public static final String PROPERTY_MAX_LOGFILESIZE =
+        "knime.logfile.maxsize";
 
 
 
@@ -228,7 +242,7 @@ public final class KNIMEConstants {
 
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
         String maxThreadsString =
-            System.getProperty("org.knime.core.maxThreads");
+            System.getProperty(PROPERTY_MAX_THREAD_COUNT);
         try {
             if (maxThreadsString != null && maxThreadsString.length() > 0) {
                 int val = Integer.parseInt(maxThreadsString);
