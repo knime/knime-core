@@ -77,8 +77,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTabbedPane;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -98,9 +98,9 @@ import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
-import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.MutableInteger;
@@ -542,6 +542,24 @@ public abstract class NodeDialogPane {
     public final void finishEditingAndSaveSettingsTo(
             final NodeSettingsWO settings) throws InvalidSettingsException {
         commitComponentsRecursively(getPanel());
+        
+        /* Workaround that makes sure that the last modified Swing component 
+         * looses focus and that its values are stored (Bug 1949). Otherwise
+         * the last changed values might get lost if a user simply clicks on 
+         * the ok or apply button without changing the focus first. */
+        JTabbedPane pane = (JTabbedPane) getPanel().getComponent(0);
+        int index = pane.getTabCount() -1;
+		if (index > 0) {
+	        if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
+	        	throw new RuntimeException("Configuration dialog tab order has"
+	        			+ " changed. Switch to flow variables tab " 
+	        			+ "detected.");
+	        }
+	        int prevIndex = pane.getSelectedIndex();
+	        pane.setSelectedIndex(index);
+	        pane.setSelectedIndex(prevIndex);
+        }
+        
         internalSaveSettingsTo(settings);
     }
 
@@ -612,7 +630,7 @@ public abstract class NodeDialogPane {
             for (int i = 0; i < cs.length; i++) {
                 commitComponentsRecursively(cs[i]);
             }
-        }
+        } 
     }
 
     /**

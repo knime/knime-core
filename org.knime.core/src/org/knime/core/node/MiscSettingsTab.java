@@ -72,7 +72,8 @@ import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
  * @author ohl, University of Konstanz
  */
 class MiscSettingsTab extends JPanel {
-    private final ButtonGroup m_group;
+    public static final String MEMORY_POLICY = "Memory Policy";
+	private final ButtonGroup m_group;
 
     /** Inits GUI. */
     public MiscSettingsTab() {
@@ -136,6 +137,6 @@ class MiscSettingsTab extends JPanel {
     }
 
     String getTabName() {
-        return "Memory Policy";
+        return MEMORY_POLICY;
     }
 }
