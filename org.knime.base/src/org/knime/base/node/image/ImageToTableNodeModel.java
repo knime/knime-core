@@ -57,7 +57,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.image.ImageContent;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -70,8 +69,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.view.ImagePortObject;
-import org.knime.core.node.port.view.ImagePortObjectSpec;
+import org.knime.core.node.port.image.ImagePortObject;
+import org.knime.core.node.port.image.ImagePortObjectSpec;
 
 /**
  * Node model allows translating an generic image port object into a table with
@@ -98,7 +97,7 @@ public class ImageToTableNodeModel extends NodeModel {
         ImagePortObjectSpec inspec = (ImagePortObjectSpec) inSpecs[0];
         DataTableSpec outspec = new DataTableSpec(
                 new DataColumnSpecCreator("Image",
-                        inspec.getType()).createSpec());
+                        inspec.getDataType()).createSpec());
         return new DataTableSpec[] {outspec};
     }
 
@@ -109,13 +108,12 @@ public class ImageToTableNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
         ImagePortObject ipo = (ImagePortObject) inObjects[0];
-        ImageContent content = ipo.getImageContent();
         DataTableSpec outspec = new DataTableSpec(
                 new DataColumnSpecCreator("Image",
-                        ipo.getSpec().getType()).createSpec());
+                        ipo.getSpec().getDataType()).createSpec());
         BufferedDataContainer buf = exec.createDataContainer(outspec);
         buf.addRowToTable(new DefaultRow(
-                RowKey.createRowKey(0), content.toImageCell()));
+                RowKey.createRowKey(0), ipo.toDataCell()));
         buf.getTable();
         return new PortObject[] {buf.getTable()};
     }
