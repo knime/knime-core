@@ -48,31 +48,34 @@
  */
 package org.knime.core.node.port.image;
 
-import java.io.IOException;
-
 import javax.swing.JComponent;
 
 import org.knime.core.data.DataType;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortObjectSpecZipInputStream;
-import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
-public class ImagePortObjectSpec implements PortObjectSpec {
+public final class ImagePortObjectSpec extends AbstractSimplePortObjectSpec {
 
-    private final DataType m_type;
+    private DataType m_type;
 
     public ImagePortObjectSpec(final DataType type) {
         m_type = type;
+        // empty
     }
 
     /**
-     * @return the type
+     *
      */
-    public DataType getType() {
+    public ImagePortObjectSpec() {
+    }
+
+    public DataType getDataType() {
         return m_type;
     }
 
@@ -84,30 +87,17 @@ public class ImagePortObjectSpec implements PortObjectSpec {
         return null;
     }
 
-    public PortObjectSpecSerializer<ImagePortObjectSpec>
-            getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<ImagePortObjectSpec>() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public ImagePortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) throws IOException {
-                return null;
-            }
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void savePortObjectSpec(final ImagePortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out) throws IOException {
-
-
-            }
-        };
+    /** {@inheritDoc} */
+    @Override
+    protected void load(
+            final ModelContentRO model) throws InvalidSettingsException {
+        m_type = DataType.load(model);
     }
 
-
-
+    /** {@inheritDoc} */
+    @Override
+    protected void save(final ModelContentWO model) {
+        m_type.save(model);
+    }
 
 }

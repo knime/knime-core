@@ -50,7 +50,10 @@ package org.knime.core.node.port.image;
 
 import javax.swing.JComponent;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
@@ -64,6 +67,8 @@ public class ImagePortObject implements PortObject {
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(ImagePortObject.class);
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ImagePortObject.class);
+
     private final ImageContent m_content;
 
     private final ImagePortObjectSpec m_spec;
@@ -74,8 +79,16 @@ public class ImagePortObject implements PortObject {
         m_spec = spec;
     }
 
-    public ImageContent getImageContent() {
-        return m_content;
+    public DataCell toDataCell() {
+        DataType typeInSpec = m_spec.getDataType();
+        DataCell result = m_content.toImageCell();
+        if (!typeInSpec.isASuperTypeOf(result.getType())) {
+            // TODO
+            LOGGER.coding("Inconsistent data types ...");
+            return DataType.getMissingCell();
+        } else {
+            return result;
+        }
     }
 
     /**
