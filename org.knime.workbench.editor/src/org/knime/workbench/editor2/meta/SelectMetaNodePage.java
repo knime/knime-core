@@ -129,13 +129,26 @@ public class SelectMetaNodePage extends WizardPage {
         gridData.grabExcessVerticalSpace = true;
         overall.setLayoutData(gridData);
         buttonGrid.setLayoutData(gridData);
-        m_btnZeroOne = new Button(buttonGrid, SWT.TOGGLE);
+
+        GridData buttonGD = new GridData();
+        buttonGD.heightHint = 80;
+        
+        /* On the Mac toggle buttons seem to have a fixed size. Therefore the
+         * images do not fit into the button. The only viable workaround was
+         * to use check buttons instead. */
+        int BUTTON_STYLE = SWT.TOGGLE;
+        if (System.getProperty("os.name").startsWith("Mac")) {
+        	BUTTON_STYLE = SWT.CHECK;
+        }
+        
+		m_btnZeroOne = new Button(buttonGrid, BUTTON_STYLE);
         m_btnZeroOne.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_0_1_inactive.png"));
         m_inactiveIconMap.put(m_btnZeroOne, ImageRepository.getImage(
             "/icons/meta/meta_0_1_inactive.png"));
         m_activeIconMap.put(m_btnZeroOne, ImageRepository.getImage(
             "/icons/meta/meta_0_1.png"));   
+        m_btnZeroOne.setLayoutData(buttonGD);
         m_btnZeroOne.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
@@ -149,13 +162,14 @@ public class SelectMetaNodePage extends WizardPage {
             }
             
         });
-        m_btnOneOne = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnOneOne = new Button(buttonGrid, BUTTON_STYLE);
         m_btnOneOne.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_1_1_inactive.png"));
         m_inactiveIconMap.put(m_btnOneOne, ImageRepository.getImage(
                 "/icons/meta/meta_1_1_inactive.png"));
         m_activeIconMap.put(m_btnOneOne, ImageRepository.getImage(
                 "/icons/meta/meta_1_1.png"));
+        m_btnOneOne.setLayoutData(buttonGD);
         m_btnOneOne.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
@@ -169,13 +183,14 @@ public class SelectMetaNodePage extends WizardPage {
             }
             
         });
-        m_btnOneTwo = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnOneTwo = new Button(buttonGrid, BUTTON_STYLE);
         m_btnOneTwo.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_1_2_inactive.png"));
         m_inactiveIconMap.put(m_btnOneTwo, ImageRepository.getImage(
                 "/icons/meta/meta_1_2_inactive.png"));
         m_activeIconMap.put(m_btnOneTwo,
                 ImageRepository.getImage("/icons/meta/meta_1_2.png"));
+        m_btnOneTwo.setLayoutData(buttonGD);
         m_btnOneTwo.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
@@ -189,7 +204,7 @@ public class SelectMetaNodePage extends WizardPage {
             }
             
         });
-        m_btnTwoOne = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnTwoOne = new Button(buttonGrid, BUTTON_STYLE);
         m_btnTwoOne.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_2_1_inactive.png"));
                 
@@ -197,6 +212,7 @@ public class SelectMetaNodePage extends WizardPage {
                 "/icons/meta/meta_2_1.png"));
         m_inactiveIconMap.put(m_btnTwoOne, ImageRepository.getImage(
                 "/icons/meta/meta_2_1_inactive.png"));
+        m_btnTwoOne.setLayoutData(buttonGD);
         m_btnTwoOne.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
@@ -210,13 +226,14 @@ public class SelectMetaNodePage extends WizardPage {
             }
             
         });
-        m_btnTwoTwo = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnTwoTwo = new Button(buttonGrid, BUTTON_STYLE);
         m_btnTwoTwo.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_2_2_inactive.png"));
         m_activeIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
                 "/icons/meta/meta_2_2.png"));                
         m_inactiveIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
                 "/icons/meta/meta_2_2_inactive.png"));
+        m_btnTwoTwo.setLayoutData(buttonGD);
         m_btnTwoTwo.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
@@ -232,13 +249,14 @@ public class SelectMetaNodePage extends WizardPage {
             }
             
         });
-        m_btnCustom = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnCustom = new Button(buttonGrid, BUTTON_STYLE);
         m_btnCustom.setImage(ImageRepository.getImage(
                 "/icons/meta/custom_meta_inactive.png"));
         m_activeIconMap.put(m_btnCustom, ImageRepository.getImage(
                 "/icons/meta/custom_meta.png"));
         m_inactiveIconMap.put(m_btnCustom, ImageRepository.getImage(
                 "/icons/meta/custom_meta_inactive.png"));
+        m_btnCustom.setLayoutData(buttonGD);
         m_btnCustom.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
