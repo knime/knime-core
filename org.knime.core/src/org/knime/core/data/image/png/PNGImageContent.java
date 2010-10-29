@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.image.png;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -56,6 +57,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.util.Arrays;
 
 import javax.imageio.ImageIO;
@@ -76,10 +78,13 @@ import org.knime.core.util.FileUtil;
  */
 public class PNGImageContent implements ImageContent {
 
-    private byte[] m_imageBytes;
-
     /** Type for PNG cells. */
     public static final DataType TYPE = DataType.getType(PNGImageCell.class);
+
+    /** PNG image content as byte array. */
+    private byte[] m_imageBytes;
+
+    private SoftReference<Image> m_imageRef = new SoftReference<Image>(null);
 
     /** Framework constructor for restoring content. <b>Do not use!</b> */
     public PNGImageContent() {
@@ -121,7 +126,7 @@ public class PNGImageContent implements ImageContent {
     /** Get a reference to the underlying byte array. The caller must not
      * modify the returned array but should use the {@link #getByteArray()}
      * if necessary.
-     * @return Reference to the underyling byte array.
+     * @return Reference to the underlying byte array.
      */
     public byte[] getByteArrayReference() {
         return m_imageBytes;
@@ -141,12 +146,17 @@ public class PNGImageContent implements ImageContent {
      *         (invalid input)
      */
     public Image getImage() {
+        Image image = m_imageRef.get();
+        if (image != null) {
+            return image;
+        }
         try {
-            BufferedImage image =
+            BufferedImage bufImage =
                 ImageIO.read(new ByteArrayInputStream(m_imageBytes));
-            if (image == null) {
+            if (bufImage == null) {
                 throw new IllegalStateException("ImageIO returned null");
             } else {
+                m_imageRef = new SoftReference<Image>(bufImage);
                 return image;
             }
         } catch (IOException e) {
@@ -170,7 +180,7 @@ public class PNGImageContent implements ImageContent {
         if (error != null) {
             g.drawString(error, 0, 0);
         } else {
-            g.drawImage(image, null, 0, 0);
+            g.drawImage(image, 0, 0, width, height, null);
         }
     }
 
@@ -204,7 +214,7 @@ public class PNGImageContent implements ImageContent {
      * @throws IOException If that fails for any reason.
      */
     public void serialize(final DataCellDataOutput output) throws IOException {
-        output.write(m_imageBytes.length);
+        output.writeInt(m_imageBytes.length);
         output.write(m_imageBytes);
     }
 
@@ -222,6 +232,18 @@ public class PNGImageContent implements ImageContent {
         } else {
             return new PNGImageCell(this);
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Dimension getPreferredSize() {
+        Image image;
+        try {
+            image = getImage();
+        } catch (IllegalStateException ise) {
+            return new Dimension(16, 16);
+        }
+        return new Dimension(image.getWidth(null), image.getHeight(null));
     }
 
 }

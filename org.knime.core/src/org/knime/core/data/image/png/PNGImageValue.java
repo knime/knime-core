@@ -54,16 +54,19 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.image.ImageDataValueRenderer;
+import org.knime.core.data.image.ImageValue;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
 /** DataValue Interface for plain PNG image.
  * @author Thomas Gabriel, KNIME.com GmbH, Zurich
  */
-public interface PNGImageValue extends DataValue {
+public interface PNGImageValue extends ImageValue {
 
     /** Get content of this image.
-     * @return The image content, never null. */
+     * @return The image content, never null.
+     */
+    @Override
     public PNGImageContent getImageContent();
 
     /** Meta information to this value type.

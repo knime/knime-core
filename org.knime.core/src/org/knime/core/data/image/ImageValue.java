@@ -48,63 +48,14 @@
  */
 package org.knime.core.data.image;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import org.knime.core.data.DataValue;
 
-import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
-
-/** Renderer for image content.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+/** Interface for all image cells.
+ * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class ImageDataValueRenderer extends AbstractPainterDataValueRenderer {
+public interface ImageValue extends DataValue {
 
-    private final String m_name;
-    private ImageContent m_content;
-
-    /** Create new renderer.
-     * @param name Name of the renderer, e.g. "PNG Image". */
-    public ImageDataValueRenderer(final String name) {
-        m_name = name;
-
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void setValue(final Object value) {
-        if (value instanceof ImageValue) {
-            m_content = ((ImageValue)value).getImageContent();
-        } else {
-            m_content = null;
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getDescription() {
-        return m_name;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void paintComponent(final Graphics g) {
-        super.paintComponent(g);
-        if (m_content != null) {
-            Graphics gClip =
-                g.create(getX(), getY(), getWidth(), getHeight());
-            Graphics2D g2d = (Graphics2D)gClip;
-            m_content.paint(g2d, getWidth(), getHeight());
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Dimension getPreferredSize() {
-        if (m_content == null) {
-            return new Dimension(16, 16);
-        }
-        return m_content.getPreferredSize();
-    }
+    /** @return underlying image content for this image type/value */
+    public ImageContent getImageContent();
 
 }

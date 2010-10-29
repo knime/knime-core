@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.image;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,6 +76,12 @@ public interface ImageContent {
      * @param height image height
      */
     public void paint(final Graphics2D g, final int width, final int height);
+
+    /** Preferred dimension, width and height, for the given image to be
+     * rendered.
+     * @return preferred dimension
+     */
+    public Dimension getPreferredSize();
 
     /** Factory method to generate cell implementation.
      * @return A (likely new) cell representing this image.

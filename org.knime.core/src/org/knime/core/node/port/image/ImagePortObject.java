@@ -48,13 +48,14 @@
  */
 package org.knime.core.node.port.image;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
+import javax.swing.JScrollPane;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -68,7 +69,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
-import org.knime.core.util.FileUtil;
 
 
 /** Port object representing a simple image (png, ...).
@@ -149,8 +149,15 @@ public class ImagePortObject extends AbstractPortObject {
                 Graphics2D g2d = (Graphics2D)gClip;
                 m_content.paint(g2d, getWidth(), getHeight());
             }
+            /** {@inheritDoc} */
+            @Override
+            public Dimension getPreferredSize() {
+                return m_content.getPreferredSize();
+            }
         };
-        return new JComponent[] {c};
+        JScrollPane jsp = new JScrollPane(c);
+        jsp.setName("Image");
+        return new JComponent[] {jsp};
     }
 
     /** {@inheritDoc} */
@@ -159,11 +166,8 @@ public class ImagePortObject extends AbstractPortObject {
             final PortObjectSpec spec,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        FileUtil.copy(in, out);
-        out.close();
-        byte[] clAsBytes = out.toByteArray();
-        String contentClName = new String(clAsBytes, "UTF-8");
+        ZipEntry nextEntry = in.getNextEntry();
+        String contentClName = nextEntry.getName();
         ImageContent cnt;
         try {
             Class<?> contentCl = GlobalClassCreator.createClass(contentClName);
@@ -176,11 +180,6 @@ public class ImagePortObject extends AbstractPortObject {
             throw new IOException("Unable to get image content class "
                     + "information from \"" + contentClName + "\"");
         }
-        ZipEntry nextEntry = in.getNextEntry();
-        if (!nextEntry.getName().equals("image-content")) {
-            throw new IOException("Unexpected zip entry "
-                    + "(expected \"image-content\"): " + nextEntry.getName());
-        }
         cnt.load(in);
         in.close();
         m_spec = (ImagePortObjectSpec)spec;
@@ -192,11 +191,7 @@ public class ImagePortObject extends AbstractPortObject {
     protected void save(final PortObjectZipOutputStream out,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        String contentClName = m_content.getClass().getName();
-        byte[] clAsBytes = contentClName.getBytes("UTF-8");
-        out.write(clAsBytes);
-        out.closeEntry();
-        out.putNextEntry(new ZipEntry("image-content"));
+        out.putNextEntry(new ZipEntry(m_content.getClass().getName()));
         m_content.save(out);
         out.close();
     }

@@ -94,8 +94,9 @@ public final class ImagePortObjectSpec extends AbstractSimplePortObjectSpec {
     /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
-        return new JComponent[]{
-                new JLabel("Image of type \"" + getDataType() + "\"")};
+        JLabel l = new JLabel("Image of type \"" + getDataType() + "\"");
+        l.setName("Image Spec");
+        return new JComponent[]{l};
     }
 
     /** {@inheritDoc} */
