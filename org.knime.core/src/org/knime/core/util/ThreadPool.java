@@ -397,13 +397,31 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
 
         synchronized (m_queuedFutures) {
-            m_pendingJobs.incrementAndGet();
+            incrementPendingJobs();
             if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
         }
 
         return ftask;
+    }
+
+    private void incrementPendingJobs() {
+        m_pendingJobs.incrementAndGet();
+        if (m_parent != null) {
+            m_parent.incrementPendingJobs();
+        }
+    }
+
+    private void decrementPendingJobs() {
+        if (m_parent != null) {
+            m_parent.decrementPendingJobs();
+        }
+        if (m_pendingJobs.decrementAndGet() == 0) {
+            synchronized (m_pendingJobs) {
+                m_pendingJobs.notifyAll();
+            }
+        }
     }
 
     /**
@@ -421,7 +439,7 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
         synchronized (m_queuedFutures) {
-            m_pendingJobs.incrementAndGet();
+            incrementPendingJobs();
             if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
@@ -458,13 +476,9 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
 
         synchronized (m_queuedFutures) {
-            m_pendingJobs.incrementAndGet();
+            incrementPendingJobs();
             if (wakeupWorker(ftask, this) == null) {
-                if (m_pendingJobs.decrementAndGet() == 0) {
-                    synchronized (m_pendingJobs) {
-                        m_pendingJobs.notifyAll();
-                    }
-                }
+                decrementPendingJobs();
                 return null;
             }
         }
@@ -488,13 +502,9 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
         synchronized (m_queuedFutures) {
-            m_pendingJobs.incrementAndGet();
+            incrementPendingJobs();
             if (wakeupWorker(ftask, this) == null) {
-                if (m_pendingJobs.decrementAndGet() == 0) {
-                    synchronized (m_pendingJobs) {
-                        m_pendingJobs.notifyAll();
-                    }
-                }
+                decrementPendingJobs();
                 return null;
             }
         }
@@ -637,14 +647,11 @@ public class ThreadPool {
             while (it.hasNext()) {
                 MyFuture<?> future = it.next();
                 if (future.getPool() == this) {
-                    m_pendingJobs.decrementAndGet();
+                    decrementPendingJobs();
                     future.cancel(true);
                     it.remove();
                 }
             }
-        }
-        synchronized (m_pendingJobs) {
-            m_pendingJobs.notifyAll();
         }
         setMaxThreads(0);
     }
