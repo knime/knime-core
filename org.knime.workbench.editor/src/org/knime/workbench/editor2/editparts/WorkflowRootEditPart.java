@@ -57,17 +57,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.draw2d.ConnectionLayer;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.gef.CompoundSnapToHelper;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -416,6 +419,17 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void refreshVisuals() {
+        ConnectionLayer cLayer = (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
+        if ((getViewer().getControl().getStyle() & SWT.MIRRORED ) == 0) {
+            cLayer.setAntialias(SWT.ON);
+        }
+        super.refreshVisuals();
+    }
     /**
      *
      * {@inheritDoc}
