@@ -97,10 +97,10 @@ public class ManualIfNodeModel extends NodeModel {
         outSpecs[0] = inSpecs[0];
         outSpecs[1] = inSpecs[0];
         if (m_choice.getStringValue().equals(ManualIfNodeDialog.TOP)) {
-            outSpecs[1] = InactiveBranchPortObjectSpec.SPEC;
+            outSpecs[1] = InactiveBranchPortObjectSpec.INSTANCE;
         }
         if (m_choice.getStringValue().equals(ManualIfNodeDialog.BOTTOM)) {
-            outSpecs[0] = InactiveBranchPortObjectSpec.SPEC;
+            outSpecs[0] = InactiveBranchPortObjectSpec.INSTANCE;
         }
         return outSpecs;
     }

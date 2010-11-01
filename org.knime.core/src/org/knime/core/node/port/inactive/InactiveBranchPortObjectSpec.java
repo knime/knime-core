@@ -66,7 +66,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 public final class InactiveBranchPortObjectSpec implements PortObjectSpec {
 
     /** Singleton to be used. */
-    public static final InactiveBranchPortObjectSpec SPEC =
+    public static final InactiveBranchPortObjectSpec INSTANCE =
             new InactiveBranchPortObjectSpec();
 
     /** Serializer method as required by {@link PortObjectSpec} class.
@@ -79,7 +79,7 @@ public final class InactiveBranchPortObjectSpec implements PortObjectSpec {
             @Override
             public InactiveBranchPortObjectSpec loadPortObjectSpec(
                     final PortObjectSpecZipInputStream in) {
-                return SPEC;
+                return INSTANCE;
             }
 
             @Override

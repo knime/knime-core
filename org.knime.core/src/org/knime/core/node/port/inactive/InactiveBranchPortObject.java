@@ -117,7 +117,7 @@ public final class InactiveBranchPortObject implements PortObject {
      */
     @Override
     public PortObjectSpec getSpec() {
-        return InactiveBranchPortObjectSpec.SPEC;
+        return InactiveBranchPortObjectSpec.INSTANCE;
     }
 
     /**

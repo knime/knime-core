@@ -1371,7 +1371,7 @@ public final class Node implements NodeModelWarningListener {
                     for (int i = 0; i < inSpecs.length; i++) {
                         if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
                             for (int j = 0; j < m_outputs.length; j++) {
-                                m_outputs[j].spec = InactiveBranchPortObjectSpec.SPEC;
+                                m_outputs[j].spec = InactiveBranchPortObjectSpec.INSTANCE;
                             }
                             if (success) {
                                 m_logger.debug("Configure skipped. (" + this.getName() + " in inactive branch.)");
