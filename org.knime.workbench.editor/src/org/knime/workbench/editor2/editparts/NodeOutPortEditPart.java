@@ -56,7 +56,6 @@ import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -97,6 +96,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
         NodeOutPortFigure portFigure =
                 new NodeOutPortFigure(getType(), getIndex(),
                         container.getNrOutPorts(), isMetaNode, tooltip);
+        portFigure.setInactive(port.isInactive());
         portFigure.setIsConnected(isConnected());
         return portFigure;
     }
@@ -164,10 +164,8 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
             @Override
             public void run() {
                 NodeOutPort outPort = (NodeOutPort)getModel();
-                boolean isInactive =
-                    outPort.getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
                 NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
-                fig.setInactive(isInactive);
+                fig.setInactive(outPort.isInactive());
                 fig.repaint();
             }
         });

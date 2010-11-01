@@ -75,7 +75,6 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
@@ -516,50 +515,42 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      *
      * @param state new state of underlying node
+     * @param isInactive is true, the state is ignored and the inactive status
+     *            figure set.
      */
-    public void setState(final NodeContainer.State state) {
-        switch (state) {
-        case IDLE:
+    public void setState(final NodeContainer.State state,
+            final boolean isInactive) {
+        if (!isInactive) {
+            switch (state) {
+            case IDLE:
+                setStatusAmple();
+                m_statusFigure.setIcon(RED);
+                break;
+            case CONFIGURED:
+                setStatusAmple();
+                m_statusFigure.setIcon(YELLOW);
+                break;
+            case EXECUTED:
+                setStatusAmple();
+                m_statusFigure.setIcon(GREEN);
+                break;
+            case PREEXECUTE:
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+            case POSTEXECUTE:
+                setProgressBar(true);
+                break;
+            case MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+            case QUEUED:
+                setProgressBar(false);
+                break;
+            }
+        } else {
             setStatusAmple();
-            m_statusFigure.setIcon(RED);
-            break;
-        case CONFIGURED:
-            setStatusAmple();
-            m_statusFigure.setIcon(YELLOW);
-            break;
-        case EXECUTED:
-            setStatusAmple();
-            m_statusFigure.setIcon(GREEN);
-            break;
-        case PREEXECUTE:
-        case EXECUTING:
-        case EXECUTINGREMOTELY:
-        case POSTEXECUTE:
-            setProgressBar(true);
-            break;
-        case MARKEDFOREXEC:
-        case UNCONFIGURED_MARKEDFOREXEC:
-        case QUEUED:
-            setProgressBar(false);
-            break;
+            m_statusFigure.setIcon(INACTIVE);
         }
         m_statusFigure.repaint();
-    }
-
-    /**
-     * Displays the "inactive" status traffic light. The next
-     * {@link #setState(org.knime.core.node.workflow.NodeContainer.State)}
-     * overwrites it.
-     */
-    public void setInactive() {
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                setStatusAmple();
-                m_statusFigure.setIcon(INACTIVE);
-                m_statusFigure.repaint();
-            }
-        });
     }
 
     /**

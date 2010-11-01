@@ -97,7 +97,7 @@ public class SubworkflowFigure extends NodeContainerFigure {
      * Only reflects three different states: idle, executing, executed.
      */
     @Override
-    public void setState(final State state) {
+    public void setState(final State state, final boolean isInactive) {
         switch (state) {
         case IDLE:
         case CONFIGURED:
@@ -108,6 +108,8 @@ public class SubworkflowFigure extends NodeContainerFigure {
         case UNCONFIGURED_MARKEDFOREXEC:
         case QUEUED:
         case EXECUTING:
+        case PREEXECUTE:
+        case POSTEXECUTE:
         case EXECUTINGREMOTELY:
             ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
                     EXECUTING_STATE);

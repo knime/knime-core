@@ -239,6 +239,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
         nodeFigure.hideNodeName(HideNodeNamesAction.HIDE_NODE_NAMES);
+        boolean isInactive = false;
+        if (getNodeContainer() instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+            isInactive = snc.isInactive();
+        }
+        nodeFigure.setState(getNodeContainer().getState(), isInactive);
+
         return nodeFigure;
     }
 
@@ -324,7 +331,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             @Override
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-                fig.setState(state.getState());
+                boolean isInactive = false;
+                if (getNodeContainer() instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+                    isInactive = snc.isInactive();
+                }
+                fig.setState(state.getState(), isInactive);
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -515,12 +527,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
-        f.setState(getNodeContainer().getState());
+        boolean isInactive = false;
+        if (getNodeContainer() instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+            isInactive = snc.isInactive();
+        }
+
+        f.setState(getNodeContainer().getState(), isInactive);
         updateNodeStatus();
     }
 
     /**
-     * Checks the status of the this node (including in/active) and if there is
+     * Checks the status of the this node and if there is
      * a message in the <code>NodeStatus</code> object the message is set.
      * Otherwise the currently displayed message is removed.
      */
@@ -530,12 +548,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeMessage nodeMessage = nc.getNodeMessage();
         if (nodeMessage != null) {
             containerFigure.setMessage(nodeMessage);
-        }
-        if (nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)nc;
-            if (snc.isInactive()) {
-                containerFigure.setInactive();
-            }
         }
     }
 
