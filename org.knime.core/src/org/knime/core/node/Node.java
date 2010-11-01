@@ -85,6 +85,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -93,11 +95,11 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
-import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.util.FileUtil;
@@ -737,21 +739,6 @@ public final class Node implements NodeModelWarningListener {
             }
         }
 
-        // check for compatible input PortObjects
-        for (int i = 0; i < inData.length; i++) {
-            PortType thisType = m_inputs[i + 1].getType();
-            if (thisType.isOptional() && inData[i] == null) {
-                // ignore non-populated optional input
-            } else if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
-                createErrorMessageAndNotify("Connection Error: Mismatch"
-                        + " of input port types (port " + (i + 1) + ").");
-                m_logger.error("  (Wanted: "
-                        + thisType.getPortObjectClass().getName() + ", "
-                        + "actual: " + inData[i].getClass().getName() + ")");
-                return false;
-            }
-        }
-
         PortObject[] rawOutData; // the new DTs from the model
         try {
             // INVOKE MODEL'S EXECUTE
@@ -854,7 +841,10 @@ public final class Node implements NodeModelWarningListener {
                 return false;
             }
             if (newOutData[i] != null) {
-                if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
+            	if (newOutData[i] instanceof InactiveBranchPortObject) {
+            		// allow bypassed PO
+            		// TODO ensure model was skipped during configure?
+            	} else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
                     createErrorMessageAndNotify("Invalid output port object "
                             + "at port " + i);
                     m_logger.error("  (Wanted: "

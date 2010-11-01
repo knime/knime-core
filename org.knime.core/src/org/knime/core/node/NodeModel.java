@@ -63,6 +63,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -434,6 +437,37 @@ public abstract class NodeModel {
 
         setWarningMessage(null);
 
+        // check if the node is part of a skipped branch and return
+        // appropriate objects without actually configuring the node.
+        if (!(this instanceof InactiveBranchConsumer)) {
+            for (int i = 0; i < data.length; i++) {
+                if (data[i] instanceof InactiveBranchPortObject) {
+                    PortObject[] outs = new PortObject[getNrOutPorts()];
+                    for (int j = 0; j < outs.length; j++) {
+                        outs[j] = InactiveBranchPortObject.INSTANCE;
+                    }
+                    return outs;
+                }
+            }
+        }
+
+        // check for compatible input PortObjects
+        for (int i = 0; i < data.length; i++) {
+            PortType thisType = getInPortType(i);
+            if (thisType.isOptional() && data[i] == null) {
+                // ignore non-populated optional input
+            } else if (data[i] instanceof InactiveBranchPortObject) {
+                assert this instanceof InactiveBranchConsumer;
+                // allow Bypass POs at BypassConsumers
+            } else if (!(thisType.getPortObjectClass().isInstance(data[i]))) {
+                m_logger.error("  (Wanted: "
+                        + thisType.getPortObjectClass().getName() + ", "
+                        + "actual: " + data[i].getClass().getName() + ")");
+                throw new IllegalStateException("Connection Error: Mismatch"
+                        + " of input port types (port " + (i) + ").");
+            }
+        }
+
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData = execute(data, exec);
@@ -567,7 +601,7 @@ public abstract class NodeModel {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
 
-        // (1) case PortObjects to BufferedDataTable
+        // (1) cast PortObjects to BufferedDataTable
         BufferedDataTable[] inTables = new BufferedDataTable[inObjects.length];
         for (int i = 0; i < inObjects.length; i++) {
             try {
@@ -845,6 +879,21 @@ public abstract class NodeModel {
 
         setWarningMessage(null);
 
+        // check if the node is part of a skipped branch and return
+        // appropriate specs without actually configuring the node.
+        if (!(this instanceof InactiveBranchConsumer)) {
+            for (int i = 0; i < inSpecs.length; i++) {
+                if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
+                    PortObjectSpec[] outSpecs =
+                        new PortObjectSpec[getNrOutPorts()];
+                    for (int j = 0; j < outSpecs.length; j++) {
+                        outSpecs[j] = InactiveBranchPortObjectSpec.SPEC;
+                    }
+                    return outSpecs;
+                }
+            }
+        }
+
         PortObjectSpec[] copyInSpecs = new PortObjectSpec[getNrInPorts()];
         PortObjectSpec[] newOutSpecs;
 
@@ -863,8 +912,9 @@ public abstract class NodeModel {
             // complain if actual types are incompatible.
             Class<? extends PortObjectSpec> expected =
                 m_inPortTypes[i].getPortObjectSpecClass();
-            if (copyInSpecs[i] != null
-                    && !expected.isAssignableFrom(copyInSpecs[i].getClass())) {
+            if (copyInSpecs[i] != null  // i.e. skip only "optional and not connected"
+                    && !expected.isAssignableFrom(copyInSpecs[i].getClass())
+                    && !(copyInSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
                 StringBuilder b = new StringBuilder("Incompatible port spec");
                 if (copyInSpecs.length > 1) {
                     b.append(" at port ").append(i);
