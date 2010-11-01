@@ -67,7 +67,7 @@ public class ManualIfNodeDialog extends DefaultNodeSettingsPane {
      */
     public ManualIfNodeDialog() {
         addDialogComponent(new DialogComponentButtonGroup(createChoiceModel(),
-                false, "das Label", BOTH, BOTTOM, TOP));
+                false, "Choose Active Port:", BOTH, BOTTOM, TOP));
     }
 
     /**
