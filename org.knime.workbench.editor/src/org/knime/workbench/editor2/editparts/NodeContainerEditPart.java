@@ -92,6 +92,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -519,15 +520,22 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Checks the status of the this node and if there is a message in the
-     * <code>NodeStatus</code> object the message is set. Otherwise the
-     * currently displayed message is removed.
+     * Checks the status of the this node (including in/active) and if there is
+     * a message in the <code>NodeStatus</code> object the message is set.
+     * Otherwise the currently displayed message is removed.
      */
     private void updateNodeStatus() {
+        NodeContainer nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
-        NodeMessage nodeMessage = getNodeContainer().getNodeMessage();
+        NodeMessage nodeMessage = nc.getNodeMessage();
         if (nodeMessage != null) {
             containerFigure.setMessage(nodeMessage);
+        }
+        if (nc instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)nc;
+            if (snc.isInactive()) {
+                containerFigure.setInactive();
+            }
         }
     }
 

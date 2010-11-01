@@ -57,6 +57,7 @@ import java.util.Set;
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
@@ -168,10 +169,14 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
-                ((MetaNodeOutPortFigure)getFigure()).setState(
-                        state.getState());
+                MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
+                fig.setState(state.getState());
                 rebuildTooltip();
-                getFigure().repaint();
+                WorkflowOutPort outPort = (WorkflowOutPort)getModel();
+                boolean isInactive =
+                        outPort.getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
+                fig.setInactive(isInactive);
+                fig.repaint();
             }
         });
     }

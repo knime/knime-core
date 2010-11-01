@@ -149,6 +149,10 @@ public abstract class AbstractPortFigure extends Shape {
         m_isConnected = isConnected;
     }
 
+    public boolean isConnected() {
+        return m_isConnected;
+    }
+
     /**
      * @return the index of the port
      */
@@ -305,7 +309,7 @@ public abstract class AbstractPortFigure extends Shape {
         return true;
     }
 
-    private boolean showFlowVarPorts() {
+    protected boolean showFlowVarPorts() {
         IFigure p = getParent();
         if (p instanceof NodeContainerFigure) {
             return ((NodeContainerFigure)getParent()).getShowFlowVarPorts();

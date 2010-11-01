@@ -56,11 +56,15 @@ import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Edit part for a {@link NodeOutPort}. Model: {@link NodeOutPort} View:
@@ -68,7 +72,8 @@ import org.knime.workbench.editor2.figures.NodeOutPortFigure;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class NodeOutPortEditPart extends AbstractPortEditPart {
+public class NodeOutPortEditPart extends AbstractPortEditPart implements
+        NodeStateChangeListener {
 
     /**
      * @param type the port type
@@ -90,10 +95,30 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         String tooltip = getTooltipText(port.getPortName(), port);
         boolean isMetaNode = !(container instanceof SingleNodeContainer);
         NodeOutPortFigure portFigure =
-                new NodeOutPortFigure(getType(), getIndex(), container
-                        .getNrOutPorts(), isMetaNode, tooltip);
+                new NodeOutPortFigure(getType(), getIndex(),
+                        container.getNrOutPorts(), isMetaNode, tooltip);
         portFigure.setIsConnected(isConnected());
         return portFigure;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void activate() {
+        super.activate();
+        NodeOutPort outPort = (NodeOutPort)getModel();
+        outPort.addNodeStateChangeListener(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        NodeOutPort outPort = (NodeOutPort)getModel();
+        outPort.removeNodeStateChangeListener(this);
     }
 
     /**
@@ -129,4 +154,23 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     protected List<ConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                NodeOutPort outPort = (NodeOutPort)getModel();
+                boolean isInactive =
+                    outPort.getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
+                NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
+                fig.setInactive(isInactive);
+                fig.repaint();
+            }
+        });
+    }
+
 }

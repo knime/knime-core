@@ -133,9 +133,10 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
         } else if (m_currentState.equals(NodeContainer.State.EXECUTED)) {
             m_currentImage = GREEN;
         }
-
-        Rectangle r = computePortShapeBounds(getBounds().getCopy());
-        graphics.drawImage(m_currentImage, new Point(r.x - 5, r.y + 1));
+        if (!isInactive()) {
+            Rectangle r = computePortShapeBounds(getBounds().getCopy());
+            graphics.drawImage(m_currentImage, new Point(r.x - 5, r.y + 1));
+        }
     }
 
 

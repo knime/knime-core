@@ -56,8 +56,10 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
+import org.knime.workbench.editor2.ImageRepository;
 
 /**
  * Figure for displaying a <code>NodeOutPort</code> inside a node.
@@ -65,6 +67,12 @@ import org.knime.core.node.port.PortType;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortFigure extends AbstractPortFigure {
+
+    /** Red traffic light. * */
+    private static final Image INACTIVE =
+            ImageRepository.getImage("icons/ports/port_inactive.png");
+
+    private boolean m_isInactive = false;
 
     /**
      *
@@ -130,12 +138,26 @@ public class NodeOutPortFigure extends AbstractPortFigure {
                 getNrPorts(), getPortIndex(), getType(), isMetaNodePort());
     }
 
+    public void setInactive(final boolean isInactive) {
+        m_isInactive = isInactive;
+    }
+
+    protected boolean isInactive() {
+        return m_isInactive;
+    }
     /**
      * {@inheritDoc}
      */
     @Override
     public void paintFigure(final Graphics graphics) {
-        // TODO Auto-generated method stub
         super.paintFigure(graphics);
+        if (m_isInactive) {
+            if (isImplFlowVarPort() && !showFlowVarPorts() && !isConnected()) {
+                return;
+            }
+            // overlay the port with an inactive icon
+            Rectangle r = computePortShapeBounds(getBounds().getCopy());
+            graphics.drawImage(INACTIVE, new Point(r.x - 5, r.y - 5));
+        }
     }
 }

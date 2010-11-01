@@ -75,6 +75,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
@@ -103,32 +104,36 @@ public class NodeContainerFigure extends RectangleFigure {
     public static final int HEIGHT = 48;
 
     /** Red traffic light. */
-    public static final Image RED =
-            ImageRepository.getImage("icons/ampel_red.png");
+    public static final Image RED = ImageRepository
+            .getImage("icons/ampel_red.png");
 
     /** Yellow traffic light. * */
-    public static final Image YELLOW =
-            ImageRepository.getImage("icons/ampel_yellow.png");
+    public static final Image YELLOW = ImageRepository
+            .getImage("icons/ampel_yellow.png");
 
     /** Green traffic light. */
-    public static final Image GREEN =
-            ImageRepository.getImage("icons/ampel_green.png");
+    public static final Image GREEN = ImageRepository
+            .getImage("icons/ampel_green.png");
+
+    /** Inactive traffic light. */
+    public static final Image INACTIVE = ImageRepository
+            .getImage("icons/ampel_inactive.png");
 
     /** Info sign. */
-    public static final Image INFO_SIGN =
-            ImageRepository.getImage("icons/roundInfo.jpg");
+    public static final Image INFO_SIGN = ImageRepository
+            .getImage("icons/roundInfo.jpg");
 
     /** Warning sign. */
-    public static final Image WARNING_SIGN =
-            ImageRepository.getImage("icons/warning.gif");
+    public static final Image WARNING_SIGN = ImageRepository
+            .getImage("icons/warning.gif");
 
     /** Error sign. */
-    public static final Image ERROR_SIGN =
-            ImageRepository.getImage("icons/error.jpg");
+    public static final Image ERROR_SIGN = ImageRepository
+            .getImage("icons/error.jpg");
 
     /** Delete sign. */
-    public static final Image DELETE_SIGN =
-            ImageRepository.getImage("icons/delete.png");
+    public static final Image DELETE_SIGN = ImageRepository
+            .getImage("icons/delete.png");
 
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
@@ -213,7 +218,7 @@ public class NodeContainerFigure extends RectangleFigure {
         setLayoutManager(new DelegatingLayout());
 
         IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
         String fontName = fontName();
         Display current = Display.getDefault();
@@ -357,8 +362,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // the closest space is used for a split
         int indexLeft = middle;
         int indexRight = middle + 1;
-        for (; indexLeft >= 0 && indexRight < text.length();
-                indexLeft--, indexRight++) {
+        for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
             if (text.charAt(indexLeft) == ' ') {
                 StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
@@ -396,8 +400,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // if the tooltip (description) contains content, set it
             String toolTipText = m_name.getText();
             if (m_description != null && !m_description.trim().equals("")) {
-                toolTipText = toolTipText + ":\n\n Description:\n"
-                    + m_description;
+                toolTipText =
+                        toolTipText + ":\n\n Description:\n" + m_description;
             }
 
             m_nameTooltip.setText(toolTipText);
@@ -543,6 +547,22 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
+     * Displays the "inactive" status traffic light. The next
+     * {@link #setState(org.knime.core.node.workflow.NodeContainer.State)}
+     * overwrites it.
+     */
+    public void setInactive() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                setStatusAmple();
+                m_statusFigure.setIcon(INACTIVE);
+                m_statusFigure.repaint();
+            }
+        });
+    }
+
+    /**
      *
      * @param msg the node message
      */
@@ -593,15 +613,16 @@ public class NodeContainerFigure extends RectangleFigure {
         // the label
         prefWidth += 10;
 
-        int prefHeight = m_heading.getPreferredSize().height
-                + m_symbolFigure.getPreferredSize().height
-                // + m_infoWarnErrorPanel.getPreferredSize().height
-                // replace with a fixed size of 16? pixel
-                + m_progressFigure.getPreferredSize().height
-                + m_statusFigure.getPreferredSize().height
-                + m_name.getPreferredSize().height
-                // plus a fixed size for the info error warn panel
-                + 20;
+        int prefHeight =
+                m_heading.getPreferredSize().height
+                        + m_symbolFigure.getPreferredSize().height
+                        // + m_infoWarnErrorPanel.getPreferredSize().height
+                        // replace with a fixed size of 16? pixel
+                        + m_progressFigure.getPreferredSize().height
+                        + m_statusFigure.getPreferredSize().height
+                        + m_name.getPreferredSize().height
+                        // plus a fixed size for the info error warn panel
+                        + 20;
 
         return new Dimension(prefWidth, prefHeight);
     }
@@ -637,8 +658,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * We need to set the color before invoking super.
-     * {@inheritDoc}
+     * We need to set the color before invoking super. {@inheritDoc}
      */
     @Override
     protected void fillShape(final Graphics graphics) {
@@ -668,32 +688,32 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private final Label m_deleteIcon;
 
-        private static final String BACKGROUND_OTHER =
-                "icons/node/" + "background_other.png";
+        private static final String BACKGROUND_OTHER = "icons/node/"
+                + "background_other.png";
 
-        private static final String BACKGROUND_SOURCE =
-                "icons/node/" + "background_source.png";
+        private static final String BACKGROUND_SOURCE = "icons/node/"
+                + "background_source.png";
 
-        private static final String BACKGROUND_SINK =
-                "icons/node/" + "background_sink.png";
+        private static final String BACKGROUND_SINK = "icons/node/"
+                + "background_sink.png";
 
-        private static final String BACKGROUND_LEARNER =
-                "icons/node/" + "background_learner.png";
+        private static final String BACKGROUND_LEARNER = "icons/node/"
+                + "background_learner.png";
 
-        private static final String BACKGROUND_PREDICTOR =
-                "icons/node/" + "background_predictor.png";
+        private static final String BACKGROUND_PREDICTOR = "icons/node/"
+                + "background_predictor.png";
 
-        private static final String BACKGROUND_MANIPULATOR =
-                "icons/node/" + "background_manipulator.png";
+        private static final String BACKGROUND_MANIPULATOR = "icons/node/"
+                + "background_manipulator.png";
 
-        private static final String BACKGROUND_META =
-                "icons/node/" + "background_meta.png";
+        private static final String BACKGROUND_META = "icons/node/"
+                + "background_meta.png";
 
-        private static final String BACKGROUND_VIEWER =
-                "icons/node/" + "background_viewer.png";
+        private static final String BACKGROUND_VIEWER = "icons/node/"
+                + "background_viewer.png";
 
-        private static final String BACKGROUND_UNKNOWN =
-                "icons/node/" + "background_unknown.png";
+        private static final String BACKGROUND_UNKNOWN = "icons/node/"
+                + "background_unknown.png";
 
         private static final String BACKGROUND_LOOPER_START =
                 "icons/node/background_looper_start.png";
@@ -1124,6 +1144,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Set a new font size which is applied to the node name and label.
+     *
      * @param fontSize the new font size to ba applied.
      */
     public void setFontSize(final int fontSize) {
@@ -1147,6 +1168,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Set the hide flag to hide/show the node name.
+     *
      * @param hide true, if the node name is visible, otherwise false
      */
     public void hideNodeName(final boolean hide) {
