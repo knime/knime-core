@@ -239,7 +239,7 @@
             level-id="pca"
             name="PCA"
             path="/mining">
-      </category>           
+      </category>
    </extension>
             
      <extension
@@ -1024,6 +1024,18 @@
             expert-flag="false"
             factory-class="org.knime.base.node.image.ImageToTableNodeFactory"
             id="org.knime.base.node.image.ImageToTableNodeFactory">
+      </node>
+      <node
+            category-path="/switches"
+            expert-flag="false"
+            factory-class="org.knime.base.node.switches.manualif.ManualIfNodeFactory"
+            id="org.knime.base.switches.manualif">
+      </node>
+      <node
+            category-path="/switches"
+            expert-flag="false"
+            factory-class="org.knime.base.node.switches.endif.EndifNodeFactory"
+            id="org.knime.base.node.switches.endif">
       </node>
    </extension>
       <extension

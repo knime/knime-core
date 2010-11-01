@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="manualIf.png" type="Manipulator">
+    <name>Manual IF Switch</name>
+    
+    <shortDescription>
+        Allows to manually control which branch the data will flow into.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+			This node passes the data either to the top, bottom, or both
+			output ports, depending on the configuration.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table">The input table.</inPort>
+        <outPort index="0" name="First output table">The first choice.</outPort>
+        <outPort index="1" name="Second output table">The second choice.</outPort>
+    </ports>
+</knimeNode>
