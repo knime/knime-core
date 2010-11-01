@@ -54,11 +54,13 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -69,8 +71,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class CopyAction extends AbstractClipboardAction {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(CopyAction.class);
+    private NodeContainerEditPart[] m_nodeParts;
+    private AnnotationEditPart[] m_annotationParts;
 
     /**
      * Constructs a new clipboard copy action.
@@ -94,7 +96,7 @@ public class CopyAction extends AbstractClipboardAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        ISharedImages sharedImages = 
+        ISharedImages sharedImages =
             PlatformUI.getWorkbench().getSharedImages();
         return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_COPY);
     }
@@ -114,28 +116,37 @@ public class CopyAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
-        return parts.length > 0;
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
+        AnnotationEditPart[] anno =
+            getSelectedParts(AnnotationEditPart.class);
+        return parts.length > 0 || anno.length > 0;
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Clipboard copy action invoked for " + nodeParts.length
-                + " node(s)");
 
-        NodeID[] ids = new NodeID[nodeParts.length];
-        for (int i = 0; i < nodeParts.length; i++) {
-            NodeContainerEditPart nodeEP = nodeParts[i];
+    /** {@inheritDoc} */
+    @Override
+    public void runInSWT() {
+        m_nodeParts = getSelectedParts(NodeContainerEditPart.class);
+        m_annotationParts = getSelectedParts(AnnotationEditPart.class);
+
+        NodeID[] ids = new NodeID[m_nodeParts.length];
+        for (int i = 0; i < m_nodeParts.length; i++) {
+            NodeContainerEditPart nodeEP = m_nodeParts[i];
             ids[i] = nodeEP.getNodeContainer().getID();
         }
-        
-        WorkflowPersistor copyPersistor = getManager().copy(ids);
-        
+        WorkflowAnnotation[] annotations =
+            new WorkflowAnnotation[m_annotationParts.length];
+        for (int i = 0; i < m_annotationParts.length; i++) {
+            annotations[i] = m_annotationParts[i].getModel();
+        }
+
+        WorkflowCopyContent content = new WorkflowCopyContent();
+        content.setNodeIDs(ids);
+        content.setAndCloneAnnotations(annotations);
+        WorkflowPersistor copyPersistor = getManager().copy(content);
+
         // ClipboardWorkflowManager.put(getManager(), ids);
-        
+
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files
         // getEditor().getClipboard().setContents(
@@ -143,7 +154,7 @@ public class CopyAction extends AbstractClipboardAction {
         // connectionParts)},
         // new Transfer[]{ResourceTransfer.getInstance()});
         getEditor().setClipboardContent(new ClipboardObject(copyPersistor));
-        
+
         // update the actions
         getEditor().updateActions();
 
@@ -151,5 +162,22 @@ public class CopyAction extends AbstractClipboardAction {
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
-    
+
+    /** @return the annotationParts */
+    public AnnotationEditPart[] getAnnotationParts() {
+        return m_annotationParts;
+    }
+
+    /** @return the nodeParts */
+    public NodeContainerEditPart[] getNodeParts() {
+        return m_nodeParts;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        throw new IllegalStateException(
+                "Not to be called as runInSWT is overwritten.");
+    }
+
 }

@@ -62,9 +62,12 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -81,6 +84,8 @@ public class DeleteCommand extends Command {
 
     /** Ids of nodes being deleted. */
     private final NodeID[] m_nodeIDs;
+    /** References to annotations being deleted. */
+    private final WorkflowAnnotation[] m_annotations;
 
     /** Array containing connections that are to be deleted and which are not
      * part of the persistor (perisistor only covers connections whose source
@@ -103,17 +108,19 @@ public class DeleteCommand extends Command {
     /**
      * Creates a new delete command for a set of nodes. Undo will also restore
      * all connections that were removed as part of this command's execute.
-     * @param nodesAndConnectionParts Selected nodes and connections
+     * @param editParts Selected nodes and connections and annotations
      * @param manager wfm hosting the nodes.
      */
-    public DeleteCommand(final Collection<?> nodesAndConnectionParts,
+    public DeleteCommand(final Collection<?> editParts,
             final WorkflowManager manager) {
         m_manager = manager;
         Set<NodeID> idSet = new LinkedHashSet<NodeID>();
+        Set<WorkflowAnnotation> annotationSet =
+            new LinkedHashSet<WorkflowAnnotation>();
         Set<ConnectionContainer> conSet =
             new LinkedHashSet<ConnectionContainer>();
         EditPartViewer viewer = null;
-        for (Object p : nodesAndConnectionParts) {
+        for (Object p : editParts) {
             if (p instanceof NodeContainerEditPart) {
                 NodeContainerEditPart ncep = (NodeContainerEditPart)p;
                 if (viewer == null && ncep.getParent() != null) {
@@ -122,7 +129,7 @@ public class DeleteCommand extends Command {
                 NodeID id = ncep.getNodeContainer().getID();
                 idSet.add(id);
                 // the selection may correspond to the outer workflow, this
-                // happens a meta node is double-cliked (opened) and the
+                // happens a meta node is double-clicked (opened) and the
                 // action buttons are enabled/disabled -- a new DeleteCommand
                 // is created with the correct WorkbenchPart but the wrong
                 // selection (seen in debugger)
@@ -141,10 +148,18 @@ public class DeleteCommand extends Command {
                 if (viewer == null && ccep.getParent() != null) {
                     viewer = ccep.getViewer();
                 }
+            } else if (p instanceof AnnotationEditPart) {
+                AnnotationEditPart anno = (AnnotationEditPart)p;
+                annotationSet.add(anno.getModel());
+                if (viewer == null && anno.getParent() != null) {
+                    viewer = anno.getViewer();
+                }
             }
         }
         m_viewer = viewer;
         m_nodeIDs = idSet.toArray(new NodeID[idSet.size()]);
+        m_annotations = annotationSet.toArray(
+                new WorkflowAnnotation[annotationSet.size()]);
 
         m_connectionCount = conSet.size();
         // remove all connections that will be contained in the persistor
@@ -174,7 +189,7 @@ public class DeleteCommand extends Command {
                 return false;
             }
         }
-        return foundValid;
+        return foundValid || m_annotations.length > 0;
     }
 
     /** {@inheritDoc} */
@@ -182,8 +197,11 @@ public class DeleteCommand extends Command {
     public void execute() {
         // The WFM removes all connections for us, before the node is
         // removed.
-        if (m_nodeIDs.length > 0) {
-            m_undoPersitor = m_manager.copy(true, m_nodeIDs);
+        if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
+            WorkflowCopyContent content = new WorkflowCopyContent();
+            content.setNodeIDs(m_nodeIDs);
+            content.setAnnotationReferences(m_annotations);
+            m_undoPersitor = m_manager.copy(true, content);
         }
         for (NodeID id : m_nodeIDs) {
             NodeContainer nc = m_manager.getNodeContainer(id);
@@ -206,6 +224,9 @@ public class DeleteCommand extends Command {
         }
         for (ConnectionContainer cc : m_connections) {
             m_manager.removeConnection(cc);
+        }
+        for (WorkflowAnnotation anno : m_annotations) {
+            m_manager.removeAnnotation(anno);
         }
     }
 

@@ -26,9 +26,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -36,32 +37,32 @@ import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryItem;
 import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryManager;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class MetaNodeTemplateDropTargetListener 
+public class MetaNodeTemplateDropTargetListener
     implements TransferDropTargetListener {
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            MetaNodeTemplateDropTargetListener.class);
-    
+
     // TODO: later on use the viewer to execute a command
-    // in this way, the creation of meta node templates can be encapsulated 
+    // in this way, the creation of meta node templates can be encapsulated
     // into an Action/Command
     private EditPartViewer m_viewer;
     private WorkflowEditor m_editor;
-    
-    public MetaNodeTemplateDropTargetListener(WorkflowEditor editor, 
-            EditPartViewer viewer) {
+
+    public MetaNodeTemplateDropTargetListener(final WorkflowEditor editor,
+            final EditPartViewer viewer) {
         m_viewer = viewer;
         m_editor = editor;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void dragEnter(DropTargetEvent event) {
+    public void dragEnter(final DropTargetEvent event) {
         event.feedback = DND.FEEDBACK_SELECT;
         event.operations = DND.DROP_COPY;
         event.detail = DND.DROP_COPY;
@@ -71,7 +72,7 @@ public class MetaNodeTemplateDropTargetListener
      * {@inheritDoc}
      */
     @Override
-    public void dragLeave(DropTargetEvent event) {
+    public void dragLeave(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
     }
@@ -80,7 +81,7 @@ public class MetaNodeTemplateDropTargetListener
      * {@inheritDoc}
      */
     @Override
-    public void dragOperationChanged(DropTargetEvent event) {
+    public void dragOperationChanged(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
     }
@@ -89,7 +90,7 @@ public class MetaNodeTemplateDropTargetListener
      * {@inheritDoc}
      */
     @Override
-    public void dragOver(DropTargetEvent event) {
+    public void dragOver(final DropTargetEvent event) {
         event.feedback = DND.FEEDBACK_SELECT;
         event.operations = DND.DROP_COPY;
         event.detail = DND.DROP_COPY;
@@ -101,16 +102,16 @@ public class MetaNodeTemplateDropTargetListener
     @Override
     public void drop(final DropTargetEvent event) {
         LocalSelectionTransfer transfer = LocalSelectionTransfer.getTransfer();
-        
-        // check instanceof  
+
+        // check instanceof
         NodeID id = null;
         WorkflowManager sourceManager = null;
         Object selection = ((IStructuredSelection)transfer.getSelection())
-            .getFirstElement(); 
+            .getFirstElement();
         if (selection instanceof MetaNodeTemplateRepositoryItem) {
             id = ((MetaNodeTemplateRepositoryItem)selection).getNodeID();
             sourceManager = MetaNodeTemplateRepositoryManager.getInstance()
-                .getWorkflowManager(); 
+                .getWorkflowManager();
         } else if (selection instanceof MetaNodeTemplate) {
             id = ((MetaNodeTemplate)selection).getManager().getID();
             sourceManager = RepositoryFactory.META_NODE_ROOT;
@@ -118,16 +119,18 @@ public class MetaNodeTemplateDropTargetListener
         if (id == null || sourceManager == null) {
             return;
         }
+        WorkflowCopyContent content = new WorkflowCopyContent();
+        content.setNodeIDs(id);
         NodeID[] copied = m_editor.getWorkflowManager().copyFromAndPasteHere(
-                sourceManager, new NodeID[] {id});
+                sourceManager, content);
         // create UI info
         NodeContainer newNode = m_editor.getWorkflowManager().getNodeContainer(
                 copied[0]);
-        NodeUIInformation uiInfo = 
+        NodeUIInformation uiInfo =
             (NodeUIInformation)newNode.getUIInformation();
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;
-        org.eclipse.swt.graphics.Point toControl = 
+        org.eclipse.swt.graphics.Point toControl =
             m_viewer.getControl().toControl(event.x, event.y);
         Point p = new Point(toControl.x, toControl.y);
         if (uiInfo == null) {
@@ -142,7 +145,7 @@ public class MetaNodeTemplateDropTargetListener
      * {@inheritDoc}
      */
     @Override
-    public void dropAccept(DropTargetEvent event) {
+    public void dropAccept(final DropTargetEvent event) {
     }
 
     @Override
@@ -151,7 +154,7 @@ public class MetaNodeTemplateDropTargetListener
     }
 
     @Override
-    public boolean isEnabled(DropTargetEvent event) {
+    public boolean isEnabled(final DropTargetEvent event) {
         // TODO Auto-generated method stub
         return true;
     }

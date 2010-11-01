@@ -88,8 +88,10 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -97,8 +99,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.Node.LoopRole;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -114,9 +114,9 @@ import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSetti
 import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -132,7 +132,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class WorkflowManager extends NodeContainer {
+public final class WorkflowManager extends NodeContainer implements NodeUIInformationListener {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -183,6 +183,9 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
+
+    private final Vector<WorkflowAnnotation> m_annotations =
+        new Vector<WorkflowAnnotation>();
 
     // Misc members:
 
@@ -2674,6 +2677,7 @@ public final class WorkflowManager extends NodeContainer {
         final ReentrantLock lock = new ReentrantLock();
         final Condition condition = lock.newCondition();
         NodeStateChangeListener listener = new NodeStateChangeListener() {
+            @Override
             public void stateChanged(final NodeStateEvent stateEvent) {
                 lock.lock();
                 try {
@@ -3013,6 +3017,7 @@ public final class WorkflowManager extends NodeContainer {
                 // to do: Never lock a child (e.g. node) first and then its
                 // parent (e.g. wfm) - see also bug #1755!
                 PARENT_NOTIFIER.execute(new Runnable() {
+                    @Override
                     public void run() {
                         synchronized (getParent().m_workflowMutex) {
                                 getParent().checkForNodeStateChanges(
@@ -3653,22 +3658,22 @@ public final class WorkflowManager extends NodeContainer {
      * into this wfm instance. All nodes wil be reset (and configured id
      * possible). Connections among the nodes are kept.
      * @param sourceManager The wfm to copy from
-     * @param nodeIDs The node ids to copy (must exist in sourceManager)
+     * @param content The content to copy (must exist in sourceManager)
      * @return The new ids of the nodes in this wfm.
      */
     public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
-            final NodeID... nodeIDs) {
-        WorkflowPersistor copyPersistor = sourceManager.copy(nodeIDs);
+            final WorkflowCopyContent content) {
+        WorkflowPersistor copyPersistor = sourceManager.copy(content);
         return paste(copyPersistor);
     }
 
-    /** Copy the nodes with the given ids.
-     * @param nodeIDs The nodes to copy (must exist).
+    /** Copy the given content.
+     * @param content The content to copy (must exist).
      * @return A workflow persistor hosting the node templates, ready to be
      * used in the {@link #paste(WorkflowPersistor)} method.
      */
-    public WorkflowPersistor copy(final NodeID... nodeIDs) {
-        return copy(false, nodeIDs);
+    public WorkflowPersistor copy(final WorkflowCopyContent content) {
+        return copy(false, content);
     }
 
     /** Copy the nodes with the given ids.
@@ -3678,12 +3683,13 @@ public final class WorkflowManager extends NodeContainer {
      *        as backup of an undoable delete command (undoable = undo enabled).
      *        If it is undone, the directories must not be cleared before the
      *        next save (in order to keep the drop folder)
-     * @param nodeIDs The nodes to copy (must exist).
+     * @param content The content to copy (must exist).
      * @return A workflow persistor hosting the node templates, ready to be
      * used in the {@link #paste(WorkflowPersistor)} method.
      */
     public WorkflowPersistor copy(final boolean copyNCNodeDir,
-            final NodeID... nodeIDs) {
+            final WorkflowCopyContent content) {
+        NodeID[] nodeIDs = content.getNodeIDs();
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
         if (idsHashed.size() != nodeIDs.length) {
             throw new IllegalArgumentException(
@@ -3707,12 +3713,14 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             }
-            return new PasteWorkflowContentPersistor(loaderMap, connTemplates);
+            return new PasteWorkflowContentPersistor(
+                    loaderMap, connTemplates, content.getAnnotations());
         }
     }
 
     /** Pastes the contents of the argument persistor into this wfm.
-     * @param persistor The persistor created with {@link #copy(NodeID...)}.
+     * @param persistor The persistor created with
+     * {@link #copy(WorkflowCopyContent)} method.
      * @return The new node ids of the inserted nodes.
      */
     public NodeID[] paste(final WorkflowPersistor persistor) {
@@ -3916,7 +3924,7 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowLoadResult result = new WorkflowLoadResult(
                 workflowDirRef.getFile().getName());
         persistor.preLoadNodeContainer(workflowknimeRef, settings, result,
-        	credentialLoader);
+                credentialLoader);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
         boolean isIsolatedProject = persistor.getInPortTemplates().length == 0
@@ -4007,6 +4015,10 @@ public final class WorkflowManager extends NodeContainer {
             new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, NodeContainerPersistor> nodeLoaderMap =
             persistor.getNodeLoaderMap();
+        exec.setMessage("annotations");
+        for (WorkflowAnnotation w : persistor.getWorkflowAnnotations()) {
+            addWorkflowAnnotation(w);
+        }
         exec.setMessage("node & connection information");
         Map<Integer, NodeID> translationMap =
             loadNodesAndConnections(nodeLoaderMap,
@@ -4850,6 +4862,57 @@ public final class WorkflowManager extends NodeContainer {
             setDirty();
         }
     }
+
+    /* -- Workflow Annotations ---------------------------------------------*/
+
+    /** @return read-only collection of all currently registered annotations. */
+    public Collection<WorkflowAnnotation> getWorkflowAnnotations() {
+        return Collections.unmodifiableList(m_annotations);
+    }
+
+    /** Add new workflow annotation, fire events.
+     * @param annotation to add
+     * @throws IllegalArgumentException If annotation already registered. */
+    /** Add new workflow annotation, fire events.
+     * @param annotation to add
+     * @throws IllegalArgumentException If annotation already registered. */
+    public void addWorkflowAnnotation(final WorkflowAnnotation annotation) {
+        if (m_annotations.contains(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" already exists");
+        }
+        m_annotations.add(annotation);
+        annotation.addUIInformationListener(this);
+        notifyWorkflowListeners(new WorkflowEvent(
+                WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
+        setDirty();
+    }
+
+    /** Remove workflow annotation, fire events.
+     * @param annotation to remove
+     * @throws IllegalArgumentException If annotation is not registered. */
+    public void removeAnnotation(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" does not exists");
+        }
+        annotation.removeUIInformationListener(this);
+        notifyWorkflowListeners(new WorkflowEvent(
+                WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
+        setDirty();
+    }
+
+    /** Listener to annotations, etc; sets content dirty.
+     * @param evt Change event. */
+    @Override
+    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
+        setDirty();
+    }
+
+
+    /* -------------------------------------------------------------------*/
+
+
 
     /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
      * of the requested type. Intended purpose is to allow certain extensions

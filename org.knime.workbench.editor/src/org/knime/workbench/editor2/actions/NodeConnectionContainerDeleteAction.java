@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,13 +44,12 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.02.2006 (sieb): created
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -71,15 +70,15 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * This class overrides the default delete action of eclipse. This is due to
  * enable collection commands. This means the createDeleteCommand method expects
  * a command that deletes all selected parts.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeConnectionContainerDeleteAction extends DeleteAction {
-    
+
     /**
      * Constructs a <code>NodeConnectionContainerDeleteAction</code> using the
      * specified part.
-     * 
+     *
      * @param part The part for this action
      */
     public NodeConnectionContainerDeleteAction(final WorkflowEditor part) {
@@ -89,7 +88,7 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
 
     /**
      * Create one command to remove the selected objects.
-     * 
+     *
      * @param objects The objects to be deleted.
      * @return The command to remove the selected objects.
      */
@@ -105,21 +104,22 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         VerifyingCompoundCommand compoundCmd = new VerifyingCompoundCommand(
                 GEFMessages.DeleteAction_ActionDeleteCommandName);
 
-        List<NodeContainerEditPart> nodeParts = 
-            new ArrayList<NodeContainerEditPart>();
-        for (Object o : objects) {
-            if (o instanceof NodeContainerEditPart) {
-                nodeParts.add((NodeContainerEditPart)o);
-            }
-        }
-        
-        WorkflowManager manager = 
+        // will contain nodes -- just used for marking
+        NodeContainerEditPart[] nodeParts = AbstractNodeAction.filterObjects(
+                NodeContainerEditPart.class, objects);
+
+        /* can't currently be marked ... */
+//        AnnotationEditPart[] annotationParts =
+//            AbstractNodeAction.filterObjects(
+//                    AnnotationEditPart.class, objects);
+
+        WorkflowManager manager =
             ((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
         DeleteCommand cmd = new DeleteCommand(objects, manager);
         int nodeCount = cmd.getNodeCount();
         int connCount = cmd.getConnectionCount();
-        
-        StringBuilder dialogText = 
+
+        StringBuilder dialogText =
             new StringBuilder("Do you really want to delete ");
         if (nodeCount > 0) {
             dialogText.append(nodeCount).append(" node");
@@ -134,21 +134,21 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         compoundCmd.setDialogDisplayText(dialogText.toString());
 
         // set the parts into the compound command (for unmarking after cancel)
-        compoundCmd.setNodeParts(nodeParts);
+        compoundCmd.setNodeParts(Arrays.asList(nodeParts));
         compoundCmd.add(cmd);
 
         return compoundCmd;
     }
 
     /** Adds all connections, which do not belong to the current selection
-     * to the connParts argument. This is necessary to keep track on which 
+     * to the connParts argument. This is necessary to keep track on which
      * connections were removed (to allow for undo).
      * @param nodeParts the selected nodes
-     * @param connParts the already selected connections. This list will be 
+     * @param connParts the already selected connections. This list will be
      * modified by this method.
      */
     void addAffectedConnections(
-            final Collection<NodeContainerEditPart> nodeParts, 
+            final Collection<NodeContainerEditPart> nodeParts,
             final Collection<ConnectionContainerEditPart> connParts) {
         for (NodeContainerEditPart ncep : nodeParts) {
             connParts.addAll(Arrays.asList(ncep.getAllConnections()));

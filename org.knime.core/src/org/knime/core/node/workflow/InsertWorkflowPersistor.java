@@ -65,7 +65,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
- * Persistor that is used when a workflow (a project) is loaded.
+ * Persistor that is used when a workflow (a project) is loaded. It is used
+ * to past a single (meta-) node into ROOT.
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class InsertWorkflowPersistor implements WorkflowPersistor {
@@ -131,6 +132,13 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+        return Collections.emptyList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ReferencedFile> getObsoleteNodeDirectories() {
         return Collections.emptyList();
     }

@@ -123,6 +123,20 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
         return "Opens the first out-port view of the selected nodes.";
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected boolean calculateEnabled() {
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
+        for (NodeContainerEditPart p : parts) {
+            final NodeContainer cont = p.getNodeContainer();
+            if (cont.getNrOutPorts() >= 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * This opens the first view of all the selected nodes.
      *
@@ -132,7 +146,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating open first out-port view job for "
                 + nodeParts.length + " node(s)...");
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
             if (cont.getNrOutPorts() >= 1) {

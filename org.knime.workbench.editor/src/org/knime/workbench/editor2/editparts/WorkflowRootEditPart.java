@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EventObject;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -72,6 +73,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.NodeUIInformationEvent;
+import org.knime.core.node.workflow.NodeUIInformationListener;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -88,31 +92,38 @@ import org.knime.workbench.ui.SyncExecQueueDispatcher;
  * Root controller for the <code>WorkflowManager</code> model object. Consider
  * this as the controller for the "background" of the editor. It always has a
  * <code>WorkflowManager</code> as its model object.
- * 
+ *
  * Model: {@link WorkflowManager}
- * 
+ *
  *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
-        WorkflowListener, CommandStackListener, ConnectableEditPart {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(WorkflowRootEditPart.class);
+        WorkflowListener, CommandStackListener, ConnectableEditPart,
+        // since annotations fire ui events:
+        NodeUIInformationListener {
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(WorkflowRootEditPart.class);
 
     private ProgressToolTipHelper m_toolTipHelper;
-    
+
     private WorkflowPortBar m_inBar;
+
     private WorkflowPortBar m_outBar;
-    
+
     // TODO: maybe also connections, workflow ports, etc, should be stored
     /*
-     * This stores the node ids from the PasteAction. If 
-     * the NodeContainer with the referring NodeID is created through createChild, 
-     * the referring EditPart is selected and removed from
-     * this set. If this set is empty, the selection is cleared before the 
-     * new EditPart is added (normal addition of nodes). 
+     * This stores the node ids from the PasteAction. If the NodeContainer with
+     * the referring NodeID is created through createChild, the referring
+     * EditPart is selected and removed from this set. If this set is empty, the
+     * selection is cleared before the new EditPart is added (normal addition of
+     * nodes).
      */
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
+
+    /* same deal for added annotations */
+    private final Set<WorkflowAnnotation> m_annotationSelection =
+            new LinkedHashSet<WorkflowAnnotation>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -122,19 +133,24 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return (WorkflowManager)getModel();
     }
 
-    
     /**
-     * Sets the NodeIDs from a set of nodes that are added to the editor and 
+     * Sets the NodeIDs from a set of nodes that are added to the editor and
      * should be selected as soon as they appear.
-     * 
+     *
      * @param ids node ids of the {@link NodeContainerEditPart}s that should be
-     * selected as soon as their {@link NodeContainerEditPart}s are created.
+     *            selected as soon as their {@link NodeContainerEditPart}s are
+     *            created.
      */
     public void setFutureSelection(final NodeID[] ids) {
         m_futureSelection.clear();
         for (NodeID id : ids) {
             m_futureSelection.add(id);
         }
+    }
+
+    public void setFutureAnnotationSelection(final Collection<WorkflowAnnotation> annos) {
+        m_annotationSelection.clear();
+        m_annotationSelection.addAll(annos);
     }
 
     /**
@@ -146,8 +162,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Returns the model chidlren, that is, the <code>NodeConatiner</code>s
-     * that are stored in the workflow manager.
+     * Returns the model chidlren, that is, the <code>NodeConatiner</code>s that
+     * are stored in the workflow manager.
      *
      * {@inheritDoc}
      */
@@ -156,15 +172,21 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     protected List getModelChildren() {
         List modelChildren = new ArrayList();
         WorkflowManager wfm = getWorkflowManager();
+        // sequence here determines z-order of edit parts
+
+        // add workflow annotations as children of the workflow manager
+        for (WorkflowAnnotation anno : wfm.getWorkflowAnnotations()) {
+            modelChildren.add(anno);
+        }
         modelChildren.addAll(wfm.getNodeContainers());
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
-                NodeUIInformation uiInfo = (NodeUIInformation)
-                wfm.getInPortsBarUIInfo();
+                NodeUIInformation uiInfo =
+                        (NodeUIInformation)wfm.getInPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_inBar.setUIInfo((NodeUIInformation)
-                            wfm.getInPortsBarUIInfo());
+                    m_inBar.setUIInfo((NodeUIInformation)wfm
+                            .getInPortsBarUIInfo());
                 }
             }
             modelChildren.add(m_inBar);
@@ -172,18 +194,18 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         if (wfm.getNrWorkflowOutgoingPorts() > 0) {
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
-                NodeUIInformation uiInfo = (NodeUIInformation)
-                wfm.getOutPortsBarUIInfo();
+                NodeUIInformation uiInfo =
+                        (NodeUIInformation)wfm.getOutPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((NodeUIInformation)
-                            wfm.getOutPortsBarUIInfo());
-                }                
+                    m_outBar.setUIInfo((NodeUIInformation)wfm
+                            .getOutPortsBarUIInfo());
+                }
             }
             modelChildren.add(m_outBar);
         }
+
         return modelChildren;
     }
-
 
     /**
      * {@inheritDoc}
@@ -240,8 +262,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         getWorkflowManager().addListener(this);
 
         // add as listener on the command stack
-        getViewer().getEditDomain().getCommandStack().addCommandStackListener(
-                this);
+        getViewer().getEditDomain().getCommandStack()
+                .addCommandStackListener(this);
 
     }
 
@@ -283,8 +305,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /**
      * This installes the edit policies for the root EditPart:
      * <ul>
-     * <li><code>EditPolicy.CONTAINER_ROLE</code> - this serves as a
-     * container for nodes</li>
+     * <li><code>EditPolicy.CONTAINER_ROLE</code> - this serves as a container
+     * for nodes</li>
      * <li><code>EditPolicy.LAYOUT_ROLE</code> - this edit part a layout that
      * allows children to be moved</li>.
      * </ul>
@@ -327,7 +349,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 refreshTargetConnections();
 
                 // update out port (workflow in port) tooltips
-                
+
                 for (Object part : getChildren()) {
 
                     if (part instanceof NodeOutPortEditPart
@@ -343,7 +365,26 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 refreshVisuals();
             }
         });
-    
+
+    }
+
+    /**
+     * Called by the workflow manager after workflow annotations change.
+     * {@inheritDoc}
+     */
+    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
+        LOGGER.debug("WorkflowRoot: node UI changed (i.e. annotations changed)"
+                + " updating children...");
+
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            public void run() {
+                // annotations are children of the workflow
+                refreshChildren();
+                // always refresh visuals
+                getFigure().revalidate();
+                refreshVisuals();
+            }
+        });
     }
 
     /**
@@ -367,15 +408,16 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     public void createToolTipHelper(final Shell underlyingShell) {
         // create a tooltip helper for all child figures
-        ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer()
-                .getProperty(ZoomManager.class.toString()));
-        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl(),
-                zoomManager);
+        ZoomManager zoomManager =
+                (ZoomManager)(getRoot().getViewer()
+                        .getProperty(ZoomManager.class.toString()));
+        m_toolTipHelper =
+                new ProgressToolTipHelper(getViewer().getControl(), zoomManager);
         ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -384,8 +426,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug("part: " + part);
         if (part instanceof NodeContainerEditPart) {
             getViewer().deselect(this);
-            NodeID id = ((NodeContainerEditPart)part).getNodeContainer()
-                .getID();
+            NodeID id =
+                    ((NodeContainerEditPart)part).getNodeContainer().getID();
             if (m_futureSelection.isEmpty()) {
                 // select only this element
                 getViewer().deselectAll();
@@ -396,8 +438,18 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 m_futureSelection.remove(id);
             }
         }
+        if (model instanceof WorkflowAnnotation) {
+            getViewer().deselect(this);
+            if (m_annotationSelection.isEmpty()) {
+                getViewer().deselectAll();
+                getViewer().select(part);
+            } else if (m_annotationSelection.contains(model)) {
+                getViewer().appendSelection(part);
+                m_annotationSelection.remove(model);
+            }
+        }
         // connections are selected in workflowChanged
         return part;
     }
-    
+
 }

@@ -42,72 +42,73 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 /**
- * Loads all meta node template repository items from plugins store 
+ * Loads all meta node template repository items from plugins store
  * and provides them as input.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public final class MetaNodeTemplateRepositoryManager {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            MetaNodeTemplateRepositoryManager.class); 
-    
-    private static final String EXTENSOIN_POINT_ID 
-        = "org.knime.workbench.ui.metanode"; 
-    
+            MetaNodeTemplateRepositoryManager.class);
+
+    private static final String EXTENSOIN_POINT_ID
+        = "org.knime.workbench.ui.metanode";
+
     private List<MetaNodeTemplateRepositoryItem>m_items;
-    
+
     private static final String CFG_ITEM = "MetaNodeTemplate";
     private static final String CFG_TYPE = "MetaNodeTemplates";
 
     // the key for the preference store
-    private static final String METANODE_TEMPLATE_REPOSITORY_KEY 
+    private static final String METANODE_TEMPLATE_REPOSITORY_KEY
         = "org.knime.metanode.template.repository";
-    
+
     // TODO: store in user workspace
     // the default location for the meta node template repository
-    private static final String DEFAULT_REPOSITORY_DIR 
+    private static final String DEFAULT_REPOSITORY_DIR
         = KNIMEConstants.getKNIMEHomeDir() + "/.metanodetemplates";
-    
-    
+
+
     // the actual file
     private static final String METANODE_TEMPLATE_REPOSITORY;
-        
+
     static {
         KNIMEUIPlugin.getDefault().getPreferenceStore().setDefault(
                 METANODE_TEMPLATE_REPOSITORY_KEY, DEFAULT_REPOSITORY_DIR);
         METANODE_TEMPLATE_REPOSITORY = KNIMEUIPlugin.getDefault()
             .getPreferenceStore().getString(METANODE_TEMPLATE_REPOSITORY_KEY);
-         
+
     }
-    
-    
+
+
     private static MetaNodeTemplateRepositoryManager instance;
-    
+
     private WorkflowManager m_workflowmanager;
-    
+
     private MetaNodeTemplateRepositoryManager() {
         load();
         instance = this;
     }
 
     /**
-     * 
+     *
      * @return the singleton instance of this manager (already loaded).
      */
     public static MetaNodeTemplateRepositoryManager getInstance() {
         if (instance == null) {
             instance = new MetaNodeTemplateRepositoryManager();
-            
+
         }
         return instance;
     }
-    
+
     /**
-     * 
+     *
      * @return the {@link MetaNodeTemplateRepositoryItem}s
      */
     public List<MetaNodeTemplateRepositoryItem> getTemplates() {
@@ -115,7 +116,7 @@ public final class MetaNodeTemplateRepositoryManager {
     }
 
     /**
-     * 
+     *
      * @param item adds the item to the list of items
      */
     public void addItem(final MetaNodeTemplateRepositoryItem item) {
@@ -123,7 +124,7 @@ public final class MetaNodeTemplateRepositoryManager {
     }
 
     /**
-     * 
+     *
      * @return the workflow manager to which all meta nodes are added
      */
     public WorkflowManager getWorkflowManager() {
@@ -131,45 +132,47 @@ public final class MetaNodeTemplateRepositoryManager {
     }
 
     /**
-     * 
+     *
      * @param item to be removed from the list
      */
     public void removeItem(final MetaNodeTemplateRepositoryItem item) {
         m_items.remove(item);
     }
-    
+
     /**
      * Creates a new meta node template by copying the meta node from the source
-     * {@link WorkflowManager} to the this {@link WorkflowManager}. 
+     * {@link WorkflowManager} to the this {@link WorkflowManager}.
      * @param name name of the template
      * @param source WorkflowManager from which the MetaNode is copied
      * @param nodeID the {@link NodeID} of the meta node to be copied
      */
-    public void createMetaNodeTemplate(final String name, 
+    public void createMetaNodeTemplate(final String name,
             final WorkflowManager source, final NodeID nodeID) {
+        WorkflowCopyContent content = new WorkflowCopyContent();
+        content.setNodeIDs(nodeID);
         NodeID newNode = m_workflowmanager.copyFromAndPasteHere(
-                source, new NodeID[] {nodeID})[0];
-        MetaNodeTemplateRepositoryItem item 
+                source, content)[0];
+        MetaNodeTemplateRepositoryItem item
             = new MetaNodeTemplateRepositoryItem(
                 name, newNode);
         m_items.add(item);
     }
-    
+
     /**
-     * 
+     *
      * @param item the template
-     * @return the meta node represented by the template 
+     * @return the meta node represented by the template
      *  (referenced by the NodeID)
      */
     public WorkflowManager getSubworkflow(
             final MetaNodeTemplateRepositoryItem item) {
         return (WorkflowManager)m_workflowmanager.getNodeContainer(
                 item.getNodeID());
-        
+
     }
-    
-    
-    
+
+
+
     private void load() {
         m_items = new ArrayList<MetaNodeTemplateRepositoryItem>();
         try {
@@ -185,25 +188,25 @@ public final class MetaNodeTemplateRepositoryManager {
             // load WorkflowManager from file
             IMemento[] templates = memento.getChildren(CFG_ITEM);
             for (IMemento template : templates) {
-                MetaNodeTemplateRepositoryItem item 
+                MetaNodeTemplateRepositoryItem item
                     = new MetaNodeTemplateRepositoryItem();
                 item.loadFrom((XMLMemento)template);
                 item.updateNodeID(m_workflowmanager.getID());
                 m_items.add(item);
             }
         } catch (FileNotFoundException fnfe) {
-            // file not found -> no meta nodes defined yet 
+            // file not found -> no meta nodes defined yet
             // -> no problem (ignoring that)
             // LOGGER.error("Error during load of meta node templates: ", fnfe);
-            LOGGER.debug("No meta node templates found at " 
+            LOGGER.debug("No meta node templates found at "
                     +  getMetaNodeTemplateStore().getPath());
         } catch (WorkbenchException we) {
             LOGGER.error("Error during load of meta node templates: ", we);
         }
-        
+
         loadPreinstalledMetaNodes();
     }
-    
+
     private void loadPreinstalledMetaNodes() {
         IExtensionRegistry reg = Platform.getExtensionRegistry();
         IExtensionPoint p = reg.getExtensionPoint(EXTENSOIN_POINT_ID);
@@ -215,83 +218,83 @@ public final class MetaNodeTemplateRepositoryManager {
                 URL url = FileLocator.find(
                         KNIMEUIPlugin.getDefault().getBundle(),
                         new Path(path), null);
-                
+
                 if (url != null) {
                     try {
-                        LOGGER.debug("found pre-installed template " 
+                        LOGGER.debug("found pre-installed template "
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
-                        WorkflowManager metaNode = m_workflowmanager.load(f, 
+                        WorkflowManager metaNode = m_workflowmanager.load(f,
                                 new ExecutionMonitor(), null, false)
                                 .getWorkflowManager();
-                        MetaNodeTemplateRepositoryItem preItem 
-                            = new MetaNodeTemplateRepositoryItem(f.getName(), 
+                        MetaNodeTemplateRepositoryItem preItem
+                            = new MetaNodeTemplateRepositoryItem(f.getName(),
                                     metaNode.getID());
                         m_items.add(preItem);
                     } catch (CanceledExecutionException cee) {
-                        LOGGER.error("Unexpected canceled execution exception", 
+                        LOGGER.error("Unexpected canceled execution exception",
                                 cee);
                     } catch (Exception e) {
                         LOGGER.error(
                                 "Failed to load meta workflow repository", e);
                     }
                 }
-                
+
             }
         }
     }
 
     /**
-     * Saves the workflowManager to the directory specified by 
-     *  {@link #METANODE_TEMPLATE_REPOSITORY} and all 
-     *  {@link MetaNodeTemplateRepositoryItem}s to the preference store 
+     * Saves the workflowManager to the directory specified by
+     *  {@link #METANODE_TEMPLATE_REPOSITORY} and all
+     *  {@link MetaNodeTemplateRepositoryItem}s to the preference store
      *  (.plugins/org.knime.workbench.ui).
      */
     public void save() {
         // save workflow manager to dedicated dir
         try {
-            m_workflowmanager.save(new File(METANODE_TEMPLATE_REPOSITORY), 
+            m_workflowmanager.save(new File(METANODE_TEMPLATE_REPOSITORY),
                     new ExecutionMonitor(), false);
             XMLMemento memento = XMLMemento.createWriteRoot(CFG_TYPE);
             for (MetaNodeTemplateRepositoryItem item : m_items) {
-                item.saveTo((XMLMemento)memento.createChild(CFG_ITEM));   
+                item.saveTo((XMLMemento)memento.createChild(CFG_ITEM));
             }
             FileWriter writer = new FileWriter(getMetaNodeTemplateStore());
             memento.save(writer);
         } catch (IOException e) {
-            LOGGER.error("Couldn't save meta node templates. " 
+            LOGGER.error("Couldn't save meta node templates. "
                     + "Templates will be lost", e);
         } catch (CanceledExecutionException e) {
-            LOGGER.error("Couldn't save meta node templates. " 
+            LOGGER.error("Couldn't save meta node templates. "
                     + "Templates will be lost", e);
         }
     }
 
-    
+
     private WorkflowManager loadWorkflowManager() {
         try {
             WorkflowManager wfm = WorkflowManager.loadProject(
-                    new File(METANODE_TEMPLATE_REPOSITORY), 
+                    new File(METANODE_TEMPLATE_REPOSITORY),
                     new ExecutionMonitor(), null).getWorkflowManager();
             return wfm;
         } catch (IOException e) {
-            LOGGER.error("Couldn't load WorkflowManager. " 
+            LOGGER.error("Couldn't load WorkflowManager. "
                     + "Old templates will be lost!", e);
         } catch (InvalidSettingsException e) {
-            LOGGER.error("Couldn't load WorkflowManager. " 
+            LOGGER.error("Couldn't load WorkflowManager. "
                     + "Old templates will be lost!", e);
         } catch (CanceledExecutionException e) {
-            LOGGER.error("Couldn't load WorkflowManager. " 
+            LOGGER.error("Couldn't load WorkflowManager. "
                     + "Old templates will be lost!", e);
         }
         return null;
     }
-    
-    
+
+
     private File getMetaNodeTemplateStore() {
         return KNIMEUIPlugin.getDefault()
             .getStateLocation().append("MetaNodeTemplates.xml").toFile();
     }
-    
-    
+
+
 }

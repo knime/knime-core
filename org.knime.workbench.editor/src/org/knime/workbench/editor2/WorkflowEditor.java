@@ -135,6 +135,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.CopyAction;
@@ -376,7 +377,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         super.createActions();
 
         // Stack actions
-
         StackAction undo = new UndoAction(this);
         StackAction redo = new RedoAction(this);
 
@@ -399,8 +399,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription =
                 new SetNameAndDescriptionAction(this);
-
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
+
+        // new annotation action
+        AddAnnotationAction annotation = new AddAnnotationAction(this);
 
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
@@ -431,6 +433,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
 
+        m_actionRegistry.registerAction(annotation);
+
         // remember ids for later updates via 'updateActions'
         m_editorActions = new ArrayList<String>();
         m_editorActions.add(undo.getId());
@@ -451,6 +455,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
+        m_editorActions.add(annotation.getId());
+
     }
 
     /**

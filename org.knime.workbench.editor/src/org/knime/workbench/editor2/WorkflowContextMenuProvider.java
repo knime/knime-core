@@ -61,12 +61,16 @@ import org.eclipse.gef.ui.actions.UpdateAction;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -98,6 +102,9 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
     private final GraphicalViewer m_viewer;
 
+    // it's final, but the content changes each time the menu opens
+    private final Point m_lastLocation = new Point(0, 0);
+
     /**
      * Creates a new context menu provider, that is, registers some actions from
      * the action registry.
@@ -113,6 +120,14 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 + "needs an action registry !";
 
         m_actionRegistry = actionRegistry;
+        m_viewer.getControl().addMenuDetectListener(new MenuDetectListener() {
+            @Override
+            public void menuDetected(final MenuDetectEvent e) {
+                Point pt = m_viewer.getControl().toControl(e.x, e.y);
+                m_lastLocation.x = pt.x;
+                m_lastLocation.y = pt.y;
+            }
+        });
     }
 
     /**
@@ -180,6 +195,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         ((AbstractNodeAction)action).update();
         // set name and description
         action = m_actionRegistry.getAction(SetNameAndDescriptionAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // add workflow annotation
+        action = m_actionRegistry.getAction(AddAnnotationAction.ID);
+        AddAnnotationAction aaa = (AddAnnotationAction)action;
+        aaa.setLocation(m_lastLocation.x, m_lastLocation.y);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
@@ -275,4 +296,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
         manager.updateAll(true);
     }
+
+
 }

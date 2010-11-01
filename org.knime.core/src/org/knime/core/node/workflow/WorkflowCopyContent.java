@@ -40,111 +40,61 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.core.node.workflow;
 
-import org.eclipse.gef.commands.Command;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to "hide node names".
- *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * Class representing node IDs and workflow annotations that need to be
+ * copied from a workflow. Both IDs and annotation must be contained in the
+ * workflow that is copied from.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class HideNodeNamesAction extends AbstractClipboardAction {
+public final class WorkflowCopyContent {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.hide_node_names";
+    private NodeID[] m_nodeIDs;
+    private WorkflowAnnotation[] m_annotations;
 
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
-
-    /**
-     * @param editor The workflow editor
-     */
-    public HideNodeNamesAction(final WorkflowEditor editor) {
-        super(editor);
+    /** @return the ids */
+    public NodeID[] getNodeIDs() {
+        return m_nodeIDs;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getId() {
-        return ID;
+    /** @param ids the ids to set */
+    public void setNodeIDs(final NodeID... ids) {
+        m_nodeIDs = ids;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "Hide Node Names";
+    /** @return the annotations, never null */
+    public WorkflowAnnotation[] getAnnotations() {
+        return m_annotations != null
+            ? m_annotations : new WorkflowAnnotation[0];
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/hideNodeNames_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Hide all node names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
+    /** Clones the argument annotations and keeps the clone.
+     * @param annotations the annotations to set */
+    public void setAndCloneAnnotations(
+            final WorkflowAnnotation... annotations) {
+        m_annotations = new WorkflowAnnotation[annotations.length];
+        for (int i = 0; i < annotations.length; i++) {
+            m_annotations[i] = annotations[i].clone();
         }
-        HIDE_NODE_NAMES = hide;
     }
 
-    /**
-     * {@inheritDoc}
+    /** Sets annotation references. This is used from the undo persistors
+     * (DeleteCommand) to make sure that the very same annotations are inserted
+     * back into the workflow. They need to be the same to allow undo for
+     * previous executed command (that are possibly also undone).
+     * @param annotations The annotations references.
      */
-    @Override
-    protected boolean calculateEnabled() {
-        return true;
+    public void setAnnotationReferences(
+            final WorkflowAnnotation... annotations) {
+        m_annotations = annotations;
     }
+
 }

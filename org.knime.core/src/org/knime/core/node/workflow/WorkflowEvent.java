@@ -80,6 +80,10 @@ public class WorkflowEvent {
      NODE_ADDED,
      /** Event: node removed from workflow. */
      NODE_REMOVED,
+     /** Event: annotation added to workflow. */
+     ANNOTATION_ADDED,
+     /** Event: annotation removed from workflow. */
+     ANNOTATION_REMOVED,
      /** Event: workflow is marked as dirty. */
      WORKFLOW_DIRTY,
     }

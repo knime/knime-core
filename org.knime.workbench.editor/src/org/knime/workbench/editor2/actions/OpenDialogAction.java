@@ -119,11 +119,13 @@ public class OpenDialogAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        if (getSelectedNodeParts().length != 1) {
+        NodeContainerEditPart[] selected =
+            getSelectedParts(NodeContainerEditPart.class);
+        if (selected.length != 1) {
             return false;
         }
 
-        NodeContainerEditPart part = getSelectedNodeParts()[0];
+        NodeContainerEditPart part = selected[0];
 
         return part.getNodeContainer().hasDialog();
     }

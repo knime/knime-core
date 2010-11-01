@@ -40,104 +40,49 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   2010 10 26 (ohl): created
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to "hide node names".
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class HideNodeNamesAction extends AbstractClipboardAction {
+public class AddAnnotationAction extends AbstractNodeAction {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.hide_node_names";
+    /** unique ID for this action. * */
+    public static final String ID = "knime.action.addannotation";
 
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
+    private static final int DEFAULT_XLOC = 20;
+
+    private static final int DEFAULT_YLOC = 29;
+
+    private int m_x;
+
+    private int m_y;
 
     /**
-     * @param editor The workflow editor
+     * @param part
+     * @param style
      */
-    public HideNodeNamesAction(final WorkflowEditor editor) {
+    public AddAnnotationAction(final WorkflowEditor editor) {
         super(editor);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getId() {
-        return ID;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "Hide Node Names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/hideNodeNames_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Hide all node names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
-        }
-        HIDE_NODE_NAMES = hide;
+        m_x = DEFAULT_XLOC;
+        m_y = DEFAULT_YLOC;
     }
 
     /**
@@ -146,5 +91,59 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
     @Override
     protected boolean calculateEnabled() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return "New Workflow Annotation";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getImageDescriptor() {
+        ISharedImages sharedImages =
+                PlatformUI.getWorkbench().getSharedImages();
+        return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_PASTE);
+    }
+
+    /**
+     * @param xLoc
+     * @param yLoc
+     */
+    public void setLocation(final int xLoc, final int yLoc) {
+        m_x = xLoc;
+        m_y = yLoc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        AddAnnotationCommand aac =
+                new AddAnnotationCommand(getManager(), getEditor().getViewer(),
+                        new Point(m_x, m_y));
+        getCommandStack().execute(aac); // enables undo
+
+        // update the actions
+        getEditor().updateActions();
+
+        // Give focus to the editor again. Otherwise the actions (selection)
+        // is not updated correctly.
+        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return ID;
     }
 }

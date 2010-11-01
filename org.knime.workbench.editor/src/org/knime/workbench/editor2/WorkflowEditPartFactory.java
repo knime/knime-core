@@ -59,14 +59,16 @@ import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
-import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -78,7 +80,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 /**
  * This factory creates the GEF <code>EditPart</code>s instances (the
  * controller objects) for given model objects.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
@@ -87,13 +89,13 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
 //    private static final NodeLogger LOGGER =
 //            NodeLogger.getLogger(WorkflowEditPartFactory.class);
 
-    /* 
+    /*
      * we need this flag to determine between the "root" workflow manager and
      * all subsequent meta nodes. This means that we implicitely assume that
      * the "root" workflow manager is the first object to come of type
-     * WorkflowManager. This assumption is correct, since the top model is 
+     * WorkflowManager. This assumption is correct, since the top model is
      * passed to the factory and subsequently is asked for its model children.
-     * 
+     *
      * @see WorkflowGraphicalViewerCreator#createViewer
      * @see AbstractGraphicalViewer#sertEditPartFactory
      * @see WorkflowRootEditPart#getModelChildren
@@ -101,10 +103,10 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
     private boolean m_isTop = true;
 
     /**
-     * An instance per {@link GraphicalViewer} is necessary, in order to 
-     * distinguish between the workflow manager of the editor and contained 
-     * subworkflows.  
-     * 
+     * An instance per {@link GraphicalViewer} is necessary, in order to
+     * distinguish between the workflow manager of the editor and contained
+     * subworkflows.
+     *
      */
     public WorkflowEditPartFactory() {
     }
@@ -112,8 +114,8 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
     /**
      * Creates the referring edit parts for the following parts of the model.
      * <ul>
-     *  <li>{@link WorkflowManager}: either {@link WorkflowRootEditPart} or 
-     *  {@link NodeContainerEditPart} (depending on the currently displayed 
+     *  <li>{@link WorkflowManager}: either {@link WorkflowRootEditPart} or
+     *  {@link NodeContainerEditPart} (depending on the currently displayed
      *  level)</li>
      *  <li>{@link SingleNodeContainer}: {@link NodeContainerEditPart}</li>
      *  <li>{@link NodeInPort}: {@link NodeInPortEditPart}</li>
@@ -123,17 +125,17 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
      *  <li>{@link WorkflowInPort}: {@link WorkflowInPortEditPart}</li>
      *  <li>{@link WorkflowOutPort}: {@link WorkflowOutPortEditPart}</li>
      * </ul>
-     * 
+     *
      * The {@link WorkflowRootEditPart} has its {@link NodeContainer}s and its
-     * {@link WorkflowInPort}s and {@link WorkflowOutPort}s as model children. 
-     * The {@link NodeContainerEditPart} has its {@link NodePort}s as its 
-     * children. 
-     * 
+     * {@link WorkflowInPort}s and {@link WorkflowOutPort}s as model children.
+     * The {@link NodeContainerEditPart} has its {@link NodePort}s as its
+     * children.
+     *
      * @see WorkflowRootEditPart#getModelChildren()
      * @see NodeContainerEditPart#getModelChildren()
-     * 
+     *
      * @throws IllegalArgumentException if any other object is passed
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -155,6 +157,9 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
 //                part = new NodeContainerEditPart();
                 part = new SubworkflowEditPart();
             }
+        } else if (model instanceof WorkflowAnnotation) {
+            /* workflow annotations hang off the workflow manager */
+            part = new AnnotationEditPart();
         } else if (model instanceof WorkflowPortBar) {
             WorkflowPortBar bar = (WorkflowPortBar)model;
             if (bar.isInPortBar()) {
@@ -165,20 +170,20 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
         } else if (model instanceof SingleNodeContainer) {
             // SingleNodeContainer -> NodeContainerEditPart
             part = new NodeContainerEditPart();
-            
-            // we have to test for WorkflowInPort first because it's a 
-            // subclass of NodeInPort (same holds for WorkflowOutPort and 
-            // NodeOutPort) 
-        } else if (model instanceof WorkflowInPort 
+
+            // we have to test for WorkflowInPort first because it's a
+            // subclass of NodeInPort (same holds for WorkflowOutPort and
+            // NodeOutPort)
+        } else if (model instanceof WorkflowInPort
                 && context instanceof WorkflowInPortBarEditPart) {
-            // WorkflowInPort and context WorkflowRootEditPart -> 
+            // WorkflowInPort and context WorkflowRootEditPart ->
             // WorkflowInPortEditPart
             /*
-             * if the context is a WorkflowRootEditPart it indicates that the 
+             * if the context is a WorkflowRootEditPart it indicates that the
              * WorkflowInPort is a model child of the WorkflowRootEditPart, i.e.
-             * we look at it as a workflow in port. If the context is a 
+             * we look at it as a workflow in port. If the context is a
              * NodeContainerEditPart the WorkflowInPort is a model child of a
-             * NodeContainerEditPart and we look at it as a node in port. 
+             * NodeContainerEditPart and we look at it as a node in port.
              */
             WorkflowInPort inport = (WorkflowInPort)model;
             part =
@@ -186,21 +191,21 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
                         inport.getPortIndex());
         } else if (model instanceof WorkflowOutPort
                 && context instanceof WorkflowOutPortBarEditPart) {
-            // WorkflowOutPort and context WorkflowRootEditPart -> 
+            // WorkflowOutPort and context WorkflowRootEditPart ->
             // WorkflowOutPortEditPart
             /*
-             * if the context is a WorkflowRootEditPart it indicates that the 
-             * WorkflowOutPort is a model child of the WorkflowRootEditPart, 
-             * i.e. we look at it as a workflow out port. If the context is a 
+             * if the context is a WorkflowRootEditPart it indicates that the
+             * WorkflowOutPort is a model child of the WorkflowRootEditPart,
+             * i.e. we look at it as a workflow out port. If the context is a
              * NodeContainerEditPart the WorkflowOutPort is a model child of a
-             * NodeContainerEditPart and we look at it as a node out port. 
+             * NodeContainerEditPart and we look at it as a node out port.
              */
-            
+
          // TODO: return SubWorkFlowOutPortEditPart
             WorkflowOutPort outport = (WorkflowOutPort)model;
-                
+
              part = new WorkflowOutPortEditPart(
-                        outport.getPortType(), 
+                        outport.getPortType(),
                         outport.getPortIndex());
         } else if (model instanceof WorkflowOutPort) {
          // TODO: return SubWorkFlowOutPortEditPart
@@ -208,16 +213,16 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             part = new MetaNodeOutPortEditPart(
                     outport.getPortType(),
                     outport.getPortIndex());
-            
+
         } else if (model instanceof NodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
-            part = new NodeInPortEditPart(port.getPortType(), 
+            part = new NodeInPortEditPart(port.getPortType(),
                     port.getPortIndex());
         } else if (model instanceof NodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
             NodePort port = (NodeOutPort)model;
-            part = new NodeOutPortEditPart(port.getPortType(), 
+            part = new NodeOutPortEditPart(port.getPortType(),
                     port.getPortIndex());
         } else if (model instanceof ConnectionContainer) {
             // ConnectionContainer -> ConnectionContainerEditPart

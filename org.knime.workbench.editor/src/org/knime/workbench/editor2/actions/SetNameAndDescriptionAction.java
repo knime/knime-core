@@ -124,7 +124,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
 
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
 
         // only if just one node part is selected
         if (parts.length != 1) {

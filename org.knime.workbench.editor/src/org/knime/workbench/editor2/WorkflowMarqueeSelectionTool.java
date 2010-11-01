@@ -40,6 +40,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -217,7 +218,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 continue;
             if (!(child instanceof NodeContainerEditPart
                     || child instanceof ConnectionContainerEditPart
-                    || child instanceof AbstractWorkflowPortBarEditPart)) {
+                    || child instanceof AbstractWorkflowPortBarEditPart
+                    || child instanceof AnnotationEditPart)) {
                 continue;
             }
 

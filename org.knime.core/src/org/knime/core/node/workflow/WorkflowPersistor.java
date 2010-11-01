@@ -107,6 +107,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      */
     List<Credentials> getCredentials();
 
+    /** @return (non-mull) map of annotations. */
+    List<WorkflowAnnotation> getWorkflowAnnotations();
+
     /** List of node directories, whose corresponding nodes failed
      * to load. These directories will be deleted in the next save invocation.
      * @return List of obsolete node directories

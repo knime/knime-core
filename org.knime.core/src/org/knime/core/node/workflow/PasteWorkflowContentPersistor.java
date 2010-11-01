@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -76,16 +77,20 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
+    private final WorkflowAnnotation[] m_copiedAnnotations;
 
     /** Create new persistor.
-     * @param connectionSet A copy of connection clones.
      * @param loaderMap The loader map.
+     * @param connectionSet A copy of connection clones.
+     * @param copiedAnnotations Copied workflow annotations.
      */
     PasteWorkflowContentPersistor(
             final Map<Integer, NodeContainerPersistor> loaderMap,
-            final Set<ConnectionContainerTemplate> connectionSet) {
+            final Set<ConnectionContainerTemplate> connectionSet,
+            final WorkflowAnnotation[] copiedAnnotations) {
         m_connectionSet = connectionSet;
         m_loaderMap = loaderMap;
+        m_copiedAnnotations = copiedAnnotations;
     }
 
     /** {@inheritDoc} */
@@ -159,6 +164,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+        return Arrays.asList(m_copiedAnnotations);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ReferencedFile> getObsoleteNodeDirectories() {
         return Collections.emptyList();
     }

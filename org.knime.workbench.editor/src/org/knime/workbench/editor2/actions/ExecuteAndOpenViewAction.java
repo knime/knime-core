@@ -130,7 +130,8 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection
         WorkflowManager wm = getEditor().getWorkflowManager();
         for (int i = 0; i < parts.length; i++) {

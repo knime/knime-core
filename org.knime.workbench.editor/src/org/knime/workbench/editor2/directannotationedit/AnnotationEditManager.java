@@ -40,111 +40,47 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   2010 10 25 (ohl): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.directannotationedit;
 
-import org.eclipse.gef.commands.Command;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.gef.GraphicalEditPart;
+import org.eclipse.gef.editparts.ZoomManager;
+import org.eclipse.gef.tools.CellEditorLocator;
+import org.eclipse.gef.tools.DirectEditManager;
 
 /**
- * Action to "hide node names".
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class HideNodeNamesAction extends AbstractClipboardAction {
-
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.hide_node_names";
-
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
-
-    /**
-     * @param editor The workflow editor
-     */
-    public HideNodeNamesAction(final WorkflowEditor editor) {
-        super(editor);
+public class AnnotationEditManager extends DirectEditManager {
+    public AnnotationEditManager(final GraphicalEditPart editPart,
+            final CellEditorLocator locator) {
+        super(editPart, StyledTextEditor.class, locator);
     }
 
     /**
-     * {@inheritDoc}
+     * Initializes the cell editor.
+     *
+     * @see org.eclipse.gef.tools.DirectEditManager#initCellEditor()
      */
     @Override
-    public String getId() {
-        return ID;
+    protected void initCellEditor() {
+        StyledTextEditor stw = (StyledTextEditor)getCellEditor();
+        stw.setZoomFactor(getZoomfactor());
+        stw.setValue(getEditPart().getModel());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "Hide Node Names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/hideNodeNames_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Hide all node names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
-        }
-        HIDE_NODE_NAMES = hide;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return true;
+    private double getZoomfactor() {
+        ZoomManager zoomManager =
+                (ZoomManager)(getEditPart().getRoot().getViewer()
+                        .getProperty(ZoomManager.class.toString()));
+        return zoomManager.getZoom();
     }
 }

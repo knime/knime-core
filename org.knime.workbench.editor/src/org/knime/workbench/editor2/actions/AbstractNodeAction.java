@@ -48,9 +48,9 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.gef.EditPart;
@@ -113,56 +113,64 @@ public abstract class AbstractNodeAction extends SelectionAction {
     @Override
     public final void run() {
 
-        // get selected parts...
-        final NodeContainerEditPart[] parts = getSelectedNodeParts();
-
         // call implementation of this action in the SWT UI thread
         Display.getCurrent().syncExec(new Runnable() {
             @Override
             public void run() {
-                runOnNodes(parts);
+                runInSWT();
             }
 
         });
     }
 
     /**
-     * @return The selected <code>NodeContainerEditParts</code>, may be empty
+     * Calls {@link #runOnNodes(NodeContainerEditPart[])}
+     * with the current selected <code>NodeContainerEditPart</code>s.
      */
-    protected NodeContainerEditPart[] getSelectedNodeParts() {
+    public void runInSWT() {
+        // get selected parts...
+        final NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
+        runOnNodes(parts);
 
-        return getNodeParts(getSelectedObjects());
     }
 
-    /**
-     * @return The all <code>NodeContainerEditParts</code>, may be empty
-     */
-    protected NodeContainerEditPart[] getAllNodeParts() {
-
-        return getNodeParts(getAllObjects());
+    /** Get selected edit parts.
+     * @param editPartClass The class of interest
+     * @param <T> The class to the argument
+     * @return The selected <code>EditParts</code> of the given part. */
+    protected <T extends EditPart> T[] getSelectedParts(
+            final Class<T> editPartClass) {
+        return filterObjects(editPartClass, getSelectedObjects());
     }
 
-    /*
-     * @return The all <code>NodeContainerEditParts</code>, may be empty
-     */
-    private NodeContainerEditPart[] getNodeParts(final List nodeObjects) {
-        ArrayList<NodeContainerEditPart> objects = new ArrayList<NodeContainerEditPart>(
-                nodeObjects);
+    /** Get all edit parts.
+     * @param editPartClass The class of interest
+     * @param <T> The class to the argument
+     * @return The <code>EditParts</code> of the given part. */
+    protected <T extends EditPart> T[] getAllParts(
+            final Class<T> editPartClass) {
+        return filterObjects(editPartClass, getAllObjects());
+    }
+
+    /** @param editPartClass The class of interest
+     * @param list To filter from
+     * @param <T> The class to the argument
+     * @return The selected <code>EditParts</code> of the given part. */
+    public static final <T extends EditPart> T[] filterObjects(
+            final Class<T> editPartClass, final List<?> list) {
+        ArrayList<T> objects = new ArrayList<T>();
 
         // clean list, that is, remove all objects that are not edit
         // parts for a NodeContainer
-        for (Iterator iter = objects.iterator(); iter.hasNext();) {
-            Object element = iter.next();
-            if (!(element instanceof NodeContainerEditPart)) {
-                iter.remove();
-                continue;
+        for (Object e : list) {
+            if (editPartClass.isInstance(e)) {
+                objects.add(editPartClass.cast(e));
             }
         }
-
-        final NodeContainerEditPart[] parts = objects
-                .toArray(new NodeContainerEditPart[objects.size()]);
-
-        return parts;
+        @SuppressWarnings("unchecked")
+        T[] array = (T[])Array.newInstance(editPartClass, objects.size());
+        return objects.toArray(array);
     }
 
     /**
@@ -215,26 +223,12 @@ public abstract class AbstractNodeAction extends SelectionAction {
         throw new UnsupportedOperationException("This method no longer exist!");
     }
 
-    /**
-     * This normally needs to be overridden by subclasses.
-     *
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return getSelectedNodeParts().length > 0;
-    }
-
-    /**
-     * Clients must provide a unique action ID.
-     *
-     * @see org.eclipse.jface.action.IAction#getId()
-     */
+    /** {@inheritDoc} */
     @Override
     public abstract String getId();
 
-    /**
-     * Clients must implement action code here.
+    /** Clients can implement action code here (or overwrite
+     * {@link #runInSWT()}).
      *
      * @param nodeParts The parts that the action should be executed on.
      */

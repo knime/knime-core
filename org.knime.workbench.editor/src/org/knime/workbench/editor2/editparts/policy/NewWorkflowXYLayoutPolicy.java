@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -57,16 +57,18 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
  * Handles manual layout editing for the workflow, that is, creates the commands
  * that can change the visual constraints of the contents.
- * 
+ *
  * Only available for XYLayoutManagers, not for automatic layout
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
@@ -82,7 +84,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
     /**
      * Creates command to move / resize <code>NodeContainer</code> components
      * on the project's client area.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -100,7 +102,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         // that set it into the visuals
         Rectangle rect = ((Rectangle) constraint).getCopy();
         int[] newBounds = new int[] {rect.x, rect.y, rect.width, rect.height};
-        
+
         // We need a node container model object ...
         if (child.getModel() instanceof NodeContainer) {
             NodeContainer container = (NodeContainer) child.getModel();
@@ -108,6 +110,9 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         } else if (child instanceof AbstractWorkflowPortBarEditPart) {
             command = new ChangeWorkflowPortBarCommand(
                     (AbstractWorkflowPortBarEditPart)child, rect);
+        } else if (child instanceof AnnotationEditPart) {
+            command = new ChangeAnnotationBoundsCommand(
+                    (AnnotationEditPart)child, rect);
         }
         return command;
     }

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,14 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2006 (sieb): created
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
+import org.eclipse.gef.EditPart;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -59,12 +62,13 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.DeleteCommand;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Implements the clipboard cut action to copy nodes and connections into the
  * clipboard and additionally delete them from the workflow.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class CutAction extends AbstractClipboardAction {
@@ -73,7 +77,7 @@ public class CutAction extends AbstractClipboardAction {
 
     /**
      * Constructs a new clipboard copy action.
-     * 
+     *
      * @param editor the workflow editor this action is intended for
      */
     public CutAction(final WorkflowEditor editor) {
@@ -89,7 +93,7 @@ public class CutAction extends AbstractClipboardAction {
 
         return ActionFactory.CUT.getId();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -100,7 +104,7 @@ public class CutAction extends AbstractClipboardAction {
                 .getSharedImages();
         return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_CUT);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -111,32 +115,36 @@ public class CutAction extends AbstractClipboardAction {
 
     /**
      * At least one node must be selected.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
-
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
         return parts.length > 0;
     }
 
     /**
      * Invokes the copy action followed by the delete command.
-     * 
      * {@inheritDoc}
      */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+    public void runInSWT() {
 
         LOGGER.debug("Clipboard cut action invoked...");
 
         // invoke copy action
         CopyAction copy = new CopyAction(getEditor());
-        copy.runOnNodes(nodeParts);
+        copy.runInSWT();
+        NodeContainerEditPart[] nodeParts = copy.getNodeParts();
+        AnnotationEditPart[] annotationParts = copy.getAnnotationParts();
+        Collection<EditPart> coll = new ArrayList<EditPart>();
+        coll.addAll(Arrays.asList(nodeParts));
+        coll.addAll(Arrays.asList(annotationParts));
 
         DeleteCommand delete = new DeleteCommand(
-                Arrays.asList(nodeParts), getEditor().getWorkflowManager()); 
+                coll, getEditor().getWorkflowManager());
         getCommandStack().execute(delete); // enable undo
 
         getEditor().updateActions();
@@ -144,5 +152,12 @@ public class CutAction extends AbstractClipboardAction {
         // Give focus to the editor again. Otherwise the actions (selection)
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        throw new IllegalStateException(
+                "Not to be called as runInSWT is overwritten.");
     }
 }

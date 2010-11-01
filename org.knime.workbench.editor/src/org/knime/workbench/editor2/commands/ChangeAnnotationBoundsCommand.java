@@ -43,108 +43,90 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   21.02.2008 (Fabian Dill): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.commands;
 
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
- * Action to "hide node names".
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class HideNodeNamesAction extends AbstractClipboardAction {
+public class ChangeAnnotationBoundsCommand extends Command {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.hide_node_names";
+    private final Rectangle m_oldBounds;
 
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
+    private final Rectangle m_newBounds;
+
+    // TODO this must not be a hard reference (undo/redo problems when deleted)
+    private final AnnotationEditPart m_annotationEditPart;
 
     /**
-     * @param editor The workflow editor
+     *
+     * @param portBar The workflow port bar to change
+     * @param newBounds The new bounds
      */
-    public HideNodeNamesAction(final WorkflowEditor editor) {
-        super(editor);
+    public ChangeAnnotationBoundsCommand(final AnnotationEditPart portBar,
+            final Rectangle newBounds) {
+        WorkflowAnnotation anno = (WorkflowAnnotation)portBar.getModel();
+        m_oldBounds =
+                new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
+                        anno.getHeight());
+        m_newBounds = newBounds;
+        m_annotationEditPart = portBar;
     }
 
     /**
+     *
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public boolean canExecute() {
+//        Dimension min = m_annotationEditPart.getFigure().getMinimumSize();
+//        if (m_newBounds.width < min.width || m_newBounds.height < min.height) {
+//            return false;
+//        }
+        return super.canExecute();
     }
 
     /**
-     * {@inheritDoc}
+     * Sets the new bounds.
+     *
+     * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
-    public String getText() {
-        return "Hide Node Names";
+    public void execute() {
+        WorkflowAnnotation annotation =
+                (WorkflowAnnotation)m_annotationEditPart.getModel();
+        annotation.setDimension(m_newBounds.x, m_newBounds.y,
+                m_newBounds.width, m_newBounds.height);
+        m_annotationEditPart.getFigure().setBounds(m_newBounds);
+        m_annotationEditPart.getFigure().getLayoutManager()
+                .layout(m_annotationEditPart.getFigure());
     }
 
     /**
-     * {@inheritDoc}
+     * Sets the old bounds.
+     *
+     * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
+    public void undo() {
+        WorkflowAnnotation annotation =
+                (WorkflowAnnotation)m_annotationEditPart.getModel();
+        annotation.setDimension(m_oldBounds.x, m_oldBounds.y,
+                        m_oldBounds.width, m_oldBounds.height);
+        // must set explicitly so that event is fired by container
+        m_annotationEditPart.getFigure().setBounds(m_oldBounds);
+        m_annotationEditPart.getFigure().getLayoutManager()
+                .layout(m_annotationEditPart.getFigure());
     }
 
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/hideNodeNames_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Hide all node names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
-        }
-        HIDE_NODE_NAMES = hide;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return true;
-    }
 }

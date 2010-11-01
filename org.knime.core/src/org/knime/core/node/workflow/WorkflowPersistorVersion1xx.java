@@ -112,6 +112,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private String m_name;
     private List<FlowVariable> m_workflowVariables;
     private List<Credentials> m_credentials;
+    private List<WorkflowAnnotation> m_workflowAnnotations;
 
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -147,6 +148,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getLoadVersionString() {
         return getVersionString();
     }
@@ -159,11 +161,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
         return m_connectionSet;
     }
 
     /** {@inheritDoc} */
+    @Override
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return m_nodeContainerLoaderMap;
     }
@@ -175,22 +179,26 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
 
     /** {@inheritDoc} */
+    @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
         return m_globalTableRepository;
     }
 
     /** {@inheritDoc} */
+    @Override
     public NodeContainer getNodeContainer(final WorkflowManager parent,
             final NodeID id) {
         return parent.createSubWorkflow(this, id);
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getName() {
         return m_name;
     }
@@ -209,26 +217,36 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+        return m_workflowAnnotations;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ReferencedFile> getObsoleteNodeDirectories() {
         return m_obsoleteNodeDirectories;
     }
 
     /** {@inheritDoc} */
+    @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
         return m_inPortTemplates;
     }
 
     /** {@inheritDoc} */
+    @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
         return m_outPortTemplates;
     }
 
     /** {@inheritDoc} */
+    @Override
     public UIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
     /** {@inheritDoc} */
+    @Override
     public UIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
@@ -346,6 +364,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             setDirtyAfterLoad();
             loadResult.addError(error);
             m_credentials = Collections.emptyList();
+        }
+
+        try {
+            m_workflowAnnotations = loadWorkflowAnnotations(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error =
+                "Unable to load workflow annotations: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_workflowAnnotations = Collections.emptyList();
         }
 
         NodeSettingsRO metaFlowParentSettings =
@@ -891,7 +920,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             return null;
         }
     }
-    
+
     protected void loadUIInfoSettings(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         uiInfo.load(settings);
@@ -1060,6 +1089,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      */
     protected List<Credentials> loadCredentials(
             final NodeSettingsRO settings) throws InvalidSettingsException {
+        return Collections.emptyList();
+    }
+
+    /** Load annotations (added in v2.3).
+     * @param workflowSett to load from
+     * @return non-null list.
+     * @throws InvalidSettingsException If this fails for any reason.
+     */
+    protected List<WorkflowAnnotation> loadWorkflowAnnotations(
+            final NodeSettingsRO workflowSett) throws InvalidSettingsException {
         return Collections.emptyList();
     }
 

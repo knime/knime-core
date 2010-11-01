@@ -103,7 +103,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         V210("2.1.0"),
         /** Version 2.2.x, introduces optional inputs, flow variable input
          * credentials, node local drop directory. */
-        V220("2.2.0");
+        V220("2.2.0"),
+        /** Version 2.3.x, introduces workflow annotations & switches. */
+        V230("2.3.0");
 
         private final String m_versionString;
 
@@ -129,7 +131,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return null;
         }
     }
-    static final String VERSION_LATEST = LoadVersion.V220.getVersionString();
+    static final String VERSION_LATEST = LoadVersion.V230.getVersionString();
 
     static boolean canReadVersion(final String versionString) {
         return LoadVersion.get(versionString) != null;
@@ -208,6 +210,28 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             }
         }
         return r;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected List<WorkflowAnnotation> loadWorkflowAnnotations(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // no credentials in v2.2 and before
+        if (getLoadVersion().ordinal() < LoadVersion.V230.ordinal()) {
+            return Collections.emptyList();
+        }
+        if (!settings.containsKey("annotations")) {
+            return Collections.emptyList();
+        }
+        NodeSettingsRO annoSettings = settings.getNodeSettings("annotations");
+        List<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>();
+        for (String key : annoSettings.keySet()) {
+            NodeSettingsRO child = annoSettings.getNodeSettings(key);
+            WorkflowAnnotation anno = new WorkflowAnnotation();
+            anno.load(child);
+            result.add(anno);
+        }
+        return result;
     }
 
     /** {@inheritDoc} */
@@ -457,6 +481,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         metaPersistor.save(wm, settings);
         saveWorkflowVariables(wm, settings);
         saveCredentials(wm, settings);
+        saveWorkflowAnnotations(wm, settings);
 
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
@@ -563,6 +588,22 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 NodeSettingsWO s = sub.addNodeSettings(c.getName());
                 c.save(s);
             }
+        }
+    }
+
+    protected void saveWorkflowAnnotations(final WorkflowManager manager,
+            final NodeSettingsWO settings) {
+        Collection<WorkflowAnnotation> annotations =
+            manager.getWorkflowAnnotations();
+        if (annotations.size() == 0) {
+            return;
+        }
+        NodeSettingsWO annoSettings = settings.addNodeSettings("annotations");
+        int i = 0;
+        for (WorkflowAnnotation a : annotations) {
+            NodeSettingsWO t = annoSettings.addNodeSettings("annotation_" + i);
+            a.save(t);
+            i += 1;
         }
     }
 

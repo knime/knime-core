@@ -40,111 +40,50 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   2010 10 25 (ohl): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.directannotationedit;
 
-import org.eclipse.gef.commands.Command;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.tools.CellEditorLocator;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.swt.widgets.Composite;
+import org.knime.workbench.editor2.figures.AnnotationFigure3;
 
 /**
- * Action to "hide node names".
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class HideNodeNamesAction extends AbstractClipboardAction {
+public class StyledTextEditorLocator implements CellEditorLocator {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.hide_node_names";
+    private final AnnotationFigure3 m_figure;
 
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
-
-    /**
-     * @param editor The workflow editor
-     */
-    public HideNodeNamesAction(final WorkflowEditor editor) {
-        super(editor);
+    public StyledTextEditorLocator(final AnnotationFigure3 figure) {
+        figure.getClass(); // must not be null
+        m_figure = figure;
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public String getId() {
-        return ID;
+    public void relocate(final CellEditor celleditor) {
+        Composite edit = (Composite)celleditor.getControl();
+        Rectangle figBounds = m_figure.getBounds().getCopy();
+        // adapt to zoom level and viewport
+        m_figure.translateToAbsolute(figBounds);
+        org.eclipse.swt.graphics.Rectangle trim = edit.computeTrim(0, 0, 0, 0);
+        figBounds.translate(trim.x, trim.y);
+        figBounds.width += trim.width;
+        figBounds.height += trim.height;
+        edit.setBounds(new org.eclipse.swt.graphics.Rectangle(figBounds.x,
+                figBounds.y - StyledTextEditor.TOOLBAR_HEIGHT, figBounds.width,
+                figBounds.height + StyledTextEditor.TOOLBAR_HEIGHT));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return "Hide Node Names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/hideNodeNames_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Hide all node names";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
-        }
-        HIDE_NODE_NAMES = hide;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return true;
-    }
 }

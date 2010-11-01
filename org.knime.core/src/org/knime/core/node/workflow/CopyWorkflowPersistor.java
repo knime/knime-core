@@ -81,6 +81,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final HashMap<Integer, ContainerTable> m_tableRep;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
+    private final List<WorkflowAnnotation> m_workflowAnnotations;
 
     /** Create copy persistor.
      * @param original To copy from
@@ -137,6 +138,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (Credentials c : original.getCredentialsStore().getCredentials()) {
             m_credentials.add(c.clone());
         }
+        m_workflowAnnotations = new ArrayList<WorkflowAnnotation>();
+        for (WorkflowAnnotation w : original.getWorkflowAnnotations()) {
+            m_workflowAnnotations.add(w.clone());
+        }
     }
 
     /** {@inheritDoc} */
@@ -176,11 +181,19 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<Credentials> getCredentials() {
         return m_credentials;
     }
 
     /** {@inheritDoc} */
+    @Override
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+        return m_workflowAnnotations;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ReferencedFile> getObsoleteNodeDirectories() {
         return Collections.emptyList();
     }

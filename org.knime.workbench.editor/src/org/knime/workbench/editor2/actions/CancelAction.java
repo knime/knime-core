@@ -127,7 +127,8 @@ public class CancelAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
 
-        NodeContainerEditPart[] parts = getSelectedNodeParts();
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
 
         // enable if we have at least one executing or queued node in our
         // selection
