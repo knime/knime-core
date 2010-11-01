@@ -87,6 +87,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -673,6 +674,16 @@ public final class Node implements NodeModelWarningListener {
     boolean hasContent() {
         return m_model.hasContent();
     }
+    
+    /**
+     * @return true if configure or execute were skipped because nodes is
+     *   part of an inactive branch.
+     * @see InactiveBranchPortObjectSpec
+     */
+    public boolean isInactive() {
+        return m_outputs[0].spec == null ? false
+                : m_outputs[0].spec instanceof InactiveBranchPortObjectSpec;
+    }
 
     /**
      * Starts executing this node. If the node has been executed already, it
@@ -702,6 +713,22 @@ public final class Node implements NodeModelWarningListener {
         // TODO: NEWWFM State Event
         // notifyStateListeners(new NodeStateChangedEvent(
         // NodeStateChangedEvent.Type.START_EXECUTE));
+
+        // check if the node is part of a skipped branch and return
+        // appropriate objects without actually configuring the node.
+        if (!(m_model instanceof InactiveBranchConsumer)) {
+            for (int i = 0; i < rawData.length; i++) {
+                if (rawData[i] instanceof InactiveBranchPortObject) {
+                    // one incoming object=IBPO is enough to skip
+                    // the entire execution of this node:
+                    PortObject[] outs = new PortObject[getNrOutPorts()];
+                    Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
+                    setOutPortObjects(outs, false);
+                    assert m_model.hasContent() == false;
+                    return true;
+                }
+            }
+        }
 
         // copy input port objects, ignoring the 0-variable port:
         PortObject[] data = Arrays.copyOfRange(rawData, 1, rawData.length);
@@ -842,7 +869,7 @@ public final class Node implements NodeModelWarningListener {
             }
             if (newOutData[i] != null) {
             	if (newOutData[i] instanceof InactiveBranchPortObject) {
-            		// allow bypassed PO
+            		// allow PO coming from inactive branch
             		// TODO ensure model was skipped during configure?
             	} else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
                     createErrorMessageAndNotify("Invalid output port object "
@@ -1306,6 +1333,22 @@ public final class Node implements NodeModelWarningListener {
                         // throw new InvalidSettingsException(
                         // "Node is not executable until all predecessors "
                         // + "are configured and/or executed.");
+                    }
+                }
+
+                // check if the node is part of a skipped branch and return
+                // appropriate specs without actually configuring the node.
+                if (!(m_model instanceof InactiveBranchConsumer)) {
+                    for (int i = 0; i < inSpecs.length; i++) {
+                        if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
+                            for (int j = 0; j < m_outputs.length; j++) {
+                                m_outputs[j].spec = InactiveBranchPortObjectSpec.SPEC;
+                            }
+                            if (success) {
+                                m_logger.debug("Configure skipped. (" + this.getName() + " in inactive branch.)");
+                            }
+                            return true;
+                        }
                     }
                 }
 

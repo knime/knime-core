@@ -437,20 +437,6 @@ public abstract class NodeModel {
 
         setWarningMessage(null);
 
-        // check if the node is part of a skipped branch and return
-        // appropriate objects without actually configuring the node.
-        if (!(this instanceof InactiveBranchConsumer)) {
-            for (int i = 0; i < data.length; i++) {
-                if (data[i] instanceof InactiveBranchPortObject) {
-                    PortObject[] outs = new PortObject[getNrOutPorts()];
-                    for (int j = 0; j < outs.length; j++) {
-                        outs[j] = InactiveBranchPortObject.INSTANCE;
-                    }
-                    return outs;
-                }
-            }
-        }
-
         // check for compatible input PortObjects
         for (int i = 0; i < data.length; i++) {
             PortType thisType = getInPortType(i);
@@ -878,21 +864,6 @@ public abstract class NodeModel {
         assert inSpecs.length == getNrInPorts();
 
         setWarningMessage(null);
-
-        // check if the node is part of a skipped branch and return
-        // appropriate specs without actually configuring the node.
-        if (!(this instanceof InactiveBranchConsumer)) {
-            for (int i = 0; i < inSpecs.length; i++) {
-                if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
-                    PortObjectSpec[] outSpecs =
-                        new PortObjectSpec[getNrOutPorts()];
-                    for (int j = 0; j < outSpecs.length; j++) {
-                        outSpecs[j] = InactiveBranchPortObjectSpec.SPEC;
-                    }
-                    return outSpecs;
-                }
-            }
-        }
 
         PortObjectSpec[] copyInSpecs = new PortObjectSpec[getNrInPorts()];
         PortObjectSpec[] newOutSpecs;

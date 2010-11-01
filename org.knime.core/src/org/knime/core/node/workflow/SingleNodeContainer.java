@@ -81,6 +81,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -1183,6 +1184,15 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     public URL getIcon() {
         return m_node.getFactory().getIcon();
+    }
+    
+    /**
+     * @return true if configure or execute were skipped because nodes is
+     *   part of an inactive branch.
+     * @see Node#isInactive()
+     */
+    public boolean isInactive() {
+        return m_node.isInactive();
     }
 
     /**
