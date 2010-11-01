@@ -120,6 +120,8 @@ import org.knime.core.util.MutableInteger;
  * @see org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane
  */
 public abstract class NodeDialogPane {
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(
+			NodeDialogPane.class);
 
     // This listener needs to be static and not an anonymous inner class
     // because it stays registered in some static Swing classes. Thus a long
@@ -551,9 +553,9 @@ public abstract class NodeDialogPane {
         int index = pane.getTabCount() -1;
 		if (index > 0) {
 	        if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
-	        	throw new RuntimeException("Configuration dialog tab order has"
-	        			+ " changed. Switch to flow variables tab " 
-	        			+ "detected.");
+	        	LOGGER.coding("Configuration dialog tab order has"
+	        			+ " changed. The assumption that the flow variables tab" 
+	        			+ " is not the last tab was violated.");
 	        }
 	        int prevIndex = pane.getSelectedIndex();
 	        pane.setSelectedIndex(index);
