@@ -393,6 +393,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     /** Is configured according to the settings object.
      * @return If node is saved in configured state. */
+    @Override
     public boolean isConfigured() {
         return m_isConfigured;
     }
@@ -410,6 +411,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -609,6 +611,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         // we explicitly return null here as the node decides on how
         // to behave (in workflows 1.x.x it's not known what is the correct
@@ -621,11 +624,13 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     /** {@inheritDoc} */
+    @Override
     public ReferencedFile getNodeInternDirectory() {
         return m_nodeInternDirectory;
     }
 
     /** {@inheritDoc} */
+    @Override
     public NodeSettingsRO getSettings() {
         return m_modelSettings;
     }

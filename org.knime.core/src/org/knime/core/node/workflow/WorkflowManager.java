@@ -4017,7 +4017,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
         for (WorkflowAnnotation w : persistor.getWorkflowAnnotations()) {
-            addWorkflowAnnotation(w);
+            addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
         Map<Integer, NodeID> translationMap =
@@ -4877,6 +4877,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param annotation to add
      * @throws IllegalArgumentException If annotation already registered. */
     public void addWorkflowAnnotation(final WorkflowAnnotation annotation) {
+        addWorkflowAnnotationInternal(annotation);
+        setDirty();
+    }
+
+    /** Adds annotation as in #addWorkf but does not fire dirty event. */
+    private void addWorkflowAnnotationInternal(
+            final WorkflowAnnotation annotation) {
         if (m_annotations.contains(annotation)) {
             throw new IllegalArgumentException("Annotation \"" + annotation
                     + "\" already exists");
@@ -4885,7 +4892,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         annotation.addUIInformationListener(this);
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
-        setDirty();
     }
 
     /** Remove workflow annotation, fire events.

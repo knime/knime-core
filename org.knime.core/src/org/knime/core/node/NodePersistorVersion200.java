@@ -64,15 +64,16 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
-import org.knime.core.node.port.PortObject.PortObjectSerializer;
-import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
@@ -256,7 +257,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
         boolean isBDT = object instanceof BufferedDataTable
             || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
-        if (isBDT) {
+        boolean isInactive = spec instanceof InactiveBranchPortObjectSpec;
+        if (isBDT && !isInactive) {
             assert object == null || object instanceof BufferedDataTable
                 : "Expected BufferedDataTable, got "
                     + object.getClass().getSimpleName();
@@ -501,12 +503,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
         PortObject object = null;
+        // this can not be simplified as BDT must be loaded as BDT even if
+        // the port type is not BDT (but general PortObject)
         boolean isBDT =
                 (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(
                         objectClass) && BufferedDataTable.TYPE
                         .getPortObjectSpecClass().getName().equals(specClass))
                         || designatedType.equals(BufferedDataTable.TYPE);
-        if (isBDT) {
+        // an InactiveBranchPortObjectSpec can be put into any port!
+        boolean isInactive =
+            InactiveBranchPortObjectSpec.class.getName().equals(specClass);
+        if (isBDT && !isInactive) {
             if (specClass != null
                     && !specClass.equals(BufferedDataTable.TYPE
                             .getPortObjectSpecClass().getName())) {
@@ -618,7 +625,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             }
         }
         if (spec != null) {
-            if (!designatedType.getPortObjectSpecClass().isInstance(spec)) {
+            if (!designatedType.getPortObjectSpecClass().isInstance(spec)
+                    && !isInactive) {
                 throw new IOException("Actual port spec type (\""
                         + spec.getClass().getSimpleName()
                         + "\") does not match designated one (\""
@@ -628,7 +636,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
         String summary = null;
         if (object != null) {
-            if (!designatedType.getPortObjectClass().isInstance(object)) {
+            if (!designatedType.getPortObjectClass().isInstance(object)
+                    && !isInactive) {
                 throw new IOException("Actual port object type (\""
                         + object.getClass().getSimpleName()
                         + "\") does not match designated one (\""

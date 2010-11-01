@@ -444,7 +444,7 @@ public abstract class NodeModel {
                 // ignore non-populated optional input
             } else if (data[i] instanceof InactiveBranchPortObject) {
                 assert this instanceof InactiveBranchConsumer;
-                // allow Bypass POs at BypassConsumers
+                // allow Inactive POs at InactiveBranchConsumer
             } else if (!(thisType.getPortObjectClass().isInstance(data[i]))) {
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "

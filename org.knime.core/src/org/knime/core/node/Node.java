@@ -379,6 +379,44 @@ public final class Node implements NodeModelWarningListener {
         return result;
     }
 
+    /** Check class of the spec instance.
+     * @param spec The spec
+     * @param portIdx the port
+     * @return <code>true</code> if the spec is valid (null, correct class
+     *         or inactive port object spec)
+     */
+    private boolean checkPortObjectSpecClass(
+            final PortObjectSpec spec, final int portIdx) {
+        if (spec == null) {
+            return true;
+        } else if (spec instanceof InactiveBranchPortObjectSpec) {
+            return true;
+        } else {
+            Class<? extends PortObjectSpec> specClass =
+                m_outputs[portIdx].type.getPortObjectSpecClass();
+            return specClass.isInstance(spec);
+        }
+    }
+
+    /** Check class of the object instance.
+     * @param spec The port object
+     * @param portIdx the port
+     * @return <code>true</code> if the object is valid (null, correct class
+     *         or inactive port object)
+     */
+    private boolean checkPortObjectClass(
+            final PortObject obj, final int portIdx) {
+        if (obj == null) {
+            return true;
+        } else if (obj instanceof InactiveBranchPortObject) {
+            return true;
+        } else {
+            Class<? extends PortObject> objClass =
+                m_outputs[portIdx].type.getPortObjectClass();
+            return objClass.isInstance(obj);
+        }
+    }
+
     /** Loads data from an argument persistor.
      * @param loader To load from.
      * @param exec For progress.
@@ -389,46 +427,36 @@ public final class Node implements NodeModelWarningListener {
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
         for (int i = 0; i < getNrOutPorts(); i++) {
-            Class<? extends PortObjectSpec> specClass =
-                m_outputs[i].type.getPortObjectSpecClass();
             PortObjectSpec spec = loader.getPortObjectSpec(i);
-            if (spec != null && !specClass.isInstance(spec)) {
+            if (checkPortObjectSpecClass(spec, i)) {
+                m_outputs[i].spec = spec;
+            } else {
+                Class<? extends PortObjectSpec> specClass =
+                    m_outputs[i].type.getPortObjectSpecClass();
                 loadResult.addError("Loaded PortObjectSpec of class \""
                         + spec.getClass().getSimpleName() + ", expected "
                         + specClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
-            } else {
-                m_outputs[i].spec = spec;
             }
 
-            Class<? extends PortObject> objClass =
-                m_outputs[i].type.getPortObjectClass();
             PortObject obj = loader.getPortObject(i);
-            if (obj != null && !objClass.isInstance(obj)) {
+            if (checkPortObjectClass(obj, i)) {
+                m_outputs[i].object = obj;
+                m_outputs[i].summary = loader.getPortObjectSummary(i);
+            } else {
+                Class<? extends PortObject> objClass =
+                    m_outputs[i].type.getPortObjectClass();
                 loadResult.addError("Loaded PortObject of class \""
                         + obj.getClass().getSimpleName() + ", expected "
                         + objClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
-            } else {
-                m_outputs[i].object = obj;
-                m_outputs[i].summary = loader.getPortObjectSummary(i);
             }
             if (m_outputs[i].object != null) {
                 // overwrites the spec that is read few rows above
                 spec = m_outputs[i].object.getSpec();
-                if (spec == null || !specClass.isInstance(spec)) {
-                    String error = spec == null
-                        ? "PortObjectSpec to PortObject \""
-                            + m_outputs[i].object.getClass().getSimpleName()
-                            + "\" must not be null"
-                        : "Loaded PortObjectSpec of class \""
-                            + spec.getClass().getSimpleName() + ", expected "
-                            + specClass.getSimpleName();
-                    loadResult.addError(error);
-                    loader.setNeedsResetAfterLoad();
-                }
                 m_outputs[i].spec = spec;
-                m_outputs[i].hiliteHdl = (i == 0) ? null : m_model.getOutHiLiteHandler(i - 1);
+                m_outputs[i].hiliteHdl =
+                    (i == 0) ? null : m_model.getOutHiLiteHandler(i - 1);
             }
         }
         m_model.restoreWarningMessage(loader.getWarningMessage());
@@ -674,7 +702,7 @@ public final class Node implements NodeModelWarningListener {
     boolean hasContent() {
         return m_model.hasContent();
     }
-    
+
     /**
      * @return true if configure or execute were skipped because nodes is
      *   part of an inactive branch.
@@ -802,7 +830,7 @@ public final class Node implements NodeModelWarningListener {
         // add variable port at index 0
         PortObject[] newOutData = new PortObject[rawOutData.length + 1];
         System.arraycopy(rawOutData, 0, newOutData, 1, rawOutData.length);
-        newOutData[0] = new FlowVariablePortObject();
+        newOutData[0] = FlowVariablePortObject.INSTANCE;
 
         // check if we see a loop status in the NodeModel
         FlowLoopContext slc = m_model.getLoopStatus();
@@ -868,10 +896,10 @@ public final class Node implements NodeModelWarningListener {
                 return false;
             }
             if (newOutData[i] != null) {
-            	if (newOutData[i] instanceof InactiveBranchPortObject) {
-            		// allow PO coming from inactive branch
-            		// TODO ensure model was skipped during configure?
-            	} else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
+                if (newOutData[i] instanceof InactiveBranchPortObject) {
+                    // allow PO coming from inactive branch
+                    // TODO ensure model was skipped during configure?
+                } else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
                     createErrorMessageAndNotify("Invalid output port object "
                             + "at port " + i);
                     m_logger.error("  (Wanted: "
@@ -1054,6 +1082,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param warningMessage the new message in the node model.
      */
+    @Override
     public void warningChanged(final String warningMessage) {
 
         // get the warning message if available and create a message object
