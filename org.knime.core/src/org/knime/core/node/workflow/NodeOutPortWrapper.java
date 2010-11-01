@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 1, 2008 (mb/bw): created
  */
@@ -56,24 +56,25 @@ import java.util.Set;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * 
+ *
  * @author B. Wiswedel, M. Berthold, University of Konstanz
  */
 public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
-    
+
     private final Set<NodeStateChangeListener>m_listener;
-    
+
     /** if connected, reference the outport this node is connected to.
      */
     private NodeOutPort m_underlyingPort;
-    
+
     /**
-     * Creates a new output port with a fixed type and index (should unique 
+     * Creates a new output port with a fixed type and index (should unique
      * to all other output ports of this node) for the given node.
-     * 
+     *
      * @param pType The port's type
      * @param portIndex This port index
      */
@@ -86,7 +87,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      * Set a new underlying port - used when the connection inside this
      * workflow to this outgoing port changes. The argument is the new
      * NodeOutPort connected to the outgoing port of the WFM.
-     * 
+     *
      * @param p new port
      */
     void setUnderlyingPort(final NodeOutPort p) {
@@ -98,9 +99,9 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
             // this fixes bug #1499
             // we use some prefix here and do not simply copy the name since
             // the default (null) name is "Outport 0", for instance. If we then
-            // connect a WFM to an outer WFM, whereby the inner WFM is not 
+            // connect a WFM to an outer WFM, whereby the inner WFM is not
             // connected (i.e. its output would show "Output X"), we would end
-            // up copying whatever the WFM decides (the port could show 
+            // up copying whatever the WFM decides (the port could show
             // "Outport 3" although the port is "0"
             // besides all that it's reasonable to show that the port only
             // forwards data, it does not hold it.
@@ -132,16 +133,18 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     /**
      * {@inheritDoc}
      */
+    @Override
     public HiLiteHandler getHiLiteHandler() {
         if (m_underlyingPort == null) {
             return null;
         }
         return m_underlyingPort.getHiLiteHandler();
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public FlowObjectStack getFlowObjectStack() {
         if (m_underlyingPort == null) {
             return null;
@@ -149,17 +152,18 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         FlowObjectStack sos = m_underlyingPort.getFlowObjectStack();
         return sos;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public PortObject getPortObject() {
         if (m_underlyingPort == null) {
             return null;
         }
         return m_underlyingPort.getPortObject();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getPortSummary() {
@@ -168,35 +172,37 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         }
         return m_underlyingPort.getPortSummary();
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeContainer.State getNodeState() {
         if (m_underlyingPort == null) {
-            /* 
+            /*
              * Return the IDLE state if the underlying port is null.
              * This may happen during loading of meta nodes and
-             * if the port is not connected. The port is anyway intersted in 
+             * if the port is not connected. The port is anyway intersted in
              * the state and it is displayed as "no spec/node data".
-             * 
-             * TODO: when necessary (e.g. if a "not connected" state for the 
-             * port should be displayed an additional event type has to be 
+             *
+             * TODO: when necessary (e.g. if a "not connected" state for the
+             * port should be displayed an additional event type has to be
              * implemented (NodeOutPort.State = {Not_CONNECTED, NO_SPEC_NO_DATA,
-             * SPEC_AVAILABLE, DATA_AVAILABEL}. Then the SingleNodeContainer 
-             * has to cvonvert between the NodeContainer.State and the 
-             * NodeOutPort.State. The NodeContainer.State can then be moved to 
+             * SPEC_AVAILABLE, DATA_AVAILABEL}. Then the SingleNodeContainer
+             * has to cvonvert between the NodeContainer.State and the
+             * NodeOutPort.State. The NodeContainer.State can then be moved to
              * the SingleNodeContainer.
-             * Meanwhile return IDLE. 
+             * Meanwhile return IDLE.
              */
             return NodeContainer.State.IDLE;
         }
         return m_underlyingPort.getNodeState();
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public PortObjectSpec getPortObjectSpec() {
         if (m_underlyingPort == null) {
             return null;
@@ -204,27 +210,33 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         return m_underlyingPort.getPortObjectSpec();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean isInactive() {
+        return getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
+    }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void openPortView(final String name) {
         if (m_underlyingPort == null) {
             return;
         }
         m_underlyingPort.openPortView(name);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void disposePortView() {
         // it's task of the underlying port to dispose views.
     }
-    
+
     ///////////////////////////
     // Equals/HashCode/ToString
     ///////////////////////////
-    
+
     /**
      * {@inheritDoc}
      */
@@ -257,24 +269,26 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         }
         return m_underlyingPort.toString();
     }
-    
+
     ///////////////////////////////////////////////
     ///         State Listener methods
     //////////////////////////////////////////////
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public boolean addNodeStateChangeListener(
             final NodeStateChangeListener listener) {
         return m_listener.add(listener);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
         for (NodeStateChangeListener l : m_listener) {
             l.stateChanged(e);
@@ -282,18 +296,20 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public boolean removeNodeStateChangeListener(
             final NodeStateChangeListener listener) {
         return m_listener.remove(listener);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void stateChanged(final NodeStateEvent state) {
         if (state.getState().equals(NodeContainer.State.IDLE)
                 || state.getState().equals(NodeContainer.State.CONFIGURED)

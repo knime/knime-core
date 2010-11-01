@@ -78,22 +78,28 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
      * @return PortObject the object for this port. Can be null.
      */
     public PortObject getPortObject();
-    
-    /** Get summary of the underlying port object as provided by 
+
+    /** Get summary of the underlying port object as provided by
      * {@link PortObject#getSummary()}. It's a separate method since calling
      * getPortObject().getSummary() may force the underlying table (if it is
-     * a table) to restore its content from disc. Summaries are saved in the 
+     * a table) to restore its content from disc. Summaries are saved in the
      * workflow file (or the node's corresponding sub directory).
-     * @return The port object's summary. 
-     */ 
+     * @return The port object's summary.
+     */
     public String getPortSummary();
+
+
+    /** @return true if the contained spec is not null and instance of
+     * {@link org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec}
+     */
+    public boolean isInactive();
 
     /**
      * @return the state of the node owning this port.
      */
     public NodeContainer.State getNodeState();
-    
-    
+
+
     /**
      * Returns the hilite handler for this port as set by the node this port is
      * output for.
@@ -116,35 +122,35 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
      */
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name);
-    
+
     /** Dispose the view (if any) associated with this port. */
     public void disposePortView();
-    
+
     /**
-     * 
+     *
      * @param listener a listener to the state of the port, that is the state
      *  of the predecessor node
-     * @return true if the listener was added, false if it was already 
+     * @return true if the listener was added, false if it was already
      *  registered
      */
     public boolean addNodeStateChangeListener(
             final NodeStateChangeListener listener);
-    
+
     /**
-     * 
+     *
      * @param listener the listener to be de-registered
-     * @return true if it was successfully removed, false if it was not 
+     * @return true if it was successfully removed, false if it was not
      *  registered
      */
     public boolean removeNodeStateChangeListener(
             final NodeStateChangeListener listener);
-    
+
     /**
-     * 
-     * @param e the event which should be forwarded to all regsitered 
+     *
+     * @param e the event which should be forwarded to all regsitered
      * {@link NodeStateChangeListener}s
      */
     public void notifyNodeStateChangeListener(final NodeStateEvent e);
-    
+
 
 }
