@@ -11,10 +11,19 @@
             squared error. The user must choose one column as target (dependent variable) and a number of independent variables. By
             default, polynomials with degree 2 are computed, which can be changed in the dialog.
         </intro>
-        <option name="Target column">The column that contains the dependent "target" variable.</option>
-        <option name="Polynomial degree">The maximum degree the polynomial regression function should have.</option>
-        <option name="Column Selection">Select the columns containing the independent variables and
-        	move them to the "include" list. </option>
+        <tab name="Regression settings">
+            <option name="Target column">The column that contains the dependent "target" variable.</option>
+            <option name="Polynomial degree">The maximum degree the polynomial regression function should have.</option>
+            <option name="Column Selection">Select the columns containing the independent variables and
+                move them to the "include" list. </option>                
+        </tab>
+        <tab name="View settings">
+            <option name="Number of data points to show in view">
+                This option can be use to change the number of data points in
+                the node view if e.g. there are too many points. The default
+                value is 10,000 points.            
+            </option>
+        </tab>
     </fullDescription>
 
     <ports>
