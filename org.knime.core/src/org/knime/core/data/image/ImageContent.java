@@ -71,6 +71,10 @@ import org.knime.core.data.DataCell;
 public interface ImageContent {
 
     /** Render image into argument graphics object.
+     *
+     * <p>It is up to the implementation to fill the given space or just
+     * scale to the maximum of either width or height - in any case it should
+     * not draw outside the argument range.
      * @param g To paint to.
      * @param width image width
      * @param height image height
