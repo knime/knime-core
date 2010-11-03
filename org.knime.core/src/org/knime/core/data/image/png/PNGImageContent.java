@@ -84,31 +84,35 @@ public class PNGImageContent implements ImageContent {
     /** PNG image content as byte array. */
     private byte[] m_imageBytes;
 
-    private SoftReference<Image> m_imageRef = new SoftReference<Image>(null);
+    private SoftReference<Image> m_imageRef;
 
     /** Framework constructor for restoring content. <b>Do not use!</b> */
     public PNGImageContent() {
         // no-arg, required by ImageContent
     }
 
-    /** Creates PNG image content from byte array. Callers must ensure that
-     * the content of the byte array is valid PNG content.
+    /** Creates PNG image content from byte array.
      * @param imageBytes The image bytes.
      * @throws NullPointerException If the argument is null.
+     * @throws IllegalArgumentException If the argument does not represent a
+     * valid png byte stream (according to {@link ImageIO#read(InputStream)}.
      */
     public PNGImageContent(final byte[] imageBytes) {
         if (imageBytes == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_imageBytes = imageBytes;
+        m_imageRef = new SoftReference<Image>(getImageInternal(imageBytes));
     }
 
-    /** Reads image content from a stream. The caller has to ensure that
-     * the input stream provides valid PNG input. The reader will read content
+    /** Reads image content from a stream. The reader will read content
      * until the end of the stream, it will not close the stream.
+     *
      * @param is The input stream.
      * @throws IOException If reading from the stream fails.
      * @throws NullPointerException If the argument is null;
+     * @throws IllegalArgumentException If the argument does not represent a
+     * valid png byte stream (according to {@link ImageIO#read(InputStream)}.
      */
     public PNGImageContent(final InputStream is) throws IOException {
         this(toByteArray(is));
@@ -142,8 +146,9 @@ public class PNGImageContent implements ImageContent {
 
     /** Get the image represented by this object.
      * @return The image.
-     * @throws IllegalStateException If the image can't be generated
-     *         (invalid input)
+     * @throws IllegalStateException If the image can't be read from the
+     *         internal memory representation (the Image is not actually stored
+     *         as part of this cell but kept in a SoftReference)
      */
     public Image getImage() {
         Image image = m_imageRef.get();
@@ -151,16 +156,29 @@ public class PNGImageContent implements ImageContent {
             return image;
         }
         try {
+            image = getImageInternal(m_imageBytes);
+            m_imageRef = new SoftReference<Image>(image);
+            return image;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Image can't be re-read", e);
+        }
+    }
+
+    /** Read image from byte[] array.
+     * @return A new image
+     */
+    private static Image getImageInternal(final byte[] array) {
+        try {
             BufferedImage bufImage =
-                ImageIO.read(new ByteArrayInputStream(m_imageBytes));
+                ImageIO.read(new ByteArrayInputStream(array));
             if (bufImage == null) {
-                throw new IllegalStateException("ImageIO returned null");
+                throw new IllegalArgumentException(
+                        "ImageIO returned null while reading image bytes");
             } else {
-                m_imageRef = new SoftReference<Image>(bufImage);
                 return bufImage;
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Image can't be read", e);
+            throw new IllegalArgumentException("Image can't be read", e);
         }
     }
 
