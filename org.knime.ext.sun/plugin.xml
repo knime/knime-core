@@ -8,12 +8,12 @@
             factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
             id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
       <node
-            category-path="/loopsupport"
+            category-path="/flowcontrol/variables"
             expert-flag="true"
             factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
       <node
-            category-path="/loopsupport"
+            category-path="/flowcontrol/switches"
             expert-flag="true"
             factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
