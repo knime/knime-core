@@ -146,7 +146,7 @@ implements InactiveBranchConsumer {
         if (activeI < 0) {
             throw new InvalidSettingsException("No active branch found!");
         }
-        return new PortObjectSpec[]{inSpecs[activeI]};
+        return new PortObjectSpec[]{ inSpecs[activeI] };
     }
 
     /**
@@ -175,7 +175,7 @@ implements InactiveBranchConsumer {
         if (activeI < 0) {
             throw new InvalidSettingsException("No active branch found!");
         }
-        return new PortObject[]{inData[activeI]};
+        return new PortObject[]{ inData[activeI] };
     }
 
     /**
