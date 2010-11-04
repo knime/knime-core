@@ -108,7 +108,21 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createWeightModel() {
         return new SettingsModelString("weights",
-                MA_METHODS.Simple.getLabel());
+                MA_METHODS.Simple.getLabel()) {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String getStringValue() {
+                String str = super.getStringValue();
+                if (str.equals("Exponential")) {
+                    return "Old Exponential";
+                } else if (str.equals("Simple")) {
+                    return "Backward simple";
+                }
+                return str;
+            }
+        };
     }
 
     /**
@@ -118,4 +132,5 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
     static SettingsModelBoolean createReplaceColumnModel() {
         return new SettingsModelBoolean("replace_column", false);
     }
+
 }

@@ -102,9 +102,9 @@ public enum MA_METHODS {
      /** Triple exponential  smoothing moving average. */
      TripleExponential("Triple exponential"),
      /** the old exponential behavior. */
-     OldExponential("Exponential");
+     OldExponential("Old Exponential");
 
-     private String m_label;
+     private final String m_label;
 
      /**
       * @return the label of the method.
@@ -144,12 +144,12 @@ public enum MA_METHODS {
          }
          // needed for upwards compatibility
          if (label.equals("Simple")) {
-            return Simple;
-        } else if (label.equals("Exponential")) {
-            return OldExponential;
-        }
-         throw new IllegalArgumentException(label
-                 + "Invalid ReferenceRowPolicy label");
+             return Simple;
+         } else if (label.equals("Exponential")) {
+             return OldExponential;
+         }
+         throw new IllegalArgumentException(
+         		"Unknown movering average method \"" + label + "\"");
      }
 
      /**This methods returns all methods which can be used with the
@@ -169,7 +169,7 @@ public enum MA_METHODS {
          return ret;
      }
 
-     /**This methods returns all methods which are centered.
+     /** This methods returns all methods which are centered.
       * @return an list containing all centered methods.
       */
      public static List<MA_METHODS> getCenteredMethods() {
@@ -186,35 +186,35 @@ public enum MA_METHODS {
      */
     public MovingAverage getMAObject(final int winLength) {
         switch(this) {
-        case Center:
-            return new SimpleMA(winLength);
-        case CenterG:
-            return WeightedMA.getGaussianWeightedInstance(
-                    winLength);
-        case Cumulative:
-            return new CumulativeMA();
-        case Exponential:
-            return new ExponentialMA(winLength);
-        case Forward:
-            return new SimpleMA(winLength);
-        case ForwardG:
-            return WeightedMA.getForwardGaussianWeightedInstance(
-                    winLength);
-        case Simple:
-            return new SimpleMA(winLength);
-        case SimpleG:
-            return WeightedMA.getBackwardGaussianWeightedInstance(
-                    winLength);
-        case OldExponential:
-            return new ExponentialOldMA(winLength);
-        case DoubleExponential:
-            return new DoubleExpMA(winLength);
-        case TripleExponential:
-            return new TripleExponentialMA(winLength);
-        case HarmonicC:
-            return new HarmonicMeanMA(winLength);
-        default:
-            return new SimpleMA(winLength);
-            }
+            case Center:
+                return new SimpleMA(winLength);
+            case CenterG:
+                return WeightedMA.getGaussianWeightedInstance(
+                        winLength);
+            case Cumulative:
+                return new CumulativeMA();
+            case Exponential:
+                return new ExponentialMA(winLength);
+            case Forward:
+                return new SimpleMA(winLength);
+            case ForwardG:
+                return WeightedMA.getForwardGaussianWeightedInstance(
+                        winLength);
+            case Simple:
+                return new SimpleMA(winLength);
+            case SimpleG:
+                return WeightedMA.getBackwardGaussianWeightedInstance(
+                        winLength);
+            case OldExponential:
+                return new ExponentialOldMA(winLength);
+            case DoubleExponential:
+                return new DoubleExpMA(winLength);
+            case TripleExponential:
+                return new TripleExponentialMA(winLength);
+            case HarmonicC:
+                return new HarmonicMeanMA(winLength);
+            default:
+                return new SimpleMA(winLength);
+        }
      }
 }
