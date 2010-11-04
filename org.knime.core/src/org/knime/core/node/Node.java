@@ -1543,8 +1543,17 @@ public final class Node implements NodeModelWarningListener {
         NodeDialogPane dialogPane = getDialogPane();
         PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
         for (int i = 1; i < inSpecs.length; i++) {
+            if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
+                if (!(m_model instanceof InactiveBranchConsumer)) {
+                    throw new NotConfigurableException("Can not configure"
+                    		+ " nodes in inactive branches.");
+                }
+            }
             PortType t = getInputType(i);
-            if (!t.acceptsPortObjectSpec(inSpecs[i])) {
+            if (!t.acceptsPortObjectSpec(inSpecs[i])
+                    && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
+                // wrong type and not a consumer of inactive branches either 
+                // (which is the only exception for a type mismatch)
                 throw new IllegalArgumentException(
                         "Invalid incoming port object spec \""
                                 + inSpecs[i].getClass().getSimpleName()
