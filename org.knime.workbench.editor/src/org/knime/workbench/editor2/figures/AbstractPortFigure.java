@@ -80,14 +80,16 @@ public abstract class AbstractPortFigure extends Shape {
      */
     protected static Color lightenColor(final Color c) {
         try {
-            int d = 150;
-            return new Color(Display.getCurrent(), Math
-                    .min(255, c.getRed() + d), Math.min(255, c.getGreen() + d),
-                    Math.min(255, c.getBlue() + d));
+            float[] hsb = new float[3];
+            java.awt.Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), hsb);
+            hsb[2] = Math.min(1.0f, hsb[2] + ((1.0f - hsb[2]) * 0.67f));
+            int lCol =
+                    java.awt.Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+            return new Color(Display.getCurrent(), (lCol >> 16) & 0xFF,
+                    (lCol >> 8) & 0xFF, lCol & 0xFF);
         } catch (Throwable t) {
             return c;
         }
-
     }
 
     private static Color COLOR_FLOWVAR_PORT = null;
