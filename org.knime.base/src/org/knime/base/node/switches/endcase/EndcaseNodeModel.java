@@ -106,7 +106,7 @@ implements InactiveBranchConsumer {
      * One + 3 optional inputs, one output.
      */
     protected EndcaseNodeModel() {
-        super(getInPortTypes(4),
+        super(getInPortTypes(3),
                 new PortType[] {new PortType(PortObject.class)});
     }
 
