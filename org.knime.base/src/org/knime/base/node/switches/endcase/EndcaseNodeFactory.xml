@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="endif.png" type="Manipulator">
+    <name>ENDCASE Switch</name>
+    
+    <shortDescription>
+        Merges two or more branches which were initially created by an
+        IF or CASE Switch Node.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This nodes takes the objects from exactly one active branch. If
+        no or more than one branch are active, execution fails.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="First Input">The first input.</inPort>
+        <inPort index="1" name="Second (optional) Input">The second (optional) input.</inPort>
+        <inPort index="2" name="Third (optional) Input">The third (optional) input.</inPort>
+        <inPort index="3" name="Fourth (optional) Input">The fourth (optional) input.</inPort>
+        <outPort index="0" name="Output">Output.</outPort>
+    </ports>
+</knimeNode>
