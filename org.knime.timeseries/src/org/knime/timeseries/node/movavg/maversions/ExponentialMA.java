@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,60 +46,62 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ *  calculates an exponential smoothing of the time series.
+ *  the mean therefore is calculated using
  *
- * @author Iris Adae, University of Konstanz, Germany
+ *  s_n = alpha * x_n + (1-alpha) * s_n-1
+ *
+ *  we use the windowsize k as initialization and for the alpha value
+ *
+ * alpha = 2(k+1)
+ *
+ * @author Adae, University of Konstanz
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class ExponentialMA extends MovingAverage {
+
+    private double m_alpha;
+    private double m_avg = 0;
+    private int m_nrofValues = 0;
+    private int m_winLength;
 
     /**
-     * {@inheritDoc}
+     * @param winLength the length of the window.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public ExponentialMA(final int winLength) {
+        m_winLength = 1;
+        m_nrofValues = 0;
+        m_alpha = 2.0 / (winLength + 1);
+
+        m_avg = 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    public DataCell getMeanandUpdate(final double newValue) {
+
+        // till the predefined window size is reached, we calculate the mean
+        if (m_nrofValues < m_winLength) {
+            m_avg = m_avg + ((newValue - m_avg) / (m_winLength + 1));
+            m_nrofValues++;
+        } else {
+            m_avg = m_alpha * newValue + m_avg * (1 - m_alpha);
+        }
+        return new DoubleCell(m_avg);
     }
 
     /**
-     * {@inheritDoc}
+     * @return the current mean.
      */
-    @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    protected double getMean() {
+        return m_avg;
     }
 
 }

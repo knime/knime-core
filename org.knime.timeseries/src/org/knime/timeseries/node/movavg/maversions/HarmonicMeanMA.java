@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,60 +46,55 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.knime.timeseries.node.movavg.maversions;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * the mean is calculated using.
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * n / divisor
+ *
+ * where the divisior = sum{1...n} 1/x_n
+ *
+ * based on the division it  only uses strictly positive values.
+ *
+ *
+ * @author Adae, University of Konstanz
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class HarmonicMeanMA extends SlidingWindowMovingAverage {
+
+   private double m_dividor = 0;
 
     /**
-     * {@inheritDoc}
+     * @param winLength the length of the window
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public HarmonicMeanMA(final int winLength) {
+        super(winLength);
+        m_dividor = 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    protected double updateMean(final double value) {
+        if (getFirst() > 0) {
+            m_dividor -= (1.0 / getFirst());
+        }
+        if (value > 0) {
+            m_dividor += (1.0 / value);
+        }
+        return getWinLength() / m_dividor;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    protected double updateMean(final double value, final int curWinSize) {
+        if (value > 0) {
+            m_dividor += (1.0 / value);
+        }
+        return curWinSize / m_dividor;
     }
 
 }

@@ -46,60 +46,27 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * Implements Moving Average on a time series.
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public abstract class MovingAverage {
 
-    /**
-     * {@inheritDoc}
+    /** This method should take care of two task.
+     * First it should include the given value into the currently
+     * saved average. And return it.
+     *
+     * Additionally it should e.g. in the sliding window approach,
+     * remove no longer needed values.
+     *
+     * @param newValue the new value
+     * @return the current average as a DoubleCell
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+    public abstract DataCell getMeanandUpdate(final double newValue);
 
 }

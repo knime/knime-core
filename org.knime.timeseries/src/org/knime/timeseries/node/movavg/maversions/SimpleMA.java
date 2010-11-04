@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,60 +46,42 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.knime.timeseries.node.movavg.maversions;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * calculates the mean of the given window.
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * @author Adae, University of Konstanz
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class SimpleMA extends SlidingWindowMovingAverage {
+
+
+    // the weight of each window
+    private double m_weight;
+
+    /**
+     * @param winLength the window length.
+     */
+    public SimpleMA(final int winLength) {
+        super(winLength);
+        m_weight = 1.0 / winLength;
+    }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public double updateMean(final double d) {
+        return getMean() +  (d - getFirst()) * m_weight;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    protected double updateMean(final double value,
+                                final int curWinSize) {
+        return getMean() + ((value - getMean()) / (curWinSize + 1));
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
 }

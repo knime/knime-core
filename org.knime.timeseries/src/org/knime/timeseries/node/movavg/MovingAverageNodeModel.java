@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
- * History
- *   Jan 14, 2007 (rs): created
+ *
  */
 package org.knime.timeseries.node.movavg;
 
@@ -64,7 +62,9 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -75,29 +75,29 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelOddIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.node.movavg.maversions.MovingAverage;
+import org.knime.timeseries.util.SlidingWindow;
 
 /**
- * 
+ *
  * @author Rosaria Silipo
  */
 public class MovingAverageNodeModel extends NodeModel {
 
-    
-    
     private MovingAverage[] m_mas;
 
-    private final SettingsModelOddIntegerBounded m_winLength
+    private final SettingsModelIntegerBounded m_winLength
         = MovingAverageDialog.createWindowLengthModel();
 
-    private final SettingsModelFilterString m_columnNames 
+    private final SettingsModelFilterString m_columnNames
         = MovingAverageDialog.createColumnNamesModel();
 
-    private final SettingsModelString m_weights 
+    private final SettingsModelString m_kindOfMAModel
         = MovingAverageDialog.createWeightModel();
-    
-    private final SettingsModelBoolean m_replace 
+
+    private final SettingsModelBoolean m_replace
         = MovingAverageDialog.createReplaceColumnModel();
 
      /** Init node, 1 input, 1 output. */
@@ -126,7 +126,7 @@ public class MovingAverageNodeModel extends NodeModel {
             setWarningMessage("Auto-configure: selected all double columns!");
         }
         if (m_columnNames.getIncludeList().isEmpty()) {
-            setWarningMessage("No double columns selected: " 
+            setWarningMessage("No double columns selected: "
                     + "input will be same as output!");
         }
         // check for the existence of the selected columns
@@ -143,18 +143,31 @@ public class MovingAverageNodeModel extends NodeModel {
             throw new InvalidSettingsException(
             "Window length is not selected.");
         }
-        
-        // define weight function 
-        if (m_weights.getStringValue() == null) {
+
+        // define weight function
+        if (m_kindOfMAModel.getStringValue() == null) {
             throw new InvalidSettingsException(
                     "No weight function selected.");
         } else {
-           String weights = m_weights.getStringValue();
            // create one MA-compute engine per column (overkill, I know
-           // but much easier to reference later on in our DataCellFactory
+           // but much easier to reference later on in our DataCellFactory)
+
+            MA_METHODS method = MA_METHODS.getPolicy4Label(
+                    m_kindOfMAModel.getStringValue());
+            // if the center method is selected, the window size
+            // has to be uneven
+
+            if (MA_METHODS.getCenteredMethods().contains(method)) {
+                if (winLength % 2 == 0) {
+                    throw new InvalidSettingsException(
+                            "For centered methods, the window "
+                                    + "size has to be uneven");
+                }
+            }
+
            m_mas = new MovingAverage[inSpecs[0].getNumColumns()];
            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-               m_mas[i] = new MovingAverage(m_winLength.getIntValue(), weights);
+               m_mas[i] = method.getMAObject(winLength);
            }
         }
 
@@ -162,19 +175,17 @@ public class MovingAverageNodeModel extends NodeModel {
         return new DataTableSpec[]{c.createSpec()};
     }
 
-    
+
     private ColumnRearranger createColRearranger(final DataTableSpec spec) {
+
         ColumnRearranger result = new ColumnRearranger(spec);
 
         for (String thisCol : m_columnNames.getIncludeList()) {
-            final int colIndex =
-                spec.findColumnIndex(thisCol);
+            final int colIndex = spec.findColumnIndex(thisCol);
             DataColumnSpec newColSpec =
-                new DataColumnSpecCreator(
-                        DataTableSpec.getUniqueColumnName(spec, 
-                                "MA(" + thisCol + ")"),
-                        DoubleCell.TYPE).createSpec();
-        
+                    new DataColumnSpecCreator(DataTableSpec
+                            .getUniqueColumnName(spec, "MA(" + thisCol + ")"),
+                            DoubleCell.TYPE).createSpec();
             SingleCellFactory c = new SingleCellFactory(newColSpec) {
                 @Override
                 public DataCell getCell(final DataRow row) {
@@ -182,9 +193,9 @@ public class MovingAverageNodeModel extends NodeModel {
                     if (cell.isMissing() || !(cell instanceof DoubleValue)) {
                         return DataType.getMissingCell();
                     }
-                    return m_mas[colIndex]
-                                .maValue(((DoubleValue)cell).getDoubleValue()); 
-                 }
+                    return m_mas[colIndex].getMeanandUpdate(
+                            ((DoubleValue)cell).getDoubleValue());
+                }
             };
             if (m_replace.getBooleanValue()) {
                 result.replace(c, colIndex);
@@ -192,7 +203,6 @@ public class MovingAverageNodeModel extends NodeModel {
                 result.append(c);
             }
         }
-        
         return result;
     }
 
@@ -202,18 +212,177 @@ public class MovingAverageNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        
-        if (m_winLength.getIntValue() < inData[0].getRowCount()) {
-            ColumnRearranger c = createColRearranger(
-                    inData[0].getDataTableSpec());
-            return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                inData[0], c, exec)};
-        } else {
+
+        if (m_winLength.getIntValue() > inData[0].getRowCount()) {
             throw new Exception(
                     "Number of total samples in time series smaller than "
                     + "moving average window length!");
         }
+        MA_METHODS method = MA_METHODS.getPolicy4Label(
+                               m_kindOfMAModel.getStringValue());
+        if (!MA_METHODS.getBackwardCompMethods().contains(method)) {
+
+            // in the first option everything which is looking to future rows
+            // must be handeled
+
+            int position = 0;
+            if (MA_METHODS.getCenteredMethods().contains(method)) {
+                position = (m_winLength.getIntValue() - 1) / 2;
+            }
+
+            // idea... we save the rows to add them in the sliding window
+            // but still, use the MovingAverage class to  calculate everything.
+            return new BufferedDataTable[] {getSlidingNotBackward(
+                    inData[0].getSpec(),
+                    inData[0],
+                    position,
+                    exec)};
+
+        } else { // default we use the old behaviour
+
+            // the column rearranger can currently be used for backward
+            // and cumulative moving average.
+            ColumnRearranger c = createColRearranger(
+                    inData[0].getDataTableSpec());
+            return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+                inData[0], c, exec)};
+        }
     }
+
+    private BufferedDataTable getSlidingNotBackward(final DataTableSpec spec,
+            final BufferedDataTable inData, final int refNR,
+            final ExecutionContext exec)
+                throws CanceledExecutionException {
+
+        // for speed, at first create an array with the int of the columns.
+        int[] colindexex = new int[m_columnNames.getIncludeList().size()];
+        int counter = 0;
+        for (String thisCol : m_columnNames.getIncludeList()) {
+            colindexex[counter] = spec.findColumnIndex(thisCol);
+            counter++;
+        }
+
+        // the sliding window over data rows is used to save the already filled
+        // data rows
+        SlidingWindow<DataRow> window
+                    = new SlidingWindow<DataRow>(m_winLength.getIntValue());
+        // the output container.
+        BufferedDataContainer out
+                = exec.createDataContainer(
+                        createColRearranger(spec).createSpec());
+
+        int nrNewColumns = 0;
+        if (!m_replace.getBooleanValue()) {
+            // we add missing value cells to ensure the rowlength
+            nrNewColumns = colindexex.length;
+        }
+
+        // create a map, which moves from the old if necessary to the new
+        // index.
+        int[] gotoMap = new int[spec.getNumColumns()];
+        for (int i = 0; i < gotoMap.length; i++) {
+            gotoMap[i]  = i;
+        }
+        if (!m_replace.getBooleanValue()) {
+            int currentend = spec.getNumColumns();
+            for (int colIndex : colindexex) {
+                gotoMap[colIndex] = currentend;
+                currentend++;
+            }
+        }
+        double rowCount = 0;
+        double rowNrs = inData.getRowCount();
+        exec.setMessage("Calculating Means");
+        for (DataRow row : inData) {
+            exec.checkCanceled();
+            exec.setProgress(rowCount++ / rowNrs);
+
+            // first add old / e.g. rows, no longer used for the sliding window
+            // to the data table.
+
+            // the donerow is no longer necessary in the windows
+            // and can therefore be written to the data table
+            DataRow donerow = window.addandget(addMissingCells(nrNewColumns,
+                    colindexex,
+                    row));
+            if (donerow != null) {
+                out.addRowToTable(donerow);
+            }
+
+            // all moving values, of the currently examined window are
+            // calculated
+            DataCell[] cells = new DataCell[colindexex.length];
+            counter = 0;
+            for (int colIndex : colindexex) {
+                DataCell cell = row.getCell(colIndex);
+                cells[counter] = DataType.getMissingCell();
+                if (!cell.isMissing() && (cell instanceof DoubleValue)) {
+                    double value = ((DoubleValue)cell).getDoubleValue();
+                    cells[counter] = m_mas[colIndex].getMeanandUpdate(value);
+                }
+                counter++;
+            }
+            // now replace the cells in the sliding window with the newly
+            // calculated means.
+
+            // first check if the row exists.
+            DataRow oldrow = window.get(refNR);
+            if (oldrow != null) {
+                DataCell[] oldcells = new DataCell[oldrow.getNumCells()];
+                counter = 0;
+                for (DataCell c : oldrow) {
+                    oldcells[counter] =  c;
+                    counter++;
+                }
+
+                // second replace the cells, therefore go through the colindexex
+                for (int i = 0; i < colindexex.length; i++) {
+                    oldcells[gotoMap[colindexex[i]]] = cells[i];
+                }
+                window.replace(refNR,
+                        new DefaultRow(oldrow.getKey(), oldcells));
+            }
+        }
+
+        // finally clear the sliding window
+        for (DataRow row : window.getList()) {
+            out.addRowToTable(row);
+        }
+
+        out.close();
+        return out.getTable();
+    }
+
+    /**
+     * adds a fixed number of missing cells to the given row.
+     * or replaces the  original ones with missings.
+     * @param colindexex
+     */
+    private DataRow addMissingCells(final int nrMiss,
+            final int[] colindexex,
+            final DataRow oldrow) {
+        DataCell[] cell = new DataCell[oldrow.getNumCells() + nrMiss];
+        int counter = 0;
+        for (DataCell c : oldrow) {
+            cell[counter] = c;
+            counter++;
+        }
+        if (nrMiss <= 0) {
+            // we replace the colindexex with missings.
+            for (int i : colindexex) {
+                cell[i] = DataType.getMissingCell();
+            }
+            return oldrow;
+        } else { // we add missings to the end.
+
+            for (; counter < cell.length; counter++) {
+                cell[counter] = DataType.getMissingCell();
+            }
+        }
+        return new DefaultRow(oldrow.getKey(), cell);
+
+    }
+
 
     /**
      * {@inheritDoc}
@@ -223,8 +392,9 @@ public class MovingAverageNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_columnNames.validateSettings(settings);
         m_replace.validateSettings(settings);
-        m_weights.validateSettings(settings);
+        m_kindOfMAModel.validateSettings(settings);
         m_winLength.validateSettings(settings);
+//        m_positionModel.validateSettings(settings);
     }
 
     /**
@@ -234,7 +404,7 @@ public class MovingAverageNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_columnNames.loadSettingsFrom(settings);
-        m_weights.loadSettingsFrom(settings);
+        m_kindOfMAModel.loadSettingsFrom(settings);
         m_winLength.loadSettingsFrom(settings);
         m_replace.loadSettingsFrom(settings);
    }
@@ -246,7 +416,7 @@ public class MovingAverageNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_columnNames.saveSettingsTo(settings);
         m_winLength.saveSettingsTo(settings);
-        m_weights.saveSettingsTo(settings);
+        m_kindOfMAModel.saveSettingsTo(settings);
         m_replace.saveSettingsTo(settings);
     }
 

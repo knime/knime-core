@@ -44,16 +44,9 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
- * History
- *   January 13, 2007 (rosaria): created from String2Smileys
+ *
  */
 package org.knime.timeseries.node.movavg;
-
-
-
-import java.util.LinkedList;
-import java.util.List;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -63,47 +56,37 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelOddIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This dialog lets the user choose the column that contains the string values
- * that should be converted into Smiles values.
- * 
- * @author Rosaria Silipo
+ * This is the dialog of the moving average node.
+ *
+ * @author Iris Adae, University of Konstanz, Germany
  */
 public class MovingAverageDialog extends DefaultNodeSettingsPane {
 
-    // private final JCheckBox m_AppendColumn = new JCheckBox();
-
-    /** Constructor adding three components. */
+    /** Constructor adding four components. */
     @SuppressWarnings("unchecked")
     public MovingAverageDialog() {
 
-        LinkedList ll = new LinkedList();
-        List<String> listAllowedWeightsFunctions = ll;
-        listAllowedWeightsFunctions.add(MovingAverage.WEIGHT_FUNCTIONS.Simple
-                .name());
-        listAllowedWeightsFunctions
-                .add(MovingAverage.WEIGHT_FUNCTIONS.Exponential.name());
-
         addDialogComponent(new DialogComponentStringSelection(
                 createWeightModel(), "Type of Moving Average: ",
-                listAllowedWeightsFunctions));
+                MA_METHODS.getLabels()));
 
         addDialogComponent(new DialogComponentNumberEdit(
                 createWindowLengthModel(),
-                "Window Length (odd number of samples): "));
-        
+                "Window Length", 8));
+
         addDialogComponent(new DialogComponentBoolean(
-                createReplaceColumnModel(), "Replace columns"));
+                createReplaceColumnModel(), "Remove original columns"));
 
         addDialogComponent(new DialogComponentColumnFilter(
                 createColumnNamesModel(), 0, false, DoubleValue.class));
     }
 
     /**
-     * 
+     *
      * @return the settings model for the column name
      */
     static SettingsModelFilterString createColumnNamesModel() {
@@ -111,24 +94,25 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * 
+     *
      * @return the model for the window length
      */
-    static SettingsModelOddIntegerBounded createWindowLengthModel() {
-        return new SettingsModelOddIntegerBounded("win_length", 21, 3, 10001);
+    static SettingsModelIntegerBounded createWindowLengthModel() {
+        return new SettingsModelIntegerBounded("win_length", 21, 1,
+                Integer.MAX_VALUE);
     }
 
     /**
-     * 
+     *
      * @return the model for the weight (simple or exponential)
      */
     static SettingsModelString createWeightModel() {
         return new SettingsModelString("weights",
-                MovingAverage.WEIGHT_FUNCTIONS.Simple.name());
+                MA_METHODS.Simple.getLabel());
     }
-    
+
     /**
-     * 
+     *
      * @return model for the replace column checkbox
      */
     static SettingsModelBoolean createReplaceColumnModel() {

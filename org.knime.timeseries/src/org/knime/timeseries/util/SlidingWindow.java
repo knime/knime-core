@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,62 +44,86 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- *
+ * <w
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.util;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.LinkedList;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * This class provides a sliding window. It controls the size of the window.
+ * It is only possible to insert new values, replace previous ones or get the
+ * whole list.
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * @author Adae, University of Konstanz
+ * @param <T> the object stored in the window.
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class SlidingWindow<T extends Object> {
+
+    private final int m_size;
+    private LinkedList<T> m_list;
 
     /**
-     * {@inheritDoc}
+     * @param size the size of the sliding window
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public SlidingWindow(final int size) {
+        m_size = size;
+        m_list = new LinkedList<T>();
+    }
+
+
+    /**
+     * @param e the new last row of the sliding window
+     * @return the removed row (the previous first one) or null,
+     * if the window was not yet full.
+     */
+    public T addandget(final T e) {
+        T ret = null;
+        if (m_list.size() >= m_size) {
+            // remove the first
+            ret = m_list.removeFirst();
+        }
+        m_list.add(e);
+        return ret;
     }
 
     /**
-     * {@inheritDoc}
+     * @param i the position of the wished row  in the window
+     * @return the data row on position i, or null, if there  is no such row.
      */
-    @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    public T get(final int i) {
+        if (i >= m_size) {
+            return null;
+        }
+        try {
+            return m_list.get(i);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
-    /**
-     * {@inheritDoc}
+    /**Replaces the Data Row at position i with the given.
+     * @param i the position to be replaced
+     * @param e the new value (T) for position i
+     * @return true, if the replacement was successful, false otherwise.
      */
-    @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
+    public boolean replace(final int i, final T e) {
+        if (i >= m_size || e == null) {
+            return false;
+        }
+        try {
+            m_list.set(i, e);
+        } catch (final IndexOutOfBoundsException exp) {
+            return false;
+        }
         return true;
+    }
+
+    /**
+     * @return the complete stored window.
+     */
+    public LinkedList<T> getList() {
+        return m_list;
     }
 
 }

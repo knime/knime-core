@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,60 +46,52 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
+
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * TREMA = 3 * EMA(x,n) - 3 * EMA(EMA(x,n),n) + EMA(EMA(EMA(x,n),n),n).
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * Triple exponential smoothing
+ *
+ * @author Adae, University of Konstanz
  */
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class TripleExponentialMA extends MovingAverage {
+
+    private ExponentialMA m_ema;
+    private ExponentialMA m_emaema;
+    private ExponentialMA m_emaemaema;
 
     /**
-     * {@inheritDoc}
+     *
+     * @param winsize the size ofthe window.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public TripleExponentialMA(final int winsize) {
+        m_ema = new ExponentialMA(winsize);
+        m_emaema = new ExponentialMA(winsize);
+        m_emaemaema = new ExponentialMA(winsize);
     }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    public DataCell getMeanandUpdate(final double newValue) {
+        DataCell dc = m_ema.getMeanandUpdate(newValue);
+        if (!dc.isMissing()) {
+            dc = m_emaema.getMeanandUpdate(m_ema.getMean());
+            if (!dc.isMissing()) {
+                dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
+                if (!dc.isMissing()) {
+                    double trema = 3 * m_ema.getMean() - 3 * m_emaema.getMean()
+                            + m_emaemaema.getMean();
+                    return new DoubleCell(trema);
+                }
+            }
+        }
+        return dc;
     }
 
 }
