@@ -1058,6 +1058,12 @@
             factory-class="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
             id="org.knime.base.node.switches.endcase">
       </node>
+      <node
+            category-path="/flowcontrol/switches"
+            expert-flag="false"
+            factory-class="org.knime.base.node.switches.startcase.StartcaseNodeFactory"
+            id="org.knime.base.node.switches.startcase">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
