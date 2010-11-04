@@ -55,8 +55,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.eclipse.draw2d.BorderLayout;
+import org.eclipse.draw2d.Panel;
 import org.eclipse.draw2d.PositionConstants;
-import org.eclipse.draw2d.ScrollPane;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.text.BlockFlow;
 import org.eclipse.draw2d.text.BlockFlowLayout;
@@ -74,27 +75,23 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AnnotationFigure3 extends ScrollPane {
+public class AnnotationFigure3 extends Panel {
 
     private final FlowPage m_page;
-
-    private final static Color BG = AnnotationEditPart
-            .getAnnotationDefaultBackgroundColor();
 
     /**
      * @param annotation the annotation to display
      */
     public AnnotationFigure3(final WorkflowAnnotation annotation) {
 
-//        Panel p = new Panel();
-//        p.setLayoutManager(new ToolbarLayout(false));
-//        p.setBackgroundColor(BG);
+        setLayoutManager(new BorderLayout());
+        Color bg = AnnotationEditPart.getAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
         m_page.setLayoutManager(new PageFlowLayout(m_page));
-        m_page.setBackgroundColor(BG);
-//        p.add(m_page);
-        setContents(m_page);
-        setBackgroundColor(BG);
+        m_page.setBackgroundColor(bg);
+        add(m_page);
+        setConstraint(m_page, BorderLayout.CENTER);
+        setBackgroundColor(bg);
         newContent(annotation);
     }
 
@@ -146,7 +143,9 @@ public class AnnotationFigure3 extends ScrollPane {
         }
         BlockFlow bf = new BlockFlow();
         // bf.setBorder(new MarginBorder(4, 2, 4, 0));
-        bf.setLayoutManager(new BlockFlowLayout(bf));
+        BlockFlowLayout bfl = new BlockFlowLayout(bf);
+        bfl.setContinueOnSameLine(true);
+        bf.setLayoutManager(bfl);
         bf.setHorizontalAligment(PositionConstants.ALWAYS_LEFT);
         bf.setOrientation(SWT.LEFT_TO_RIGHT);
         bf.setBackgroundColor(bg);
@@ -168,13 +167,7 @@ public class AnnotationFigure3 extends ScrollPane {
     @Override
     public void setBounds(final Rectangle rect) {
         super.setBounds(rect);
-        // Rectangle pageSize = rect.getCopy();
-        // Rectangle r = getViewport().getClientArea();
-        // Dimension pref = m_page.getPreferredSize(r.width, -1);
-        // m_page.setBounds(new Rectangle(pageSize.x, pageSize.y, r.width,
-        // pref.height));
-        m_page.setBounds(rect);
-        repaint();
+        m_page.invalidate();
     }
 
     private TextFlow getDefaultStyled(final String text, final Color bg) {

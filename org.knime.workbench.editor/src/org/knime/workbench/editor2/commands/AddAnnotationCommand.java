@@ -75,9 +75,9 @@ public class AddAnnotationCommand extends Command {
 
     private final Point m_location;
 
-    private static final int DEFAULT_HEIGHT = 150;
+    private static final int DEFAULT_HEIGHT = 67;
 
-    private static final int DEFAULT_WIDTH = 120;
+    private static final int DEFAULT_WIDTH = 175;
 
     private static final int INITIAL_COLOR = AnnotationEditPart
             .colorToRGBint(AnnotationEditPart
