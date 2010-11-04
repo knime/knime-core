@@ -264,4 +264,17 @@ public class PNGImageContent implements ImageContent {
         return new Dimension(image.getWidth(null), image.getHeight(null));
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        Dimension dim = getPreferredSize();
+        String summary = "PNG Image " + dim.width + " x "
+            + dim.height + " with ";
+        if (m_imageBytes.length < 1000) {
+            return summary + m_imageBytes.length + " B";
+        } else {
+            return summary + (m_imageBytes.length / 1024) + " KB";
+        }
+    }
+
 }

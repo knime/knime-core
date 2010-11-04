@@ -106,5 +106,9 @@ public interface ImageContent {
      */
     public void load(final InputStream in) throws IOException;
 
+    /** @return short summary representing this image content object. */
+    public String getSummary();
+
+
 }
 

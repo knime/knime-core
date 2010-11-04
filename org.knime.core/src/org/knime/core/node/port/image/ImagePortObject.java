@@ -126,7 +126,7 @@ public class ImagePortObject extends AbstractPortObject {
     /**{@inheritDoc} */
     @Override
     public String getSummary() {
-        return m_content.toString();
+        return m_content.getSummary();
     }
 
     /** {@inheritDoc} */
