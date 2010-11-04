@@ -39,7 +39,6 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.util.LogfileAppender;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
