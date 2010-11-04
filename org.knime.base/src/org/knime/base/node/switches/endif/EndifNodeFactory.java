@@ -68,7 +68,7 @@ public class EndifNodeFactory extends NodeFactory<EndifNodeModel> {
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new EndifNodeDialog();
     }
 
     /** {@inheritDoc} */
@@ -93,7 +93,7 @@ public class EndifNodeFactory extends NodeFactory<EndifNodeModel> {
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }
