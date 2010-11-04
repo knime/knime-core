@@ -368,8 +368,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
 
     private static final String MINING_SCHEMA_FILE = "MiningSchema.xml";
 
-    private static final String IGNORED_KEY = "ignored";
-
     private static final String LEARNING_KEY = "learning";
 
     private static final String TARGET_KEY = "target";
@@ -420,16 +418,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         // TODO: sanity check if names are consistent
         NodeSettingsRO miningSchemaSettings =
                 NodeSettings.loadFromXML(noCloseIn);
-        List<String> ignoredCols = new LinkedList<String>();
-        for (String colName
-                : miningSchemaSettings.getStringArray(IGNORED_KEY)) {
-            DataColumnSpec colSpec = dataTableSpec.getColumnSpec(colName);
-            if (colSpec == null) {
-                throw new InvalidSettingsException("Column " + colName
-                        + " is not in DataTableSpec");
-            }
-            ignoredCols.add(colName);
-        }
         List<String> learningCols = new LinkedList<String>();
         for (String colName
                 : miningSchemaSettings.getStringArray(LEARNING_KEY)) {
