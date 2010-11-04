@@ -68,16 +68,16 @@ import org.knime.core.data.DataCell;
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public interface ImageContent {
-    /** Render image into argument graphics object.
+    /** Render image into argument graphics object. The aspect ration of the
+     * image must be retained, i.e. the width and height are maximum values
+     * that do not need to be fulfilled both at the same time.
      *
-     * <p>It is up to the implementation to fill the given space or just
-     * scale to the maximum of either width or height - in any case it should
-     * not draw outside the argument range.
      * @param g To paint to.
-     * @param width image width
-     * @param height image height
+     * @param maxWidth image maximum width
+     * @param maxHeight image maximum height
      */
-    public void paint(final Graphics2D g, final int width, final int height);
+    public void paint(final Graphics2D g, final int maxWidth,
+            final int maxHeight);
 
     /** Preferred dimension, width and height, for the given image to be
      * rendered.
