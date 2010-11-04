@@ -204,12 +204,6 @@ public class PNGImageContent implements ImageContent {
 
     /** {@inheritDoc} */
     @Override
-    public void load(final InputStream input) throws IOException {
-        m_imageBytes = toByteArray(input);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void save(final OutputStream output) throws IOException {
         output.write(m_imageBytes);
     }

@@ -61,15 +61,13 @@ import org.knime.core.data.DataCell;
  *
  * <p><b>Note:</b> Objects of this interface must be read-only!
  *
- * Implementations are required to provide a no-arg constructor that is used
- * by the framework to restore the image content. As objects of this class
- * are generally read-only, the documentation should state that access to
- * the no-arg constructor is discouraged for client code.
+ * Implementations are required to provide at least a constructor with an
+ * {@link InputStream} as only argument, which is used by the framework to
+ * restore the image content.
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public interface ImageContent {
-
     /** Render image into argument graphics object.
      *
      * <p>It is up to the implementation to fill the given space or just
@@ -98,17 +96,7 @@ public interface ImageContent {
      */
     public void save(final OutputStream out) throws IOException;
 
-    /** Framework method that is used along with the required no-arg
-     * constructor to restore the image content. As objects of this class are
-     * read-only, this method should not be used by client code.
-     * @param in To read from.
-     * @throws IOException If that fails for any reason.
-     */
-    public void load(final InputStream in) throws IOException;
-
     /** @return short summary representing this image content object. */
     public String getSummary();
-
-
 }
 
