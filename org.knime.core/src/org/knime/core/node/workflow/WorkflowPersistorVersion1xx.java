@@ -78,6 +78,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
@@ -153,6 +154,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return getVersionString();
     }
 
+    /** @return load version, never null. */
+    LoadVersion getLoadVersion() {
+        // returns non-null version (asserted in constructor)
+        return LoadVersion.get(getVersionString());
+    }
     /**
      * @return the workflowDir
      */
@@ -923,7 +929,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     protected void loadUIInfoSettings(final UIInformation uiInfo,
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        uiInfo.load(settings);
+        uiInfo.load(settings, getLoadVersion());
     }
 
     /** Sub class hook o read port bar info.

@@ -54,6 +54,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.
@@ -80,22 +81,22 @@ public class NodeUIInformation implements UIInformation {
     private static final String KEY_BOUNDS = "extrainfo.node.bounds";
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
-    
+
     /** Set to true if the bounds are absolute (correct in the context of the
      * editor). It's false if the coordinates refer to relative coordinates and
      * need to be adjusted by the NodeContainerFigure#initFigure... method.
-     * This field is transient and not stored as part of the 
+     * This field is transient and not stored as part of the
      * {@link #save(NodeSettingsWO)} method. A loaded object has always absolute
      * coordinates.
      */
-    private final boolean m_hasAbsoluteCoordinates; 
+    private final boolean m_hasAbsoluteCoordinates;
 
     /** Creates new object, the bounds to be set are assumed to be absolute
      * (m_isInitialized is true). */
     public NodeUIInformation() {
         m_hasAbsoluteCoordinates = true;
     }
-    
+
     /** Inits new node figure with given coordinates.
      * @param x x coordinate
      * @param y y coordinate
@@ -103,7 +104,7 @@ public class NodeUIInformation implements UIInformation {
      * @param height height of figure
      * @param absoluteCoords If the coordinates are absolute.
      */
-    public NodeUIInformation(final int x, final int y, 
+    public NodeUIInformation(final int x, final int y,
             final int width, final int height, final boolean absoluteCoords) {
         m_bounds[0] = x;
         m_bounds[1] = y;
@@ -115,6 +116,7 @@ public class NodeUIInformation implements UIInformation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
     }
@@ -122,7 +124,7 @@ public class NodeUIInformation implements UIInformation {
     /**
      * {@inheritDoc}
      */
-    public void load(final NodeSettingsRO conf)
+    public void load(final NodeSettingsRO conf, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
@@ -139,14 +141,14 @@ public class NodeUIInformation implements UIInformation {
         }
         return true;
     }
-    
+
     /**
      * @return the hasAbsoluteCoordinates (transient) field
      */
     public boolean hasAbsoluteCoordinates() {
         return m_hasAbsoluteCoordinates;
     }
-    
+
     /**
      * Sets the location. *
      *

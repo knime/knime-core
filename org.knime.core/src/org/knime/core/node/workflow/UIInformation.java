@@ -53,6 +53,7 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  * Basic interface for extra information.
@@ -73,12 +74,15 @@ public interface UIInformation extends Cloneable {
      * Reads the information from the NodeSettings object.
      *
      * @param config Retrieve the data from.
+     * @param loadVersion The workflow version that was used to store this
+     *        object
      * @throws InvalidSettingsException If the required keys are not available
      *             in the NodeSettings.
      *
      * @see #save
      */
-    void load(final NodeSettingsRO config) throws InvalidSettingsException;
+    void load(final NodeSettingsRO config, final LoadVersion loadVersion)
+        throws InvalidSettingsException;
 
     /** UIInformation objects are cloneable without further restriction.
      *

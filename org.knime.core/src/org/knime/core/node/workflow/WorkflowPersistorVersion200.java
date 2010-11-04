@@ -163,6 +163,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     }
 
     /** @return version being loaded, never null. */
+    @Override
     public LoadVersion getLoadVersion() {
         return LoadVersion.get(super.getLoadVersionString());
     }
@@ -228,7 +229,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         for (String key : annoSettings.keySet()) {
             NodeSettingsRO child = annoSettings.getNodeSettings(key);
             WorkflowAnnotation anno = new WorkflowAnnotation();
-            anno.load(child);
+            anno.load(child, getLoadVersion());
             result.add(anno);
         }
         return result;

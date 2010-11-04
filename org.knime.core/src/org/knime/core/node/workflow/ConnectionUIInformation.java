@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.07.2005 (Florian Georg): created
  */
@@ -55,12 +55,13 @@ import java.util.ArrayList;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  * Default implementation of a connection extra info.
- * 
+ *
  * By now it only stores bendpoints used by the modelling editor.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionUIInformation implements UIInformation {
@@ -74,7 +75,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /**
      * Constructs a <code>ConnectionUIInformation</code>.
-     * 
+     *
      */
     public ConnectionUIInformation() {
 
@@ -82,7 +83,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /**
      * Add a bendpoint.
-     * 
+     *
      * @param x x coordinate
      * @param y y cordinate
      * @param index index of the point
@@ -93,7 +94,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /**
      * Removes a bendpoint.
-     * 
+     *
      * @param index The point index
      */
     public void removeBendpoint(final int index) {
@@ -102,7 +103,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /**
      * Returns a bendpoint.
-     * 
+     *
      * @param index The point index
      * @return the point (int[]{x,y}), or <code>null</code>
      */
@@ -112,7 +113,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /**
      * Gets all bendpoints.
-     * 
+     *
      * @return all bendpoints
      */
     public int[][] getAllBendpoints() {
@@ -122,6 +123,7 @@ public class ConnectionUIInformation implements UIInformation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void save(final NodeSettingsWO config) {
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
         for (int i = 0; i < m_bendpoints.size(); i++) {
@@ -130,10 +132,9 @@ public class ConnectionUIInformation implements UIInformation {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void load(final NodeSettingsRO config)
+    /** {@inheritDoc} */
+    @Override
+    public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
             throws InvalidSettingsException {
         int size = config.getInt(KEY_BENDPOINTS + "_size");
         for (int i = 0; i < size; i++) {
@@ -144,7 +145,7 @@ public class ConnectionUIInformation implements UIInformation {
     /**
      * Changes the position by setting the bend points according to the given
      * moving distance.
-     * 
+     *
      * @param moveDist the distance to change the bend points
      * @return A new copy of this object with all its bend points shifted
      *         by the argument offset.
@@ -158,9 +159,9 @@ public class ConnectionUIInformation implements UIInformation {
         }
         return copy;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -173,11 +174,11 @@ public class ConnectionUIInformation implements UIInformation {
         }
         return bld.toString();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ConnectionUIInformation clone() {
-        ConnectionUIInformation newObject 
+        ConnectionUIInformation newObject
             = new ConnectionUIInformation();
         newObject.m_bendpoints.clear();
         for (int [] bendpoint : this.m_bendpoints) {

@@ -54,6 +54,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -188,10 +189,10 @@ public class WorkflowAnnotation implements UIInformation {
         }
     }
 
-    /** {@inheritDoc}.
-     * loads new values and fires change event */
+    /** {@inheritDoc}
+    * loads new values and fires change event. */
     @Override
-    public void load(final NodeSettingsRO config)
+    public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
             throws InvalidSettingsException {
         setText(config.getString("text"));
         setBgColor(config.getInt("bgcolor"));
