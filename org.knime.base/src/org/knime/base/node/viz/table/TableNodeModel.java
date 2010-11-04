@@ -60,6 +60,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableContentModel;
 
@@ -93,6 +94,17 @@ public class TableNodeModel extends NodeModel
     public TableNodeModel() {
         super(1, 0);
         // models have empty content
+        m_contModel = new TableContentModel();
+    }
+    
+    /** Subclass constructor which overrides the port types. Subclasses must 
+     * also override the execute and configure methods. 
+     *
+     * @param inPortTypes the input port types
+     */
+    protected TableNodeModel(final PortType[] inPortTypes) {
+    	super(inPortTypes, new PortType[]{});
+    	  // models have empty content
         m_contModel = new TableContentModel();
     }
 
