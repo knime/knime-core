@@ -12,6 +12,11 @@
             expert-flag="true"
             factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
    </extension>
 
 </plugin>
