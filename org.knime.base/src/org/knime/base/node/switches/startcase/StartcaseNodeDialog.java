@@ -48,7 +48,6 @@
 package org.knime.base.node.switches.startcase;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 

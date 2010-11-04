@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   09.08.2005 (bernd): created
  */
 package org.knime.base.node.switches.endif;
 
@@ -69,7 +67,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-
 
 /**
  * Dialog for the node collecting data from two - potentially
@@ -95,6 +92,7 @@ public class EndifNodeDialog extends NodeDialogPane {
      */
     public EndifNodeDialog() {
         ActionListener actionListener = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_suffixField.setEnabled(m_appendSuffixButton.isSelected());
             }

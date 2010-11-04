@@ -51,45 +51,22 @@
 package org.knime.base.node.switches.startcase;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.append.row.AppendedRowsIterator;
-import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
-import org.knime.base.data.append.row.AppendedRowsTable;
-import org.knime.base.node.io.pmml.write.PMMLWriterNodeModel;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.BufferedDataContainer;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
-import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteManager;
-import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * Start of a CASE Statement. Takes the table from one branch and
