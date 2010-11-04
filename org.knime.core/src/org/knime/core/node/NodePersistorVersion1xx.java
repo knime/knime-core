@@ -67,6 +67,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
@@ -81,6 +83,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private boolean m_isExecuted;
 
     private boolean m_hasContent;
+
+    private boolean m_isInactive;
 
     private boolean m_isConfigured;
 
@@ -154,6 +158,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
     protected boolean loadHasContent(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
+    }
+
+    protected boolean loadIsInactive(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        return false;
     }
 
     /** Sub class hook to read warning message.
@@ -410,6 +419,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_hasContent;
     }
 
+    /** Accessor for derived class, not part of interface!
+     * @return Inactive (dead IF branch) */
+    protected boolean isInactive() {
+        return m_isInactive;
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean needsResetAfterLoad() {
@@ -491,6 +506,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
             m_hasContent = loadHasContent(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load hasContent flag: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
+            setNeedsResetAfterLoad(); // also implies dirty
+        }
+
+        try {
+            m_isInactive = loadIsInactive(settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load isInactive flag: " + ise.getMessage();
             loadResult.addError(e);
             getLogger().warn(e, ise);
             setNeedsResetAfterLoad(); // also implies dirty
@@ -645,7 +669,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public PortObject getPortObject(final int outportIndex) {
         if (outportIndex == 0) {
-            return FlowVariablePortObject.INSTANCE;
+            if (m_isInactive) {
+                return InactiveBranchPortObject.INSTANCE;
+            } else {
+                return FlowVariablePortObject.INSTANCE;
+            }
         }
         return m_portObjects[outportIndex];
     }
@@ -670,7 +698,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         if (outportIndex == 0) {
-            return FlowVariablePortObjectSpec.INSTANCE;
+            if (m_isInactive) {
+                return InactiveBranchPortObjectSpec.INSTANCE;
+            } else {
+                return FlowVariablePortObjectSpec.INSTANCE;
+            }
         }
         return m_portObjectSpecs[outportIndex];
     }

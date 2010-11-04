@@ -126,6 +126,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
         saveHasContent(node, settings);
+        saveIsInactive(node, settings);
         saveWarningMessage(node, settings);
         ReferencedFile nodeInternDirRef = getNodeInternDirectory(nodeDirRef);
         File nodeInternDir = nodeInternDirRef.getFile();
@@ -337,6 +338,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addBoolean("hasContent", hasContent);
     }
 
+    protected void saveIsInactive(final Node node, final NodeSettingsWO settings) {
+        boolean isInactive = node.isInactive();
+        settings.addBoolean("isInactive", isInactive);
+    }
+
     protected void saveWarningMessage(
             final Node node, final NodeSettingsWO settings) {
         String warnMessage = node.getWarningMessageFromModel();
@@ -381,6 +387,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         LoadNodeModelSettingsFailPolicy result =
             getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
+        if (isInactive()) {
+            // silently ignore invalid settings for dead branches
+            // (nodes may be saved as EXECUTED but they were never actually
+            // executed but only set to be inactive)
+            return LoadNodeModelSettingsFailPolicy.IGNORE;
+        }
         assert result != null : "fail policy is null";
         return result;
     }
@@ -390,6 +402,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected boolean loadHasContent(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadIsInactive(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        if (getLoadVersion().ordinal() >= LoadVersion.V230.ordinal()) {
+            return settings.getBoolean("isInactive", false);
+        } else {
+            return super.loadIsInactive(settings);
+        }
     }
 
     /** {@inheritDoc} */
