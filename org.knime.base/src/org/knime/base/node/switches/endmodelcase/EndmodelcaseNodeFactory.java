@@ -48,7 +48,7 @@
  * History
  *   Sept 30, 2010 (mb): created
  */
-package org.knime.base.node.switches.endcase;
+package org.knime.base.node.switches.endmodelcase;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -57,12 +57,12 @@ import org.knime.core.node.NodeView;
 /**
  * @author M. Berthold, University of Konstanz
  */
-public class EndcaseNodeFactory extends NodeFactory<EndcaseNodeModel> {
+public class EndmodelcaseNodeFactory extends NodeFactory<EndmodelcaseNodeModel> {
 
     /**
      * Create factory, that instantiates nodes.
      */
-    public EndcaseNodeFactory() {
+    public EndmodelcaseNodeFactory() {
     }
 
     /** {@inheritDoc} */
@@ -73,14 +73,14 @@ public class EndcaseNodeFactory extends NodeFactory<EndcaseNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    public EndcaseNodeModel createNodeModel() {
-        return new EndcaseNodeModel();
+    public EndmodelcaseNodeModel createNodeModel() {
+        return new EndmodelcaseNodeModel();
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<EndcaseNodeModel> createNodeView(final int index,
-            final EndcaseNodeModel model) {
+    public NodeView<EndmodelcaseNodeModel> createNodeView(final int index,
+            final EndmodelcaseNodeModel model) {
         return null;
     }
 

@@ -48,7 +48,7 @@
  * History
  *   Sept 17 2008 (mb): created (from wiswedel's TableToVariableNode)
  */
-package org.knime.base.node.switches.endcase;
+package org.knime.base.node.switches.endmodelcase;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,13 +74,13 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class EndcaseNodeModel extends NodeModel
+public class EndmodelcaseNodeModel extends NodeModel
         implements InactiveBranchConsumer {
 
     /**
      * One + 3 optional inputs, one output.
      */
-    protected EndcaseNodeModel() {
+    protected EndmodelcaseNodeModel() {
         super(getInPortTypes(3),
                 new PortType[] {new PortType(PortObject.class)});
     }
