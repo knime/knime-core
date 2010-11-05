@@ -204,7 +204,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private IFile m_fileResource;
 
-    // if we are a subworkflow editor, we have to store the parent for saving
+    /** If subworkflow editor, store the parent for saving. */
     private WorkflowEditor m_parentEditor;
 
     private NewOverviewOutlinePage m_overviewOutlinePage;
@@ -217,9 +217,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private String m_loadingCanceledMessage;
 
-    /**
-     * Indicates if this editor has been closed.
-     */
+    /** Indicates if this editor has been closed. */
     private boolean m_closed;
 
     private String m_manuallySetToolTip;
@@ -253,7 +251,6 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the graphical viewer of this editor.
      */
     public GraphicalViewer getViewer() {
-
         return getGraphicalViewer();
     }
 
@@ -274,7 +271,6 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      */
     public void setClipboardContent(final ClipboardObject content) {
-
         clipboard = content;
     }
 
@@ -1196,7 +1192,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Marks this editor as diry and notifies the registered listeners.
+     * Marks this editor as dirty and notifies the registered listeners.
      */
     public void markDirty() {
         if (!m_isDirty) {
@@ -1229,8 +1225,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             event.getDelta().accept(new MyResourceDeltaVisitor());
         } catch (CoreException e) {
-            // should never happen, I think...
-            e.printStackTrace();
+            LOGGER.error(e.getMessage(), e);
         }
 
     }
@@ -1429,4 +1424,5 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void stateChanged(final NodeStateEvent state) {
         markDirty();
     }
+
 }

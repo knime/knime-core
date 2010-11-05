@@ -49,10 +49,12 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Action to "hide node names".
@@ -63,11 +65,6 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
 
     /** unique ID for this action. */
     public static final String ID = "knime.action.hide_node_names";
-
-    /** flag that saves the current that of this action; true if all node names
-     * are hidden, otherwise false - default.
-     */
-    public static boolean HIDE_NODE_NAMES = false;
 
     /**
      * @param editor The workflow editor
@@ -131,13 +128,22 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final boolean hide = !HIDE_NODE_NAMES;
-        for (NodeContainerEditPart ep
-                : getAllParts(NodeContainerEditPart.class)) {
-             ep.hideNodeName(hide);
+    public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
+
+        ScrollingGraphicalViewer provider = (ScrollingGraphicalViewer) 
+                getEditor().getEditorSite().getSelectionProvider();
+        if (provider == null) {
+            return;
         }
-        HIDE_NODE_NAMES = hide;
+
+        // get parent of the node parts
+        WorkflowRootEditPart editorPart = (WorkflowRootEditPart) 
+                provider.getRootEditPart().getChildren().get(0);
+        editorPart.changeHideNodeNames();
+        for (NodeContainerEditPart edit : getAllParts(
+                NodeContainerEditPart.class)) {
+            edit.callHideNodeName();
+        }
     }
 
     /**

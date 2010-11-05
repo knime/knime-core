@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
- * History
- *   10.06.2008 (Fabian Dill): created
+ *
  */
 package org.knime.workbench.editor2.editparts;
 
@@ -54,10 +52,14 @@ import org.eclipse.draw2d.IFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.editor2.figures.SubworkflowFigure;
 
-
-
+/**
+ *
+ *
+ * @author Fabian Dill, University of Konstanz, Germany
+ */
 public class SubworkflowEditPart extends NodeContainerEditPart {
 
+    /** {inheritDoc} */
     @Override
     protected IFigure createFigure() {
         // create the visuals for the node container.
@@ -66,9 +68,10 @@ public class SubworkflowEditPart extends NodeContainerEditPart {
 
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
-
+        if (getRootEditPart() != null) {
+            nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
+        }
         return nodeFigure;
     }
-    
-    
+
 }

@@ -160,6 +160,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      *
      * {@inheritDoc}
      */
+    @Override
     public NodeContainer getNodeContainer() {
         return getWorkflowManager();
     }
@@ -200,13 +201,12 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 NodeUIInformation uiInfo =
                         (NodeUIInformation)wfm.getOutPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((NodeUIInformation)wfm
-                            .getOutPortsBarUIInfo());
+                    m_outBar.setUIInfo((NodeUIInformation)
+                            wfm.getOutPortsBarUIInfo());
                 }
             }
             modelChildren.add(m_outBar);
         }
-
         return modelChildren;
     }
 
@@ -214,7 +214,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Object getAdapter(final Class adapter) {
         if (adapter == SnapToHelper.class) {
             List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();
@@ -225,8 +224,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 snapStrategies.add(new SnapToGuides(this));
             }
             val =
-                    (Boolean)getViewer().getProperty(
-                            SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
+                (Boolean)getViewer().getProperty(
+                        SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
             if (true || val != null && val.booleanValue()) {
                 snapStrategies.add(new SnapToPortGeometry(this));
             }
@@ -335,13 +334,14 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      *
      * {@inheritDoc}
      */
+    @Override
     public void workflowChanged(final WorkflowEvent event) {
 
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
                 + "children/connections..");
 
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
-
+            @Override
             public void run() {
 
                 // refreshing the children
@@ -368,18 +368,19 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 refreshVisuals();
             }
         });
-
     }
 
     /**
      * Called by the workflow manager after workflow annotations change.
      * {@inheritDoc}
      */
+    @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         LOGGER.debug("WorkflowRoot: node UI changed (i.e. annotations changed)"
                 + " updating children...");
 
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
             public void run() {
                 // annotations are children of the workflow
                 refreshChildren();
@@ -393,6 +394,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void commandStackChanged(final EventObject event) {
         LOGGER.debug("WorkflowRoot: command stack changed");
 
@@ -431,7 +433,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         super.refreshVisuals();
     }
     /**
-     *
      * {@inheritDoc}
      */
     @Override
@@ -464,6 +465,20 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         }
         // connections are selected in workflowChanged
         return part;
+    }
+
+    /** true, if node names are hidden, otherwise false - default. */
+    private boolean m_hideNodeNames = false;
+
+    /** @return change show/hide node label status */
+    public boolean changeHideNodeNames() {
+        m_hideNodeNames = !m_hideNodeNames;
+        return m_hideNodeNames;
+    }
+
+    /** @return true, if node labels are hidden, otherwise false */
+    public boolean hideNodeNames() {
+        return m_hideNodeNames;
     }
 
 }

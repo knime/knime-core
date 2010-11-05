@@ -61,6 +61,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartListener;
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
@@ -98,7 +99,6 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
-import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
@@ -238,7 +238,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
-        nodeFigure.hideNodeName(HideNodeNamesAction.HIDE_NODE_NAMES);
+        if (getRootEditPart() != null) {
+            nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
+        }
         boolean isInactive = false;
         if (getNodeContainer() instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
@@ -467,6 +469,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 if (store.contains(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
                     name = store.getString(
                         PreferenceConstants.P_DEFAULT_NODE_LABEL);
+                    if (name == null || name.trim().isEmpty()) {
+                        return "";
+                    }
                 }
             }
         }
@@ -706,6 +711,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return;
     }
 
+    /** {inheritDoc} */
     @Override
     public void jobManagerChanged(final JobManagerChangedEvent e) {
         URL iconURL = getNodeContainer().findJobManager().getIcon();
@@ -773,8 +779,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    public void hideNodeName(final boolean hide) {
-        ((NodeContainerFigure) getFigure()).hideNodeName(hide);
+    /** @return underlying workflow root */
+    WorkflowRootEditPart getRootEditPart() {
+        EditPartViewer viewer = getViewer();
+        if (viewer != null  && viewer.getRootEditPart().getContents()
+                instanceof WorkflowRootEditPart) {
+            WorkflowRootEditPart part = (WorkflowRootEditPart)
+                    viewer.getRootEditPart().getContents();
+            return part;
+        }
+        return null;
+    }
+
+    /** Change hide/show node label status. */
+    public void callHideNodeName() {
+        if (getRootEditPart() != null) {
+            ((NodeContainerFigure) getFigure()).hideNodeName(
+                    getRootEditPart().hideNodeNames());
+        }
     }
 
 }
