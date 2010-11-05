@@ -68,6 +68,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
@@ -88,6 +90,8 @@ public final class DialogComponentStringSelection extends DialogComponent {
     private final JComboBox m_combobox;
 
     private final JLabel m_label;
+    
+    private final FlowVariableModelButton m_fvmButton;
 
     /**
      * Constructor that puts label and combobox into panel. It expects the user
@@ -144,8 +148,15 @@ public final class DialogComponentStringSelection extends DialogComponent {
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
             final Collection<String> list, final boolean editable) {
+        this(stringModel, label, list, editable, null);
+    }
+    /* same constructor, FlowVariableModel exposed */
+    public DialogComponentStringSelection(
+            final SettingsModelString stringModel, final String label,
+            final Collection<String> list, final boolean editable,
+            final FlowVariableModel fvm) {
         this(stringModel, label,
-                DefaultStringIconOption.createOptionArray(list));
+                DefaultStringIconOption.createOptionArray(list), fvm);
         m_combobox.setEditable(editable);
         if (editable) {
             final StringIconListCellEditor editor 
@@ -207,6 +218,12 @@ public final class DialogComponentStringSelection extends DialogComponent {
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
             final StringIconOption[] list) {
+        this(stringModel, label, list, null);
+    }
+    /* same constructor, FlowVariableModel exposed */
+    public DialogComponentStringSelection(
+            final SettingsModelString stringModel, final String label,
+            final StringIconOption[] list, final FlowVariableModel fvm) {
         super(stringModel);
 
         if ((list == null) || (list.length == 0)) {
@@ -247,6 +264,20 @@ public final class DialogComponentStringSelection extends DialogComponent {
                 updateComponent();
             }
         });
+
+        // add variable editor button if so desired
+        if (fvm != null) {
+            fvm.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent evt) {
+                    m_combobox.setEnabled(!fvm.isVariableReplacementEnabled());
+                }
+            });
+            m_fvmButton = new FlowVariableModelButton(fvm);
+            getComponentPanel().add(m_fvmButton);
+        } else {
+            m_fvmButton = null;
+        }
 
         //call this method to be in sync with the settings model
         updateComponent();

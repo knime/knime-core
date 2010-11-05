@@ -55,12 +55,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  *
  * @author ohl, University of Konstanz
  */
-public class SettingsModelString extends SettingsModel {
+public class SettingsModelString extends SettingsModel
+implements SettingsModelFlowVariableCompatible {
 
     private String m_value;
 
@@ -196,5 +198,22 @@ public class SettingsModelString extends SettingsModel {
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getKey() {
+        return m_configName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public FlowVariable.Type getFlowVariableType() {
+        return FlowVariable.Type.STRING;
+    }
+
 
 }

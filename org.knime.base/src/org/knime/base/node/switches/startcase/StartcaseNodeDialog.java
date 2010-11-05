@@ -47,6 +47,9 @@
  */
 package org.knime.base.node.switches.startcase;
 
+import java.util.Arrays;
+
+import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -62,9 +65,12 @@ public class StartcaseNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public StartcaseNodeDialog() {
+        SettingsModelString smfs = createChoiceModel();
+        FlowVariableModel fvm = createFlowVariableModel(smfs);
+        
         addDialogComponent(new DialogComponentStringSelection(
-                createChoiceModel(),
-                "Choose Active Port:", options));
+                smfs, "Choose Active Port:",
+                Arrays.asList(options), false, fvm));
     }
 
     /**
