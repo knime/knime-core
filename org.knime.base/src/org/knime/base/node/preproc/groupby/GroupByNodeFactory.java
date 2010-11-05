@@ -80,9 +80,8 @@ public class GroupByNodeFactory extends NodeFactory<GroupByNodeModel> {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
-    public NodeView createNodeView(final int viewIndex,
+    public NodeView<GroupByNodeModel> createNodeView(final int viewIndex,
             final GroupByNodeModel nodeModel) {
         return null;
     }

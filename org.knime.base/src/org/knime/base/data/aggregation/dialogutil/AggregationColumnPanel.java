@@ -79,15 +79,15 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JLabel;
+import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -96,6 +96,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 
 /**
@@ -170,7 +171,6 @@ public class AggregationColumnPanel extends MouseAdapter {
 
         private void maybeShowContextMenu(final MouseEvent e) {
             if (e.isPopupTrigger()) {
-//                final int rowIdx = m_aggrColTable.rowAtPoint(e.getPoint());
                 final JPopupMenu menu = createPopupMenu();
                 menu.show(e.getComponent(),
                            e.getX(), e.getY());
@@ -279,7 +279,6 @@ public class AggregationColumnPanel extends MouseAdapter {
                     menu.add(noneSelected);
                     return;
             }
-//            final JMenu aggrMenu = new JMenu("Aggregation method");
             final List<Entry<String, List<AggregationMethod>>>
                 methodList = getMethods4SelectedItems();
             if (methodList.size() == 1) {
@@ -326,7 +325,6 @@ public class AggregationColumnPanel extends MouseAdapter {
                     }
                 }
             }
-//            menu.add(aggrMenu);
         }
     }
 
@@ -335,7 +333,6 @@ public class AggregationColumnPanel extends MouseAdapter {
      */
     public AggregationColumnPanel() {
         m_avAggrColList = new JList(m_avAggrColListModel);
-//        m_avAggrColList.setVisibleRowCount(8);
         m_avAggrColList.setCellRenderer(new DataColumnSpecListCellRenderer());
         m_avAggrColList.addMouseListener(new MouseAdapter() {
             @Override
@@ -357,6 +354,8 @@ public class AggregationColumnPanel extends MouseAdapter {
         m_aggrColTable.getColumnModel().getColumn(1).setCellRenderer(
                 new AggregationMethodTableCellRenderer());
         m_aggrColTable.addMouseListener(new AggregationColumnTableListener());
+        m_aggrColTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+        m_aggrColTable.getColumnModel().getColumn(1).setPreferredWidth(20);
 
         m_panel.setMinimumSize(PANEL_DIMENSION);
         m_panel.setPreferredSize(PANEL_DIMENSION);
@@ -365,13 +364,9 @@ public class AggregationColumnPanel extends MouseAdapter {
         final Border border = BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), " Aggregation settings ");
         rootBox.setBorder(border);
-        rootBox.add(Box.createHorizontalGlue());
         rootBox.add(createAggrColBox());
-        rootBox.add(Box.createHorizontalGlue());
         rootBox.add(createButtonBox());
-        rootBox.add(Box.createHorizontalGlue());
         rootBox.add(createAggrColTable());
-        rootBox.add(Box.createHorizontalGlue());
         m_panel.add(rootBox);
     }
 
@@ -397,84 +392,82 @@ public class AggregationColumnPanel extends MouseAdapter {
         final Border border =
             BorderFactory.createTitledBorder(" Available columns ");
         aggrColBox.setBorder(border);
-        aggrColBox.add(Box.createHorizontalGlue());
         final JScrollPane avColList = new JScrollPane(m_avAggrColList);
         final Dimension dimension = new Dimension(125, COMPONENT_HEIGHT);
         avColList.setMinimumSize(dimension);
         avColList.setPreferredSize(dimension);
         aggrColBox.add(avColList);
-        aggrColBox.add(Box.createHorizontalGlue());
         return aggrColBox;
     }
 
-    private Component createButtonBox() {
-        final Box buttonBox = new Box(BoxLayout.Y_AXIS);
-        buttonBox.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+    private JComponent createButtonBox() {
+        final JPanel buttonBox = new JPanel();
+        buttonBox.setBorder(BorderFactory.createTitledBorder(" Select "));
+        buttonBox.setLayout(new BoxLayout(buttonBox, BoxLayout.Y_AXIS));
         buttonBox.add(Box.createVerticalGlue());
-
+        buttonBox.add(createButtonFiller(10, 10));
         final JButton addButton = new JButton("add >>");
         addButton.setMaximumSize(new Dimension(BUTTON_WIDTH, 25));
         buttonBox.add(addButton);
         addButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onAddIt();
             }
         });
-        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(createButtonFiller(15, 10));
 
         final JButton addAllButton = new JButton("add all >>");
         addAllButton.setMaximumSize(new Dimension(BUTTON_WIDTH, 25));
         buttonBox.add(addAllButton);
         addAllButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onAddAll();
             }
         });
-        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(createButtonFiller(15, 10));
 
         final JButton remButton = new JButton("<< remove");
         remButton.setMaximumSize(new Dimension(BUTTON_WIDTH, 25));
         buttonBox.add(remButton);
         remButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onRemIt();
             }
         });
-        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(createButtonFiller(15, 10));
 
         final JButton remAllButton = new JButton("<< remove all");
         remAllButton.setMaximumSize(new Dimension(BUTTON_WIDTH, 25));
         buttonBox.add(remAllButton);
         remAllButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onRemAll();
             }
         });
+        buttonBox.add(createButtonFiller(10, 10));
         buttonBox.add(Box.createVerticalGlue());
         return buttonBox;
     }
 
+    private Component createButtonFiller(final int height, final int width) {
+        final Component filler = Box.createVerticalStrut(height);
+        final Dimension fillerDimension = new Dimension(width, height);
+        filler.setMaximumSize(fillerDimension);
+        filler.setPreferredSize(fillerDimension);
+        filler.setMinimumSize(fillerDimension);
+        return filler;
+    }
+
     private Component createAggrColTable() {
-        final Box box = new Box(BoxLayout.Y_AXIS);
-        box.add(Box.createVerticalGlue());
-        final Box labelBox = new Box(BoxLayout.X_AXIS);
-        labelBox.add(Box.createHorizontalGlue());
-        labelBox.add(new JLabel("To change multiple columns use "
-                + "right mouse click for context menu."));
-        labelBox.add(Box.createHorizontalGlue());
-        box.add(labelBox);
-        box.add(Box.createVerticalGlue());
         final JScrollPane pane = new JScrollPane(m_aggrColTable);
-//        final int width =
-//            (int)Math.ceil(
-//                    (GroupByNodeDialog.COMPONENT_WIDTH - BUTTON_WIDTH) / 1.5);
-//        final Dimension dimension =
-//            new Dimension(width , COMPONENT_HEIGHT);
-//        pane.setMinimumSize(dimension);
-//        pane.setPreferredSize(dimension);
-        box.add(pane);
-        box.add(Box.createVerticalGlue());
-        return box;
+        pane.setBorder(BorderFactory.createTitledBorder(null,
+        " To change multiple columns use right mouse click for context menu. ",
+        TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION));
+        return pane;
     }
 
     /**

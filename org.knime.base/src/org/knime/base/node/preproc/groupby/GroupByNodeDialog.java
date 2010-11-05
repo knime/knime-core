@@ -74,6 +74,7 @@ import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -124,7 +125,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
                 ColumnNamePolicy.getDefault().getLabel());
 
-    private final DialogComponentColumnFilter m_groupColPanel;
+    private final DialogComponentColumnFilter m_groupCol;
 
     private final AggregationColumnPanel m_aggrColPanel =
         new AggregationColumnPanel();
@@ -139,10 +140,10 @@ public class GroupByNodeDialog extends NodeDialogPane {
         addTab("Options", m_panel);
 
 //The group column box
-        m_groupColPanel =
+        m_groupCol =
             new DialogComponentColumnFilter(m_groupByCols, 0, false);
-        m_groupColPanel.setIncludeTitle(" Group column(s) ");
-        m_groupColPanel.setExcludeTitle(" Available column(s) ");
+        m_groupCol.setIncludeTitle(" Group column(s) ");
+        m_groupCol.setExcludeTitle(" Available column(s) ");
         m_groupByCols.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -150,10 +151,11 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 groupByColsChanged();
             }
         });
-        final JPanel groupPanel =
-            GroupByNodeDialog.createGroup(" Group settings ",
-                m_groupColPanel.getComponentPanel());
-        m_panel.add(groupPanel);
+        final JPanel groupColPanel = m_groupCol.getComponentPanel();
+        groupColPanel.setLayout(new GridLayout(1, 1));
+        groupColPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), " Group settings "));
+        m_panel.add(groupColPanel);
 
 //The aggregation column box
         m_panel.add(m_aggrColPanel.getComponentPanel());
@@ -163,7 +165,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_panel.add(advancedBox);
 
 //calculate the component size
-        int width = (int)Math.max(m_groupColPanel.getComponentPanel().
+        int width = (int)Math.max(m_groupCol.getComponentPanel().
                 getMinimumSize().getWidth(), m_aggrColPanel.
                     getComponentPanel().getMinimumSize().getWidth());
         width = (int)Math.max(width, advancedBox.getMinimumSize().getWidth());
@@ -171,7 +173,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         final Dimension dimension =
             new Dimension(width, DEFAULT_HEIGHT);
         m_panel.setMinimumSize(dimension);
-        m_panel.setMaximumSize(dimension);
         m_panel.setPreferredSize(dimension);
 
         //add the  process in memory change listener
@@ -201,55 +202,51 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private JComponent createAdvancedOptionsBox() {
 //general option box
         final Box generalBox = new Box(BoxLayout.X_AXIS);
-        generalBox.add(Box.createVerticalGlue());
         final DialogComponent maxNoneNumericVals =
             new DialogComponentNumber(m_maxUniqueValues,
                     "Maximum unique values per group", new Integer(1000), 5);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
         generalBox.add(maxNoneNumericVals.getComponentPanel());
-        generalBox.add(Box.createVerticalGlue());
 
-        final DialogComponent enableHilite = new DialogComponentBoolean(
-                m_enableHilite, "Enable hiliting");
-        generalBox.add(enableHilite.getComponentPanel());
-        generalBox.add(Box.createVerticalGlue());
         final DialogComponentStringSelection colNamePolicy =
             new DialogComponentStringSelection(m_columnNamePolicy, null,
                     ColumnNamePolicy.getPolicyLabels());
         generalBox.add(colNamePolicy.getComponentPanel());
-        generalBox.add(Box.createVerticalGlue());
 
 //memory option box
         final Box memoryBox = new Box(BoxLayout.X_AXIS);
-        memoryBox.add(Box.createVerticalGlue());
+        final DialogComponent enableHilite = new DialogComponentBoolean(
+                m_enableHilite, "Enable hiliting");
+        memoryBox.add(enableHilite.getComponentPanel());
+        memoryBox.add(Box.createHorizontalStrut(35));
+
         final DialogComponent inMemory = new DialogComponentBoolean(
                 m_inMemory, "Process in memory");
         inMemory.setToolTipText(
         "Processes all data in memory.");
         memoryBox.add(inMemory.getComponentPanel());
-        memoryBox.add(Box.createVerticalGlue());
 
         final DialogComponent sortInMemory = new DialogComponentBoolean(
                 m_sortInMemory, "Sort in memory");
         memoryBox.add(sortInMemory.getComponentPanel());
-        memoryBox.add(Box.createVerticalGlue());
 
         final DialogComponent retainOrder = new DialogComponentBoolean(
                 m_retainOrder, "Retain row order");
         retainOrder.setToolTipText(
                 "Retains the original row order of the input table.");
         memoryBox.add(retainOrder.getComponentPanel());
-        memoryBox.add(Box.createVerticalGlue());
 
 //Advanced settings box
-        final Box rootBox = new Box(BoxLayout.Y_AXIS);
+        final Box box = new Box(BoxLayout.Y_AXIS);
+        box.add(generalBox);
+        box.add(memoryBox);
+        box.setMaximumSize(box.getPreferredSize());
+        final Box rootBox = new Box(BoxLayout.X_AXIS);
         rootBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), " Advanced settings "));
         rootBox.add(Box.createHorizontalGlue());
-        rootBox.add(generalBox);
-        rootBox.add(Box.createHorizontalGlue());
-        rootBox.add(memoryBox);
+        rootBox.add(box);
         rootBox.add(Box.createHorizontalGlue());
         return rootBox;
     }
@@ -300,7 +297,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (final InvalidSettingsException e) {
             m_inMemory.setBooleanValue(false);
         }
-        m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
+        m_groupCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         groupByColsChanged();
     }
 
@@ -310,7 +307,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        m_groupColPanel.saveSettingsTo(settings);
+        m_groupCol.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
@@ -318,20 +315,5 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_aggrColPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
-    }
-
-    /**
-     * @param title the title of the group
-     * @param component the component to add to the group
-     * @return the {@link JPanel} of the group
-     */
-    private static JPanel createGroup(final String title,
-            final JComponent component) {
-        final JPanel subPanel = new JPanel();
-        subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.Y_AXIS));
-        subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), title));
-        subPanel.add(component);
-        return subPanel;
     }
 }
