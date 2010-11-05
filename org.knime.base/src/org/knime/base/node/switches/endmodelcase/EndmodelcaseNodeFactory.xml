@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="endif.png" type="Manipulator">
-    <name>End CASE</name>
+<knimeNode icon="endcase.png" type="Manipulator">
+    <name>End (Model) CASE</name>
     
     <shortDescription>
-        Merges two or more branches which were initially created by an
-        IF or CASE Switch Node.
+        Merges two or more branches with arbitrary models which were
+        initially created by an IF or CASE Switch Node.
     </shortDescription>
     
     <fullDescription>

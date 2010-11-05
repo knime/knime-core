@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="endcase.png" type="Manipulator">
+    <name>End CASE</name>
+    
+    <shortDescription>
+        Merges 1-3 branches which were initially created by an IF or CASE
+        Switch Node.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This nodes takes the data either from one of the input port or
+        concatenates the two (or three) tables if more than one branch
+        contains data.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Input table">The first input table.</inPort>
+        <inPort index="1" name="Second (optional) table">The second optional input table.</inPort>
+        <inPort index="2" name="Third (optional) table">The third optional input table.</inPort>
+        <outPort index="0" name="Output table">Output Table.</outPort>
+    </ports>
+</knimeNode>
