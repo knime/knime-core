@@ -105,13 +105,13 @@ public class EndcaseNodeModel extends NodeModel
         int activeI = -1;
         while (i < inSpecs.length) {
             if (inSpecs[i] != null) {
-                // port connect
+                // port connected
                 if (!(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
                     // and active branch!
-                    if (activeI > 0) {
+                    if (activeI >= 0) {
                         // but we already found one before!
                         throw new InvalidSettingsException("More than one"
-                        		+ "active branch not supported!.");
+                        		+ " active branch not supported!.");
                     }
                     activeI = i;
                 }
@@ -134,13 +134,13 @@ public class EndcaseNodeModel extends NodeModel
         int activeI = -1;
         while (i < inData.length) {
             if (inData[i] != null) {
-                // port connect
+                // port connected
                 if (!(inData[i] instanceof InactiveBranchPortObject)) {
                     // and active branch!
-                    if (activeI > 0) {
+                    if (activeI >= 0) {
                         // but we already found one before!
                         throw new InvalidSettingsException("More than one"
-                                + "active branch not supported!.");
+                                + " active branch not supported!.");
                     }
                     activeI = i;
                 }
