@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2006 (sieb): created
  */
@@ -52,9 +52,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -65,7 +62,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * Implements the clipboard paste action to paste nodes and connections from the
  * clipboard into the editor. This sub class is used for context invoked pastes
  * only and pastes the nodes to the location of the current cursor.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteActionContextMenu extends PasteAction {
@@ -77,7 +74,7 @@ public class PasteActionContextMenu extends PasteAction {
 
     /**
      * Constructs a new clipboard paste action.
-     * 
+     *
      * @param editor the workflow editor this action is intended for
      */
     public PasteActionContextMenu(final WorkflowEditor editor) {
@@ -91,36 +88,30 @@ public class PasteActionContextMenu extends PasteAction {
     public String getId() {
         return ID;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         super.runOnNodes(nodeParts);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected ShiftCalculator newShiftCalculator() {
         return new ShiftCalculator() {
             /** {@inheritDoc} */
             @Override
-            public int[] calculateShift(
-                    final NodeID[] ids, final WorkflowManager manager, 
+            public int[] calculateShift(final Iterable<int[]> boundsList,
+                    final WorkflowManager manager,
                     final ClipboardObject clipObject) {
                 int x = getEditor().getSelectionTool().getXLocation();
                 int y = getEditor().getSelectionTool().getYLocation();
                 int smallestX = Integer.MAX_VALUE;
                 int smallestY = Integer.MAX_VALUE;
-                for (int i = 0; i < ids.length; i++) {
-                    NodeContainer nc = getManager().getNodeContainer(ids[i]);
-                    // finaly change the extra info so that the copies are
-                    // located differently (if not null)
-                    NodeUIInformation extraInfo =
-                            (NodeUIInformation)nc.getUIInformation();
-                    int[] bounds = extraInfo.getBounds();
+                for (int[] bounds : boundsList) {
                     int currentX = bounds[0];
                     int currentY = bounds[1];
                     if (currentX < smallestX) {
@@ -134,7 +125,7 @@ public class PasteActionContextMenu extends PasteAction {
                         (ZoomManager)getEditor().getViewer().getProperty(
                                 ZoomManager.class.toString());
 
-                Point viewPortLocation = 
+                Point viewPortLocation =
                     zoomManager.getViewport().getViewLocation();
                 x += viewPortLocation.x;
                 y += viewPortLocation.y;

@@ -88,15 +88,16 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
      * @param tableRep The table map in the target
      * @param preserveDeletableFlags Whether to keep the "is-deletable" flags
      *        in the target.
-     * @param copyNCNodeDir If to keep the location of the node directories
-     *        (important for undo of delete commands, see
-     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
+     * @param isUndoableDeleteCommand If to keep the location of the node
+     *        directories (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
+     *        for details.)
      */
     @SuppressWarnings("unchecked")
     CopyWorkflowPersistor(final WorkflowManager original,
             final HashMap<Integer, ContainerTable> tableRep,
             final boolean preserveDeletableFlags,
-            final boolean copyNCNodeDir) {
+            final boolean isUndoableDeleteCommand) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
             ? original.getInPortsBarUIInfo().clone() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
@@ -115,7 +116,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         }
         m_name = original.getNameField();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
-                original, preserveDeletableFlags, copyNCNodeDir);
+                original, preserveDeletableFlags, isUndoableDeleteCommand);
         if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
             m_tableRep = new HashMap<Integer, ContainerTable>();
         } else {
@@ -125,7 +126,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
         for (NodeContainer nc : original.getNodeContainers()) {
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
-                    m_tableRep, true, copyNCNodeDir));
+                    m_tableRep, true, isUndoableDeleteCommand));
         }
 
         for (ConnectionContainer cc : original.getConnectionContainers()) {
@@ -140,7 +141,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         }
         m_workflowAnnotations = new ArrayList<WorkflowAnnotation>();
         for (WorkflowAnnotation w : original.getWorkflowAnnotations()) {
-            m_workflowAnnotations.add(w.clone());
+            WorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
+            m_workflowAnnotations.add(anno);
         }
     }
 

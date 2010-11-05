@@ -142,8 +142,8 @@ public class CopyAction extends AbstractClipboardAction {
 
         WorkflowCopyContent content = new WorkflowCopyContent();
         content.setNodeIDs(ids);
-        content.setAndCloneAnnotations(annotations);
-        WorkflowPersistor copyPersistor = getManager().copy(content);
+        content.setAnnotation(annotations);
+        WorkflowPersistor copyPersistor = getManager().copy(false, content);
 
         // ClipboardWorkflowManager.put(getManager(), ids);
 

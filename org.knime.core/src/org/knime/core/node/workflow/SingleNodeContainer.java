@@ -877,7 +877,7 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
+    WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final FlowObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
@@ -909,7 +909,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 sncSettings = new SingleNodeContainerSettings();
             }
             m_settings = sncSettings;
-            return new NodeID[0];
+            return null;
         }
     }
 
@@ -1239,9 +1239,10 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags, final boolean copyNCNodeDir) {
+            final boolean preserveDeletableFlags,
+            final boolean isUndoableDeleteCommand) {
         return new CopySingleNodeContainerPersistor(this,
-                preserveDeletableFlags, copyNCNodeDir);
+                preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     // /////////////////////////////////////////////////////////////////////

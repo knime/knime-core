@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,19 +79,24 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
     private final WorkflowAnnotation[] m_copiedAnnotations;
+    private final boolean m_isUndoableDeleteCommand;
 
     /** Create new persistor.
      * @param loaderMap The loader map.
      * @param connectionSet A copy of connection clones.
      * @param copiedAnnotations Copied workflow annotations.
+     * @param isUndoableDeleteCommand If false, annotations will be cloned in
+     *        {@link #getWorkflowAnnotations()}.
      */
     PasteWorkflowContentPersistor(
             final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connectionSet,
-            final WorkflowAnnotation[] copiedAnnotations) {
+            final WorkflowAnnotation[] copiedAnnotations,
+            final boolean isUndoableDeleteCommand) {
         m_connectionSet = connectionSet;
         m_loaderMap = loaderMap;
         m_copiedAnnotations = copiedAnnotations;
+        m_isUndoableDeleteCommand = isUndoableDeleteCommand;
     }
 
     /** {@inheritDoc} */
@@ -166,7 +172,18 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public List<WorkflowAnnotation> getWorkflowAnnotations() {
-        return Arrays.asList(m_copiedAnnotations);
+        if (m_isUndoableDeleteCommand) {
+            return Arrays.asList(m_copiedAnnotations);
+        } else {
+            // must create a new fresh copy on each invocation
+            // (multiple pastes possible)
+            ArrayList<WorkflowAnnotation> result =
+                new ArrayList<WorkflowAnnotation>(m_copiedAnnotations.length);
+            for (WorkflowAnnotation a : m_copiedAnnotations) {
+                result.add(a.clone());
+            }
+            return result;
+        }
     }
 
     /** {@inheritDoc} */

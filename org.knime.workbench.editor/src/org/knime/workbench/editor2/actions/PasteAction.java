@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2006 (sieb): created
  */
@@ -54,7 +54,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -65,19 +64,19 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
  * clipboard into the editor.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
 //    private static final NodeLogger LOGGER =
 //            NodeLogger.getLogger(PasteAction.class);
-    
+
     private static final int OFFSET = 120;
-    
+
 
     /**
      * Constructs a new clipboard paste action.
-     * 
+     *
      * @param editor the workflow editor this action is intended for
      */
     public PasteAction(final WorkflowEditor editor) {
@@ -112,7 +111,7 @@ public class PasteAction extends AbstractClipboardAction {
 
     /**
      * At least one <code>NodeSettings</code> object must be in the clipboard.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -131,7 +130,7 @@ public class PasteAction extends AbstractClipboardAction {
             new PasteFromWorkflowPersistorCommand(
                     getEditor(), clipObject, shiftCalculator);
         getCommandStack().execute(pasteCommand); // enables undo
-        
+
         // update the actions
         getEditor().updateActions();
 
@@ -140,11 +139,11 @@ public class PasteAction extends AbstractClipboardAction {
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
 
-    
+
     /**
      * A shift operator that calculates a fixed offset. The sub class
-     * {@link PasteActionContextMenu} overrides this method to return a 
-     * different shift calculator that respects the current mouse 
+     * {@link PasteActionContextMenu} overrides this method to return a
+     * different shift calculator that respects the current mouse
      * pointer location.
      * @return A new shift calculator.
      */
@@ -152,10 +151,10 @@ public class PasteAction extends AbstractClipboardAction {
         return new ShiftCalculator() {
             /** {@inheritDoc} */
             @Override
-            public int[] calculateShift(final NodeID[] ids, 
-                    final WorkflowManager manager, 
+            public int[] calculateShift(final Iterable<int[]> boundsList,
+                    final WorkflowManager manager,
                     final ClipboardObject clipObject) {
-                final int counter = 
+                final int counter =
                     clipObject.incrementAndGetRetrievalCounter();
                 int newX = (OFFSET * counter);
                 int newY = (OFFSET * counter);

@@ -122,7 +122,9 @@ public class CutAction extends AbstractClipboardAction {
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
-        return parts.length > 0;
+        AnnotationEditPart[] anno =
+            getSelectedParts(AnnotationEditPart.class);
+        return parts.length > 0 || anno.length > 0;
     }
 
     /**

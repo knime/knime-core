@@ -3645,9 +3645,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags, final boolean copyNCNodeDir) {
-        return new CopyWorkflowPersistor(
-                this, tableRep, preserveDeletableFlags, copyNCNodeDir);
+            final boolean preserveDeletableFlags,
+            final boolean isUndoableDeleteCommand) {
+        return new CopyWorkflowPersistor(this, tableRep,
+                preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     //////////////////////////////////////
@@ -3659,9 +3660,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * possible). Connections among the nodes are kept.
      * @param sourceManager The wfm to copy from
      * @param content The content to copy (must exist in sourceManager)
-     * @return The new ids of the nodes in this wfm.
+     * @return Inserted NodeIDs and annotations.
      */
-    public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
+    public WorkflowCopyContent copyFromAndPasteHere(
+            final WorkflowManager sourceManager,
             final WorkflowCopyContent content) {
         WorkflowPersistor copyPersistor = sourceManager.copy(content);
         return paste(copyPersistor);
@@ -3677,17 +3679,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Copy the nodes with the given ids.
-     * @param copyNCNodeDir True if the returned persistor should also keep
-     *        the locations of the node's directories (e.g.
-     *        &lt;workflow>/File Reader (#xy)/). This is true if the copy serves
-     *        as backup of an undoable delete command (undoable = undo enabled).
-     *        If it is undone, the directories must not be cleared before the
-     *        next save (in order to keep the drop folder)
+     * @param isUndoableDeleteCommand True if the returned persistor is used
+     * in the delete command (which supports undo). This has two effects:
+     * <ol>
+     *   <li>It keeps the locations of the node's directories (e.g.
+     *   &lt;workflow>/File Reader (#xy)/). This is true if the copy serves
+     *   as backup of an undoable delete command (undoable = undo enabled).
+     *   If it is undone, the directories must not be cleared before the
+     *   next save (in order to keep the drop folder)
+     *   </li>
+     *   <li>The returned persistor will insert a reference to the contained
+     *   workflow annotations instead of copying them (enables undo on previous
+     *   move or edit commands.
+     *   </li>
+     * </ol>
      * @param content The content to copy (must exist).
      * @return A workflow persistor hosting the node templates, ready to be
      * used in the {@link #paste(WorkflowPersistor)} method.
      */
-    public WorkflowPersistor copy(final boolean copyNCNodeDir,
+    public WorkflowPersistor copy(final boolean isUndoableDeleteCommand,
             final WorkflowCopyContent content) {
         NodeID[] nodeIDs = content.getNodeIDs();
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
@@ -3704,7 +3714,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
                 loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor(
-                        m_globalTableRepository, false, copyNCNodeDir));
+                      m_globalTableRepository, false, isUndoableDeleteCommand));
                 for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
@@ -3713,17 +3723,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            return new PasteWorkflowContentPersistor(
-                    loaderMap, connTemplates, content.getAnnotations());
+            return new PasteWorkflowContentPersistor(loaderMap, connTemplates,
+                    content.getAnnotations(), isUndoableDeleteCommand);
         }
     }
 
     /** Pastes the contents of the argument persistor into this wfm.
      * @param persistor The persistor created with
      * {@link #copy(WorkflowCopyContent)} method.
-     * @return The new node ids of the inserted nodes.
+     * @return The new node ids of the inserted nodes and the annotations in a
+     *         dedicated object.
      */
-    public NodeID[] paste(final WorkflowPersistor persistor) {
+    public WorkflowCopyContent paste(final WorkflowPersistor persistor) {
         synchronized (m_workflowMutex) {
             try {
                 return loadContent(persistor,
@@ -3935,7 +3946,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (mutex) {
             m_loadVersion = persistor.getLoadVersionString();
             NodeID[] newIDs = loadContent(insertPersistor, tblRep, null,
-                    exec, result, keepNodeMessages);
+                    exec, result, keepNodeMessages).getNodeIDs();
             if (newIDs.length != 1) {
                 throw new InvalidSettingsException("Loading workflow failed, "
                         + "couldn't identify child sub flow (typically "
@@ -3997,7 +4008,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
+    WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final FlowObjectStack ignoredStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
@@ -4016,7 +4027,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Map<Integer, NodeContainerPersistor> nodeLoaderMap =
             persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
-        for (WorkflowAnnotation w : persistor.getWorkflowAnnotations()) {
+        List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
+        for (WorkflowAnnotation w : annos) {
             addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
@@ -4042,7 +4054,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         m_deletedNodesFileLocations.addAll(
                 persistor.getObsoleteNodeDirectories());
         Collection<NodeID> resultColl = persistorMap.keySet();
-        return resultColl.toArray(new NodeID[resultColl.size()]);
+        NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
+        WorkflowAnnotation[] newAnnotations =
+            annos.toArray(new WorkflowAnnotation[annos.size()]);
+        WorkflowCopyContent result = new WorkflowCopyContent();
+        result.setAnnotation(newAnnotations);
+        result.setNodeIDs(newIDs);
+        return result;
     }
 
     private void postLoad(

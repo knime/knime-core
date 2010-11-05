@@ -122,7 +122,7 @@ public class MetaNodeTemplateDropTargetListener
         WorkflowCopyContent content = new WorkflowCopyContent();
         content.setNodeIDs(id);
         NodeID[] copied = m_editor.getWorkflowManager().copyFromAndPasteHere(
-                sourceManager, content);
+                sourceManager, content).getNodeIDs();
         // create UI info
         NodeContainer newNode = m_editor.getWorkflowManager().getNodeContainer(
                 copied[0]);

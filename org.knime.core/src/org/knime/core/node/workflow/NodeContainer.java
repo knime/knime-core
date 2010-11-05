@@ -67,6 +67,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitor;
@@ -75,7 +76,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -1170,13 +1170,15 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation
      * should be copied also (false when individual nodes are copied
      * but true when an entire meta node is copied).
-     * @param copyNCNodeDir If to keep the location of the node directories
-     *        (important for undo of delete commands, see
-     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
+     * @param isUndoableDeleteCommand If to keep the location of the
+     *        node directories (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
+     *        for details.)
      * @return A new persistor for copying. */
     protected abstract NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags, boolean copyNCNodeDir);
+            final boolean preserveDeletableFlags,
+            final boolean isUndoableDeleteCommand);
 
     /**
      * @param directory the nodeContainerDirectory to set
@@ -1206,11 +1208,12 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param preserveNodeMessage Whether possible node messages in the
      *        persistor are to be preserved (parameter to configure method
      *        that is called during load).
-     * @return The list of nodes that were inserted, for single node containers
-     *         the result is an empty array.
+     * @return The workflow content that was inserted (NodeID's and
+     *         annotations), for single node containers the result is null.
      * @throws CanceledExecutionException If canceled.
      */
-    abstract NodeID[] loadContent(final NodeContainerPersistor persistor,
+    abstract WorkflowCopyContent loadContent(
+            final NodeContainerPersistor persistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final FlowObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)

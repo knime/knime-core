@@ -84,14 +84,15 @@ final class CopySingleNodeContainerPersistor implements
      * @param original To copy from
      * @param preserveDeletableFlag Whether to keep the "is-deletable" flags
      *        in the target.
-     * @param copyNCNodeDir If to keep the location of the node directories
-     *        (important for undo of delete commands, see
-     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
+     * @param isUndoableDeleteCommand If to keep the location of the node
+     *        directories (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
+     *        for details.)
      */
     public CopySingleNodeContainerPersistor(
             final SingleNodeContainer original,
             final boolean preserveDeletableFlag,
-            final boolean copyNCNodeDir) {
+            final boolean isUndoableDeleteCommand) {
         Node originalNode = original.getNode();
         FlowObjectStack stack = original.getFlowObjectStack();
         List<FlowObject> objs;
@@ -109,7 +110,7 @@ final class CopySingleNodeContainerPersistor implements
         m_nodeFactory = originalNode.getFactory();
         m_nodePersistor = originalNode.createCopyPersistor();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
-                original, preserveDeletableFlag, copyNCNodeDir);
+                original, preserveDeletableFlag, isUndoableDeleteCommand);
     }
 
     /** {@inheritDoc} */

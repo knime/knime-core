@@ -200,7 +200,7 @@ public class DeleteCommand extends Command {
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
             WorkflowCopyContent content = new WorkflowCopyContent();
             content.setNodeIDs(m_nodeIDs);
-            content.setAnnotationReferences(m_annotations);
+            content.setAnnotation(m_annotations);
             m_undoPersitor = m_manager.copy(true, content);
         }
         for (NodeID id : m_nodeIDs) {

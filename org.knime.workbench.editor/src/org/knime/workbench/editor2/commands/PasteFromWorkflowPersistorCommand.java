@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,6 +63,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
@@ -80,8 +82,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     private final WorkflowEditor m_editor;
     private ShiftCalculator m_shiftCalculator;
 
-    private NodeID[] m_pastedIDs;
-    private WorkflowAnnotation[] m_workflowAnnotations;
+    private WorkflowCopyContent m_pastedContent;
 
     /**
      * @param editor The workflow to paste into
@@ -119,15 +120,27 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     public void execute() {
         WorkflowManager manager = m_editor.getWorkflowManager();
         WorkflowPersistor copyPersistor = m_clipboardObject.getCopyPersistor();
-        m_pastedIDs = manager.paste(copyPersistor);
-        List<WorkflowAnnotation> t = copyPersistor.getWorkflowAnnotations();
-        m_workflowAnnotations = t.toArray(new WorkflowAnnotation[t.size()]);
+        m_pastedContent = manager.paste(copyPersistor);
+        NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
+        WorkflowAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
         Set<NodeID> newIDs = new HashSet<NodeID>(); // fast lookup below
+        List<int[]> insertedElementBounds = new ArrayList<int[]>();
+        for (NodeID i : pastedNodes) {
+            NodeContainer nc = manager.getNodeContainer(i);
+            NodeUIInformation ui = (NodeUIInformation)nc.getUIInformation();
+            int[] bounds = ui.getBounds();
+            insertedElementBounds.add(bounds);
+        }
+        for (WorkflowAnnotation a : pastedAnnos) {
+            int[] bounds =
+                new int[] {a.getX(), a.getY(), a.getWidth(), a.getHeight()};
+            insertedElementBounds.add(bounds);
+        }
         int[] moveDist = m_shiftCalculator.calculateShift(
-                m_pastedIDs, manager, m_clipboardObject);
+                insertedElementBounds, manager, m_clipboardObject);
         // for redo-operations we need the exact same shift.
         m_shiftCalculator = new FixedShiftCalculator(moveDist);
-        for (NodeID id : m_pastedIDs) {
+        for (NodeID id : pastedNodes) {
             newIDs.add(id);
             NodeContainer nc = manager.getNodeContainer(id);
             NodeUIInformation oldUI = (NodeUIInformation)nc.getUIInformation();
@@ -148,7 +161,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
                 }
             }
         }
-        for (WorkflowAnnotation a : m_workflowAnnotations) {
+        for (WorkflowAnnotation a : pastedAnnos) {
             a.shiftPosition(moveDist[0], moveDist[1]);
         }
 
@@ -159,7 +172,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
                 && partViewer.getRootEditPart().getContents()
                 instanceof WorkflowRootEditPart) {
             ((WorkflowRootEditPart)partViewer.getRootEditPart().getContents())
-                .setFutureSelection(m_pastedIDs);
+                .setFutureSelection(pastedNodes);
         }
     }
 
@@ -167,11 +180,13 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     @Override
     public boolean canUndo() {
         WorkflowManager manager = m_editor.getWorkflowManager();
-        if (m_pastedIDs == null || m_pastedIDs.length == 0
-                || m_workflowAnnotations.length == 0) {
+        NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
+        WorkflowAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
+        if ((pastedNodes == null || pastedNodes.length == 0)
+                && (pastedAnnos == null || pastedAnnos.length == 0)) {
             return false;
         }
-        for (NodeID id : m_pastedIDs) {
+        for (NodeID id : pastedNodes) {
             if (!manager.canRemoveNode(id)) {
                 return false;
             }
@@ -183,19 +198,12 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     @Override
     public void undo() {
         WorkflowManager manager = m_editor.getWorkflowManager();
-        for (NodeID id : m_pastedIDs) {
-            manager.removeNode(id); // will skip unknown ids
+        for (NodeID id : m_pastedContent.getNodeIDs()) {
+            manager.removeNode(id);
         }
-        for (WorkflowAnnotation anno : m_workflowAnnotations) {
+        for (WorkflowAnnotation anno : m_pastedContent.getAnnotations()) {
             manager.removeAnnotation(anno);
         }
-    }
-
-    /**
-     * @return the pastedIDs
-     */
-    public NodeID[] getPastedIDs() {
-        return m_pastedIDs;
     }
 
     /**
@@ -205,13 +213,13 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
      */
     public abstract static class ShiftCalculator {
 
-        /** Calculates the shift (offset) when inserting nodes.
-         * @param ids The nodes that were inserted.
+        /** Calculates the shift (offset) when inserting nodes/annotations.
+         * @param bounds The bounds of the inserted elements
          * @param manager The manager where they were inserted.
          * @param clipObject The clipboard object (for retrieval counter)
          * @return The shift (array of length 2).
          */
-        public abstract int[] calculateShift(final NodeID[] ids,
+        public abstract int[] calculateShift(Iterable<int[]> bounds,
                 final WorkflowManager manager,
                 final ClipboardObject clipObject);
     }
@@ -232,7 +240,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
         /** {@inheritDoc} */
         @Override
         public int[] calculateShift(
-                final NodeID[] ids, final WorkflowManager manager,
+                final Iterable<int[]> bounds, final WorkflowManager manager,
                 final ClipboardObject clipObject) {
             return m_moveDist;
         }

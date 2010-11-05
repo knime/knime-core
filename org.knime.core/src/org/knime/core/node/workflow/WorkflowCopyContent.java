@@ -72,28 +72,17 @@ public final class WorkflowCopyContent {
 
     /** @return the annotations, never null */
     public WorkflowAnnotation[] getAnnotations() {
-        return m_annotations != null
-            ? m_annotations : new WorkflowAnnotation[0];
-    }
-
-    /** Clones the argument annotations and keeps the clone.
-     * @param annotations the annotations to set */
-    public void setAndCloneAnnotations(
-            final WorkflowAnnotation... annotations) {
-        m_annotations = new WorkflowAnnotation[annotations.length];
-        for (int i = 0; i < annotations.length; i++) {
-            m_annotations[i] = annotations[i].clone();
+        if (m_annotations == null) {
+            return new WorkflowAnnotation[0];
+        } else {
+            return m_annotations;
         }
     }
 
-    /** Sets annotation references. This is used from the undo persistors
-     * (DeleteCommand) to make sure that the very same annotations are inserted
-     * back into the workflow. They need to be the same to allow undo for
-     * previous executed command (that are possibly also undone).
+    /** Sets annotation references.
      * @param annotations The annotations references.
      */
-    public void setAnnotationReferences(
-            final WorkflowAnnotation... annotations) {
+    public void setAnnotation(final WorkflowAnnotation... annotations) {
         m_annotations = annotations;
     }
 

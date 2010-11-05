@@ -83,12 +83,14 @@ implements NodeContainerMetaPersistor {
      * @param original To copy from
      * @param preserveDeletableFlag Whether to keep the "is-deletable" flags
      *        in the target.
-     * @param copyNCNodeDir If to keep the location of the node directories
-     *        (important for undo of delete commands, see
-     *        {@link WorkflowManager#copy(boolean, NodeID...)} for details.)
+     * @param isUndoableDeleteCommand If to keep the location of the node
+     *        directories (important for undo of delete commands, see
+     *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
+     *        for details.)
      */
     CopyNodeContainerMetaPersistor(final NodeContainer original,
-            final boolean preserveDeletableFlag, final boolean copyNCNodeDir) {
+            final boolean preserveDeletableFlag,
+            final boolean isUndoableDeleteCommand) {
         m_customName = original.getCustomName();
         m_customDescription = original.getCustomDescription();
         m_nodeIDSuffix = original.getID().getIndex();
@@ -114,7 +116,7 @@ implements NodeContainerMetaPersistor {
             m_uiInformation = null;
         }
         m_isDeletable = !preserveDeletableFlag || original.isDeletable();
-        if (copyNCNodeDir) {
+        if (isUndoableDeleteCommand) {
             m_ncDirRef = original.getNodeContainerDirectory();
         } else {
             m_ncDirRef = null;
