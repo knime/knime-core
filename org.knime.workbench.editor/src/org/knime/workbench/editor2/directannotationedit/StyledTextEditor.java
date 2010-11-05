@@ -55,6 +55,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
@@ -96,8 +97,9 @@ public class StyledTextEditor extends CellEditor {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(StyledTextEditor.class);
 
-    /** height of the font style toolbar in the editor control */
-    public static final int TOOLBAR_HEIGHT = 16;
+    /** height of the font style toolbar in the editor control. */
+    public static final int TOOLBAR_HEIGHT =
+        Platform.OS_LINUX.equals(Platform.getOS()) ? 22 : 16;
 
     private StyledText m_styledText;
 
