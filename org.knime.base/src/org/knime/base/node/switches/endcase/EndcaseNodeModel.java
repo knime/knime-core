@@ -213,6 +213,7 @@ implements InactiveBranchConsumer {
         for (BufferedDataTable t : tables) {
             totalRowCount += t.getRowCount();
             dtables[i] = (DataTable)t;
+            i++;
         }
 
         AppendedRowsTable out = new AppendedRowsTable(
