@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -68,18 +68,18 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderNodeModel extends NodeModel {
-    
+
     private DataTableSpec m_lastSpec = null;
-    
+
     private String m_query = null;
-    
-    private final DatabaseReaderConnection m_load = 
+
+    private final DatabaseReaderConnection m_load =
         new DatabaseReaderConnection(null);
-    
+
     /**
      * Creates a new database reader with one data out-port.
      * @param ins number data input ports
@@ -94,12 +94,12 @@ class DBReaderNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         try {
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
-                    m_load.getQueryConnection(), m_query));
+                    m_load.getQueryConnection(), parseQuery(m_query)));
             m_lastSpec = m_load.getDataTableSpec();
             exec.setProgress("Reading data from database...");
             return new BufferedDataTable[]{m_load.createTable(exec)};
@@ -115,11 +115,48 @@ class DBReaderNodeModel extends NodeModel {
     }
 
     /**
+     * Parses the given R command and replaces the variables.
+     * @param rCommand the R command to parse
+     * @param model delegator to to retrieve variables
+     * @return the R script where the variables have been replace with
+     *         their actual value
+     */
+    private String parseQuery(final String query) {
+        String command = new String(query);
+        int currentIndex = 0;
+        do {
+            currentIndex = command.indexOf("$${", currentIndex);
+            if (currentIndex < 0) {
+                break;
+            }
+            int endIndex = command.indexOf("}$$", currentIndex);
+            String var = command.substring(currentIndex + 4, endIndex);
+            switch (command.charAt(currentIndex + 3)) {
+                case 'I' :
+                    int i = peekFlowVariableInt(var);
+                    command = command.replace(
+                            "$${I" + var + "}$$", Integer.toString(i));
+                    break;
+                case 'D' :
+                    double d = peekFlowVariableDouble(var);
+                    command = command.replace(
+                            "$${D" + var + "}$$", Double.toString(d));
+                    break;
+                case 'S' :
+                    String s = peekFlowVariableString(var);
+                    command = command.replace("$${S" + var + "}$$", s);
+                    break;
+            }
+        } while (true);
+        return command;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-
+        // empty
     }
 
     /**
@@ -131,12 +168,12 @@ class DBReaderNodeModel extends NodeModel {
         File specFile = null;
         specFile = new File(nodeInternDir, "spec.xml");
         if (!specFile.exists()) {
-            IOException ioe = new IOException("Spec file (\"" 
+            IOException ioe = new IOException("Spec file (\""
                     + specFile.getAbsolutePath() + "\") does not exist "
                     + "(node may have been saved by an older version!)");
             throw ioe;
         }
-        NodeSettingsRO specSett = 
+        NodeSettingsRO specSett =
             NodeSettings.loadFromXML(new FileInputStream(specFile));
         try {
             m_lastSpec = DataTableSpec.load(specSett);
@@ -159,12 +196,12 @@ class DBReaderNodeModel extends NodeModel {
         File specFile = new File(nodeInternDir, "spec.xml");
         specSett.saveToXML(new FileOutputStream(specFile));
     }
- 
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
@@ -176,7 +213,7 @@ class DBReaderNodeModel extends NodeModel {
                         "No database connection available.");
             }
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
-                    conn, m_query));
+                    conn, parseQuery(m_query)));
             m_lastSpec = m_load.getDataTableSpec();
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
@@ -187,7 +224,7 @@ class DBReaderNodeModel extends NodeModel {
             throw new InvalidSettingsException(t);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -199,8 +236,8 @@ class DBReaderNodeModel extends NodeModel {
         if (query != null && query.contains(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
-                    "Database table place holder (" 
-                    + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER 
+                    "Database table place holder ("
+                    + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
                     + ") not replaced.");
         }
         // validates the current settings on a temp. connection
@@ -242,14 +279,14 @@ class DBReaderNodeModel extends NodeModel {
         }
         settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
     }
-    
+
     /**
      * @param newQuery the new query to set
      */
     final void setQuery(final String newQuery) {
         m_query = newQuery;
     }
-    
+
     /**
      * @return current query
      */

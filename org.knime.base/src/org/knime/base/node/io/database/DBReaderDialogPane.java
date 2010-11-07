@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,20 +44,28 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JEditorPane;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -65,25 +73,31 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.workflow.FlowVariable;
+
 
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderDialogPane extends NodeDialogPane {
-    
+
     private final DBDialogPane m_loginPane = new DBDialogPane();
-  
+
     private final JEditorPane m_statmnt = new JEditorPane("text", "");
-    
+
+    private final DefaultListModel m_listModelVars;
+    private final JList m_listVars;
+
     /**
      * Creates new dialog.
      */
     DBReaderDialogPane() {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
-        m_statmnt.setText("SELECT * FROM " 
+        m_statmnt.setText("SELECT * FROM "
                 + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
@@ -92,8 +106,61 @@ class DBReaderDialogPane extends NodeDialogPane {
                 .createTitledBorder(" SQL Statement "));
         JPanel allPanel = new JPanel(new BorderLayout());
         allPanel.add(m_loginPane, BorderLayout.NORTH);
-        allPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // init variable list
+        m_listModelVars = new DefaultListModel();
+        m_listVars = new JList(m_listModelVars);
+
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+            JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+            jsp.setResizeWeight(1 / 4d);
+            jsp.setRightComponent(scrollPane);
+
+            m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
+            m_listVars.addMouseListener(new MouseAdapter() {
+                /** {@inheritDoc} */
+                @Override
+                public final void mouseClicked(final MouseEvent e) {
+                    Object o = m_listVars.getSelectedValue();
+                    if (o != null) {
+                        FlowVariable var = (FlowVariable) o;
+                        m_statmnt.replaceSelection(extendVariable(var));
+                        m_listVars.clearSelection();
+                        m_statmnt.requestFocus();
+                    }
+                }
+            });
+            JScrollPane scrollVars = new JScrollPane(m_listVars,
+                    ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scrollVars.setBorder(BorderFactory.createTitledBorder(
+                " Flow Variable List "));
+            jsp.setLeftComponent(scrollVars);
+            allPanel.add(jsp, BorderLayout.CENTER);
+        } else {
+            allPanel.add(scrollPane, BorderLayout.CENTER);
+        }
         super.addTab("Settings", allPanel);
+    }
+
+    /**
+     * Replaces and returns the given flow variable.
+     * @param var flow variable to be extended
+     * @return the new variable as string with pre- and suffix for
+     *         INTEGER, DOUBLE and STRING types
+     */
+    private String extendVariable(final FlowVariable var) {
+        switch (var.getType()) {
+            case INTEGER :
+                return "$${I" + var.getName() + "}$$";
+            case DOUBLE :
+                return "$${D" + var.getName() + "}$$";
+            case STRING :
+                return "$${S" + var.getName() + "}$$";
+            default : throw new RuntimeException(
+                "Unsupported flow variable type '" + var.getType() + "'");
+        }
     }
 
     /**
@@ -105,12 +172,18 @@ class DBReaderDialogPane extends NodeDialogPane {
 	Collection<String> creds = super.getCredentialsNames();
         m_loginPane.loadSettingsFrom(settings, specs, creds);
         // statement
-        String statement = 
-            settings.getString(DatabaseConnectionSettings.CFG_STATEMENT, null); 
-        m_statmnt.setText(statement == null 
-                ? "SELECT * FROM " 
-                        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER 
+        String statement =
+            settings.getString(DatabaseConnectionSettings.CFG_STATEMENT, null);
+        m_statmnt.setText(statement == null
+                ? "SELECT * FROM "
+                        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
                 : statement);
+        // update list of flow/workflow variables
+        m_listModelVars.removeAllElements();
+        for (Map.Entry<String, FlowVariable> e
+                : getAvailableFlowVariables().entrySet()) {
+            m_listModelVars.addElement(e.getValue());
+        }
     }
 
     /**
@@ -120,7 +193,7 @@ class DBReaderDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_loginPane.saveSettingsTo(settings);
-        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, 
+        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT,
                 m_statmnt.getText().trim());
     }
 }
