@@ -194,6 +194,12 @@ implements InactiveBranchConsumer {
             // all inactive or not connected, return first PO (which must
             // be connected!)
             assert inData[0] instanceof InactiveBranchPortObject;
+            if (m_enableHiliting) {
+                // create empty hilite translation map (so we correctly
+                // handle the internals).
+                Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
+                m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
+            }
             return new PortObject[]{ inData[0] };
         }
         assert tables.size() > 0;

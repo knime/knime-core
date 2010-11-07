@@ -158,6 +158,12 @@ implements InactiveBranchConsumer {
     @Override
     protected PortObject[] execute(final PortObject[] rawInData,
             final ExecutionContext exec) throws Exception {
+        if (m_enableHiliting) {
+            // create empty hilite translation map (so we correctly
+            // handle the internals even if we return with a IBPO:
+            Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
+            m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
+        }
         if (rawInData[0] instanceof InactiveBranchPortObject) {
             return new PortObject[]{rawInData[1]};
         }
