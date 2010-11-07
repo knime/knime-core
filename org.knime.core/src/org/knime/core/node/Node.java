@@ -748,7 +748,16 @@ public final class Node implements NodeModelWarningListener {
             for (int i = 0; i < rawData.length; i++) {
                 if (rawData[i] instanceof InactiveBranchPortObject) {
                     // one incoming object=IBPO is enough to skip
-                    // the entire execution of this node:
+                    // the entire execution of this node. But first check
+                    // if it's the end of a loop:
+                    if (m_model instanceof LoopEndNode) {
+                        // we can not handle this case: the End Loop node needs to
+                        // trigger re-exeuction which it won't in an inactive branch
+                        createErrorMessageAndNotify("Loop End node in inactive "
+                                + "branch not allowed.");
+                        return false;
+                    }
+                    // normal node: skip execution
                     PortObject[] outs = new PortObject[getNrOutPorts()];
                     Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
                     setOutPortObjects(outs, false);
