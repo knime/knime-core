@@ -271,8 +271,17 @@ public final class Expression {
             buffer.append("\n");
         }
 
-        buffer.append("public class " + name + " {");
-        buffer.append("\n");
+        for (Class<?> c : REQUIRED_COMPILATION_UNITS) {
+            buffer.append("import ");
+            buffer.append(c.getName());
+            buffer.append(";");
+            buffer.append("\n");
+        }
+
+        buffer.append("public class ").append(name);
+        buffer.append(" extends ");
+        buffer.append(AbstractSnippetExpression.class.getSimpleName());
+        buffer.append(" {\n");
         buffer.append("\n");
 
         /* Add the source fields */
