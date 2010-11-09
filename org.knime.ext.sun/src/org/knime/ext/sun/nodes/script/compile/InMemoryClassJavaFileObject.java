@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -45,42 +45,43 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
+ * History
+ *   Dec 31, 2009 (wiswedel): created
  */
-package org.knime.ext.sun.nodes.script.expression;
+package org.knime.ext.sun.nodes.script.compile;
 
-/** Declared exception in the evaluate method of a snippet to abort the entire
- * execution.
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+
+import javax.tools.SimpleJavaFileObject;
+
+/**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class Abort extends Exception {
+final class InMemoryClassJavaFileObject extends SimpleJavaFileObject {
+    private ByteArrayOutputStream m_classStream;
 
-    /** Empty abort. */
-    Abort() {
-        super();
+    /** Constructs new java class file object.
+     * @param className The name of the class file.
+     */
+    InMemoryClassJavaFileObject(final String className) {
+        super(URI.create("file:/" + className.replace('.', '/')
+                + Kind.CLASS.extension), Kind.CLASS);
     }
 
-    /** Abort with all details.
-     * @param message The message
-     * @param cause The cause
-     */
-    public Abort(final String message, final Throwable cause) {
-        super(message, cause);
+    /** {@inheritDoc} */
+    @Override
+    public OutputStream openOutputStream() throws IOException {
+        m_classStream = new ByteArrayOutputStream();
+        return m_classStream;
     }
 
-    /** Abort with message.
-     * @param message The message
-     */
-    public Abort(final String message) {
-        super(message);
-    }
-
-    /** Abort with cause.
-     * @param cause The cause.
-     */
-    public Abort(final Throwable cause) {
-        super(cause);
+    /** @return the classStream */
+    public byte[] getClassStream() {
+        return m_classStream.toByteArray();
     }
 
 }

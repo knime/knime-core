@@ -48,39 +48,16 @@
  */
 package org.knime.ext.sun.nodes.script.expression;
 
-/** Declared exception in the evaluate method of a snippet to abort the entire
- * execution.
+/** Abstract class that is extended by the dynamically generated expression
+ * instances.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class Abort extends Exception {
+public abstract class AbstractSnippetExpression {
 
-    /** Empty abort. */
-    Abort() {
-        super();
-    }
-
-    /** Abort with all details.
-     * @param message The message
-     * @param cause The cause
+    /** Overridden by the expression instances. 
+     * @return The result.
+     * @throws Abort If entire execution is aborted.
      */
-    public Abort(final String message, final Throwable cause) {
-        super(message, cause);
-    }
-
-    /** Abort with message.
-     * @param message The message
-     */
-    public Abort(final String message) {
-        super(message);
-    }
-
-    /** Abort with cause.
-     * @param cause The cause.
-     */
-    public Abort(final Throwable cause) {
-        super(cause);
-    }
-
+    public abstract Object internalEvaluate() throws Abort;
 }

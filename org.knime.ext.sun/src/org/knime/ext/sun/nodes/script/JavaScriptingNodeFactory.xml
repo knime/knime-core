@@ -44,6 +44,14 @@
 	           to include such external jar or zip files, add their location
 	           in the "Additional Libraries" tab using the control buttons.  
 	        </p>
+	        <p>
+	           Exceptions in the snippet are catched by the framework and will
+	           result in a missing value for the current row. If the snippet
+	           throws an exception of class <tt>Abort</tt> (an inner class that 
+	           is available to each snippet without further import statements), 
+	           the entire execution will halt, using the exception message
+	           as error that is presented to the user.   
+	        </p>
 		</intro>
 		<option name="Column List">
 		  The list contains the column that are available in the input table.

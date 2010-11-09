@@ -17,6 +17,18 @@
             expert-flag="true"
             factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory">
+      </node>
    </extension>
 
 </plugin>

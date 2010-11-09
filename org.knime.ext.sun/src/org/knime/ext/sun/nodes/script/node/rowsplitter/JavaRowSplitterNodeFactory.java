@@ -1,4 +1,4 @@
-/*  
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -40,34 +40,83 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- * 
+ * ------------------------------------------------------------------------
+ *
  */
-package org.knime.ext.sun.nodes.script.expression;
+package org.knime.ext.sun.nodes.script.node.rowsplitter;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.ext.sun.nodes.script.JavaScriptingNodeDialog;
+import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
+import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetBooleanType;
 
 /**
- * An exception being thrown when the compilation fails.
- * 
- * @author Bernd Wiswedel, University of Konstanz
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class CompilationFailedException extends Exception {
+public class JavaRowSplitterNodeFactory extends
+        NodeFactory<JavaRowSplitterNodeModel> {
+
+    private final boolean m_hasFalsePort;
+    private final JavaScriptingCustomizer m_customizer;
+
     /**
-     * @param msg detailed (more or less) error message
-     * @see Exception#Exception(java.lang.String)
+     *
      */
-    public CompilationFailedException(final String msg) {
-        super(msg);
+    public JavaRowSplitterNodeFactory() {
+        this(true);
     }
 
     /**
-     * @param msg detailed (more or less) error message
-     * @param cause the cause for this exception
-     * @see Exception#Exception(java.lang.Throwable)
+     *
      */
-    public CompilationFailedException(final String msg, final Throwable cause) {
-        super(msg, cause);
+    protected JavaRowSplitterNodeFactory(final boolean hasFalsePort) {
+        m_hasFalsePort = hasFalsePort;
+        m_customizer = new JavaScriptingCustomizer();
+        m_customizer.setShowArrayReturn(false);
+        m_customizer.setOutputIsVariable(false);
+        m_customizer.setReturnTypes(JavaSnippetBooleanType.INSTANCE);
+        m_customizer.setShowColumnList(true);
+        m_customizer.setShowGlobalDeclarationList(true);
+        m_customizer.setShowInsertMissingAsNull(true);
+        m_customizer.setShowOutputPanel(false);
+        m_customizer.setShowOutputTypePanel(false);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public JavaRowSplitterNodeModel createNodeModel() {
+        return new JavaRowSplitterNodeModel(m_customizer, m_hasFalsePort);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<JavaRowSplitterNodeModel> createNodeView(
+            final int viewIndex, final JavaRowSplitterNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new JavaScriptingNodeDialog(m_customizer);
+    }
+
 }

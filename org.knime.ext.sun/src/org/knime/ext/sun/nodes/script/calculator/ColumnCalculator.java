@@ -63,6 +63,7 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.ext.sun.nodes.script.expression.Abort;
 import org.knime.ext.sun.nodes.script.expression.EvaluationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
@@ -97,8 +98,6 @@ public class ColumnCalculator implements CellFactory {
      * before calculate is called.
      */
     private int m_lastProcessedRow = 0;
-
-
 
     /**
      * Creates new factory for a column appender. It creates an instance of the
@@ -147,6 +146,7 @@ public class ColumnCalculator implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         m_lastProcessedRow = curRowNr;
+        
         exec.setProgress(curRowNr / (double)rowCount, "Calculated row "
                 + curRowNr + " (\"" + lastKey + "\")");
     }
@@ -231,6 +231,11 @@ public class ColumnCalculator implements CellFactory {
             m_expression.set(nameValueMap);
             o = m_expression.evaluate();
             // class correctness is asserted by compiler
+        } catch (Abort ee) {
+            StringBuilder builder = new StringBuilder("Calculation aborted: ");
+            String message = ee.getMessage();
+            builder.append(message == null ? "<no details>" : message);
+            throw new RuntimeException(builder.toString(), ee);
         } catch (EvaluationFailedException ee) {
             Throwable cause = ee.getCause();
             if (cause instanceof InvocationTargetException) {

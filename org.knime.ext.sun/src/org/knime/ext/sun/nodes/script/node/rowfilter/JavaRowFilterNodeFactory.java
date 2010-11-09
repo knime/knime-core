@@ -46,41 +46,21 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.ext.sun.nodes.script.expression;
+package org.knime.ext.sun.nodes.script.node.rowfilter;
 
-/** Declared exception in the evaluate method of a snippet to abort the entire
- * execution.
+import org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory;
+
+/**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class Abort extends Exception {
+public class JavaRowFilterNodeFactory extends JavaRowSplitterNodeFactory {
 
-    /** Empty abort. */
-    Abort() {
-        super();
-    }
-
-    /** Abort with all details.
-     * @param message The message
-     * @param cause The cause
+    /**
+     *
      */
-    public Abort(final String message, final Throwable cause) {
-        super(message, cause);
-    }
-
-    /** Abort with message.
-     * @param message The message
-     */
-    public Abort(final String message) {
-        super(message);
-    }
-
-    /** Abort with cause.
-     * @param cause The cause.
-     */
-    public Abort(final Throwable cause) {
-        super(cause);
+    public JavaRowFilterNodeFactory() {
+        super(false);
     }
 
 }

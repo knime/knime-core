@@ -49,7 +49,6 @@
 package org.knime.ext.sun.nodes.script.expression;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
@@ -64,19 +63,19 @@ import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
 public class ExpressionInstance {
     private final Map<InputField, ExpressionField> m_fieldMap;
 
-    private final Object m_compiled;
+    private final AbstractSnippetExpression m_abstractExpression;
 
     /**
      * Creates new expression instance wrapping a compiled object with that has
      * fields according to the properties argument.
      *
-     * @param compiled the object being wrapped. Must have an
-     *            <code>internalEvaluate</code> method.
+     * @param abstracExpression the object being wrapped.
      * @param fieldMap map of field name to field class
      */
-    protected ExpressionInstance(final Object compiled,
+    protected ExpressionInstance(
+            final AbstractSnippetExpression abstracExpression,
             final Map<InputField, ExpressionField> fieldMap) {
-        m_compiled = compiled;
+        m_abstractExpression = abstracExpression;
         m_fieldMap = fieldMap;
     }
 
@@ -85,13 +84,13 @@ public class ExpressionInstance {
      *
      * @return the result of the evaluation
      * @throws EvaluationFailedException if the evaluation fails for any reason
+     * @throws Abort If snippet code throws Abort exception.
      */
-    public final Object evaluate() throws EvaluationFailedException {
+    public final Object evaluate() throws EvaluationFailedException, Abort {
         try {
-            Method eval = m_compiled.getClass().getMethod("internalEvaluate",
-                    (Class[])null);
-            Object result = eval.invoke(m_compiled);
-            return result;
+            return m_abstractExpression.internalEvaluate();
+        } catch (Abort a) {
+            throw a;
         } catch (Throwable throwable) {
             throw new EvaluationFailedException(throwable);
         }
@@ -158,10 +157,10 @@ public class ExpressionInstance {
             throws IllegalPropertyException {
         String fieldType = "<UNKNOWN>";
         try {
-            Class<?> type = m_compiled.getClass();
+            Class<?> type = m_abstractExpression.getClass();
             Field f = type.getDeclaredField(property);
             fieldType = f.getType().getName();
-            f.set(m_compiled, value);
+            f.set(m_abstractExpression, value);
         } catch (NoSuchFieldException e) {
             throw new IllegalPropertyException("Unknown Field: " + property, e);
         } catch (IllegalAccessException e) {

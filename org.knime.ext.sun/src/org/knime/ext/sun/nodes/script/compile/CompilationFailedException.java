@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,47 +40,34 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  */
-package org.knime.ext.sun.nodes.script.expression;
+package org.knime.ext.sun.nodes.script.compile;
 
-/** Declared exception in the evaluate method of a snippet to abort the entire
- * execution.
+/**
+ * An exception being thrown when the compilation fails.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, University of Konstanz
  */
-@SuppressWarnings("serial")
-public class Abort extends Exception {
-
-    /** Empty abort. */
-    Abort() {
-        super();
-    }
-
-    /** Abort with all details.
-     * @param message The message
-     * @param cause The cause
+public class CompilationFailedException extends Exception {
+    /**
+     * @param msg detailed (more or less) error message
+     * @see Exception#Exception(java.lang.String)
      */
-    public Abort(final String message, final Throwable cause) {
-        super(message, cause);
+    public CompilationFailedException(final String msg) {
+        super(msg);
     }
 
-    /** Abort with message.
-     * @param message The message
+    /**
+     * @param msg detailed (more or less) error message
+     * @param cause the cause for this exception
+     * @see Exception#Exception(java.lang.Throwable)
      */
-    public Abort(final String message) {
-        super(message);
+    public CompilationFailedException(final String msg, final Throwable cause) {
+        super(msg, cause);
     }
-
-    /** Abort with cause.
-     * @param cause The cause.
-     */
-    public Abort(final Throwable cause) {
-        super(cause);
-    }
-
 }

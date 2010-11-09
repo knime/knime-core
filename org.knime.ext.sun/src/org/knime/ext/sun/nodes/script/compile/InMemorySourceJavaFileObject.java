@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2009
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -45,42 +45,82 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
+ * History
+ *   Dec 31, 2009 (wiswedel): created
  */
-package org.knime.ext.sun.nodes.script.expression;
+package org.knime.ext.sun.nodes.script.compile;
 
-/** Declared exception in the evaluate method of a snippet to abort the entire
- * execution.
- *
+import java.io.IOException;
+import java.net.URI;
+
+import javax.tools.SimpleJavaFileObject;
+
+/**
+ * Represents an in-memory java file object.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class Abort extends Exception {
+public final class InMemorySourceJavaFileObject extends SimpleJavaFileObject {
 
-    /** Empty abort. */
-    Abort() {
-        super();
+    private final String m_source;
+    private final String m_className;
+
+    /** Create a new in-memory java source object.
+     * @param className The class name (including path)
+     * @param source The java source code.
+     */
+    public InMemorySourceJavaFileObject(
+            final String className, final String source) {
+        super(URI.create("file:/" + className.replace('.', '/')
+                + Kind.SOURCE.extension), Kind.SOURCE);
+        if (source == null) {
+            throw new NullPointerException("Source must not be null");
+        }
+        m_className = className;
+        m_source = source;
     }
 
-    /** Abort with all details.
-     * @param message The message
-     * @param cause The cause
-     */
-    public Abort(final String message, final Throwable cause) {
-        super(message, cause);
+    /** {@inheritDoc} */
+    @Override
+    public CharSequence getCharContent(final boolean ignoreEncodingErrors)
+            throws IOException {
+        return m_source;
     }
 
-    /** Abort with message.
-     * @param message The message
-     */
-    public Abort(final String message) {
-        super(message);
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return m_source;
     }
 
-    /** Abort with cause.
-     * @param cause The cause.
-     */
-    public Abort(final Throwable cause) {
-        super(cause);
+    /** @return the source */
+    public String getSource() {
+        return m_source;
+    }
+
+    /** @return the className */
+    public String getClassName() {
+        return m_className;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return m_className.hashCode() ^ m_source.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof InMemorySourceJavaFileObject) {
+            InMemorySourceJavaFileObject other =
+                (InMemorySourceJavaFileObject)obj;
+            return other.m_className.equals(m_className)
+                && other.m_source.equals(m_source);
+        }
+        return false;
     }
 
 }
