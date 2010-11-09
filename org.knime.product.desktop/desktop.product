@@ -30,7 +30,7 @@ All other trademarks are the property of their respective owners.
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
-      <vmArgs>-Xmx512m -XX:MaxPermSize=128m -server</vmArgs>
+      <vmArgs>-Xmx512m -XX:MaxPermSize=128m -server -Dknime.expert.mode=false</vmArgs>
    </launcherArgs>
 
    <windowImages i128="/org.knime.product/icons/gif/knime128.gif" i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif"/>
