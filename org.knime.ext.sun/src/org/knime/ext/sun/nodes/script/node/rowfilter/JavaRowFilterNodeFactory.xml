@@ -9,9 +9,11 @@
               Java Snippet based Row Filter. Use the java editor to enter a
               boolean expression that is used to define whether an input row
               is passed to the output. For instance, to filter for every other
-              row, you could use an expression such as <pre>
-return $$ROWINDEX$$ % 2 == 0;</pre>
+              row, you could use an expression such as
             </p>
+            <pre>
+return $$ROWINDEX$$ % 2 == 0;
+            </pre>
             <p>
               This node supports missing values as input, which are represented
               as <tt>null</tt> values. The expression must not return 
