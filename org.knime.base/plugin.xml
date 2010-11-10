@@ -243,14 +243,14 @@
       <category
             after="meta"
             description="nodes for loops, switches and other flow control operations"
-            icon="icons/missing.gif"
+            icon="icons/16x16/flow_control.png"
             level-id="flowcontrol"
             name="Flow Control"
             path="/">
       </category>
       <category
             description="Nodes for If/Case switch handling"
-            icon="icons/missing.gif"
+            icon="icons/16x16/switches.png"
             level-id="switches"
             name="Switches"
             path="/flowcontrol">
@@ -263,7 +263,7 @@
             path="/mining">
       </category>
       <category
-            icon="icons/missing.gif"
+            icon="icons/16x16/variables.png"
             level-id="variables"
             name="Variables"
             path="/flowcontrol">

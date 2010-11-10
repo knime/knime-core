@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="" type="Manipulator">
+<knimeNode icon="filter_java.png" type="Manipulator">
     <name>Java Snippet Row Filter</name>
     <shortDescription>Java Snippet based Row Filter</shortDescription>
     <fullDescription>
