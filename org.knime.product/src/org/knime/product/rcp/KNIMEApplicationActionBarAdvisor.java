@@ -276,7 +276,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
 
-        MenuManager fileMenu = new MenuManager("&File");
+        MenuManager fileMenu = new MenuManager("&File", "Filemenu");
         MenuManager editMenu =
                 new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
         MenuManager viewMenu =
@@ -304,6 +304,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_print);
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
+        fileMenu.add(new GroupMarker("SVGExport")); // Included as anchor for the optional SVGExport.
         fileMenu.add(new Separator());
         fileMenu.add(m_changeWorkspaceAction);
         fileMenu.add(new Separator());
@@ -394,6 +395,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
         // sort actions by view name
         Collections.sort(result, new Comparator<IAction>() {
+            @Override
             public int compare(final IAction o1, final IAction o2) {
                 if (o1 == null) {
                     return -1;
