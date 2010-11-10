@@ -249,7 +249,6 @@
             path="/">
       </category>
       <category
-            after="variables"
             description="Nodes for If/Case switch handling"
             icon="icons/missing.gif"
             level-id="switches"
