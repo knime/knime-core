@@ -128,7 +128,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** Error sign. */
     public static final Image ERROR_SIGN = ImageRepository
-            .getImage("icons/error.jpg");
+            .getImage("icons/error.png");
 
     /** Delete sign. */
     public static final Image DELETE_SIGN = ImageRepository

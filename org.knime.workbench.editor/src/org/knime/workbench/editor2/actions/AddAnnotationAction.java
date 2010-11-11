@@ -45,15 +45,12 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
- * History
- *   2010 10 26 (ohl): created
  */
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
+import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -76,8 +73,8 @@ public class AddAnnotationAction extends AbstractNodeAction {
     private int m_y;
 
     /**
-     * @param part
-     * @param style
+     * Create a new 'Add Annotation' action.
+     * @param editor underlying workflow editor
      */
     public AddAnnotationAction(final WorkflowEditor editor) {
         super(editor);
@@ -106,9 +103,8 @@ public class AddAnnotationAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        ISharedImages sharedImages =
-                PlatformUI.getWorkbench().getSharedImages();
-        return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_PASTE);
+        return ImageRepository
+        .getImageDescriptor("icons/annotation.png");
     }
 
     /**

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   16.03.2005 georg : renewed
+ *
  */
 package org.knime.workbench.editor2.figures;
 
@@ -56,12 +54,11 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.MarginBorder;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.jface.resource.JFaceResources;
-
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
  * Figure for displaying tool tips on warning/error signs.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WarnErrorToolTip extends Figure {
@@ -83,7 +80,7 @@ public class WarnErrorToolTip extends Figure {
 
     /**
      * Creates a new ToolTip.
-     * 
+     *
      * @param text The text to display
      * @param type The type of the tool tip to create (warning/error)
      */
@@ -96,7 +93,7 @@ public class WarnErrorToolTip extends Figure {
         if (type == WARNING) {
             m_tooltip.setIcon(ImageRepository.getImage("icons/warning.gif"));
         } else {
-            m_tooltip.setIcon(ImageRepository.getImage("icons/error.jpg"));
+            m_tooltip.setIcon(ImageRepository.getImage("icons/error.png"));
         }
         m_tooltip.setBorder(TOOL_TIP_BORDER);
         m_tooltip.setFont(JFaceResources.getDefaultFont());
@@ -108,7 +105,7 @@ public class WarnErrorToolTip extends Figure {
 
     /**
      * Sets the text to be shown as a tooltip.
-     * 
+     *
      * @param text The text to show
      */
     public void setText(final String text) {
