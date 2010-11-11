@@ -23,8 +23,6 @@
       </product>
    </extension>
    <extension point="org.eclipse.ui.commands">
-      <keyConfiguration description="KNIME Workbench Key Configuration" id="org.knime.product.keyConfiguration" name="KNIME Workbench Key Configuration">
-      </keyConfiguration>
       <command description="Creates a new KNIME project" id="open.new.project.wizard" name="New KNIME Project...">
       </command>
    </extension>
