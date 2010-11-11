@@ -83,8 +83,7 @@ public abstract class AbstractPortFigure extends Shape {
             float[] hsb = new float[3];
             java.awt.Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), hsb);
             hsb[2] = Math.min(1.0f, hsb[2] + ((1.0f - hsb[2]) * 0.67f));
-            int lCol =
-                    java.awt.Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+            int lCol = java.awt.Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
             return new Color(Display.getCurrent(), (lCol >> 16) & 0xFF,
                     (lCol >> 8) & 0xFF, lCol & 0xFF);
         } catch (Throwable t) {
@@ -285,8 +284,8 @@ public abstract class AbstractPortFigure extends Shape {
             if (getType().equals(FlowVariablePortObject.TYPE)) {
                 if (points.size() == 4) {
                     Rectangle p =
-                            new Rectangle(points.getPoint(0), points
-                                    .getPoint(2));
+                            new Rectangle(points.getPoint(0),
+                                    points.getPoint(2));
                     graphics.fillOval(p);
                 } else {
                     graphics.fillPolygon(points);
@@ -369,8 +368,8 @@ public abstract class AbstractPortFigure extends Shape {
             if (getType().equals(FlowVariablePortObject.TYPE)) {
                 if (points.size() == 4) {
                     Rectangle p =
-                            new Rectangle(points.getPoint(0), points
-                                    .getPoint(2));
+                            new Rectangle(points.getPoint(0),
+                                    points.getPoint(2));
                     graphics.drawOval(p);
                 } else {
                     graphics.drawPolygon(points);
