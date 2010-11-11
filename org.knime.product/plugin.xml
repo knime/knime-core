@@ -18,7 +18,7 @@
          </property>
          <property name="preferenceCustomization" value="plugin_customization.ini">
          </property>
-         <property name="windowImages" value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime64.gif">
+         <property name="windowImages" value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime48.gif,icons/gif/knime64.gif,icons/gif/knime128.gif">
          </property>
       </product>
    </extension>
