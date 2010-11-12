@@ -450,23 +450,23 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             m_uiListenerActive = true;
 
         }
-        if (uiInfo.isSymbolRelative()) {
-            // since ver2.3.0 all coordinates are relative to the icon
-            Point offset = fig.getOffsetToRefPoint(uiInfo);
-            bounds[0] -= offset.x;
-            bounds[1] -= offset.y;
-        } else {
+        if (!uiInfo.isSymbolRelative()) {
             // ui info from an earlier version - x/y is top top left coordinates
             // store symbol relative coordinates
             int xCorr = 29;
-            int yCorr = Platform.OS_LINUX.equals(Platform.getOS()) ? 10 : 15;
+            int yCorr = Platform.OS_LINUX.equals(Platform.getOS()) ? 18 : 15;
             // don't trigger another entry into this method
+            bounds[0] += xCorr;
+            bounds[1] += yCorr;
             m_uiListenerActive = false;
-            getNodeContainer().setUIInformation(
-                    new NodeUIInformation(bounds[0] + xCorr, bounds[1] + yCorr,
-                            bounds[2], bounds[3], true));
+            getNodeContainer().setUIInformation(new NodeUIInformation(
+                    bounds[0], bounds[1], bounds[2], bounds[3], true));
             m_uiListenerActive = true;
         }
+        // since ver2.3.0 all coordinates are relative to the icon
+        Point offset = fig.getOffsetToRefPoint(uiInfo);
+        bounds[0] -= offset.x;
+        bounds[1] -= offset.y;
         // set the new constraints in the parent edit part layouter
         Dimension pref = fig.getPreferredSize();
         if (bounds[2] < 0) {
@@ -765,6 +765,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             Integer fontSize = (Integer)pce.getNewValue();
             fig.setFontSize(fontSize);
             Display.getCurrent().syncExec(new Runnable() {
+                @Override
                 public void run() {
                     updateFigureFromUIinfo((NodeUIInformation)getNodeContainer()
                             .getUIInformation());
