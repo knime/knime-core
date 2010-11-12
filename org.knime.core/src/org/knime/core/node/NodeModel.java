@@ -1098,6 +1098,11 @@ public abstract class NodeModel {
     /** Holds the {@link FlowObjectStack} of this node. */
     private FlowObjectStack m_flowObjectStack;
 
+    /** Variables that were added by the node model. This is to fix bug 1771
+     * (flow object stack contains obsolete items). These elements will be
+     * pushed on the real node stack after execute. */
+    private FlowObjectStack m_outgoingFlowObjectStack;
+
     /** Get the value of the String variable with the given name leaving the
      * flow variable stack unmodified.
      * @param name Name of the variable
@@ -1107,8 +1112,13 @@ public abstract class NodeModel {
      * type is available.
      */
     protected final String peekFlowVariableString(final String name) {
-        return m_flowObjectStack.peekFlowVariable(
-                name, FlowVariable.Type.STRING).getStringValue();
+        try {
+            return m_outgoingFlowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.STRING).getStringValue();
+        } catch (NoSuchElementException e) {
+            return m_flowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.STRING).getStringValue();
+        }
     }
 
     /** Put a new variable of type double onto the stack. If such variable
@@ -1119,7 +1129,7 @@ public abstract class NodeModel {
      */
     protected final void pushFlowVariableDouble(
             final String name, final double value) {
-        m_flowObjectStack.push(new FlowVariable(name, value));
+        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Get the value of the double variable with the given name leaving the
@@ -1131,8 +1141,13 @@ public abstract class NodeModel {
      * type is available.
      */
     protected final double peekFlowVariableDouble(final String name) {
-        return m_flowObjectStack.peekFlowVariable(
-                name, FlowVariable.Type.DOUBLE).getDoubleValue();
+        try {
+            return m_outgoingFlowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.DOUBLE).getDoubleValue();
+        } catch (NoSuchElementException e) {
+            return m_flowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.DOUBLE).getDoubleValue();
+        }
     }
 
     /** Put a new variable of type integer onto the stack. If such variable
@@ -1143,7 +1158,7 @@ public abstract class NodeModel {
      */
     protected final void pushFlowVariableInt(
             final String name, final int value) {
-        m_flowObjectStack.push(new FlowVariable(name, value));
+        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Get the value of the integer variable with the given name leaving the
@@ -1155,8 +1170,13 @@ public abstract class NodeModel {
      * type is available.
      */
     protected final int peekFlowVariableInt(final String name) {
-        return m_flowObjectStack.peekFlowVariable(
-                name, FlowVariable.Type.INTEGER).getIntValue();
+        try {
+            return m_outgoingFlowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.INTEGER).getIntValue();
+        } catch (NoSuchElementException e) {
+            return m_flowObjectStack.peekFlowVariable(
+                    name, FlowVariable.Type.INTEGER).getIntValue();
+        }
     }
 
     /** Put a new variable of type String onto the stack. If such variable
@@ -1167,7 +1187,7 @@ public abstract class NodeModel {
      */
     protected final void pushFlowVariableString(
             final String name, final String value) {
-        m_flowObjectStack.push(new FlowVariable(name, value));
+        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
     }
 
     /** Informs WorkflowManager after execute to continue the loop.
@@ -1241,8 +1261,18 @@ public abstract class NodeModel {
         return m_flowObjectStack;
     }
 
-    void setFlowObjectStack(final FlowObjectStack scsc) {
+    void setFlowObjectStack(final FlowObjectStack scsc,
+            final FlowObjectStack outgoingFlowObjectStack) {
         m_flowObjectStack = scsc;
+        m_outgoingFlowObjectStack = outgoingFlowObjectStack;
+    }
+
+    /** @return list of added flow variables.
+     * @see Node#getOutgoingFlowVariables()
+     */
+    /** @return the outgoingFlowObjectStack */
+    public FlowObjectStack getOutgoingFlowObjectStack() {
+        return m_outgoingFlowObjectStack;
     }
 
     /** @deprecated This method has been replaced by

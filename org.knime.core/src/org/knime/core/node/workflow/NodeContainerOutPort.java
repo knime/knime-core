@@ -53,7 +53,6 @@ package org.knime.core.node.workflow;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -150,19 +149,15 @@ public class NodeContainerOutPort extends NodePortAdaptor
         return m_snc.getNode().getOutputHiLiteHandler(getPortIndex());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Lets the underlying {@link SingleNodeContainer} create an outgoing
+     * flow object stack and returns it.
+     * @return a new flow stack containing the incoming variables and the
+     * variables added in the node (whereby a loop end node will have all
+     * variables added in the loop body removed).
+     * @see SingleNodeContainer#createOutFlowObjectStack() */
     @Override
     public FlowObjectStack getFlowObjectStack() {
-        FlowObjectStack st = m_snc.getNode().getFlowObjectStack();
-        if (m_snc.getLoopRole().equals(LoopRole.END)) {
-            // FIXME: this also pops variables, which were added from the loop
-            // end node ... this is not what one would expect.
-            st = new FlowObjectStack(m_snc.getID(), st);
-            st.pop(FlowLoopContext.class);
-        }
-        return st;
+        return m_snc.createOutFlowObjectStack();
     }
 
     /**

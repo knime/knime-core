@@ -54,8 +54,10 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,6 +70,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
@@ -897,10 +900,11 @@ public final class SingleNodeContainer extends NodeContainer {
                 m_node.putOutputTablesIntoGlobalRepository(getParent()
                         .getGlobalTableRepository());
             }
+            final FlowObjectStack outgoingStack = new FlowObjectStack(getID());
             for (FlowObject s : persistor.getFlowObjects()) {
-                inStack.push(s);
+                outgoingStack.push(s);
             }
-            setFlowObjectStack(inStack);
+            setFlowObjectStack(inStack, outgoingStack);
             SingleNodeContainerSettings sncSettings =
                 persistor.getSNCSettings();
             if (sncSettings == null) {
@@ -1056,11 +1060,15 @@ public final class SingleNodeContainer extends NodeContainer {
      * Set {@link FlowObjectStack}.
      *
      * @param st new stack
+     * @param outgoingStack a node-local stack containing the items that
+     *        were pushed by the node (this stack will be empty unless this
+     *        node is a loop start node)
      */
-    void setFlowObjectStack(final FlowObjectStack st) {
+    void setFlowObjectStack(final FlowObjectStack st,
+            final FlowObjectStack outgoingStack) {
         synchronized (m_nodeMutex) {
             pushNodeDropDirURLsOntoStack(st);
-            m_node.setFlowObjectStack(st);
+            m_node.setFlowObjectStack(st, outgoingStack);
         }
     }
 
@@ -1107,6 +1115,45 @@ public final class SingleNodeContainer extends NodeContainer {
     FlowObjectStack getFlowObjectStack() {
         synchronized (m_nodeMutex) {
             return m_node.getFlowObjectStack();
+        }
+    }
+
+
+    /** Delegates to node to get flow variables they are added or modified
+     * by the node.
+     * @return The list of outgoing flow variables.
+     * @see org.knime.core.node.Node#getOutgoingFlowObjectStack()
+     */
+    public FlowObjectStack getOutgoingFlowObjectStack() {
+        synchronized (m_nodeMutex) {
+            return m_node.getOutgoingFlowObjectStack();
+        }
+    }
+
+    /** Creates a copy of the stack held by the Node and modifies the copy
+     * by pushing all outgoing flow variables onto it. If the node represents
+     * a loop end node, it will also pop the corresponding loop context
+     * (and thereby all variables added in the loop body).
+     * @return Such a (new!) stack. */
+    public FlowObjectStack createOutFlowObjectStack() {
+        synchronized (m_nodeMutex) {
+            FlowObjectStack st = getFlowObjectStack();
+            FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
+            if (LoopRole.END.equals(getLoopRole())) {
+                finalStack.pop(FlowLoopContext.class);
+            }
+            FlowObjectStack outgoingStack = getOutgoingFlowObjectStack();
+            List<FlowObject> flowObjectsOwnedByThis;
+            if (outgoingStack == null) { // not configured -> no stack
+                flowObjectsOwnedByThis = Collections.emptyList();
+            } else {
+                flowObjectsOwnedByThis =
+                    outgoingStack.getFlowObjectsOwnedBy(getID(), Scope.Local);
+            }
+            for (FlowObject v : flowObjectsOwnedByThis) {
+                finalStack.push(v);
+            }
+            return finalStack;
         }
     }
 

@@ -1805,12 +1805,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 if (LoopRole.END.equals(snc.getLoopRole())) {
                     // if this is an END to a loop, make sure it knows its head
-                    FlowLoopContext slc = snc.getNode().
-                               getFlowObjectStack().peek(FlowLoopContext.class);
+                    FlowObjectStack flowObjectStack = snc.getFlowObjectStack();
+                    FlowLoopContext slc =
+                        flowObjectStack.peek(FlowLoopContext.class);
                     if (slc == null) {
                         LOGGER.debug("Incoming flow object stack for "
                                 + snc.getNameWithID() + ":\n"
-                                + snc.getFlowObjectStack().toDeepString());
+                                + flowObjectStack.toDeepString());
                         throw new IllegalFlowObjectStackException(
                                 "Encountered loop-end without "
                                 + "corresponding head!");
@@ -1830,8 +1831,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     snc.getNode().setLoopStartNode(
                             ((SingleNodeContainer)headNode).getNode());
                 } else if (LoopRole.BEGIN.equals(snc.getLoopRole())) {
-                    snc.getNode().getFlowObjectStack().push(
+                    snc.getNode().getOutgoingFlowObjectStack().push(
                             new InnerFlowLoopContext());
+//                    snc.getNode().getFlowObjectStack().push(
+//                            new InnerFlowLoopContext());
                 } else {
                     // or not if it's any other type of node
                     snc.getNode().setLoopStartNode(null);
@@ -1843,7 +1846,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Cleanup a node after execution. This will also permit the argument node
-     * to change its state in {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
+     * to change its state in {@link NodeContainer#
+     * performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be
      * continued.
      *
@@ -2001,7 +2005,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // clean up all newly added objects on FlowVariable Stack
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
-        headSNC.getFlowObjectStack().pop(InnerFlowLoopContext.class);
+        headSNC.getOutgoingFlowObjectStack().pop(InnerFlowLoopContext.class);
+//        headSNC.getFlowObjectStack().pop(InnerFlowLoopContext.class);
         // (4) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
         for (NodeAndInports nai : loopBodyNodes) {
@@ -3183,9 +3188,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // nodes can be EXECUTINGREMOTELY when loaded (reconnect to a
                 // grid/server) -- also these nodes will be configured() on load
             case EXECUTINGREMOTELY:
+                // the stack that previously would have been propagated,
+                // used to track changes
+                FlowObjectStack oldFOS = snc.createOutFlowObjectStack();
                 // create new FlowObjectStack
-                FlowObjectStack oldFOS = snc.getFlowObjectStack();
                 FlowObjectStack scsc;
+                FlowObjectStack nodeOutgoingStack = new FlowObjectStack(sncID);
                 boolean flowStackConflict = false;
                 if (isSourceNode(sncID)) {
                     // no input ports - create new stack, prefilled with
@@ -3206,9 +3214,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // the stack will automatically add the ID of the
                     // head of the loop (the owner!)
                     FlowLoopContext slc = new FlowLoopContext();
-                    scsc.push(slc);
+                    nodeOutgoingStack.push(slc);
                 }
-                snc.setFlowObjectStack(scsc);
+                snc.setFlowObjectStack(scsc, nodeOutgoingStack);
                 snc.setCredentialsStore(m_credentialsStore);
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
@@ -3249,10 +3257,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
                 // check if FlowObjectStacks have changed
                 boolean stackChanged = false;
-                // TODO: once SOS.equals() actually works...
-                stackChanged = !snc.getFlowObjectStack().isEmpty()
-                  || (oldFOS != null && !oldFOS.isEmpty());
-//                    stackChanged = snc.getFlowObjectStack().equals(oldFOS);
+                FlowObjectStack newFOS = snc.createOutFlowObjectStack();
+                stackChanged = !newFOS.equals(oldFOS);
                 // check if HiLiteHandlers have changed
                 boolean hiLiteHdlsChanged = false;
                 for (int i = 0; i < oldHdl.length; i++) {

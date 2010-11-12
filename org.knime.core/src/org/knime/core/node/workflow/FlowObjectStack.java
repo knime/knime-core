@@ -157,15 +157,33 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         if (predecessors.isEmpty()) {
             predecessors.add(rootStack.m_stack);
         }
-        if (predecessors.size() == 0) {
-            m_stack = new Vector<FlowObject>();
-        } else {
-            @SuppressWarnings("unchecked")
-            Vector<FlowObject>[] sos = predecessors.toArray(
-                    new Vector[predecessors.size()]);
-            m_stack = merge(sos);
-        }
+        Vector<FlowObject>[] sos = predecessors.toArray(
+                new Vector[predecessors.size()]);
+        m_stack = merge(resortInputStacks(sos));
         m_nodeID = id;
+    }
+
+    /** Resorts the array elements so that the first element is the last
+     * element in the returned array. This became necessary with introducing
+     * the flow variable ports, which need to overrule all incoming flow
+     * variables.
+     * <p>
+     * Method was added to address bug 2392.
+     * @param sos The input stacks
+     * @return sos if there is at most one element in the input stack or
+     *         a copy, whereby the copy will be shifted by one and the last
+     *         element is the first element of sos.
+     */
+    private static Vector<FlowObject>[] resortInputStacks(
+            final Vector<FlowObject>[] sos) {
+        if (sos.length <= 1) {
+            return sos;
+        }
+        @SuppressWarnings("unchecked")
+        Vector<FlowObject>[] result = new Vector[sos.length];
+        System.arraycopy(sos, 1, result, 0, sos.length - 1);
+        result[sos.length - 1] = sos[0];
+        return result;
     }
 
     private static Vector<FlowObject> merge(final Vector<FlowObject>[] sos) {
@@ -377,6 +395,31 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     @Override
     public String toString() {
         return toDeepString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        // stacks are not really used in hashs ... but since we implement equals
+        int hash = m_nodeID.hashCode();
+        for (FlowObject o : m_stack) {
+            hash += o.hashCode();
+        }
+        return hash;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof FlowObjectStack)) {
+            return false;
+        }
+        FlowObjectStack o = (FlowObjectStack)obj;
+        return o.m_nodeID.equals(m_nodeID)
+            && o.m_stack.equals(m_stack); // deep equals!
     }
 
     /**

@@ -115,7 +115,9 @@ final class JavaEditVariableNodeModel extends NodeModel
     @Override
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
-        calculate();
+        // must not call calculate() as it has been done in configure()
+        // (and there would otherwise be the chance that we do a calculation
+        // on the already updated values!)
         return new PortObject[] {FlowVariablePortObject.INSTANCE};
     }
 

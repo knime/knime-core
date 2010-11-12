@@ -248,7 +248,7 @@ public final class Node implements NodeModelWarningListener {
                 new PortType(FlowVariablePortObject.class, true));
         for (int i = 1; i < m_inputs.length; i++) {
             m_inputs[i] = new Input(m_factory.getInportName(i - 1),
-                                            m_model.getInPortType(i - 1));
+                    m_model.getInPortType(i - 1));
         }
 
         // create an extra output port (index: 0) for the variables.
@@ -338,7 +338,8 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Creates an execution result containing all calculated values in a
      * execution. The returned value is suitable to be used in
-     * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor, LoadResult)}.
+     * {@link #loadDataAndInternals(
+     * NodeContentPersistor, ExecutionMonitor, LoadResult)}.
      * If this node is not executed, it will assign null values to the fields
      * in the returned execution result.
      * @param exec For progress information.
@@ -1302,13 +1303,14 @@ public final class Node implements NodeModelWarningListener {
         return newVariableHash;
     }
 
-    private void pushOntoStack(final Map<String, FlowVariable> newVars) {
-        FlowObjectStack stack = getFlowObjectStack();
+    private void addOutgoingFlowVariables(
+            final Map<String, FlowVariable> newVars) {
+        FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
         ArrayList<FlowVariable> reverseOrder =
             new ArrayList<FlowVariable>(newVars.values());
         Collections.reverse(reverseOrder);
         for (FlowVariable v : reverseOrder) {
-            stack.push(v);
+            outgoingFlowObjectStack.push(v);
         }
     }
 
@@ -1378,12 +1380,15 @@ public final class Node implements NodeModelWarningListener {
                 // appropriate specs without actually configuring the node.
                 if (!(m_model instanceof InactiveBranchConsumer)) {
                     for (int i = 0; i < inSpecs.length; i++) {
-                        if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
+                        if (inSpecs[i]
+                                    instanceof InactiveBranchPortObjectSpec) {
                             for (int j = 0; j < m_outputs.length; j++) {
-                                m_outputs[j].spec = InactiveBranchPortObjectSpec.INSTANCE;
+                                m_outputs[j].spec =
+                                    InactiveBranchPortObjectSpec.INSTANCE;
                             }
                             if (success) {
-                                m_logger.debug("Configure skipped. (" + this.getName() + " in inactive branch.)");
+                                m_logger.debug("Configure skipped. ("
+                                        + getName() + " in inactive branch.)");
                             }
                             return true;
                         }
@@ -1396,7 +1401,7 @@ public final class Node implements NodeModelWarningListener {
                 if (postConfigure != null) {
                     newOutSpec = postConfigure.configure(inSpecs, newOutSpec);
                 }
-                pushOntoStack(newVariables);
+                addOutgoingFlowVariables(newVariables);
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
                     m_outputs[p + 1].spec = newOutSpec[p];
@@ -1555,13 +1560,13 @@ public final class Node implements NodeModelWarningListener {
             if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
                 if (!(m_model instanceof InactiveBranchConsumer)) {
                     throw new NotConfigurableException("Can not configure"
-                    		+ " nodes in inactive branches.");
+                            + " nodes in inactive branches.");
                 }
             }
             PortType t = getInputType(i);
             if (!t.acceptsPortObjectSpec(inSpecs[i])
                     && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
-                // wrong type and not a consumer of inactive branches either 
+                // wrong type and not a consumer of inactive branches either
                 // (which is the only exception for a type mismatch)
                 throw new IllegalArgumentException(
                         "Invalid incoming port object spec \""
@@ -1901,12 +1906,21 @@ public final class Node implements NodeModelWarningListener {
     // FlowObjectStack handling
     // ////////////////////////
 
-    public void setFlowObjectStack(final FlowObjectStack scsc) {
-        m_model.setFlowObjectStack(scsc);
+    public void setFlowObjectStack(final FlowObjectStack scsc,
+            final FlowObjectStack outgoingFlowObjectStack) {
+        m_model.setFlowObjectStack(scsc, outgoingFlowObjectStack);
     }
 
     public FlowObjectStack getFlowObjectStack() {
         return m_model.getFlowObjectStack();
+    }
+
+    /** Get list of flow variables that are added by NodeModel implementation.
+     * @return The stack of flow variables that the node added in its client
+     *         code (configure & execute).
+     */
+    public FlowObjectStack getOutgoingFlowObjectStack(){
+        return m_model.getOutgoingFlowObjectStack();
     }
 
     public void clearLoopStatus() {

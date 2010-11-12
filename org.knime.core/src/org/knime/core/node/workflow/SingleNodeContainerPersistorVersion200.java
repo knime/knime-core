@@ -297,7 +297,7 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected void saveFlowObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("flow_stack");
-        FlowObjectStack stack = nc.getFlowObjectStack();
+        FlowObjectStack stack = nc.getOutgoingFlowObjectStack();
         @SuppressWarnings("unchecked")
         Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST
                 : stack.getFlowObjectsOwnedBy(
@@ -323,8 +323,6 @@ public class SingleNodeContainerPersistorVersion200 extends
             c += 1;
         }
     }
-
-
 
     /** {@inheritDoc} */
     @Override
