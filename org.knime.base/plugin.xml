@@ -45,6 +45,12 @@
             name="Row"
             path="/manipulation"/>
       <category
+            icon="icons/missing.gif"
+            level-id="row-other"
+            after="row-transform"
+            name="Other"
+            path="/manipulation/row"/>
+      <category
             after="statistics"
             icon="icons/16x16/category_learner.gif"
             level-id="mining"
@@ -119,10 +125,15 @@
             name="Scoring"
             path="/mining"/>
       <category
-            after="write"
             icon="icons/missing.gif"
             level-id="artificial"
             name="Artificial Data"
+            path="/io"/>
+      <category
+            after="write"
+            icon="icons/missing.gif"
+            level-id="io-other"
+            name="Other"
             path="/io"/>
       <category
             icon="icons/missing.gif"
@@ -192,6 +203,12 @@
             level-id="misc"
             name="Misc"
             path="/"/>
+      <category
+            description="Java Snippet nodes"
+            icon="icons/missing.gif"
+            level-id="java-snippet"
+            name="Java Snippet"
+            path="/misc"/>
       <category
             icon="icons/missing.gif"
             level-id="column-split+combine"
@@ -360,7 +377,7 @@
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/>
       <node
             factory-class="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
-            category-path="/io/artificial"
+            category-path="/io/io-other"
             id="org.knime.base.node.util.sampledata.SampleDataNodeFactory"/>
       <node
             category-path="/io/write"
@@ -575,7 +592,7 @@
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
     <node
          factory-class="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"
-         category-path="/manipulation/row"
+         category-path="/manipulation/row/row-other"
          id="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"/>
       <node
             category-path="/mining/miscClass"
@@ -977,7 +994,7 @@
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.rules.RuleEngineNodeFactory"
             id="org.knime.base.node.rules.RuleEngineNodeFactory">
       </node>
@@ -1083,6 +1100,80 @@
             factory-class="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
             id="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
       </node>
+            <node
+            after="org.knime.base.node.preproc.split.SplitNodeFactory"
+            category-path="/manipulation/column/column-split+combine"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory"
+            id="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory">
+      </node>
+      <node
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
+            id="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory"
+            id="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
+            id="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.addemptyrows.AddEmptyRowsNodeFactory"
+            id="org.knime.base.node.preproc.addemptyrows.AddEmptyRowsNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.cellreplace.CellReplacerNodeFactory"
+            id="org.knime.base.node.preproc.cellreplace.CellReplacerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/binning"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.autobinner.AutoBinnerLearnNodeFactory"
+            id="org.knime.base.node.preproc.autobinner.AutoBinnerLearnNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/binning"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.autobinner.apply.AutoBinnerApplyNodeFactory"
+            id="org.knime.base.node.preproc.autobinner.apply.AutoBinnerApplyNodeFactory">
+      </node>        
+      <node
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
+            id="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory">
+      </node>  
+      <node
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.listfiles.ListFilesNodeFactory"
+            id="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
+      </node>
+      <node
+            category-path="misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
+            id="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory">
+      </node>  
    </extension>
       <extension
          point="org.knime.base.pmmlports">

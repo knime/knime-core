@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="loop_end_column_append.png" type="LoopEnd">
+    <name>Loop End (Column Append)</name>
+
+    <shortDescription>Node at the end of a loop, collecting the intermediate 
+        results by joining the tables on their row IDs.</shortDescription>
+
+    <fullDescription>
+        <intro>
+        <p>
+            Node at the end of a loop, collecting the intermediate 
+            results by joining the tables on their row IDs. In each iteration
+            the node will join the current input table with the previous result.
+            The join is based on the row ID on the incoming tables.
+        </p>
+        <p>
+            The typical use case of this node is that you calculate a set of
+            new columns in the loop body and then feed only the newly created
+            columns to this loop end node. It will join all intermediate results
+            (the results from each iteration) using a join operation 
+            (full outer join on the RowID column). It is strongly recommended
+            that you filter the original input data from the input as it will
+            otherwise occur multiple times in the joined output. Use a Joiner 
+            node following this loop end node in order to join the result with
+            the original input data (the data provided to the loop start node). 
+        </p>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Any datatable">Any datatable</inPort>
+        <outPort index="0" name="Collected results">Collected results from the loop body</outPort>
+    </ports>
+</knimeNode>

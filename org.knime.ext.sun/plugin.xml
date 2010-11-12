@@ -4,7 +4,7 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/misc"
+            category-path="/misc/java-snippet"
             factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
             id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
       <node
@@ -18,13 +18,13 @@
             factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
       <node
-            category-path="/misc"
+            category-path="/misc/java-snippet"
             expert-flag="false"
             factory-class="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/misc/java-snippet"
             expert-flag="false"
             factory-class="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"
             id="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory">
