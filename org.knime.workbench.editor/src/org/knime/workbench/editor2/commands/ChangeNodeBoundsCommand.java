@@ -1,4 +1,3 @@
-
 /*
  * ------------------------------------------------------------------------
  *
@@ -53,42 +52,52 @@ package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
 
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the
- * workflow. The bounds are stored into the <code>ExtraInfo</code> object of
- * the <code>NodeContainer</code>
+ * workflow. The bounds are stored into the <code>ExtraInfo</code> object of the
+ * <code>NodeContainer</code>
  *
  * @author Florian Georg, University of Konstanz
  */
 public class ChangeNodeBoundsCommand extends Command {
 
     private final int[] m_oldBounds;
+
     private final int[] m_newBounds;
 
     /* must not keep NodeContainer here to enable undo/redo (the node container
      * instance may change if deleted and the delete is undone. */
     private final NodeID m_nodeID;
+
     private final WorkflowManager m_manager;
 
     /**
      *
      * @param container The node container to change
-     * @param newBounds The new bounds
+     * @param figureBounds The new bounds of the figure
+     * @param figure the figure that is going to be moved
      */
     public ChangeNodeBoundsCommand(final NodeContainer container,
-            final int[] newBounds) {
-        // right info type
+            final NodeContainerFigure figure, final Rectangle figureBounds) {
 
-        NodeUIInformation uiInfo = 
-            (NodeUIInformation) container.getUIInformation();
+        // must translate figure bounds into node figure ui info - which is
+        // relative to the node's symbol
+        NodeUIInformation uiInfo =
+            (NodeUIInformation)container.getUIInformation();
+        Point offset = figure.getOffsetToRefPoint(uiInfo);
         m_oldBounds = uiInfo.getBounds();
-        m_newBounds = newBounds;
+        m_newBounds = new int[]{figureBounds.x + offset.x,
+                figureBounds.y + offset.y, figureBounds.width,
+                figureBounds.height};;
         m_nodeID = container.getID();
         m_manager = container.getParent();
     }
@@ -101,9 +110,9 @@ public class ChangeNodeBoundsCommand extends Command {
     @Override
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            NodeUIInformation information = new NodeUIInformation(
-                    m_newBounds[0], m_newBounds[1],
-                    m_newBounds[2], m_newBounds[3], true);
+            NodeUIInformation information =
+                    new NodeUIInformation(m_newBounds[0], m_newBounds[1],
+                            m_newBounds[2], m_newBounds[3], true);
             NodeContainer container = m_manager.getNodeContainer(m_nodeID);
             // must set explicitly so that event is fired by container
             container.setUIInformation(information);
@@ -118,12 +127,11 @@ public class ChangeNodeBoundsCommand extends Command {
     @Override
     public void undo() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            NodeUIInformation information = new NodeUIInformation(
-                    m_oldBounds[0], m_oldBounds[1],
-                    m_oldBounds[2], m_oldBounds[3], true);
+            NodeUIInformation information =
+                    new NodeUIInformation(m_oldBounds[0], m_oldBounds[1],
+                            m_oldBounds[2], m_oldBounds[3], true);
             NodeContainer container = m_manager.getNodeContainer(m_nodeID);
             container.setUIInformation(information);
         }
     }
 }
-

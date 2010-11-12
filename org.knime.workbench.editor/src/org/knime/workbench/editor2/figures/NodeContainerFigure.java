@@ -61,6 +61,7 @@ import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -73,6 +74,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -158,7 +160,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /** Tooltip for displaying the full heading. */
     private final NewToolTipFigure m_headingTooltip;
 
-    /** content pane, contains the port visuals and the icon. * */
+    /** content pane, contains the port visuals and the icon. */
     private final SymbolFigure m_symbolFigure;
 
     /** contains the the "traffic light". * */
@@ -591,29 +593,19 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        // TODO: rewrite. We have to take into account:
-        /*
-         * WIDTH: max of m_contentFigure m_heading m_status figure m_name
-         *
-         * HEIGHT: m_contentFigure m_infoWarnErrorPanel constant height?
-         * m_statusFigure m_name
-         */
 
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
         // add some offset, that the selection border is not directly at
         // the label
         prefWidth += 10;
 
-        int prefHeight =
-                m_heading.getPreferredSize().height
-                        + m_symbolFigure.getPreferredSize().height
-                        // + m_infoWarnErrorPanel.getPreferredSize().height
-                        // replace with a fixed size of 16? pixel
-                        + m_progressFigure.getPreferredSize().height
-                        + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height
-                        // plus a fixed size for the info error warn panel
-                        + 20;
+        int prefHeight = 0;
+        prefHeight += m_heading.getPreferredSize().height;
+        prefHeight += m_symbolFigure.getPreferredSize().height;
+        prefHeight += m_progressFigure.getPreferredSize().height;
+        prefHeight += m_statusFigure.getPreferredSize().height;
+        prefHeight += 20; // fixed size for the info error warn panel
+        prefHeight += m_name.getPreferredSize().height;
 
         return new Dimension(prefWidth, prefHeight);
     }
@@ -1164,6 +1156,37 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void hideNodeName(final boolean hide) {
         m_heading.setVisible(!hide);
+    }
+
+    /**
+     * New bounds describe the boundaries of figure with x/y at the top left
+     * corner. Since 2.3.0 the UI info stores the boundaries with x/y relative
+     * to the icon symbol. Width and height in the UI info is in both cases the
+     * width and height of the figure. <br />
+     * This method returns x/y offsets - basically the current distance of the
+     * top left corner to the top left corner of the symbol (with the current
+     * font size etc.).
+     * @param uiInfo underlying node's ui information holding the bounds
+     * @return the offset of the reference point in the figure to the figure's
+     *         symbol (values could be negative, if bounds are very small).
+     * @since KNIME 2.3.0
+     */
+    public Point getOffsetToRefPoint(final NodeUIInformation uiInfo) {
+        int yDiff = m_heading.getPreferredSize().height
+                + NodeContainerLocator.GAP * 2;
+        Rectangle t = this.getBounds();
+        int thiswidth = uiInfo.getBounds()[2];
+        if (thiswidth <= 0) {
+            thiswidth = t.width;
+            if (thiswidth <= 0) {
+                // figure with not set yet
+                thiswidth = getPreferredSize().width;
+            }
+        }
+        int xDiff = (thiswidth - m_symbolFigure.getPreferredSize().width) / 2;
+
+        Point r = new Point(xDiff, yDiff);
+        return r;
     }
 
 }

@@ -62,6 +62,8 @@ import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
  * Handles manual layout editing for the workflow, that is, creates the commands
@@ -82,8 +84,8 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
     }
 
     /**
-     * Creates command to move / resize <code>NodeContainer</code> components
-     * on the project's client area.
+     * Creates command to move / resize <code>NodeContainer</code> components on
+     * the project's client area.
      *
      * {@inheritDoc}
      */
@@ -98,21 +100,21 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
 
         Command command = null;
 
-        // Create a copy of the bounds from the model, and return a command
-        // that set it into the visuals
-        Rectangle rect = ((Rectangle) constraint).getCopy();
-        int[] newBounds = new int[] {rect.x, rect.y, rect.width, rect.height};
-
-        // We need a node container model object ...
+        Rectangle rect = ((Rectangle)constraint).getCopy();
         if (child.getModel() instanceof NodeContainer) {
-            NodeContainer container = (NodeContainer) child.getModel();
-            command = new ChangeNodeBoundsCommand(container, newBounds);
+            NodeContainer container = (NodeContainer)child.getModel();
+            NodeContainerEditPart nodePart = (NodeContainerEditPart)child;
+            command =
+                    new ChangeNodeBoundsCommand(container,
+                            (NodeContainerFigure)nodePart.getFigure(), rect);
         } else if (child instanceof AbstractWorkflowPortBarEditPart) {
-            command = new ChangeWorkflowPortBarCommand(
-                    (AbstractWorkflowPortBarEditPart)child, rect);
+            command =
+                    new ChangeWorkflowPortBarCommand(
+                            (AbstractWorkflowPortBarEditPart)child, rect);
         } else if (child instanceof AnnotationEditPart) {
-            command = new ChangeAnnotationBoundsCommand(
-                    (AnnotationEditPart)child, rect);
+            command =
+                    new ChangeAnnotationBoundsCommand(
+                            (AnnotationEditPart)child, rect);
         }
         return command;
     }

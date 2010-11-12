@@ -71,11 +71,6 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeUIInformation implements UIInformation {
-    /** TODO: Version id of this extra info implementation. */
-    // private static final String VERSION = "1.0";
-
-    /** TODO: The key under which the type is registered. * */
-    // private static final String KEY_VERSION = "extrainfo.node.version";
 
     /** The key under which the bounds are registered. * */
     private static final String KEY_BOUNDS = "extrainfo.node.bounds";
@@ -91,6 +86,16 @@ public class NodeUIInformation implements UIInformation {
      */
     private final boolean m_hasAbsoluteCoordinates;
 
+    /**
+     * Since Ver.2.3.0 the x/y coordinates are the ones of the symbol of the
+     * node (background image with node icon). Before the location was relative
+     * to the top left corner of the node's figure. (Change was made to avoid
+     * tilted connections with changing font size in the figure.) Only loading
+     * ui info from an old workflow sets this flag to false - and causes an
+     * offset to be applied (in the NodeContainerEditPart).
+     */
+    private boolean m_symbolRelative = true;
+
     /** Creates new object, the bounds to be set are assumed to be absolute
      * (m_isInitialized is true). */
     public NodeUIInformation() {
@@ -98,8 +103,8 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /** Inits new node figure with given coordinates.
-     * @param x x coordinate
-     * @param y y coordinate
+     * @param x x coordinate of the figures symbol (i.e. the background image)
+     * @param y y coordinate of the figures symbol (i.e. the background image)
      * @param width width of figure
      * @param height height of figure
      * @param absoluteCoords If the coordinates are absolute.
@@ -127,6 +132,7 @@ public class NodeUIInformation implements UIInformation {
     public void load(final NodeSettingsRO conf, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
+        m_symbolRelative = loadVersion.ordinal() >= LoadVersion.V230.ordinal();
     }
 
     /**
@@ -150,10 +156,21 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /**
-     * Sets the location. *
+     * If false, the coordinates are loaded with an old workflow and are
+     * relative to the top left corner of the node's figure.
+     */
+    public boolean isSymbolRelative() {
+        return m_symbolRelative;
+    }
+
+    /**
+     * Sets the location. The x/y location must be relative to the node figure's
+     * symbol (the background image that contains the node's icon). The
+     * NodeContainerEditPart translates it into a figure location - taking the
+     * actual font size (of the node name) into account.
      *
-     * @param x x-coordinate
-     * @param y y-coordinate
+     * @param x x-coordinate of the figures symbol (i.e. the background image)
+     * @param y y-coordinate of the figures symbol (i.e. the background image)
      * @param w width
      * @param h height
      *
@@ -211,8 +228,9 @@ public class NodeUIInformation implements UIInformation {
         if (m_bounds == null) {
             return "not set";
         }
-        return "x " + m_bounds[0] + " y " + m_bounds[1]
-               + " width " + m_bounds[2] + " height "  + m_bounds[3]
-               + (m_hasAbsoluteCoordinates ? "(absolute)" : "(relative)");
+        return "x=" + m_bounds[0] + " y=" + m_bounds[1]
+                + (m_symbolRelative ? "" : " (TOPLEFT!)") + " width="
+                + m_bounds[2] + " height=" + m_bounds[3]
+                + (m_hasAbsoluteCoordinates ? "(absolute)" : "(relative)");
     }
 }

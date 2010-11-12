@@ -62,6 +62,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.gef.CompoundSnapToHelper;
 import org.eclipse.gef.EditPart;
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.SnapToGrid;
@@ -71,6 +72,7 @@ import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -178,7 +180,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         WorkflowManager wfm = getWorkflowManager();
         // sequence here determines z-order of edit parts
 
-        // add workflow annotations as children of the workflow manager
+        // Add workflow annotations as children of the workflow manager.
+        // Add them first so they appear behind everything else
         for (WorkflowAnnotation anno : wfm.getWorkflowAnnotations()) {
             modelChildren.add(anno);
         }
@@ -426,9 +429,18 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected void refreshVisuals() {
-        ConnectionLayer cLayer = (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
-        if ((getViewer().getControl().getStyle() & SWT.MIRRORED ) == 0) {
-            cLayer.setAntialias(SWT.ON);
+        ConnectionLayer cLayer = 
+                (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
+        if (cLayer != null) {
+            EditPartViewer viewer = getViewer();
+            if (viewer != null) {
+                Control c = viewer.getControl();
+                if (c != null) {
+                    if ((c.getStyle() & SWT.MIRRORED) == 0) {
+                        cLayer.setAntialias(SWT.ON);
+                    }
+                }
+            }
         }
         super.refreshVisuals();
     }

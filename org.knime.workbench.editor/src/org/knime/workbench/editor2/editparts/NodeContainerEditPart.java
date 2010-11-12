@@ -55,7 +55,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
@@ -112,9 +114,9 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * Edit part for node containers. This also listens to interesting events, like
- * changed extra infos or execution states
- * Model: {@link NodeContainer}
- * View: {@link NodeContainerFigure}
+ * changed extra infos or execution states <br />
+ * Model: {@link NodeContainer} <br />
+ * View: {@link NodeContainerFigure} <br />
  * Controller: {@link NodeContainerEditPart}
  *
  * @author Florian Georg, University of Konstanz
@@ -125,13 +127,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeUIInformationListener, EditPartListener, ConnectableEditPart,
         JobManagerChangedListener, IPropertyChangeListener {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(NodeContainerEditPart.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(NodeContainerEditPart.class);
 
     /**
      * true, if the figure was initialized from the node extra info object.
      */
-    private boolean m_figureInitialized;
+    private boolean m_uiListenerActive = true;
 
     /**
      * The manager for the direct editing of the node name.
@@ -146,7 +148,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public NodeContainerEditPart() {
         super();
         IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.addPropertyChangeListener(this);
     }
 
@@ -184,6 +186,22 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void activate() {
         super.activate();
 
+        initFigure();
+
+        // If we already have extra info, init figure now
+        NodeUIInformation uiInfo =
+                (NodeUIInformation)getNodeContainer().getUIInformation();
+        if (uiInfo != null) {
+            // takes over all info except the coordinates
+            updateFigureFromUIinfo(uiInfo);
+        } else {
+            // set a new empty UI info
+            NodeUIInformation info = new NodeUIInformation();
+            info.setNodeLocation(0, 0, -1, -1);
+            // we not yet a listener to ui info changes
+            getNodeContainer().setUIInformation(info);
+        }
+
         // listen to node container (= model object)
         getNodeContainer().addNodeStateChangeListener(this);
         getNodeContainer().addNodeMessageListener(this);
@@ -192,27 +210,23 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         getNodeContainer().addJobManagerChangedListener(this);
         addEditPartListener(this);
 
-        // If we already have extra info, init figure now
-        if (getNodeContainer().getUIInformation() != null) {
-            initFigureFromUIInfo((NodeUIInformation)getNodeContainer()
-                    .getUIInformation());
-        } else {
-            // set the initial settings to the figure on the next "stateChanged"
-            // event.
-            m_figureInitialized = false;
-            // create default extra info and set it
-            // NOTE: This is done for nodes that are created from code
-            // e.g. cross validation node creates a partitioner and
-            // has no knowledge about a extrainfo
-            NodeUIInformation info = new NodeUIInformation();
-            info.setNodeLocation(0, 0, -1, -1);
-            getNodeContainer().setUIInformation(info);
-        }
+        // set the job manager icon
         NodeContainer cont = getNodeContainer();
         if (cont != null && cont.findJobManager() != null) {
             URL iconURL = getNodeContainer().findJobManager().getIcon();
             setJobManagerIcon(iconURL);
         }
+        // set the active (or disabled) state
+        boolean isInactive = false;
+        if (getNodeContainer() instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+            isInactive = snc.isInactive();
+        }
+        ((NodeContainerFigure)getFigure()).setState(getNodeContainer()
+                .getState(), isInactive);
+        // set the node message
+        updateNodeStatus();
+
     }
 
     /**
@@ -241,13 +255,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (getRootEditPart() != null) {
             nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
         }
-        boolean isInactive = false;
-        if (getNodeContainer() instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-            isInactive = snc.isInactive();
-        }
-        nodeFigure.setState(getNodeContainer().getState(), isInactive);
-
         return nodeFigure;
     }
 
@@ -273,7 +280,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             performDirectEdit();
         } else if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
-            openDialog();
+             openDialog();
         }
     }
 
@@ -317,15 +324,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return ports;
     }
 
-    /**
-     * Refreshes the visuals for this node representation.
-     * {@inheritDoc}
-     */
-    @Override
-        protected void refreshVisuals() {
-        super.refreshVisuals();
-    }
-
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
@@ -335,7 +333,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 boolean isInactive = false;
                 if (getNodeContainer() instanceof SingleNodeContainer) {
-                    SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+                    SingleNodeContainer snc =
+                            (SingleNodeContainer)getNodeContainer();
                     isInactive = snc.isInactive();
                 }
                 fig.setState(state.getState(), isInactive);
@@ -389,67 +388,98 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
 
+        if (!m_uiListenerActive) {
+            return;
+        }
+
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-
-                // case NodeContainer.EVENT_EXTRAINFO_CHANGED:
-                LOGGER.debug("ExtraInfo changed, "
-                        + "updating bounds and visuals...");
-
-                WorkflowRootEditPart parent = null;
-                parent = (WorkflowRootEditPart)getParent();
-
-                // provide some info from the extra info object to the
-                // figure
-                NodeUIInformation ei = (NodeUIInformation)
-                    getNodeContainer().getUIInformation();
-
-                //
-                // if not already initialized, do this now.
-                // Necessary 'cause the extra info is only available after
-                // the node
-                // has been added to the WFM via the CreateNodeCommand
-                // All of this data is static and should not change after
-                // creation
-                // (icon, type)
-                if (!m_figureInitialized) {
-                    initFigureFromUIInfo(ei);
-                    m_figureInitialized = true;
-                }
-
-                // set the new constraints in the parent edit part
-                int[] bounds = ei.getBounds();
-                parent.setLayoutConstraint(NodeContainerEditPart.this,
-                        getFigure(), new Rectangle(bounds[0], bounds[1],
-                                bounds[2], bounds[3]));
-
-                // check status of node
-                updateNodeStatus();
-                fig.setCustomName(getCustomName());
-                fig.setCustomDescription(evt.getDescription());
-                updateNodeStatus();
-
-                // reset the tooltip text of the outports
-                for (Object part : getChildren()) {
-
-                    if (part instanceof NodeOutPortEditPart) {
-                        NodeOutPortEditPart outPortPart =
-                                (NodeOutPortEditPart)part;
-                        outPortPart.rebuildTooltip();
-                    }
-                }
-
-                // always refresh visuals
-                refreshVisuals();
-
+                NodeUIInformation uiInfo =
+                        (NodeUIInformation)getNodeContainer()
+                                .getUIInformation();
+                updateFigureFromUIinfo(uiInfo);
             }
 
         });
+    }
+
+    private void updateFigureFromUIinfo(final NodeUIInformation uiInfo) {
+
+        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+        setBoundsFromUIinfo(uiInfo);
+
+        // update node custom name and description too
+        fig.setCustomName(getCustomName());
+        fig.setCustomDescription(getNodeContainer().getCustomDescription());
+        // check status of node
+        updateNodeStatus();
+
+        // reset the tooltip text of the outports
+        for (Object part : getChildren()) {
+            if (part instanceof NodeOutPortEditPart) {
+                NodeOutPortEditPart outPortPart = (NodeOutPortEditPart)part;
+                outPortPart.rebuildTooltip();
+            }
+        }
+
+        // always refresh visuals
+        refreshVisuals();
+
+    }
+
+    private void setBoundsFromUIinfo(final NodeUIInformation uiInfo) {
+        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+        WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
+        int[] bounds = uiInfo.getBounds();
+        if (!uiInfo.hasAbsoluteCoordinates()) {
+            // make it absolute coordinates taking scrolling into account
+            Point p = new Point(bounds[0], bounds[1]);
+            fig.translateToRelative(p);
+            bounds[0] = p.x;
+            bounds[1] = p.y;
+            NodeUIInformation newUI =
+                    new NodeUIInformation(bounds[0], bounds[1], bounds[2],
+                            bounds[3], true);
+            // don't trigger another event here, when updating ui info
+            m_uiListenerActive = false;
+            getNodeContainer().setUIInformation(newUI);
+            m_uiListenerActive = true;
+
+        }
+        if (uiInfo.isSymbolRelative()) {
+            // since ver2.3.0 all coordinates are relative to the icon
+            Point offset = fig.getOffsetToRefPoint(uiInfo);
+            bounds[0] -= offset.x;
+            bounds[1] -= offset.y;
+        } else {
+            // ui info from an earlier version - x/y is top top left coordinates
+            // store symbol relative coordinates
+            int xCorr = 29;
+            int yCorr = Platform.OS_LINUX.equals(Platform.getOS()) ? 10 : 15;
+            // don't trigger another entry into this method
+            m_uiListenerActive = false;
+            getNodeContainer().setUIInformation(
+                    new NodeUIInformation(bounds[0] + xCorr, bounds[1] + yCorr,
+                            bounds[2], bounds[3], true));
+            m_uiListenerActive = true;
+        }
+        // set the new constraints in the parent edit part layouter
+        Dimension pref = fig.getPreferredSize();
+        if (bounds[2] < 0) {
+            bounds[2] = pref.width;
+        }
+        if (bounds[3] < 0) {
+            bounds[3] = pref.height;
+        }
+        Rectangle rect =
+                new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+        fig.setBounds(rect);
+        parent.setLayoutConstraint(NodeContainerEditPart.this, getFigure(),
+                rect);
 
     }
 
@@ -463,12 +493,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         String name = "Node";
         IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         if (store.contains(PreferenceConstants.P_SET_NODE_LABEL)) {
             if (store.getBoolean(PreferenceConstants.P_SET_NODE_LABEL)) {
                 if (store.contains(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
-                    name = store.getString(
-                        PreferenceConstants.P_DEFAULT_NODE_LABEL);
+                    name =
+                            store.getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
                     if (name == null || name.trim().isEmpty()) {
                         return "";
                     }
@@ -478,44 +508,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return name + " " + getNodeContainer().getID().getIndex();
     }
 
-    /**
-     * Initializes the figure with data from the node ui info object. This
-     * must be done only once, but after the node has been added to the WFM
-     * (otherwise the ui info object is not available).
-     *
-     * @param uiInfo UI info to provide to the figure
-     */
-    private void initFigureFromUIInfo(final NodeUIInformation uiInfo) {
-
-        LOGGER.debug("Initializing figure from NodeExtraInfo..");
-
-        /*
-         * If the figure wasn't yet initialized (has relative coords)
-         * convert from absolute to take scrolling into account
-         */
+    private void initFigure() {
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
-        int[] b = uiInfo.getBounds(); // this is a copy
-        if (!uiInfo.hasAbsoluteCoordinates()) { // make it absolute coordinates
-            Point p = new Point(b[0], b[1]);
-            f.translateToRelative(p);
-            b[0] = p.x;
-            b[1] = p.y;
-            NodeUIInformation newUI = new NodeUIInformation(
-                    b[0], b[1], b[2], b[3], true);
-            getNodeContainer().setUIInformation(newUI);
-        }
-        f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
-        m_figureInitialized = true;
-
-        // String plugin = ei.getPluginID();
-        // String iconPath = ei.getIconPath();
         NodeType type = getNodeContainer().getType();
         String name = getNodeContainer().getName();
         String description = getNodeContainer().getCustomDescription();
 
         // get the icon
-        Image icon = ImageRepository.getScaledImage(
-                getNodeContainer().getIcon(), 16, 16);
+        Image icon =
+                ImageRepository.getScaledImage(getNodeContainer().getIcon(),
+                        16, 16);
         // get default image if null
         if (icon == null) {
             icon =
@@ -530,22 +532,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         f.setCustomName(getCustomName());
         f.setCustomDescription(description);
 
-        // TODO FIXME construct initial state here (after loading) - this should
-        // be made nicer
-        boolean isInactive = false;
-        if (getNodeContainer() instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-            isInactive = snc.isInactive();
-        }
-
-        f.setState(getNodeContainer().getState(), isInactive);
-        updateNodeStatus();
     }
 
     /**
-     * Checks the status of the this node and if there is
-     * a message in the <code>NodeStatus</code> object the message is set.
-     * Otherwise the currently displayed message is removed.
+     * Checks the status of the this node and if there is a message in the
+     * <code>NodeStatus</code> object the message is set. Otherwise the
+     * currently displayed message is removed.
      */
     private void updateNodeStatus() {
         NodeContainer nc = getNodeContainer();
@@ -617,9 +609,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         for (Object part : getChildren()) {
 
             if (part instanceof NodeInPortEditPart) {
-                result
-                        .addAll(((NodeInPortEditPart)part)
-                                .getTargetConnections());
+                result.addAll(((NodeInPortEditPart)part).getTargetConnections());
             }
         }
 
@@ -682,13 +672,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     + " reason:\n" + ex.getMessage());
             mb.open();
         } catch (Throwable t) {
-            LOGGER.error("The dialog pane for node '"
-                    + container.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an implementation error.", t);
+            LOGGER.error(
+                    "The dialog pane for node '" + container.getNameWithID()
+                            + "' has thrown a '" + t.getClass().getSimpleName()
+                            + "'. That is most likely an implementation error.",
+                    t);
         }
 
-        }
+    }
 
     public void openSubWorkflowEditor() {
 
@@ -696,14 +687,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug("opening new editor for sub-workflow");
         try {
             NodeContainer container = (NodeContainer)getModel();
-            final WorkflowEditor parent = (WorkflowEditor)PlatformUI
-                .getWorkbench().getActiveWorkbenchWindow()
-                    .getActivePage().getActiveEditor();
-            WorkflowManagerInput input = new WorkflowManagerInput(
-                    (WorkflowManager)container, parent);
-            PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage().openEditor(input,
-                        "org.knime.workbench.editor.WorkflowEditor");
+            final WorkflowEditor parent =
+                    (WorkflowEditor)PlatformUI.getWorkbench()
+                            .getActiveWorkbenchWindow().getActivePage()
+                            .getActiveEditor();
+            WorkflowManagerInput input =
+                    new WorkflowManagerInput((WorkflowManager)container, parent);
+            PlatformUI
+                    .getWorkbench()
+                    .getActiveWorkbenchWindow()
+                    .getActivePage()
+                    .openEditor(input,
+                            "org.knime.workbench.editor.WorkflowEditor");
         } catch (PartInitException e) {
             LOGGER.error("Error while opening new editor", e);
             e.printStackTrace();
@@ -764,17 +759,26 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void propertyChange(final PropertyChangeEvent pce) {
-        if (pce.getProperty().equals(
-                PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
-            Integer fontSize = (Integer) pce.getNewValue();
-            ((NodeContainerFigure) getFigure()).setFontSize(fontSize);
+        if (pce.getProperty()
+                .equals(PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
+            NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+            Integer fontSize = (Integer)pce.getNewValue();
+            fig.setFontSize(fontSize);
+            Display.getCurrent().syncExec(new Runnable() {
+                public void run() {
+                    updateFigureFromUIinfo((NodeUIInformation)getNodeContainer()
+                            .getUIInformation());
+                    getRootEditPart().getFigure().invalidate();
+                    getRootEditPart().refreshVisuals();
+                }
+            });
             return;
         }
         if (pce.getProperty().equals(PreferenceConstants.P_SET_NODE_LABEL)
                 || pce.getProperty().equals(
                         PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
             String newName = getCustomName();
-            ((NodeContainerFigure) getFigure()).setCustomName(newName);
+            ((NodeContainerFigure)getFigure()).setCustomName(newName);
             return;
         }
     }
@@ -782,10 +786,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /** @return underlying workflow root */
     WorkflowRootEditPart getRootEditPart() {
         EditPartViewer viewer = getViewer();
-        if (viewer != null  && viewer.getRootEditPart().getContents()
-                instanceof WorkflowRootEditPart) {
-            WorkflowRootEditPart part = (WorkflowRootEditPart)
-                    viewer.getRootEditPart().getContents();
+        if (viewer != null
+                && viewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
+            WorkflowRootEditPart part =
+                    (WorkflowRootEditPart)viewer.getRootEditPart()
+                            .getContents();
             return part;
         }
         return null;
@@ -794,8 +799,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /** Change hide/show node label status. */
     public void callHideNodeName() {
         if (getRootEditPart() != null) {
-            ((NodeContainerFigure) getFigure()).hideNodeName(
-                    getRootEditPart().hideNodeNames());
+            ((NodeContainerFigure)getFigure()).hideNodeName(getRootEditPart()
+                    .hideNodeNames());
         }
     }
 

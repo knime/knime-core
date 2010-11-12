@@ -66,6 +66,11 @@ public class NodeContainerLocator implements Locator {
     private final NodeContainerFigure m_container;
 
     /**
+     * Distance (vertically) between the contained figures in the node figure
+     */
+    public final static int GAP = 1;
+
+    /**
      * Places the components in the node figure. (I.e. the Node Name, the icon
      * (symbol figure), the custom name and the status or progress indicator.
      * Ports have their own locators.
@@ -95,13 +100,12 @@ public class NodeContainerLocator implements Locator {
             }
             above = f;
         }
-
         Rectangle r = above.getBounds().getCopy();
         if (above == m_container) {
             // we are the first component in the container
-            y = r.y + 1;
+            y = r.y + GAP;
         } else {
-            y = r.y + r.height + 1;
+            y = r.y + r.height + GAP;
         }
         // center it
         Rectangle contBounds = m_container.getBounds().getCopy();
