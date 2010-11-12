@@ -1,0 +1,3 @@
+requires.1.namespace=org.eclipse.equinox.p2.iu
+requires.1.name=org.eclipse.jdt.compiler.tool
+requires.1.range=1.0.0
