@@ -129,10 +129,17 @@ public class NodeUIInformation implements UIInformation {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void load(final NodeSettingsRO conf, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
-        m_symbolRelative = loadVersion.ordinal() >= LoadVersion.V230.ordinal();
+        if (loadVersion == null) {
+            m_symbolRelative = false;
+        } else {
+            m_symbolRelative =
+                loadVersion.ordinal() >= LoadVersion.V230.ordinal();
+        }
+
     }
 
     /**
