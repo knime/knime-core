@@ -270,13 +270,14 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     }
 
     /**
-     * {@inheritDoc}
+     * Fills the menu bar with the main menus for the windows. Some anchors were added below the last action of each division for convenience.
+     * These anchors are named after the action above them, e.g.: "file/ImportPreferences" is located below "Import Preferences..." but above the seperator.
      */
     @Override
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
 
-        MenuManager fileMenu = new MenuManager("&File", "Filemenu");
+        MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
         MenuManager editMenu =
                 new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
         MenuManager viewMenu =
@@ -307,23 +308,28 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(new GroupMarker("SVGExport")); // Included as anchor for the optional SVGExport.
         fileMenu.add(new Separator());
         fileMenu.add(m_changeWorkspaceAction);
+        fileMenu.add(new GroupMarker("SwitchWorkspace"));
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
         fileMenu.add(m_exportPrefAction);
         fileMenu.add(m_importPrefAction);
+        fileMenu.add(new GroupMarker("ImportPreferences"));
         fileMenu.add(new Separator());
         fileMenu.add(m_installFeaturesAction);
         fileMenu.add(m_updateKnimeAction);
+        fileMenu.add(new GroupMarker("UpdateKNIME"));
         fileMenu.add(new Separator());
         fileMenu.add(m_exitAction);
 
         // Edit menu
         editMenu.add(m_undoAction);
         editMenu.add(m_redoAction);
+        fileMenu.add(new GroupMarker("Redo"));
         editMenu.add(new Separator());
         editMenu.add(m_cutAction);
         editMenu.add(m_copyAction);
         editMenu.add(m_pasteAction);
+        fileMenu.add(new GroupMarker("Paste"));
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
