@@ -75,7 +75,18 @@ public class SortedListCellOperator extends ListCellOperator {
      */
     public SortedListCellOperator(final DataColumnSpec origColSpec,
             final int maxUniqueValues) {
-        super("List (sorted)", "Sorted list", maxUniqueValues);
+        this("List (sorted)", "Sorted list", origColSpec, maxUniqueValues);
+    }
+
+    /**Constructor for class SortedListCellOperator.
+     * @param label of the derived class
+     * @param colName the column name
+     * @param origColSpec the column spec of the column to aggregate
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    protected SortedListCellOperator(final String label, final String colName,
+            final DataColumnSpec origColSpec, final int maxUniqueValues) {
+        super(label, colName, maxUniqueValues);
         if (origColSpec == null) {
             //use the default comparator
             m_comparator = GeneralDataValueComparator.getInstance();

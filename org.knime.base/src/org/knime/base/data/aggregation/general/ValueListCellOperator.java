@@ -50,54 +50,23 @@ package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
- * Returns all values as a {@link SetCell} per group.
+ * Create a list cell that contains all values per group
+ * (excluding missing values).
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class SetCellOperator extends AggregationOperator {
+public class ValueListCellOperator extends ListCellOperator {
 
-    private final Set<DataCell> m_cells;
-
-    /**Constructor for class SetCellOperator.
-     * @param maxUniqueValues the maximum number of unique values
+    /**Constructor for class ValueListCellOperator.
+     * @param maxUniqueValues the maximum unique values
      */
-    public SetCellOperator(final int maxUniqueValues) {
-        this("Set", "Set", maxUniqueValues);
-    }
-
-    /**Constructor for class SetCellOperator.
-     * @param label of the derived class
-     * @param colName the column name
-     * @param maxUniqueValues the maximum number of unique values
-     */
-    protected SetCellOperator(final String label, final String colName,
-            final int maxUniqueValues) {
-        super(label, colName, true, false, maxUniqueValues, DataValue.class);
-        try {
-            m_cells = new LinkedHashSet<DataCell>(maxUniqueValues);
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataType getDataType(final DataType origType) {
-        return SetCell.getCollectionType(origType);
+    public ValueListCellOperator(final int maxUniqueValues) {
+        super("List (excl. missing)", "Value list", maxUniqueValues);
     }
 
     /**
@@ -106,7 +75,7 @@ public class SetCellOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(
             final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new SetCellOperator(maxUniqueValues);
+        return new ValueListCellOperator(maxUniqueValues);
     }
 
     /**
@@ -114,27 +83,10 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (m_cells.size() >= getMaxUniqueValues()) {
-            return true;
+        if (cell.isMissing()) {
+            return false;
         }
-        m_cells.add(cell);
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataCell getResultInternal() {
-        return CollectionCellFactory.createSetCell(m_cells);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_cells.clear();
+        return super.computeInternal(cell);
     }
 
     /**
@@ -142,7 +94,8 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains each element "
-                + "only once per group (including missing values).";
+        return "Creates a ListCell that contains all values "
+        + "per group (excluding missing values).";
     }
+
 }

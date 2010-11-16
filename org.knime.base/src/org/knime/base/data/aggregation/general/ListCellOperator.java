@@ -69,7 +69,7 @@ public class ListCellOperator extends AggregationOperator {
 
     private final List<DataCell> m_cells;
 
-    /**Constructor for class Concatenate.
+    /**Constructor for class ListCellOperator.
      * @param maxUniqueValues the maximum number of unique values
      */
     public ListCellOperator(final int maxUniqueValues) {

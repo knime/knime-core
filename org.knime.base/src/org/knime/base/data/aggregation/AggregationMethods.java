@@ -81,10 +81,13 @@ import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
 import org.knime.base.data.aggregation.general.SetCellOperator;
 import org.knime.base.data.aggregation.general.SortedListCellOperator;
+import org.knime.base.data.aggregation.general.SortedValueListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
 import org.knime.base.data.aggregation.general.ValueCountOperator;
+import org.knime.base.data.aggregation.general.ValueListCellOperator;
+import org.knime.base.data.aggregation.general.ValueSetCellOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
@@ -226,10 +229,16 @@ public final class AggregationMethods {
             addOperator(new MissingValueCountOperator());
               /** List collection.*/
             addOperator(new ListCellOperator(0));
+            /** Value list collection.*/
+            addOperator(new ValueListCellOperator(0));
             /** Sorted list collection.*/
             addOperator(new SortedListCellOperator(null, 0));
+            /** Sorted value list collection.*/
+            addOperator(new SortedValueListCellOperator(null, 0));
               /** Set collection.*/
             addOperator(new SetCellOperator(0));
+            /** Value set collection.*/
+            addOperator(new ValueSetCellOperator(0));
         } catch (final DuplicateOperatorException e) {
             throw new IllegalStateException(
                     "Exception while initializing class: "
