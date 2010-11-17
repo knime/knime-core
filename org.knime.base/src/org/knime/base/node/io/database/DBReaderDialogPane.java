@@ -122,12 +122,14 @@ class DBReaderDialogPane extends NodeDialogPane {
                 /** {@inheritDoc} */
                 @Override
                 public final void mouseClicked(final MouseEvent e) {
-                    Object o = m_listVars.getSelectedValue();
-                    if (o != null) {
-                        FlowVariable var = (FlowVariable) o;
-                        m_statmnt.replaceSelection(extendVariable(var));
-                        m_listVars.clearSelection();
-                        m_statmnt.requestFocus();
+                    if (e.getClickCount() == 2) {
+                        Object o = m_listVars.getSelectedValue();
+                        if (o != null) {
+                            FlowVariable var = (FlowVariable) o;
+                            m_statmnt.replaceSelection(extendVariable(var));
+                            m_listVars.clearSelection();
+                            m_statmnt.requestFocus();
+                        }
                     }
                 }
             });
