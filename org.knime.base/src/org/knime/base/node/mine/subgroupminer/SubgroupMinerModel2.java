@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,24 +44,21 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
- * History
- *   30.11.2005 (dill): created
+ *
  */
 package org.knime.base.node.mine.subgroupminer;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithm;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
@@ -75,7 +72,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
@@ -100,16 +96,16 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.property.hilite.HiLiteMapper;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The SubgroupMinerModel2 searches for frequent itemsets with an apriori
  * algorithm using a prefixtree structure.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  * @author Iris Adae, University of Konstanz
  */
-public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
+public class SubgroupMinerModel2 extends NodeModel {
 
     /** Config key for the column containing the transactions. */
     public static final String CFG_TRANSACTION_COL = "TRANSACTION_COLUMN";
@@ -120,14 +116,10 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     /** Config key for the maximal itemset length. */
     public static final String CFG_MAX_ITEMSET_LENGTH = "MAX_ITEMSET_LENGTH";
 
-    /**
-     * Config key for the itemset type (free, closed or maximal).
-     */
+    /** Config key for the itemset type (free, closed or maximal). */
     public static final String CFG_ITEMSET_TYPE = "ITEMSET_TYPE";
 
-    /**
-     * Config key for the sorting method.
-     */
+    /** Config key for the sorting method. */
     public static final String CFG_SORT_BY = "SORT_BY";
 
     /** Config key if association rules should be output. */
@@ -142,6 +134,7 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     public static final String CFG_UNDERLYING_STRUCT = "UNDERLYING_STRUCT";
 
     /* ------------------ Defaults -------------------- */
+
     /** Default value for the minimum support. */
     public static final double DEFAULT_MIN_SUPPORT = 0.9;
 
@@ -152,38 +145,27 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     public static final double DEFAULT_CONFIDENCE = 0.8;
 
     /* ---------- fields ---------- */
-    private SettingsModelString m_transactionColumn =
+
+    private final SettingsModelString m_transactionColumn =
             SubgroupMinerDialog2.createBitVectorColumnModel();
 
-    private SettingsModelDoubleBounded m_minSupport =
+    private final SettingsModelDoubleBounded m_minSupport =
             SubgroupMinerDialog2.createMinSupportModel();
 
-    private SettingsModelIntegerBounded m_maxItemSetLength =
+    private final SettingsModelIntegerBounded m_maxItemSetLength =
             SubgroupMinerDialog2.createItemsetLengthModel();
 
-    private SettingsModelString m_itemSetType =
+    private final SettingsModelString m_itemSetType =
             SubgroupMinerDialog2.createItemSetTypeModel();
 
-    private SettingsModelBoolean m_associationRules =
+    private final SettingsModelBoolean m_associationRules =
             SubgroupMinerDialog2.createAssociationRuleFlagModel();
 
-    private SettingsModelDoubleBounded m_confidence =
+    private final SettingsModelDoubleBounded m_confidence =
             SubgroupMinerDialog2.createConfidenceModel();
 
-    private SettingsModelString m_underlyingStruct =
+    private final SettingsModelString m_underlyingStruct =
             SubgroupMinerDialog2.createAlgorithmModel();
-
-    private BufferedDataTable m_itemSetTable;
-
-    private AprioriAlgorithm m_apriori;
-
-    private List<DataCell> m_nameMapping;
-
-    private Map<Integer, RowKey> m_tidRowKeyMapping;
-
-    private int m_nrOfRows;
-
-    private int m_maxBitsetLength;
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(SubgroupMinerModel2.class);
@@ -240,11 +222,12 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     }
 
     private List<BitVectorValue> preprocess(final DataTable inData,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
-        m_tidRowKeyMapping = new HashMap<Integer, RowKey>();
-        m_nrOfRows = 0;
+            final ExecutionMonitor exec,
+            final Map<Integer, RowKey> tidRowKeyMapping,
+            final AtomicInteger maxBitsetLength)
+            throws CanceledExecutionException {
+        int nrOfRows = 0;
         int totalNrRows = ((BufferedDataTable)inData).getRowCount();
-        m_maxBitsetLength = 0;
         List<BitVectorValue> bitSets = new ArrayList<BitVectorValue>();
         int bitVectorIndex =
                 inData.getDataTableSpec().findColumnIndex(
@@ -266,33 +249,34 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
                         + currCell.length() + ". Only bit vectors up to "
                         + Integer.MAX_VALUE + " are supported by this node.");
             }
-            m_maxBitsetLength =
-                    Math.max(m_maxBitsetLength, (int)currCell.length());
+            maxBitsetLength.set(Math.max(maxBitsetLength.get(),
+                    (int)currCell.length()));
             bitSets.add(currCell);
-            m_tidRowKeyMapping.put(m_nrOfRows, currRow.getKey());
-            m_nrOfRows++;
+            tidRowKeyMapping.put(nrOfRows, currRow.getKey());
+            nrOfRows++;
 
-            exec.setProgress((double)m_nrOfRows / (double)totalNrRows,
-                    "preprocessing..." + m_nrOfRows);
+            exec.setProgress((double)nrOfRows / (double)totalNrRows,
+                    "preprocessing..." + nrOfRows);
         }
-        LOGGER.debug("max length: " + m_maxBitsetLength);
+        LOGGER.debug("max length: " + maxBitsetLength.get());
         return bitSets;
     }
 
     /**The preprocessing of the cells, if the selected column is a collection.
-     * the collection values are saved internally, and a bitvector is 
+     * the collection values are saved internally, and a bitvector is
      * created for each transaction.
-     * 
+     *
      * @param input the data table.
      * @param exec the execution context.
      * @return the list of bitvectors
      */
     private List<BitVectorValue> preprocessCollCells(
             final BufferedDataTable inData,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
-
-        // at first fill the values in m_mapping
-         m_nameMapping = new LinkedList<DataCell>();
+            final ExecutionMonitor exec,
+            final List<DataCell> nameMapping,
+            final Map<Integer, RowKey> tidRowKeyMapping,
+            final AtomicInteger maxBitsetLength)
+            throws CanceledExecutionException {
 
         final Map<DataCell, Integer> cell2ItemMap =
                 new HashMap<DataCell, Integer>();
@@ -300,7 +284,7 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
         int transIndex =
                 inData.getDataTableSpec().findColumnIndex(
                         m_transactionColumn.getStringValue());
-        
+
         for (final DataRow row : inData) {
             final DataCell cell = row.getCell(transIndex);
             if (!cell.isMissing()) {
@@ -310,16 +294,14 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
                     if (!cell2ItemMap.containsKey(valCell)) {
                         cell2ItemMap.put(valCell, new Integer(cell2ItemMap
                                 .size()));
-                        m_nameMapping.add(valCell);
+                        nameMapping.add(valCell);
                     }
                 }
             }
         }
 
         // afterwards create the bitvectors
-
-        m_tidRowKeyMapping = new HashMap<Integer, RowKey>();
-        m_nrOfRows = 0;
+        int nrOfRows = 0;
         int totalNrRows = inData.getRowCount();
         List<BitVectorValue> bitSets = new ArrayList<BitVectorValue>();
         for (final DataRow row : inData) {
@@ -330,11 +312,11 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
             }
             CollectionDataValue currCell =
                     ((CollectionDataValue)row.getCell(transIndex));
-            SparseBitVector bitvec = new SparseBitVector(m_nameMapping.size());
+            SparseBitVector bitvec = new SparseBitVector(nameMapping.size());
             for (final DataCell valCell : currCell) {
                 exec.checkCanceled();
                 Integer itemID = cell2ItemMap.get(valCell);
-                assert (itemID != null); 
+                assert (itemID != null);
                 bitvec.set(itemID.intValue(), true);
             }
 
@@ -347,14 +329,14 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
 
             bitSets.add(new SparseBitVectorCellFactory(bitvec)
                             .createDataCell());
-            m_tidRowKeyMapping.put(m_nrOfRows, row.getKey());
-            m_nrOfRows++;
+            tidRowKeyMapping.put(nrOfRows, row.getKey());
+            nrOfRows++;
 
-            exec.setProgress((double)m_nrOfRows / (double)totalNrRows,
-                    "preprocessing..." + m_nrOfRows);
+            exec.setProgress((double)nrOfRows / (double)totalNrRows,
+                    "preprocessing..." + nrOfRows);
         }
-        m_maxBitsetLength = m_nameMapping.size();
-        LOGGER.debug("max length: " + m_maxBitsetLength);
+        maxBitsetLength.set(nameMapping.size());
+        LOGGER.debug("max length: " + maxBitsetLength.get());
         return bitSets;
     }
 
@@ -368,26 +350,29 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
         DataTableSpec spec = input.getDataTableSpec();
         ExecutionMonitor exec1 = exec.createSubProgress(0.5);
         ExecutionMonitor exec2 = exec.createSubProgress(0.5);
+        Map<Integer, RowKey> tidRowKeyMapping = new HashMap<Integer, RowKey>();
+        LinkedList<DataCell> nameMapping = new LinkedList<DataCell>();
 
         List<BitVectorValue> transactions;
+        AtomicInteger maxBitsetLength = new AtomicInteger(0);
         if (spec.getColumnSpec(
-                m_transactionColumn.getStringValue()).getType().isCompatible(
+            m_transactionColumn.getStringValue()).getType().isCompatible(
                 BitVectorValue.class)) {
-            transactions = preprocess(input, exec1);
-
-            m_nameMapping = new LinkedList<DataCell>();
-                List<String> columnstrings =  
-                    spec.getColumnSpec(
-                            m_transactionColumn.getStringValue())
-                            .getElementNames();
-                for (String s : columnstrings) {
-                    m_nameMapping.add(new StringCell(s));
-                }
-            m_maxBitsetLength = m_nameMapping.size();
+            transactions = preprocess(input, exec1, tidRowKeyMapping,
+                    maxBitsetLength);
+            List<String> columnstrings = spec.getColumnSpec(
+                 m_transactionColumn.getStringValue()).getElementNames();
+            for (String s : columnstrings) {
+                nameMapping.add(new StringCell(s));
+            }
+            // fix #2505: use maximum bitset length
+            maxBitsetLength.set(Math.max(maxBitsetLength.get(),
+                    nameMapping.size()));
         } else if (spec.getColumnSpec(
                 m_transactionColumn.getStringValue()).getType().isCompatible(
                 CollectionDataValue.class)) {
-            transactions = preprocessCollCells(input, exec1);
+            transactions = preprocessCollCells(input, exec1, nameMapping,
+                    tidRowKeyMapping, maxBitsetLength);
 
             // for the name Mapping is taken care in the preprocessing
         } else {
@@ -397,95 +382,106 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
                     "Selected column is not a possible transaction");
         }
 
-        m_apriori =
-                AprioriAlgorithmFactory.getAprioriAlgorithm(
-                        AprioriAlgorithmFactory.AlgorithmDataStructure
-                                .valueOf(m_underlyingStruct.getStringValue()),
-                        m_maxBitsetLength, m_nrOfRows);
+        AprioriAlgorithm apriori = AprioriAlgorithmFactory.getAprioriAlgorithm(
+		        AprioriAlgorithmFactory.AlgorithmDataStructure
+		                .valueOf(m_underlyingStruct.getStringValue()),
+		        maxBitsetLength.get(), input.getRowCount());
         LOGGER.debug("support: " + m_minSupport);
         LOGGER.debug(m_minSupport + " start apriori: " + new Date());
-        m_apriori.findFrequentItemSets(transactions, m_minSupport
-                .getDoubleValue(), m_maxItemSetLength.getIntValue(),
+        try{
+           apriori.findFrequentItemSets(transactions,
+                m_minSupport.getDoubleValue(), m_maxItemSetLength.getIntValue(),
                 FrequentItemSet.Type.valueOf(m_itemSetType.getStringValue()),
                 exec2);
+        } catch (OutOfMemoryError oome) {
+            throw new OutOfMemoryError(
+        	        "Execution resulted in an out of memory error, "
+        			 + "please increase the support threshold.");
+        }
         LOGGER.debug("ended apriori: " + new Date());
-        m_itemSetTable = createOutputTable(spec, exec);
-
-        return new BufferedDataTable[]{m_itemSetTable};
+        BufferedDataTable itemSetTable = createOutputTable(spec, exec, apriori,
+                nameMapping);
+        return new BufferedDataTable[]{itemSetTable};
     }
 
     /**
-     * Returns the frequent itemsets as a table.
-     * 
-     * @return the frequent itemsets
-     */
-    public DataTable getItemSetTable() {
-        return m_itemSetTable;
-    }
-
-    /**
-     * Returns the minimum support.
-     * 
      * @return the minimum support
      */
     public double getMinSupport() {
         return m_minSupport.getDoubleValue();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Set<RowKey> getKeys(final RowKey key) {
-        LOGGER.debug("getKeys for: " + key);
-        Set<RowKey> cells = new HashSet<RowKey>();
-        for (RowIterator itr = m_itemSetTable.iterator(); itr.hasNext();) {
-            DataRow currRow = itr.next();
-            if (currRow.getKey().equals(key)) {
-                LOGGER.debug("found key ");
-                for (int i = 1; i < currRow.getNumCells(); i++) {
-                    cells.add(new RowKey(currRow.getCell(i).toString()));
-                }
-            }
-        }
-        LOGGER.debug("mapping: " + cells);
-        return cells;
+    // TODO fix bug 2506: implement HiLiteTranslator
+    private final HiLiteHandler m_outHiLiteHandler = new HiLiteHandler();
+
+    /** {@inheritDoc} */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_outHiLiteHandler;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Set<RowKey> keySet() {
-        return Collections.unmodifiableSet(new LinkedHashSet<RowKey>(
-                m_tidRowKeyMapping.values()));
-    }
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//	public Set<RowKey> getKeys(final RowKey key) {
+//        LOGGER.debug("getKeys for: " + key);
+//        Set<RowKey> cells = new HashSet<RowKey>();
+//        for (RowIterator itr = m_itemSetTable.iterator(); itr.hasNext();) {
+//            DataRow currRow = itr.next();
+//            if (currRow.getKey().equals(key)) {
+//                LOGGER.debug("found key ");
+//                for (int i = 1; i < currRow.getNumCells(); i++) {
+//                    cells.add(new RowKey(currRow.getCell(i).toString()));
+//                }
+//            }
+//        }
+//        LOGGER.debug("mapping: " + cells);
+//        return cells;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//	public Set<RowKey> keySet() {
+//        return Collections.unmodifiableSet(new LinkedHashSet<RowKey>(
+//                m_tidRowKeyMapping.values()));
+//    }
 
     private BufferedDataTable createOutputTable(
-            final DataTableSpec inputSpec, final ExecutionContext exec)
+            final DataTableSpec inputSpec, final ExecutionContext exec,
+            final AprioriAlgorithm apriori,
+            final List<DataCell> nameMapping)
             throws CanceledExecutionException {
         if (m_associationRules.getBooleanValue()) {
-            return createAssociationRulesOutput(inputSpec, exec);
+            return createAssociationRulesOutput(inputSpec, exec, apriori,
+                    nameMapping);
         }
-        return createFrequentItemsetOutput(inputSpec, exec);
+        return createFrequentItemsetOutput(inputSpec, exec, apriori,
+                nameMapping);
     }
 
     /**
+     * @param apriori
      * @return a DataTable containing the frequent item sets and their support
      */
     private BufferedDataTable createFrequentItemsetOutput(
-            final DataTableSpec spec, final ExecutionContext exec) 
+            final DataTableSpec spec, final ExecutionContext exec,
+            final AprioriAlgorithm apriori, final List<DataCell> nameMapping)
             throws CanceledExecutionException {
 
         DataTableSpec outSpec = createItemsetOutputSpec(spec);
         BufferedDataContainer itemRows = exec.createDataContainer(outSpec);
-        assert m_nameMapping != null;
+        assert nameMapping != null;
         List<FrequentItemSet> freqSets =
-                m_apriori.getFrequentItemSets(FrequentItemSet.Type
+                apriori.getFrequentItemSets(FrequentItemSet.Type
                         .valueOf(m_itemSetType.getStringValue()));
 
         // iterate over set list
         int rowKeyCounter = 0;
         for (FrequentItemSet set : freqSets) {
-            exec.setProgress((double)rowKeyCounter / (double)m_nrOfRows,
+            exec.setProgress((double)rowKeyCounter / (double)freqSets.size(),
                     "creating output table. Row number: " + rowKeyCounter);
             exec.checkCanceled();
             Set<DataCell> itemList = new HashSet<DataCell>();
@@ -493,8 +489,8 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
                 Integer item = set.getItems().get(i);
                 // for every item look at the referring column name
                 DataCell itemName;
-                if (m_nameMapping.size() > item) {
-                    itemName = m_nameMapping.get(item);
+                if (nameMapping.size() > item) {
+                    itemName = nameMapping.get(item);
                 } else {
                     itemName = new StringCell("item" + item);
                 }
@@ -503,7 +499,7 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
             // create for every set a row
             DataCell supp = new DoubleCell(set.getSupport());
             DataCell itemCell = CollectionCellFactory.createSetCell(itemList);
-            DataRow row = new DefaultRow("item set " 
+            DataRow row = new DefaultRow("item set "
                         + (rowKeyCounter++), supp, itemCell);
             itemRows.addRowToTable(row);
         }
@@ -514,12 +510,13 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
 
     private BufferedDataTable createAssociationRulesOutput(
             final DataTableSpec inputSpec,
-            final ExecutionContext exec) {
+            final ExecutionContext exec, final AprioriAlgorithm apriori,
+            final List<DataCell> nameMapping) {
         DataTableSpec outSpec = createAssociationRulesSpec(inputSpec);
         BufferedDataContainer ruleRows = exec.createDataContainer(outSpec);
-        assert m_nameMapping != null;
+        assert nameMapping != null;
         List<AssociationRule> associationRules =
-                m_apriori.getAssociationRules(m_confidence.getDoubleValue());
+                apriori.getAssociationRules(m_confidence.getDoubleValue());
         // for every association rule
         int rowKeyCounter = 0;
         for (AssociationRule r : associationRules) {
@@ -539,8 +536,8 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
             allCells[1] = new DoubleCell(confidence);
             allCells[2] = new DoubleCell(lift);
             // consequent is always only one item -> access with get(0) ok
-            if (m_nameMapping.size() > consequent.getItems().get(0)) {
-                allCells[3] = m_nameMapping.get(consequent.getItems().get(0));
+            if (nameMapping.size() > consequent.getItems().get(0)) {
+                allCells[3] = nameMapping.get(consequent.getItems().get(0));
             } else {
                 allCells[3] =
                         new StringCell("Item" + consequent.getItems().get(0));
@@ -550,9 +547,9 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
             Set<DataCell> allcells = new HashSet<DataCell>();
             for (int i = 0; i < antecedent.getItems().size()
                     && i < m_maxItemSetLength.getIntValue() + 5; i++) {
-                if (m_nameMapping.size() 
+                if (nameMapping.size()
                         > antecedent.getItems().get(i)) {
-                    allcells.add(m_nameMapping.get(antecedent
+                    allcells.add(nameMapping.get(antecedent
                             .getItems().get(i)));
                 } else {
                     allcells.add(new StringCell("Item"
@@ -570,11 +567,10 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
         return ruleRows.getTable();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
+    	// empty
     }
 
     /**
@@ -632,8 +628,8 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
 
     private DataTableSpec createItemsetOutputSpec(final DataTableSpec spec) {
         /*
-         * creating the ouput spec with (maxDepth + 1) String columns and the
-         * first column as an int colum (the support)
+         * creating the output spec with (maxDepth + 1) String columns and the
+         * first column as an int column (the support)
          */
         DataColumnSpec[] colSpecs = new DataColumnSpec[2];
         DataColumnSpecCreator colspeccreator =
@@ -655,7 +651,7 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
         DataType transType = spec.getColumnSpec(
             m_transactionColumn.getStringValue()).getType();
 
-        /* now create the table spec */
+        // now create the table spec
         DataColumnSpec[] colSpecs = new DataColumnSpec[6];
         DataColumnSpecCreator creator =
                 new DataColumnSpecCreator("Support", DoubleCell.TYPE);
@@ -665,15 +661,15 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
         creator = new DataColumnSpecCreator("Lift", DoubleCell.TYPE);
         colSpecs[2] = creator.createSpec();
         DataType transCollType = transType.getCollectionElementType();
-        creator = new DataColumnSpecCreator("Consequent", 
+        creator = new DataColumnSpecCreator("Consequent",
                 transCollType == null ? StringCell.TYPE : transCollType);
         colSpecs[3] = creator.createSpec();
         creator = new DataColumnSpecCreator("implies", StringCell.TYPE);
         colSpecs[4] = creator.createSpec();
-
-        colSpecs[5] = new DataColumnSpecCreator("Items", 
-            transCollType == null ? SetCell.getCollectionType(StringCell.TYPE)
-                    : SetCell.getCollectionType(transCollType)).createSpec();
+        creator = new DataColumnSpecCreator("Items",
+                transCollType == null ? SetCell.getCollectionType(
+                StringCell.TYPE) : SetCell.getCollectionType(transCollType));
+        colSpecs[5] = creator.createSpec();
         return new DataTableSpec(colSpecs);
     }
 
@@ -683,6 +679,7 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
+        // empty
     }
 
     /**
@@ -691,5 +688,6 @@ public class SubgroupMinerModel2 extends NodeModel implements HiLiteMapper {
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
+        // empty
     }
 }
