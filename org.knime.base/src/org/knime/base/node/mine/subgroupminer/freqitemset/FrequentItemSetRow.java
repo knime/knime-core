@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (dill): created
  */
@@ -73,7 +73,7 @@ import org.knime.core.data.def.StringCell;
  * frequent item set, the support of it, whether it is closed, resp. maximal or
  * not. Each item in the set is realised as a StringValue (the name of the
  * item).
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class FrequentItemSetRow implements DataRow {
@@ -93,7 +93,7 @@ public class FrequentItemSetRow implements DataRow {
 
     /**
      * Creates a FrequentItemSetRow from the passed arguments.
-     * 
+     *
      * @param key the unique row key
      * @param items the names of the items in the set as strings
      * @param length the length of the item set (which might be different from
@@ -132,7 +132,7 @@ public class FrequentItemSetRow implements DataRow {
     /**
      * Extracts the itemset names from a Default row, which was a former itemset
      * row.
-     * 
+     *
      * @param row a former frequent itemset row
      * @return the names of the itemset of a former itemset row
      */
@@ -150,7 +150,7 @@ public class FrequentItemSetRow implements DataRow {
 
     /**
      * Returns the support of a former frequent itemset row.
-     * 
+     *
      * @param row a former frequent itemset row
      * @return the support of a former frequent itemset row
      */
@@ -162,7 +162,7 @@ public class FrequentItemSetRow implements DataRow {
      * Creates a FrequentItemSetRow from the passed arguments. It is assumed
      * that this item set is neither closed nor maximal: these values will be
      * set to <code>false</code>.
-     * 
+     *
      * @param key the unique row key
      * @param items the names of the items in the set as strings
      * @param length the length of the item set (which might be different from
@@ -177,6 +177,7 @@ public class FrequentItemSetRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getNumCells() {
         return m_length + 1;
     }
@@ -184,6 +185,7 @@ public class FrequentItemSetRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }
@@ -191,6 +193,7 @@ public class FrequentItemSetRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowKey getKey() {
         return m_key;
     }
@@ -198,13 +201,14 @@ public class FrequentItemSetRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell getCell(final int index) {
         return m_cells[index];
     }
 
     /**
      * Returns the support of the represented frequent itemset.
-     * 
+     *
      * @return the support of the represented frequent itemset
      */
     public double getSupport() {
@@ -213,7 +217,7 @@ public class FrequentItemSetRow implements DataRow {
 
     /**
      * Returns the number of items in the represented frequent itemset.
-     * 
+     *
      * @return the number of items in the represented frequent itemset
      */
     public int getSetLength() {
@@ -222,7 +226,7 @@ public class FrequentItemSetRow implements DataRow {
 
     /**
      * Returns the items as a set of Strings.
-     * 
+     *
      * @return the items as a set of Strings
      */
     public Set<String> asSet() {
@@ -235,7 +239,7 @@ public class FrequentItemSetRow implements DataRow {
 
     /**
      * Returns whether the represented itemset is closed or not.
-     * 
+     *
      * @return whether the represented itemset is closed or not
      */
     public boolean isClosed() {

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.12.2005 (Fabian Dill): created
  */
@@ -69,7 +69,7 @@ import org.knime.core.node.NodeLogger;
  * manner, the items are combined to larger itemsets by taking the next item
  * from the frequent ones and join their transaction ids until the support is
  * less than the minimum support.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class TIDApriori implements AprioriAlgorithm {
@@ -90,7 +90,7 @@ public class TIDApriori implements AprioriAlgorithm {
     private List<TIDItemSet> m_repository;
 
     private TIDPrefixTreeNode m_prefixTree;
-    
+
     private int m_idCounter = 0;
 
     /**
@@ -98,7 +98,7 @@ public class TIDApriori implements AprioriAlgorithm {
      * support, number of transactions and stores them with the ids of the
      * transactions they appear in. At the end the always frequent items, which
      * occur in every transaction are filtered.
-     * 
+     *
      * @param transactions the database containing the transactions as BitSets
      * @param exec the execution monitor
      * @throws CanceledExecutionException if user cancels execution
@@ -108,14 +108,14 @@ public class TIDApriori implements AprioriAlgorithm {
         m_frequentItems = new ArrayList<TIDItem>();
         int transactionNr = 0;
         for (BitVectorValue transaction : transactions) {
-            double progress = transactionNr / (double)m_dbsize; 
+            double progress = transactionNr / (double)m_dbsize;
             exec.setProgress(progress,
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
             exec.checkCanceled();
-            // this type cast is save since the maximum length was checked in 
+            // this type cast is save since the maximum length was checked in
             // SubgroupMinerModel2#preprocess
-            for (int item = (int)transaction.nextSetBit(0); item >= 0; 
+            for (int item = (int)transaction.nextSetBit(0); item >= 0;
                 item = (int)transaction.nextSetBit(item + 1)) {
                 /*
                  * iterate over every set bit, but!!! if: counterSoFar (what we
@@ -145,7 +145,7 @@ public class TIDApriori implements AprioriAlgorithm {
                             // check if it still could become frequent
 //                            int counterSoFar = m_frequentItems.get(j)
 //                                    .getSupport();
-//                            if (counterSoFar + (transactions.size() 
+//                            if (counterSoFar + (transactions.size()
 //                                    - transactionNr) >= m_minSupport) {
                                 TIDItem freqItem = m_frequentItems.get(j);
                                 freqItem.addTID(transactionNr);
@@ -238,7 +238,7 @@ public class TIDApriori implements AprioriAlgorithm {
         }
         // if all children of one node are processed, the set can be added to
         // the repository
-        // this is also done for free sets (in case of association rules output 
+        // this is also done for free sets (in case of association rules output
         // the repository will be used later on
         addToClosedRepository(node.getItemSet());
     }
@@ -246,6 +246,7 @@ public class TIDApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void findFrequentItemSets(final List<BitVectorValue> transactions,
             final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
@@ -265,6 +266,7 @@ public class TIDApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<FrequentItemSet> getFrequentItemSets(
             final FrequentItemSet.Type type) {
         List<FrequentItemSet> freqSets = new ArrayList<FrequentItemSet>();
@@ -302,7 +304,7 @@ public class TIDApriori implements AprioriAlgorithm {
     }
 
     private List<FrequentItemSet> getMaximalItemSets() {
-        List<FrequentItemSet> maximalItemsets 
+        List<FrequentItemSet> maximalItemsets
             = new ArrayList<FrequentItemSet>();
         List<FrequentItemSet> closedItemsets = getClosedItemSets();
         for (FrequentItemSet outer : closedItemsets) {
@@ -340,10 +342,11 @@ public class TIDApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<AssociationRule> getAssociationRules(final double confidence) {
         List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
                     FrequentItemSet.Type.CLOSED);
-        List<AssociationRule> associationRules 
+        List<AssociationRule> associationRules
             = new ArrayList<AssociationRule>();
         // handle always frequent items seperately
         List<Integer> alwaysFrequentIds = new ArrayList<Integer>();
@@ -359,9 +362,9 @@ public class TIDApriori implements AprioriAlgorithm {
             List<Integer>itemList = new ArrayList<Integer>();
             itemList.add(item.getId());
             AssociationRule rule = new AssociationRule(
-                    new FrequentItemSet(Integer.toString(m_idCounter++), rest, 
-                        1.0), 
-                    new FrequentItemSet(Integer.toString(m_idCounter++), 
+                    new FrequentItemSet(Integer.toString(m_idCounter++), rest,
+                        1.0),
+                    new FrequentItemSet(Integer.toString(m_idCounter++),
                         itemList, 1.0), 1.0, 1.0, 1.0);
             associationRules.add(rule);
         }
@@ -396,14 +399,14 @@ public class TIDApriori implements AprioriAlgorithm {
                         }
                         AssociationRule rule = new AssociationRule(
                                 new FrequentItemSet(
-                                        Integer.toString(m_idCounter++), 
+                                        Integer.toString(m_idCounter++),
                                         sWithoutI, newSupport),
                                 new FrequentItemSet(
                                         Integer.toString(m_idCounter++),
-                                        iList, 
+                                        iList,
                                         // TODO: support of single item
                                         tidItem.getSupport()),
-                                        s.getSupport(), c, 
+                                        s.getSupport(), c,
                                         c / tidItem.getSupport() * m_dbsize);
                         associationRules.add(rule);
                     }

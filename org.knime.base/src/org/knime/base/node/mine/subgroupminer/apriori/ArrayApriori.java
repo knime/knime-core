@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.12.2005 (dill): created
  */
@@ -73,7 +73,7 @@ import org.knime.core.node.ExecutionMonitor;
  * processed, for each level once, by going to the node corresponding to first
  * item in the transaction, and process the rest of the transaction for that
  * node. Thus, there is no candidate generation.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class ArrayApriori implements AprioriAlgorithm {
@@ -101,13 +101,13 @@ public class ArrayApriori implements AprioriAlgorithm {
     private int m_compressedLength;
 
     private List<Integer> m_alwaysFrequentItems;
-    
+
     private int m_idCounter;
 
     /**
      * Creates an ArrayApriori instance with the bitset length, corresponding to
      * the number of items.
-     * 
+     *
      * @param bitSetLength the number of items
      * @param dbsize the number of transactions
      */
@@ -118,7 +118,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     }
 
     /**
-     * 
+     *
      * @param minSupport the minimum support
      */
     public void setMinSupport(final double minSupport) {
@@ -131,7 +131,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      * are mapped to the array position of only the frequent ones. Thus, the
      * algorithm works with the mostly much shorter array of frequent items
      * only.
-     * 
+     *
      * @param transactions the database as bitsets
      */
     private void findFrequentItems(final List<BitVectorValue> transactions) {
@@ -140,9 +140,9 @@ public class ArrayApriori implements AprioriAlgorithm {
 
         List<Integer> frequentItems = new ArrayList<Integer>();
         for (BitVectorValue s : transactions) {
-            // this type cast is save because the maximum length is checked in 
+            // this type cast is save because the maximum length is checked in
             // SubgroupMinerNodeModel#preprocess
-            for (int i = (int)s.nextSetBit(0); i >= 0; 
+            for (int i = (int)s.nextSetBit(0); i >= 0;
                 i = (int)s.nextSetBit(i + 1)) {
                 // simply increment the position
                 // that is probably faster than checking whether it might be
@@ -193,9 +193,10 @@ public class ArrayApriori implements AprioriAlgorithm {
      * predecessors. When the counting is finished, new children are created for
      * those itemsets, which might become frequent in the next level, that is,
      * itemsets with one item more.
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void findFrequentItemSets(final List<BitVectorValue> transactions,
             final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
@@ -227,9 +228,9 @@ public class ArrayApriori implements AprioriAlgorithm {
 
     private void count(final BitVectorValue transaction,
             final ArrayPrefixTreeNode node, final int item, final int level) {
-        // this type cast is save since the maximum length was checked in 
+        // this type cast is save since the maximum length was checked in
         // SubgroupMinerModel2#preprocess
-        for (int i = (int)transaction.nextSetBit(item); i >= 0; 
+        for (int i = (int)transaction.nextSetBit(item); i >= 0;
                 i = (int)transaction.nextSetBit(i + 1)) {
             if (m_mapping[i] < 0) {
                 // this means that this item is not frequent at all!
@@ -247,7 +248,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     }
 
     private void createChildren(final ArrayPrefixTreeNode node, final int item,
-            final int level, final ExecutionMonitor exec) 
+            final int level, final ExecutionMonitor exec)
         throws CanceledExecutionException {
         if (node == null) {
             return;
@@ -257,7 +258,7 @@ public class ArrayApriori implements AprioriAlgorithm {
             exec.checkCanceled();
             if (level == m_builtLevel) {
                 // create children
-                if (((double)node.getCounterFor(i) / (double)m_dbsize) 
+                if (((double)node.getCounterFor(i) / (double)m_dbsize)
                         >= m_minSupport) {
                     /*
                      * Get the parent and the children of that parent ->
@@ -274,8 +275,8 @@ public class ArrayApriori implements AprioriAlgorithm {
                         } else {
                             boolean hasFrequentSubset = false;
                             for (int j = i; j < node.getLength(); j++) {
-                                if (((double)parentsChild.getCounterFor(j) 
-                                        / (double)m_dbsize) 
+                                if (((double)parentsChild.getCounterFor(j)
+                                        / (double)m_dbsize)
                                         >= m_minSupport) {
                                     hasFrequentSubset = true;
                                     break;
@@ -318,10 +319,11 @@ public class ArrayApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<AssociationRule> getAssociationRules(final double confidence) {
         List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
                 FrequentItemSet.Type.CLOSED);
-        List<AssociationRule> associationRules 
+        List<AssociationRule> associationRules
             = new ArrayList<AssociationRule>();
         /*
          * handle always frequent items seperately: since they are always
@@ -337,7 +339,7 @@ public class ArrayApriori implements AprioriAlgorithm {
             List<Integer>iList = new ArrayList<Integer>(1);
             iList.add(i);
             AssociationRule rule = new AssociationRule(
-                    new FrequentItemSet(Integer.toString(m_idCounter++), 
+                    new FrequentItemSet(Integer.toString(m_idCounter++),
                             withoutI, 1.0),
                     new FrequentItemSet(Integer.toString(m_idCounter++),
                             iList, 1.0),
@@ -367,12 +369,12 @@ public class ArrayApriori implements AprioriAlgorithm {
                         iList.add(i);
                         AssociationRule rule = new AssociationRule(
                                 new FrequentItemSet(
-                                        Integer.toString(m_idCounter++), 
+                                        Integer.toString(m_idCounter++),
                                         sWithoutI, newSupport),
                                 new FrequentItemSet(
-                                        Integer.toString(m_idCounter++), iList, 
+                                        Integer.toString(m_idCounter++), iList,
                                         getSupportFor(iList)),
-                                        s.getSupport(), c, 
+                                        s.getSupport(), c,
                                             c / getSupportFor(iList)
                                 );
                         associationRules.add(rule);
@@ -397,6 +399,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<FrequentItemSet> getFrequentItemSets(final Type type) {
         List<FrequentItemSet> list = new ArrayList<FrequentItemSet>();
         for (Integer i : m_alwaysFrequentItems) {
@@ -426,7 +429,7 @@ public class ArrayApriori implements AprioriAlgorithm {
 
     private List<FrequentItemSet> filterMaximalItemsets(
             final List<FrequentItemSet> closedItemsets) {
-        List<FrequentItemSet> maximalItemsets 
+        List<FrequentItemSet> maximalItemsets
             = new ArrayList<FrequentItemSet>();
         for (FrequentItemSet outer : closedItemsets) {
             boolean isMaximal = true;
@@ -450,11 +453,11 @@ public class ArrayApriori implements AprioriAlgorithm {
             return;
         }
         for (int i = item; i < root.getLength(); i++) {
-            if (((double)root.getCounterFor(i) / (double)m_dbsize) 
+            if (((double)root.getCounterFor(i) / (double)m_dbsize)
                     >= m_minSupport) {
                 FrequentItemSet newSet = new FrequentItemSet(
                         "" + m_idCounter++,
-                        currSet.getItems(), ((double)root.getCounterFor(i) 
+                        currSet.getItems(), ((double)root.getCounterFor(i)
                                 / (double)m_dbsize));
                 newSet.add(m_backwardMapping[i]);
                 list.add(newSet);
@@ -466,6 +469,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     private List<FrequentItemSet> filterClosedItemsets(
             final List<FrequentItemSet> completeList) {
         Collections.sort(completeList, new Comparator<FrequentItemSet>() {
+            @Override
             public int compare(final FrequentItemSet s1,
                     final FrequentItemSet s2) {
                 if (s1.getSupport() == s2.getSupport()) {

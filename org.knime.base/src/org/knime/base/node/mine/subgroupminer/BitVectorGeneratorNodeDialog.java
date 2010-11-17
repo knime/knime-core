@@ -105,11 +105,11 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private boolean m_hasStringCol = false;
 
     private JCheckBox m_replaceBox;
-    
+
     private static final int COMP_HEIGHT = 20;
 
     @SuppressWarnings("unchecked")
-    private DialogComponentColumnFilter m_includeColumns 
+    private DialogComponentColumnFilter m_includeColumns
         = new DialogComponentColumnFilter(
                 BitVectorGeneratorNodeModel.createColumnFilterModel(), 0,
                 false, DoubleValue.class);
@@ -130,6 +130,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         m_useMean = new JCheckBox();
         m_useMean.setSelected(false);
         m_useMean.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent arg0) {
                 m_meanPercentage.setEnabled(m_useMean.isSelected());
                 m_threshold.setEnabled(!m_useMean.isSelected());
@@ -157,10 +158,10 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         // if the input is numeric
         m_numericRadio = new JRadioButton("Numeric input (many columns)");
         m_numericRadio.addItemListener(new ItemListener() {
-
             /**
              * {@inheritDoc}
              */
+            @Override
             public void itemStateChanged(final ItemEvent arg0) {
                 if (m_numericRadio.isSelected()) {
                     // disable
@@ -179,10 +180,10 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         m_stringRadio = new JRadioButton(
                 "Parse bitvectors from strings (one column)");
         m_stringRadio.addItemListener(new ItemListener() {
-
             /**
              * {@inheritDoc}
              */
+            @Override
             public void itemStateChanged(final ItemEvent arg0) {
                 if (m_stringRadio.isSelected()) {
                     // disable
@@ -203,14 +204,14 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         JPanel numericPanel = createNumericInputPanel();
         JPanel stringPanel = createStringInputPanel();
         JPanel replacePanel = createReplacePanel();
-        
+
         numericPanel.setBorder(BorderFactory.createTitledBorder(
                 "Bits from numeric columns"));
         stringPanel.setBorder(BorderFactory.createTitledBorder(
                 "Bits from string column"));
         replacePanel.setBorder(BorderFactory.createTitledBorder(
                 "General"));
-        
+
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(numericPanel);
@@ -240,7 +241,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         threshBox.add(threshLabel);
         threshBox.add(m_threshold);
         threshBox.add(Box.createHorizontalGlue());
-        
+
         Box meanBox = Box.createHorizontalBox();
         JLabel meanLabel = new JLabel("Use percentage of the mean:");
         meanLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -249,7 +250,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         meanBox.add(meanLabel);
         meanBox.add(m_useMean);
         meanBox.add(Box.createHorizontalGlue());
-        
+
         Box percentageBox = Box.createHorizontalBox();
         JLabel percentageLabel = new JLabel("Percentage:");
         m_meanPercentage.setMinimumSize(new Dimension(100, COMP_HEIGHT));
@@ -258,7 +259,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         percentageBox.add(percentageLabel);
         percentageBox.add(m_meanPercentage);
         percentageBox.add(Box.createHorizontalGlue());
-        
+
         Box numericRadioBox = Box.createHorizontalBox();
         numericRadioBox.add(m_numericRadio);
         numericRadioBox.add(Box.createHorizontalGlue());
@@ -287,17 +288,17 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         colBox.add(Box.createHorizontalGlue());
         colBox.add(m_stringColumn.getComponentPanel());
         colBox.add(Box.createHorizontalGlue());
-        
+
         Box methodBox = Box.createHorizontalBox();
         JLabel methodLabel = new JLabel("Kind of string representation: ");
         m_stringType.setMinimumSize(new Dimension(100, COMP_HEIGHT));
         m_stringType.setMaximumSize(new Dimension(100, COMP_HEIGHT));
-        
+
         methodBox.add(Box.createHorizontalGlue());
         methodBox.add(methodLabel);
         methodBox.add(m_stringType);
         methodBox.add(Box.createHorizontalGlue());
-        
+
         Box stringRadioBox = Box.createHorizontalBox();
         stringRadioBox.add(m_stringRadio);
         stringRadioBox.add(Box.createHorizontalGlue());
@@ -356,7 +357,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                 BitVectorGeneratorNodeModel.CFG_MEAN_THRESHOLD, 100));
         m_replaceBox.setSelected(settings.getBoolean(
                 BitVectorGeneratorNodeModel.CFG_REPLACE, false));
-        
+
         m_stringColumn.loadSettingsFrom(settings, specs);
         m_includeColumns.loadSettingsFrom(settings, specs);
     }

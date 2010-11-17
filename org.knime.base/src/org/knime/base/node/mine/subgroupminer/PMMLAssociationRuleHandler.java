@@ -95,6 +95,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
     @Override
     public void characters(final char[] ch, final int start,
             final int length) throws SAXException {
+        // empty
     }
 
     /**
@@ -102,6 +103,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
      */
     @Override
     public void endDocument() throws SAXException {
+        // empty
     }
 
     /**

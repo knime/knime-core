@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.02.2006 (dill): created
  */
@@ -61,12 +61,12 @@ import org.knime.core.node.NodeView;
  * bitsets out of the data. In particular, this is the number of processed rows,
  * the resulting bitvector length, the total number of generated zeros and ones
  * and the resulting ratio from 1s to 0s.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class BitVectorGeneratorView 
+public class BitVectorGeneratorView
         extends NodeView<BitVectorGeneratorNodeModel> {
-    
+
     private JEditorPane m_pane;
 
     private static final int ROUNDING_CONSTANT = 10000;
@@ -74,7 +74,7 @@ public class BitVectorGeneratorView
     /**
      * Creates the view instance or the BitVectorGeneratorNode with the
      * BitVectorGeneratorNodeModel as the underlying model.
-     * 
+     *
      * @param model the underlying node model
      */
     public BitVectorGeneratorView(final BitVectorGeneratorNodeModel model) {
@@ -90,8 +90,8 @@ public class BitVectorGeneratorView
      */
     @Override
     protected void modelChanged() {
-        BitVectorGeneratorNodeModel model = 
-            (BitVectorGeneratorNodeModel)getNodeModel();
+        BitVectorGeneratorNodeModel model =
+            getNodeModel();
         if (model != null) {
             setTextArea();
         }
@@ -102,6 +102,7 @@ public class BitVectorGeneratorView
      */
     @Override
     protected void onClose() {
+        // empty
     }
 
     /**
@@ -109,16 +110,14 @@ public class BitVectorGeneratorView
      */
     @Override
     protected void onOpen() {
-        BitVectorGeneratorNodeModel model = ((BitVectorGeneratorNodeModel)
-                getNodeModel());
+        BitVectorGeneratorNodeModel model = (getNodeModel());
         if (model != null) {
             setTextArea();
         }
     }
 
     private void setTextArea() {
-        BitVectorGeneratorNodeModel model 
-            = (BitVectorGeneratorNodeModel)getNodeModel();
+        BitVectorGeneratorNodeModel model = getNodeModel();
         StringBuffer buffer = new StringBuffer("<html></body>");
         buffer.append("<h2>BitVector Generator Information:</h2>");
         buffer.append("<hr>");

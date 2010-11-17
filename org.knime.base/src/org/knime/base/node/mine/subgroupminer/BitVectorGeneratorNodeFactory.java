@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.12.2005 (dill): created
  */
@@ -56,12 +56,12 @@ import org.knime.core.node.NodeView;
 
 /**
  * The factory for the BitVectorGenerator Node.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class BitVectorGeneratorNodeFactory 
+public class BitVectorGeneratorNodeFactory
         extends NodeFactory<BitVectorGeneratorNodeModel> {
-    
+
     /**
      * {@inheritDoc}
      */
@@ -84,8 +84,7 @@ public class BitVectorGeneratorNodeFactory
     @Override
     public NodeView<BitVectorGeneratorNodeModel> createNodeView(
             final int viewIndex, final BitVectorGeneratorNodeModel nodeModel) {
-        return new BitVectorGeneratorView(
-                (BitVectorGeneratorNodeModel)nodeModel);
+        return new BitVectorGeneratorView(nodeModel);
     }
 
     /**

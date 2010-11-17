@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.12.2005 (dill): created
  */
@@ -55,7 +55,7 @@ import java.util.BitSet;
 /**
  * The TIDItem consists of an id and a BitSet, where each bit corresponds to a
  * transaction id and is set, if this item is present in the transaction.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class TIDItem implements Comparable<TIDItem> {
@@ -66,7 +66,7 @@ public class TIDItem implements Comparable<TIDItem> {
 
     /**
      * Creates an TIDItem with this id and present in no transaction.
-     * 
+     *
      * @param id the id of this item
      */
     public TIDItem(final int id) {
@@ -75,7 +75,7 @@ public class TIDItem implements Comparable<TIDItem> {
     }
 
     /**
-     * 
+     *
      * @return - the id of this item.
      */
     public int getId() {
@@ -85,7 +85,7 @@ public class TIDItem implements Comparable<TIDItem> {
     /**
      * Adds a transaction id to this item, thus, the item has to be present in
      * this transaction.
-     * 
+     *
      * @param tid the transaction id of the transaction this item is present in
      */
     public void addTID(final int tid) {
@@ -95,7 +95,7 @@ public class TIDItem implements Comparable<TIDItem> {
     /**
      * The support of this item, which is the number of transaction it is
      * present in.
-     * 
+     *
      * @return the support of this item, which is the numer of transactions it
      *         is present in
      */
@@ -106,7 +106,7 @@ public class TIDItem implements Comparable<TIDItem> {
     /**
      * The transaction ids as a bitset, where the bit is set if the item is
      * present in the corresponding transaction.
-     * 
+     *
      * @return the ids of the transactions this item appears in
      */
     public BitSet getTransactionIDs() {
@@ -142,7 +142,7 @@ public class TIDItem implements Comparable<TIDItem> {
     @Override
     public TIDItem clone() {
         TIDItem newItem = new TIDItem(new Integer(m_id));
-        for (int tid = m_transactionIDs.nextSetBit(0); tid >= 0; 
+        for (int tid = m_transactionIDs.nextSetBit(0); tid >= 0;
             tid = m_transactionIDs.nextSetBit(tid + 1)) {
             newItem.addTID(tid);
         }
@@ -154,6 +154,7 @@ public class TIDItem implements Comparable<TIDItem> {
      * @return -1 if this is smaller, 0 if it is equal to the other and +1 if
      *         this is greater
      */
+    @Override
     public int compareTo(final TIDItem theOther) {
         if (m_id < theOther.getId()) {
             return -1;

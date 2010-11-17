@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.10.2005 (dill): created
  */
@@ -72,12 +72,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * input column for the bitvectors, the minimum support, the desired type of
  * frequent itemsets (free, closed or maximal), the maximal itemset length, how
  * the output table should be sorted and the underlying algorithm.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  * @author Iris Adae, University of Konstanz
  */
 public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
-    
+
     private final DialogComponentColumnNameSelection m_transactionCols;
 
     private final DialogComponentNumber m_minSupportComp;
@@ -100,97 +100,98 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public SubgroupMinerDialog2() {
         super();
-        
+
         m_transactionCols = new DialogComponentColumnNameSelection(
               createBitVectorColumnModel(),
               "Column containing transactions",
               0, BitVectorValue.class, CollectionDataValue.class);
-        
+
         m_minSupportComp = new DialogComponentNumber(
                 createMinSupportModel(),
                 "Minimum support (0-1)", 0.1);
-        
+
         m_itemSetTypeComp = new DialogComponentStringSelection(
                 createItemSetTypeModel(), "Itemset type",
                 FrequentItemSet.Type.asStringList());
 
         m_itemSetLengthComp = new DialogComponentNumber(
                 createItemsetLengthModel(),
-                "Maximal itemset length:", 1);        
+                "Maximal itemset length:", 1);
 
         m_dataStructComp = new DialogComponentStringSelection(
                 createAlgorithmModel(),
                 "Underlying data structure: ",
                 AprioriAlgorithmFactory.AlgorithmDataStructure.asStringList());
-        
+
 
         // models
-        final SettingsModelDoubleBounded confidenceModel 
+        final SettingsModelDoubleBounded confidenceModel
             = createConfidenceModel();
-        final SettingsModelBoolean assocRuleFlag 
+        final SettingsModelBoolean assocRuleFlag
             = createAssociationRuleFlagModel();
-        
-        // components 
+
+        // components
         m_confidence = new DialogComponentNumber(
                 confidenceModel, "Minimum confidence:", 0.1, 8);
-        
+
 
         m_associationRules = new DialogComponentBoolean(
                 assocRuleFlag, "Output association rules");
-        
+
         // listener
         assocRuleFlag.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 confidenceModel.setEnabled(assocRuleFlag.getBooleanValue());
             }
         });
-        
-        
+
+
         // adding to panel
         createNewGroup(" Itemset Mining ");
         addDialogComponent(m_transactionCols);
         addDialogComponent(m_minSupportComp);
         addDialogComponent(m_dataStructComp);
-        
+
         createNewGroup(" Output ");
         addDialogComponent(m_itemSetTypeComp);
         addDialogComponent(m_itemSetLengthComp);
-        
+
         createNewGroup(" Association Rules ");
         addDialogComponent(m_associationRules);
         addDialogComponent(m_confidence);
     }
 
     /**
-     * 
+     *
      * @return settings model for the transaction column
      */
     static SettingsModelString createBitVectorColumnModel() {
         return new SettingsModelString(
                 SubgroupMinerModel2.CFG_TRANSACTION_COL, "");
     }
-    
+
     /**
-     * 
+     *
      * @return settings model for the minimum support
      */
     static SettingsModelDoubleBounded createMinSupportModel() {
         return new SettingsModelDoubleBounded(
-                SubgroupMinerModel2.CFG_MIN_SUPPORT, 
+                SubgroupMinerModel2.CFG_MIN_SUPPORT,
                 SubgroupMinerModel2.DEFAULT_MIN_SUPPORT, 0.0, 1.0);
     }
-    
+
     /**
-     * 
+     *
      * @return settings model for the item set type
      */
     static SettingsModelString createItemSetTypeModel() {
-        return new SettingsModelString(SubgroupMinerModel2.CFG_ITEMSET_TYPE, 
+        return new SettingsModelString(SubgroupMinerModel2.CFG_ITEMSET_TYPE,
                 FrequentItemSet.Type.CLOSED.name());
     }
-    
+
     /**
-     * 
+     *
      * @return settings model for the itemset length
      */
     static SettingsModelIntegerBounded createItemsetLengthModel() {
@@ -199,19 +200,19 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
                 SubgroupMinerModel2.DEFAULT_MAX_ITEMSET_LENGTH,
                 1, Integer.MAX_VALUE);
     }
-    
+
     /**
-     * 
+     *
      * @return settings model for the association rule creation flag
      */
     static SettingsModelBoolean createAssociationRuleFlagModel() {
         return new SettingsModelBoolean(
                 SubgroupMinerModel2.CFG_ASSOCIATION_RULES, false);
     }
-    
+
     /**
-     * 
-     * @return settings model for the confidence 
+     *
+     * @return settings model for the confidence
      */
     static SettingsModelDoubleBounded createConfidenceModel() {
         SettingsModelDoubleBounded model = new SettingsModelDoubleBounded(
@@ -220,14 +221,14 @@ public class SubgroupMinerDialog2 extends DefaultNodeSettingsPane {
         model.setEnabled(false);
         return model;
     }
-    
+
     /**
-     * 
+     *
      * @return settings model for the underlying algorithm
      */
     static SettingsModelString createAlgorithmModel() {
         return new SettingsModelString(
-                SubgroupMinerModel2.CFG_UNDERLYING_STRUCT, 
+                SubgroupMinerModel2.CFG_UNDERLYING_STRUCT,
                 AprioriAlgorithmFactory.AlgorithmDataStructure.ARRAY.name());
     }
 }

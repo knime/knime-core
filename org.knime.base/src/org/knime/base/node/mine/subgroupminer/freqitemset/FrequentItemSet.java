@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (Fabian Dill): created
  */
@@ -62,7 +62,7 @@ import java.util.List;
  * free, closed or maximal. Free sets have no other constraint then the minimum
  * support. Closed itemsets have no superset with the same support and maximal
  * itemsets have no frequent superset at all.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class FrequentItemSet implements Iterable<Integer> {
@@ -71,7 +71,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * sets have no other constraint then the minimum support. Closed itemsets
      * have no superset with the same support and maximal itemsets have no
      * frequent superset at all.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public static enum Type {
@@ -84,7 +84,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
         /**
          * Returns the enum fields as a String list of their names.
-         * 
+         *
          * @return the enum fields as a String list of their names
          */
         public static List<String> asStringList() {
@@ -104,7 +104,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     private boolean m_isClosed;
 
     private boolean m_isMaximal;
-    
+
     private final String m_id;
 
     /**
@@ -119,7 +119,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     /**
      * Creates frequent itemset with the passed items, support = 0 and neither
      * closed nor maximal.
-     * 
+     *
      * @param id the id of this itemset
      * @param items the items constituting this set
      */
@@ -130,12 +130,12 @@ public class FrequentItemSet implements Iterable<Integer> {
     /**
      * Creates a fequent itemset with the passed items and the given support.
      * Neither closed nor maximal.
-     * 
+     *
      * @param id the id of this itemset
      * @param items the items constituting this set
      * @param support the support of this itemset
      */
-    public FrequentItemSet(final String id, 
+    public FrequentItemSet(final String id,
             final List<Integer> items, final double support) {
         this(id, items, support, false, false);
     }
@@ -144,7 +144,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * Creates a frequent itemset with the passed items, the given support and
      * whether it is closed or maximal. If both, closed and maximal are
      * <code>false</code> it is considered to be free.
-     * 
+     *
      * @param id the id of this itemset
      * @param items the items consituting this itemset.
      * @param support the support of this itemset.
@@ -153,7 +153,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * @param isMaximal <code>true</code> if this itemset is maximal,
      *            <code>false</code> otherwise
      */
-    public FrequentItemSet(final String id, final List<Integer> items, 
+    public FrequentItemSet(final String id, final List<Integer> items,
             final double support,
             final boolean isClosed, final boolean isMaximal) {
         m_items = new LinkedList<Integer>(items);
@@ -166,7 +166,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     /**
      * Returns <code>true</code>, if this itemset is a subset of the passed
      * one, that is, if the passed one contains all items of this set.
-     * 
+     *
      * @param s2 the frequent itemset to test on
      * @return <code>true</code>, if this is a subset of the passed one,
      *         <code>false</code> otherwise
@@ -176,16 +176,16 @@ public class FrequentItemSet implements Iterable<Integer> {
     }
 
     /**
-     * 
+     *
      * @return the id of this itemset
      */
     public String getId() {
         return m_id;
     }
-    
+
     /**
      * Adds the passed item to the set.
-     * 
+     *
      * @param item the item to add to this set
      */
     public void add(final Integer item) {
@@ -193,16 +193,17 @@ public class FrequentItemSet implements Iterable<Integer> {
     }
 
     /**
-     * 
+     *
      * @return an iterator over the items
      */
+    @Override
     public Iterator<Integer> iterator() {
         return m_items.iterator();
     }
 
     /**
      * Returns a copy of the items in this set.
-     * 
+     *
      * @return a copy of the items in this set
      */
     public List<Integer> getItems() {
@@ -211,7 +212,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
     /**
      * Adds a set of items.
-     * 
+     *
      * @param items the items to add to this set
      */
     public void setItems(final List<Integer> items) {
@@ -219,7 +220,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     }
 
     /**
-     * 
+     *
      * @return <code>true</code>, if this itemset is closed,
      *         <code>false</code> otherwise
      */
@@ -229,7 +230,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
     /**
      * Sets whether this set is closed or not.
-     * 
+     *
      * @param isClosed <code>true</code>, if this set is closed,
      *            <code>false</code> otherwise
      */
@@ -238,7 +239,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     }
 
     /**
-     * 
+     *
      * @return <code>true</code>, if this set is maximal, <code>false</code>
      *         otherwise
      */
@@ -248,7 +249,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
     /**
      * Sets whether this set is maximal or not.
-     * 
+     *
      * @param isMaximal whether this frequent item set is maximal or not
      */
     public void setMaximal(final boolean isMaximal) {
@@ -264,7 +265,7 @@ public class FrequentItemSet implements Iterable<Integer> {
 
     /**
      * Sets the support of this set.
-     * 
+     *
      * @param support the support of this set
      */
     public void setSupport(final double support) {

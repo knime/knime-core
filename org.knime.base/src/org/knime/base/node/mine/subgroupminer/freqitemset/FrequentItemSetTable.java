@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (dill): created
  */
@@ -71,8 +71,8 @@ import org.knime.core.data.RowIterator;
  * This can not be done by the SorterNode, since the rows of a
  * FrequentItemSetTable are of variable length ( the rest is filled with empty
  * cells) and the user is able to sort by itemset length.
- * 
- * @deprecated 
+ *
+ * @deprecated
  * @author Fabian Dill, University of Konstanz
  */
 @Deprecated
@@ -88,7 +88,7 @@ public class FrequentItemSetTable implements DataTable {
 
         /**
          * Returns the enum fields as a String list of their names.
-         * 
+         *
          * @return the enum fields as a String list of their names
          */
         public static List<String> asStringList() {
@@ -105,14 +105,15 @@ public class FrequentItemSetTable implements DataTable {
 
     private final DataTableSpec m_spec;
 
-    private static final Map<FrequentItemSetTable.Sorter, 
+    private static final Map<FrequentItemSetTable.Sorter,
         Comparator<FrequentItemSetRow>> COMPARATORS;
 
     static {
-        COMPARATORS = new HashMap<FrequentItemSetTable.Sorter, 
+        COMPARATORS = new HashMap<FrequentItemSetTable.Sorter,
             Comparator<FrequentItemSetRow>>();
         COMPARATORS.put(FrequentItemSetTable.Sorter.SUPPORT,
                 new Comparator<FrequentItemSetRow>() {
+                    @Override
                     public int compare(final FrequentItemSetRow row1,
                             final FrequentItemSetRow row2) {
                         return ((Double)row2.getSupport()).compareTo(row1
@@ -121,6 +122,7 @@ public class FrequentItemSetTable implements DataTable {
                 });
         COMPARATORS.put(FrequentItemSetTable.Sorter.ITEM_SET_LENGTH,
                 new Comparator<FrequentItemSetRow>() {
+                    @Override
                     public int compare(final FrequentItemSetRow row1,
                             final FrequentItemSetRow row2) {
                         return ((Integer)row2.getSetLength()).compareTo(row1
@@ -132,7 +134,7 @@ public class FrequentItemSetTable implements DataTable {
     /**
      * Creates a FrequentItemSetTable out of the passed row array and the given
      * DataTableSpec.
-     * 
+     *
      * @param rows the rows of this table
      * @param spec the DataTableSpec of this Table
      */
@@ -149,7 +151,7 @@ public class FrequentItemSetTable implements DataTable {
     /**
      * Creates a FrequentItemSetTable out of the passed row list and the given
      * DataTableSpec.
-     * 
+     *
      * @param rowList the rows of this table
      * @param spec the DataTableSpec of this table
      */
@@ -193,6 +195,7 @@ public class FrequentItemSetTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
@@ -200,13 +203,14 @@ public class FrequentItemSetTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         return new FrequentItemSetRowIterator();
     }
 
     /**
      * Sorts the table by the given sorter (support or itemset length).
-     * 
+     *
      * @param sorter defines by which feature the table should be sorted
      */
     public void sortBy(final Sorter sorter) {
@@ -223,7 +227,7 @@ public class FrequentItemSetTable implements DataTable {
 
         /**
          * Creates an instance of the iterator over the table.
-         * 
+         *
          */
         public FrequentItemSetRowIterator() {
             m_iterator = m_rows.iterator();
