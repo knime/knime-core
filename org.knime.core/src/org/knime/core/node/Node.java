@@ -126,12 +126,12 @@ import org.w3c.dom.Element;
  * passed to the node constructor to create a node of that specific type.
  *
  * @author Thomas Gabriel, University of Konstanz
- *
  */
 public final class Node implements NodeModelWarningListener {
 
     /** The node logger for this class. */
     private final NodeLogger m_logger;
+
     /**
      * Config for node (and node container) settings which are shown in the
      * dialog.
@@ -752,8 +752,9 @@ public final class Node implements NodeModelWarningListener {
                     // the entire execution of this node. But first check
                     // if it's the end of a loop:
                     if (m_model instanceof LoopEndNode) {
-                        // we can not handle this case: the End Loop node needs to
-                        // trigger re-exeuction which it won't in an inactive branch
+                        // we can not handle this case: the End Loop node needs
+                        // to trigger re-execution which it won't in an inactive
+                        // branch
                         createErrorMessageAndNotify("Loop End node in inactive "
                                 + "branch not allowed.");
                         return false;
@@ -1501,42 +1502,6 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Shows this node's dialog with the name of this node as title.
-     *
-     * @see #showDialog(String)
-     */
-    // OBSOLETE
-    // public void showDialog(final DataTableSpec[] specs) {
-    // showDialog("Dialog - " + getName(), specs);
-    // }
-    /**
-     * Opens the node's dialog and loads the current settings from the model
-     * into the dialog.
-     *
-     * @param title The title for the dialog to open.
-     */
-    // OBSOLETE
-    // public void showDialog(final String title, final DataTableSpec[] specs) {
-    // try {
-    // if (hasDialog()) {
-    // NodeDialog dlg = new NodeDialog(getDialogPane(specs), this);
-    // dlg.openDialog();
-    // }
-    // } catch (Exception e) {
-    // m_logger.error("show dialog failed", e);
-    // m_status =
-    // new NodeStatus.Error("Dialog could not be opend properly: "
-    // + e.getMessage());
-    // notifyStateListeners(m_status);
-    // } catch (Error e) {
-    // m_logger.fatal("show dialog failed", e);
-    // m_status =
-    // new NodeStatus.Error("Dialog could not be opend properly: "
-    // + e.getMessage());
-    // notifyStateListeners(m_status);
-    // }
-    // }
-    /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
      *            {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}.
      * @param settings The current settings of this node. The settings object
@@ -1696,90 +1661,6 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    /**
-     * Validates the settings inside the model.
-     *
-     * @throws InvalidSettingsException If not valid.
-     */
-    // OBSOLETE
-    // public void validateModelSettingsFromDialog()
-    // throws InvalidSettingsException {
-    // // save new dialog's config into new object
-    // NodeSettings newSettings = new NodeSettings(this.getName());
-    // m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
-    // m_model.validateSettings(newSettings.getNodeSettings(CFG_MODEL));
-    // // validate settings
-    // loadMiscSettingsFrom(newSettings.getNodeSettings(CFG_MISC_SETTINGS),
-    // false);
-    // }
-    /**
-     * Reads the current settings from the dialog and writes them into the
-     * model.
-     *
-     * @throws InvalidSettingsException If the settings are not valid for the
-     *             underlying model.
-     */
-    // OBSOLETE, will be fixed by MICHAEL
-    // public void loadModelSettingsFromDialog() throws InvalidSettingsException
-    // {
-    // // save new dialog's config into new object
-    // NodeSettings newSettings = new NodeSettings(this.getName());
-    // m_dialogPane.finishEditingAndSaveSettingsTo(newSettings);
-    // // and apply it to the model
-    // m_model.loadSettingsFrom(newSettings.getNodeSettings(CFG_MODEL));
-    // // if this method is called, the dialog was at least open, so the
-    // // the misc information is present (note: there were no misc infos
-    // // before KNIME 1.2.0)
-    // loadMiscSettingsFrom(newSettings.getNodeSettings(CFG_MISC_SETTINGS),
-    // true);
-    // }
-    /**
-     * Compares the current settings from the dialog with the settings from the
-     * model.
-     *
-     * @return true if the settings are equal
-     */
-    // OBSOLETE here
-    // public boolean isModelAndDialogSettingsEqual() {
-    // try {
-    // // save new dialog's config into new object
-    // NodeSettings dialogSettings = new NodeSettings("Compare");
-    // m_dialogPane.finishEditingAndSaveSettingsTo(dialogSettings);
-    // NodeSettings modelSettings = new NodeSettings("Compare");
-    // NodeSettingsWO miscSettings =
-    // modelSettings.addNodeSettings(CFG_MISC_SETTINGS);
-    // saveMiscSettingsTo(miscSettings);
-    // m_model.saveSettingsTo(modelSettings.addNodeSettings(CFG_MODEL));
-    // // check for equality
-    // return dialogSettings.isIdentical(modelSettings);
-    // } catch (InvalidSettingsException ise) {
-    // // if there are invalid settings it is assumed that the settings
-    // // are not equal
-    // return false;
-    // }
-    // }
-    /**
-     * Reads the current settings from the model and load them into the dialog
-     * pane.
-     *
-     * @throws NotConfigurableException if the dialog cannot be opened because
-     *             of real invalid settings or if any preconditions are not
-     *             fulfilled, e.g. no predecessor node, no nominal column in
-     *             input table, etc.
-     */
-    // OBSOLETE
-    // private void loadDialogSettingsFromModel(final PortObjectSpec[] specs)
-    // throws NotConfigurableException {
-    // // get the model's current settings ...
-    // NodeSettings currSettings = new NodeSettings(this.getName());
-    // NodeSettingsWO modelSettings = currSettings.addNodeSettings(CFG_MODEL);
-    // m_model.saveSettingsTo(modelSettings);
-    // NodeSettingsWO miscSettings =
-    // currSettings.addNodeSettings(CFG_MISC_SETTINGS);
-    // saveMiscSettingsTo(miscSettings);
-    // // ... to init the dialog
-    // m_dialogPane.internalLoadSettingsFrom(currSettings, specs);
-    // }
     /**
      * Adds a state listener to this node. Ignored, if the listener is already
      * registered.
