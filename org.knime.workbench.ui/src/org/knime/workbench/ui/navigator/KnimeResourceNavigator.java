@@ -62,6 +62,7 @@ import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -262,16 +263,20 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL) {
                     @Override
                     protected void handleDoubleSelect(final SelectionEvent event) {
-                        // we have to consume this event in order to avoid
-                        // expansion/collaps of the double clicked project
-                        // strangly enough it opens anyway and the collopased or
-                        // expanded state remains
-                        // Update: 2.0.3 call handle open in order to enable
-                        // open on double-click on the Mac. So far no
-                        // side-effects on
-                        // Windows
-                        KnimeResourceNavigator.this.handleOpen(new OpenEvent(
-                                this, getSelection()));
+                        // the default implementation in the navigator
+                        // performs a collapse/expand AND an open event.
+                        // We only want either, depending on the selection.
+                        Object sel =
+                                ((StructuredSelection)getSelection())
+                                        .getFirstElement();
+                        if (isWorkflow(sel)) {
+                            KnimeResourceNavigator.this.handleOpen(
+                                    new OpenEvent(this, getSelection()));
+                        } else {
+                            // expand the double-clicked element one level down
+                            KnimeResourceNavigator.super.handleDoubleClick(
+                                    new DoubleClickEvent(this, getSelection()));
+                        }
                     }
                 };
         viewer.setUseHashlookup(true);
@@ -357,16 +362,18 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 ((IStructuredSelection)event.getSelection()).getFirstElement();
 
         if (selection instanceof IContainer) {
-            IContainer container = (IContainer)selection;
-            IFile file = null;
-            Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
-            if (container.exists(wfPath)) {
-                if (container.getParent() != null
-                        && !container.getParent().exists(wfPath)) {
-                    file =
-                            (IFile)container
-                                    .findMember(WorkflowPersistor.WORKFLOW_FILE);
-                    LOGGER.debug("opening: " + container.getName());
+            IFile file = getWorkflowFile(selection);
+            if (file != null && file.exists()) {
+                if (isWorkflow(selection)) {
+                    // don't open meta nodes
+                    StructuredSelection selection2 =
+                            new StructuredSelection(file);
+
+                    OpenFileAction action =
+                            new OpenFileAction(PlatformUI.getWorkbench()
+                                   .getActiveWorkbenchWindow().getActivePage());
+                    action.selectionChanged(selection2);
+                    action.run();
                 }
             } else {
                 EditMetaInfoAction action = new EditMetaInfoAction();
@@ -375,22 +382,49 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 }
                 return;
             }
-            if (file != null && file.exists()) {
-                StructuredSelection selection2 = new StructuredSelection(file);
+        }
+    }
 
-                OpenFileAction action =
-                        new OpenFileAction(PlatformUI.getWorkbench()
-                                .getActiveWorkbenchWindow().getActivePage());
-                action.selectionChanged(selection2);
-                action.run();
+    /**
+     * Returns the workflow file - of a flow or a meta node - or null.
+     * @param o
+     * @return
+     */
+    private IFile getWorkflowFile(final Object o) {
+        if (o instanceof IContainer) {
+            IContainer container = (IContainer)o;
+            Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
+            if (container.exists(wfPath)) {
+                    return (IFile)container.findMember(
+                            WorkflowPersistor.WORKFLOW_FILE);
             }
         }
+        return null;
+    }
+
+    private boolean isWorkflow(final Object o) {
+        if (o instanceof IContainer) {
+            IContainer container = (IContainer)o;
+            Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
+            if (container.exists(wfPath)) {
+                // container must have a workflow file
+                IFile wFile =
+                        (IFile)container
+                                .findMember(WorkflowPersistor.WORKFLOW_FILE);
+                if (wFile != null && wFile.exists()) {
+                    // also parent must _not_ have a workflow file
+                    return (container.getParent() == null)
+                            || !container.getParent().exists(wfPath);
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * Fills the context menu with the actions contained in this group and its
      * subgroups. Additionally the close project item is removed as not intended
-     * for the kinme projects. Note: Projects which are closed in the default
+     * for the knime projects. Note: Projects which are closed in the default
      * navigator are not shown in the knime navigator any more.
      *
      * @param menu the context menu
@@ -435,7 +469,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new ExportKnimeWorkflowAction(PlatformUI.getWorkbench()
                         .getActiveWorkbenchWindow()));
 
-        // TODO: this is hardcoded the copy item. should be retreived more
+        // TODO: this is hardcoded the copy item. should be retrieved more
         // dynamically
         String id = menu.getItems()[2].getId();
 
