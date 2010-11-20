@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="TestcaseCollector" name="TestcaseCollector" schema="schema/org.knime.testing.TestcaseCollector.exsd"/>
    <!-- This is an example for providing an own category 
       <extension
          point="org.knime.workbench.repository.categories">

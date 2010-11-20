@@ -23,38 +23,31 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.regex.Pattern;
 
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner;
 import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
-import org.eclipse.osgi.baseadaptor.loader.BaseClassLoader;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
-import org.knime.DummyClass;
 
 /**
- * This application runs all Unit tests it can find. It collects all classes in
- * the same classpath entry as {@link DummyClass}. This can either be a
- * directory (if started from within the IDE) or a JAR file (if started from an
- * Eclipse installation).
- *
+ * This application runs all Unit tests it can find. It collects all classes by
+ * querying implementations of {@link AbstractTestcaseCollector} that are
+ * registered at the extension point.
  *
  * @author Thorsten Meinl, University of Konstanz
- *
  */
-@SuppressWarnings("restriction")
 public class UnittestRunnerApplication implements IApplication {
+    private static final String EXT_POINT_ID =
+            "org.knime.testing.TestcaseCollector";
+
+    private static final String EXT_POINT_ATTR_DF = "TestcaseCollector";
+
     private boolean m_stopped;
 
     private File m_destDir;
@@ -72,53 +65,50 @@ public class UnittestRunnerApplication implements IApplication {
         }
         m_destDir.mkdirs();
 
-        // find the correct classpath entry
-        BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
-        ClasspathManager cpm = cl.getClasspathManager();
-        String dummyClassPath =
-                DummyClass.class.getName().replace(".", "/") + ".class";
-
-        BundleEntry be = cpm.findLocalEntry(dummyClassPath);
-        URL localUrl = be.getLocalURL();
-
-        // collect all classes inside the director or jar file
-        List<String> classNames;
-        if ("file".equals(localUrl.getProtocol())) {
-            String path = localUrl.getPath();
-            path = path.replaceFirst(Pattern.quote(dummyClassPath) + "$", "");
-            classNames = collectInDirectory(new File(path), "");
-        } else if ("jar".equals(localUrl.getProtocol())) {
-            String path =
-                    localUrl.getPath().replaceFirst("^file:", "")
-                            .replaceFirst("\\!.+$", "");
-            classNames = collectInJar(new JarFile(path));
-        } else {
-            throw new IllegalStateException("Cannot read from protocol '"
-                    + localUrl.getProtocol() + "'");
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+        if (point == null) {
+            throw new IllegalStateException("ACTIVATION ERROR: "
+                    + " --> Invalid extension point: " + EXT_POINT_ID);
         }
 
-        classNames.remove(DummyClass.class.getName());
+        for (IConfigurationElement elem : point.getConfigurationElements()) {
+            String collectorName = elem.getAttribute(EXT_POINT_ATTR_DF);
+            String decl = elem.getDeclaringExtension().getUniqueIdentifier();
 
-        // run the tests
-        for (String className : classNames) {
-            if (m_stopped) {
-                System.err.println("Tests aborted");
-                break;
+            if (collectorName == null || collectorName.isEmpty()) {
+                throw new Exception("The extension '" + decl
+                        + "' doesn't provide the required attribute '"
+                        + EXT_POINT_ATTR_DF + "', ignoring it");
             }
 
-            System.out.println("======= Running " + className + " =======");
-            JUnitTest junitTest = new JUnitTest(className);
-            JUnitTestRunner runner =
-                    new JUnitTestRunner(junitTest, false, false, false, this
-                            .getClass().getClassLoader());
-            XMLJUnitResultFormatter formatter = new XMLJUnitResultFormatter();
-            OutputStream out =
-                    new FileOutputStream(
-                            new File(m_destDir, className + ".xml"));
-            formatter.setOutput(out);
-            runner.addFormatter(formatter);
-            runner.run();
-            out.close();
+            AbstractTestcaseCollector collector =
+                    (AbstractTestcaseCollector)elem
+                            .createExecutableExtension(EXT_POINT_ATTR_DF);
+
+            // run the tests
+            for (String className : collector.getUnittestsClasses()) {
+                if (m_stopped) {
+                    System.err.println("Tests aborted");
+                    break;
+                }
+
+                System.out.println("======= Running " + className + " =======");
+                JUnitTest junitTest = new JUnitTest(className);
+                JUnitTestRunner runner =
+                        new JUnitTestRunner(junitTest, false, false, false,
+                                collector.getClass().getClassLoader());
+                XMLJUnitResultFormatter formatter =
+                        new XMLJUnitResultFormatter();
+                OutputStream out =
+                        new FileOutputStream(new File(m_destDir, className
+                                + ".xml"));
+                formatter.setOutput(out);
+                runner.addFormatter(formatter);
+                runner.run();
+                out.close();
+            }
+
         }
 
         return EXIT_OK;
@@ -192,58 +182,7 @@ public class UnittestRunnerApplication implements IApplication {
     private void printUsage() {
         System.err.println("Valid arguments:");
 
-        System.err.println("    -outputDir <dir_name>: specifies the"
+        System.err.println("    -destDir <dir_name>: specifies the"
                 + " directory into which the test results are written.");
-    }
-
-    /**
-     * Recursively Collects and returns all classes (excluding inner classes)
-     * that are in the specified directory.
-     *
-     * @param directory the directory
-     * @param packageName the package name, initially the empty string
-     * @return a list with class names
-     */
-    private List<String> collectInDirectory(final File directory,
-            final String packageName) {
-        List<String> classNames = new ArrayList<String>();
-
-        for (File f : directory.listFiles()) {
-            if (f.isDirectory()) {
-                classNames.addAll(collectInDirectory(f,
-                        packageName + f.getName() + "."));
-            } else if (f.getName().endsWith(".class")
-                    && !f.getName().contains("$")) {
-                String s =
-                        packageName + f.getName().replaceFirst("\\.class$", "");
-                classNames.add(s);
-            }
-        }
-
-        return classNames;
-    }
-
-    /**
-     * Collects and returns all classes inside the given JAR file (excluding
-     * inner classes).
-     *
-     * @param jar the jar file
-     * @return a list with class names
-     * @throws IOException if an I/O error occurs
-     */
-    private List<String> collectInJar(final JarFile jar) throws IOException {
-        List<String> classNames = new ArrayList<String>();
-
-        Enumeration<JarEntry> entries = jar.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry e = entries.nextElement();
-            String s = e.getName();
-            if (s.endsWith(".class") && !s.contains("$")) {
-                s = s.replaceFirst("\\.class$", "");
-                classNames.add(s.replace('/', '.'));
-            }
-        }
-        jar.close();
-        return classNames;
     }
 }
