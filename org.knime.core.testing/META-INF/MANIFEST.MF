@@ -8,3 +8,22 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.testing;bundle-version="2.3.0",
  org.junit;bundle-version="4.8.1"
+Export-Package: org.knime.core,
+ org.knime.core.data.container,
+ org.knime.core.data.def,
+ org.knime.core.data.util,
+ org.knime.core.data.vector.bitvector,
+ org.knime.core.data.vector.bytevector,
+ org.knime.core.node,
+ org.knime.core.node.port.pmml,
+ org.knime.core.node.property.hilite,
+ org.knime.core.node.tableview,
+ org.knime.core.util,
+ org.knime.core.util.tokenizer,
+ org.knime.core.workflow,
+ org.knime.core.workflow.bug2225_sourceNodesInMetaNodes,
+ org.knime.core.workflow.chainofnodesoneblocking,
+ org.knime.core.workflow.metaWithIndependentThroughConns,
+ org.knime.core.workflow.metawithsinglenode,
+ org.knime.core.workflow.simplechainofnodes,
+ org.knime.core.workflow.simpleLoop

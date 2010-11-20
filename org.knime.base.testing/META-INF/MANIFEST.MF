@@ -25,5 +25,6 @@ Export-Package: org.knime.base,
  org.knime.base.node.preproc.sorter,
  org.knime.base.node.viz.histogram.util,
  org.knime.base.util.kdtree,
- org.knime.base.util.math
+ org.knime.base.util.math,
+ org.knime.core.data.container.blobs
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
