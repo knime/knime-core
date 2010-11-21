@@ -58,7 +58,6 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.internal.ide.model.WorkbenchAdapterBuilder;
 
 /**
  * This advisor is used for configuring the workbench window and creating the
@@ -116,11 +115,11 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
         // We want to use ResourceNavigator, so we have to introduce this
         // dependency to org.eclipse.ui.ide (otherwise we don't see our
         // Resources)
-        WorkbenchAdapterBuilder.registerAdapters();
+        org.eclipse.ui.ide.IDE.registerAdapters();
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -132,12 +131,12 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
                 // do nothing
             }
             @Override
-            public boolean preShutdown(final IWorkbench workbench, 
+            public boolean preShutdown(final IWorkbench workbench,
                     final boolean forced) {
                 // Remove consoles manually in time. Otherwise they are removed,
-                // when the display is already disposed and this causes 
+                // when the display is already disposed and this causes
                 // exceptions
-                // this is a workaround for bug 
+                // this is a workaround for bug
                 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=257970
                 // reported here:
                 // http://dev.eclipse.org/newslists/news.eclipse.platform.rcp/msg35729.html
@@ -149,5 +148,5 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
             }
         });
     }
-    
+
 }

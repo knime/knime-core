@@ -20,7 +20,6 @@ Require-Bundle: org.eclipse.ui,
 Export-Package: org.knime.product,org.knime.product.headless,org.knime
  .product.rcp
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-ClassPath: knime-product.jar
 Bundle-Version: 2.3.0.qualifier
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-Activator: org.knime.product.ProductPlugin

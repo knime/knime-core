@@ -66,12 +66,10 @@ public class KNIMEApplication implements IApplication {
      */
     private static final Integer EXIT_RELAUNCH = new Integer(24);
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext
-     *      context)
+    /**
+     * {@inheritDoc}
      */
+    @Override
     public Object start(final IApplicationContext appContext) throws Exception {
         Display display = createDisplay();
 
@@ -80,7 +78,7 @@ public class KNIMEApplication implements IApplication {
 
             try {
                 if (!checkInstanceLocation(shell)) {
-                    Platform.endSplash();
+                    appContext.applicationRunning();
                     return EXIT_OK;
                 }
             } finally {
@@ -114,7 +112,7 @@ public class KNIMEApplication implements IApplication {
     }
 
 
-    protected WorkbenchAdvisor getWorkbenchAdvisor() {
+    private WorkbenchAdvisor getWorkbenchAdvisor() {
         return new KNIMEApplicationWorkbenchAdvisor();
     }
 
@@ -444,11 +442,10 @@ public class KNIMEApplication implements IApplication {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.equinox.app.IApplication#stop()
+    /**
+     * {@inheritDoc}
      */
+    @Override
     public void stop() {
         final IWorkbench workbench = PlatformUI.getWorkbench();
         if (workbench == null) {
@@ -456,6 +453,7 @@ public class KNIMEApplication implements IApplication {
         }
         final Display display = workbench.getDisplay();
         display.syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (!display.isDisposed()) {
                     workbench.close();
