@@ -1077,24 +1077,28 @@
             id="org.knime.base.node.switches.manualif.ManualIfNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.switches.manualif.ManualIfNodeFactory"
             category-path="/flowcontrol/switches"
             expert-flag="true"
             factory-class="org.knime.base.node.switches.endif.EndifNodeFactory"
             id="org.knime.base.node.switches.endif.EndifNodeFactory">
       </node>
       <node
-            category-path="/flowcontrol/switches"
-            expert-flag="true"
-            factory-class="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
-            id="org.knime.base.node.switches.endcase.EndcaseNodeFactory">
-      </node>
-      <node
+            after="org.knime.base.node.switches.endif.EndifNodeFactory"
             category-path="/flowcontrol/switches"
             expert-flag="true"
             factory-class="org.knime.base.node.switches.startcase.StartcaseNodeFactory"
             id="org.knime.base.node.switches.startcase.StartcaseNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.switches.startcase.StartcaseNodeFactory"
+            category-path="/flowcontrol/switches"
+            expert-flag="true"
+            factory-class="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
+            id="org.knime.base.node.switches.endcase.EndcaseNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
             category-path="/flowcontrol/switches"
             expert-flag="true"
             factory-class="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"

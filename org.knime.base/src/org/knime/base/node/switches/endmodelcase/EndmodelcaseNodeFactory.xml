@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="endcase.png" type="Manipulator">
+<knimeNode icon="switches_esac_model.png" type="Manipulator">
     <name>End (Model) CASE</name>
     
     <shortDescription>
