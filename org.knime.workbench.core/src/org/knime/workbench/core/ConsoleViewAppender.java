@@ -52,12 +52,7 @@ package org.knime.workbench.core;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.LinkedList;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.console.ConsolePlugin;
@@ -126,6 +121,10 @@ public final class ConsoleViewAppender extends Writer {
 
     private final NodeLogger.LEVEL m_level;
 
+    private final MessageConsoleStream m_out;
+
+
+
     /**
      * Initializes the ConsoleView appender.S.
      *
@@ -135,6 +134,9 @@ public final class ConsoleViewAppender extends Writer {
         m_color = color;
         m_name = name;
         m_level = level;
+
+        MessageConsole console = findConsole(CONSOLE_NAME);
+        m_out = console.newMessageStream();
     }
 
     /**
@@ -150,59 +152,6 @@ public final class ConsoleViewAppender extends Writer {
     public NodeLogger.LEVEL getLevel() {
         return m_level;
     }
-
-    /**
-     * Appends a logging message to the console log. Color is selected based
-     * upon the given logging level.
-     *
-     * @param text text
-     */
-    public void append(final String text) {
-        assert text == text;
-        Display.getDefault().syncExec(new Runnable() {
-            public void run() {
-
-            }
-        });
-
-    }
-
-    // /**
-    // * Writes an event to the corresponding console log.
-    // *
-    // * @param event The event to log
-    // * @param color Text color
-    // */
-    // private void writeToConsole(final LoggingEvent event, final Color color)
-    // {
-    // }
-
-    // /**
-    // * Activates (= brings to top) the console view that is responsible for
-    // the
-    // * given event
-    // */
-    // private void activateConsole() {
-    // MessageConsole console = findConsole(CONSOLE_NAME);
-    //
-    // IWorkbenchPage page = PlatformUI.getWorkbench()
-    // .getActiveWorkbenchWindow().getActivePage();
-    // if (page == null) {
-    // return; // workbench may not be opened yet, ignore !
-    // // TODO: cache and display later !
-    // }
-    //
-    // String id = IConsoleConstants.ID_CONSOLE_VIEW;
-    // IConsoleView view;
-    // try {
-    // view = (IConsoleView) page.showView(id);
-    // view.display(console);
-    // } catch (PartInitException e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-    //
-    // }
 
     /**
      * Looks up the console view that is responsible for the given event, does
@@ -225,8 +174,6 @@ public final class ConsoleViewAppender extends Writer {
         return myConsole;
     }
 
-    private static ConsoleWriteJob consoleWriteJob = new ConsoleWriteJob();
-
     /**
      * {@inheritDoc}
      */
@@ -235,11 +182,15 @@ public final class ConsoleViewAppender extends Writer {
             throws IOException {
         // make new string here as the caller reuses the char[]
         final String str = new String(cbuf, off, len);
-        // makes sure that the printing is not queued in the UI thread,
-        // to be changed when bug
-        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
-        // is fixed.
-        consoleWriteJob.add(this, str);
+
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                // activateConsole();
+                m_out.setColor(m_color);
+                m_out.print(str);
+            }
+        });
     }
 
     /**
@@ -256,94 +207,5 @@ public final class ConsoleViewAppender extends Writer {
     @Override
     public void close() throws IOException {
         // nothing to do here
-    }
-
-    /**
-     * Little job (i.e. also thread) that prints messages to the console. It
-     * must not be the UI thread because of bug #140540:
-     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
-     *
-     * @deprecated To be removed when the bug has been fixed (I, BW, am on the
-     *             cc list)
-     */
-    @Deprecated
-    private static class ConsoleWriteJob extends Job {
-        private final LinkedList<ConsoleStringTuple> m_queueEntries;
-
-        private static final int MAX_STACK_SIZE = 100000;
-
-        /**
-         *
-         */
-        public ConsoleWriteJob() {
-            super("Console Write Job");
-            setSystem(true);
-            m_queueEntries = new LinkedList<ConsoleStringTuple>();
-        }
-
-        /**
-         * @param appender
-         * @param str
-         */
-        public void add(final ConsoleViewAppender appender, final String str) {
-            synchronized (m_queueEntries) {
-                if (m_queueEntries.size() > MAX_STACK_SIZE) {
-                    m_queueEntries.clear();
-                    m_queueEntries.add(new ConsoleStringTuple(WARN_APPENDER,
-                            "Console stack exceeded " + MAX_STACK_SIZE
-                                    + " messages, flushing..."));
-                } else {
-                    m_queueEntries.add(new ConsoleStringTuple(appender, str));
-                }
-                if (getState() == Job.SLEEPING || getState() == Job.NONE) {
-                    wakeUp();
-                    schedule();
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected IStatus run(final IProgressMonitor monitor) {
-            if (!monitor.isCanceled()) {
-                while (!m_queueEntries.isEmpty()) {
-                    final ConsoleStringTuple first;
-                    synchronized (m_queueEntries) {
-                        first = m_queueEntries.removeFirst();
-                    }
-                    final ConsoleViewAppender a = first.m_appender;
-                    MessageConsole cons = a.findConsole(CONSOLE_NAME);
-                    final MessageConsoleStream out = cons.newMessageStream();
-                    // apparently the setColor invocation must take place
-                    // in the UI thread (otherwise exception to error log)
-                    // the print invocation must not take place in the UI
-                    // thread (because of the before mentioned bug)
-                    Display.getDefault().syncExec(new Runnable() {
-                        public void run() {
-                            // activateConsole();
-                            out.setColor(a.m_color);
-                        }
-                    });
-                    out.print(first.m_string);
-                }
-            }
-            return Status.OK_STATUS;
-        }
-
-        /** Two members: ConsoleViewAppender and the string to print. */
-        private static final class ConsoleStringTuple {
-            private final ConsoleViewAppender m_appender;
-
-            private final String m_string;
-
-            private ConsoleStringTuple(final ConsoleViewAppender appender,
-                    final String string) {
-                m_appender = appender;
-                m_string = string;
-            }
-        }
-
     }
 }
