@@ -57,7 +57,7 @@ package org.knime.ext.sun.nodes.script.expression;
 public class Abort extends Exception {
 
     /** Empty abort. */
-    Abort() {
+    public Abort() {
         super();
     }
 
