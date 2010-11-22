@@ -61,6 +61,7 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyAdapter;
@@ -69,6 +70,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -105,9 +107,10 @@ public class StyledTextEditor extends CellEditor {
             TOOLBAR_HEIGHT = 16;
         }
     }
-    /** the minimum width of the editor window in order to show all buttons
-     * even under MacOS. Seems the default distance between buttons is seven.
-     * And we currently have seven buttons in the toolbar.
+
+    /** the minimum width of the editor window in order to show all buttons even
+     * under MacOS. Seems the default distance between buttons is seven. And we
+     * currently have seven buttons in the toolbar.
      */
     public static final int TOOLBAR_MIN_WIDTH = (TOOLBAR_HEIGHT + 7) * 7;
 
@@ -187,6 +190,18 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.setFont(parent.getFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
+        m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
+            @Override
+            public void verifyKey(final VerifyEvent event) {
+                // pressing DEL at the end of the text closes the editor!
+                if (event.keyCode == SWT.DEL
+                        && m_styledText.getCaretOffset() == m_styledText
+                                .getText().length()) {
+                    // ignore the DEL at the end of the text
+                    event.doit = false;
+                }
+            }
+        });
         // forward some events to the cell editor
         m_styledText.addKeyListener(new KeyAdapter() {
             @Override
