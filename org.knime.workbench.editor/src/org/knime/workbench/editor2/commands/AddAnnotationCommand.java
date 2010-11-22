@@ -83,7 +83,7 @@ public class AddAnnotationCommand extends Command {
             .colorToRGBint(AnnotationEditPart
                     .getAnnotationDefaultBackgroundColor());
 
-    public static final String INITIAL_TEXT = "Select and click to edit.";
+    public static final String INITIAL_TEXT = "Double-click to edit.";
 
     // remember the new annotation for undo
     private WorkflowAnnotation m_anno;

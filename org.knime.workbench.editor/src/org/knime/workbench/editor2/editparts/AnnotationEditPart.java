@@ -318,10 +318,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void performRequest(final Request request) {
         if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            performEdit();
+            // enter edit mode only after a double-click
+            super.performRequest(request);
         } else if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
-            super.performRequest(request);
+            performEdit();
         } else {
             super.performRequest(request);
         }
