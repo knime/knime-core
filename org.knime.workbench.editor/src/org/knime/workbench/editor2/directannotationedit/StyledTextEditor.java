@@ -94,12 +94,19 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  */
 public class StyledTextEditor extends CellEditor {
 
+    /** height of the font style toolbar in the editor control. */
+    public static final int TOOLBAR_HEIGHT;
+    static {
+        if (Platform.OS_LINUX.equals(Platform.getOS())) {
+            TOOLBAR_HEIGHT = 22;
+        } else if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            TOOLBAR_HEIGHT = 30;
+        } else {
+            TOOLBAR_HEIGHT = 16;
+        }
+    }
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(StyledTextEditor.class);
-
-    /** height of the font style toolbar in the editor control. */
-    public static final int TOOLBAR_HEIGHT =
-        Platform.OS_LINUX.equals(Platform.getOS()) ? 22 : 16;
 
     private StyledText m_styledText;
 
