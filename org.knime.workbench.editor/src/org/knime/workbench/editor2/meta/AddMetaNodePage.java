@@ -81,6 +81,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
+import org.knime.workbench.editor2.meta.MetaNodePortType.DataMetaNodePortType;
 
 /**
  * The single page of the {@link AddMetaNodeWizard}.
@@ -118,6 +119,7 @@ public class AddMetaNodePage extends WizardPage {
      *
      * {@inheritDoc}
      */
+    @Override
     public void createControl(final Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(new GridLayout(1, true));
@@ -140,6 +142,7 @@ public class AddMetaNodePage extends WizardPage {
 
             private int m_top;
 
+            @Override
             public void paintControl(final PaintEvent e) {
                 GC gc = e.gc;
                 Rectangle bounds = m_previewPanel.getBounds();
@@ -295,12 +298,14 @@ public class AddMetaNodePage extends WizardPage {
         }
         // add the ports to the lists
         for (int i = 0; i < nrInPorts; i++) {
-            Port inPort = new Port(BufferedDataTable.TYPE, "in_" + i);
+            Port inPort = new Port(BufferedDataTable.TYPE,
+                    DataMetaNodePortType.INSTANCE.getName(), "in_" + i);
             m_inPortList.add(inPort);
             m_inPorts.add(inPort.toString());
         }
         for (int i = 0; i < nrOutPorts; i++) {
-            Port outPort = new Port(BufferedDataTable.TYPE, "out_" + i);
+            Port outPort = new Port(BufferedDataTable.TYPE,
+                    DataMetaNodePortType.INSTANCE.getName(), "out_" + i);
             m_outPortList.add(outPort);
             m_outPorts.add(outPort.toString());
         }
@@ -445,6 +450,7 @@ public class AddMetaNodePage extends WizardPage {
 
         add.addSelectionListener(new SelectionListener() {
 
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 MetaPortDialog dialog = new MetaPortDialog(
                         Display.getDefault().getActiveShell());
@@ -463,6 +469,7 @@ public class AddMetaNodePage extends WizardPage {
                 updateStatus();
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 widgetDefaultSelected(e);
             }
@@ -475,10 +482,12 @@ public class AddMetaNodePage extends WizardPage {
         remove.setLayoutData(gridData);
         remove.addSelectionListener(new SelectionListener() {
 
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 if (in) {
                     remove(true, m_inPorts.getItem(

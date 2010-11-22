@@ -50,11 +50,7 @@
  */
 package org.knime.workbench.editor2.meta;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * Helper class to represent a port with name and type.
@@ -64,6 +60,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 public class Port {
 
     private final PortType m_type;
+    private final String m_typeName;
     private String m_name;
 
 
@@ -71,12 +68,13 @@ public class Port {
      *
      * @param type the port type
      */
-    public Port(final PortType type) {
+    public Port(final PortType type, String typeName) {
         m_type = type;
+        m_typeName = typeName;
     }
 
-    public Port(final PortType type, final String name) {
-        this(type);
+    public Port(final PortType type, String typeName, final String name) {
+        this(type, typeName);
         m_name = name;
     }
 
@@ -86,6 +84,14 @@ public class Port {
      */
     public PortType getType() {
         return m_type;
+    }
+    
+    /**
+     * Returns the port type name (i.e. "Data")
+     * @return
+     */
+    public String getTypeName() {
+        return m_typeName;
     }
 
     /**
@@ -110,16 +116,6 @@ public class Port {
      */
     @Override
     public String toString() {
-        if (m_type.equals(BufferedDataTable.TYPE)) {
-            return m_name + " (Data)";
-        } else if (PMMLPortObject.TYPE.isSuperTypeOf(m_type)) {
-            return m_name + " (PMML)";
-        } else if (m_type.equals(DatabasePortObject.TYPE)) {
-            return m_name + " (Database)";
-        } else if (m_type.equals(FlowVariablePortObject.TYPE)) {
-            return m_name + " (FlowVariable)";
-        } else {
-            return m_name + " (unknown)";
-        }
+        return m_name + " (" + m_typeName + ")";
     }
 }

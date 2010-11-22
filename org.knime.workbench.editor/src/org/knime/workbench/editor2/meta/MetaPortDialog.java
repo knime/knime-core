@@ -194,7 +194,7 @@ public class MetaPortDialog extends Dialog {
                     throw new IllegalStateException(
                             "Unknown port type: " + selected);
                 }
-                m_port = new Port(type.getType());
+                m_port = new Port(type.getType(), type.getName());
                 m_shell.dispose();
             }
 

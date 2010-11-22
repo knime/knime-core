@@ -128,6 +128,10 @@ public abstract class MetaNodePortType {
     /** Data port type. */
     public static final class DataMetaNodePortType extends MetaNodePortType {
 
+        /** Instance to be used. */
+        public static final DataMetaNodePortType INSTANCE =
+            new DataMetaNodePortType();
+
         /** Calls super constructor with corresponding types. */
         public DataMetaNodePortType() {
             super(BufferedDataTable.TYPE, "Data");
