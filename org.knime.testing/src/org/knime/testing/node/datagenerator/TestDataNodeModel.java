@@ -90,7 +90,7 @@ public class TestDataNodeModel extends NodeModel {
         new GregorianCalendar(0, 1, 1, 24, 59, 59).getTime(),
         new GregorianCalendar(4000, 1, 1, 24, 59, 59).getTime()};
 
-    private static final int noOfCols = 15;
+    private static final int noOfCols = 17;
 
 
     /**Constructor for class TestDataNodeModel.
@@ -143,6 +143,9 @@ public class TestDataNodeModel extends NodeModel {
             cells[i++] = getMissingVal(rowIdx);
             cells[i++] = getMissingValListVal(rowIdx, noOfListItems);
             cells[i++] = getMissingValSetVal(rowIdx, noOfSetItems);
+
+            cells[i++] = getStringVal(rowIdx);
+            cells[i++] = getDoubleVal(rowIdx);
 
             final DefaultRow row =
                 new DefaultRow(RowKey.createRowKey(rowIdx), cells);
@@ -338,6 +341,22 @@ public class TestDataNodeModel extends NodeModel {
         specs[i++] = creator.createSpec();
         creator.setName("MissingValStringSetCol");
         creator.setType(SetCell.getCollectionType(StringCell.TYPE));
+        specs[i++] = creator.createSpec();
+        creator.setName("LongStringColumnNameLongStringColumnName"
+                + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
+                + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
+                + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
+                + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
+                + "LongStringColumnNameLongStringColumnName");
+        creator.setType(StringCell.TYPE);
+        specs[i++] = creator.createSpec();
+        creator.setName("LongDoubleColumnNameLongDoubleColumnName"
+                + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
+                + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
+                + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
+                + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
+                + "LongDoubleColumnNameLongDoubleColumnName");
+        creator.setType(DoubleCell.TYPE);
         specs[i++] = creator.createSpec();
 
         return new DataTableSpec(specs);
