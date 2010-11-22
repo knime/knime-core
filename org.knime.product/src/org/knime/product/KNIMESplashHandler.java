@@ -133,7 +133,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         for (Image img : m_images) {
             maxWidth = Math.max(maxWidth, img.getBounds().width + 3);
         }
-        
+
         final int horizontalSpacing = 10;
         // each item requires space "(maxWidth + horizontalSpacing)", except
         // for the very last image
@@ -154,13 +154,13 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         if (m_images.size() > 0) {
             m_installedExtensions = new Label(splash, SWT.NONE);
             m_installedExtensions.setText("Installed Extensions:");
-            
-            /* On Mac OS X the origin of the coordinate system is in the bottom 
+
+            /* On Mac OS X the origin of the coordinate system is in the bottom
              * left corner. Therefore we need other y coordinates here. */
             int y = 195;
-            if (System.getProperty("os.name").startsWith("Mac")) {
+            if (Platform.OS_MACOSX.equals(Platform.getOS())) {
             	y = 110;
-            } 
+            }
             m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, y, 200, 20);
         }
     }
@@ -173,13 +173,13 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
         int xWidth = panelSize.x;
         int yWidth = panelSize.y;
-        
-        /* On Mac OS X the origin of the coordinate system is in the bottom 
+
+        /* On Mac OS X the origin of the coordinate system is in the bottom
          * left corner. Therefor we need other y coordinates here. */
         int y = 225;
-        if (System.getProperty("os.name").startsWith("Mac")) {
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
         	y = 65;
-        } 
+        }
         m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, y, xWidth, yWidth);
     }
 
