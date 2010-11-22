@@ -39,23 +39,23 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class DateMetaGUIElement extends MetaGUIElement {
-    
+
     private static final String SEPARATOR = "/";
-    
+
     private static final String FORM_TYPE = "date";
-    
+
     private int m_day;
-    
+
     private int m_month;
-    
+
     private int m_year;
 
-    
-    public DateMetaGUIElement(final String label, final String value, 
+
+    public DateMetaGUIElement(final String label, final String value,
             final boolean isReadOnly) {
         super(label, value, isReadOnly);
         // if value == null -> current date
@@ -72,7 +72,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
             m_year = Integer.parseInt(fields[2].trim());
         }
     }
-    
+
     /**
      * Sets the represented date to the current time.
      */
@@ -82,18 +82,18 @@ public class DateMetaGUIElement extends MetaGUIElement {
         m_month = date.get(Calendar.MONTH);
         m_year = date.get(Calendar.YEAR);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public Control createGUIElement(final FormToolkit toolkit, 
+    public Control createGUIElement(final FormToolkit toolkit,
             final Composite parent) {
         Composite date = toolkit.createComposite(parent);
-        GridLayout layout = new GridLayout(6, true);
+        GridLayout layout = new GridLayout(6, false);
         layout.horizontalSpacing = 10;
-        date.setLayout(layout);        
-        
+        date.setLayout(layout);
+
         toolkit.createLabel(date, "Day:");
         createDayCombo(date);
 
@@ -105,11 +105,13 @@ public class DateMetaGUIElement extends MetaGUIElement {
         return date;
     }
 
-    
-    
-    
+
+
+
     private void createYearCombo(final Composite parent) {
-        final Combo year = new Combo(parent, SWT.DROP_DOWN);
+        // must not be rw (resize problem on linux:
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218224)
+        final Combo year = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         year.add("2008");
         year.add("2009");
         year.add("2010");
@@ -138,7 +140,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
                     showSelectPrompt("Year");
                 }
             }
-            
+
         });
         year.addModifyListener(new ModifyListener() {
 
@@ -146,7 +148,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
             public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
-            
+
         });
         year.setEnabled(!isReadOnly());
     }
@@ -155,7 +157,9 @@ public class DateMetaGUIElement extends MetaGUIElement {
 
 
     private void createMonthCombo(final Composite parent) {
-        final Combo month = new Combo(parent, SWT.DROP_DOWN);
+        // must not be rw (resize problem on linux:
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218224)
+        final Combo month = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         month.add("01");
         month.add("02");
         month.add("03");
@@ -179,7 +183,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
 
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                int index = month.getSelectionIndex(); 
+                int index = month.getSelectionIndex();
                 if (index < 0) {
                     showSelectPrompt("Month");
                 } else {
@@ -193,7 +197,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
             public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
-            
+
         });
         month.setEnabled(!isReadOnly());
     }
@@ -202,7 +206,9 @@ public class DateMetaGUIElement extends MetaGUIElement {
 
 
     private void createDayCombo(final Composite parent) {
-        final Combo day = new Combo(parent, SWT.DROP_DOWN);
+        // must not be rw (resize problem on linux:
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218224)
+        final Combo day = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         day.add("01");
         day.add("02");
         day.add("03");
@@ -245,7 +251,7 @@ public class DateMetaGUIElement extends MetaGUIElement {
 
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                int index = day.getSelectionIndex(); 
+                int index = day.getSelectionIndex();
                 if (index < 0) {
                     showSelectPrompt("Day");
                 } else {
@@ -259,8 +265,8 @@ public class DateMetaGUIElement extends MetaGUIElement {
             public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
-            
-        });    
+
+        });
         day.setEnabled(!isReadOnly());
     }
 
@@ -271,13 +277,13 @@ public class DateMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(final TransformerHandler parentElement) 
+    public void saveTo(final TransformerHandler parentElement)
         throws SAXException {
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
+        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
                 FORM_TYPE);
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
-        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA",
                 "" + isReadOnly());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
         String dateString = createStorageString(m_day, m_month, m_year);
@@ -285,23 +291,23 @@ public class DateMetaGUIElement extends MetaGUIElement {
         parentElement.characters(date, 0, date.length);
         parentElement.endElement(null, null, MetaGUIElement.ELEMENT);
     }
-    
-    
+
+
     private void showSelectPrompt(final String missingField) {
         Display.getDefault().syncExec(new Runnable() {
 
             @Override
             public void run() {
                 MessageDialog.openWarning(Display.getDefault().getActiveShell(),
-                        "Please select...", 
+                        "Please select...",
                         missingField + " is empty. Please select");
             }
-            
+
         });
     }
-    
+
     /**
-     * Return the string representation that is used to store the date within 
+     * Return the string representation that is used to store the date within
      * XML.
      * @param day 1-31
      * @param month 0-11
