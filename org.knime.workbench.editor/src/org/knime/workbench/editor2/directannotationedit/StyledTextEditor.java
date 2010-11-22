@@ -100,7 +100,7 @@ public class StyledTextEditor extends CellEditor {
         if (Platform.OS_LINUX.equals(Platform.getOS())) {
             TOOLBAR_HEIGHT = 22;
         } else if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            TOOLBAR_HEIGHT = 30;
+            TOOLBAR_HEIGHT = 28;
         } else {
             TOOLBAR_HEIGHT = 16;
         }
