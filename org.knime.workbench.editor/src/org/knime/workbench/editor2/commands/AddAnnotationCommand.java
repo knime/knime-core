@@ -60,6 +60,7 @@ import org.eclipse.swt.graphics.Point;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -75,10 +76,14 @@ public class AddAnnotationCommand extends Command {
 
     private final Point m_location;
 
-    private static final int DEFAULT_HEIGHT = 67;
+    private static final int DEFAULT_HEIGHT;
 
-    private static final int DEFAULT_WIDTH = 175;
+    private static final int DEFAULT_WIDTH;
 
+    static {
+        DEFAULT_WIDTH = Math.max(175, StyledTextEditor.TOOLBAR_MIN_WIDTH);
+        DEFAULT_HEIGHT = (int)Math.round(DEFAULT_WIDTH * 0.38);
+    }
     private static final int INITIAL_COLOR = AnnotationEditPart
             .colorToRGBint(AnnotationEditPart
                     .getAnnotationDefaultBackgroundColor());

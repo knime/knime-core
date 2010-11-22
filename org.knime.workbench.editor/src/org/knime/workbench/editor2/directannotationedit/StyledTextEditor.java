@@ -105,6 +105,12 @@ public class StyledTextEditor extends CellEditor {
             TOOLBAR_HEIGHT = 16;
         }
     }
+    /** the minimum width of the editor window in order to show all buttons
+     * even under MacOS. Seems the default distance between buttons is seven.
+     * And we currently have seven buttons in the toolbar.
+     */
+    public static final int TOOLBAR_MIN_WIDTH = (TOOLBAR_HEIGHT + 7) * 7;
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(StyledTextEditor.class);
 
