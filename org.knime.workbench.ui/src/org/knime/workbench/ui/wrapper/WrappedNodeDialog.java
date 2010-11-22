@@ -93,7 +93,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * JFace implementation of a dialog containing the wrapped Panel from the
+ * JFace implementation of a dialog containing the wrapped panel from the
  * original node dialog.
  *
  * @author Thomas Gabriel, University of Konstanz, Germany
@@ -282,13 +282,17 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     protected void createButtonsForButtonBar(final Composite parent) {
-        // WORKAROUND !! We can't use IDialogConstants.OK_ID here, as this
-        // always closes the dialog, regardless if the settings couldn't be
-        // applied.
+        // WORKAROUND: can't use IDialogConstants.OK_ID here, as this always
+        // closes the dialog, regardless if the settings couldn't be applied.
         final Button btnOK = createButton(parent,
               IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
+        final Button btnApply = createButton(parent,
+                IDialogConstants.FINISH_ID, "Apply", false);
+        final Button btnCancel = createButton(parent,
+                IDialogConstants.CANCEL_ID,
+                IDialogConstants.CANCEL_LABEL, false);
 
-        m_wrapper.addKeyListener(new KeyListener() {
+        final KeyListener keyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
             public void keyReleased(final KeyEvent ke) {
@@ -313,16 +317,17 @@ public class WrappedNodeDialog extends Dialog {
                         // force OK - Execute when CTRL and ENTER is pressed
                         // open first out-port view if SHIFT is pressed
                         doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
+                        // reset ok button state/label
+                        btnOK.setText("OK");
                     }
                 }
             }
-        });
+        };
 
-        final Button btnApply = createButton(parent,
-                IDialogConstants.FINISH_ID, "Apply", false);
-        final Button btnCancel = createButton(parent,
-                IDialogConstants.CANCEL_ID,
-                IDialogConstants.CANCEL_LABEL, false);
+        btnOK.addKeyListener(keyListener);
+        btnApply.addKeyListener(keyListener);
+        btnCancel.addKeyListener(keyListener);
+        m_wrapper.addKeyListener(keyListener);
 
         // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
@@ -339,6 +344,8 @@ public class WrappedNodeDialog extends Dialog {
                     // OK only
                     doOK(se, false, false);
                 }
+                // reset ok button state/label
+                btnOK.setText("OK");
             }
         });
 
@@ -346,6 +353,8 @@ public class WrappedNodeDialog extends Dialog {
             @Override
             public void widgetSelected(final SelectionEvent se) {
                 se.doit = doApply();
+                // reset ok button state/label
+                btnOK.setText("OK");
             }
         });
 
