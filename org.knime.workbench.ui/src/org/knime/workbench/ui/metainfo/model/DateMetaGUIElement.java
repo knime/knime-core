@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -135,7 +134,6 @@ public class DateMetaGUIElement extends MetaGUIElement {
                 if (selectionIdx >= 0) {
                     String yearString = year.getItem(selectionIdx);
                     m_year = Integer.parseInt(yearString);
-                    fireModifiedEvent(new ModifyEvent(new Event()));
                 } else {
                     showSelectPrompt("Year");
                 }
