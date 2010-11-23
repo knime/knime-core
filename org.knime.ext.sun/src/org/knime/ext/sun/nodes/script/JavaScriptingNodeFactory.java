@@ -55,6 +55,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
+import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDateAndTimeType;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDoubleType;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntType;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetLongType;
@@ -78,6 +79,7 @@ public class JavaScriptingNodeFactory
                 JavaSnippetIntType.INSTANCE,
                 JavaSnippetLongType.INSTANCE,
                 JavaSnippetDoubleType.INSTANCE,
+                JavaSnippetDateAndTimeType.INSTANCE,
                 JavaSnippetStringType.INSTANCE
         });
     }

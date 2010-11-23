@@ -52,6 +52,7 @@ package org.knime.ext.sun.nodes.script.settings;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.knime.core.data.BooleanValue;
@@ -65,6 +66,8 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -89,6 +92,7 @@ public abstract class JavaSnippetType
         JavaSnippetIntType.INSTANCE,
         JavaSnippetLongType.INSTANCE,
         JavaSnippetDoubleType.INSTANCE,
+        JavaSnippetDateAndTimeType.INSTANCE,
         JavaSnippetStringType.INSTANCE
     };
 
@@ -344,6 +348,33 @@ public abstract class JavaSnippetType
         @Override
         protected DoubleCell toKNIMECell(final Double value) {
             return new DoubleCell(value);
+        }
+    }
+
+    /** DataAndTime type. */
+    public static final class JavaSnippetDateAndTimeType
+    extends JavaSnippetType<Date, DateAndTimeValue, DateAndTimeCell> {
+
+        /** Singleton instance. */
+        public static final JavaSnippetDateAndTimeType INSTANCE =
+            new JavaSnippetDateAndTimeType();
+
+        /** */
+        private JavaSnippetDateAndTimeType() {
+            super(Date.class, DateAndTimeValue.class, DateAndTimeCell.class);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected Date toJavaClass(final DateAndTimeValue value) {
+            return new Date(value.getUTCTimeInMillis());
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected DateAndTimeCell toKNIMECell(final Date value) {
+            long time = value.getTime();
+            return new DateAndTimeCell(time, true, true, true);
         }
     }
 

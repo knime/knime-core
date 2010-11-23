@@ -74,10 +74,12 @@
 		<option name="Method Body">
           Enter your java code here (the entire source will be wrapped in a
           method). You can add the name of a column 
-		  by double-clicking its name in the left list. Note that numeric 
-		  (double-compatible) columns will be handled as <tt>Double</tt>,
-		  int-compatible columns as <tt>Integer</tt> and any other column type 
-		  as <tt>String</tt>. If the input type represents a collection type, 
+		  by double-clicking its name in the left list. Note that native
+		  KNIME data types are passed into the expression as plain java objects
+		  (e.g. an <tt>Intcell</tt> as <tt>Integer</tt>, 
+		  <tt>DoubleCell</tt> as <tt>Double</tt>, <tt>DateAndTime</tt> as
+		  <tt>Date</tt>), whereby unknown KNIME types are available as 
+		  <tt>String</tt>. If the input type represents a collection type, 
 		  it will be available as (typed) array in the snippet.
 		</option>
 		<option name="Insert Missing As Null">
