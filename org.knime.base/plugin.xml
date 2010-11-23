@@ -1104,6 +1104,13 @@
             factory-class="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
             id="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
       </node>
+      <node
+            after="org.knime.base.node.switches.endcase.EndmodelcaseNodeFactory"
+            category-path="/flowcontrol/switches"
+            expert-flag="true"
+            factory-class="org.knime.base.node.switches.emtpytablereplacer.EmptyTableReplacerNodeFactory"
+            id="org.knime.base.node.switches.emptytablereplacer.EmptyTableReplacerNodeFactory">
+      </node>
             <node
             after="org.knime.base.node.preproc.split.SplitNodeFactory"
             category-path="/manipulation/column/column-split+combine"
