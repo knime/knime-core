@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.08.2005 (bernd): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.data.DataColumnSpec;
 
 
 /**
- * Renderer that checks if the value being renderer is of type 
+ * Renderer that checks if the value being renderer is of type
  * <code>DataColumnSpec</code> if so it will renderer the name of the column
  * spec and also the type's icon. If not, the passed value's toString() method
  * is used for rendering.
@@ -73,18 +73,21 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
      */
     @Override
     public Component getListCellRendererComponent(
-            final JList list, final Object value, final int index, 
+            final JList list, final Object value, final int index,
             final boolean isSelected, final boolean cellHasFocus) {
-        // The super method will reset the icon if we call this method 
+        // The super method will reset the icon if we call this method
         // last. So we let super do its job first and then we take care
         // that everything is properly set.
         Component c =  super.getListCellRendererComponent(list, value, index,
                 isSelected, cellHasFocus);
         assert (c == this);
+        String text = null;
         if (value instanceof DataColumnSpec) {
-            setText(((DataColumnSpec)value).getName().toString());
+            text = ((DataColumnSpec)value).getName().toString();
+            setText(text);
             setIcon(((DataColumnSpec)value).getType().getIcon());
         }
+        list.setToolTipText(text);
         return this;
     }
 }
