@@ -111,16 +111,12 @@ public class DateMetaGUIElement extends MetaGUIElement {
         // must not be rw (resize problem on linux:
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218224)
         final Combo year = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
-        year.add("2008");
-        year.add("2009");
-        year.add("2010");
-        year.add("2011");
-        year.add("2012");
-        year.add("2013");
-        year.add("2014");
-        year.add("2015");
+        int endYear = Calendar.getInstance().get(Calendar.YEAR) + 10;
+        for (int i = 2008; i <= endYear; i++) {
+            year.add(Integer.toString(i));
+        }
         // current year
-        year.select(year.indexOf("" + m_year));
+        year.select(year.indexOf(Integer.toString(m_year)));
         year.addSelectionListener(new SelectionListener() {
 
             @Override
