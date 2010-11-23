@@ -278,9 +278,9 @@ public final class NodeExecutionJobManagerPool {
                         + "') ignored.", ule);
             } catch (Throwable t) {
                 LOGGER.error("Problems during initialization of "
-                        + "job manager (with id '" + jobMgr + "'.)");
+                        + "job manager (with id '" + jobMgr + "'.)", t);
                 if (decl != null) {
-                    LOGGER.error("Extension " + decl + " ignored.", t);
+                    LOGGER.error("Extension " + decl + " ignored.");
                 }
             }
 
