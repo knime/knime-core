@@ -179,6 +179,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         idxBox.add(m_colCombo);
         idxBox.add(Box.createHorizontalGlue());
         panel.add(idxBox);
+        m_colCombo.setPreferredSize(new Dimension(150, 25));
+        m_colCombo.setMinimumSize(new Dimension(75, 25));
+        m_colCombo.setMaximumSize(new Dimension(6000, 25));
+
 
         /* the panel for range/regExpr matching */
         JPanel matchPanel = new JPanel();
@@ -264,17 +268,21 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
         panel.add(Box.createVerticalGlue()); // do we need some glue here?!?
         panel.invalidate();
-        this.add(panel);
+
+        JPanel outerPanel = new JPanel();
+        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+        outerPanel.add(Box.createVerticalGlue());
+        outerPanel.add(panel);
+        outerPanel.add(Box.createVerticalGlue());
+        this.add(outerPanel);
     }
 
     @SuppressWarnings("unchecked")
     private void instantiateComponents(final RowFilterNodeDialogPane parentPane,
             final DataTableSpec tSpec)
             throws NotConfigurableException {
-
         /* instantiate the col idx selector, depending on the table spec */
         assert ((tSpec != null) && (tSpec.getNumColumns() > 0));
-
         Vector<String> colNames = new Vector<String>();
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
@@ -283,31 +291,33 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 new ColumnSelectionComboxBox((Border)null, DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 selectedColChanged();
             }
         });
-
         /* the selectors for what kind of checking will be done */
         m_useRange = new JRadioButton("use range checking");
         m_useRegExpr = new JRadioButton("use pattern matching");
         m_useMissValue = new JRadioButton("only missing values match");
         m_useRange.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 radiosChanged();
             }
         });
         m_useRegExpr.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 radiosChanged();
             }
         });
         m_useMissValue.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 radiosChanged();
             }
         });
-
         m_radios = new ButtonGroup();
         m_radios.add(m_useRange);
         m_radios.add(m_useRegExpr);
@@ -318,27 +328,29 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_upperLabel = new JLabel("upper bound:");
         m_upperBound = new JTextField();
         m_lowerBound.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
-
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
-
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
         });
         m_upperBound.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
-
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
-
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 boundsChanged();
             }
@@ -351,20 +363,20 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_regExpr.setSelectedItem("");
         JTextField ed = (JTextField)m_regExpr.getEditor().getEditorComponent();
         ed.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
-
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
-
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
         });
         m_regExpr.addItemListener(this);
-
         /* add flow variable button for the pattern/regexpr */
         FlowVariableModel fvm = parentPane.createFlowVariableModel(
                 new String[] {RowFilterNodeModel.CFGFILTER,
@@ -385,13 +397,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             }
         });
         m_regExprVarButton = new FlowVariableModelButton(fvm);
-
         m_caseSensitive = new JCheckBox("case sensitive match");
         m_isRegExpr = new JCheckBox("regular expression");
         m_hasWildCards = new JCheckBox("contains wild cards");
         m_hasWildCards.setToolTipText("insert '?' or '*' to match any one "
                 + "character or any sequence (including none) of characters.");
         m_isRegExpr.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 wildRegExprChanged(e);
                 // also trigger regular expression recompile
@@ -399,6 +411,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             }
         });
         m_hasWildCards.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 wildRegExprChanged(e);
                 // also trigger regular expression recompile
@@ -409,7 +422,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_errText = new JLabel("");
         setErrMsg("");
         m_errText.setForeground(Color.RED);
-
         /* set the default values */
         m_useRegExpr.setSelected(true);
         if (tSpec == null) {
@@ -428,6 +440,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
      *
      * @param e the item event.
      */
+    @Override
     public void itemStateChanged(final ItemEvent e) {
         if (e.getSource() == m_regExpr) {
             if (m_regExpr.getSelectedIndex() >= 0) {

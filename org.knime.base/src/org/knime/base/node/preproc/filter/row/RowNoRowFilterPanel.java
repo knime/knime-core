@@ -44,13 +44,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.07.2005 (ohl): created
  */
 package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.ParseException;
@@ -71,7 +72,7 @@ import org.knime.base.node.preproc.filter.row.rowfilter.RowNoRowFilter;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowNoRowFilterPanel extends RowFilterPanel {
@@ -112,42 +113,52 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
                 updateErrText();
             }
         });
+        m_first.setMaximumSize(new Dimension(6022, 25));
+        m_first.setMinimumSize(new Dimension(50, 25));
+        m_first.setPreferredSize(new Dimension(50, 25));
+        m_last.setMaximumSize(new Dimension(6022, 25));
+        m_last.setMinimumSize(new Dimension(50, 25));
+        m_last.setPreferredSize(new Dimension(50, 25));
+
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+        JPanel framePanel = new JPanel();
+        framePanel.setLayout(new BoxLayout(framePanel, BoxLayout.Y_AXIS));
+        framePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Row number range:"));
 
-        Box labelBox = Box.createVerticalBox();
-        labelBox.add(Box.createHorizontalStrut(300));
-        Box textBox = Box.createHorizontalBox();
-        textBox.add(Box.createHorizontalGlue());
-        labelBox.add(textBox);
-
         Box firstBox = Box.createHorizontalBox();
+        firstBox.add(Box.createHorizontalGlue());
         firstBox.add(new JLabel("first row number:"));
         firstBox.add(m_first);
         firstBox.add(Box.createHorizontalGlue());
 
         Box eotBox = Box.createHorizontalBox();
+        eotBox.add(Box.createHorizontalGlue());
         eotBox.add(m_tilEOT);
         eotBox.add(Box.createHorizontalGlue());
 
         Box lastBox = Box.createHorizontalBox();
+        lastBox.add(Box.createHorizontalGlue());
         lastBox.add(new JLabel("last row number:"));
         lastBox.add(m_last);
         lastBox.add(Box.createHorizontalGlue());
 
         Box errBox = Box.createHorizontalBox();
+        errBox.add(Box.createHorizontalGlue());
         errBox.add(m_errText);
         errBox.add(Box.createHorizontalGlue());
 
-        panel.add(labelBox);
-        panel.add(firstBox);
-        panel.add(eotBox);
-        panel.add(lastBox);
-        panel.add(Box.createVerticalStrut(7));
-        panel.add(errBox);
-        panel.add(Box.createVerticalGlue()); // do we need some glue here?!?
+        framePanel.add(firstBox);
+        framePanel.add(Box.createVerticalStrut(7));
+        framePanel.add(eotBox);
+        framePanel.add(lastBox);
+        framePanel.add(Box.createVerticalStrut(7));
+        framePanel.add(errBox);
+
+        panel.add(Box.createVerticalGlue());
+        panel.add(framePanel);
+        panel.add(Box.createVerticalGlue());
 
         this.add(panel);
     }

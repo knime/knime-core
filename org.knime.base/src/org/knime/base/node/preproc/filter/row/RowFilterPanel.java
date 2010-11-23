@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (ohl): created
  */
@@ -52,6 +52,7 @@ package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -64,28 +65,27 @@ import org.knime.core.node.InvalidSettingsException;
  * They provide a en/disable method which affects all added components. They add
  * horizontal and vertical struts so that the size of the panel doesn't change,
  * even if everything is disabled.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
+@SuppressWarnings("serial")
 public abstract class RowFilterPanel extends JPanel {
 
     private JPanel m_panel;
 
     /**
      * A rowfilter panel.
-     * 
+     *
      * @param width minimum width of the panel
      * @param height minimum height of the panel
      */
     public RowFilterPanel(final int width, final int height) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
         m_panel = new JPanel();
+        m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
 
         super.add(Box.createHorizontalStrut(width));
-
-        Box panelBox = Box.createVerticalBox();
-        panelBox.add(m_panel);
-        panelBox.add(Box.createVerticalGlue());
 
         Box inner = Box.createHorizontalBox();
         inner.add(Box.createVerticalStrut(height));
@@ -112,7 +112,7 @@ public abstract class RowFilterPanel extends JPanel {
     /**
      * Makes all components contained in the panel in/visible, depending on the
      * value passed in.
-     * 
+     *
      * @param visible if set <code>true</code> all components in the panel
      *            will be made visible, if <code>false</code> they will be
      *            invisible
@@ -122,6 +122,33 @@ public abstract class RowFilterPanel extends JPanel {
         for (int c = 0; c < compos.length; c++) {
             setVisibleRec(visible, compos[c]);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPreferredSize(final Dimension preferredSize) {
+        m_panel.setPreferredSize(preferredSize);
+        super.setPreferredSize(preferredSize);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setMinimumSize(final Dimension minimumSize) {
+        m_panel.setMinimumSize(minimumSize);
+        super.setMinimumSize(minimumSize);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setMaximumSize(final Dimension maximumSize) {
+        m_panel.setMaximumSize(maximumSize);
+        super.setMaximumSize(maximumSize);
     }
 
     /*
@@ -140,7 +167,7 @@ public abstract class RowFilterPanel extends JPanel {
     /**
      * Adjusts the settings/values of its components to reflect the
      * settings/properties of the filter passed in.
-     * 
+     *
      * @param filter containing specs for filter properties
      * @throws InvalidSettingsException if the filter passed is not the one
      *             represented by this panel

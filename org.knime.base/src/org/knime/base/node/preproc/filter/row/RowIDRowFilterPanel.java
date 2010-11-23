@@ -44,13 +44,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.07.2005 (ohl): created
  */
 package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -69,7 +70,7 @@ import org.knime.base.node.preproc.filter.row.rowfilter.RowIDRowFilter;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowIDRowFilterPanel extends RowFilterPanel {
@@ -107,6 +108,9 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
                 regExprChanged();
             }
         });
+        m_regExpr.setMaximumSize(new Dimension(6022, 25));
+        m_regExpr.setMinimumSize(new Dimension(150, 25));
+        m_regExpr.setPreferredSize(new Dimension(100, 25));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -115,21 +119,20 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
 
         Box exprBox = Box.createHorizontalBox();
         exprBox.add(new JLabel("regular expression to match:"));
-        exprBox.add(Box.createHorizontalStrut(3));
         exprBox.add(m_regExpr);
-        exprBox.add(Box.createHorizontalGlue());
 
-        panel.add(Box.createVerticalStrut(10));
         panel.add(exprBox);
-        panel.add(Box.createVerticalStrut(7));
         panel.add(m_caseSensitive);
-        panel.add(Box.createVerticalStrut(4));
         panel.add(m_startsWith);
-        panel.add(Box.createVerticalStrut(10));
         panel.add(m_errText);
-        panel.add(Box.createVerticalGlue());
 
-        this.add(panel);
+        JPanel outerPanel = new JPanel();
+        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+        outerPanel.add(Box.createVerticalGlue());
+        outerPanel.add(panel);
+        outerPanel.add(Box.createVerticalGlue());
+
+        this.add(outerPanel);
 
         updateErrText();
     }
