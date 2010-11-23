@@ -318,7 +318,9 @@ public class WrappedNodeDialog extends Dialog {
                         // open first out-port view if SHIFT is pressed
                         doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
                         // reset ok button state/label
-                        btnOK.setText("OK");
+                        if (ke.doit == false) {
+                            btnOK.setText("OK");
+                        }
                     }
                 }
             }
@@ -344,8 +346,10 @@ public class WrappedNodeDialog extends Dialog {
                     // OK only
                     doOK(se, false, false);
                 }
-                // reset ok button state/label
-                btnOK.setText("OK");
+                if (se.doit == false) {
+                    // reset ok button state/label
+                    btnOK.setText("OK");
+                }
             }
         });
 
