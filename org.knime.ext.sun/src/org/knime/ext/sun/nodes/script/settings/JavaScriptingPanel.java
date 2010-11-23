@@ -307,9 +307,7 @@ public class JavaScriptingPanel extends JPanel {
         }
 
         JPanel returnTypeAndCompilation = createReturnTypeAndCompilationPanel();
-        if (m_customizer.getShowOutputTypePanel()) {
-            southPanel.add(returnTypeAndCompilation);
-        }
+        southPanel.add(returnTypeAndCompilation);
         add(centerPanel, BorderLayout.CENTER);
         add(southPanel, BorderLayout.SOUTH);
     }
@@ -435,8 +433,10 @@ public class JavaScriptingPanel extends JPanel {
             arrayPanel.add(m_isArrayReturnChecker);
             returnType.add(arrayPanel, BorderLayout.SOUTH);
         }
+        if (m_customizer.getShowOutputTypePanel()) {
+            returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
+        }
 
-        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
         return returnTypeAndCompilation;
 
     }
@@ -452,8 +452,9 @@ public class JavaScriptingPanel extends JPanel {
 
         String rType = s.getReturnType().getName();
         boolean isArrayReturn = s.isArrayReturn();
-        String defaultColName = "new column";
-        String newColName = s.getColName();
+        String defaultNewName = m_customizer.getOutputIsVariable()
+            ? "new variable" : "new column";
+        String newName = s.getColName();
         boolean isReplace = s.isReplace();
         boolean isTestCompilation = s.isTestCompilationOnDialogClose();
         boolean isInsertMissingAsNull = s.isInsertMissingAsNull();
@@ -461,7 +462,7 @@ public class JavaScriptingPanel extends JPanel {
         m_newNameField.setText("");
         // will select newColName only if it is in the spec list
         try {
-            m_replaceColumnCombo.update(spec, newColName);
+            m_replaceColumnCombo.update(spec, newName);
         } catch (NotConfigurableException e1) {
             NodeLogger.getLogger(getClass()).coding("Combo box throws "
                     + "exception although content is not required", e1);
@@ -493,9 +494,9 @@ public class JavaScriptingPanel extends JPanel {
             m_replaceRadio.doClick();
         } else {
             m_appendRadio.doClick();
-            String newColString = (newColName != null ? newColName
-                    : defaultColName);
-            m_newNameField.setText(newColString);
+            String newNameString = (newName != null ? newName
+                    : defaultNewName);
+            m_newNameField.setText(newNameString);
         }
         m_replaceRadio.setEnabled(fieldsAvailable);
         m_headerEdit.setText(header);

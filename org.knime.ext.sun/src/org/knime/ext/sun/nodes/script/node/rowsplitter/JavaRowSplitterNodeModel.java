@@ -133,12 +133,14 @@ public class JavaRowSplitterNodeModel extends NodeModel
         for (int i = 0; it.hasNext(); i++) {
             DataRow r = it.next();
             DataCell result = cc.calculate(r);
+            boolean b;
             if (result.isMissing()) {
-                throw new RuntimeException(
-                        "Expression must not return missing value (row " + i
-                        + " -- \"" + r.getKey() + "\")");
+                b = false;
+                setWarningMessage("Expression returned missing value for some "
+                        + "rows (interpreted as no match)");
+            } else {
+                b = ((BooleanValue)result).getBooleanValue();
             }
-            boolean b = ((BooleanValue)result).getBooleanValue();
             if (b) {
                 trueMatch.addRowToTable(r);
             } else if (falseMatch != null) {

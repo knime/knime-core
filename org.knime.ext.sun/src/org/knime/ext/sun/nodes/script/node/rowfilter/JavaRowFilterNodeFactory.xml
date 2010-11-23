@@ -15,10 +15,16 @@
 return $$ROWINDEX$$ % 2 == 0;
             </pre>
             <p>
-              This node supports missing values as input, which are represented
-              as <tt>null</tt> values. The expression must not return 
-              <tt>null</tt>. For a detailed description see also the 
-              Java Snippet node.
+              This node supports missing values. If the corresponding check box 
+              is set missing values are represented as <tt>null</tt> values. 
+              If the check box is not set and the snippet accesses a field whose
+              value is missing, the expression evaluates to <tt>false</tt> 
+              (no match). It also evaluates to <tt>false</tt> in case the 
+              snippet throws an exception (other than <tt>Abort</tt>).
+            </p>
+            <p>
+              You can halt the entire execution by throwing an <tt>Abort</tt>
+              exception such as <tt>throw new Abort(message);</tt>.
             </p>
         </intro>
         <option name="Column List">
@@ -46,6 +52,25 @@ return $$ROWINDEX$$ % 2 == 0;
           (double-compatible) variables will be handled as <tt>Double</tt>,
           int-compatible variables as <tt>Integer</tt> and any other varaible
           type as <tt>String</tt>. 
+        </option>
+        <option name="Insert Missing As Null">
+          If selected, missing values in the input table will be represented
+          by <tt>null</tt> in the expression. It is your responsibility to check
+          for <tt>null</tt> in this case (the fields are all real classes, 
+          so even <tt>int</tt> and <tt>double</tt> are represented as their
+          respective class <tt>Integer</tt> and <tt>Double</tt>). If unselected,
+          a missing value in the relevant input cell will immediately produce
+          a <tt>false</tt> match. 
+        </option>
+        <option name="Compile on close">
+          If unchecked, the syntax test is skipped when the settings are 
+          applied to the model, allowing the dialog to close even if there are
+          syntax errors encountered. This enables the user to temporarily close
+          the dialog, investigate the input table and then return to the
+          almost-complete-and-running snippet code in the dialog. The node will
+          not be executable (it will be red) if the code contains syntax errors.
+          This option is only for convenience, it does not have any effect on
+          the output of this node.
         </option>
     </fullDescription>
     <ports>
