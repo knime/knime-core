@@ -714,6 +714,14 @@ public final class Node implements NodeModelWarningListener {
                 : m_outputs[0].spec instanceof InactiveBranchPortObjectSpec;
     }
 
+    /** Returns true if the contained model is an instance of
+     * {@link InactiveBranchConsumer}.
+     * @return Such a property.
+     */
+    public boolean isInactiveBranchConsumer() {
+        return m_model instanceof InactiveBranchConsumer;
+    }
+
     /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
@@ -745,7 +753,7 @@ public final class Node implements NodeModelWarningListener {
 
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
-        if (!(m_model instanceof InactiveBranchConsumer)) {
+        if (!isInactiveBranchConsumer()) {
             for (int i = 0; i < rawData.length; i++) {
                 if (rawData[i] instanceof InactiveBranchPortObject) {
                     // one incoming object=IBPO is enough to skip
@@ -1379,7 +1387,7 @@ public final class Node implements NodeModelWarningListener {
 
                 // check if the node is part of a skipped branch and return
                 // appropriate specs without actually configuring the node.
-                if (!(m_model instanceof InactiveBranchConsumer)) {
+                if (!isInactiveBranchConsumer()) {
                     for (int i = 0; i < inSpecs.length; i++) {
                         if (inSpecs[i]
                                     instanceof InactiveBranchPortObjectSpec) {
@@ -1523,7 +1531,7 @@ public final class Node implements NodeModelWarningListener {
         PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
         for (int i = 1; i < inSpecs.length; i++) {
             if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
-                if (!(m_model instanceof InactiveBranchConsumer)) {
+                if (!isInactiveBranchConsumer()) {
                     throw new NotConfigurableException("Can not configure"
                             + " nodes in inactive branches.");
                 }

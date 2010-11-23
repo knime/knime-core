@@ -137,7 +137,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         ExecutionMonitor portMon = execMon.createSilentSubProgress(0.6);
         ExecutionMonitor intTblsMon = execMon.createSilentSubProgress(0.1);
         execMon.setMessage("Internals");
-        if (isSaveData) {
+        boolean isSaveInternals = isSaveData;
+        if (isSaveInternals) {
+            // do not save data for inactive nodes
+            isSaveInternals =
+                node.isInactiveBranchConsumer() || !node.isInactive();
+        }
+        if (isSaveInternals) {
             saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
         }
         internalMon.setProgress(1.0);
