@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   13.02.2008 (gabriel): created
  */
@@ -57,11 +57,15 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.node.BufferedDataTable;
@@ -80,34 +84,34 @@ import org.knime.core.node.workflow.CredentialsProvider;
 /**
  * Class used as database port object holding a {@link BufferedDataTable}
  * and a <code>ModelContentRO</code> to create a database connection.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabasePortObject implements PortObject {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DatabasePortObject.class);
-    
+
     private final DatabasePortObjectSpec m_spec;
 
     /**
-     * Database port type formed <code>PortObjectSpec.class</code> and 
+     * Database port type formed <code>PortObjectSpec.class</code> and
      * <code>PortObject.class</code> from this class.
      */
     public static final PortType TYPE = new PortType(DatabasePortObject.class);
-    
+
     /** {@inheritDoc} */
     @Override
     public DatabasePortObjectSpec getSpec() {
         return m_spec;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
         return "No. of columns: " + m_spec.getDataTableSpec().getNumColumns();
     }
-    
+
     /**
      * Creates a new database port object.
      * @param spec database port object spec
@@ -120,7 +124,7 @@ public class DatabasePortObject implements PortObject {
         }
         m_spec = spec;
     }
-    
+
     /**
      * @return underlying data
      */
@@ -136,45 +140,45 @@ public class DatabasePortObject implements PortObject {
             return null;
         }
     }
-    
+
     /**
      * @return connection model
      */
     public ModelContentRO getConnectionModel() {
         return m_spec.getConnectionModel();
     }
-    
+
     /**
      * Serializer used to save <code>DatabasePortObject</code>.
      * @return a new database port object serializer
      */
-    public static PortObjectSerializer<DatabasePortObject> 
+    public static PortObjectSerializer<DatabasePortObject>
             getPortObjectSerializer() {
         return new PortObjectSerializer<DatabasePortObject>() {
             /** {@inheritDoc} */
             @Override
             public void savePortObject(final DatabasePortObject portObject,
-                    final PortObjectZipOutputStream out, 
+                    final PortObjectZipOutputStream out,
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-
+                // nothing to save
             }
-            
+
             /** {@inheritDoc} */
             @Override
             public DatabasePortObject loadPortObject(
-                    final PortObjectZipInputStream in, 
-                    final PortObjectSpec spec, 
+                    final PortObjectZipInputStream in,
+                    final PortObjectSpec spec,
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
                 return new DatabasePortObject((DatabasePortObjectSpec) spec);
             }
         };
     }
-    
+
     /** Credentials to connect to the database while previewing the data. */
     private CredentialsProvider m_credentials;
-    
+
     /**
      * Override this panel in order to set the CredentialsProvider
      * into this class.
@@ -189,16 +193,14 @@ public class DatabasePortObject implements PortObject {
         }
         /**
          * Set provider.
-         * @param cp {@link CredentialsProvider} 
+         * @param cp {@link CredentialsProvider}
          */
         public void setCredentialsProvider(final CredentialsProvider cp) {
             m_credentials = cp;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
         JComponent[] specPanels = m_spec.getViews();
@@ -207,9 +209,9 @@ public class DatabasePortObject implements PortObject {
             @Override
             public String getName() {
                 return "Table Preview";
-            }            
+            }
         };
-        JButton b = new JButton("Cache no. of rows: ");
+        final JButton b = new JButton("Cache no. of rows: ");
         final JPanel p = new JPanel(new FlowLayout());
         final JTextField cacheRows = new JTextField("100");
         cacheRows.setMinimumSize(new Dimension(50, 20));
@@ -221,31 +223,57 @@ public class DatabasePortObject implements PortObject {
         panels[0].add(p, BorderLayout.NORTH);
         panels[0].add(dataView, BorderLayout.CENTER);
         b.addActionListener(new ActionListener() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
-                panels[0].removeAll();
-                int value = 100;
+                final AtomicInteger value = new AtomicInteger(100);
                 try {
-                    value = Integer.parseInt(cacheRows.getText().trim());
+                    int v = Integer.parseInt(cacheRows.getText().trim());
+                    value.set(v);
                 } catch (NumberFormatException nfe) {
-                    cacheRows.setText("100");
+                    cacheRows.setText(Integer.toString(value.get()));
                 }
-                BufferedDataTableView dataView2 = new BufferedDataTableView(
-                        getDataTable(value)) {
-                    @Override
-                    public String getName() {
-                        return "Table Preview";
-                    }            
-                };
-                dataView2.setName("Table Preview");
-                panels[0].add(p, BorderLayout.NORTH);
-                panels[0].add(dataView2, BorderLayout.CENTER);
-                panels[0].setName(dataView2.getName());
+                panels[0].removeAll();
+                panels[0].add(new JLabel("Fetching " + value.get()
+                        + " rows from database..."), BorderLayout.NORTH);
                 panels[0].repaint();
                 panels[0].revalidate();
+                new SwingWorker<DataTable, Void>() {
+                    /** {@inheritDoc} */
+                    @Override
+                    protected DataTable doInBackground() throws Exception {
+                        return getDataTable(value.get());
+                    }
+                    /** {@inheritDoc} */
+                    @Override
+                    protected void done() {
+                        DataTable dt = null;
+                        try {
+                            dt = super.get();
+                        } catch (ExecutionException ee) {
+                            LOGGER.warn("Error during fetching data from "
+                                + "database, reason: " + ee.getMessage(), ee);
+                        } catch (InterruptedException ie) {
+                            LOGGER.warn("Error during fetching data from "
+                                + "database, reason: " + ie.getMessage(), ie);
+                        }
+                        BufferedDataTableView dataView2 =
+                            new BufferedDataTableView(dt) {
+                            /** {@inheritDoc} */
+                            @Override
+                            public String getName() {
+                                return "Table Preview";
+                            }
+                        };
+                        dataView2.setName("Table Preview");
+                        panels[0].removeAll();
+                        panels[0].add(p, BorderLayout.NORTH);
+                        panels[0].add(dataView2, BorderLayout.CENTER);
+                        panels[0].setName(dataView2.getName());
+                        panels[0].repaint();
+                        panels[0].revalidate();
+                    }
+                }.execute();
             }
         });
         for (int i = 1; i < panels.length; i++) {
@@ -253,7 +281,7 @@ public class DatabasePortObject implements PortObject {
         }
         return panels;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -264,13 +292,13 @@ public class DatabasePortObject implements PortObject {
             return false;
         }
         DatabasePortObject dbPort = (DatabasePortObject) obj;
-        return m_spec.equals(dbPort.m_spec); 
+        return m_spec.equals(dbPort.m_spec);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_spec.hashCode();
     }
-    
+
 }

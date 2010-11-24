@@ -162,7 +162,7 @@ public final class DatabaseDriverLoader {
             } catch (Throwable t) {
                 LOGGER.info("Could not load driver library file \""
                         + hist + "\" from history"
-                        + (t.getMessage() != null 
+                        + (t.getMessage() != null
                                 ? ", reason: " + t.getMessage() : "."));
             }
         }
@@ -173,7 +173,7 @@ public final class DatabaseDriverLoader {
      *
      */
     private DatabaseDriverLoader() {
-
+        // empty default constructor
     }
 
     /**
@@ -207,7 +207,7 @@ public final class DatabaseDriverLoader {
             throw new IOException("File \"" + file + "\" does not exist.");
         }
         if (file.isDirectory()) {
-            throw new IOException("File \"" + file 
+            throw new IOException("File \"" + file
                     + "\" can't be a directory.");
         }
         final String fileName = file.getAbsolutePath();
@@ -261,15 +261,15 @@ public final class DatabaseDriverLoader {
      * the current class path in order to try to instantiate this class.
      * @param driverName The driver name.
      * @return The <code>WrappedDriver</code> for the given driver name.
-     */    
-    private static WrappedDriver getWrappedDriver(final String driverName) 
+     */
+    private static WrappedDriver getWrappedDriver(final String driverName)
             throws Exception {
         WrappedDriver wdriver = DRIVER_MAP.get(driverName);
         if (wdriver != null) {
             return wdriver;
         }
         // otherwise try to load new driver from registered classes
-        Class<?> c = Class.forName(driverName, true, 
+        Class<?> c = Class.forName(driverName, true,
                 ClassLoader.getSystemClassLoader());
         WrappedDriver d = new WrappedDriver((Driver) c.newInstance());
         DRIVER_MAP.put(driverName, d);
@@ -330,6 +330,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Connection connect(final String url, final Properties info)
                 throws SQLException {
             return m_d.connect(url, info);
@@ -338,6 +339,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean acceptsURL(final String url) throws SQLException {
             return m_d.acceptsURL(url);
         }
@@ -345,6 +347,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DriverPropertyInfo[] getPropertyInfo(final String url,
                 final Properties info) throws SQLException {
             return m_d.getPropertyInfo(url, info);
@@ -353,6 +356,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getMajorVersion() {
             return m_d.getMajorVersion();
         }
@@ -360,6 +364,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getMinorVersion() {
             return m_d.getMinorVersion();
         }
@@ -367,6 +372,7 @@ public final class DatabaseDriverLoader {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean jdbcCompliant() {
             return m_d.jdbcCompliant();
         }
