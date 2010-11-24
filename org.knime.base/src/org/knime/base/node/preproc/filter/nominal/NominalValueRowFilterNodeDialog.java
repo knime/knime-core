@@ -87,7 +87,7 @@ import org.knime.core.node.NotConfigurableException;
  * necessar buttons to add, add all, remove, and remove all possible values from
  * one list to the other. The lists are update, when a nominal column is
  * selected.
- * 
+ *
  * @author KNIME GmbH
  */
 public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
@@ -171,6 +171,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         JButton add = new JButton("Add >");
         add.setMaximumSize(new Dimension(200, 20));
         add.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 Object[] o = m_excludeList.getSelectedValues();
                 for (int i = 0; i < o.length; i++) {
@@ -182,6 +183,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         JButton addAll = new JButton("Add all >>");
         addAll.setMaximumSize(new Dimension(200, 20));
         addAll.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 for (int i = 0; i < m_excluded.getSize(); i++) {
                     m_included.addElement(m_excluded.getElementAt(i));
@@ -192,10 +194,13 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         JButton remove = new JButton("< Remove");
         remove.setMaximumSize(new Dimension(200, 20));
         remove.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
-                Object o = m_includeList.getSelectedValue();
-                m_excluded.addElement(o);
-                m_included.removeElement(o);
+                Object[] o = m_includeList.getSelectedValues();
+                for (int i = 0; i < o.length; i++) {
+                    m_excluded.addElement(o[i]);
+                    m_included.removeElement(o[i]);
+                }
             }
         });
         JButton removeAll = new JButton("<< Remove all");
@@ -241,11 +246,12 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * If the nominal column selection changes, include and exclude lists are
      * cleared and all possible values of that column are put into the exclude
      * list.
      */
+    @Override
     public void itemStateChanged(final ItemEvent item) {
         m_selectedColumn = (String)item.getItem();
         m_included.removeAllElements();
@@ -258,7 +264,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -317,7 +323,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
