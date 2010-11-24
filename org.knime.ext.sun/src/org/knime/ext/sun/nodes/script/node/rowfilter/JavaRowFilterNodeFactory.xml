@@ -8,8 +8,9 @@
             <p>
               Java Snippet based Row Filter. Use the java editor to enter a
               boolean expression that is used to define whether an input row
-              is passed to the output. For instance, to filter for every other
-              row, you could use an expression such as
+              is passed to the output, whereby <tt>true</tt> defines a match, 
+              i.e. the current row is passed to the output. For instance, to 
+              filter for every other row, you could use an expression such as
             </p>
             <pre>
 return $$ROWINDEX$$ % 2 == 0;
