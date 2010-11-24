@@ -80,8 +80,8 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
@@ -123,6 +123,70 @@ public final class BatchExecutor {
             m_name = name;
             m_value = value;
             m_type = type;
+        }
+    }
+
+    /**
+     *
+     * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+     */
+    private static final class BatchExecWorkflowLoadHelper implements
+            WorkflowLoadHelper {
+        /**  */
+        private final Map<String, Credentials> m_credentialMap;
+
+        /**
+         * @param credentialMap
+         */
+        private BatchExecWorkflowLoadHelper(
+                final Map<String, Credentials> credentialMap) {
+            m_credentialMap = credentialMap;
+        }
+
+        @Override
+        public List<Credentials> loadCredentials(
+                final List<Credentials> credentials) {
+            List<Credentials> newCredentials = new ArrayList<Credentials>();
+            Console cons = null;
+            for (Credentials cred : credentials) {
+                String login = null;
+                String password = null;
+                if (m_credentialMap.containsKey(cred.getName())) {
+                    Credentials currCred = m_credentialMap.get(cred
+                            .getName());
+                    if (currCred != null) {
+                        login = currCred.getLogin();
+                        password = currCred.getPassword();
+                    }
+                }
+                if (login == null || password == null) {
+                    if (cons == null) {
+                        if ((cons = System.console()) == null) {
+                            System.err
+                            .println("No console for "
+                                    + "credential prompt available");
+                            return credentials;
+                        }
+                    }
+                    cons.printf("Enter for credential %s ", cred
+                            .getName());
+                    if (login == null) {
+                        login = cons
+                        .readLine("%s", "Enter login: ");
+                    }
+                    char[] pwd = getPasswordFromConsole(cons);
+                    password = new String(pwd);
+                }
+                newCredentials.add(new Credentials(cred.getName(),
+                        login, password));
+            }
+            return newCredentials;
+        }
+
+        @Override
+        public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final String workflowVersionString) {
+            return UnknownKNIMEVersionLoadPolicy.Abort;
         }
     }
 
@@ -209,7 +273,7 @@ public final class BatchExecutor {
         String masterKey = null;
         List<Option> options = new ArrayList<Option>();
         List<FlowVariable> wkfVars = new ArrayList<FlowVariable>();
-        final Map<String, Credentials> credentialMap = 
+        final Map<String, Credentials> credentialMap =
             new LinkedHashMap<String, Credentials>();
 
         for (String s : args) {
@@ -393,48 +457,15 @@ public final class BatchExecutor {
             workflowDir = workflowDir.listFiles()[0];
         }
 
-        WorkflowLoadResult loadResult = WorkflowManager.loadProject(
-                workflowDir, new ExecutionMonitor(), new CredentialLoader() {
-                    @Override
-                    public List<Credentials> load(
-                	    final List<Credentials> credentials) {
-                	List<Credentials> newCredentials = new ArrayList<Credentials>();
-                	Console cons = null;
-                	for (Credentials cred : credentials) {
-                	    String login = null;
-                	    String password = null;
-                	    if (credentialMap.containsKey(cred.getName())) {
-                		Credentials currCred = credentialMap.get(cred
-                			.getName());
-                		if (currCred != null) {
-                		    login = currCred.getLogin();
-                		    password = currCred.getPassword();
-                		}
-                	    }
-                	    if (login == null || password == null) {
-                		if (cons == null) {
-                		    if ((cons = System.console()) == null) {
-                			System.err
-                			.println("No console for "
-                				+ "credential prompt available");
-                			return credentials;
-                		    }
-                		}
-                		cons.printf("Enter for credential %s ", cred
-                			.getName());
-                		if (login == null) {
-                		    login = cons
-                		         .readLine("%s", "Enter login: ");
-                		}
-                		char[] pwd = getPasswordFromConsole(cons);
-                		password = new String(pwd);
-                	    }
-                	    newCredentials.add(new Credentials(cred.getName(),
-                		    login, password));
-                	}
-                	return newCredentials;
-                    }
-                });
+        WorkflowLoadResult loadResult;
+        try {
+            loadResult = WorkflowManager.loadProject(
+                    workflowDir, new ExecutionMonitor(),
+                    new BatchExecWorkflowLoadHelper(credentialMap));
+        } catch (UnsupportedWorkflowVersionException e) {
+            System.err.println("Unknown workflow version: " + e.getMessage());
+            return 1;
+        }
         if (failOnLoadError && loadResult.hasErrors()) {
             System.err.println("Error(s) during workflow loading. "
                     + "Check log file for details.");
@@ -653,13 +684,14 @@ public final class BatchExecutor {
             KnimeEncryption.setEncryptionKeySupplier(
                     new EncryptionKeySupplier() {
                 /** {@inheritDoc} */
+                @Override
                 public String getEncryptionKey() {
                     return encryptionKey;
                 }
             });
         }
     }
-    
+
     private static char[] getPasswordFromConsole(final Console cons) {
         char[] first, second;
         boolean areEqual;

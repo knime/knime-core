@@ -3774,11 +3774,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     static final String CFG_CREATED_BY = "created_by";
 
     public static WorkflowLoadResult loadProject(final File directory,
-            final ExecutionMonitor exec,
-            final CredentialLoader credentialLoader)
+            final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper)
             throws IOException, InvalidSettingsException,
-                CanceledExecutionException {
-        return ROOT.load(directory, exec, credentialLoader, false);
+            CanceledExecutionException, UnsupportedWorkflowVersionException {
+        return ROOT.load(directory, exec, loadHelper, false);
     }
 
     /** {@inheritDoc} */
@@ -3861,11 +3860,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Loads the workflow contained in the directory as node into this
      * workflow instance. Loading a whole new project is usually done using
-     * {@link WorkflowManager#loadProject(File, ExecutionMonitor)}.
+     * {@link WorkflowManager#loadProject(File, ExecutionMonitor,
+     * WorkflowLoadHelper)}.
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
-     * @param credentialLoader callback to load credentials (if available)
+     * @param rawLoadHelper callback to load credentials and such (if available)
      *        during load of the underlying <code>SingleNodeContainer</code>
+     *        (may be null).
      * @param keepNodeMessages Whether to keep the messages that are associated
      * with the nodes in the loaded workflow (mostly false but true when
      * remotely computed results are loaded).
@@ -3874,17 +3875,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         I/O problems (file not present, e.g.)
      * @throws InvalidSettingsException If parsing the "important" files fails.
      * @throws CanceledExecutionException If canceled.
+     * @throws UnsupportedWorkflowVersionException  If the version of the
+     * workflow is unknown (future version)
      */
     public WorkflowLoadResult load(final File directory,
             final ExecutionMonitor exec,
-            final CredentialLoader credentialLoader,
+            final WorkflowLoadHelper rawLoadHelper,
             final boolean keepNodeMessages) throws IOException,
-            InvalidSettingsException, CanceledExecutionException {
+            InvalidSettingsException, CanceledExecutionException,
+            UnsupportedWorkflowVersionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
+        }
+        WorkflowLoadHelper loadHelper = rawLoadHelper;
+        if (loadHelper == null) {
+            loadHelper = WorkflowLoadHelper.DefaultWorkflowLoadHelper.INSTANCE;
         }
 
         exec.setMessage("Loading workflow structure from \""
@@ -3902,13 +3910,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 new BufferedInputStream(new FileInputStream(workflowknime)));
         // CeBIT 2006 version did not contain a version string.
         String version;
+        String versionString;
         if (settings.containsKey(CFG_VERSION)) {
             version = settings.getString(CFG_VERSION);
+            versionString = version;
         } else {
             version = "0.9.0";
+            versionString = "<unknown>";
         }
+
         if (version == null) {
-            throw new InvalidSettingsException(
+            throw new UnsupportedWorkflowVersionException(
                 "Refuse to load workflow: Workflow version not available.");
         }
         WorkflowPersistorVersion1xx persistor;
@@ -3924,24 +3936,39 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + ") you are trying to load. In some rare cases, it"
                     + " might not be possible to load all data"
                     + " or some nodes can't be configured."
-                    + " Please re-configure and/or re-execute these"
-                    + " nodes.");
+                    + " Please re-configure and/or re-execute these nodes.");
             persistor = new WorkflowPersistorVersion1xx(
                     new HashMap<Integer, ContainerTable>(), version);
         } else {
-            throw new InvalidSettingsException("Unable to load workflow, "
-                    + "version string \"" + version + "\" is unknown");
+            StringBuilder versionDetails = new StringBuilder(versionString);
+            String createdBy = settings.getString(CFG_CREATED_BY, null);
+            if (createdBy != null) {
+                versionDetails.append(" (created by KNIME ");
+                versionDetails.append(createdBy).append(")");
+            }
+            String v = versionDetails.toString();
+            switch (loadHelper.getUnknownKNIMEVersionLoadPolicy(v)) {
+            case Abort:
+                throw new UnsupportedWorkflowVersionException(
+                        "Unable to load workflow, version string \""
+                        + v + "\" is unknown");
+            default:
+                version = WorkflowPersistorVersion200.VERSION_LATEST;
+                // TODO only create new hash map if this is a project?
+                persistor = new WorkflowPersistorVersion200(
+                        new HashMap<Integer, ContainerTable>(), version);
+            }
         }
         LOGGER.debug("Loading workflow from \"" + directory.getAbsolutePath()
-                + "\" (version \"" + version + "\" with loader class \""
+                + "\" (version \"" + versionString + "\" with loader class \""
                 + persistor.getClass().getSimpleName() + "\")");
         // data files are loaded using a repository of reference tables;
         Map<Integer, BufferedDataTable> tblRep =
             new HashMap<Integer, BufferedDataTable>();
         WorkflowLoadResult result = new WorkflowLoadResult(
                 workflowDirRef.getFile().getName());
-        persistor.preLoadNodeContainer(workflowknimeRef, settings, result,
-                credentialLoader);
+        persistor.preLoadNodeContainer(
+                workflowknimeRef, settings, result, loadHelper);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
         boolean isIsolatedProject = persistor.getInPortTemplates().length == 0

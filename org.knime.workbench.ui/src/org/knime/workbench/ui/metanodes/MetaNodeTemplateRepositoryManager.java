@@ -42,6 +42,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -277,6 +278,9 @@ public final class MetaNodeTemplateRepositoryManager {
                     new File(METANODE_TEMPLATE_REPOSITORY),
                     new ExecutionMonitor(), null).getWorkflowManager();
             return wfm;
+        } catch (UnsupportedWorkflowVersionException e) {
+            LOGGER.error("Couldn't load WorkflowManager. "
+                    + "Old templates will be lost!", e);
         } catch (IOException e) {
             LOGGER.error("Couldn't load WorkflowManager. "
                     + "Old templates will be lost!", e);

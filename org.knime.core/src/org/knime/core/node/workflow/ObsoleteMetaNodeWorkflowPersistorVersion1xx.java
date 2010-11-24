@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 27, 2008 (wiswedel): created
  */
@@ -69,19 +69,19 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         WorkflowPersistorVersion1xx {
-    
+
     private enum MetaNodeType {
         ORDINARY,
         CROSSVALIDATION,
         LOOPER
     };
-    
-    public static final List<String> OLD_META_NODES = 
+
+    public static final List<String> OLD_META_NODES =
         Collections.unmodifiableList(Arrays.asList(new String[]{
             "org.knime.base.node.meta.MetaNodeFactory01",
             "org.knime.base.node.meta.MetaNodeFactory11",
@@ -98,23 +98,23 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             "de.unikn.knime.dev.node.xvalidation.XValidateNodeFactory",
             "de.unikn.knime.dev.node.looper.LooperFactory"
         }));
-    
+
     private int[] m_dataInNodeIDs = new int[0];
     private int[] m_dataOutNodeIDs = new int[0];
-    
+
     private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
-    
+
     public ObsoleteMetaNodeWorkflowPersistorVersion1xx(
-            final HashMap<Integer, ContainerTable> globalRep, 
+            final HashMap<Integer, ContainerTable> globalRep,
             final String versionString) {
         super(globalRep, versionString);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
             final NodeSettingsRO parentSettings, final LoadResult result,
-            final CredentialLoader credentialLoader) 
+            final WorkflowLoadHelper loadHelper)
     throws IOException, InvalidSettingsException {
         File setFile = nodeFileRef.getFile();
         if (!setFile.getName().equals("settings.xml")) {
@@ -128,7 +128,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             throw new IOException("Parent directory not represented by class "
                     + ReferencedFile.class);
         }
-        ReferencedFile workflowKnimeRef = 
+        ReferencedFile workflowKnimeRef =
             new ReferencedFile(parent, "workflow.knime");
         File workflowKnime = workflowKnimeRef.getFile();
         if (!workflowKnime.isFile()) {
@@ -150,21 +150,21 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         NodeSettingsRO modelSet = settings.getNodeSettings("model");
         m_dataInNodeIDs = modelSet.getIntArray("dataInContainerIDs");
         m_dataOutNodeIDs = modelSet.getIntArray("dataOutContainerIDs");
-        super.preLoadNodeContainer(workflowKnimeRef, parentSettings, result,
-        	credentialLoader);
+        super.preLoadNodeContainer(
+                workflowKnimeRef, parentSettings, result, loadHelper);
         String name = "Looper";
         switch (m_metaNodeType) {
         case CROSSVALIDATION:
             name = "Cross Validation";
         case LOOPER:
-            result.addError("Workflow contains obsolete \"" + name 
+            result.addError("Workflow contains obsolete \"" + name
                     + "\" meta node implementation, not all settings could "
                     + "be restored, please re-configure and execute again.");
             setNeedsResetAfterLoad();
-        default: 
+        default:
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean shouldSkipThisNode(final NodeSettingsRO settings) {
@@ -180,15 +180,15 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             return false; // will fail at later stage
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected SingleNodeContainerPersistorVersion1xx 
+    protected SingleNodeContainerPersistorVersion1xx
             createSingleNodeContainerPersistor() {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
                 this, getVersionString());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected String loadWorkflowName(final NodeSettingsRO set)
@@ -213,7 +213,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         File f = getWorkflowDir().getFile();
         File oldSettingsFile = new File(f, "settings.xml");
         if (!oldSettingsFile.isFile()) {
-            throw new IOException("No such settings file: " 
+            throw new IOException("No such settings file: "
                     + oldSettingsFile.getAbsolutePath());
         }
         return NodeSettings.loadFromXML(new BufferedInputStream(
@@ -234,14 +234,14 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         }
         return template;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO loadOutPortsSettingsEnum(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected WorkflowPortTemplate loadOutPortTemplate(
@@ -252,14 +252,14 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         if ("data".equals(stype)) {
             type = BufferedDataTable.TYPE;
         } else if ("model".equals(stype)) {
-            throw new InvalidSettingsException("1.x model ports no longer " 
+            throw new InvalidSettingsException("1.x model ports no longer "
                     + "supported: " + stype);
         } else {
             throw new InvalidSettingsException("Unknown port: " + stype);
         }
         return new WorkflowPortTemplate(index, type);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
@@ -273,21 +273,21 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         }
         return template;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO loadInPortsSettingsEnum(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected WorkflowPortTemplate loadInPortTemplate(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return loadOutPortTemplate(settings);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO loadSettingsForConnections(
@@ -324,7 +324,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         wfmOut.addInt("targetPort", 0);
         return fake;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected ConnectionContainerTemplate loadConnection(
@@ -373,14 +373,14 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                     + "between nodes " + sourceID + " and " + destID);
         } catch (Throwable t) {
             getLogger().warn("Exception while loading connection UI " +
-            		"information between nodes " + sourceID + " and " 
+            		"information between nodes " + sourceID + " and "
             		+ destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
                 destPort, /*isDeletable*/true, uiInfo);
     }
-    
-    private static boolean doesAnyArrayContain(final int value, 
+
+    private static boolean doesAnyArrayContain(final int value,
             final int[]... arrays) {
         for (int[] array : arrays) {
             for (int i : array) {
@@ -391,23 +391,23 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         }
         return false;
     }
-    
+
     private class ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx
         extends SingleNodeContainerPersistorVersion1xx {
-        
+
         /**
-         * 
+         *
          */
         public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                final WorkflowPersistorVersion1xx workflowPersistor, 
+                final WorkflowPersistorVersion1xx workflowPersistor,
                 final String versionString) {
             super(workflowPersistor, versionString);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected String loadNodeFactoryClassName(
-                final NodeSettingsRO parentSettings, 
+                final NodeSettingsRO parentSettings,
                 final NodeSettingsRO settings) throws InvalidSettingsException {
             String f = super.loadNodeFactoryClassName(parentSettings, settings);
             switch (m_metaNodeType) {
@@ -429,7 +429,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             }
             return f;
         }
-        
+
     }
-    
+
 }

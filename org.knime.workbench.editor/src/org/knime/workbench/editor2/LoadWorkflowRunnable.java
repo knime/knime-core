@@ -53,8 +53,6 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.swing.UIManager;
@@ -64,7 +62,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.CanceledExecutionException;
@@ -72,14 +69,12 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.CredentialLoader;
-import org.knime.core.node.workflow.Credentials;
+import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 
 /**
@@ -100,41 +95,42 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
     private WorkflowEditor m_editor;
 
     private File m_workflowFile;
-    
+
     private Throwable m_throwable = null;
 
     /**
-     * 
+     *
      * @param editor the {@link WorkflowEditor} for which the workflow should
      * be loaded
-     * @param workflowFile the workflow file from which the workflow should be 
+     * @param workflowFile the workflow file from which the workflow should be
      * loaded (or created = empty workflow file)
      */
-    public LoadWorkflowRunnable(final WorkflowEditor editor, 
+    public LoadWorkflowRunnable(final WorkflowEditor editor,
             final File workflowFile) {
         m_editor = editor;
         m_workflowFile = workflowFile;
     }
-    
+
     /**
-     * 
+     *
      * @return the throwable which was thrown during the loading of the workflow
      * or null, if no throwable was thrown
      */
     Throwable getThrowable() {
         return m_throwable;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void run(final IProgressMonitor pm) {
         CheckThread checkThread = null;
         // indicates whether to create an empty workflow
         // this is done if the file is empty
         boolean createEmptyWorkflow = false;
-        
+
         // name of workflow will be null (uses directory name then)
         String name = null;
 
@@ -146,7 +142,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
                     "Loading workflow...");
-            final DefaultNodeProgressMonitor progressMonitor 
+            final DefaultNodeProgressMonitor progressMonitor
                 = new DefaultNodeProgressMonitor();
             progressMonitor.addProgressListener(progressHandler);
 
@@ -154,43 +150,21 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             checkThread.start();
 
-            final File parentFile = m_workflowFile.getParentFile();
-            final Display d = Display.getDefault();
-            final WorkflowLoadResult result = WorkflowManager.loadProject(
-                    parentFile, new ExecutionMonitor(progressMonitor),
-                    new CredentialLoader() {
-                        @Override
-                        public List<Credentials> load(
-                            final List<Credentials> credentials) {
-                                final List<Credentials> newCredentials = 
-                                    new ArrayList<Credentials>();
-                                // run sync'ly in UI thread 
-                                d.syncExec(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        CredentialVariablesDialog dialog = 
-                                            new CredentialVariablesDialog(
-                                               d.getActiveShell(), credentials, 
-                                               parentFile.getName());
-                                        if (dialog.open() == Dialog.OK) {
-                                            newCredentials.addAll(
-                                                dialog.getCredentials());
-                                        } else {
-                                            newCredentials.addAll(credentials);
-                                        }
-                                    }
-                                });
-                                return newCredentials;
-                        }
-                    });
+            File parentFile = m_workflowFile.getParentFile();
+            Display d = Display.getDefault();
+            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(
+                    d, parentFile.getName());
+            final WorkflowLoadResult result =
+                WorkflowManager.loadProject(parentFile,
+                    new ExecutionMonitor(progressMonitor), loadHelper);
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
             if (result.getWorkflowManager().isDirty()) {
                 m_editor.markDirty();
             }
-            
-            final IStatus status = createStatus(result, 
+
+            final IStatus status = createStatus(result,
                     !result.getGUIMustReportDataLoadErrors());
             final String message;
             switch (status.getSeverity()) {
@@ -199,21 +173,22 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 break;
             case IStatus.WARNING:
                 message = "Warnings during load";
-                logPreseveLineBreaks("Warnings during load: " 
+                logPreseveLineBreaks("Warnings during load: "
                         + result.getFilteredError(
                                 "", LoadResultEntryType.Warning), false);
                 break;
             default:
                 message = "Errors during load";
-                logPreseveLineBreaks("Errors during load: " 
+                logPreseveLineBreaks("Errors during load: "
                         + result.getFilteredError(
                                 "", LoadResultEntryType.Warning), true);
             }
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     // will not open if status is OK.
                     ErrorDialog.openError(
-                            Display.getDefault().getActiveShell(), 
+                            Display.getDefault().getActiveShell(),
                             "Workflow Load", message, status);
                 }
             });
@@ -224,10 +199,10 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             m_throwable = ioe;
             if (m_workflowFile.length() == 0) {
                 LOGGER.info("New workflow created.");
-                // this is the only place to set this flag to true: we have an 
+                // this is the only place to set this flag to true: we have an
                 // empty workflow file, i.e. a new project was created
-                // bugfix 1555: if an exception is thrown DO NOT create empty 
-                // workflow 
+                // bugfix 1555: if an exception is thrown DO NOT create empty
+                // workflow
                 createEmptyWorkflow = true;
             } else {
                 LOGGER.error("Could not load workflow from: "
@@ -237,8 +212,12 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.error("Could not load workflow from: "
                     + m_workflowFile.getName(), ise);
             m_throwable = ise;
+        } catch (UnsupportedWorkflowVersionException uve) {
+            LOGGER.info("Canceled workflow load due to incompatible version");
+            m_editor.setWorkflowManager(null);
+            m_editor.setLoadingCanceled(true);
         } catch (CanceledExecutionException cee) {
-            LOGGER.info("Canceled loading workflow: " 
+            LOGGER.info("Canceled loading workflow: "
                     + m_workflowFile.getName());
             m_editor.setWorkflowManager(null);
             m_editor.setLoadingCanceled(true);
@@ -250,22 +229,22 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
         } finally {
             // terminate the check thread
             checkThread.finished();
-            // create empty WFM if a new workflow is created 
+            // create empty WFM if a new workflow is created
             // (empty workflow file)
             if (createEmptyWorkflow) {
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
                         .createAndAddProject(name));
                 // save empty project immediately
-                // bugfix 1341 -> see WorkflowEditor line 1294 
+                // bugfix 1341 -> see WorkflowEditor line 1294
                 // (resource delta visitor movedTo)
                 Display.getDefault().syncExec(new Runnable() {
                     @Override
-                    public void run() {                        
+                    public void run() {
                         m_editor.doSave(new NullProgressMonitor());
                     }
                 });
                 m_editor.setIsDirty(false);
-                
+
             }
             // IMPORTANT: Remove the reference to the file and the
             // editor!!! Otherwise the memory can not be freed later
@@ -273,7 +252,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             m_workflowFile = null;
         }
     }
-    
+
     /** Logs the argument error to LOGGER, preserving line breaks.
      * This method will hopefully go into the NodeLogger facilities (and hence
      * be public API).
@@ -291,15 +270,15 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             }
         }
     }
-    
-    private static IStatus createStatus(final LoadResultEntry loadResult, 
+
+    private static IStatus createStatus(final LoadResultEntry loadResult,
             final boolean treatDataLoadErrorsAsOK) {
         LoadResultEntry[] children = loadResult.getChildren();
         if (children.length == 0) {
             int severity;
             switch (loadResult.getType()) {
             case DataLoadError:
-                severity = treatDataLoadErrorsAsOK 
+                severity = treatDataLoadErrorsAsOK
                 ? IStatus.OK : IStatus.ERROR;
                 break;
             case Error:
@@ -311,16 +290,16 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             default:
                 severity = IStatus.OK;
             }
-            return new Status(severity, KNIMEEditorPlugin.PLUGIN_ID, 
+            return new Status(severity, KNIMEEditorPlugin.PLUGIN_ID,
                     loadResult.getMessage(), null);
         }
         IStatus[] subStatus = new IStatus[children.length];
         for (int i = 0; i < children.length; i++) {
             subStatus[i] = createStatus(children[i], treatDataLoadErrorsAsOK);
         }
-        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK, 
+        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK,
                 subStatus, loadResult.getMessage(), null);
     }
-    
+
 }
 

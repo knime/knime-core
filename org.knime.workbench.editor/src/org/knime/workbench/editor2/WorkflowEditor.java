@@ -244,7 +244,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         createActions();
 
         m_loadingCanceled = false;
-        m_loadingCanceledMessage = "";
     }
 
     /**
@@ -670,17 +669,23 @@ public class WorkflowEditor extends GraphicalEditor implements
                             public void run() {
                                 getEditorSite().getPage().closeEditor(
                                         WorkflowEditor.this, false);
-                                MessageBox mb =
-                                        new MessageBox(Display.getDefault()
-                                                .getActiveShell(),
-                                                SWT.ICON_INFORMATION | SWT.OK);
-                                mb.setText("Editor could not be opened");
-                                mb.setMessage(m_loadingCanceledMessage);
-                                mb.open();
+                                if (m_loadingCanceledMessage != null) {
+                                    MessageBox mb = new MessageBox(Display.
+                                            getDefault().getActiveShell(),
+                                            SWT.ICON_INFORMATION | SWT.OK);
+                                    mb.setText("Editor could not be opened");
+                                    mb.setMessage(m_loadingCanceledMessage);
+                                    mb.open();
+                                }
                             }
+
                         });
-                        throw new OperationCanceledException(
-                                m_loadingCanceledMessage);
+                        if (m_loadingCanceledMessage != null) {
+                            throw new OperationCanceledException(
+                                    m_loadingCanceledMessage);
+                        } else {
+                            throw new OperationCanceledException();
+                        }
                     } else if (loadWorflowRunnable.getThrowable() != null) {
                         throw new RuntimeException(
                                 loadWorflowRunnable.getThrowable());

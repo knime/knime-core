@@ -183,7 +183,7 @@ public class SingleNodeContainerPersistorVersion1xx
     @Override
     public void preLoadNodeContainer(final ReferencedFile settingsFileRef,
             final NodeSettingsRO parentSettings, final LoadResult result,
-            final CredentialLoader credentialLoader)
+            final WorkflowLoadHelper loadHelper)
     throws InvalidSettingsException, IOException {
         File settingsFile = settingsFileRef.getFile();
         String error;

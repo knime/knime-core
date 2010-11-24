@@ -244,7 +244,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
             final NodeSettingsRO parentSettings, final LoadResult loadResult,
-            final CredentialLoader credentialLoader)
+            final WorkflowLoadHelper loadHelper)
             throws InvalidSettingsException, IOException {
         throwUnsupportedOperationException();
     }

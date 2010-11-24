@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -40,57 +40,75 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
- * 
- * History
- *   Sep 24, 2007 (wiswedel): created
+ * ------------------------------------------------------------------------
+ *
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
-import java.util.Map;
-
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import java.util.List;
 
 /**
- * 
- * @author Bernd Wiswedel, University of Konstanz
+ * Callback class that is used during loading of a workflow to read
+ * user credentials and other information.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface NodeContainerPersistor {
+public interface WorkflowLoadHelper {
 
-    NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
+    /** Default (pessimistic) default load helper. */
+    public static final WorkflowLoadHelper INSTANCE =
+        new DefaultWorkflowLoadHelper();
 
-    NodeContainerMetaPersistor getMetaPersistor();
 
-    boolean needsResetAfterLoad();
-    
-    boolean isDirtyAfterLoad();
-    
-    /** Does this persistor complain if its persisted state 
-     * {@link NodeContainer#getState() state} does not match the state after
-     * loading (typically all non-executed nodes are configured after load). 
-     * This is true for all SingleNodeContainer and newer meta nodes,
-     * but it will be false for meta nodes, which are loaded from 1.x workflow.
-     * @return Such a property.
+    /** How to proceed when a workflow written with a future KNIME version is
+     * loaded. */
+    public enum UnknownKNIMEVersionLoadPolicy {
+        /** Abort loading. */
+        Abort,
+        /** Try anyway. */
+        Try
+    };
+
+    /**
+     * Caller method invoked when credentials are needed during loading
+     * of a workflow.
+     * @param credentials to be initialized
+     * @return a list of new <code>Credentials</code>
      */
-    boolean mustComplainIfStateDoesNotMatch();
-    
-    void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, LoadResult loadResult,
-            final WorkflowLoadHelper loadHelper)
-            throws InvalidSettingsException, IOException;
+    public List<Credentials> loadCredentials(
+            final List<Credentials> credentials);
 
-    void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
-            final ExecutionMonitor exec, final LoadResult loadResult)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException;
+    /** Callback if an unknown version string is encountered in the KNIME
+     * workflow.
+     * @param workflowVersionString The version string as in the workflow file
+     *        (possibly null or otherwise meaningless).
+     * @return A non-null policy
+     */
+    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+            final String workflowVersionString);
+
+    /** Default implementation of a load helper.
+     * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+     */
+    public static class DefaultWorkflowLoadHelper
+        implements WorkflowLoadHelper {
+
+        /** {@inheritDoc} */
+        @Override
+        public List<Credentials> loadCredentials(final List<Credentials> cred) {
+            return cred;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final String workflowVersionString) {
+            return UnknownKNIMEVersionLoadPolicy.Abort;
+        }
+
+    }
+
+
 }

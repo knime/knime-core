@@ -95,7 +95,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private static final NodeSettingsRO EMPTY_SETTINGS =
         new NodeSettings("<<empty>>");
 
-    private String m_versionString;
+    private final String m_versionString;
     private final TreeMap<Integer, NodeContainerPersistor>
         m_nodeContainerLoaderMap;
 
@@ -291,7 +291,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     @Override
     public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
             final NodeSettingsRO parentSettings, final LoadResult loadResult,
-            final CredentialLoader credentialLoader)
+            final WorkflowLoadHelper loadHelper)
     throws InvalidSettingsException, IOException {
         if (nodeFileRef == null || !nodeFileRef.getFile().isFile()) {
             setDirtyAfterLoad();
@@ -322,19 +322,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowDir = parentRef;
 
         try {
-            m_versionString = loadVersion(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load version string: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            // this will enforce the WFM to save everything from scratch
-            // (this is tough problem; pretty much everything can go wrong
-            // in the following... can't guess load version)
-            m_versionString = "1.3.0";
-        }
-
-        try {
             m_name = loadWorkflowName(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow name: " + e.getMessage();
@@ -358,10 +345,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         try {
             m_credentials = loadCredentials(m_workflowSett);
             // request to initialize credentials - if available
-            if (credentialLoader != null) {
-                if (m_credentials != null && !m_credentials.isEmpty()) {
-                    m_credentials = credentialLoader.load(m_credentials);
-                }
+            if (m_credentials != null && !m_credentials.isEmpty()) {
+                m_credentials = loadHelper.loadCredentials(m_credentials);
             }
         } catch (InvalidSettingsException e) {
             String error =
@@ -863,11 +848,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      */
     protected boolean shouldSkipThisNode(final NodeSettingsRO settings) {
         return false;
-    }
-
-    protected String loadVersion(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        return settings.getString("version");
     }
 
     protected int loadNodeIDSuffix(final NodeSettingsRO settings)
