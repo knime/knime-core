@@ -87,6 +87,13 @@ public class UserNodeNameCellEditorLocator implements CellEditorLocator {
     public void relocate(final CellEditor celleditor) {
         Text text = (Text)celleditor.getControl();
         Rectangle rect = m_nodeContainerFigure.getNameLabelRectangle();
+        int minWidth = m_nodeContainerFigure.getBounds().width;
+        if (rect.width < minWidth) {
+            // make it wider - and move it to the left to have it centered again
+            int diff = minWidth - rect.width;
+            rect.x = rect.x - (diff / 2);
+            rect.width = minWidth;
+        }
         m_nodeContainerFigure.translateToAbsolute(rect);
         org.eclipse.swt.graphics.Rectangle trim = text.computeTrim(0, 0, 0, 0);
         rect.translate(trim.x, trim.y);

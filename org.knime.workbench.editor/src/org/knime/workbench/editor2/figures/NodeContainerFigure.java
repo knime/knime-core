@@ -259,12 +259,14 @@ public class NodeContainerFigure extends RectangleFigure {
         add(m_symbolFigure);
         add(m_infoWarnErrorPanel);
         add(m_statusFigure);
+        add(m_name);
 
         // layout the components
         setConstraint(m_heading, new NodeContainerLocator(this));
         setConstraint(m_symbolFigure, new NodeContainerLocator(this));
         setConstraint(m_infoWarnErrorPanel, new NodeContainerLocator(this));
         setConstraint(m_statusFigure, new NodeContainerLocator(this));
+        setConstraint(m_name, new NodeContainerLocator(this));
     }
 
     boolean getShowFlowVarPorts() {
@@ -384,19 +386,10 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void setCustomName(final String name) {
         if (name == null || name.trim().equals("")) {
-            try {
-                m_name.setText("");
-                remove(m_name);
-            } catch (IllegalArgumentException iae) {
-                // do nothing
-            }
+            m_name.setText("");
         } else {
             // if the name is not already set
-            m_name.setText(name);
-            if (!(m_name.getParent() == this)) {
-                add(m_name, 4);
-                setConstraint(m_name, new NodeContainerLocator(this));
-            }
+            m_name.setText(name.trim());
 
             // if the tooltip (description) contains content, set it
             String toolTipText = m_name.getText();
