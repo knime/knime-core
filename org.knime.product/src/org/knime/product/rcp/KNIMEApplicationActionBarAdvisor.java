@@ -305,7 +305,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_print);
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
-        fileMenu.add(new GroupMarker("SVGExport")); // Included as anchor for the optional SVGExport.
+        fileMenu.add(new GroupMarker("ExportWorkflow"));
         fileMenu.add(new Separator());
         fileMenu.add(m_changeWorkspaceAction);
         fileMenu.add(new GroupMarker("SwitchWorkspace"));
