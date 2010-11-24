@@ -46,12 +46,12 @@
             name="Hide Node Names"/>
       <command
             categoryId="knime.command.category"
-            description="Open first view for selected node(s)"
+            description="Open first view for selected nodes"
             id="knime.commands.openView"
             name="Open View"/>
       <command
             categoryId="knime.command.category"
-            description="Execute and open first view for selected node"
+            description="Execute all selected nodes and open first view"
             id="knime.commands.executeAndOpenView"
             name="Execute and Open View"/>
       <command
@@ -61,7 +61,7 @@
             name="Edit Node Name and Description..."/>
       <command
             categoryId="knime.command.category"
-            description="Open first out-port view for selected node(s)"
+            description="Open first out-port view for selected nodes"
             id="knime.commands.openFirstOutPortView"
             name="Open First Out-port View"/>
       <command
@@ -185,11 +185,11 @@
                disabledIcon="icons/executeAndView_disabled.PNG"
                icon="icons/executeAndView.PNG"
                id="org.knime.workbench.editor.actions.executeAndOpenView"
-               label="Execute and Open View"
+               label="Execute and Open Views"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Execute selected node and open first view"/>
+               tooltip="Execute selected nodes and open first view"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.ExecuteAllEditorAction"
                definitionId="knime.commands.executeall"

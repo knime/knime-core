@@ -61,7 +61,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to execute a node and open its first view.
+ * Action to execute all selected nodes and open their first view.
  *
  * @author Christoph Sieb, University of Konstanz
  */
@@ -94,7 +94,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute and Open View";
+        return "Execute and Open Views";
     }
 
     /**
@@ -119,7 +119,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Execute the selected node and open its first view.";
+        return "Execute the selected nodes and open first view.";
     }
 
     /**
@@ -143,65 +143,64 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         return false;
     }
 
+    private void executeAndOpen(final NodeContainer cont) {
+        if (cont.getNrViews() > 0) {
+            // another listener must be registered at the workflow manager to
+            // receive also those events from nodes that have just been queued
+            cont.addNodeStateChangeListener(new NodeStateChangeListener() {
+                @Override
+                public void stateChanged(final NodeStateEvent state) {
+                    // check if the node has finished (either executed or
+                    // removed from the queue)
+                    if (state.getSource() == cont.getID() && state.getState()
+                            .equals(NodeContainer.State.EXECUTED)) {
+                        // if the node was successfully executed
+                        // start the view
+                        if (cont.getState().equals(
+                                NodeContainer.State.EXECUTED)) {
+                            Display.getDefault().asyncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // run open view action
+                                    IAction viewAction = new OpenViewAction(
+                                            cont, 0);
+                                    viewAction.run();
+                                }
+                            });
+                        }
+                    }
+                    if (!cont.getState().executionInProgress()) {
+                        // in those cases remove the listener
+                        cont.removeNodeStateChangeListener(this);
+                    }
+                }
+
+            });
+        }
+        getManager().executeUpToHere(cont.getID());
+    }
+
     /**
-     * This starts an execution job for the selected node. Note that this is all
-     * controlled by the WorkflowManager object of the currently open editor.
+     * Execute all selected nodes and open their first view (if available).
      *
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        // if more than one node part is selected
-        if (nodeParts.length != 1) {
-            LOGGER.debug("Execution denied as more than one node is "
-                    + "selected. Not allowed in 'Execute and "
-                    + "open view' action.");
-            return;
+        LOGGER.debug("Creating 'Execute and Open Views' job for "
+                + nodeParts.length + " node(s)...");
+        NodeContainerEditPart[] parts =
+            getSelectedParts(NodeContainerEditPart.class);
+        for (NodeContainerEditPart p : parts) {
+            final NodeContainer cont = p.getNodeContainer();
+            executeAndOpen(cont);
         }
-
-        LOGGER.debug("Executing and opening view for one node");
-
-        final NodeContainer cont = nodeParts[0].getNodeContainer();
-        // another listener must be registered at the workflow manager
-        // to receive also those events from nodes that have just
-        // been queued.
-        cont.addNodeStateChangeListener(new NodeStateChangeListener() {
-            @Override
-            public void stateChanged(final NodeStateEvent state) {
-
-                // check if the node has finished (either executed or
-                // removed from the queue)
-                if (state.getSource() == cont.getID()
-                        && state.getState().equals(
-                                NodeContainer.State.EXECUTED)) {
-
-                    // if the node was successfully executed
-                    // start the view
-                    if (cont.getState().equals(NodeContainer.State.EXECUTED)) {
-                        Display.getDefault().asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                // set the appropriate action to open the view
-                                IAction viewAction = new OpenViewAction(
-                                        cont, 0);
-                                viewAction.run();
-                            }
-                        });
-                    }
-                }
-                if (!cont.getState().executionInProgress()) {
-                    // in those cases remove the listener
-                    cont.removeNodeStateChangeListener(this);
-                }
-            }
-
-        });
-        getManager().executeUpToHere(cont.getID());
-
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
-        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+        try {
+            // Give focus to the editor again. Otherwise the actions (selection)
+            // is not updated correctly.
+            getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+        } catch (Exception e) {
+            // ignore
+        }
     }
 }
