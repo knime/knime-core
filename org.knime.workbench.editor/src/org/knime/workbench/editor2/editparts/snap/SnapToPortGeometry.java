@@ -509,7 +509,7 @@ public class SnapToPortGeometry extends SnapToHelper {
                 Point p = ((Connection)conPart.getFigure()).getPoints()
                         .getPoint(2);
 
-                rowVector.add(new Entry(0, p.y - 1, true, portPart.getType()));
+                rowVector.add(new Entry(0, p.y, true, portPart.getType()));
             }
 
             List targetConnections = portPart.getTargetConnections();
@@ -520,7 +520,7 @@ public class SnapToPortGeometry extends SnapToHelper {
                 PointList pList = ((Connection)conPart.getFigure()).getPoints();
                 Point p = pList.getPoint(pList.size() - 3);
 
-                rowVector.add(new Entry(0, p.y - 1, false, portPart.getType()));
+                rowVector.add(new Entry(0, p.y, false, portPart.getType()));
             }
         }
 
@@ -603,11 +603,8 @@ public class SnapToPortGeometry extends SnapToHelper {
                     m_yValues, moveDelta);
             if (Math.abs(ycorrect) < THRESHOLD) {
                 snapOrientation &= ~VERTICAL;
-                correction.preciseY += (ycorrect + 1);
+                correction.preciseY += ycorrect;
             }
-
-//             System.out.println("Ycorrect:" + correction.preciseY
-//             + " intermediat: " + ycorrect + "delta: " + moveDelta);
         }
 
         if ((snapOrientation & EAST) != 0) {
