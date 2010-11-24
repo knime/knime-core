@@ -109,7 +109,7 @@ public final class ConvenienceMethods {
      * '2M' (2 megabyte). If that fails (not parsable or negative), it will
      * return the the default value and log an error message.
      * @param envVar The name of the variable, must not be null (NPE)
-     * @param defaultValue The default value.
+     * @param defaultValue The default value (in bytes)
      * @return The size parameters in bytes or the defaultValue if the value
      *         can't be parsed.
      */
