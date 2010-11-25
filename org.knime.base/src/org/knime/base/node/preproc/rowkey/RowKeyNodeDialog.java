@@ -49,6 +49,9 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -62,9 +65,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 
 /**
@@ -179,6 +179,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
 
         m_replaceKey.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 final boolean b = enableReplaceOptions();
                 m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
@@ -197,6 +198,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         });
 
         m_appendRowKey.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
             }

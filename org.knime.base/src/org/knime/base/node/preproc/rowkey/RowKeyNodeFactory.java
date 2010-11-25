@@ -44,28 +44,28 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History 05.11.2006 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.rowkey;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * The node factory of the row key manipulation node. The node allows the user
- * to replace the row key with another column and/or to append a new column 
+ * to replace the row key with another column and/or to append a new column
  * with the values of the current row key.
  *
  * @author Tobias Koetter
  */
-public class RowKeyNodeFactory extends NodeFactory {
+public class RowKeyNodeFactory extends NodeFactory<RowKeyNodeModel> {
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public RowKeyNodeModel createNodeModel() {
         return new RowKeyNodeModel();
     }
 
@@ -81,8 +81,8 @@ public class RowKeyNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<RowKeyNodeModel> createNodeView(final int viewIndex,
+            final RowKeyNodeModel nodeModel) {
         return null;
     }
 
