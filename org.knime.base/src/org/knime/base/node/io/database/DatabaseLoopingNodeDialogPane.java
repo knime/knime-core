@@ -56,7 +56,7 @@ import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
-import org.knime.core.data.NominalValue;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -89,7 +89,7 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
     DatabaseLoopingNodeDialogPane() {
         super(true);
         m_columns = new DialogComponentColumnNameSelection(createColumnModel(),
-                "Column selection: ", 0, NominalValue.class);
+                "Column selection: ", 0, DataValue.class);
         m_aggregatebyRow = new DialogComponentBoolean(createAggregateModel(),
                 "Aggregate by row");
         m_appendGridColumn = new DialogComponentBoolean(createGridColumnModel(),
