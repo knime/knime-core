@@ -51,13 +51,9 @@ package org.knime.base.data.aggregation.collection;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -66,23 +62,13 @@ import java.util.Set;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class UniqueElementCountOperator extends AggregationOperator {
-
-    private final Set<DataCell> m_vals;
-
+public class OrElementCountOperator extends OrElementOperator {
 
     /**Constructor for class UniqueElementCountOperator.
      * @param maxUniqueValues the maximum number of unique values
      */
-    public UniqueElementCountOperator(final int maxUniqueValues) {
-        super("Unique element count", true, false, maxUniqueValues,
-                CollectionDataValue.class);
-        try {
-            m_vals = new HashSet<DataCell>(maxUniqueValues);
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
+    public OrElementCountOperator(final int maxUniqueValues) {
+        super("Union count", "Union count", maxUniqueValues);
     }
 
     /**
@@ -91,7 +77,7 @@ public class UniqueElementCountOperator extends AggregationOperator {
     @Override
     public AggregationOperator createInstance(final DataColumnSpec origColSpec,
             final int maxUniqueValues) {
-        return new UniqueElementCountOperator(maxUniqueValues);
+        return new OrElementCountOperator(maxUniqueValues);
     }
 
     /**
@@ -106,40 +92,8 @@ public class UniqueElementCountOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell instanceof CollectionDataValue) {
-            //missing cells are skipped
-            final CollectionDataValue collectionCell =
-                (CollectionDataValue)cell;
-            for (final DataCell valCell : collectionCell) {
-                if (m_vals.contains(cell)) {
-                    continue;
-                }
-                //check if the set contains more values than allowed
-                //before adding a new value
-                if (m_vals.size() >= getMaxUniqueValues()) {
-                    return true;
-                }
-                m_vals.add(valCell);
-            }
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected DataCell getResultInternal() {
-        return new IntCell(m_vals.size());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_vals.clear();
+        return new IntCell(super.getValues().size());
     }
 
     /**
@@ -147,8 +101,8 @@ public class UniqueElementCountOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Counts the number of unique elements in "
-        + "all collections per group.";
+        return "Creates an IntCell that contains the size of the "
+        + "union of all collection elements per group.";
     }
 
 }
