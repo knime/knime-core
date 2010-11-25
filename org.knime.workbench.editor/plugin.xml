@@ -260,7 +260,7 @@
             commandId="knime.commands.hideNodeNames"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+ALT+F12"/>    
+            sequence="CTRL+ALT+Q"/>    
       <key
             commandId="knime.commands.execute"
             contextId="org.eclipse.ui.contexts.window"
