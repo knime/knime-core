@@ -1071,7 +1071,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!nc.getState().executionInProgress()
                     && !hasSuccessorInProgress(id)) {
                 resetSuccessors(id);
-                if (nc.getState().equals(State.EXECUTED)) {
+                if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
                         ((SingleNodeContainer)nc).reset();
                     } else {
