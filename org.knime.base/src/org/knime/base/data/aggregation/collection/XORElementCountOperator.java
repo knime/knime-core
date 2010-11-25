@@ -51,58 +51,33 @@ package org.knime.base.data.aggregation.collection;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 
 /**
- * Collection operator that returns the intersection of all elements.
+ * Collection operator that counts the number of elements in
+ * the set of the exclusive-or on all elements.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AndElementOperator extends AggregationOperator {
-
-    private final Set<DataCell> m_vals;
-    private boolean m_first = true;
+public class XORElementCountOperator extends XORElementOperator {
 
     /**Constructor for class UnionOperator.
      * @param maxUniqueValues the maximum number of unique values
      */
-    public AndElementOperator(final int maxUniqueValues) {
-        this("Intersection", "Intersection", maxUniqueValues);
+    public XORElementCountOperator(final int maxUniqueValues) {
+        super("Exclusive-or count", "Exclusive-or count", maxUniqueValues);
     }
 
-    /**Constructor for class AndElementOperator.
-     * @param label of the derived class
-     * @param colName the column name
-     * @param maxUniqueValues the maximum number of unique values
-     */
-    protected AndElementOperator(final String label, final String colName,
-            final int maxUniqueValues) {
-        super(label, colName, true, false, maxUniqueValues,
-                CollectionDataValue.class);
-        try {
-            m_vals = new LinkedHashSet<DataCell>(maxUniqueValues);
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
-    }
     /**
      * {@inheritDoc}
      */
     @Override
     public AggregationOperator createInstance(final DataColumnSpec origColSpec,
             final int maxUniqueValues) {
-        return new AndElementOperator(maxUniqueValues);
+        return new XORElementCountOperator(maxUniqueValues);
     }
 
     /**
@@ -110,45 +85,7 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return SetCell.getCollectionType(origType.getCollectionElementType());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell instanceof CollectionDataValue) {
-            //missing cells are skipped
-            final CollectionDataValue collectionCell =
-                (CollectionDataValue)cell;
-            final Set<DataCell> valCells =
-                new HashSet<DataCell>(collectionCell.size());
-            for (final DataCell valCell : collectionCell) {
-                valCells.add(valCell);
-            }
-            if (m_first) {
-                //we have to check this only for the first set since the result
-                //can't get bigger
-                if (valCells.size() >= getMaxUniqueValues()) {
-                    return true;
-                }
-                m_vals.addAll(valCells);
-                m_first = false;
-            } else {
-                //keep only the matching ones
-                m_vals.retainAll(valCells);
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @return the values that have been collected so far as
-     * an unmodifiable collection
-     */
-    protected Collection<DataCell> getValues() {
-        return Collections.unmodifiableCollection(m_vals);
+        return IntCell.TYPE;
     }
 
     /**
@@ -156,16 +93,7 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        return CollectionCellFactory.createSetCell(m_vals);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_vals.clear();
-        m_first = true;
+        return new IntCell(getValues().size());
     }
 
     /**
@@ -173,8 +101,8 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains the intersection of all "
-        + "collection elements per group."
-        + " Only elements that are present in all collections are kept.";
+        return "Creates an IntCell that contains the size of all exclusive "
+        + "elements that exist in only one collection per group";
     }
+
 }

@@ -58,6 +58,7 @@ import org.knime.core.data.collection.SetCell;
 import org.knime.base.data.aggregation.AggregationOperator;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -72,11 +73,21 @@ public class XORElementOperator extends AggregationOperator {
     private final Set<DataCell> m_vals;
 
 
-    /**Constructor for class SingleElementOperator.
+    /**Constructor for class XORElementOperator.
      *@param maxUniqueValues the maximum number of unique values
      */
     public XORElementOperator(final int maxUniqueValues) {
-        super("Exclusive-or", true, false, maxUniqueValues,
+        this("Exclusive-or", "Exclusive-or", maxUniqueValues);
+    }
+
+    /**Constructor for class XORElementOperator.
+     * @param label of the derived class
+     * @param colName the column name
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    protected XORElementOperator(final String label, final String colName,
+            final int maxUniqueValues) {
+        super(label, colName, true, false, maxUniqueValues,
                 CollectionDataValue.class);
         try {
             m_vals = new LinkedHashSet<DataCell>(maxUniqueValues);
@@ -128,6 +139,14 @@ public class XORElementOperator extends AggregationOperator {
     @Override
     protected DataType getDataType(final DataType origType) {
         return SetCell.getCollectionType(origType.getCollectionElementType());
+    }
+
+    /**
+     * @return the values that have been collected so far as
+     * an unmodifiable collection
+     */
+    protected Collection<DataCell> getValues() {
+        return Collections.unmodifiableCollection(m_vals);
     }
 
     /**

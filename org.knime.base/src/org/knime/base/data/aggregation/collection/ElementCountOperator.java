@@ -124,7 +124,8 @@ public class ElementCountOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Counts the elements of all collections per group.";
+        return "Counts the elements of all collections by "
+        + "adding the size of all collections per group.";
     }
 
 }
