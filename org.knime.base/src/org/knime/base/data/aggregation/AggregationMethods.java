@@ -59,10 +59,12 @@ import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
+import org.knime.base.data.aggregation.collection.AndElementCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementOperator;
 import org.knime.base.data.aggregation.collection.ElementCountOperator;
+import org.knime.base.data.aggregation.collection.OrElementCountOperator;
 import org.knime.base.data.aggregation.collection.OrElementOperator;
-import org.knime.base.data.aggregation.collection.UniqueElementCountOperator;
+import org.knime.base.data.aggregation.collection.XORElementCountOperator;
 import org.knime.base.data.aggregation.collection.XORElementOperator;
 import org.knime.base.data.aggregation.date.DateMeanOperator;
 import org.knime.base.data.aggregation.date.DayRangeOperator;
@@ -81,13 +83,10 @@ import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
 import org.knime.base.data.aggregation.general.SetCellOperator;
 import org.knime.base.data.aggregation.general.SortedListCellOperator;
-import org.knime.base.data.aggregation.general.SortedValueListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
 import org.knime.base.data.aggregation.general.ValueCountOperator;
-import org.knime.base.data.aggregation.general.ValueListCellOperator;
-import org.knime.base.data.aggregation.general.ValueSetCellOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
@@ -157,14 +156,18 @@ public final class AggregationMethods {
 //The collection methods
             /**And.*/
             addOperator(new AndElementOperator(0));
+            /**And count.*/
+            addOperator(new AndElementCountOperator(0));
             /**Or.*/
             addOperator(new OrElementOperator(0));
+            /**Or count.*/
+            addOperator(new OrElementCountOperator(0));
             /**XOR.*/
             addOperator(new XORElementOperator(0));
+            /**XOR count.*/
+            addOperator(new XORElementCountOperator(0));
             /**Element counter.*/
             addOperator(new ElementCountOperator());
-            /**Unique element counter.*/
-            addOperator(new UniqueElementCountOperator(0));
 //The date methods
             /**Date mean operator.*/
             addOperator(new DateMeanOperator());
@@ -229,16 +232,10 @@ public final class AggregationMethods {
             addOperator(new MissingValueCountOperator());
               /** List collection.*/
             addOperator(new ListCellOperator(0));
-            /** Value list collection.*/
-            addOperator(new ValueListCellOperator(0));
             /** Sorted list collection.*/
             addOperator(new SortedListCellOperator(null, 0));
-            /** Sorted value list collection.*/
-            addOperator(new SortedValueListCellOperator(null, 0));
               /** Set collection.*/
             addOperator(new SetCellOperator(0));
-            /** Value set collection.*/
-            addOperator(new ValueSetCellOperator(0));
         } catch (final DuplicateOperatorException e) {
             throw new IllegalStateException(
                     "Exception while initializing class: "
@@ -574,12 +571,30 @@ public final class AggregationMethods {
         if (label == null) {
             throw new NullPointerException("Label must not be null");
         }
-        final AggregationOperator operator = getOperator(label);
+        AggregationOperator operator = getOperator(label);
         if (operator == null) {
-            throw new IllegalArgumentException("No method found for label: "
-                + label);
+            operator = oldOperators(label);
+            if (operator == null) {
+                throw new IllegalArgumentException("No method found for label: "
+                        + label);
+            }
         }
         return operator;
+    }
+
+    /**
+     * Compatibility method that returns old methods which are no longer
+     * available in the front end.
+     *
+     * @param label the unique label of the operator
+     * @return the operator for the given label or <code>null</code> if none
+     * exists
+     */
+    private AggregationOperator oldOperators(final String label) {
+        if (label.equals("Unique element count")) {
+            return getOperator("Union count");
+        }
+        return null;
     }
 
     /**
