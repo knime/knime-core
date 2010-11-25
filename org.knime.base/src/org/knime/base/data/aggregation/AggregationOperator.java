@@ -190,6 +190,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec createColumnSpec(final String colName,
             final DataColumnSpec origSpec) {
         if (origSpec == null) {
@@ -251,6 +252,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getLabel() {
         return m_label;
     }
@@ -258,6 +260,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getColumnLabel() {
         return m_colName;
     }
