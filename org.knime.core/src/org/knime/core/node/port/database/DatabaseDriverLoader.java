@@ -145,7 +145,7 @@ public final class DatabaseDriverLoader {
             DRIVER_MAP.put(d.toString(), d);
         } catch (Throwable t) {
             LOGGER.warn("Could not load driver class \""
-                    + JDBC_ODBC_DRIVER + "\".", t);
+                    + JDBC_ODBC_DRIVER + "\"");
         }
     }
 
@@ -170,7 +170,6 @@ public final class DatabaseDriverLoader {
 
     /**
      * Hide (empty) constructor.
-     *
      */
     private DatabaseDriverLoader() {
         // empty default constructor

@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
@@ -66,17 +67,18 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderConnectionNodeModel extends DBNodeModel
+final class DBQueryNodeModel2 extends DBNodeModel
         implements DBVariableSupportNodeModel {
 
-    private final DatabaseReaderConnection m_load =
-        new DatabaseReaderConnection(null);
+    private String m_query = "SELECT * FROM "
+        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER;
 
     /**
      * Creates a new database reader.
      */
-    DBReaderConnectionNodeModel() {
-        super(new PortType[0], new PortType[]{DatabasePortObject.TYPE});
+    DBQueryNodeModel2() {
+        super(new PortType[]{DatabasePortObject.TYPE},
+                new PortType[]{DatabasePortObject.TYPE});
     }
 
     /**
@@ -85,10 +87,7 @@ final class DBReaderConnectionNodeModel extends DBNodeModel
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn != null) {
-            conn.saveConnection(settings);
-        }
+        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
     }
 
     /**
@@ -98,7 +97,15 @@ final class DBReaderConnectionNodeModel extends DBNodeModel
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-        new DatabaseQueryConnectionSettings(settings, getCredentialsProvider());
+        String query = settings.getString(
+                DatabaseConnectionSettings.CFG_STATEMENT);
+        if (query != null && !query.contains(
+                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER)) {
+            throw new InvalidSettingsException(
+                    "Database view place holder ("
+                    + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
+                    + ") must not be replaced.");
+        }
     }
 
     /**
@@ -108,62 +115,52 @@ final class DBReaderConnectionNodeModel extends DBNodeModel
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(settings,
-                getCredentialsProvider());
-        try {
-            m_load.setDBQueryConnection(conn);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        }
+        m_query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec)
-            throws CanceledExecutionException, Exception {
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        conn = new DatabaseQueryConnectionSettings(conn,
-                parseQuery(conn.getQuery()));
-        DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
-        DataTableSpec spec = load.getDataTableSpec();
-        DatabasePortObject dbObj = new DatabasePortObject(
-                new DatabasePortObjectSpec(spec, conn.createConnectionModel()));
-        return new PortObject[]{dbObj};
-    }
-
-    /**
+        /**
      * {@inheritDoc}
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+    	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+    	DatabaseQueryConnectionSettings conn =
+    		new DatabaseQueryConnectionSettings(
+    		    spec.getConnectionModel(), getCredentialsProvider());
+        String newQuery = parseQuery(conn.getQuery());
+        conn = createDBQueryConnection(spec, newQuery);
         try {
-            // try to create database connection
-            DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-            if (conn == null) {
-                throw new InvalidSettingsException(
-                        "No database connection available.");
-            }
-            conn = new DatabaseQueryConnectionSettings(conn,
-                    parseQuery(conn.getQuery()));
-            DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
-            DataTableSpec spec = load.getDataTableSpec();
-            if (spec == null) {
-                throw new InvalidSettingsException(
-                        "No database connection available.");
-            }
-            DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
-                    conn.createConnectionModel());
+            DatabaseReaderConnection reader =
+                new DatabaseReaderConnection(conn);
+            DataTableSpec outSpec = reader.getDataTableSpec();
+            DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                    outSpec, conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
-        } catch (InvalidSettingsException ise) {
-            throw ise;
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec)
+            throws CanceledExecutionException, Exception {
+        DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+        DatabaseQueryConnectionSettings conn =
+                new DatabaseQueryConnectionSettings(
+                dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
+        String newQuery = parseQuery(conn.getQuery());
+        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery);
+        DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+        DataTableSpec outSpec = load.getDataTableSpec();
+        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                outSpec, conn.createConnectionModel());
+        DatabasePortObject outObj = new DatabasePortObject(dbSpec);
+        return new PortObject[]{outObj};
     }
 
     /**
@@ -174,8 +171,11 @@ final class DBReaderConnectionNodeModel extends DBNodeModel
      *         their actual value
      */
     private String parseQuery(final String query) {
-        String command = new String(query);
+        String command = new String(m_query).replaceAll(
+            DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
+            "(" + query + ")");
         return DBVariableSupportNodeModel.Resolver.parse(command, this);
+
     }
 
     /**

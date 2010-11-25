@@ -198,6 +198,7 @@ final class DBWriterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
@@ -206,7 +207,7 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
-
+        // empty
     }
 
     /**
@@ -215,7 +216,7 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
-
+        // empty
     }
 
     /**

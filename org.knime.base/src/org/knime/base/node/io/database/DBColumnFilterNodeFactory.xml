@@ -17,8 +17,9 @@
             list.
         </intro>
         
-        <option name="Include">
-            This list contains the column names that are included.
+        <option name="Exclude">
+            This list contains the column names of the input table that are 
+            excluded.
         </option>
         
         <option name="Select">
@@ -26,6 +27,10 @@
             list.
         </option>
         
+        <option name="Include">
+            This list contains the column names that are included.
+        </option>
+                
         <option name="Search">
             Use one of these fields to search either within the Include
             or Exclude list for certain column names or name substrings.
@@ -34,11 +39,7 @@
             all matching columns to be selected making them movable between
             the two lists.
         </option>
-        
-        <option name="Exclude">
-            This list contains the column names of the input table that are 
-            excluded.
-        </option>
+       
     </fullDescription>
     
     <ports>

@@ -56,16 +56,15 @@ import org.knime.core.node.NodeView;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-@Deprecated
-public final class DBQueryNodeFactory
-        extends NodeFactory<DBQueryNodeModel> {
+public final class DBQueryNodeFactory2
+        extends NodeFactory<DBQueryNodeModel2> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBQueryNodeModel createNodeModel() {
-        return new DBQueryNodeModel();
+    public DBQueryNodeModel2 createNodeModel() {
+        return new DBQueryNodeModel2();
     }
 
     /**
@@ -80,8 +79,8 @@ public final class DBQueryNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DBQueryNodeModel> createNodeView(final int viewIndex,
-            final DBQueryNodeModel nodeModel) {
+    public NodeView<DBQueryNodeModel2> createNodeView(final int viewIndex,
+            final DBQueryNodeModel2 nodeModel) {
         return null;
     }
 
@@ -98,6 +97,6 @@ public final class DBQueryNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBQueryNodeDialogPane();
+        return new DBReaderDialogPane(false);
     }
 }

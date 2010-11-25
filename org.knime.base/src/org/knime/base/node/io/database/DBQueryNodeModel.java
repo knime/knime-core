@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -64,22 +64,23 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 final class DBQueryNodeModel extends DBNodeModel {
-    
+
     /** Place holder for the database input view. */
     static final String TABLE_PLACE_HOLDER = "#table#";
-    
-   private final SettingsModelString m_query = 
+
+   private final SettingsModelString m_query =
         DBQueryNodeDialogPane.createQueryModel();
-    
+
     /**
      * Creates a new database reader.
      */
     DBQueryNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, 
+        super(new PortType[]{DatabasePortObject.TYPE},
                 new PortType[]{DatabasePortObject.TYPE});
     }
 
@@ -99,12 +100,12 @@ final class DBQueryNodeModel extends DBNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-        SettingsModelString query = 
+        SettingsModelString query =
             m_query.createCloneWithValidatedValue(settings);
         String queryString = query.getStringValue();
         if (queryString != null && !queryString.contains(TABLE_PLACE_HOLDER)) {
             throw new InvalidSettingsException(
-                    "Database view place holder (" + TABLE_PLACE_HOLDER 
+                    "Database view place holder (" + TABLE_PLACE_HOLDER
                     + ") must not be replaced.");
         }
     }
@@ -118,7 +119,7 @@ final class DBQueryNodeModel extends DBNodeModel {
         super.loadValidatedSettingsFrom(settings);
         m_query.loadSettingsFrom(settings);
     }
-    
+
         /**
      * {@inheritDoc}
      */
@@ -126,13 +127,13 @@ final class DBQueryNodeModel extends DBNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
     	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-    	DatabaseQueryConnectionSettings conn = 
+    	DatabaseQueryConnectionSettings conn =
     		new DatabaseQueryConnectionSettings(
     		    spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
-            DatabaseReaderConnection reader = 
+            DatabaseReaderConnection reader =
                 new DatabaseReaderConnection(conn);
             DataTableSpec outSpec = reader.getDataTableSpec();
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
@@ -142,16 +143,16 @@ final class DBQueryNodeModel extends DBNodeModel {
             throw new InvalidSettingsException(t);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected final PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DatabaseQueryConnectionSettings conn = 
+        DatabaseQueryConnectionSettings conn =
                 new DatabaseQueryConnectionSettings(
                 dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
@@ -163,10 +164,10 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabasePortObject outObj = new DatabasePortObject(dbSpec);
         return new PortObject[]{outObj};
     }
-    
+
     private String createQuery(final String query) {
         return m_query.getStringValue().replaceAll(
                 TABLE_PLACE_HOLDER, "(" + query + ")");
     }
-        
+
 }

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -53,12 +53,12 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBReaderConnectionNodeFactory 
+public final class DBReaderConnectionNodeFactory
         extends NodeFactory<DBReaderConnectionNodeModel> {
-    
+
     /**
      * {@inheritDoc}
      */
@@ -97,6 +97,6 @@ public final class DBReaderConnectionNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane();
+        return new DBReaderDialogPane(true);
     }
 }

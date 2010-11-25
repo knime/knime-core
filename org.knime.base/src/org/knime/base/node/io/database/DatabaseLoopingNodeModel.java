@@ -282,6 +282,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                 private final int m_nrCells =
                     (m_appendGridColumn.getBooleanValue()
                             ? resRow.getNumCells() + 1 : resRow.getNumCells());
+                @Override
                 public DataCell getCell(final int index) {
                     if (m_appendGridColumn.getBooleanValue()
                             && index == resRow.getNumCells()) {
@@ -290,12 +291,15 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                         return resRow.getCell(index);
                     }
                 }
+                @Override
                 public RowKey getKey() {
                     return rowKey;
                 }
+                @Override
                 public int getNumCells() {
                     return m_nrCells;
                 }
+                @Override
                 public Iterator<DataCell> iterator() {
                     return resRow.iterator();
                 }

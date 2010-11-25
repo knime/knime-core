@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -58,13 +58,15 @@ import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
-    
+
     /**
      * Create query dialog with text box to enter table name.
      */
@@ -72,16 +74,16 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
         super.addDialogComponent(new DialogComponentMultiLineString(
                 createQueryModel(), "SQL query"));
     }
-    
+
     /**
      * Create model to enter SQL statement on input database view.
      * @return a new model to enter SQL statement
      */
     static final SettingsModelString createQueryModel() {
         return new SettingsModelString("SQL_query", "SELECT * FROM "
-                + DBQueryNodeModel.TABLE_PLACE_HOLDER);
+                + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -89,7 +91,7 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) specs[0];
-        final DataTableSpec[] dataSpecs; 
+        final DataTableSpec[] dataSpecs;
         if (dbSpec == null) {
             dataSpecs = new DataTableSpec[]{null};
         } else {
@@ -97,7 +99,7 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
         }
         super.loadAdditionalSettingsFrom(settings, dataSpecs);
     }
-    
+
     /**
      * {@inheritDoc}
      */

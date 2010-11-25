@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -74,23 +74,23 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBConnectionNodeModel extends NodeModel {
-    
+
     private DatabaseReaderConnection m_load = null;
-    
+
     private DataTableSpec m_lastSpec = null;
-    
+
     /** Config key to write last processed spec. */
     static final String CFG_SPEC_XML = "spec.xml";
-    
+
     /**
      * Creates a new database connection reader.
      */
     DBConnectionNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, 
+        super(new PortType[]{DatabasePortObject.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -99,12 +99,12 @@ final class DBConnectionNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         if (m_load == null) {
             exec.setProgress("Opening database connection...");
             DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-            DatabaseQueryConnectionSettings conn = 
+            DatabaseQueryConnectionSettings conn =
                 new DatabaseQueryConnectionSettings(
                     dbObj.getConnectionModel(), getCredentialsProvider());
             m_load = new DatabaseReaderConnection(conn);
@@ -119,6 +119,7 @@ final class DBConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
@@ -129,11 +130,11 @@ final class DBConnectionNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         File specFile = new File(nodeInternDir, CFG_SPEC_XML);
         if (!specFile.exists()) {
-            throw new IOException("Spec file (\"" 
+            throw new IOException("Spec file (\""
                     + specFile.getAbsolutePath() + "\") does not exist "
                     + "(node may have been saved by an older version!)");
         }
-        NodeSettingsRO specSett = 
+        NodeSettingsRO specSett =
             NodeSettings.loadFromXML(new FileInputStream(specFile));
         try {
             m_lastSpec = DataTableSpec.load(specSett);
@@ -156,14 +157,14 @@ final class DBConnectionNodeModel extends NodeModel {
         File specFile = new File(nodeInternDir, CFG_SPEC_XML);
         specSett.saveToXML(new FileOutputStream(specFile));
     }
- 
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) 
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DatabasePortObjectSpec dbSpec = 
+        DatabasePortObjectSpec dbSpec =
             (DatabasePortObjectSpec) inSpecs[0];
         ModelContentRO newConn = dbSpec.getConnectionModel();
         if (m_load != null) {
@@ -175,8 +176,8 @@ final class DBConnectionNodeModel extends NodeModel {
             }
         }
         try {
-            DatabaseQueryConnectionSettings conn = 
-                new DatabaseQueryConnectionSettings(newConn, 
+            DatabaseQueryConnectionSettings conn =
+                new DatabaseQueryConnectionSettings(newConn,
                     getCredentialsProvider());
             m_load = new DatabaseReaderConnection(conn);
             m_lastSpec = m_load.getDataTableSpec();
@@ -189,14 +190,15 @@ final class DBConnectionNodeModel extends NodeModel {
             throw new InvalidSettingsException(t);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        
+        // empty
+
     }
 
     /**
@@ -205,7 +207,7 @@ final class DBConnectionNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
+        // empty
     }
 
     /**
@@ -213,7 +215,7 @@ final class DBConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-
+        // empty
     }
-    
+
 }

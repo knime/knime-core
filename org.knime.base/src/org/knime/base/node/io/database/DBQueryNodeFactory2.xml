@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="./db_query.png" deprecated="true">
+<knimeNode type="Manipulator" icon="./db_query.png">
 	<name>Database Query</name>
 	
 	<shortDescription>
@@ -16,10 +16,16 @@
 		 modified. 
 		</intro>
 		
-   	    <option name="SQL query">
+   	    <option name="SQL Statement">
 		  Enter a new database query. Don't removed the #table# place
 		  holder which represents the incoming SQL statement.
 	    </option>
+	    <option name="Flow Variable List">
+            The list contains the flow variables that are currently available at
+            the node input. Double clicking any of the entries will insert the
+            respective identifier at the current cursor position (replacing the
+            selection, if any).
+         </option>
 	</fullDescription>
 	
 	<ports>

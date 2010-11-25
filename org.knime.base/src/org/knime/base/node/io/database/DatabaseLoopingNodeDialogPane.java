@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   19.06.2007 (gabriel): created
  */
@@ -70,26 +70,27 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
-    
+
     private final DialogComponentColumnNameSelection m_columns;
-    
+
     private final DialogComponentBoolean m_aggregatebyRow;
-    
+
     private final DialogComponentBoolean m_appendGridColumn;
-    
+
     private final DialogComponentNumber m_noValues;
 
     /**
      * Creates a new dialog for the Database Looping node.
      */
     DatabaseLoopingNodeDialogPane() {
-        m_columns = new DialogComponentColumnNameSelection(createColumnModel(), 
+        super(true);
+        m_columns = new DialogComponentColumnNameSelection(createColumnModel(),
                 "Column selection: ", 0, NominalValue.class);
-        m_aggregatebyRow = new DialogComponentBoolean(createAggregateModel(), 
+        m_aggregatebyRow = new DialogComponentBoolean(createAggregateModel(),
                 "Aggregate by row");
         m_appendGridColumn = new DialogComponentBoolean(createGridColumnModel(),
             "Append grid column");
@@ -105,28 +106,28 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
         JPanel columnPanel = super.getPanel();
         columnPanel.add(southPanel, BorderLayout.SOUTH);
     }
-    
+
     /** @return string model for column selection */
     static SettingsModelString createColumnModel() {
         return new SettingsModelString("column_selection", null);
     }
-    
+
     /** @return aggregation model */
     static SettingsModelBoolean createAggregateModel() {
         return new SettingsModelBoolean("aggregate_by_row", false);
     }
-    
+
     /** @return append grid column model */
     static SettingsModelBoolean createGridColumnModel() {
         return new SettingsModelBoolean("append_grid_column", true);
     }
-    
+
     /** @return append grid column model */
     static SettingsModelIntegerBounded createNoValuesModel() {
-        return new SettingsModelIntegerBounded("values_per_query", 
+        return new SettingsModelIntegerBounded("values_per_query",
                 1, 1, Integer.MAX_VALUE);
     }
-    
+
     /**
      * {@inheritDoc}
      */

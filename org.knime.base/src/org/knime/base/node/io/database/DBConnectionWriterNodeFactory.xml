@@ -12,7 +12,7 @@
         Writes the table from the input database connection into a new table
         inside the database. An already existing table will be dropped. 
 		</intro>
-		<option name="Table name: ">
+		<option name="Table name">
 		      Enter a new database table name. 
 		</option>
 	</fullDescription>

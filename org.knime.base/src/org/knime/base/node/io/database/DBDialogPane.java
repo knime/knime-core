@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -80,14 +80,13 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 
-
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBDialogPane extends JPanel {
 
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DBDialogPane.class);
 
     private final JComboBox m_driver = new JComboBox();
@@ -99,13 +98,13 @@ final class DBDialogPane extends JPanel {
     private final JPasswordField m_pass = new JPasswordField();
 
     private boolean m_passwordChanged = false;
-    
+
     private final JCheckBox m_credCheckBox = new JCheckBox();
     private final JComboBox m_credBox = new JComboBox();
-        
+
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
-    
+
     /**
      * Creates new dialog.
      */
@@ -132,14 +131,14 @@ final class DBDialogPane extends JPanel {
         m_driver.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent ie) {
-                String url = 
+                String url =
                     DatabaseDriverLoader.getURLForDriver((String) ie.getItem());
                 m_db.setSelectedItem(url);
             }
         });
         dbPanel.add(m_db);
         super.add(dbPanel);
-        
+
         JPanel credPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         credPanel.setBorder(BorderFactory.createTitledBorder(
             " Workflow Credentials "));
@@ -147,15 +146,15 @@ final class DBDialogPane extends JPanel {
         m_credCheckBox.addItemListener(new ItemListener() {
            @Override
            public void itemStateChanged(final ItemEvent ie) {
-                enableCredentials(m_credCheckBox.isSelected());        
-           } 
+                enableCredentials(m_credCheckBox.isSelected());
+           }
         });
         m_credBox.setEditable(false);
         m_credBox.setFont(FONT);
         m_credBox.setPreferredSize(new Dimension(375, 20));
         credPanel.add(m_credBox);
         super.add(credPanel);
-                
+
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
@@ -167,12 +166,15 @@ final class DBDialogPane extends JPanel {
         m_pass.setPreferredSize(new Dimension(400, 20));
         m_pass.setFont(FONT);
         m_pass.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 m_passwordChanged = true;
             }
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 m_passwordChanged = true;
             }
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 m_passwordChanged = true;
             }
@@ -183,12 +185,12 @@ final class DBDialogPane extends JPanel {
                 if (!m_passwordChanged) {
                     m_pass.setText("");
                 }
-            } 
+            }
         });
         passPanel.add(m_pass);
         super.add(passPanel);
     }
-    
+
     private void enableCredentials(final boolean flag) {
         m_credBox.setEnabled(flag);
         m_pass.setEnabled(!flag);
@@ -219,14 +221,14 @@ final class DBDialogPane extends JPanel {
         m_driver.removeAllItems();
         // update list of registered driver
         updateDriver();
-        String select = settings.getString("driver", 
+        String select = settings.getString("driver",
                 m_driver.getSelectedItem().toString());
         m_driver.setSelectedItem(select);
         // update list of urls
         m_db.removeAllItems();
-        for (String databaseURL 
+        for (String databaseURL
                 : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
-            m_db.addItem(databaseURL);   
+            m_db.addItem(databaseURL);
         }
         String dbName = settings.getString("database", null);
         if (dbName == null) {
@@ -234,7 +236,7 @@ final class DBDialogPane extends JPanel {
         } else {
             m_db.setSelectedItem(dbName);
         }
-        
+
         boolean useCredential = settings.containsKey("credential_name");
         enableCredentials(useCredential);
         if (useCredential) {
@@ -257,7 +259,7 @@ final class DBDialogPane extends JPanel {
         m_driver.removeAllItems();
         Set<String> driverNames = new HashSet<String>(
                 DatabaseDriverLoader.getLoadedDriver());
-        for (String driverName 
+        for (String driverName
                 : DatabaseConnectionSettings.DRIVER_ORDER.getHistory()) {
             if (driverNames.contains(driverName)) {
                 m_driver.addItem(driverName);
@@ -277,10 +279,10 @@ final class DBDialogPane extends JPanel {
         String driverName = m_driver.getSelectedItem().toString();
         settings.addString("driver", driverName);
         String url = m_db.getEditor().getItem().toString();
-        settings.addString("database", url);     
+        settings.addString("database", url);
         boolean useCredential = m_credCheckBox.isSelected();
         if (useCredential) {
-            settings.addString("credential_name", 
+            settings.addString("credential_name",
                 (String) m_credBox.getSelectedItem());
         } else {
             settings.addString("user", m_user.getText().trim());
@@ -289,11 +291,11 @@ final class DBDialogPane extends JPanel {
                     settings.addString("password", KnimeEncryption.encrypt(
                             m_pass.getPassword()));
                 } catch (Throwable t) {
-                    LOGGER.error("Could not encrypt password, reason: " 
+                    LOGGER.error("Could not encrypt password, reason: "
                             + t.getMessage(), t);
                 }
             } else {
-                settings.addString("password", 
+                settings.addString("password",
                     new String(m_pass.getPassword()));
             }
         }

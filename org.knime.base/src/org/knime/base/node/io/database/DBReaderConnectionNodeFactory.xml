@@ -14,32 +14,38 @@
 	     by default only but you can use the load button to register additional drivers from Zip or Jar.
 		</intro>
 		
-	<option name="Database Driver: ">
+	<option name="Database driver">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
         (Database drivers).
 	</option>
-	<option name="Database Name: ">
+	<option name="Database URL">
         Enter the database name here, for example 
         jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
 	</option>
-	<option name="Workflow Credentials: ">
+	<option name="Workflow Credentials">
         If checked, the credentials (user and password) are used as defined on 
         the workflow. The credential name links to the specified user and 
         password. Those can be replaced or edit using the 'Workflow Credentials'
         menu available in the workflow context menu.
     </option>
-	<option name="User Name: ">
+	<option name="User name">
         Your log-in user name for the database.
 	</option>
-	<option name="Password: ">
+	<option name="Password">
         Your log-in password for the database. Note, the password is
         de- and encrypted before handling it internally.
 	</option>
-	<option name="SQL Statement: ">
+	<option name="SQL Statement">
         Enter the SQL-like query here, for example SELECT * FROM table
 	</option>
+	<option name="Flow Variable List">
+      The list contains the flow variables that are currently available at
+      the node input. Double clicking any of the entries will insert the
+      respective identifier at the current cursor position (replacing the
+      selection, if any).
+    </option>
 	</fullDescription>
 	
 	<ports>

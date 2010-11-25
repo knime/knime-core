@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -64,19 +64,19 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBConnectionWriterNodeModel extends NodeModel {
-    
-    private SettingsModelString m_tableName = 
+
+    private SettingsModelString m_tableName =
         DBConnectionWriterDialogPane.createTableNameModel();
-    
+
     /**
      * Creates a new database connection reader.
      */
@@ -89,12 +89,12 @@ final class DBConnectionWriterNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         exec.setProgress("Opening database connection...");
         String tableName = m_tableName.getStringValue();
-        DatabaseQueryConnectionSettings conn = 
+        DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel(), getCredentialsProvider());
         try {
@@ -102,7 +102,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Exception e) {
             // suppress exception thrown when table does not exist in database
         }
-        conn.execute("CREATE TABLE " + tableName 
+        conn.execute("CREATE TABLE " + tableName
                 + " AS (" + conn.getQuery() + ")");
         return new BufferedDataTable[0];
     }
@@ -112,7 +112,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        // empty
     }
 
     /**
@@ -121,7 +121,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-
+        // empty
     }
 
     /**
@@ -130,14 +130,14 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-
+        // empty
     }
- 
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) 
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         String table = m_tableName.getStringValue();
         if (table == null || table.trim().isEmpty()) {
@@ -146,7 +146,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         }
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-            DatabaseQueryConnectionSettings conn = 
+            DatabaseQueryConnectionSettings conn =
                 new DatabaseQueryConnectionSettings(
                     spec.getConnectionModel(), getCredentialsProvider());
             conn.createConnection();
@@ -156,19 +156,19 @@ final class DBConnectionWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException(t);
         }
         if (table != null) {
-            super.setWarningMessage("Existing table \"" 
+            super.setWarningMessage("Existing table \""
                     + table + "\" will be dropped!");
         }
         return new DataTableSpec[0];
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString tableName = 
+        SettingsModelString tableName =
             m_tableName.createCloneWithValidatedValue(settings);
         String tableString = tableName.getStringValue();
         if (tableString == null || tableString.contains("<table_name>")) {
@@ -193,5 +193,5 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_tableName.saveSettingsTo(settings);
     }
-    
+
 }

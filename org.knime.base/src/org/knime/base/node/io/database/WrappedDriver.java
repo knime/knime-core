@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -56,7 +56,7 @@ import java.util.Properties;
 
 /**
  * Wraps a Driver object.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class WrappedDriver implements Driver {
@@ -64,7 +64,7 @@ final class WrappedDriver implements Driver {
 
     /**
      * Create wrapper.
-     * 
+     *
      * @param d For this <code>Driver</code>.
      */
     WrappedDriver(final Driver d) {
@@ -74,6 +74,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Connection connect(final String url, final Properties info)
             throws SQLException {
         return m_d.connect(url, info);
@@ -82,6 +83,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean acceptsURL(final String url) throws SQLException {
         return m_d.acceptsURL(url);
     }
@@ -89,6 +91,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DriverPropertyInfo[] getPropertyInfo(final String url,
             final Properties info) throws SQLException {
         return m_d.getPropertyInfo(url, info);
@@ -97,6 +100,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getMajorVersion() {
         return m_d.getMajorVersion();
     }
@@ -104,6 +108,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getMinorVersion() {
         return m_d.getMinorVersion();
     }
@@ -111,6 +116,7 @@ final class WrappedDriver implements Driver {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean jdbcCompliant() {
         return m_d.jdbcCompliant();
     }

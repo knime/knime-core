@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  */
 package org.knime.core.node.port.database;
 
@@ -56,31 +56,31 @@ import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DatabaseQueryConnectionSettings 
+public final class DatabaseQueryConnectionSettings
         extends DatabaseConnectionSettings {
-    
-    /** Place holder <code>&lttable&gt</code>. */
-    public static final String TABLE_PLACEHOLDER = "<table>";
-    
+
+    /** Table place holder <code>#table#</code>. */
+    public static final String TABLE_PLACEHOLDER = "#table#";
+
     private final String m_query;
-    
+
     /**
      * Create a new connection with an empty query object.
      * @param settings settings to load from
-     * @param cp credential store used to get user name and password
+     * @param cp credentials provider used to get user name and password
      * @throws InvalidSettingsException if settings could not be loaded
      */
     public DatabaseQueryConnectionSettings(final ConfigRO settings,
-            final CredentialsProvider cp) 
+            final CredentialsProvider cp)
             throws InvalidSettingsException {
         super();
         m_query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
         super.loadValidatedConnection(settings, cp);
     }
-    
+
     /**
      * Creates a new connection based in the given connection and the query
      * string.
@@ -88,12 +88,12 @@ public final class DatabaseQueryConnectionSettings
      * @param query the SQL query
      */
     public DatabaseQueryConnectionSettings(
-            final DatabaseConnectionSettings conn, 
+            final DatabaseConnectionSettings conn,
             final String query) {
         super(conn);
         m_query = query;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -103,13 +103,13 @@ public final class DatabaseQueryConnectionSettings
             throws InvalidSettingsException {
         String query = settings.getString(CFG_STATEMENT);
         if (query != null && query.contains(TABLE_PLACEHOLDER)) {
-            throw new InvalidSettingsException("Database table place holder (" 
+            throw new InvalidSettingsException("Database table place holder ("
                     + TABLE_PLACEHOLDER + ") not replaced in query:\n"
                     + query);
         }
         super.validateConnection(settings, cp);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -118,14 +118,14 @@ public final class DatabaseQueryConnectionSettings
         settings.addString(CFG_STATEMENT, m_query);
         super.saveConnection(settings);
     }
-    
+
     /**
-     * @return SQL statement 
+     * @return SQL statement
      */
     public String getQuery() {
         return m_query;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -134,6 +134,6 @@ public final class DatabaseQueryConnectionSettings
         ModelContent cont = new ModelContent("database_query_connection_model");
         saveConnection(cont);
         return cont;
-    }        
+    }
 
 }

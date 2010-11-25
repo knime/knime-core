@@ -71,7 +71,8 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderNodeModel extends NodeModel {
+class DBReaderNodeModel extends NodeModel
+        implements DBVariableSupportNodeModel {
 
     private DataTableSpec m_lastSpec = null;
 
@@ -123,32 +124,31 @@ class DBReaderNodeModel extends NodeModel {
      */
     private String parseQuery(final String query) {
         String command = new String(query);
-        int currentIndex = 0;
-        do {
-            currentIndex = command.indexOf("$${", currentIndex);
-            if (currentIndex < 0) {
-                break;
-            }
-            int endIndex = command.indexOf("}$$", currentIndex);
-            String var = command.substring(currentIndex + 4, endIndex);
-            switch (command.charAt(currentIndex + 3)) {
-                case 'I' :
-                    int i = peekFlowVariableInt(var);
-                    command = command.replace(
-                            "$${I" + var + "}$$", Integer.toString(i));
-                    break;
-                case 'D' :
-                    double d = peekFlowVariableDouble(var);
-                    command = command.replace(
-                            "$${D" + var + "}$$", Double.toString(d));
-                    break;
-                case 'S' :
-                    String s = peekFlowVariableString(var);
-                    command = command.replace("$${S" + var + "}$$", s);
-                    break;
-            }
-        } while (true);
-        return command;
+        return DBVariableSupportNodeModel.Resolver.parse(command, this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int delegatePeekFlowVariableInt(final String name) {
+        return super.peekFlowVariableInt(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double delegatePeekFlowVariableDouble(final String name) {
+        return peekFlowVariableDouble(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String delegatePeekFlowVariableString(final String name) {
+        return peekFlowVariableString(name);
     }
 
     /**

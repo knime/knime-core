@@ -70,7 +70,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
-
 /**
  * Creates a connection to write to database.
  *
@@ -82,7 +81,7 @@ final class DBWriterConnection {
             .getLogger(DBWriterConnection.class);
 
     private DBWriterConnection() {
-
+        // empty default constructor
     }
 
     /**
@@ -297,7 +296,7 @@ final class DBWriterConnection {
                         				dateCell.getUTCTimeInMillis());
                         		stmt.setTime(dbIdx, time);
                         	} else {
-                        		java.sql.Timestamp timestamp = 
+                        		java.sql.Timestamp timestamp =
                         		    new java.sql.Timestamp(
                         		            dateCell.getUTCTimeInMillis());
                         		stmt.setTimestamp(dbIdx, timestamp);

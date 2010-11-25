@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -62,15 +62,16 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
- * 
+ * Abstract class derives the general {@link NodeModel} for all database node
+ * implementations.
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBNodeModel extends NodeModel {
-    
+abstract class DBNodeModel extends NodeModel {
+
     /** The logger instance used for this and all derived classes. */
-    protected final NodeLogger m_logger = 
+    protected final NodeLogger m_logger =
         NodeLogger.getLogger(DBNodeModel.class);
-    
+
     /**
      * Creates a new database reader.
      * @param inPorts array of input port types
@@ -85,7 +86,7 @@ class DBNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-
+        // empty
     }
 
     /**
@@ -94,7 +95,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
+        // empty
     }
 
     /**
@@ -103,7 +104,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
+        // empty
     }
 
     /**
@@ -111,7 +112,7 @@ class DBNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        // empty
     }
 
     /**
@@ -120,7 +121,7 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-
+        // empty
     }
 
     /**
@@ -129,25 +130,25 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-
+        // empty
     }
-    
+
     /**
-     * Creates a new query connection based on the connection settings, that 
+     * Creates a new query connection based on the connection settings, that
      * is, either create a new table or wrap the SQL statement.
      * @param spec the database connection
      * @param newQuery the new query to execute
      * @return a database connection object
-     * @throws InvalidSettingsException if the query to create the new table 
+     * @throws InvalidSettingsException if the query to create the new table
      *         inside the database could not be executed
      */
     final DatabaseQueryConnectionSettings createDBQueryConnection(
-            final DatabasePortObjectSpec spec, final String newQuery) 
+            final DatabasePortObjectSpec spec, final String newQuery)
     		throws InvalidSettingsException {
-    	DatabaseQueryConnectionSettings conn = 
+    	DatabaseQueryConnectionSettings conn =
     		new DatabaseQueryConnectionSettings(
     			spec.getConnectionModel(), getCredentialsProvider());
         return new DatabaseQueryConnectionSettings(conn, newQuery);
     }
-        
+
 }
