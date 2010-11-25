@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -77,38 +77,38 @@ import org.osgi.framework.Bundle;
 /**
  * Factory for creation of repository objects from
  * <code>IConfigurationElement</code> s from the Plugin registry.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryFactory {
     private RepositoryFactory() {
         // hidden constructor (utility class)
     }
-    
-    
+
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            RepositoryFactory.class); 
-    
-    private static final String META_NODE_ICON 
+            RepositoryFactory.class);
+
+    private static final String META_NODE_ICON
         = "icons/meta_nodes/metanode_template.png";
-    
+
     private static ImageDescriptor defaultIcon;
-    
-    /** 
-     * Workflow manager instance loading and administering 
-     * the predefined meta nodes. 
+
+    /**
+     * Workflow manager instance loading and administering
+     * the predefined meta nodes.
      */
     public static final WorkflowManager META_NODE_ROOT;
-    
-    static {        
+
+    static {
         META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject(
                 "KNIME MetaNode Repository");
     }
-    
+
 
     /**
      * Creates a new node repository object. Throws an exception, if this fails
-     * 
+     *
      * @param element Configuration element from the contributing plugin
      * @return NodeTemplate object to be used within the repository.
      * @throws IllegalArgumentException If the element is not compatible (e.g.
@@ -170,10 +170,10 @@ public final class RepositoryFactory {
 
         return node;
     }
-    
+
     /**
-     * 
-     * @param configuration content of the extension 
+     *
+     * @param configuration content of the extension
      * @return a meta node template
      */
     public static MetaNodeTemplate createMetaNode(
@@ -183,20 +183,21 @@ public final class RepositoryFactory {
         String workflowDir = configuration.getAttribute("workflowDir");
         String after = configuration.getAttribute("after");
         String iconPath = configuration.getAttribute("icon");
+        String categoryPath = configuration.getAttribute("category-path");
         boolean isExpertNode = Boolean.parseBoolean(
                 configuration.getAttribute("expert-flag"));
         String pluginId = configuration.getDeclaringExtension()
             .getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
-        
+
         WorkflowManager manager = loadMetaNode(pluginId, workflowDir);
         if (manager == null) {
-            LOGGER.error("MetaNode  " + name + " could not be loaded. " 
+            LOGGER.error("MetaNode  " + name + " could not be loaded. "
                     + "Skipped.");
             return null;
         }
         MetaNodeTemplate template = new MetaNodeTemplate(
-                id, name, manager);
+                id, name, categoryPath, manager);
         template.setPluginID(configuration.getContributor().getName());
         if (after != null && !after.isEmpty()) {
             template.setAfterID(after);
@@ -208,7 +209,7 @@ public final class RepositoryFactory {
         if (!Boolean.valueOf(
                 System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
-            ImageDescriptor descriptor = null; 
+            ImageDescriptor descriptor = null;
             Image icon = null;
             if (iconPath != null) {
                 descriptor = AbstractUIPlugin
@@ -229,22 +230,22 @@ public final class RepositoryFactory {
     }
 
 
-    private static WorkflowManager loadMetaNode(final String pluginId, 
+    private static WorkflowManager loadMetaNode(final String pluginId,
             final String workflowDir) {
         LOGGER.debug("found pre-installed template " + workflowDir);
 
         Bundle bundle = Platform.getBundle(pluginId);
         URL url = FileLocator.find(bundle, new Path(workflowDir), null);
-        
+
         if (url != null) {
             try {
                 File f = new File(FileLocator.toFileURL(url).getFile());
                 LOGGER.debug("meta node template name: " + f.getName());
-                WorkflowManager metaNode = META_NODE_ROOT.load(f, 
+                WorkflowManager metaNode = META_NODE_ROOT.load(f,
                         new ExecutionMonitor(), null, false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
-                LOGGER.error("Unexpected canceled execution exception", 
+                LOGGER.error("Unexpected canceled execution exception",
                         cee);
             } catch (Exception e) {
                 LOGGER.error(
@@ -253,12 +254,12 @@ public final class RepositoryFactory {
         }
         return null;
     }
-    
-    
-    
+
+
+
     /**
      * Creates a new category object. Throws an exception, if this fails
-     * 
+     *
      * @param root The root to insert the category in
      * @param element Configuration element from the contributing plugin
      * @return Category object to be used within the repository.
@@ -280,7 +281,7 @@ public final class RepositoryFactory {
         cat.setAfterID(str(element.getAttribute("after"), ""));
         if (!Boolean.valueOf(System.getProperty(
                 "java.awt.headless", "false"))) {
-            ImageDescriptor descriptor = getIcon(pluginID, 
+            ImageDescriptor descriptor = getIcon(pluginID,
                     element.getAttribute("icon"));
             cat.setIcon(descriptor.createImage(true));
             cat.setIconDescriptor(descriptor);
@@ -361,8 +362,8 @@ public final class RepositoryFactory {
     private static String str(final String s, final String defaultString) {
         return s == null ? defaultString : s;
     }
-    
-    private static ImageDescriptor getIcon(final String pluginID, 
+
+    private static ImageDescriptor getIcon(final String pluginID,
             final String path) {
         if (path != null && pluginID != null) {
             ImageDescriptor desc = AbstractUIPlugin.imageDescriptorFromPlugin(
@@ -370,7 +371,7 @@ public final class RepositoryFactory {
             if (desc != null) {
                 return desc;
             }
-        } 
+        }
         // if we have not returned an image yet we have to return the default
         // icon. lazy initialization
         if (defaultIcon == null) {
@@ -379,5 +380,5 @@ public final class RepositoryFactory {
         }
         return defaultIcon;
     }
-    
+
 }

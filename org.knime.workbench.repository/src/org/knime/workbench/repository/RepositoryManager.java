@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -82,7 +82,7 @@ import org.osgi.framework.Bundle;
  * contributed extensions from the extension points and creates an arbitrary
  * model. Additionally, you can ask this to load/save workflows using the
  * appropriate eclipse classloaders
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryManager {
@@ -99,15 +99,15 @@ public final class RepositoryManager {
     // ID of "category" extension point
     private static final String ID_CATEGORY = "org.knime.workbench."
             + "repository.categories";
-    
-    private static final String ID_META_NODE 
+
+    private static final String ID_META_NODE
         = "org.knime.workbench.repository.metanode";
 
     // set the eclipse class creator into the static global class creator class
     static {
         GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
     }
-    
+
     private static Semaphore m_lock = new Semaphore(1);
 
     private Root m_root;
@@ -119,10 +119,10 @@ public final class RepositoryManager {
 
     /**
      * Returns the extensions for a given extension point.
-     * 
+     *
      * @param pointID
      *            The extension point ID
-     * 
+     *
      * @return The extensions
      */
     private IExtension[] getExtensions(final String pointID) {
@@ -187,7 +187,7 @@ public final class RepositoryManager {
             }
         }
     }
-    
+
 
     /**
      * Creates the repository model. This instantiates all contributed
@@ -204,15 +204,15 @@ public final class RepositoryManager {
         m_root = new Root();
         IExtension[] nodeExtensions = this.getExtensions(ID_NODE);
         IExtension[] categoryExtensions = this.getExtensions(ID_CATEGORY);
-        
-        boolean isInExpertMode = 
+
+        boolean isInExpertMode =
             Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
 
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements 
+        ArrayList<IConfigurationElement> allElements
             = new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
@@ -261,7 +261,7 @@ public final class RepositoryManager {
 
         for (int j = 0; j < categoryElements.length; j++) {
             IConfigurationElement e = categoryElements[j];
-            
+
             try {
                 Category category = RepositoryFactory.createCategory(m_root, e);
                 LOGGER.debug("Found category extension '" + category.getID()
@@ -298,7 +298,7 @@ public final class RepositoryManager {
                     boolean skip = !isInExpertMode && node.isExpertNode();
                     if (skip) {
                         LOGGER.debug("Skipping node extension '" + node.getID()
-                                + "': " + node.getName() 
+                                + "': " + node.getName()
                                 + " (not in expert mode)");
                         continue;
                     } else {
@@ -345,13 +345,13 @@ public final class RepositoryManager {
                         message = message + " The corresponding plugin "
                                 + "bundle could not be activated!";
                     }
-                    
+
                     LOGGER.error(message, t);
                 }
 
-            } // for configuration elements            
+            } // for configuration elements
         } // for node extensions
-        
+
         // iterate over the meta node config elements
         // and create meta node templates
         for (IExtension mnExt : metanodeExtensions) {
@@ -361,22 +361,22 @@ public final class RepositoryManager {
                     try {
                         MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
-                        boolean skip = !isInExpertMode 
+                        boolean skip = !isInExpertMode
                             && metaNode.isExpertNode();
                         if (skip) {
-                            LOGGER.debug("Skipping meta node definition '" 
-                                    + metaNode.getID() + "': " 
-                                    + metaNode.getName() 
+                            LOGGER.debug("Skipping meta node definition '"
+                                    + metaNode.getID() + "': "
+                                    + metaNode.getName()
                                     + " (not in expert mode)");
                             continue;
                         } else {
-                            LOGGER.debug("Found meta node definition '" 
-                                    + metaNode.getID() + "': " 
+                            LOGGER.debug("Found meta node definition '"
+                                    + metaNode.getID() + "': "
                                     + metaNode.getName());
                         }
                         IContainerObject parentContainer =
                             m_root.findContainer(metaNode.getCategoryPath());
-                        // If parent category is illegal, log an error and 
+                        // If parent category is illegal, log an error and
                         // append the node to the repository root.
                         if (parentContainer == null) {
                             WorkbenchErrorLogger
@@ -391,34 +391,34 @@ public final class RepositoryManager {
                             parentContainer.addChild(metaNode);
                         }
                     } catch (Throwable t) {
-                        String message = "MetaNode " 
+                        String message = "MetaNode "
                             + mnConfig.getAttribute("id")
                         + "' from plugin '" + mnConfig.getNamespaceIdentifier()
                         + "' could not be created.";
                         Bundle plugin = Platform.getBundle(mnConfig
                                 .getNamespaceIdentifier());
-                        
+
                         if (plugin == null) {
                             // if the plugin is null, the plugin could not
                             // be activated maybe due to a not
-                            // activateable plugin 
+                            // activateable plugin
                             // (plugin class can not be found)
                             message = message + " The corresponding plugin "
                             + "bundle could not be activated!";
                         }
-                        
+
                         LOGGER.error(message, t);
                     }
                 }
         }
-        
-        // remove all empty catories
-        removeEmptyCategories((AbstractContainerObject)m_root);
+
+        // remove all empty categories
+        removeEmptyCategories(m_root);
         m_lock.release();
 
-        // if errors occured show an information box
+        // if errors occurred show an information box
         if (errorString.length() > 0 && !Boolean.valueOf(
-                System.getProperty("java.awt.headless", "false"))) {            
+                System.getProperty("java.awt.headless", "false"))) {
             Display defaultDisplay = Display.getDefault();
             if (defaultDisplay != null && !defaultDisplay.isDisposed()) {
                 showErrorMessage(defaultDisplay);
@@ -429,7 +429,7 @@ public final class RepositoryManager {
         }
 
     }
-    
+
     private void removeEmptyCategories(final AbstractContainerObject treeNode) {
         for (IRepositoryObject object : treeNode.getChildren()) {
             if (object instanceof AbstractContainerObject) {
@@ -459,9 +459,9 @@ public final class RepositoryManager {
                                     display.getActiveShell(),
                                     "Errors during initialization",
                                     "Some contributed KNIME extensions"
-                                    + " could not be created or are " 
+                                    + " could not be created or are "
                                     + "duplicates, they will be "
-                                    + "skipped. \n" 
+                                    + "skipped. \n"
                                     + "For details please refer to the log.");
                         }
                     });
@@ -474,19 +474,19 @@ public final class RepositoryManager {
 
     /**
      * Returns the repository root.
-     * 
-     * @return The root object 
+     *
+     * @return The root object
      */
     public Root getRoot() {
         return m_root;
     }
-    
+
     public void releaseRoot() {
         m_lock.release();
     }
-    
-    
-    
+
+
+
     public boolean isRootAvailable() {
         return m_lock.tryAcquire();
     }

@@ -21,51 +21,52 @@ package org.knime.workbench.repository.model;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class MetaNodeTemplate extends AbstractSimpleObject {
 
     private final WorkflowManager m_manager;
-    
+
     private String m_description;
-    
+
     /**
-     * 
-     * @param workflowDir the directory containing the workflow files
+     *
      */
-    public MetaNodeTemplate(final String id, final String name, 
-            final WorkflowManager manager) {
+    public MetaNodeTemplate(final String id, final String name,
+            final String categoryPath, final WorkflowManager manager) {
         super();
         m_manager = manager;
         setID(id);
         setName(name);
         setAfterID("");
+        setCategoryPath(categoryPath);
     }
 
     public WorkflowManager getManager() {
         return m_manager;
     }
-    
-    
+
+
+    @Override
     public String getCategoryPath() {
         if (super.getCategoryPath() != null) {
             return super.getCategoryPath();
         }
         return "/meta";
     }
-    
+
     public String getDescription() {
         if (m_description != null) {
-            return m_description; 
+            return m_description;
         }
-        return m_manager.getName() + ": " 
-            + m_manager.getCustomDescription() != null 
+        return m_manager.getName() + ": "
+            + m_manager.getCustomDescription() != null
             ? m_manager.getCustomDescription() : "";
     }
 
     /**
-     * 
+     *
      * @param description description of the meta node
      */
     public void setDescription(final String description) {
@@ -73,17 +74,17 @@ public class MetaNodeTemplate extends AbstractSimpleObject {
          * If we have a description in the extension but no custome description
          * in the meta node -> set description also as custom description
          * If we have a custom description -> add the description found
-         * in the extension.  
+         * in the extension.
          */
         m_description = description;
         if (m_manager != null && m_manager.getCustomDescription() == null) {
             m_manager.setCustomDescription(m_description);
-        } else if (m_manager != null 
+        } else if (m_manager != null
                 && m_manager.getCustomDescription() != null) {
-            m_manager.setCustomDescription(m_manager.getCustomDescription() 
+            m_manager.setCustomDescription(m_manager.getCustomDescription()
                     + " " + m_description);
         }
     }
 
-    
+
 }
