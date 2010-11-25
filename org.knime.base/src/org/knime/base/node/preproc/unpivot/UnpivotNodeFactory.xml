@@ -2,15 +2,23 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="unpivot.png" type="Manipulator">
     <name>Unpivoting</name>
-    <shortDescription>Node rotates a number of selected value columns into one
-        single column and at the same time duplicates each single row by
-        the number of selected value columns.
+    <shortDescription>      
+      This node rotates the selected columns from the input table to rows and duplicates
+      at the same time the remaining input columns by appending them to each corresponding output row. 
     </shortDescription>
     <fullDescription>
-    	<intro>Node rotates a number of selected value columns into one
-        single column and at the same time duplicates each single row by
-        the number of selected value columns.
-    	</intro>
+    <intro>
+      This node rotates the selected columns from the input table to rows and duplicates
+      at the same time the remaining input columns by appending them to each corresponding output row. Example:
+     <pre>
+Input:
+  Value1 Value2 Value3 Extra1 Extra2 Extra3
+Output:
+  Value1 Extra1 Extra2 Extra3
+  Value2 Extra1 Extra2 Extra3
+  Value3 Extra1 Extra2 Extra3
+      </pre>
+    </intro>
     	<option name="Value columns">Select columns to be rotated into one
     	single column.
     	one single column.
