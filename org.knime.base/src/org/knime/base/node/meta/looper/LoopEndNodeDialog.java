@@ -52,6 +52,7 @@ package org.knime.base.node.meta.looper;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -70,6 +71,7 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class LoopEndNodeDialog extends NodeDialogPane {
     private final JCheckBox m_addIterationColumn = new JCheckBox("Add iteration column");
+    private final JCheckBox m_uniqueRowIDs = new JCheckBox("Uniquify row IDs");
 
     private final LoopEndNodeSettings m_settings = new LoopEndNodeSettings();
 
@@ -83,7 +85,12 @@ public class LoopEndNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 0, 5, 0);
         p.add(m_addIterationColumn, c);
+        c.gridy++;
+        p.add(m_uniqueRowIDs, c);
+
         addTab("Standard settings", p);
     }
 
@@ -94,6 +101,7 @@ public class LoopEndNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_settings.addIterationColumn(m_addIterationColumn.isSelected());
+        m_settings.uniqueRowIDs(m_uniqueRowIDs.isSelected());
         m_settings.saveSettings(settings);
     }
 
@@ -106,5 +114,6 @@ public class LoopEndNodeDialog extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettings(settings);
         m_addIterationColumn.setSelected(m_settings.addIterationColumn());
+        m_uniqueRowIDs.setSelected(m_settings.uniqueRowIDs());
     }
 }

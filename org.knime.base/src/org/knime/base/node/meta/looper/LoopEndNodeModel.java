@@ -80,8 +80,8 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(LoopEndNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(LoopEndNodeModel.class);
 
     private long m_startTime;
 
@@ -110,11 +110,11 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     private DataTableSpec createSpec(final DataTableSpec inSpec) {
         if (m_settings.addIterationColumn()) {
             DataColumnSpecCreator crea =
-                        new DataColumnSpecCreator(DataTableSpec
-                                .getUniqueColumnName(inSpec, "Iteration"),
-                                IntCell.TYPE);
+                    new DataColumnSpecCreator(
+                            DataTableSpec.getUniqueColumnName(inSpec,
+                                    "Iteration"), IntCell.TYPE);
             DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-    
+
             return new DataTableSpec(inSpec, newSpec);
         } else {
             return inSpec;
@@ -164,19 +164,16 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
             throw new IllegalArgumentException(error.toString());
         }
 
-        IntCell currIterCell = new IntCell(m_count);
         if (m_settings.addIterationColumn()) {
-        for (DataRow row : in) {
-            AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row
-                            .getKey()
-                            + "#" + m_count), row), currIterCell);
-            m_resultContainer.addRowToTable(newRow);
-        }
+            IntCell currIterCell = new IntCell(m_count);
+            for (DataRow row : in) {
+                AppendedColumnRow newRow = new AppendedColumnRow(
+                        createNewRow(row), currIterCell);
+                m_resultContainer.addRowToTable(newRow);
+            }
         } else {
             for (DataRow row : in) {
-                m_resultContainer.addRowToTable(new DefaultRow(new RowKey(row
-                        .getKey() + "#" + m_count), row));
+                m_resultContainer.addRowToTable(createNewRow(row));
             }
         }
 
@@ -201,6 +198,16 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
     }
 
+    private DataRow createNewRow(final DataRow row) {
+        RowKey newKey;
+        if (m_settings.uniqueRowIDs()) {
+            newKey = new RowKey(row.getKey() + "#" + m_count);
+        } else {
+            newKey = row.getKey();
+        }
+        return new DefaultRow(newKey, row);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -208,6 +215,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -236,6 +244,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**

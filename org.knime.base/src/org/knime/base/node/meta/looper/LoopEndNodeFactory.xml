@@ -9,9 +9,14 @@
         <intro>
             The LoopEnd is the node that end a loop that is executed a predefined number of times. At the start of
             the loop you need LoopStart, where you can defined how many times the loop should be executed. All
-            nodes in between are executed that many times.
+            nodes in
+            between are executed that many times.
         </intro>
         <option name="Add iteration column">Allows you to add a column containing the iteration number to the output table.</option>
+        <option name="Uniquify row IDs">If set, the iteration number is added to each row ID from the incoming table, thus making
+            the row IDs unique over all iterations. If unset, the incoming row keys are not altered. In this case you
+            have to make sure that there are not duplicate row IDs in different iterations. Otherwise an error occurs.
+        </option>
     </fullDescription>
 
     <ports>

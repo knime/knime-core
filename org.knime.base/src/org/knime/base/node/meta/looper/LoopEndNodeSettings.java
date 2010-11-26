@@ -61,6 +61,31 @@ import org.knime.core.node.NodeSettingsWO;
 public class LoopEndNodeSettings {
     private boolean m_addIterationColumn = true;
 
+    /** @since 2.3 */
+    private boolean m_uniqueRowIDs = true;
+
+    /**
+     * Sets if row keys are made unique by adding the iteration number.
+     *
+     * @param b <code>true</code> if the iteration number is added,
+     *            <code>false</code> otherwise
+     * @since 2.3
+     */
+    public void uniqueRowIDs(final boolean b) {
+        m_uniqueRowIDs = b;
+    }
+
+    /**
+     * Returns if row keys are made unique by adding the iteration number.
+     *
+     * @return <code>true</code> if the iteration number is added,
+     *         <code>false</code> otherwise
+     * @since 2.3
+     */
+    public boolean uniqueRowIDs() {
+        return m_uniqueRowIDs;
+    }
+
     /**
      * Sets if a column containing the iteration number should be appended to
      * the output table.
@@ -76,8 +101,8 @@ public class LoopEndNodeSettings {
      * Returns if a column containing the iteration number should be appended to
      * the output table.
      *
-     * @return <code>true</code> if a column should be added,
-     *            <code>false</code> otherwise
+     * @return <code>true</code> if a column should be added, <code>false</code>
+     *         otherwise
      */
     public boolean addIterationColumn() {
         return m_addIterationColumn;
@@ -90,6 +115,7 @@ public class LoopEndNodeSettings {
      */
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addBoolean("addIterationColumn", m_addIterationColumn);
+        settings.addBoolean("uniqueRowIDs", m_uniqueRowIDs);
     }
 
     /**
@@ -99,5 +125,6 @@ public class LoopEndNodeSettings {
      */
     public void loadSettings(final NodeSettingsRO settings) {
         m_addIterationColumn = settings.getBoolean("addIterationColumn", true);
+        m_uniqueRowIDs = settings.getBoolean("uniqueRowIDs", true);
     }
 }
