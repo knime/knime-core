@@ -90,6 +90,7 @@ public class LoopStartChunkNodeDialogPane extends NodeDialogPane {
         m_chunkCountButton = new JRadioButton("No. of chunks");
         ActionListener al = new ActionListener() {
             /** {@inheritDoc} */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onNewSelection();
             }

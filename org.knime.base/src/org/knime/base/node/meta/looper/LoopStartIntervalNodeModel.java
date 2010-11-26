@@ -170,6 +170,7 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -196,6 +197,7 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**

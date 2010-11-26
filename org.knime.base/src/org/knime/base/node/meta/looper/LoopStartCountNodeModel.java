@@ -145,6 +145,7 @@ implements LoopStartNodeTerminator {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -171,6 +172,7 @@ implements LoopStartNodeTerminator {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**

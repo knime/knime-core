@@ -76,11 +76,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
-import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * This class is the model for the condition loop tail node. It checks the user
@@ -330,6 +330,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -358,6 +359,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**

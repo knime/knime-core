@@ -120,6 +120,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -128,6 +129,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // empty
     }
 
     /**
@@ -137,7 +139,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     protected void reset() {
         m_iteration = 0;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -145,6 +147,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -152,6 +155,7 @@ public class LoopStartGenericNodeModel extends NodeModel implements
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // empty
     }
 
     /**
@@ -160,5 +164,6 @@ public class LoopStartGenericNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // empty
     }
 }

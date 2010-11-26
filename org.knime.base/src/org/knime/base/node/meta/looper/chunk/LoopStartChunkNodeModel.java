@@ -168,6 +168,7 @@ public class LoopStartChunkNodeModel extends NodeModel implements
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean terminateLoop() {
         boolean continueLoop = m_iterator == null || m_iterator.hasNext();
         return !continueLoop;
