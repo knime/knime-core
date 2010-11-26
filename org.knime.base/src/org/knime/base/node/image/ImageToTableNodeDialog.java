@@ -48,59 +48,41 @@
  */
 package org.knime.base.node.image;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.ArrayList;
 
+import org.knime.core.data.RowKey;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * Factory to create a table with one cell from an image port object. This node
- * has not view and no dialog.
- *
+ * Dialog for the Image To Table node allowing to specify the row ID,
+ * manually or by flow variable.
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
-public class ImageToTableNodeFactory
-        extends NodeFactory<ImageToTableNodeModel> {
+public class ImageToTableNodeDialog extends DefaultNodeSettingsPane {
+
+    /** Default row key, if no key is entered. */
+    static final RowKey DEFAULT_ROWKEY = RowKey.createRowKey(0);
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    public ImageToTableNodeModel createNodeModel() {
-        return new ImageToTableNodeModel();
+    public ImageToTableNodeDialog() {
+        SettingsModelString model = createStringModel();
+        FlowVariableModel fvm = super.createFlowVariableModel(model);
+        ArrayList<String> list = new ArrayList<String>(1);
+        list.add(DEFAULT_ROWKEY.toString());
+        super.addDialogComponent(new DialogComponentStringSelection(
+                model, "Row Identifier: ", list, true, fvm));
     }
 
-    /**
-     * {@inheritDoc}
+    /** @return settings model string used to define the row key for the
+     *          single output table row
      */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
+    static SettingsModelString createStringModel() {
+        return new SettingsModelString("generated_rowkey",
+                DEFAULT_ROWKEY.toString());
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<ImageToTableNodeModel> createNodeView(final int viewIndex,
-            final ImageToTableNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new ImageToTableNodeDialog();
-    }
-
 }

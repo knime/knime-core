@@ -66,6 +66,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -79,6 +80,9 @@ import org.knime.core.node.port.image.ImagePortObjectSpec;
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public class ImageToTableNodeModel extends NodeModel {
+
+    private final SettingsModelString m_rowKeyModel =
+        ImageToTableNodeDialog.createStringModel();
 
     /**
      * New node model with on image port input and a data table output.
@@ -112,8 +116,14 @@ public class ImageToTableNodeModel extends NodeModel {
                 new DataColumnSpecCreator("Image",
                         ipo.getSpec().getDataType()).createSpec());
         BufferedDataContainer buf = exec.createDataContainer(outspec);
-        buf.addRowToTable(new DefaultRow(
-                RowKey.createRowKey(0), ipo.toDataCell()));
+        RowKey rowKey;
+        String rowKeyValue = m_rowKeyModel.getStringValue();
+        if (rowKeyValue == null || rowKeyValue.trim().isEmpty()) {
+            rowKey = ImageToTableNodeDialog.DEFAULT_ROWKEY;
+        } else {
+            rowKey = new RowKey(rowKeyValue);
+        }
+        buf.addRowToTable(new DefaultRow(rowKey, ipo.toDataCell()));
         buf.close();
         buf.getTable();
         return new PortObject[] {buf.getTable()};
@@ -123,7 +133,8 @@ public class ImageToTableNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // empty
     }
@@ -132,7 +143,8 @@ public class ImageToTableNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // empty
     }
@@ -142,7 +154,7 @@ public class ImageToTableNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // empty
+        m_rowKeyModel.saveSettingsTo(settings);
     }
 
     /**
@@ -151,7 +163,7 @@ public class ImageToTableNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // empty
+        m_rowKeyModel.validateSettings(settings);
     }
 
     /**
@@ -160,7 +172,7 @@ public class ImageToTableNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // empty
+        m_rowKeyModel.loadSettingsFrom(settings);
     }
 
     /**

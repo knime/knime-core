@@ -10,6 +10,10 @@
         Converts a given generic image into a table with one cell holding
         the image as data cell.
 		</intro>
+		<option name="Row Identifier">Specify the row key (ID) used for the 
+		  single row created by this node.
+		</option>
+		
 	</fullDescription>
 	<ports>
         <inPort name="Image Input" index="0">Image port</inPort>
