@@ -77,9 +77,6 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 public class StartcaseNodeModel extends NodeModel
 implements InactiveBranchConsumer {
 
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(PMMLWriterNodeModel.class);
-
     private SettingsModelString m_selectedPort =
                                      StartcaseNodeDialog.createChoiceModel();
 
@@ -98,7 +95,7 @@ implements InactiveBranchConsumer {
             throws InvalidSettingsException {
         int index = Integer.parseInt(m_selectedPort.getStringValue());
         if ((index < 0) || (index >= getNrOutPorts())) {
-            throw new IllegalArgumentException("Invalid Port Index.");
+            throw new InvalidSettingsException("Invalid Port Index " + index);
         }
         PortObjectSpec[] outspecs = new PortObjectSpec[getNrOutPorts()];
         Arrays.fill(outspecs, InactiveBranchPortObjectSpec.INSTANCE);
@@ -153,6 +150,7 @@ implements InactiveBranchConsumer {
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
@@ -162,6 +160,7 @@ implements InactiveBranchConsumer {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -171,6 +170,7 @@ implements InactiveBranchConsumer {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
 }
