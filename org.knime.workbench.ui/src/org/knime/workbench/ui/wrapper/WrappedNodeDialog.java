@@ -300,8 +300,10 @@ public class WrappedNodeDialog extends Dialog {
                     btnOK.setText("OK");
                 }
                 if (ke.keyCode == SWT.ESC) {
-                    // close dialog on ESC
-                    doCancel();
+                    if (m_dialogPane.closeOnESC()) {
+                        // close dialog on ESC
+                        doCancel();
+                    }
                 }
             }
             /** {@inheritDoc} */

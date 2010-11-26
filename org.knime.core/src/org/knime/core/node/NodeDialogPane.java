@@ -271,13 +271,13 @@ public abstract class NodeDialogPane {
         }
         return m_credentialsProvider.listNames();
     }
-    
+
     /** Accessor to credentials defined on a workflow. The method will return
-     * a non-null provider. Sub-classes can read out credentials here. 
+     * a non-null provider. Sub-classes can read out credentials here.
      * Any invocation of the {@link CredentialsProvider#get(String)} method will
-     * register this node as client to the requested credentials. 
-     * The credentials identifier (its {@link ICredentials#getName()} should be 
-     * part of the configuration, i.e. chosen by the user in the configuration 
+     * register this node as client to the requested credentials.
+     * The credentials identifier (its {@link ICredentials#getName()} should be
+     * part of the configuration, i.e. chosen by the user in the configuration
      * dialog.
      *
      * @return A provider for credentials available in this workflow.
@@ -544,24 +544,24 @@ public abstract class NodeDialogPane {
     public final void finishEditingAndSaveSettingsTo(
             final NodeSettingsWO settings) throws InvalidSettingsException {
         commitComponentsRecursively(getPanel());
-        
-        /* Workaround that makes sure that the last modified Swing component 
+
+        /* Workaround that makes sure that the last modified Swing component
          * looses focus and that its values are stored (Bug 1949). Otherwise
-         * the last changed values might get lost if a user simply clicks on 
+         * the last changed values might get lost if a user simply clicks on
          * the ok or apply button without changing the focus first. */
         JTabbedPane pane = (JTabbedPane) getPanel().getComponent(0);
         int index = pane.getTabCount() -1;
 		if (index > 0) {
 	        if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
 	        	LOGGER.coding("Configuration dialog tab order has"
-	        			+ " changed. The assumption that the flow variables tab" 
+	        			+ " changed. The assumption that the flow variables tab"
 	        			+ " is not the last tab was violated.");
 	        }
 	        int prevIndex = pane.getSelectedIndex();
 	        pane.setSelectedIndex(index);
 	        pane.setSelectedIndex(prevIndex);
         }
-        
+
         internalSaveSettingsTo(settings);
     }
 
@@ -632,7 +632,7 @@ public abstract class NodeDialogPane {
             for (int i = 0; i < cs.length; i++) {
                 commitComponentsRecursively(cs[i]);
             }
-        } 
+        }
     }
 
     /**
@@ -986,6 +986,19 @@ public abstract class NodeDialogPane {
      */
     protected final int getTabIndex(final String title) {
         return m_pane.indexOfTab(title);
+    }
+
+    /**
+     * Controls the behavior of the dialog when the ESC key is pressed. By
+     * default it allows the dialog to cancel and close. Dialogs that consume
+     * the ESC event can overwrite and return false, if the dialog should not
+     * be canceled on ESC.
+     *
+     * @return true, if the dialog should cancel on ESC, false if it should stay
+     *         open.
+     */
+    public boolean closeOnESC() {
+        return true;
     }
 
     /** Create model and register a new variable for a specific settings entry

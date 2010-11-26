@@ -399,6 +399,8 @@ class SpreadsheetTable extends JTable {
                         stopCellEditing();
                         int col = Math.max(0, m_col - 1);
                         m_table.changeSelection(m_row, col, false, false);
+                    } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        cancelCellEditing();
                     }
                 }
             };

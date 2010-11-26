@@ -79,6 +79,16 @@ public final class TableCreator2NodeDialog extends NodeDialogPane {
         addTab("Table Creator Settings", createTableCreatorSettingsTab());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean closeOnESC() {
+        // do not close the dialog when ESC is pressed. 
+        // Allows the table to use ESC to cancel the edit mode of a cell.
+        return false;
+    }
+    
     private JPanel createTableCreatorSettingsTab() {
         JPanel p = new JPanel(new BorderLayout());
         m_spreadsheet = new Spreadsheet();

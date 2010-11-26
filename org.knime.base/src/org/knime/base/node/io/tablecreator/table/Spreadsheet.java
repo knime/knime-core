@@ -75,6 +75,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -145,6 +147,8 @@ public class Spreadsheet extends JComponent {
         InputLineController inputLineContr = new InputLineController();
         m_table.addPropertyChangeListener(inputLineContr);
         m_table.getModel().addTableModelListener(inputLineContr);
+        m_table.getDefaultEditor(Object.class).addCellEditorListener(
+                inputLineContr);
         m_inputLine.addKeyListener(inputLineContr);
         m_inputLine.addActionListener(inputLineContr);
 
@@ -312,12 +316,11 @@ public class Spreadsheet extends JComponent {
 
     /**
      * Keeps the table and the input line in sync.
-     *
-     * @author Heiko Hofer
      */
     private class InputLineController implements TableModelListener,
             PropertyChangeListener,
-            KeyListener, ActionListener {
+            KeyListener, ActionListener,
+            CellEditorListener {
 
         /**
          *
@@ -330,6 +333,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void propertyChange(final PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals(SpreadsheetTable.PROP_FOCUSED_ROW)
                     || evt.getPropertyName().equals(
@@ -356,6 +360,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void keyPressed(final KeyEvent e) {
             // do nothing
         }
@@ -363,6 +368,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void keyReleased(final KeyEvent e) {
             if (e.getSource() == m_inputLine) {
                 int row = m_table.getFocusedRow();
@@ -380,6 +386,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void keyTyped(final KeyEvent e) {
             // do nothing
         }
@@ -387,6 +394,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void tableChanged(final TableModelEvent e) {
             if (e.getType() == TableModelEvent.UPDATE
                     && e.getColumn() == m_table.getFocusedColumn()
@@ -401,6 +409,7 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void actionPerformed(final ActionEvent e) {
             int row = m_table.getFocusedRow();
             if (row < m_table.getRowCount()) {
@@ -414,6 +423,23 @@ public class Spreadsheet extends JComponent {
                         row);
             }
             m_table.requestFocusInWindow();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void editingStopped(final ChangeEvent e) {
+            // empty
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void editingCanceled(final ChangeEvent e) {
+            updateInputLine(m_table.getFocusedRow(),
+                    m_table.getFocusedColumn());
         }
     }
 
