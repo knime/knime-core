@@ -161,16 +161,16 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return true, if the underlying port is connected.
      */
     public boolean isConnected() {
+        WorkflowManager manager = getManager();
+        if (manager == null) {
+            return false;
+        }
         if (m_isInPort) {
-            ConnectionContainer cc =
-                    getManager().getIncomingConnectionFor(getID(), getIndex());
-            boolean result = (cc != null);
-            return result;
+            return (manager.getIncomingConnectionFor(
+                    getID(), getIndex()) != null);
         } else {
-            boolean result =
-                    getManager().getOutgoingConnectionsFor(getID(), getIndex())
-                            .size() > 0;
-            return result;
+            return (manager.getOutgoingConnectionsFor(getID(),
+                    getIndex()).size() > 0);
         }
     }
 
@@ -270,6 +270,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @param event the workflow event
      */
+    @Override
     public void workflowChanged(final WorkflowEvent event) {
         if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)
                 || event.getType()
@@ -314,6 +315,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @param zoom the zoom level from the zoom manager
      */
+    @Override
     public void zoomChanged(final double zoom) {
         double newZoomValue = zoom;
         // if the zoom level is larger than 100% the width
@@ -358,6 +360,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getSourceConnectionAnchor(
             final ConnectionEditPart connection) {
         return new OutPortConnectionAnchor(getFigure());
@@ -366,6 +369,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getSourceConnectionAnchor(final Request request) {
         return new OutPortConnectionAnchor(getFigure());
     }
@@ -373,6 +377,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getTargetConnectionAnchor(
             final ConnectionEditPart connection) {
         return new InPortConnectionAnchor(getFigure());
@@ -381,6 +386,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
         return new InPortConnectionAnchor(getFigure());
     }
