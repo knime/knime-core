@@ -762,17 +762,33 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (pce.getProperty()
                 .equals(PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
             NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-            Integer fontSize = (Integer)pce.getNewValue();
-            fig.setFontSize(fontSize);
-            Display.getCurrent().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    updateFigureFromUIinfo((NodeUIInformation)getNodeContainer()
-                            .getUIInformation());
-                    getRootEditPart().getFigure().invalidate();
-                    getRootEditPart().refreshVisuals();
+            Object value = pce.getNewValue();
+            Integer fontSize = null;
+            if (value == null) {
+                return;
+            } else if (value instanceof Integer) {
+                fontSize = (Integer) value;
+            } else if (value instanceof String && !value.toString().isEmpty()) {
+                try {
+                    fontSize = Integer.parseInt((String)value);
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Setting "
+                         + PreferenceConstants.P_NODE_LABEL_FONT_SIZE
+                         + " could not be updated. Unable to parse the value.");
                 }
-            });
+            }
+            if (fontSize != null) {
+                fig.setFontSize(fontSize);
+                Display.getCurrent().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateFigureFromUIinfo((NodeUIInformation)
+                                getNodeContainer().getUIInformation());
+                        getRootEditPart().getFigure().invalidate();
+                        getRootEditPart().refreshVisuals();
+                    }
+                });
+            }
             return;
         }
         if (pce.getProperty().equals(PreferenceConstants.P_SET_NODE_LABEL)

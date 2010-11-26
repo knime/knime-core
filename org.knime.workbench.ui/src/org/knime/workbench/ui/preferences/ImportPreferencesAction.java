@@ -56,12 +56,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.core.runtime.preferences.IExportedPreferences;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -79,6 +86,9 @@ public class ImportPreferencesAction extends Action {
     private static final ImageDescriptor ICON =
             KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
                     "icons/prefs_import.png");
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(ImportPreferencesAction.class);
 
     /**
      * The id for this action.
@@ -161,10 +171,16 @@ public class ImportPreferencesAction extends Action {
         try {
             in = new BufferedInputStream(new FileInputStream(inFile));
             IPreferencesService prefService = Platform.getPreferencesService();
-            NodeLogger.getLogger(ImportPreferencesAction.class).info(
-                    "Importing preferences from file "
+           LOGGER.info("Importing preferences from file "
                             + inFile.getAbsolutePath() + " now ...");
-            prefService.importPreferences(in);
+            /* Importing preferences still causes problems with the network
+             * preference page. After a restart of KNIME everything is back to
+             * normal. 
+             * (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=246754) */
+            IExportedPreferences prefs = prefService.readPreferences(in);
+            prefService.applyPreferences(prefs);
+            LOGGER.info("Import of preferences successfully finished.");
+            requestRestart();
         } catch (Throwable t) {
             String msg = "Unable to read preferences from selected file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
@@ -183,5 +199,61 @@ public class ImportPreferencesAction extends Action {
             }
         }
 
+    }
+
+    /**
+     * Initializes the default preferences for all preference pages. This fixes
+     * most of the issues that occur when new preferences are imported
+     * without restarting KNIME.
+     */
+    private void initializeDefaultPreferences() {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        for (IConfigurationElement element : registry
+                .getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
+            try {
+                final Object o = element.createExecutableExtension("class");
+                @SuppressWarnings("unchecked")
+                Class<? extends AbstractPreferenceInitializer> clazz =
+                        (Class<? extends AbstractPreferenceInitializer>)o.getClass();
+                if (o instanceof AbstractPreferenceInitializer) {
+                    ((AbstractPreferenceInitializer)o).initializeDefaultPreferences();
+                    System.out.println("Found class: " + clazz.getCanonicalName());
+                } else {
+                    System.out.println("Skipped class: " + clazz.getCanonicalName());
+                }
+
+            } catch (InvalidRegistryObjectException e) {
+                throw new IllegalArgumentException(e);
+            } catch (CoreException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+    }
+
+    /**
+     * Request a restart of the platform according to the specified
+     * restart policy.
+     *
+     * @param restartPolicy
+     */
+    private void requestRestart() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (PlatformUI.getWorkbench().isClosing())
+                    return;
+                int retCode = new MessageDialog(Display.getCurrent().getActiveShell(),
+                        "Restart to complete settings import",
+                        null,
+                        "The settings have been imported. It is highly recommended to restart KNIME to complete the import of the preferences. Would you like to restart now?",
+                        MessageDialog.QUESTION,
+                        new String[] {"restart", "cancel"}, 0).open();
+                if (retCode == 0) {
+                    PlatformUI.getWorkbench().restart();
+                } else {
+                    initializeDefaultPreferences();
+                }
+            }
+        });
     }
 }

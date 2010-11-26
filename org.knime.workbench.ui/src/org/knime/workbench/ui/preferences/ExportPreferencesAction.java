@@ -166,7 +166,7 @@ public class ExportPreferencesAction extends Action {
                     "Exporting preferences to file "
                             + outFile.getAbsolutePath());
             prefService.exportPreferences(prefService.getRootNode(), out,
-                    new String[0]);
+                    new String[0]);//{"bundle_defaults", "configuration"});
         } catch (Throwable t) {
             String msg = "Unable to write preferences to output file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
