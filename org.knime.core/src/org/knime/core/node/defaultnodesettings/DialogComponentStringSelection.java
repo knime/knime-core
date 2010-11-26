@@ -90,7 +90,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     private final JComboBox m_combobox;
 
     private final JLabel m_label;
-    
+
     private final FlowVariableModelButton m_fvmButton;
 
     /**
@@ -129,7 +129,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         this(stringModel, label,
                 DefaultStringIconOption.createOptionArray(list));
     }
-    
+
     /**
      * Constructor that puts label and combobox into panel. It expects the user
      * to make a selection, thus, at least one item in the list of selectable
@@ -139,7 +139,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of combobox
      * @param list list (not empty) of strings (not null) for the combobox
-     * @param editable true if the user should be able to add a value to the 
+     * @param editable true if the user should be able to add a value to the
      *  combo box
      *
      * @throws NullPointerException if one of the strings in the list is null
@@ -150,7 +150,23 @@ public final class DialogComponentStringSelection extends DialogComponent {
             final Collection<String> list, final boolean editable) {
         this(stringModel, label, list, editable, null);
     }
-    /* same constructor, FlowVariableModel exposed */
+
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of combobox
+     * @param list list (not empty) of strings (not null) for the combobox
+     * @param editable true if the user should be able to add a value to the
+     *        combo box
+     * @param fvm model exposed to choose from available flow variables
+     *
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
+     */
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
             final Collection<String> list, final boolean editable,
@@ -159,7 +175,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
                 DefaultStringIconOption.createOptionArray(list), fvm);
         m_combobox.setEditable(editable);
         if (editable) {
-            final StringIconListCellEditor editor 
+            final StringIconListCellEditor editor
                 = new StringIconListCellEditor();
             ((JTextField)editor.getEditorComponent()).getDocument()
                 // in order to get informed about model changes...
@@ -199,7 +215,6 @@ public final class DialogComponentStringSelection extends DialogComponent {
         }
     }
 
-    
     /**
      * Constructor that puts label and combobox into panel. It expects the user
      * to make a selection, thus, at least one item in the list of selectable
@@ -220,7 +235,23 @@ public final class DialogComponentStringSelection extends DialogComponent {
             final StringIconOption[] list) {
         this(stringModel, label, list, null);
     }
-    /* same constructor, FlowVariableModel exposed */
+
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of combobox
+     * @param list list (not empty) of {@link StringIconOption}s for
+     *        the combobox. The text of the selected component is stored in the
+     *        {@link SettingsModelString}.
+     * @param fvm model exposed to choose from available flow variables
+     *
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
+     */
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
             final StringIconOption[] list, final FlowVariableModel fvm) {
@@ -246,6 +277,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         getComponentPanel().add(m_combobox);
 
         m_combobox.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     // if a new item is selected update the model
@@ -260,6 +292,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
 
         // we need to update the selection, when the model changes.
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -270,7 +303,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
             fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    m_combobox.setEnabled(!fvm.isVariableReplacementEnabled());
+                     getModel().setEnabled(!fvm.isVariableReplacementEnabled());
                 }
             });
             m_fvmButton = new FlowVariableModelButton(fvm);
@@ -282,7 +315,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         //call this method to be in sync with the settings model
         updateComponent();
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -330,6 +363,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
             m_combobox.setBackground(Color.RED);
             // put the color back to normal with the next selection.
             m_combobox.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     m_combobox.setBackground(DialogComponent.DEFAULT_BG);
                 }
