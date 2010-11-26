@@ -23,6 +23,10 @@
  */
 package org.knime.base.node.meta.looper;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -41,11 +45,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-
-import java.io.File;
-import java.io.IOException;
-
 /**
  *
  * @author Thorsten Meinl, University of Konstanz
@@ -53,7 +52,10 @@ import java.io.IOException;
 public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
     private BufferedDataContainer[] m_resultContainer;
+
     private int m_count;
+
+    private final LoopEndNodeSettings m_settings = new LoopEndNodeSettings();
 
     /**
      * Creates a new model.
@@ -72,13 +74,18 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
                 createSpec(inSpecs[1])};
     }
 
-    private static DataTableSpec createSpec(final DataTableSpec inSpec) {
-        final DataColumnSpecCreator crea =
-                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
-                        inSpec, "Iteration"), IntCell.TYPE);
-        final DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
+    private DataTableSpec createSpec(final DataTableSpec inSpec) {
+        if (m_settings.addIterationColumn()) {
+            DataColumnSpecCreator crea =
+                    new DataColumnSpecCreator(
+                            DataTableSpec.getUniqueColumnName(inSpec,
+                                    "Iteration"), IntCell.TYPE);
+            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
 
-        return new DataTableSpec(inSpec, newSpec);
+            return new DataTableSpec(inSpec, newSpec);
+        } else {
+            return inSpec;
+        }
     }
 
     /**
@@ -103,21 +110,26 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
             };
         }
 
-        final IntCell currIterCell = new IntCell(m_count);
-        for (final DataRow row : inData[0]) {
-            final AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + m_count), row), currIterCell);
-            m_resultContainer[0].addRowToTable(newRow);
+        if (m_settings.addIterationColumn()) {
+            final IntCell currIterCell = new IntCell(m_count);
+            for (DataRow row : inData[0]) {
+                AppendedColumnRow newRow = new AppendedColumnRow(
+                       createNewRow(row), currIterCell);
+                m_resultContainer[0].addRowToTable(newRow);
+            }
+            for (DataRow row : inData[1]) {
+                AppendedColumnRow newRow = new AppendedColumnRow(
+                        createNewRow(row), currIterCell);
+                m_resultContainer[1].addRowToTable(newRow);
+            }
+        } else {
+            for (DataRow row : inData[0]) {
+                m_resultContainer[0].addRowToTable(createNewRow(row));
+            }
+            for (DataRow row : inData[1]) {
+                m_resultContainer[1].addRowToTable(createNewRow(row));
+            }
         }
-
-        for (final DataRow row : inData[1]) {
-            final AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + m_count), row), currIterCell);
-            m_resultContainer[1].addRowToTable(newRow);
-        }
-
 
         final boolean terminateLoop =
             ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
@@ -139,6 +151,16 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
         }
     }
 
+    private DataRow createNewRow(final DataRow row) {
+        RowKey newKey;
+        if (m_settings.uniqueRowIDs()) {
+            newKey = new RowKey(row.getKey() + "#" + m_count);
+        } else {
+            newKey = row.getKey();
+        }
+        return new DefaultRow(newKey, row);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -146,6 +168,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -154,6 +177,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -172,6 +196,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty
     }
 
     /**
@@ -179,6 +204,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_settings.saveSettings(settings);
     }
 
     /**
@@ -187,5 +213,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        LoopEndNodeSettings s = new LoopEndNodeSettings();
+        s.loadSettings(settings);
     }
 }
