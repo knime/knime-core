@@ -10,7 +10,7 @@
 		<p>
 		Hierarchically clusters the input data. <br />
 		Note: This node works only on small data sets. It keeps the entire data
-		in memory and has a n-squared complexity.<br />
+		in memory and has cubic complexity.<br />
 		There are two methods to do hierarchical clustering:
 		<ul>
 			<li>
