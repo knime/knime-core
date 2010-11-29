@@ -54,7 +54,6 @@ package org.knime.base.data.sort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -343,7 +342,8 @@ public class SortedTable implements DataTable {
         List<Iterable<DataRow>> chunksCont =
             new ArrayList<Iterable<DataRow>>();
 
-        final ArrayList<DataRow> buffer = new ArrayList<DataRow>();
+        final PriorityQueue<DataRow> buffer =
+            new PriorityQueue<DataRow>(11, m_rowComparator);
 
         double progress = 0;
         double incProgress = 0.5 / dataTable.getRowCount();
@@ -370,8 +370,6 @@ public class SortedTable implements DataTable {
                     + buffer.size();
                 incProgress = (0.5 - progress) / estimatedIncrements;
                 exec.setMessage("Sorting temporary buffer");
-                // sort buffer
-                Collections.sort(buffer, m_rowComparator);
                 // write buffer to disk
                 BufferedDataContainer diskCont =
                     exec.createDataContainer(dataTable.getDataTableSpec(),
@@ -381,12 +379,13 @@ public class SortedTable implements DataTable {
                 for (int i = 0; i < size; i++) {
                     exec.setMessage("Writing temporary table -- "
                             + i + "/" + size);
-                    DataRow next = buffer.set(i, null);
+                    DataRow next = buffer.remove();
                     diskCont.addRowToTable(next);
                     progress += incProgress;
                     exec.setProgress(progress);
                     exec.checkCanceled();
                 }
+                assert buffer.isEmpty() : "Queue not empty: " + buffer.size();
                 diskCont.close();
                 chunksCont.add(diskCont.getTable());
 
@@ -398,9 +397,15 @@ public class SortedTable implements DataTable {
         }
         // Add buffer to the chunks
         if (!buffer.isEmpty()) {
-            // sort buffer
-            Collections.sort(buffer, m_rowComparator);
-            chunksCont.add(buffer);
+            // PriorityQueue#iterator() returns in arbitrary order
+            // copy into new array list to have sorted iterator
+            // do not set initial size but let list grow while queue shrinks
+            ArrayList<DataRow> lastChunk = new ArrayList<DataRow>();
+            DataRow r;
+            while ((r = buffer.poll()) != null) {
+                lastChunk.add(r);
+            }
+            chunksCont.add(lastChunk);
         }
 
         exec.setMessage("Merging temporary tables");
