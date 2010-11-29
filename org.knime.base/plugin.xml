@@ -199,7 +199,7 @@
       <category
             after="meta"
             description="miscellaneous nodes"
-            icon="icons/missing.gif"
+            icon="icons/16x16/category_misc.png"
             level-id="misc"
             name="Misc"
             path="/"/>
@@ -287,7 +287,7 @@
       </category>
       <category
             description="Utility nodes supporting visualizations in KNIME"
-            icon="icons/missing.gif"
+            icon="icons/16x16/category_view-util.png"
             level-id="view-util"
             name="Utility"
             path="/view">
