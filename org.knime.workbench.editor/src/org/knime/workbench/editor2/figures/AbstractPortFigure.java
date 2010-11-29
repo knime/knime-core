@@ -82,7 +82,10 @@ public abstract class AbstractPortFigure extends Shape {
         try {
             float[] hsb = new float[3];
             java.awt.Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), hsb);
-            hsb[2] = Math.min(1.0f, hsb[2] + ((1.0f - hsb[2]) * 0.67f));
+            // bring down the saturation
+            hsb[1] = Math.max(0, hsb[1] * 0.5f);
+            // push up the lightness
+            hsb[2] = Math.min(1.0f, hsb[2] + ((1.0f - hsb[2]) * 0.5f));
             int lCol = java.awt.Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
             return new Color(Display.getCurrent(), (lCol >> 16) & 0xFF,
                     (lCol >> 8) & 0xFF, lCol & 0xFF);
