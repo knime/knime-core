@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -343,7 +344,7 @@ public class SortedTable implements DataTable {
         List<Iterable<DataRow>> chunksCont =
             new ArrayList<Iterable<DataRow>>();
 
-        List<DataRow> buffer = new ArrayList<DataRow>();
+        final List<DataRow> buffer = new LinkedList<DataRow>();
 
         double progress = 0;
         double incProgress = 0.5 / dataTable.getRowCount();
@@ -495,6 +496,7 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell getCell(final int index) {
             return m_row.getCell(index);
         }
@@ -502,6 +504,7 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowKey getKey() {
             return m_row.getKey();
         }
@@ -509,6 +512,7 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getNumCells() {
             return m_row.getNumCells();
         }
@@ -516,6 +520,7 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Iterator<DataCell> iterator() {
             return m_row.iterator();
         }
@@ -532,6 +537,7 @@ public class SortedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_sortedTable.getDataTableSpec();
     }
@@ -539,6 +545,7 @@ public class SortedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         return m_sortedTable.iterator();
     }
@@ -564,6 +571,7 @@ public class SortedTable implements DataTable {
          * @param dr2 another datarow to be compared with dr1
          * @return -1 if dr1 < dr2, 0 if dr1 == dr2 and 1 if dr1 > dr2
          */
+        @Override
         public int compare(final DataRow dr1, final DataRow dr2) {
 
             if (dr1 == dr2) {
