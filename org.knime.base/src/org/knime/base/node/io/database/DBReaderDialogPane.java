@@ -102,8 +102,8 @@ class DBReaderDialogPane extends NodeDialogPane {
         m_statmnt.setText("SELECT * FROM "
                 + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory
                 .createTitledBorder(" SQL Statement "));
         JPanel allPanel = new JPanel(new BorderLayout());
