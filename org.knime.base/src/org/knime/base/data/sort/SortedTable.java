@@ -57,7 +57,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -344,7 +343,7 @@ public class SortedTable implements DataTable {
         List<Iterable<DataRow>> chunksCont =
             new ArrayList<Iterable<DataRow>>();
 
-        final List<DataRow> buffer = new LinkedList<DataRow>();
+        final ArrayList<DataRow> buffer = new ArrayList<DataRow>();
 
         double progress = 0;
         double incProgress = 0.5 / dataTable.getRowCount();
@@ -378,14 +377,11 @@ public class SortedTable implements DataTable {
                     exec.createDataContainer(dataTable.getDataTableSpec(),
                             true, 0);
                 diskCont.setMaxPossibleValues(0);
-                Iterator<DataRow> bufferIter = buffer.iterator();
-                int totalBufferSize = buffer.size();
-                int currentRow = 0;
-                while (bufferIter.hasNext()) {
+                final int size = buffer.size();
+                for (int i = 0; i < size; i++) {
                     exec.setMessage("Writing temporary table -- "
-                            + (currentRow++) + "/" + totalBufferSize);
-                    DataRow next = bufferIter.next();
-                    bufferIter.remove();
+                            + i + "/" + size);
+                    DataRow next = buffer.set(i, null);
                     diskCont.addRowToTable(next);
                     progress += incProgress;
                     exec.setProgress(progress);
