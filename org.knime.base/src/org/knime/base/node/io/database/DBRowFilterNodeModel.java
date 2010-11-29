@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -57,16 +57,16 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBRowFilterNodeModel extends DBNodeModel {
-    
+
     private final SettingsModelString m_column =
             DBRowFilterNodeDialogPane.createColumnModel();
 
@@ -75,12 +75,12 @@ final class DBRowFilterNodeModel extends DBNodeModel {
 
     private final SettingsModelString m_value =
             DBRowFilterNodeDialogPane.createValueModel();
-    
+
     /**
      * Creates a new database reader.
      */
     DBRowFilterNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, 
+        super(new PortType[]{DatabasePortObject.TYPE},
                 new PortType[]{DatabasePortObject.TYPE});
     }
 
@@ -118,16 +118,16 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         m_operator.loadSettingsFrom(settings);
         m_value.loadSettingsFrom(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected final PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DatabaseQueryConnectionSettings conn = 
+        DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
@@ -145,11 +145,15 @@ final class DBRowFilterNodeModel extends DBNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        if (!spec.getDataTableSpec().containsName(m_column.getStringValue())) {
-            throw new InvalidSettingsException("Can't filter according to "
-                    + "selected column \"" + m_column.getStringValue() + "\".");
+        final String columnName = m_column.getStringValue();
+        if (columnName == null) {
+            throw new InvalidSettingsException("No filter column selected.");
         }
-        DatabaseQueryConnectionSettings conn = 
+        if (!spec.getDataTableSpec().containsName(columnName)) {
+            throw new InvalidSettingsException("Can't filter according to "
+                    + "selected column \"" + columnName + "\".");
+        }
+        DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
@@ -157,13 +161,13 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 spec.getDataTableSpec(), conn.createConnectionModel())};
     }
-    
+
     private String createQuery(final String query, final String driver) {
         StringBuilder buf = new StringBuilder();
         String colName = m_column.getStringValue();
         if (!colName.matches("\\w*")) { // if no word chars in column name
             if (driver.contains("mysql")) {
-                buf.append("`" + colName  + "`");                
+                buf.append("`" + colName  + "`");
             } else {
                 buf.append("\"" + colName  + "\"");
             }
@@ -175,8 +179,8 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             buf.append(" " + m_value.getStringValue().trim());
         }
         return "SELECT * FROM (" + query + ") "
-            + "table_" + System.identityHashCode(this) 
-            + " WHERE " + buf.toString(); 
+            + "table_" + System.identityHashCode(this)
+            + " WHERE " + buf.toString();
     }
-        
+
 }

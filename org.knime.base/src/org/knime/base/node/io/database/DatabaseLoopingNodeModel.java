@@ -124,6 +124,9 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         String column = m_columnModel.getStringValue();
+        if (column == null) {
+            throw new InvalidSettingsException("No column selected.");
+        }
         if (!inSpecs[0].containsName(column)) {
             throw new InvalidSettingsException("Column '" + column
                     + "' not found in input data.");
