@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -58,24 +58,24 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBColumnFilterNodeModel extends DBNodeModel {
-    
+
     private final SettingsModelFilterString m_filter
          = DBColumnFilterNodeDialogPane.createColumnFilterModel();
-    
+
     /**
      * Creates a new database reader.
      */
     DBColumnFilterNodeModel() {
-            super(new PortType[]{DatabasePortObject.TYPE}, 
+            super(new PortType[]{DatabasePortObject.TYPE},
                     new PortType[]{DatabasePortObject.TYPE});
     }
 
@@ -97,9 +97,10 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         super.validateSettings(settings);
         SettingsModelFilterString filter = 
             m_filter.createCloneWithValidatedValue(settings);
-        if (filter.getIncludeList().isEmpty()) {
+        if (filter.getIncludeList().isEmpty()
+                && !filter.getExcludeList().isEmpty()) {
             throw new InvalidSettingsException(
-                    "No columns included for output table.");
+                    "No columns included in output table.");
         }
     }
 
@@ -112,16 +113,16 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         super.loadValidatedSettingsFrom(settings);
         m_filter.loadSettingsFrom(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected final PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObjectSpec spec = ((DatabasePortObject)inData[0]).getSpec();
-        DatabaseQueryConnectionSettings conn = 
+        DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(spec.getConnectionModel(),
                 getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
@@ -151,7 +152,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throw new InvalidSettingsException("Not all columns available in "
                     + "input spec: " + buf.toString());
         }
-        DatabaseQueryConnectionSettings conn = 
+        DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(
                 spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
@@ -161,7 +162,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 colre.createSpec(), conn.createConnectionModel())};
     }
-    
+
     private String createQuery(final String query, final String driver) {
         StringBuilder buf = new StringBuilder();
         if (m_filter.getExcludeList().isEmpty()) {
@@ -174,7 +175,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 }
                 if (!colName.matches("\\w*")) { // if no word chars in name
                     if (driver.contains("mysql")) {
-                        buf.append("`" + colName  + "`");                
+                        buf.append("`" + colName  + "`");
                     } else {
                         buf.append("\"" + colName  + "\"");
                     }
@@ -183,8 +184,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 }
             }
         }
-        return "SELECT " + buf + " FROM (" + query + ") table_" 
+        return "SELECT " + buf + " FROM (" + query + ") table_"
             + System.identityHashCode(this);
     }
-        
+
 }
