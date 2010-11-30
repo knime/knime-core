@@ -279,7 +279,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void deactivate() {
-        super.deactivate();
         LOGGER.debug("WorkflowRootEditPart deactivated");
         for (Object o : getChildren()) {
             EditPart editPart = (EditPart)o;
@@ -288,6 +287,11 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         getWorkflowManager().removeListener(this);
         getViewer().getEditDomain().getCommandStack()
                 .removeCommandStackListener(this);
+        EditPolicyIterator editPolicyIterator = getEditPolicyIterator();
+        while (editPolicyIterator.hasNext()) {
+            editPolicyIterator.next().deactivate();
+        }
+        super.deactivate();
     }
 
     /**
@@ -429,7 +433,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected void refreshVisuals() {
-        ConnectionLayer cLayer = 
+        ConnectionLayer cLayer =
                 (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
         if (cLayer != null) {
             EditPartViewer viewer = getViewer();

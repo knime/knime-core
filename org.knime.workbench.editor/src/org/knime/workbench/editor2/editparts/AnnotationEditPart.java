@@ -191,11 +191,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void activate() {
+        super.activate();
         WorkflowAnnotation anno = getModel();
         anno.addUIInformationListener(this);
         // update the ui info now
         nodeUIInformationChanged(null);
-        super.activate();
     }
 
     /**
@@ -205,6 +205,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     public void deactivate() {
         WorkflowAnnotation anno = getModel();
         anno.removeUIInformationListener(this);
+        super.deactivate();
     }
 
     /**

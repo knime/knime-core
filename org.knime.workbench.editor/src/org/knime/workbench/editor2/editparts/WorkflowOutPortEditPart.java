@@ -72,7 +72,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * Model: {@link WorkflowOutPort}
  * View: {@link WorkflowOutPortFigure}
  * Controller: {@link WorkflowOutPortEditPart}
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowOutPortEditPart extends AbstractPortEditPart {
@@ -81,7 +81,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
             WorkflowOutPortEditPart.class);
 
 
-    
+
     /**
      * @param type port type
      * @param portID port id
@@ -113,25 +113,14 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
         if (getParent() == null) {
             return null;
         }
-        // if the referring WorkflowManager is displayed as a meta node, then  
+        // if the referring WorkflowManager is displayed as a meta node, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
             return (NodeContainer) getParent().getModel();
         }
-        // if the referring WorkflowManager is the "root" workflow manager of 
+        // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
         return ((WorkflowPortBar)getParent().getModel()).getWorkflowManager();
-    }
-    
-    /**
-     * We must register *every* port as a listener on the workflow, as we have
-     * not real objects for it.
-     *
-     * @see org.eclipse.gef.EditPart#activate()
-     */
-    @Override
-    public void activate() {
-        super.activate();
     }
 
     /**
@@ -149,16 +138,16 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        LOGGER.debug("create figure. Parent's figure: " 
+        LOGGER.debug("create figure. Parent's figure: "
                 + ((GraphicalEditPart)getParent()).getFigure());
         return new WorkflowOutPortFigure(getType(),
-                getManager().getNrOutPorts(), getIndex(), 
+                getManager().getNrOutPorts(), getIndex(),
                 getManager().getDisplayLabel());
     }
 
 
     /**
-     * This returns the (single !) connection that has this workflow out port 
+     * This returns the (single !) connection that has this workflow out port
      * as a target.
      *
      * @return singleton list containing the connection, or an empty list. Never
@@ -182,7 +171,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @return empty list, as workflow out ports are never source for 
+     * @return empty list, as workflow out ports are never source for
      * connections
      *
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
@@ -194,9 +183,10 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
     }
 
 
+    /** {@inheritDoc} */
     @Override
-    public void zoomChanged(double zoom) {
-        // TODO store the old size in order to restore it on 
+    public void zoomChanged(final double zoom) {
+        // TODO store the old size in order to restore it on
         // zoom out
         // on zoom out restore size and on zoom in restore it
         LOGGER.debug("zoom changed: " + zoom);

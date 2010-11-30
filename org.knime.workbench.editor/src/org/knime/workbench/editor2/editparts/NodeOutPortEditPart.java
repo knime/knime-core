@@ -116,9 +116,9 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      */
     @Override
     public void deactivate() {
-        super.deactivate();
         NodeOutPort outPort = (NodeOutPort)getModel();
         outPort.removeNodeStateChangeListener(this);
+        super.deactivate();
     }
 
     /**

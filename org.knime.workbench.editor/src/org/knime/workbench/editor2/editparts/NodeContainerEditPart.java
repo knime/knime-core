@@ -143,16 +143,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private boolean m_showFlowVarPorts = false;
 
     /**
-     * Default constructor.
-     */
-    public NodeContainerEditPart() {
-        super();
-        IPreferenceStore store =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
-        store.addPropertyChangeListener(this);
-    }
-
-    /**
      * @return The <code>NodeContainer</code>(= model)
      */
     @Override
@@ -189,8 +179,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         initFigure();
 
         // If we already have extra info, init figure now
+        NodeContainer cont = getNodeContainer();
         NodeUIInformation uiInfo =
-                (NodeUIInformation)getNodeContainer().getUIInformation();
+                (NodeUIInformation)cont.getUIInformation();
         if (uiInfo != null) {
             // takes over all info except the coordinates
             updateFigureFromUIinfo(uiInfo);
@@ -199,30 +190,33 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             NodeUIInformation info = new NodeUIInformation();
             info.setNodeLocation(0, 0, -1, -1);
             // we not yet a listener to ui info changes
-            getNodeContainer().setUIInformation(info);
+            cont.setUIInformation(info);
         }
 
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        store.addPropertyChangeListener(this);
+
         // listen to node container (= model object)
-        getNodeContainer().addNodeStateChangeListener(this);
-        getNodeContainer().addNodeMessageListener(this);
-        getNodeContainer().addProgressListener(this);
-        getNodeContainer().addUIInformationListener(this);
-        getNodeContainer().addJobManagerChangedListener(this);
+        cont.addNodeStateChangeListener(this);
+        cont.addNodeMessageListener(this);
+        cont.addProgressListener(this);
+        cont.addUIInformationListener(this);
+        cont.addJobManagerChangedListener(this);
         addEditPartListener(this);
 
         // set the job manager icon
-        NodeContainer cont = getNodeContainer();
         if (cont != null && cont.findJobManager() != null) {
-            URL iconURL = getNodeContainer().findJobManager().getIcon();
+            URL iconURL = cont.findJobManager().getIcon();
             setJobManagerIcon(iconURL);
         }
         // set the active (or disabled) state
         boolean isInactive = false;
-        if (getNodeContainer() instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+        if (cont instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)cont;
             isInactive = snc.isInactive();
         }
-        ((NodeContainerFigure)getFigure()).setState(getNodeContainer()
+        ((NodeContainerFigure)getFigure()).setState(cont
                 .getState(), isInactive);
         // set the node message
         updateNodeStatus();
@@ -234,12 +228,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void deactivate() {
-        super.deactivate();
         NodeContainer nc = getNodeContainer();
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        store.removePropertyChangeListener(this);
         nc.removeNodeStateChangeListener(this);
         nc.removeNodeMessageListener(this);
         nc.removeNodeProgressListener(this);
         nc.removeUIInformationListener(this);
+        nc.removeJobManagerChangedListener(this);
+        removeEditPartListener(this);
+        for (Object o : getChildren()) {
+            EditPart editPart = (EditPart)o;
+            editPart.deactivate();
+        }
+        EditPolicyIterator editPolicyIterator = getEditPolicyIterator();
+        while (editPolicyIterator.hasNext()) {
+            editPolicyIterator.next().deactivate();
+        }
+        super.deactivate();
     }
 
     /**
@@ -778,16 +785,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 }
             }
             if (fontSize != null) {
-                fig.setFontSize(fontSize);
-                Display.getCurrent().syncExec(new Runnable() {
-                    @Override
-                    public void run() {
+            fig.setFontSize(fontSize);
+            Display.getCurrent().syncExec(new Runnable() {
+                @Override
+                public void run() {
                         updateFigureFromUIinfo((NodeUIInformation)
                                 getNodeContainer().getUIInformation());
-                        getRootEditPart().getFigure().invalidate();
-                        getRootEditPart().refreshVisuals();
-                    }
-                });
+                    getRootEditPart().getFigure().invalidate();
+                    getRootEditPart().refreshVisuals();
+                }
+            });
             }
             return;
         }

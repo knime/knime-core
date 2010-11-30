@@ -2638,6 +2638,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 checkForNodeStateChanges(false);
             }
+            m_wfmListeners.clear();
+            super.performShutdown();
         }
     }
 

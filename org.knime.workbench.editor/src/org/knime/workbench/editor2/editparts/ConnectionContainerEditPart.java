@@ -156,8 +156,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /** {@inheritDoc} */
     @Override
     public void activate() {
-        getModel().addUIInformationListener(this);
         super.activate();
+        getModel().addUIInformationListener(this);
     }
 
     /** {@inheritDoc} */
@@ -343,6 +343,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      *
      * @param zoom the zoom level from the zoom manager
      */
+    @Override
     public void zoomChanged(final double zoom) {
         ((PolylineConnection)getFigure())
                 .setLineWidth(calculateLineWidthFromZoomLevel(zoom));

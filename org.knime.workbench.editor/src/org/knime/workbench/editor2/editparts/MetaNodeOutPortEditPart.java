@@ -58,6 +58,7 @@ import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
@@ -92,26 +93,41 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      */
     @Override
     protected IFigure createFigure() {
+        NodeContainer nc = getNodeContainer();
         LOGGER.debug("returning new sub meta node out port figure "
                 + " with type " + getType() + " index " + getIndex()
-                + " nr outports " + getNodeContainer().getNrOutPorts()
-                + " and tooltip " + getNodeContainer().getOutPort(getIndex())
+                + " nr outports " + nc.getNrOutPorts()
+                + " and tooltip " + nc.getOutPort(getIndex())
                 .getPortName());
         WorkflowOutPort model = (WorkflowOutPort)getModel();
         LOGGER.debug("model: " + getModel()
                 + " state: " + model.getNodeState());
 
-        NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+        NodeOutPort port = nc.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
 
         MetaNodeOutPortFigure f = new MetaNodeOutPortFigure(
-                getType(), getIndex(),
-                getNodeContainer().getNrOutPorts(),
+                getType(), getIndex(), nc.getNrOutPorts(),
                 tooltip, model.getNodeState());
-        model.addNodeStateChangeListener(this);
         f.setInactive(model.isInactive());
         f.setIsConnected(isConnected());
         return f;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void activate() {
+        super.activate();
+        WorkflowOutPort model = (WorkflowOutPort)getModel();
+        model.addNodeStateChangeListener(this);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deactivate() {
+        // TODO remove the figure from the model
+        ((WorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
+        super.deactivate();
     }
 
     /**
@@ -147,17 +163,6 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     protected List<ConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeNotify() {
-        super.removeNotify();
-        // TODO remove the figure from the model
-        ((WorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
     }
 
     /**

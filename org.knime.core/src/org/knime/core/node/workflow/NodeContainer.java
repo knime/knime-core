@@ -436,7 +436,13 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** Called when the workflow is to be disposed. It will cancel this node
      * if it is still running. If this node is being executed remotely (cluster
      * execution) and has been saved, it will just disconnect it. */
-    abstract void performShutdown();
+    void performShutdown() {
+        m_stateChangeListeners.clear();
+        m_messageListeners.clear();
+        m_progressListeners.clear();
+        m_uiListeners.clear();
+        m_jobManagerListeners.clear();
+    }
 
     /** Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).

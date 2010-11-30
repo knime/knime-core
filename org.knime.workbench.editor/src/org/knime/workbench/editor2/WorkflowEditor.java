@@ -115,6 +115,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.EditorHistory;
+import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.WorkbenchMessages;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 import org.eclipse.ui.part.FileEditorInput;
@@ -169,7 +171,8 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  */
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
-        IResourceChangeListener, NodeStateChangeListener, ISaveablePart2 {
+        IResourceChangeListener, NodeStateChangeListener, ISaveablePart2,
+        NodeUIInformationListener {
 
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
@@ -351,10 +354,23 @@ public class WorkflowEditor extends GraphicalEditor implements
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
         m_manager.removeNodeStateChangeListener(this);
+        m_manager.removeUIInformationListener(this);
         // remove resource listener..
         if (m_fileResource != null) {
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
+        if (m_parentEditor != null) {
+            // bug fix 2051: Possible memory leak related to sub-flow editor.
+            // meta node editors were still referenced by the EditorHistory
+            IWorkbench workbench = PlatformUI.getWorkbench();
+            if (workbench instanceof Workbench) {
+                EditorHistory hist = ((Workbench)workbench).getEditorHistory();
+                WorkflowManagerInput wfmInput =
+                    new WorkflowManagerInput(m_manager, m_parentEditor);
+                hist.remove(wfmInput);
+            }
+        }
+
         getCommandStack().removeCommandStackListener(this);
         super.dispose();
     }
@@ -773,17 +789,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // update Actions, as now there's everything available
         updateActions();
         updatePartName();
-        // for meta nodes register to changed custom name events
-        // since it is displayed in the editor tab
-        m_manager.addUIInformationListener(new NodeUIInformationListener() {
-
-            @Override
-            public void nodeUIInformationChanged(
-                    final NodeUIInformationEvent evt) {
-                updatePartName();
-            }
-
-        });
+        m_manager.addUIInformationListener(this);
         return;
     }
 
@@ -1429,5 +1435,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void stateChanged(final NodeStateEvent state) {
         markDirty();
     }
+
+    /** UI information listener only relevant if this editor is for a meta node
+     * (update part name).
+     * {@inheritDoc}
+     */
+    @Override
+    public void nodeUIInformationChanged(
+            final NodeUIInformationEvent evt) {
+        updatePartName();
+    }
+
 
 }

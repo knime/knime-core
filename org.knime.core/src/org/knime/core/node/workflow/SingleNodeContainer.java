@@ -616,6 +616,7 @@ public final class SingleNodeContainer extends NodeContainer {
             } else if (getState().executionInProgress()) {
                 cancelExecution();
             }
+            super.performShutdown();
         }
     }
 
