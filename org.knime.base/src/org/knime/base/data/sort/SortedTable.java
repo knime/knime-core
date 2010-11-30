@@ -52,6 +52,7 @@
  */
 package org.knime.base.data.sort;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -349,6 +350,7 @@ public class SortedTable implements DataTable {
         double incProgress = 0.5 / dataTable.getRowCount();
         int counter = 0;
         int cf = 0;
+        int chunkStartRow = 0;
 
         exec.setMessage("Reading table");
         for (Iterator<DataRow> iter = dataTable.iterator(); iter.hasNext();) {
@@ -366,6 +368,8 @@ public class SortedTable implements DataTable {
                 DataRow row = iter.next();
                 buffer.add(row);
             } else {
+            	LOGGER.debug("Writing chunk [" + chunkStartRow + ":" 
+            			+ counter + "] - mem usage: " + getMemUsage());
                 int estimatedIncrements = dataTable.getRowCount() - counter
                     + buffer.size();
                 incProgress = (0.5 - progress) / estimatedIncrements;
@@ -395,8 +399,13 @@ public class SortedTable implements DataTable {
 
                 // Force full gc to be sure that there is not too much
                 // garbage
+                LOGGER.debug("Wrote chunk [" + chunkStartRow + ":" 
+                		+ counter + "] - mem usage: " + getMemUsage());
                 Runtime.getRuntime().gc();
-                LOGGER.debug("Forced gc() when reading rows.");
+                
+                LOGGER.debug("Forced gc() when reading rows, new mem usage: " 
+                		+ getMemUsage());
+                chunkStartRow = counter + 1;
             }
         }
         // Add buffer to the chunks
@@ -470,6 +479,21 @@ public class SortedTable implements DataTable {
         }
 
         m_sortedTable = cont.getTable();
+    }
+    
+    private String getMemUsage() {
+    	Runtime runtime = Runtime.getRuntime();
+    	long free = runtime.freeMemory();
+    	long total = runtime.totalMemory();
+    	long avail = runtime.maxMemory();
+    	double freeD = free / (double)(1024 * 1024);
+    	double totalD = total / (double)(1024 * 1024);
+    	double availD = avail / (double)(1024 * 1024);
+    	String freeS = NumberFormat.getInstance().format(freeD);
+    	String totalS = NumberFormat.getInstance().format(totalD);
+    	String availS = NumberFormat.getInstance().format(availD);
+    	return "avail: " + availS + "MB, total: " + totalS 
+    		+ "MB, free: " + freeS + "MB";
     }
 
     private static class MergeEntry implements DataRow {
