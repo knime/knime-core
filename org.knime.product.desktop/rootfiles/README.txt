@@ -17,13 +17,10 @@ How to get additional features:
   this archive. For example an R integration feature 
   (http://www.r-project.org) and a chemistry feature (using the chemistry
   development kit, CDK, http://cdk.sf.net/) are available. These features
-  are installed via the KNIME update site. In KNIME select 
-  "File", "Update KNIME...". The Update Dialog opens; Select the 
-  tab "Available Software" and select the features you want to install.
-  (In case the KNIME update site doesn't show, click "Manage Sites..." and 
-  select KNIME's update site.) 
-  You need to restart KNIME after installing new extensions in order 
-  to get them activated.
+  are installed via the KNIME update site. In KNIME click 
+  "File -> Install KNIME extension...". Then select the features you want to
+  install in the dialog. You need to restart KNIME after installing new
+  extensions in order to get them activated.
 
-  Note, the update site is also available as zip archive for a later offline
+  Note, the update site is also available as zip archive for offline
   installation. Refer to the knime.org website for details.
