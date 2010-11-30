@@ -247,7 +247,7 @@ public class SortedTable implements DataTable {
         m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
         m_maxRows = Integer.MAX_VALUE;
-        m_memService = new MemoryService(0.9);
+        m_memService = new MemoryService(0.75);
         m_maxOpenContainers = maxOpenContainer;
 
         // get the column indices of the columns that will be sorted
@@ -343,7 +343,7 @@ public class SortedTable implements DataTable {
         List<Iterable<DataRow>> chunksCont =
             new ArrayList<Iterable<DataRow>>();
 
-        List<DataRow> buffer = new ArrayList<DataRow>();
+        ArrayList<DataRow> buffer = new ArrayList<DataRow>();
 
         double progress = 0;
         double incProgress = 0.5 / dataTable.getRowCount();
@@ -377,19 +377,19 @@ public class SortedTable implements DataTable {
                     exec.createDataContainer(dataTable.getDataTableSpec(),
                             true, 0);
                 diskCont.setMaxPossibleValues(0);
-                Iterator<DataRow> bufferIter = buffer.iterator();
-                int totalBufferSize = buffer.size();
-                int currentRow = 0;
-                while (bufferIter.hasNext()) {
+                final int totalBufferSize = buffer.size();
+                for (int i = 0; i < totalBufferSize; i++) {
                     exec.setMessage("Writing temporary table -- "
-                            + (currentRow++) + "/" + totalBufferSize);
-                    DataRow next = bufferIter.next();
-                    bufferIter.remove();
+                            + i + "/" + totalBufferSize);
+                    // must not use Iterator#remove as it causes 
+                    // array copies
+                    DataRow next = buffer.set(i, null);
                     diskCont.addRowToTable(next);
                     progress += incProgress;
                     exec.setProgress(progress);
                     exec.checkCanceled();
                 }
+                buffer.clear();
                 diskCont.close();
                 chunksCont.add(diskCont.getTable());
 
