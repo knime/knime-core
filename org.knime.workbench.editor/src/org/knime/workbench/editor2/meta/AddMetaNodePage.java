@@ -361,9 +361,6 @@ public class AddMetaNodePage extends WizardPage {
         if (!m_wasVisible) {
             return false;
         }
-        if (m_inPortList.size() == 0 && m_outPortList.size() == 0) {
-            return false;
-        }
         if (m_template == null) {
             return false;
         }
