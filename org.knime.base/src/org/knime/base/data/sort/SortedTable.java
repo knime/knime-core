@@ -54,6 +54,7 @@ package org.knime.base.data.sort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -342,8 +343,7 @@ public class SortedTable implements DataTable {
         List<Iterable<DataRow>> chunksCont =
             new ArrayList<Iterable<DataRow>>();
 
-        final PriorityQueue<DataRow> buffer =
-            new PriorityQueue<DataRow>(11, m_rowComparator);
+        List<DataRow> buffer = new ArrayList<DataRow>();
 
         double progress = 0;
         double incProgress = 0.5 / dataTable.getRowCount();
@@ -370,22 +370,26 @@ public class SortedTable implements DataTable {
                     + buffer.size();
                 incProgress = (0.5 - progress) / estimatedIncrements;
                 exec.setMessage("Sorting temporary buffer");
+                // sort buffer
+                Collections.sort(buffer, m_rowComparator);
                 // write buffer to disk
                 BufferedDataContainer diskCont =
                     exec.createDataContainer(dataTable.getDataTableSpec(),
                             true, 0);
                 diskCont.setMaxPossibleValues(0);
-                final int size = buffer.size();
-                for (int i = 0; i < size; i++) {
+                Iterator<DataRow> bufferIter = buffer.iterator();
+                int totalBufferSize = buffer.size();
+                int currentRow = 0;
+                while (bufferIter.hasNext()) {
                     exec.setMessage("Writing temporary table -- "
-                            + i + "/" + size);
-                    DataRow next = buffer.remove();
+                            + (currentRow++) + "/" + totalBufferSize);
+                    DataRow next = bufferIter.next();
+                    bufferIter.remove();
                     diskCont.addRowToTable(next);
                     progress += incProgress;
                     exec.setProgress(progress);
                     exec.checkCanceled();
                 }
-                assert buffer.isEmpty() : "Queue not empty: " + buffer.size();
                 diskCont.close();
                 chunksCont.add(diskCont.getTable());
 
@@ -397,15 +401,9 @@ public class SortedTable implements DataTable {
         }
         // Add buffer to the chunks
         if (!buffer.isEmpty()) {
-            // PriorityQueue#iterator() returns in arbitrary order
-            // copy into new array list to have sorted iterator
-            // do not set initial size but let list grow while queue shrinks
-            ArrayList<DataRow> lastChunk = new ArrayList<DataRow>();
-            DataRow r;
-            while ((r = buffer.poll()) != null) {
-                lastChunk.add(r);
-            }
-            chunksCont.add(lastChunk);
+            // sort buffer
+            Collections.sort(buffer, m_rowComparator);
+            chunksCont.add(buffer);
         }
 
         exec.setMessage("Merging temporary tables");
@@ -497,7 +495,6 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
-        @Override
         public DataCell getCell(final int index) {
             return m_row.getCell(index);
         }
@@ -505,7 +502,6 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
-        @Override
         public RowKey getKey() {
             return m_row.getKey();
         }
@@ -513,7 +509,6 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
-        @Override
         public int getNumCells() {
             return m_row.getNumCells();
         }
@@ -521,7 +516,6 @@ public class SortedTable implements DataTable {
         /**
          * {@inheritDoc}
          */
-        @Override
         public Iterator<DataCell> iterator() {
             return m_row.iterator();
         }
@@ -538,7 +532,6 @@ public class SortedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
-    @Override
     public DataTableSpec getDataTableSpec() {
         return m_sortedTable.getDataTableSpec();
     }
@@ -546,7 +539,6 @@ public class SortedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
-    @Override
     public RowIterator iterator() {
         return m_sortedTable.iterator();
     }
@@ -572,7 +564,6 @@ public class SortedTable implements DataTable {
          * @param dr2 another datarow to be compared with dr1
          * @return -1 if dr1 < dr2, 0 if dr1 == dr2 and 1 if dr1 > dr2
          */
-        @Override
         public int compare(final DataRow dr1, final DataRow dr2) {
 
             if (dr1 == dr2) {
