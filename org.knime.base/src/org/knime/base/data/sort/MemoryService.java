@@ -97,7 +97,7 @@ public final class MemoryService {
      * @param usedMemoryThreshold A number between 0 and 1.
      */
     public MemoryService(final double usedMemoryThreshold) {
-        this(usedMemoryThreshold, 0, true);
+        this(usedMemoryThreshold, 0, false);
 
     }
 
