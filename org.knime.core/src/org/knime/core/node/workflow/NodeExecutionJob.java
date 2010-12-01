@@ -51,6 +51,7 @@ package org.knime.core.node.workflow;
 import java.util.Arrays;
 
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
@@ -100,19 +101,32 @@ public abstract class NodeExecutionJob implements Runnable {
         m_nc = nc;
         m_data = data;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public final void run() {
         NodeContainerExecutionStatus status = null;
+        // handle inactive branches -- do not delegate to custom job
+        // manager (the node will just return inactive branch objects)
+        boolean executeInactive = false;
+        if (m_nc instanceof SingleNodeContainer) {
+        	SingleNodeContainer snc = (SingleNodeContainer)m_nc;
+        	if (!snc.isInactiveBranchConsumer()
+        			&& Node.containsInactiveObjects(getPortObjects())) {
+        		executeInactive = true; 
+        	}
+        }
+
         if (!isReConnecting()) {
             try {
                 // sets state PREEXECUTE
                 if (!m_nc.notifyParentPreExecuteStart()) {
-                    // node was canceled, ommit any subsequent state transitions
+                    // node was canceled, omit any subsequent state transitions
                     return;
                 }
-                beforeExecute();
+                if (!executeInactive) {
+                	beforeExecute();
+                }
             } catch (Throwable throwable) {
                 logError(throwable);
                 status = NodeContainerExecutionStatus.FAILURE;
@@ -145,7 +159,12 @@ public abstract class NodeExecutionJob implements Runnable {
                 // start message and keep start time
                 final long time = System.currentTimeMillis();
                 m_logger.debug(m_nc.getNameWithID() + " Start execute");
-                status = mainExecute();
+                if (executeInactive) {
+                	SingleNodeContainer snc = (SingleNodeContainer)m_nc;
+                	status = snc.performExecuteNode(getPortObjects());
+                } else {
+                	status = mainExecute();
+                }
                 if (status != null && status.isSuccess()) {
                     String elapsed = StringFormat.formatElapsedTime(
                             System.currentTimeMillis() - time);
@@ -160,7 +179,9 @@ public abstract class NodeExecutionJob implements Runnable {
         try {
             // sets state POSTEXECUTE
             m_nc.notifyParentPostExecuteStart();
-            afterExecute();
+            if (!executeInactive) {
+            	afterExecute();
+            }
         } catch (Throwable throwable) {
             status = NodeContainerExecutionStatus.FAILURE;
             logError(throwable);

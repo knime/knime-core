@@ -721,6 +721,20 @@ public final class Node implements NodeModelWarningListener {
     public boolean isInactiveBranchConsumer() {
         return m_model instanceof InactiveBranchConsumer;
     }
+    
+    /** Iterates the argument array and returns true if any element
+     * is instance of {@link InactiveBranchPortObject}.
+     * @param ins The input data
+     * @return true if any input is inactive.
+     */
+    public static boolean containsInactiveObjects(final PortObject[] ins) {
+    	for (PortObject portObject : ins) {
+			if (portObject instanceof InactiveBranchPortObject) {
+				return true;
+			}
+		}
+    	return false;
+    }
 
     /**
      * Starts executing this node. If the node has been executed already, it
@@ -753,28 +767,24 @@ public final class Node implements NodeModelWarningListener {
 
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
-        if (!isInactiveBranchConsumer()) {
-            for (int i = 0; i < rawData.length; i++) {
-                if (rawData[i] instanceof InactiveBranchPortObject) {
-                    // one incoming object=IBPO is enough to skip
-                    // the entire execution of this node. But first check
-                    // if it's the end of a loop:
-                    if (m_model instanceof LoopEndNode) {
-                        // we can not handle this case: the End Loop node needs
-                        // to trigger re-execution which it won't in an inactive
-                        // branch
-                        createErrorMessageAndNotify("Loop End node in inactive "
-                                + "branch not allowed.");
-                        return false;
-                    }
-                    // normal node: skip execution
-                    PortObject[] outs = new PortObject[getNrOutPorts()];
-                    Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-                    setOutPortObjects(outs, false);
-                    assert m_model.hasContent() == false;
-                    return true;
-                }
+        if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {
+            // one incoming object=IBPO is enough to skip
+            // the entire execution of this node. But first check
+            // if it's the end of a loop:
+            if (m_model instanceof LoopEndNode) {
+                // we can not handle this case: the End Loop node needs
+                // to trigger re-execution which it won't in an inactive
+                // branch
+                createErrorMessageAndNotify("Loop End node in inactive "
+                        + "branch not allowed.");
+                return false;
             }
+            // normal node: skip execution
+            PortObject[] outs = new PortObject[getNrOutPorts()];
+            Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
+            setOutPortObjects(outs, false);
+            assert m_model.hasContent() == false;
+            return true;
         }
 
         // copy input port objects, ignoring the 0-variable port:

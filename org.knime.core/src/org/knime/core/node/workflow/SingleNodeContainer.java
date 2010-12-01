@@ -1243,6 +1243,15 @@ public final class SingleNodeContainer extends NodeContainer {
     public boolean isInactive() {
         return m_node.isInactive();
     }
+    
+    /** @return <code>true</code> if the underlying node is able to consume
+     * inactive objects (implements 
+     * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
+     * @see {@link Node#isInactiveBranchConsumer()}
+     */
+    public boolean isInactiveBranchConsumer() {
+    	return m_node.isInactiveBranchConsumer();
+    }
 
     /**
      * @return the XML description of the node for the NodeDescription view
