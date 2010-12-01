@@ -68,6 +68,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -259,6 +260,10 @@ public class DefaultDataArray implements DataArray {
 
         } // while ((!rIter.atEnd()) && (numOfRowsRead < numOfRows))
 
+        if (rIter instanceof CloseableRowIterator) {
+            ((CloseableRowIterator)rIter).close();
+        }
+
         // make sure that the table spec's domain is set properly.
         // Use as is when there is information available, otherwise set it.
         DataColumnSpec[] colSpecs = new DataColumnSpec[numOfColumns];
@@ -305,6 +310,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataRow getRow(final int idx) {
         return m_rows.get(idx);
 
@@ -313,6 +319,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<DataCell> getValues(final int colIdx) {
         return m_possVals.get(colIdx);
     }
@@ -320,6 +327,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell getMinValue(final int colIdx) {
         return m_minVal[colIdx];
     }
@@ -327,6 +335,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell getMaxValue(final int colIdx) {
         return m_maxVal[colIdx];
     }
@@ -373,6 +382,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int size() {
         return m_rows.size();
     }
@@ -380,6 +390,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getFirstRowNumber() {
         return m_firstRow;
     }
@@ -387,6 +398,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         return new DefaultRowIterator(m_rows);
     }
@@ -394,6 +406,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
