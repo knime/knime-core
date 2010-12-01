@@ -295,7 +295,7 @@
       <category
             after="misc"
             description="Nodes provided on labs.knime.org"
-            icon="icons/labs.png"
+            icon="icons/16x16/category_knime_labs.png"
             level-id="labs"
             name="KNIME Labs"
             path="/">
@@ -303,7 +303,7 @@
       <category
             after="labs"
             description="Nodes provided by the KNIME community"
-            icon="icons/missing.gif"
+            icon="icons/16x16/category_community_nodes.png"
             level-id="community"
             name="Community Nodes"
             path="/">
