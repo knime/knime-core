@@ -292,6 +292,22 @@
             name="Utility"
             path="/view">
       </category>
+      <category
+            after="misc"
+            description="Nodes provided on labs.knime.org"
+            icon="icons/labs.png"
+            level-id="labs"
+            name="KNIME Labs"
+            path="/">
+      </category>
+      <category
+            after="labs"
+            description="Nodes provided by the KNIME community"
+            icon="icons/missing.gif"
+            level-id="community"
+            name="Community Nodes"
+            path="/">
+      </category>
    </extension>
             
      <extension
