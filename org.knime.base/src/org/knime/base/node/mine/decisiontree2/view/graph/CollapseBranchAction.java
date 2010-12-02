@@ -40,90 +40,73 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   27.07.2005 (mb): created
+ *   01.12.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.predictor;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import java.awt.event.ActionEvent;
+import java.util.Collections;
+import java.util.Enumeration;
+
+import javax.swing.AbstractAction;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
+ * An action to collapse the branch starting from the selected node in a
+ * {@link HierarchicalGraphView}.
  *
- * @author Michael Berthold, University of Konstanz
+ * @author Heiko Hofer
+ * @param <K> The type of the nodes user objects in a
+ * {@link HierarchicalGraphView}
  */
-public class DecTreePredictorNodeFactory
-        extends NodeFactory<DecTreePredictorNodeModel> {
+public class CollapseBranchAction<K> extends AbstractAction {
+    private static final long serialVersionUID = 3829708621676376218L;
+    private HierarchicalGraphView<K> m_graph;
 
     /**
-     * {@inheritDoc}
+     * @param graph nodes of the graph are effected by this action
      */
-    @Override
-    public DecTreePredictorNodeModel createNodeModel() {
-        return new DecTreePredictorNodeModel();
+    public CollapseBranchAction(final HierarchicalGraphView<K> graph) {
+        super("Collapse Branch");
+        m_graph = graph;
     }
 
     /**
      * {@inheritDoc}
      */
+    // DefaultMutableTreeNode does not support generics
+    @SuppressWarnings("unchecked")
     @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(
-            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
-        if (viewIndex == 0) {
-            return new DecTreePredictorGraphView(nodeModel);
-        } else {
-            return new DecTreePredictorNodeView(nodeModel);
+    public void actionPerformed(final ActionEvent e) {
+        K selected = m_graph.getSelected();
+        if (null == selected) {
+            return;
         }
-    }
+        DefaultMutableTreeNode node =
+            m_graph.getTreeMap().get(selected);
+        Enumeration<DefaultMutableTreeNode> enumeration =
+            node.breadthFirstEnumeration();
+        // skip starting node
+        enumeration.nextElement();
+        for (DefaultMutableTreeNode n : Collections.list(enumeration)) {
+            K k = (K)n.getUserObject();
+            m_graph.getVisible().remove(k);
+            m_graph.getCollapsed().remove(k);
+            m_graph.getWidgets().remove(k);
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+        m_graph.layoutGraph();
+        // With this call parent components get informed about the
+        // change in the preferred size.
+        m_graph.getView().revalidate();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            {
-                addDialogComponent(new DialogComponentNumber(
-                        new SettingsModelIntegerBounded(
-              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-              /* default */50000,
-                      /* min: */0,
-                      /* max: */100000),
-                   /* label: */"Maximum number of stored patterns "
-                                + "for HiLite-ing: ", 100));
-                addDialogComponent(new DialogComponentBoolean(
-                        new SettingsModelBoolean(
-                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
-                             false),
-                     "Append columns with normalized class distribution"));
-            }
-        };
+        m_graph.getView().repaint();
+        return;
     }
 }

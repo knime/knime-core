@@ -50,8 +50,11 @@
  */
 package org.knime.base.node.mine.decisiontree2.view.graph;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.MouseListener;
 
 /**
  * The visual representation of a node in an {@link  HierarchicalGraphView}.
@@ -59,7 +62,7 @@ import java.awt.Graphics2D;
  * @author Heiko Hofer
  * @param <K> The type of the user object.
  */
-public abstract class NodeWidget<K> {
+public abstract class NodeWidget<K> implements MouseListener {
     private Dimension m_size;
     private HierarchicalGraphView<K> m_graph;
     private K m_object;
@@ -80,13 +83,30 @@ public abstract class NodeWidget<K> {
      * Get the preferred size.
      * @return the preferred size
      */
-    protected abstract Dimension getPreferredSize();
+    public abstract Dimension getPreferredSize();
 
     /**
      * Paint this {@link NodeWidget} using the given {@link Graphics2D}.
+     * @param c the component to paint on
      * @param g the graphics
+     * @param x the x coordinate in the component
+     * @param y the y coordinate in the component
+     * @param width the width of the widget
+     * @param height the height of the widget
      */
-    protected abstract void paint(Graphics2D g);
+    protected abstract void paint(Component c, Graphics2D g, int x, int y,
+            int width, int height);
+
+    /**
+     * Paint this {@link NodeWidget} using the given {@link Graphics2D}.
+     * @param c the component to paint on
+     * @param g the graphics
+     * @param r position and size on the component
+     */
+    public void paint(final Component c, final Graphics2D g,
+            final Rectangle r) {
+        paint(c, g, r.x, r.y, r.width, r.height);
+    }
 
     /**
      * Get the label that should be painted on the connector above the

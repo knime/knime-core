@@ -50,9 +50,10 @@
  */
 package org.knime.base.node.mine.decisiontree2.view.graph;
 
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
@@ -61,6 +62,10 @@ import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.Scrollable;
+import javax.swing.SwingConstants;
+
+import org.knime.core.data.property.ColorAttr;
 
 /**
  * This is a {@link JComponent} which displays a {@link HierarchicalGraphView}.
@@ -68,7 +73,7 @@ import javax.swing.JPanel;
  * @author Heiko Hofer
  * @param <K> The type of the graphs user objects
  */
-final class HierarchicalGraphComponent<K> extends JPanel {
+final class HierarchicalGraphComponent<K> extends JPanel implements Scrollable {
     private static final long serialVersionUID = -8435691901973256733L;
     private HierarchicalGraphView<K> m_graph;
 
@@ -78,9 +83,7 @@ final class HierarchicalGraphComponent<K> extends JPanel {
     public HierarchicalGraphComponent(final HierarchicalGraphView<K> graph) {
         m_graph = graph;
         setLayout(null);
-        setDoubleBuffered(true);
-        setOpaque(true);
-        setBackground(Color.white);
+        setBackground(ColorAttr.BACKGROUND);
         addMouseListener(new MyMouseListener());
     }
 
@@ -93,6 +96,7 @@ final class HierarchicalGraphComponent<K> extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
         Toolkit tk = Toolkit.getDefaultToolkit();
+        @SuppressWarnings("rawtypes")
         Map desktopHints =
             (Map)(tk.getDesktopProperty("awt.font.desktophints"));
         if (desktopHints != null) {
@@ -102,7 +106,7 @@ final class HierarchicalGraphComponent<K> extends JPanel {
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         }
         super.paint(g2);
-        m_graph.paint(g2);
+        m_graph.paint(this, g2, 0, 0, this.getWidth(), this.getHeight());
     }
 
     /**
@@ -118,5 +122,77 @@ final class HierarchicalGraphComponent<K> extends JPanel {
         public void mousePressed(final MouseEvent e) {
             m_graph.mousePressed(e);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            m_graph.mouseClicked(e);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            m_graph.mouseReleased(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(300, 400);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getScrollableUnitIncrement(final Rectangle visibleRect,
+            final int orientation, final int direction) {
+        return getScrollableBlockIncrement(visibleRect,
+                orientation, direction) / 4;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getScrollableBlockIncrement(final Rectangle visibleRect,
+            final int orientation, final int direction) {
+        boolean vertical = SwingConstants.VERTICAL == orientation;
+        if (vertical) {
+            return visibleRect.height / 3;
+        } else {
+            return visibleRect.width / 3;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return getPreferredSize().width < getParent().getWidth();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return getPreferredSize().height < getParent().getHeight();
     }
 }

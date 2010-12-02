@@ -82,6 +82,8 @@ public class DecisionTree implements Serializable {
     private PMMLMissingValueStrategy m_missingValueStrategy;
     private PMMLNoTrueChildStrategy m_noTrueChildStrategy;
 
+    private String m_colorColumn;
+
     /**
      * Create DecisionTree based on a root node to which the remainder of the
      * tree is already attached.
@@ -95,7 +97,7 @@ public class DecisionTree implements Serializable {
             final String classifyColumn,
             final PMMLMissingValueStrategy mvStrategy,
             final PMMLNoTrueChildStrategy ntcStrategy) {
-        this(rootNode, classifyColumn);
+        this(rootNode, classifyColumn, null);
         m_missingValueStrategy = mvStrategy;
         m_noTrueChildStrategy = ntcStrategy;
         if (rootNode instanceof DecisionTreeNodeSplit) {
@@ -231,6 +233,7 @@ public class DecisionTree implements Serializable {
             final boolean saveKeysAndPatterns) {
         pConf.addString("type", "DecisionTree");
         pConf.addString("version", "0.0");
+        pConf.addString("color_column", m_colorColumn);
         ModelContentWO newNodeConf = pConf.addModelContent("rootNode");
         m_rootNode.saveToPredictorParams(newNodeConf, saveKeysAndPatterns);
     }
@@ -245,6 +248,8 @@ public class DecisionTree implements Serializable {
             throws InvalidSettingsException {
         String type = pConf.getString("type");
         String version = pConf.getString("version");
+        // added in v2.3
+        m_colorColumn = pConf.getString("color_column", null);
         if (!type.equals("DecisionTree")) {
             throw new InvalidSettingsException("DecisionTree can not load"
                     + " information of type '" + type + "'!");
@@ -278,7 +283,7 @@ public class DecisionTree implements Serializable {
 
         DecisionTreeNode node = m_rootNode;
         while (!node.isLeaf()) {
-            node = (DecisionTreeNode)node.getChildAt(0);
+            node = node.getChildAt(0);
         }
         return (DecisionTreeNodeLeaf)node;
     }
@@ -312,4 +317,20 @@ public class DecisionTree implements Serializable {
     public PMMLNoTrueChildStrategy getNTCStrategy() {
         return m_noTrueChildStrategy;
     }
+
+    /**
+     * @return the colorColumn
+     */
+    public String getColorColumn() {
+        return m_colorColumn;
+    }
+
+    /**
+     * @param colorColumn the colorColumn to set
+     */
+    public void setColorColumn(final String colorColumn) {
+        m_colorColumn = colorColumn;
+    }
+
+
 }

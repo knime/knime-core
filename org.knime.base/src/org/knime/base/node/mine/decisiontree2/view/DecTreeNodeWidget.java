@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.decisiontree2.view;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -85,34 +84,136 @@ import org.knime.core.data.property.ColorAttr;
  */
 public final class DecTreeNodeWidget
             extends ComponentNodeWidget<DecisionTreeNode> {
+    private boolean m_tableCollapsed;
+    private boolean m_chartCollapsed;
+    private CollapsiblePanel m_table;
+    private CollapsiblePanel m_chart;
+    private String m_colorColumn;
+
     /**
      * @param graph the graph this widget is element of
      * @param decNode the model for this widget
+     * @param colorColumn the column used for coloring
+     *                      ({link DecisionTreeNode.covoredColors()})
+     * @param tableCollapsed true when table should be collapsed initially
+     * @param chartCollapsed true when chart should be collapsed initially
      */
     public DecTreeNodeWidget(
             final HierarchicalGraphView<DecisionTreeNode> graph,
-            final DecisionTreeNode decNode) {
+            final DecisionTreeNode decNode,
+            final String colorColumn, final boolean tableCollapsed,
+            final boolean chartCollapsed) {
         super(graph, decNode);
+        m_tableCollapsed = tableCollapsed;
+        m_chartCollapsed = chartCollapsed;
+        m_colorColumn = colorColumn;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected JComponent getComponent() {
-        JPanel comp = new JPanel(new BorderLayout());
-        comp.add(createNodeLabelPanel(), BorderLayout.NORTH);
-        comp.add(createTablePanel(), BorderLayout.CENTER);
-        return comp;
-    }
-
-    private JPanel createNodeLabelPanel() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        int idx = getUserObject().getOwnIndex();
-        p.add(new JLabel("Node " + idx));
+    protected JComponent createComponent() {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setOpaque(false);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = 1;
+        JPanel nodePanel = createNodeLabelPanel();
+        nodePanel.setOpaque(false);
+        p.add(nodePanel, c);
+        // add table
+        c.gridy++;
+        JPanel tablePanel = createTablePanel();
+        tablePanel.setOpaque(false);
+        m_table = new CollapsiblePanel("Table:", tablePanel);
+        m_table.setOpaque(false);
+        m_table.setCollapsed(m_tableCollapsed);
+        p.add(m_table, c);
+        // add histogram if colors are provided
+        HashMap<Color, Double> nodeColors = getUserObject().coveredColors();
+        HashMap<Color, Double> rootColors = null != getGraphView().getRootNode()
+            ? getGraphView().getRootNode().coveredColors()
+            : getUserObject().coveredColors();
+        if (null != nodeColors && null != rootColors && rootColors.size() > 1) {
+            c.gridy++;
+            JPanel chartPanel = createChartPanel(nodeColors, rootColors);
+            chartPanel.setOpaque(false);
+            m_chart = new CollapsiblePanel("Chart:", chartPanel);
+            m_chart.setOpaque(false);
+            m_chart.setCollapsed(m_chartCollapsed);
+            p.add(m_chart, c);
+        }
         return p;
     }
 
+    /**
+     * @return the tableCollapsed
+     */
+    boolean getTableCollapsed() {
+        return null != m_table ? m_table.isCollapsed()
+                : m_tableCollapsed;
+    }
+
+    /**
+     * @param collapsed the tableCollapsed to set
+     */
+    void setTableCollapsed(final boolean collapsed) {
+        m_tableCollapsed = collapsed;
+        if (m_table != null) {
+            m_table.setCollapsed(collapsed);
+        }
+
+    }
+
+    /**
+     * @return the chartCollapsed
+     */
+    boolean getChartCollapsed() {
+        return null != m_chart ? m_chart.isCollapsed()
+                : m_chartCollapsed;
+    }
+
+    /**
+     * @param collapsed the chartCollapsed to set
+     */
+    void setChartCollapsed(final boolean collapsed) {
+        m_chartCollapsed = collapsed;
+        if (m_chart != null) {
+            m_chart.setCollapsed(collapsed);
+        }
+    }
+
+    /** The panel at the top displaying the node label.
+     * @return A label, e.g. "Iris-versicolor (45/46)" */
+    private JPanel createNodeLabelPanel() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        StringBuilder label = new StringBuilder();
+        DecisionTreeNode node = getUserObject();
+        DataCell majorityClass = node.getMajorityClass();
+        LinkedHashMap<DataCell, Double> classCounts =
+            getUserObject().getClassCounts();
+
+        double totalClassCount = node.getEntireClassCount();
+        String totalClassCountS = DoubleFormat.formatDouble(totalClassCount);
+
+        double myClassCount = classCounts.get(majorityClass);
+        String myClassCountS = DoubleFormat.formatDouble(myClassCount);
+
+        label.append(majorityClass.toString());
+        label.append(" (").append(myClassCountS);
+        label.append("/").append(totalClassCountS).append(")");
+
+        p.add(new JLabel(label.toString()));
+        return p;
+    }
+
+    // The table
     private JPanel createTablePanel() {
         LinkedHashMap<DataCell, Double> classCounts =
             getUserObject().getClassCounts();
@@ -122,13 +223,12 @@ public final class DecTreeNodeWidget
         int gridwidth = 3;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(1, 5, 1, 5);
+        c.insets = new Insets(1, 1, 1, 1);
         c.gridx = 0;
         c.gridy = 0;
-        c.gridwidth = 1;
         c.weightx = 1;
         c.weighty = 1;
-//        c.gridx++;
+        c.gridwidth = 1;
         p.add(new JLabel("Category"), c);
         c.gridx++;
         p.add(new JLabel("%"), c);
@@ -146,15 +246,6 @@ public final class DecTreeNodeWidget
             JLabel classLabel = new JLabel(cell.toString());
             c.gridy++;
             c.gridx = 0;
-//            Color color = getColor(i);
-//            colorList.add(color);
-//            JComponent colorPanel = new MyColorPanel(color);
-//            colorPanel.setDoubleBuffered(false);
-//            colorPanel.setPreferredSize(new Dimension(
-//                    classLabel.getPreferredSize().height,
-//                    classLabel.getPreferredSize().height));
-//            p.add(colorPanel, c);
-//            c.gridx++;
             p.add(classLabel, c);
             c.gridx++;
             double classFreq = classCounts.get(cell) / entireClassCounts;
@@ -167,7 +258,6 @@ public final class DecTreeNodeWidget
                 c.gridx = 0;
                 JComponent comp = new JPanel();
                 comp.setPreferredSize(classLabel.getPreferredSize());
-                comp.setDoubleBuffered(false);
                 comp.setBackground(new Color(225, 225, 225));
                 c.gridwidth = gridwidth;
                 p.add(comp, c);
@@ -182,33 +272,50 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
         c.gridy++;
         c.gridx = 0;
-//        c.gridx++;
         p.add(new JLabel("Total"), c);
         c.gridx++;
-        double covorage = entireClassCounts
-            / getGraphView().getRootNode().getEntireClassCount();
+        double nominator = null != getGraphView().getRootNode()
+            ? getGraphView().getRootNode().getEntireClassCount()
+            : getUserObject().getEntireClassCount();
+        double covorage = entireClassCounts / nominator;
         p.add(new JLabel(DoubleFormat.formatDouble(100.0 * covorage)), c);
         c.gridx++;
         p.add(new JLabel(
                 DoubleFormat.formatDouble(entireClassCounts)), c);
-        HashMap<Color, Double> nodeColors = getUserObject().coveredColors();
-        HashMap<Color, Double> rootColors =
-            getGraphView().getRootNode().coveredColors();
-        if (null != nodeColors && null != rootColors && rootColors.size() > 1) {
-            List<Double> classFreq = new ArrayList<Double>();
-            List<Color> color = new ArrayList<Color>();
-            for (Color co : rootColors.keySet()) {
-                Double freq = null != nodeColors.get(co)
-                                    ? nodeColors.get(co) : 0;
-                color.add(co);
-                classFreq.add(freq / entireClassCounts);
-            }
+        return p;
+    }
+
+    // the chart
+    private JPanel createChartPanel(final HashMap<Color, Double> nodeColors,
+            final HashMap<Color, Double> rootColors) {
+        double entireClassCounts = getUserObject().getEntireClassCount();
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        int gridwidth = 3;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(1, 1, 1, 1);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        if (null != m_colorColumn) {
+            p.add(new JLabel("Color column: " + m_colorColumn), c);
             c.gridy++;
-            c.gridx = 0;
-            c.gridwidth = gridwidth;
-            p.add(new MyHistogram(classFreq, color), c);
-            c.gridwidth = 1;
         }
+        List<Double> classFreq = new ArrayList<Double>();
+        List<Color> color = new ArrayList<Color>();
+        for (Color co : rootColors.keySet()) {
+            Double freq = null != nodeColors.get(co)
+                                ? nodeColors.get(co) : 0;
+            color.add(co);
+            classFreq.add(freq / entireClassCounts);
+        }
+        c.gridwidth = gridwidth;
+        p.add(new MyHistogram(classFreq, color), c);
+        c.gridwidth = 1;
+
         return p;
     }
 
@@ -245,29 +352,8 @@ public final class DecTreeNodeWidget
         }
     }
 
-
-//    private Color getColor(final int i) {
-//        Color[] colors = new Color[] {
-//                new Color(0, 0, 210),
-//                new Color(210, 0, 0),
-//                new Color(0, 210, 0),
-//                new Color(220, 220, 0),
-//                new Color(15, 0, 121),
-//                new Color(121, 0, 0),
-//                new Color(0, 121, 47),
-//                new Color(121, 0, 221)
-//        };
-//        return colors[i % colors.length];
-//    }
-
-
     private static class MyJSeparator extends JComponent {
         private static final long serialVersionUID = -5611048590057773103L;
-
-//        public MyJSeparator() {
-//            super.setDoubleBuffered(false);
-//            super.setOpaque(false);
-//        }
 
         /**
          * {@inheritDoc}
@@ -382,40 +468,4 @@ public final class DecTreeNodeWidget
             g2.setColor(prevColor);
         }
     }
-
-//    private static class MyColorPanel extends JComponent {
-//        private static final long serialVersionUID = 925606386201101646L;
-//        private Color m_color;
-//
-//        public MyColorPanel(final Color color) {
-//            m_color = color;
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        protected void paintComponent(final Graphics g) {
-//            super.paintComponent(g);
-//            Graphics2D g2 = (Graphics2D)g;
-//            Rectangle b = new Rectangle(
-//                   getInsets().left, getInsets().top,
-//                   getSize().width - getInsets().left - getInsets().right - 1,
-//                 getSize().height - getInsets().top - getInsets().bottom - 1);
-//            Color prevColor = g.getColor();
-//
-//            int delta = 8;
-//            Rectangle r = new Rectangle(b.x + (b.width - delta) / 2,
-//                    b.y + (b.height - delta) / 2,
-//                    delta, delta);
-//            g2.setColor(m_color);
-//            g2.fill(r);
-//            g2.setColor(ColorAttr.BORDER);
-//            g2.draw(r);
-//
-//            g2.setColor(prevColor);
-//        }
-//    }
-
-
 }

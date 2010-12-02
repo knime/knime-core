@@ -196,6 +196,17 @@ public class DecTreePredictorNodeModel extends NodeModel {
         m_decTree.resetColorInformation();
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         assert m_decTree != null;
+        // get column with color information
+        String colorColumn = null;
+        for (DataColumnSpec s : inData.getDataTableSpec()) {
+            if (s.getColorHandler() != null) {
+                colorColumn = s.getName();
+                break;
+            }
+        }
+        if (null != m_decTree) {
+            m_decTree.setColorColumn(colorColumn);
+        }
         exec.setMessage("Decision Tree Predictor: start execution.");
         PortObjectSpec[] inSpecs = new PortObjectSpec[] {
                 inPorts[0].getSpec(), inPorts[1].getSpec() };
