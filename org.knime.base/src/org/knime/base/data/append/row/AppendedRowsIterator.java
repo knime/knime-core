@@ -66,6 +66,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -78,6 +79,10 @@ public class AppendedRowsIterator extends RowIterator {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AppendedRowsIterator.class);
+
+    private static final boolean DISABLE_DUPLICATE_CHECK =
+        Boolean.getBoolean(
+                KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
 
     /**
      * The spec of the underlying table.
@@ -282,7 +287,9 @@ public class AppendedRowsIterator extends RowIterator {
                 // to do duplicate handling.
             }
         }
-        m_duplicateMap.put(key, origKey);
+        if (!DISABLE_DUPLICATE_CHECK) {
+            m_duplicateMap.put(key, origKey);
+        }
         if (m_exec != null) {
             try {
                 m_exec.checkCanceled();
@@ -365,8 +372,8 @@ public class AppendedRowsIterator extends RowIterator {
     public Set<RowKey> getDuplicateHash() {
         return Collections.unmodifiableSet(m_duplicateMap.keySet());
     }
-    
-    /** Get a map of keys in the resulting table to the keys in (any of) 
+
+    /** Get a map of keys in the resulting table to the keys in (any of)
      * the input tables, typically elements such as below.
      * <table>
      * <tr><th>Key</th><th>Value</th></tr>

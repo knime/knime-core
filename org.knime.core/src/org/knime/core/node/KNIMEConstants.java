@@ -113,6 +113,15 @@ public final class KNIMEConstants {
     public static final String PROPERTY_TABLE_GZIP_COMPRESSION =
         "knime.compress.io";
 
+    /** Java property to enable/disable row ID duplicate checks on tables.
+     * Tables in KNIME are supposed to have unique IDs, whereby the uniqueness
+     * is asserted using a duplicate checker. This property will disable this
+     * check.
+     * <p><strong>Warning:</strong> This property should not be changed by
+     * the user. */
+    public static final String PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK =
+        "knime.disable.rowid.duplicatecheck";
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
