@@ -79,6 +79,8 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class AppendedRowsNodeDialog extends NodeDialogPane {
 
+    private final JRadioButton m_failOnDuplicateButton;
+
     private final JRadioButton m_appendSuffixButton;
 
     private final JRadioButton m_skipRowButton;
@@ -96,6 +98,7 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
      */
     public AppendedRowsNodeDialog() {
         ActionListener actionListener = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_suffixField.setEnabled(m_appendSuffixButton.isSelected());
             }
@@ -112,6 +115,11 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
                 + "duplicate row ID to make it unique.");
         m_appendSuffixButton.addActionListener(actionListener);
         buttonGroup.add(m_appendSuffixButton);
+        m_failOnDuplicateButton = new JRadioButton("Fail Execution");
+        m_failOnDuplicateButton.setToolTipText("Will abort the execution if"
+                + " duplicates are encountered");
+        m_failOnDuplicateButton.addActionListener(actionListener);
+        buttonGroup.add(m_failOnDuplicateButton);
         JPanel panel = new JPanel(new GridLayout(0, 1));
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         centerPanel.setBorder(BorderFactory
@@ -123,6 +131,9 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         suffixButtonPanel.add(m_appendSuffixButton);
         suffixButtonPanel.add(m_suffixField);
         centerPanel.add(suffixButtonPanel);
+        JPanel failButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        failButtonPanel.add(m_failOnDuplicateButton);
+        centerPanel.add(failButtonPanel);
         m_skipRowButton.doClick();
         panel.add(centerPanel);
 
@@ -158,11 +169,16 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
+        // added in v2.3
+        boolean failOnDuplicate = settings.getBoolean(
+                AppendedRowsNodeModel.CFG_FAIL_ON_DUPLICATES, false);
         boolean appendSuffix = settings.getBoolean(
                 AppendedRowsNodeModel.CFG_APPEND_SUFFIX, false);
         String suffix = settings.getString(AppendedRowsNodeModel.CFG_SUFFIX,
                 "x");
-        if (appendSuffix) {
+        if (failOnDuplicate) {
+            m_failOnDuplicateButton.doClick();
+        } else if (appendSuffix) {
             m_appendSuffixButton.doClick();
         } else {
             m_skipRowButton.doClick();
@@ -186,9 +202,12 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        boolean isFailOnDuplicate = m_failOnDuplicateButton.isSelected();
         boolean isSuffix = m_appendSuffixButton.isSelected();
         boolean isIntersection = m_useInterSectionButton.isSelected();
         String suffix = m_suffixField.getText();
+        settings.addBoolean(AppendedRowsNodeModel.CFG_FAIL_ON_DUPLICATES,
+                isFailOnDuplicate);
         settings.addBoolean(AppendedRowsNodeModel.CFG_APPEND_SUFFIX, isSuffix);
         settings.addString(AppendedRowsNodeModel.CFG_SUFFIX, suffix);
         settings.addBoolean(AppendedRowsNodeModel.CFG_INTERSECT_COLUMNS,

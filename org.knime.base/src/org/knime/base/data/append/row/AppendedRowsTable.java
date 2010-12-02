@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.append.row;
 
@@ -74,17 +74,27 @@ import org.knime.core.node.NodeLogger;
  * (where it is possible - so far for string, double, int). Non matching column
  * types are adjusted such that they match (if not possible, the column's type
  * is {@link DataCell}).
- * 
+ *
  * <p>
  * The order of colums of this table is determined by the order of the top table
  * (the first array argument in the constructor)
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsTable implements DataTable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AppendedRowsTable.class);
+
+    /** How to deal with duplicate row ids. */
+    public enum DuplicatePolicy {
+        /** Skip duplicate occurrence. */
+        Skip,
+        /** Append a suffix to unify IDs. */
+        AppendSuffix,
+        /** Fail . */
+        Fail
+    }
 
     /**
      * Tables that make up this table. The first entry contains the the top part
@@ -104,9 +114,12 @@ public class AppendedRowsTable implements DataTable {
      */
     private final String m_suffix;
 
+    /** Duplicate unifying policy. */
+    private final DuplicatePolicy m_duplPolicy;
+
     /**
      * Concatenates a set of tables. Duplicate entries are skipped.
-     * 
+     *
      * @param tables all tables to be appended
      * @throws NullPointerException if argument is <code>null</code> or
      *             contains <code>null</code> elements.
@@ -116,10 +129,10 @@ public class AppendedRowsTable implements DataTable {
     } // AppendedRowsTable(DataTable[])
 
     /**
-     * Concatenates a set of tables. Duplicate keys may be skipped 
-     * (<code>suffix</code> argument is <code>null</code>) or may be avoided 
-     * by appending a fixed suffix to any subsequent occurence of a duplicate.
-     * 
+     * Concatenates a set of tables. Duplicate keys may be skipped
+     * (<code>suffix</code> argument is <code>null</code>) or may be avoided
+     * by appending a fixed suffix to any subsequent occurrence of a duplicate.
+     *
      * @param tables all tables to be appended
      * @param suffix suffix to append to duplicate keys or <code>null</code>
      *            to skip them
@@ -129,19 +142,41 @@ public class AppendedRowsTable implements DataTable {
      *             is ok)
      */
     public AppendedRowsTable(final String suffix, final DataTable... tables) {
+        this(suffix == null ? DuplicatePolicy.Skip
+                : DuplicatePolicy.AppendSuffix, suffix, tables);
+    }
+
+    /**
+     * Concatenates a set of tables. Duplicates are handled according to the
+     * policy argument.
+     *
+     * @param duplPolicy How to deal with duplicate keys.
+     * @param tables all tables to be appended
+     * @param suffix suffix to append to duplicate keys (must not be null
+     *         if policy is {@link DuplicatePolicy#AppendSuffix})
+     */
+    public AppendedRowsTable(final DuplicatePolicy duplPolicy,
+            final String suffix, final DataTable... tables) {
         m_spec = generateDataTableSpec(tables);
-        if (suffix != null && suffix.equals("")) {
-            throw new IllegalArgumentException(
-                    "Suffix must not be an empty string.");
+        switch (duplPolicy) {
+        case AppendSuffix:
+            if (suffix == null || suffix.equals("")) {
+                throw new IllegalArgumentException(
+                "Suffix must not be an empty string.");
+            }
+            break;
+        default:
         }
+        m_duplPolicy = duplPolicy;
         m_suffix = suffix;
         m_tables = new DataTable[tables.length];
         System.arraycopy(tables, 0, m_tables, 0, m_tables.length);
-    } // AppendedRowsTable(DataTable[],String,boolean)
+    }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
@@ -149,8 +184,9 @@ public class AppendedRowsTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
-        return new AppendedRowsIterator(m_tables, m_spec, m_suffix);
+        return iterator(null, -1);
     }
 
     /**
@@ -159,7 +195,7 @@ public class AppendedRowsTable implements DataTable {
      * concatenate a table to itself and do not allow duplicates, the
      * {@link RowIterator#next()} method runs <b>very</b> long (scanning the
      * entire table to just figure out that there are only duplicates).
-     * 
+     *
      * @param exec the execution monitor for cancel / progress
      * @param totalRowCount the total number rows or negative if unknown
      * @return an iterator which reacts on cancel events
@@ -167,14 +203,28 @@ public class AppendedRowsTable implements DataTable {
      */
     public AppendedRowsIterator iterator(final ExecutionMonitor exec,
             final int totalRowCount) {
-        return new AppendedRowsIterator(m_tables, m_spec, m_suffix, exec,
-                totalRowCount);
+        return new AppendedRowsIterator(this, exec, totalRowCount);
+    }
+
+    /** @return the tables */
+    DataTable[] getTables() {
+        return m_tables;
+    }
+
+    /** @return the suffix */
+    String getSuffix() {
+        return m_suffix;
+    }
+
+    /** @return the duplPolicy */
+    DuplicatePolicy getDuplPolicy() {
+        return m_duplPolicy;
     }
 
     /**
      * Factory method that determines the final {@link DataTableSpec} given the
      * tables.
-     * 
+     *
      * @param tableSpecs the table specs as in the constructor
      * @return the outcoming {qlink DataTableSpec}
      * @see #AppendedRowsTable(DataTable[])
@@ -184,11 +234,11 @@ public class AppendedRowsTable implements DataTable {
         // memorize the first column spec in the argument array for
         // each column name, we use it later on to initialize the column
         // spec creator.
-        LinkedHashMap<String, DataColumnSpec> columnSet = 
+        LinkedHashMap<String, DataColumnSpec> columnSet =
             new LinkedHashMap<String, DataColumnSpec>();
-        LinkedHashMap<String, DataType> typeSet = 
+        LinkedHashMap<String, DataType> typeSet =
             new LinkedHashMap<String, DataType>();
-        LinkedHashMap<String, DataColumnDomain> domainSet = 
+        LinkedHashMap<String, DataColumnDomain> domainSet =
             new LinkedHashMap<String, DataColumnDomain>();
 
         // create final data table spec

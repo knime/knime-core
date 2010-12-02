@@ -64,8 +64,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.append.row.AppendedRowsIterator;
-import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
+import org.knime.base.data.append.row.AppendedRowsTable;
+import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -96,6 +97,10 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  */
 public class AppendedRowsNodeModel extends NodeModel {
 
+    /** NodeSettings key flag if to fail on duplicate ids . This option was
+     * added in v2.3 and will overrule the append suffix/skip flags if true. */
+    static final String CFG_FAIL_ON_DUPLICATES = "fail_on_duplicates";
+
     /**
      * NodeSettings key if to append suffix (boolean). If false, skip the rows.
      */
@@ -109,6 +114,8 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
+
+    private boolean m_isFailOnDuplicate = false;
 
     private boolean m_isAppendSuffix = true;
 
@@ -188,8 +195,16 @@ public class AppendedRowsNodeModel extends NodeModel {
             corrected = inData;
         }
 
+        DuplicatePolicy duplPolicy;
+        if (m_isFailOnDuplicate) {
+            duplPolicy = DuplicatePolicy.Fail;
+        } else if (m_isAppendSuffix) {
+            duplPolicy = DuplicatePolicy.AppendSuffix;
+        } else {
+            duplPolicy = DuplicatePolicy.Skip;
+        }
         AppendedRowsTable out = new AppendedRowsTable(
-                (m_isAppendSuffix ? m_suffix : null), corrected);
+                duplPolicy, m_suffix, corrected);
         // note, this iterator throws runtime exceptions when canceled.
         AppendedRowsIterator it = out.iterator(exec, totalRowCount);
         BufferedDataContainer c =
@@ -294,6 +309,8 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // added in v2.3
+        settings.addBoolean(CFG_FAIL_ON_DUPLICATES, m_isFailOnDuplicate);
         settings.addBoolean(CFG_APPEND_SUFFIX, m_isAppendSuffix);
         settings.addBoolean(CFG_INTERSECT_COLUMNS, m_isIntersection);
         if (m_suffix != null) {
@@ -309,12 +326,19 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         settings.getBoolean(CFG_INTERSECT_COLUMNS);
+        // added v2.3
+        boolean isFailOnDuplicate =
+            settings.getBoolean(CFG_FAIL_ON_DUPLICATES, false);
         boolean appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
-        if (appendSuffix) {
+        if (isFailOnDuplicate) {
+            // ignore suffix
+        } else if (appendSuffix) {
             String suffix = settings.getString(CFG_SUFFIX);
             if (suffix == null || suffix.equals("")) {
                 throw new InvalidSettingsException("Invalid suffix: " + suffix);
             }
+        } else { // skip duplicates
+            // ignore suffix
         }
     }
 
@@ -325,6 +349,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_isIntersection = settings.getBoolean(CFG_INTERSECT_COLUMNS);
+        // added in v2.3
+        m_isFailOnDuplicate =
+            settings.getBoolean(CFG_FAIL_ON_DUPLICATES, false);
         m_isAppendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (m_isAppendSuffix) {
             m_suffix = settings.getString(CFG_SUFFIX);
