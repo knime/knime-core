@@ -60,7 +60,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.ServiceLoader;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -69,6 +68,7 @@ import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
+import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 
@@ -158,15 +158,17 @@ public final class JavaCodeCompiler {
         }
         compileArgs.add("-nowarn");
         final StringWriter logString = new StringWriter();
-        ServiceLoader<JavaCompiler> serviceLoader =
-            ServiceLoader.load(JavaCompiler.class);
-        JavaCompiler compiler = null;
-        for (JavaCompiler c : serviceLoader) {
-            compiler = c;
-        }
-        if (compiler == null) {
-            throw new CompilationFailedException("Unable to find compiler");
-        }
+//        ServiceLoader<JavaCompiler> serviceLoader =
+//            ServiceLoader.load(JavaCompiler.class);
+        // the service loader sometimes didn't work in the RMI instance,
+        // so we hard-code the compiler here.
+        JavaCompiler compiler = new EclipseCompiler();
+//        for (JavaCompiler c : serviceLoader) {
+//            compiler = c;
+//        }
+//        if (compiler == null) {
+//            throw new CompilationFailedException("Unable to find compiler");
+//        }
         // compiler = com.sun.tools.javac.api.JavacTool.create();
         if (m_sourceCodeDebugDir != null) {
             try {
