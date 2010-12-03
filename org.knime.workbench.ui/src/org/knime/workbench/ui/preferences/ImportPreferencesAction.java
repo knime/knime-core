@@ -70,7 +70,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -176,7 +175,7 @@ public class ImportPreferencesAction extends Action {
                             + inFile.getAbsolutePath() + " now ...");
             /* Importing preferences still causes problems with the network
              * preference page. After a restart of KNIME everything is back to
-             * normal.
+             * normal. 
              * (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=246754) */
             IExportedPreferences prefs = prefService.readPreferences(in);
             prefService.applyPreferences(prefs);
@@ -238,30 +237,15 @@ public class ImportPreferencesAction extends Action {
      * @param restartPolicy
      */
     private void requestRestart() {
-
-        // due to win 64bit issue we shouldn't restart programmatically
-        // (would cause KNIME to hang after restart)
-        if (Platform.OS_WIN32.equals(Platform.getOS())
-                && Platform.ARCH_X86_64.equals(Platform
-                        .getOSArch())) {
-            recommendManualRestart();
-            return;
-        }
-
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
-                if (PlatformUI.getWorkbench().isClosing()) {
+                if (PlatformUI.getWorkbench().isClosing())
                     return;
-                }
-                int retCode =
-                    new MessageDialog(Display.getCurrent().getActiveShell(),
+                int retCode = new MessageDialog(Display.getCurrent().getActiveShell(),
                         "Restart to complete settings import",
                         null,
-                        "The settings have been imported. It is highly "
-                        + "recommended to restart KNIME to complete the "
-                        + "import of the preferences. "
-                        + "Would you like to restart now?",
+                        "The settings have been imported. It is highly recommended to restart KNIME to complete the import of the preferences. Would you like to restart now?",
                         MessageDialog.QUESTION,
                         new String[] {"restart", "cancel"}, 0).open();
                 if (retCode == 0) {
@@ -271,31 +255,5 @@ public class ImportPreferencesAction extends Action {
                 }
             }
         });
-    }
-
-    private void recommendManualRestart() {
-        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (PlatformUI.getWorkbench().isClosing()) {
-                    return;
-                }
-
-                MessageBox box =
-                        new MessageBox(PlatformUI.getWorkbench().getDisplay()
-                                .getActiveShell(), SWT.ICON_WARNING);
-                box.setText("PLEASE RE-START MANUALLY");
-                box.setMessage("The settings have been imported. It is highly "
-                        + "recommended to restart KNIME to complete the "
-                        + "import of the preferences\n\n"
-                        + "Due to a known issue with Windows 64bit the "
-                        + "application must be re-started manually."
-                        + "Please close KNIME and re-start it.");
-                box.open();
-
-                initializeDefaultPreferences();
-            }
-        });
-
     }
 }

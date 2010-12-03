@@ -50,15 +50,9 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.p2.operations.ProvisioningJob;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Custom action to open the install wizard.
@@ -83,40 +77,8 @@ public class InvokeInstallSiteAction extends AbstractP2Action {
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
-                boolean isWin64 =
-                        Platform.OS_WIN32.equals(Platform.getOS())
-                                && Platform.ARCH_X86_64.equals(Platform
-                                        .getOSArch());
-                int defaultRestartPolicy =
-                    provUI.getPolicy().getRestartPolicy();
-
                 provUI.getPolicy().setRepositoriesVisible(false);
-                if (isWin64) {
-                    NodeLogger.getLogger(InvokeInstallSiteAction.class).debug(
-                            "Installing new features for Windows 64bit arch:"
-                                    + " activating restart workaround");
-                    provUI.getPolicy().setRestartPolicy(
-                            ProvisioningJob.RESTART_NONE);
-                }
-                int retCode = provUI.openInstallWizard(null, null, job);
-
-                if (isWin64) {
-                    if (retCode == IStatus.OK) {
-                    MessageBox box =
-                            new MessageBox(PlatformUI.getWorkbench()
-                                    .getDisplay().getActiveShell(),
-                                    SWT.ICON_WARNING);
-                    box.setText("PLEASE RE-START MANUALLY");
-                    box.setMessage(
-                            "Please re-start KNIME after "
-                            + "the installation is complete.\n\n"
-                            + "Due to a known issue with Windows 64bit the "
-                            + "application must be re-started manually "
-                            + "after installing new features.");
-                    box.open();
-                    }
-                    provUI.getPolicy().setRestartPolicy(defaultRestartPolicy);
-                }
+                provUI.openInstallWizard(null, null, job);
                 provUI.getPolicy().setRepositoriesVisible(true);
             }
         });

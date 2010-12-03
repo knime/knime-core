@@ -50,20 +50,14 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.p2.ui.dialogs.UpdateSingleIUWizard;
-import org.eclipse.equinox.p2.operations.ProvisioningJob;
 import org.eclipse.equinox.p2.operations.UpdateOperation;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Custom action to open the install wizard.
@@ -99,50 +93,17 @@ public class InvokeUpdateAction extends AbstractP2Action {
                             "No updates were found");
                 } else if (provUI.getPolicy().continueWorkingWithOperation(
                         operation, shell)) {
-                    boolean isWin64 =
-                            Platform.OS_WIN32.equals(Platform.getOS())
-                                    && Platform.ARCH_X86_64.equals(Platform
-                                            .getOSArch());
-                    int defaultRestartPolicy =
-                            provUI.getPolicy().getRestartPolicy();
-                    if (isWin64) {
-                        NodeLogger.getLogger(InvokeInstallSiteAction.class)
-                                .debug("Updating in Windows 64bit arch:"
-                                        + " activating restart workaround");
-                        provUI.getPolicy().setRestartPolicy(
-                                ProvisioningJob.RESTART_NONE);
-                    }
-                    int retCode;
                     if (UpdateSingleIUWizard.validFor(operation)) {
                         // Special case for only updating a single root
                         UpdateSingleIUWizard wizard =
                                 new UpdateSingleIUWizard(provUI, operation);
                         WizardDialog dialog = new WizardDialog(shell, wizard);
                         dialog.create();
-                        retCode = dialog.open();
+                        dialog.open();
                     } else {
                         // Open the normal version of the update wizard
-                        retCode =
-                                provUI.openUpdateWizard(false, operation, job);
+                        provUI.openUpdateWizard(false, operation, job);
                     }
-                    if (isWin64) {
-                        if (retCode == IStatus.OK) {
-                            MessageBox box =
-                                    new MessageBox(PlatformUI.getWorkbench()
-                                            .getDisplay().getActiveShell(),
-                                            SWT.ICON_WARNING);
-                            box.setText("PLEASE RE-START MANUALLY");
-                            box.setMessage("Please re-start KNIME after "
-                                    + "the installation is complete.\n\n"
-                                    + "Due to a known issue with Windows 64bit "
-                                    + "the application must be re-started "
-                                    + "manually after updating.");
-                            box.open();
-                        }
-                        provUI.getPolicy().setRestartPolicy(
-                                defaultRestartPolicy);
-                    }
-
                 }
             }
         });
