@@ -148,8 +148,8 @@ implements InactiveBranchConsumer {
             return new PortObjectSpec[]{inSpecs[0]};
         }
         // incompatible - refuse to configure
-        LOGGER.warn("Incompatible specs in EndIF.");
-        return null;
+        throw new InvalidSettingsException("The structures of both active input"
+                + " data tables are not compatible.");
     }
 
     /**
