@@ -59,6 +59,7 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.KnimeEncryption;
@@ -111,15 +112,18 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        
+
         // create a knime encryption supplier that reads in an encryption key
         // from the user via a dialog or directly from the preference page
         KnimeEncryption.setEncryptionKeySupplier(
                 MasterKeyPreferencePage.SUPPLIER);
 
-        getImageRegistry().put("knime",
-                imageDescriptorFromPlugin(PLUGIN_ID,
-                        "/icons/knime_default.png"));
+        if (Display.getCurrent() != null) {
+            // do not load UI stuff if we run, e.g. the batch executor
+            getImageRegistry().put("knime",
+                    imageDescriptorFromPlugin(PLUGIN_ID,
+                            "/icons/knime_default.png"));
+        }
 
         IPreferenceStore prefStore = getPreferenceStore();
         int freqHistorySize = prefStore.getInt(
