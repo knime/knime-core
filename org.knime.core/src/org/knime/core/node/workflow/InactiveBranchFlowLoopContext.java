@@ -40,50 +40,21 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ------------------------------------------------------------------------
  *
- * History
- *   14.03.2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
-
-
-/**
- * Special {@link FlowObject} holding loop information.
+/** Pushed to stack if a loop start node is inactive (entire loop part of
+ * an inactive branch). A loop end node will silently turn inactive too
+ * if such an object is on the stack. If no such object is on the stack,
+ * the loop end node will fail.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class FlowLoopContext extends FlowObject {
-
-    private NodeID m_tailNode;
-
-    public NodeID getHeadNode() {
-        return super.getOwner();
-    }
-
-    public void setTailNode(final NodeID tail) {
-        m_tailNode = tail;
-    }
-
-    public NodeID getTailNode() {
-        return m_tailNode;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected FlowObject cloneAndUnsetOwner() {
-        FlowLoopContext clone = (FlowLoopContext)super.cloneAndUnsetOwner();
-        clone.setTailNode(null);
-        return clone;
-    }
-
-    /** Executed start nodes will use this object during workflow load to
-     * indicate that a loop was potentially saved in a half-executed state. */
-    public static class RestoredFlowLoopContext extends FlowLoopContext {
-        // marker class
-    }
+public final class InactiveBranchFlowLoopContext extends FlowObject {
+    // marker class
 }

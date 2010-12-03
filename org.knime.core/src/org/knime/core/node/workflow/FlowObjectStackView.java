@@ -124,6 +124,9 @@ final class FlowObjectStackView extends JPanel {
                         o = "Unknown Type: " + v.getType();
                     }
                     obj[3] = o;
+                } else if (s instanceof InactiveBranchFlowLoopContext) {
+                    obj[2] = "Inactive Loop Mark";
+                    obj[3] = null;
                 } else if (s instanceof FlowLoopContext) {
                     obj[2] = "Loop (" + (loopCount++) + ")";
                     obj[3] = null;
