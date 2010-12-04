@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -60,6 +60,8 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.knime.core.node.KNIMEConstants;
+
 /**
  * This class checks for duplicates in an (almost) arbitrary number of strings.
  * This can be used to check for e.g. unique row keys. The checking is done in
@@ -69,10 +71,10 @@ import java.util.Set;
  * keys {@link #checkForDuplicates()} is called all created chunks are processed
  * and sorted by a merge sort like algorithm. If any duplicate keys are detected
  * during this process an exception is thrown.
- * 
+ *
  * <p>Note: This implementation is not thread-safe, it's supposed to be used
  * by a single thread only.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DuplicateChecker {
@@ -90,6 +92,10 @@ public class DuplicateChecker {
 
     private List<File> m_storedChunks = new ArrayList<File>();
 
+    private static final boolean DISABLE_DUPLICATE_CHECK =
+        Boolean.getBoolean(
+                KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
+
     /**
      * Creates a new duplicate checker with default parameters.
      */
@@ -99,7 +105,7 @@ public class DuplicateChecker {
 
     /**
      * Creates a new duplicate checker.
-     * 
+     *
      * @param maxChunkSize the size of each chunk, i.e. the maximum number of
      *            elements kept in memory
      * @param maxStreams the maximum number of streams that are kept open during
@@ -112,7 +118,7 @@ public class DuplicateChecker {
 
     /**
      * Adds a new key to the duplicate checker.
-     * 
+     *
      * @param s the key
      * @throws DuplicateKeyException if a duplicate within the current chunk has
      *             been detected
@@ -121,6 +127,9 @@ public class DuplicateChecker {
      */
     public void addKey(final String s) throws DuplicateKeyException,
             IOException {
+        if (DISABLE_DUPLICATE_CHECK) {
+            return;
+        }
         // bug fix #1737: keys may be just wrappers of very large strings ...
         // we make a copy, which consist of the important characters only
         if (!m_chunk.add(new String(s))) {
@@ -133,7 +142,7 @@ public class DuplicateChecker {
 
     /**
      * Checks for duplicates in all added keys.
-     * 
+     *
      * @throws DuplicateKeyException if a duplicate key has been detected
      * @throws IOException if an I/O error occurs
      */
@@ -156,7 +165,7 @@ public class DuplicateChecker {
 
     /**
      * Checks for duplicates.
-     * 
+     *
      * @param storedChunks the list of chunk files to process
      * @throws NumberFormatException should not happen
      * @throws IOException if an I/O error occurs
@@ -170,7 +179,7 @@ public class DuplicateChecker {
 
         int chunkCount = 0;
         for (int i = 0; i < nrChunks; i++) {
-            BufferedReader[] in = 
+            BufferedReader[] in =
                 new BufferedReader[Math.min(
                         m_maxStreams, storedChunks.size() - chunkCount)];
             if (in.length == 1) {
@@ -193,7 +202,7 @@ public class DuplicateChecker {
                 }
             }
 
-            final File f = 
+            final File f =
                 File.createTempFile("KNIME_DuplicateChecker", ".txt");
             f.deleteOnExit();
             newChunks.add(f);
@@ -213,9 +222,9 @@ public class DuplicateChecker {
                         switch (c) {
                         // all sequences starting with '%' are encoded
                         // special characters
-                        case '%' : 
+                        case '%' :
                             char[] array = new char[2];
-                            array[0] = lastKey.charAt(++k); 
+                            array[0] = lastKey.charAt(++k);
                             array[1] = lastKey.charAt(++k);
                             int toHex = Integer.parseInt(new String(array), 16);
                             b.append((char)(toHex));
@@ -253,7 +262,7 @@ public class DuplicateChecker {
 
     /**
      * Writes the current chunk to disk and clears the set.
-     * 
+     *
      * @throws IOException if an I/O error occurs
      */
     private void writeChunk() throws IOException {
@@ -306,6 +315,7 @@ public class DuplicateChecker {
         }
 
         /** {@inheritDoc} */
+        @Override
         public int compareTo(final Helper o) {
             return m_s.compareTo(o.m_s);
         }

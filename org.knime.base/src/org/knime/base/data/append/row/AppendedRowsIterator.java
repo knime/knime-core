@@ -55,6 +55,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -131,46 +132,30 @@ public class AppendedRowsIterator extends RowIterator {
     /** The number of rows skipped so far, just for user statistics. */
     private int m_nrRowsSkipped;
 
-    /**
-     * Creates new iterator of <code>tables</code> following <code>spec</code>.
-     *
-     * @param tables to iterate over
-     * @param spec table spec of underlying table (used to determine missing
-     *            columns and order)
-     * @param suffix the suffix to append to duplicate rows or <code>null</code>
-     *            to skip duplicates in this iterator (prints warning)
-     *
-     */
-    AppendedRowsIterator(final DataTable[] tables, final DataTableSpec spec,
-            final String suffix) {
-        this(tables, spec, suffix, null, -1);
-    }
+    /** Policy for duplicate rows. */
+    private final DuplicatePolicy m_duplPolicy;
 
     /**
      * Creates new iterator of <code>tables</code> following <code>spec</code>.
      * The iterator may throw an exception in next.
      *
-     * @param tables to iterate over
-     * @param spec table spec of underlying table (used to determine missing
-     *            columns and order)
-     * @param suffix the suffix to append to duplicate rows or <code>null</code>
-     *            to skip duplicates in this iterator (prints warning)
+     * @param table Table host.
      *
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      */
-    AppendedRowsIterator(final DataTable[] tables, final DataTableSpec spec,
-            final String suffix, final ExecutionMonitor exec,
-            final int totalRowCount) {
-        m_curMapping = new int[spec.getNumColumns()];
-        m_tables = tables;
-        m_suffix = suffix;
-        m_spec = spec;
+    AppendedRowsIterator(final AppendedRowsTable table,
+            final ExecutionMonitor exec, final int totalRowCount) {
+        m_tables = table.getTables();
+        m_suffix = table.getSuffix();
+        m_spec = table.getDataTableSpec();
+        m_duplPolicy = table.getDuplPolicy();
         m_curTable = -1;
         m_duplicateMap = new HashMap<RowKey, RowKey>();
+        m_curMapping = new int[m_spec.getNumColumns()];
         m_exec = exec;
         m_totalRowCount = totalRowCount;
-        if (tables.length > 0) {
+        if (m_tables.length > 0) {
             initNextTable();
             initNextRow();
         }
@@ -234,7 +219,11 @@ public class AppendedRowsIterator extends RowIterator {
                     throw new RuntimeCanceledExecutionException(cee);
                 }
             }
-            if (m_suffix == null) {
+            switch (m_duplPolicy) {
+            case Fail:
+                assert false : "Duplicate checking is done in the BDT";
+                throw new RuntimeException("Duplicate key \"" + key + "\"");
+            case Skip:
                 if (!m_hasPrintedError) {
                     LOGGER.warn("Table contains duplicate entry \""
                             + key.toString() + "\", skipping this row. "
@@ -263,7 +252,8 @@ public class AppendedRowsIterator extends RowIterator {
                 keyHasChanged = false; // stays false! rows have been skipped.
                 origKey = baseRow.getKey();
                 key = origKey;
-            } else {
+                break;
+            case AppendSuffix:
                 // first time we come here
                 if (!keyHasChanged && m_exec != null) {
                     String message = "Unifying row " + m_curRowIndex + " (\""
@@ -280,9 +270,19 @@ public class AppendedRowsIterator extends RowIterator {
                 key = new RowKey(newId);
                 // do not print warning here, user specified explicitly
                 // to do duplicate handling.
+                break;
+            default:
+                throw new RuntimeException("Unknown policy: " + m_duplPolicy);
             }
         }
-        m_duplicateMap.put(key, origKey);
+        switch (m_duplPolicy) {
+        case Fail:
+            // do not put key into map but leave it to the BufferedDataTable
+            // to do a efficient duplicate checking
+            break;
+        default:
+            m_duplicateMap.put(key, origKey);
+        }
         if (m_exec != null) {
             try {
                 m_exec.checkCanceled();
@@ -365,8 +365,8 @@ public class AppendedRowsIterator extends RowIterator {
     public Set<RowKey> getDuplicateHash() {
         return Collections.unmodifiableSet(m_duplicateMap.keySet());
     }
-    
-    /** Get a map of keys in the resulting table to the keys in (any of) 
+
+    /** Get a map of keys in the resulting table to the keys in (any of)
      * the input tables, typically elements such as below.
      * <table>
      * <tr><th>Key</th><th>Value</th></tr>

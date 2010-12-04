@@ -119,6 +119,13 @@ public final class OutlineView<K> extends JComponent
         super.removeNotify();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(40, 30);
+    }
 
     /**
      * {@inheritDoc}
@@ -148,7 +155,7 @@ public final class OutlineView<K> extends JComponent
         AffineTransform previousTransform = g2.getTransform();
         g2.scale(scale, scale);
         m_graph.removeGraphListener(this);
-        m_graph.paint(g2);
+        m_graph.paint(this, g2, 0, 0, graphSize.width, graphSize.height);
         m_graph.addGraphListener(this);
         g2.setTransform(previousTransform);
 
@@ -233,6 +240,7 @@ public final class OutlineView<K> extends JComponent
     /**
      * {@inheritDoc}
      */
+    @Override
     public void componentHidden(final ComponentEvent e) {
         // do nothing
     }
@@ -240,6 +248,7 @@ public final class OutlineView<K> extends JComponent
     /**
      * {@inheritDoc}
      */
+    @Override
     public void componentMoved(final ComponentEvent e) {
         repaint();
     }
@@ -247,6 +256,7 @@ public final class OutlineView<K> extends JComponent
     /**
      * {@inheritDoc}
      */
+    @Override
     public void componentResized(final ComponentEvent e) {
         repaint();
     }
@@ -254,6 +264,7 @@ public final class OutlineView<K> extends JComponent
     /**
      * {@inheritDoc}
      */
+    @Override
     public void componentShown(final ComponentEvent e) {
         // do nothing
     }
@@ -261,6 +272,7 @@ public final class OutlineView<K> extends JComponent
     /**
      * {@inheritDoc}
      */
+    @Override
     public void graphRepaint() {
        repaint();
     }

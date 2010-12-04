@@ -12,12 +12,18 @@
 			If one input table contains column names that the other table does not, the
 			columns can either be filled with missing values or
 			filtered out, i.e. they will not be in the output table.
-			The dialog allows to set the following parameters:
+			The dialog allows setting the following parameters:
 		</intro>
-        <option name="Skip rows"> Duplicate row identifiers (RowID) occuring in the 
-	        second table are not appended to the output table. </option>
+        <option name="Skip Rows"> Duplicate row identifiers (RowID) occurring in the 
+	        second table are not appended to the output table. This option is 
+	        relatively memory intensive as it needs to cache the row IDs in
+	        order to find duplicates.</option>
         <option name="Append suffix"> The output table will contain all rows, but
-            duplicate row identifiers are labeled with a suffix. </option>
+            duplicate row identifiers are labeled with a suffix. Similar to
+            the "Skip Rows" option this method is also memory intensive. </option>
+        <option name="Fail">The node will fail during execution if duplicate 
+            row IDs are encountered. This option is efficient while checking 
+            uniqueness.</option>
         <option name="Use intersection of columns">
         	Use ony the columns that appear in both input tables. Any other
         	column is ignored and won't appear in the output table.

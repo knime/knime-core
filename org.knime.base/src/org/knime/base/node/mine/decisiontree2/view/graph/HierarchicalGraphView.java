@@ -52,6 +52,7 @@ package org.knime.base.node.mine.decisiontree2.view.graph;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -61,7 +62,6 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextLayout;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,22 +84,28 @@ import org.knime.core.data.property.ColorAttr;
  * @author Heiko Hofer
  * @param <K> The type of the nodes user objects
  */
+//DefaultMutableTreeNode does not support generics.
+@SuppressWarnings("unchecked")
 public abstract class HierarchicalGraphView<K> {
     /** The alignment of the graph. */
-    public enum Align { Left, Center };
+    public enum Align { /** Root is in top left corner. */ Left,
+        /** Root is centered above the graph. */ Center
+        };
 
-    private boolean m_leftAligned = false;
-    private Map<DefaultMutableTreeNode, NodeWidget<K>> m_widgets;
-    private Map<DefaultMutableTreeNode, Rectangle> m_visible;
+    private boolean m_leftAligned;
+    private Map<K, NodeWidget<K>> m_widgets;
+    private Map<K, Rectangle> m_visible;
     private Map<Rectangle, DefaultMutableTreeNode> m_collapseSign;
     private Map<Rectangle, DefaultMutableTreeNode> m_expandSign;
     private DefaultMutableTreeNode m_root;
-    private Set<DefaultMutableTreeNode> m_collapsed;
+    private Set<K> m_collapsed;
     private JComponent m_component;
-    private LayoutInfo m_layoutInfo;
-    private Set<DefaultMutableTreeNode> m_selected;
+    private LayoutSettings m_layoutSettings;
+    private K m_selected;
     private Set<K> m_hilited;
     private List<GraphListener> m_graphListeners;
+    private int m_nodeWidth;
+    private Map<K, DefaultMutableTreeNode> m_treeMap;
 
     /**
      * Create a new instance.
@@ -116,17 +122,48 @@ public abstract class HierarchicalGraphView<K> {
      */
     public HierarchicalGraphView(final K root, final Align alignment) {
         m_leftAligned = alignment.equals(Align.Left);
-        m_widgets = new HashMap<DefaultMutableTreeNode, NodeWidget<K>>();
-        m_visible = new HashMap<DefaultMutableTreeNode, Rectangle>();
-        m_collapsed = new HashSet<DefaultMutableTreeNode>();
+        m_widgets = new HashMap<K, NodeWidget<K>>();
+        m_visible = new HashMap<K, Rectangle>();
+        m_collapsed = new HashSet<K>();
         m_collapseSign = new HashMap<Rectangle, DefaultMutableTreeNode>();
         m_expandSign = new HashMap<Rectangle, DefaultMutableTreeNode>();
-        m_selected = new HashSet<DefaultMutableTreeNode>();
         m_hilited = new HashSet<K>();
+        m_treeMap = new HashMap<K, DefaultMutableTreeNode>();
         m_graphListeners = new ArrayList<GraphListener>();
 
         m_component = new HierarchicalGraphComponent<K>(this);
-        setRootNode(root);
+        m_nodeWidth = 100;
+        init(root);
+    }
+
+
+    private void init(final K root) {
+        getWidgets().clear();
+        getVisible().clear();
+        getCollapsed().clear();
+        m_collapseSign.clear();
+        m_expandSign.clear();
+        m_selected = null;
+        m_hilited.clear();
+        if (null != root) {
+            m_root = new DefaultMutableTreeNode(root);
+            m_treeMap.put(root, m_root);
+            // recursive build tree
+            buildTree(m_root);
+            // display root an its children by default
+            getVisible().put(root, new Rectangle());
+            for (Object o : Collections.list(m_root.children())) {
+                DefaultMutableTreeNode n = (DefaultMutableTreeNode) o;
+                K k = (K)n.getUserObject();
+                getVisible().put(k, new Rectangle());
+            }
+            layoutGraph();
+            // With this call parent components get informed about the
+            // change in the preferred size.
+            m_component.revalidate();
+            // make sure that the root node is in the visible area
+            m_component.scrollRectToVisible(getVisible().get(root));
+        }
     }
 
 
@@ -136,30 +173,7 @@ public abstract class HierarchicalGraphView<K> {
      * @param root the root
      */
     public void setRootNode(final K root) {
-        m_widgets.clear();
-        m_visible.clear();
-        m_collapsed.clear();
-        m_collapseSign.clear();
-        m_expandSign.clear();
-        m_selected.clear();
-        m_hilited.clear();
-        if (null != root) {
-            m_root = new DefaultMutableTreeNode(root);
-            // recursive build tree
-            buildTree(m_root);
-            // display root an its children by default
-            m_visible.put(m_root, new Rectangle());
-            for (Object o : Collections.list(m_root.children())) {
-                DefaultMutableTreeNode n = (DefaultMutableTreeNode) o;
-                m_visible.put(n, new Rectangle());
-            }
-            layoutGraph();
-            // With this call parent components get informed about the
-            // change in the preferred size.
-            m_component.revalidate();
-            // make sure that the root node is in the visible area
-            m_component.scrollRectToVisible(m_visible.get(m_root));
-        }
+        init(root);
     }
 
 
@@ -167,10 +181,8 @@ public abstract class HierarchicalGraphView<K> {
      * Get the root.
      * @return the root
      */
-    @SuppressWarnings("unchecked") /* DefaultMutableTreeNode does not support
-        generics. */
     public K getRootNode() {
-        return (K)m_root.getUserObject();
+        return null != m_root ? (K)m_root.getUserObject() : null;
     }
 
     /** Recursively add the children to the given node. The children are
@@ -185,13 +197,12 @@ public abstract class HierarchicalGraphView<K> {
         }
         List<DefaultMutableTreeNode> nodeChildren =
             new ArrayList<DefaultMutableTreeNode>();
-        for (K child : children) {
+        for (K childK : children) {
             DefaultMutableTreeNode childNode
-                    = new DefaultMutableTreeNode(child);
+                    = new DefaultMutableTreeNode(childK);
             node.add(childNode);
+            m_treeMap.put(childK, childNode);
             nodeChildren.add(childNode);
-            m_widgets.put(childNode,
-                    getNodeWidgetFactory().createGraphNode(child));
         }
         for (DefaultMutableTreeNode childNode : nodeChildren) {
             buildTree(childNode);
@@ -242,40 +253,41 @@ public abstract class HierarchicalGraphView<K> {
     }
 
     /** Re-layout the graph. */
-    private void layoutGraph() {
+    protected void layoutGraph() {
         if (null == m_root) {
             return;
         }
         m_collapseSign.clear();
         m_expandSign.clear();
         // clear visible
-        for (DefaultMutableTreeNode key : m_visible.keySet()) {
-            m_visible.put(key, new Rectangle());
+        for (K key : getVisible().keySet()) {
+            getVisible().put(key, new Rectangle());
         }
-        NodeWidget<K> rootWidget = m_widgets.get(m_root);
+        K rootK = (K)m_root.getUserObject();
+        NodeWidget<K> rootWidget = getWidgets().get(rootK);
         if (null == rootWidget) {
-            K rootObject = (K)m_root.getUserObject();
-            rootWidget = getNodeWidgetFactory().createGraphNode(rootObject);
-            m_widgets.put(m_root, rootWidget);
+            rootWidget = getNodeWidgetFactory().createGraphNode(rootK);
+            getWidgets().put(rootK, rootWidget);
         }
-        m_layoutInfo = new LayoutInfo(rootWidget.getPreferredSize());
+        m_layoutSettings = new LayoutSettings(getNodeWidth());
 
         Stack<DefaultMutableTreeNode> stack =
             new Stack<DefaultMutableTreeNode>();
+        LayoutInfo layoutInfo = new LayoutInfo();
+        layoutInfo.setYOffset(m_layoutSettings.getTopGap());
         // start at first leaf
-        pushtoFirstLeaf(m_root, stack);
+        pushtoFirstLeaf(m_root, stack, layoutInfo);
         // recursive layout
-        DefaultMutableTreeNode nextToLayout = stack.peek();
-        while (null != nextToLayout) {
-            nextToLayout = iterativeLayout(stack, m_layoutInfo);
+        while (!stack.isEmpty()) {
+            iterativeLayout(stack, layoutInfo);
         }
         Rectangle graphBounds = computeGraphBounds();
         m_component.setPreferredSize(
-                new Dimension(m_layoutInfo.getLeftGap()
-                        + graphBounds.width + m_layoutInfo.getRightGap(),
-                        m_layoutInfo.getTopGap() + graphBounds.height
-                        + m_layoutInfo.m_levelGap / 2
-                        + m_layoutInfo.getBottomGap()));
+                new Dimension(m_layoutSettings.getLeftGap()
+                        + graphBounds.width + m_layoutSettings.getRightGap(),
+                        m_layoutSettings.getTopGap() + graphBounds.height
+                        + m_layoutSettings.getLevelGap() / 2
+                        + m_layoutSettings.getBottomGap()));
     }
 
     /**
@@ -284,55 +296,61 @@ public abstract class HierarchicalGraphView<K> {
      * @param stack the parent nodes that must be layouted
      * @param info some constants for the layout
      */
-    private DefaultMutableTreeNode iterativeLayout(
+    private void iterativeLayout(
             final Stack<DefaultMutableTreeNode> stack,
-            final LayoutInfo info) {
+            final LayoutInfo layoutInfo) {
         DefaultMutableTreeNode node = stack.pop();
-        int level = node.getLevel();
-        Rectangle bounds = new Rectangle(info.getNodeSize());
-        bounds.y = info.getTopGap()
-                + level * ((int)info.getNodeSize().getHeight()
-                + info.getLevelGap());
+        K k = (K)node.getUserObject();
+
+        NodeWidget<K> widget = getWidgets().get(k);
+        Dimension preferredSize = widget.getPreferredSize();
+        layoutInfo.setYOffset(layoutInfo.getYOffset() - preferredSize.height
+                - m_layoutSettings.getLevelGap());
+        Rectangle bounds = new Rectangle(m_layoutSettings.getNodeWidth(),
+                preferredSize.height);
         boolean layoutParent;
         if (node.isLeaf()) {
             layoutParent = false;
         } else {
             DefaultMutableTreeNode child =
                 (DefaultMutableTreeNode)node.getChildAt(0);
-            layoutParent = m_visible.containsKey(child);
+            K childK = (K)child.getUserObject();
+            layoutParent = getVisible().containsKey(childK);
         }
         if (layoutParent) {
             // Layout a parent node
             DefaultMutableTreeNode firstChild =
                 (DefaultMutableTreeNode)node.getChildAt(0);
+            K firstChildK = (K)firstChild.getUserObject();
             DefaultMutableTreeNode lastChild = m_leftAligned ? firstChild
                     : (DefaultMutableTreeNode)node.getChildAt(
                             node.getChildCount() - 1);
-            Rectangle first = m_visible.get(firstChild);
-            Rectangle last = m_visible.get(lastChild);
+            K lastChildK = (K)lastChild.getUserObject();
+            Rectangle first = getVisible().get(firstChildK);
+            Rectangle last = getVisible().get(lastChildK);
             bounds.x = (last.x + first.x) / 2;
+            bounds.y = layoutInfo.getYOffset();
             // This node can be collapsed
-            Point p = new Point(info.getSignOffset());
-            p.translate(bounds.x, bounds.y);
-            Rectangle collapseSign = new Rectangle(p, info.getSignSize());
+            Rectangle collapseSign = m_layoutSettings.getSignBounds(bounds);
             m_collapseSign.put(collapseSign, node);
         } else {
             // Layout a leaf node, which might be the first leaf in the branch
             Rectangle graphBounds = computeGraphBounds();
             bounds.x = 0 != graphBounds.width
-                ? graphBounds.x + graphBounds.width + info.getBranchGap()
-                : info.getLeftGap();
+                ? graphBounds.x + graphBounds.width
+                        + m_layoutSettings.getBranchGap()
+                : m_layoutSettings.getLeftGap();
+            bounds.y = layoutInfo.m_yOffset;
             if (!node.isLeaf()) {
                 // This node can be expanded
-                Point p = new Point(info.getSignOffset());
-                p.translate(bounds.x, bounds.y);
-                Rectangle expandSign = new Rectangle(p, info.getSignSize());
+                Rectangle expandSign = m_layoutSettings.getSignBounds(bounds);
                 m_expandSign.put(expandSign, node);
             }
         }
         assignBounds(node, bounds);
         if (stack.isEmpty()) {
-            return null;
+            // layout finished
+            return;
         }
         // go ahead with first leaf of parents next child
         DefaultMutableTreeNode parent = stack.peek();
@@ -341,10 +359,10 @@ public abstract class HierarchicalGraphView<K> {
             (DefaultMutableTreeNode)parent.getChildAfter(node);
         if (null != nextChild) {
             // go ahead with first leaf of this child
-            return pushtoFirstLeaf(nextChild, stack);
+            pushtoFirstLeaf(nextChild, stack, layoutInfo);
         } else {
             // go ahead with parent
-            return parent;
+            return;
         }
     }
 
@@ -355,9 +373,13 @@ public abstract class HierarchicalGraphView<K> {
      */
     private Rectangle computeGraphBounds() {
         Rectangle rectangle = new Rectangle();
-        for (Rectangle next : m_visible.values()) {
+        for (Rectangle next : getVisible().values()) {
             rectangle = rectangle.union(next);
         }
+        for (Rectangle next : m_expandSign.keySet()) {
+            rectangle = rectangle.union(next);
+        }
+
         return rectangle;
     }
 
@@ -369,16 +391,32 @@ public abstract class HierarchicalGraphView<K> {
      */
     private DefaultMutableTreeNode pushtoFirstLeaf(
             final DefaultMutableTreeNode node,
-            final Stack<DefaultMutableTreeNode> stack) {
+            final Stack<DefaultMutableTreeNode> stack,
+            final LayoutInfo layoutInfo) {
         DefaultMutableTreeNode n = node;
         boolean continueIteration = continueIteration(n);
         while (continueIteration) {
-            stack.push(n);
+            pushOnStack(n, stack, layoutInfo);
             n = (DefaultMutableTreeNode)n.getChildAt(0);
             continueIteration = continueIteration(n);
         }
-        stack.push(n);
+        pushOnStack(n, stack, layoutInfo);
         return n;
+    }
+
+    private void pushOnStack(final DefaultMutableTreeNode node,
+            final Stack<DefaultMutableTreeNode> stack,
+            final LayoutInfo layoutInfo) {
+        K k = (K)node.getUserObject();
+        stack.push(node);
+        NodeWidget<K> widget = getWidgets().get(k);
+        if (null == widget) {
+            widget = getNodeWidgetFactory().createGraphNode(k);
+            getWidgets().put(k, widget);
+        }
+        Dimension preferredSize = widget.getPreferredSize();
+        layoutInfo.setYOffset(layoutInfo.getYOffset() + preferredSize.height
+                + m_layoutSettings.getLevelGap());
     }
 
     /** Returns true when n has visible children. */
@@ -387,7 +425,8 @@ public abstract class HierarchicalGraphView<K> {
         if (!n.isLeaf()) {
             DefaultMutableTreeNode child =
                 (DefaultMutableTreeNode)n.getChildAt(0);
-            continueIteration = m_visible.containsKey(child);
+            K childK = (K)child.getUserObject();
+            continueIteration = getVisible().containsKey(childK);
         }
         return continueIteration;
     }
@@ -399,12 +438,12 @@ public abstract class HierarchicalGraphView<K> {
      */
     private void assignBounds(final DefaultMutableTreeNode node,
             final Rectangle bounds) {
-        m_visible.put(node, bounds);
-        NodeWidget<K> widget = m_widgets.get(node);
+        K k = (K)node.getUserObject();
+        getVisible().put((K)node.getUserObject(), bounds);
+        NodeWidget<K> widget = getWidgets().get(k);
         if (null == widget) {
-            K object = (K)node.getUserObject();
-            widget = getNodeWidgetFactory().createGraphNode(object);
-            m_widgets.put(node, widget);
+            widget = getNodeWidgetFactory().createGraphNode(k);
+            getWidgets().put(k, widget);
         }
         widget.setSize(new Dimension(bounds.width, bounds.height));
     }
@@ -414,9 +453,15 @@ public abstract class HierarchicalGraphView<K> {
      * the given graphics object. Nodes are painted with different background
      * or border whether they are selected or hilited.
      *
+     * @param c the component to paint on
      * @param g the graphics object
+     * @param x the x value of the top left corner
+     * @param y the y value of the top left corner
+     * @param width The width to be paint
+     * @param height The height to be paint
      */
-    void paint(final Graphics2D g) {
+    void paint(final Component c, final Graphics2D g, final int x,
+            final int y, final int width, final int height) {
         if (null == m_root) {
             return;
         }
@@ -427,21 +472,24 @@ public abstract class HierarchicalGraphView<K> {
             m_root.breadthFirstEnumeration();
         while (breadthFirst.hasMoreElements()) {
             DefaultMutableTreeNode curr = breadthFirst.nextElement();
-            if (!m_visible.containsKey(curr)) {
+            K currK = (K)curr.getUserObject();
+            if (!getVisible().containsKey(currK)) {
                 continue;
             }
-            paintNode(curr, g);
-            Rectangle bounds = m_visible.get(curr);
+            paintNode(c, curr, g);
+            Rectangle bounds = getVisible().get(currK);
             List<Rectangle> visibleChilds =
                 new ArrayList<Rectangle>();
             if (!curr.isLeaf()) {
                 DefaultMutableTreeNode firstChild =
                     (DefaultMutableTreeNode)curr.getChildAt(0);
-                if (m_visible.containsKey(firstChild)) {
+                K firstChildK = (K)firstChild.getUserObject();
+                if (getVisible().containsKey(firstChildK)) {
                     for (int i = 0; i < curr.getChildCount(); i++) {
                         DefaultMutableTreeNode child =
                             (DefaultMutableTreeNode)curr.getChildAt(i);
-                        visibleChilds.add(m_visible.get(child));
+                        K childK = (K)child.getUserObject();
+                        visibleChilds.add(getVisible().get(childK));
                     }
                 }
             }
@@ -451,38 +499,38 @@ public abstract class HierarchicalGraphView<K> {
                 // sign here.
             } else if (visibleChilds.isEmpty()) {
                 // draw line to the plus sign
-                int x = bounds.x + bounds.width / 2;
-                int y = bounds.y + bounds.height
-                            + m_layoutInfo.getLevelGap() / 2;
-                g.drawLine(x, bounds.y + bounds.height, x, y);
+                int xx = bounds.x + bounds.width / 2;
+                int yy = bounds.y + bounds.height
+                            + m_layoutSettings.getLevelGap() / 2;
+                g.drawLine(xx, bounds.y + bounds.height, xx, yy);
             } else {
                 // draw connections to the children
-                int x = bounds.x + bounds.width / 2;
-                int y = bounds.y + bounds.height
-                            + m_layoutInfo.getLevelGap() / 2;
-                g.drawLine(x, bounds.y + bounds.height, x, y);
+                int xx = bounds.x + bounds.width / 2;
+                int yy = bounds.y + bounds.height
+                            + m_layoutSettings.getLevelGap() / 2;
+                g.drawLine(xx, bounds.y + bounds.height, xx, yy);
 
                 Rectangle firstChild = visibleChilds.get(0);
-                if (firstChild.x != m_visible.get(curr).x) {
+                if (firstChild.x != getVisible().get(currK).x) {
                     GeneralPath path = new GeneralPath();
-                    path.moveTo(x, y);
-                    path.lineTo(firstChild.x + firstChild.width / 2 + 3, y);
-                    path.quadTo(firstChild.x + firstChild.width / 2, y,
-                            firstChild.x + firstChild.width / 2, y + 3);
+                    path.moveTo(xx, yy);
+                    path.lineTo(firstChild.x + firstChild.width / 2 + 3, yy);
+                    path.quadTo(firstChild.x + firstChild.width / 2, yy,
+                            firstChild.x + firstChild.width / 2, yy + 3);
                     path.lineTo(firstChild.x + firstChild.width / 2,
                             firstChild.y);
                     g.draw(path);
                 } else {
-                    g.drawLine(x, y, x, firstChild.y);
+                    g.drawLine(xx, yy, xx, firstChild.y);
                 }
                 if (visibleChilds.size() > 1) {
                     Rectangle lastChild =
                         visibleChilds.get(visibleChilds.size() - 1);
                     GeneralPath path = new GeneralPath();
-                    path.moveTo(x, y);
-                    path.lineTo(lastChild.x + lastChild.width / 2 - 3, y);
-                    path.quadTo(lastChild.x + lastChild.width / 2, y,
-                            lastChild.x + lastChild.width / 2, y + 3);
+                    path.moveTo(xx, yy);
+                    path.lineTo(lastChild.x + lastChild.width / 2 - 3, yy);
+                    path.quadTo(lastChild.x + lastChild.width / 2, yy,
+                            lastChild.x + lastChild.width / 2, yy + 3);
                     path.lineTo(lastChild.x + lastChild.width / 2,
                             lastChild.y);
                     g.draw(path);
@@ -491,13 +539,13 @@ public abstract class HierarchicalGraphView<K> {
                 if (visibleChilds.size() > 2) {
                     for (int i = 1; i < visibleChilds.size() - 1; i++) {
                         Rectangle child = visibleChilds.get(i);
-                        int xx = child.x + child.width / 2;
-                        g.drawLine(xx, y, xx, child.y);
+                        int xxx = child.x + child.width / 2;
+                        g.drawLine(xxx, yy, xxx, child.y);
                     }
                 }
             }
             // draw text on the connectors
-            NodeWidget<K> widget = m_widgets.get(curr);
+            NodeWidget<K> widget = getWidgets().get(currK);
             if (null != widget.getConnectorLabelAbove()) {
                 String text = widget.getConnectorLabelAbove();
                 Font prevFont = g.getFont();
@@ -506,16 +554,16 @@ public abstract class HierarchicalGraphView<K> {
                 TextLayout textLayout = new TextLayout(text, font,
                         g.getFontRenderContext());
                 Rectangle textBounds = textLayout.getBounds().getBounds();
-                int width = textBounds.width;
-                int height = textBounds.height;
-                int x = bounds.x + (bounds.width - width) / 2;
-                int y = bounds.y - height - 18;
+                int w = textBounds.width;
+                int h = textBounds.height;
+                int xx = bounds.x + (bounds.width - w) / 2;
+                int yy = bounds.y - h - 18;
                 Color prevColor = g.getColor();
                 g.setColor(ColorAttr.BACKGROUND);
-                g.fillRect(x, y - 2, width, height + 4);
+                g.fillRect(xx, yy - 2, w, h + 4);
                 g.setColor(Color.black.brighter());
                 g.setColor(ColorAttr.BORDER);
-                textLayout.draw(g, x - textBounds.x, y - textBounds.y);
+                textLayout.draw(g, xx - textBounds.x, yy - textBounds.y);
                 g.setColor(prevColor);
                 g.setFont(prevFont);
             }
@@ -528,32 +576,34 @@ public abstract class HierarchicalGraphView<K> {
                 TextLayout textLayout = new TextLayout(text, font,
                         g.getFontRenderContext());
                 Rectangle textBounds = textLayout.getBounds().getBounds();
-                int width = textBounds.width;
-                int height = textBounds.height;
-                int x = bounds.x + (bounds.width - width) / 2;
-                int y = bounds.y + bounds.height + 10;
+                int w = textBounds.width;
+                int h = textBounds.height;
+                int xx = bounds.x + (bounds.width - w) / 2;
+                int yy = bounds.y + bounds.height + 10;
                 Color prevColor = g.getColor();
                 g.setColor(ColorAttr.BACKGROUND);
-                g.fillRect(x, y - 2, width, height + 4);
+                g.fillRect(xx, yy - 2, w, h + 4);
                 g.setColor(ColorAttr.BORDER);
-                textLayout.draw(g, x - textBounds.x, y - textBounds.y);
+                textLayout.draw(g, xx - textBounds.x, yy - textBounds.y);
                 g.setColor(prevColor);
                 g.setFont(prevFont);
             }
         }
         for (Rectangle bounds : m_collapseSign.keySet()) {
-            int y = bounds.y + bounds.height / 2;
+            int yy = bounds.y + bounds.height / 2;
             int delta = 3;
             g.drawOval(bounds.x, bounds.y, bounds.width, bounds.height);
-            g.drawLine(bounds.x + delta, y, bounds.x + bounds.width - delta, y);
+            g.drawLine(bounds.x + delta, yy,
+                    bounds.x + bounds.width - delta, yy);
         }
         for (Rectangle bounds : m_expandSign.keySet()) {
-            int x = bounds.x + bounds.width / 2;
-            int y = bounds.y + bounds.height / 2;
+            int xx = bounds.x + bounds.width / 2;
+            int yy = bounds.y + bounds.height / 2;
             int delta = 3;
             g.drawOval(bounds.x, bounds.y, bounds.width, bounds.height);
-            g.drawLine(bounds.x + delta, y, bounds.x + bounds.width - delta, y);
-            g.drawLine(x, bounds.y + delta, x,
+            g.drawLine(bounds.x + delta, yy,
+                    bounds.x + bounds.width - delta, yy);
+            g.drawLine(xx, bounds.y + delta, xx,
                     bounds.y  + bounds.height - delta);
         }
         g.setPaint(origPaint);
@@ -567,12 +617,14 @@ public abstract class HierarchicalGraphView<K> {
     /**
      * Draw the node, its background and border to the graphics object.
      */
-    private void paintNode(final DefaultMutableTreeNode node,
+    private void paintNode(final Component c,
+            final DefaultMutableTreeNode node,
             final Graphics2D g) {
-        NodeWidget<K> widget = m_widgets.get(node);
-        Rectangle bounds = m_visible.get(node);
-        boolean selected = m_selected.contains(node);
-        boolean hilited = m_hilited.contains((node.getUserObject()));
+        K k = (K)node.getUserObject();
+        NodeWidget<K> widget = getWidgets().get(k);
+        Rectangle bounds = getVisible().get(k);
+        boolean selected = m_selected == k;
+        boolean hilited = m_hilited.contains(k);
         if (selected && hilited) {
             g.setPaint(ColorAttr.SELECTED_HILITE);
             g.fillRoundRect(bounds.x, bounds.y,
@@ -589,13 +641,8 @@ public abstract class HierarchicalGraphView<K> {
                 bounds.width, bounds.height,
                 8, 8);
 
-        AffineTransform previousTransform = g.getTransform();
-        AffineTransform trans = g.getTransform();
-        trans.concatenate(AffineTransform.getTranslateInstance(
-                bounds.x, bounds.y));
-        g.setTransform(trans);
-        widget.paint(g);
-        g.setTransform(previousTransform);
+        widget.paint(c, g, bounds);
+
         if (selected) {
             g.setStroke(new BasicStroke(2f));
         } else {
@@ -609,24 +656,43 @@ public abstract class HierarchicalGraphView<K> {
     }
 
     /**
+     * Handler for the mouse clicked event.
+     * @param e the mouse event
+     */
+    public void mouseClicked(final MouseEvent e) {
+        // do nothing
+    }
+
+    /**
+     * Handler for the mouse released event.
+     * @param e the mouse event
+     */
+    public void mouseReleased(final MouseEvent e) {
+        // do nothing
+    }
+
+    /**
      * Handler for the mouse pressed event.
      * @param e the mouse event
-     * */
-    void mousePressed(final MouseEvent e) {
+     */
+    public void mousePressed(final MouseEvent e) {
         for (Rectangle r : m_collapseSign.keySet()) {
             if (r.contains(e.getPoint())) {
                 // collapse children
                 DefaultMutableTreeNode node = m_collapseSign.get(r);
+                K userObject = (K)node.getUserObject();
                 Enumeration<DefaultMutableTreeNode> enumeration =
                         node.breadthFirstEnumeration();
                 // skip starting node
                 enumeration.nextElement();
                 for (DefaultMutableTreeNode n : Collections.list(enumeration)) {
-                    if (m_collapsed.contains(n)) {
-                        m_collapsed.remove(n);
-                    } else if (m_visible.containsKey(n)) {
-                        m_visible.remove(n);
-                        m_collapsed.add(n);
+                    K k = (K)n.getUserObject();
+                    if (getCollapsed().contains(k)) {
+                        getCollapsed().remove(k);
+                        getWidgets().remove(k);
+                    } else if (getVisible().containsKey(k)) {
+                        getVisible().remove(k);
+                        getCollapsed().add(k);
                     }
                 }
                 layoutGraph();
@@ -635,9 +701,9 @@ public abstract class HierarchicalGraphView<K> {
                         Collections.list(node.breadthFirstEnumeration());
                 for (Object o : collapsedSubtree) {
                     DefaultMutableTreeNode n = (DefaultMutableTreeNode)o;
-                    if (m_selected.contains(n)) {
-                        m_selected.remove(n);
-                        m_selected.add(node);
+                    K k = (K)n.getUserObject();
+                    if (m_selected == k) {
+                        m_selected = userObject;
                     }
                 }
                 m_component.revalidate();
@@ -649,19 +715,22 @@ public abstract class HierarchicalGraphView<K> {
             if (r.contains(e.getPoint())) {
                 // expand children
                 DefaultMutableTreeNode node = m_expandSign.get(r);
+                K userObject = (K)node.getUserObject();
                 assert !node.isLeaf();
                 for (Object o : Collections.list(node.children())) {
                     DefaultMutableTreeNode child = (DefaultMutableTreeNode)o;
-                    m_collapsed.add(child);
+                    K k = (K)child.getUserObject();
+                    getCollapsed().add(k);
                 }
                 Enumeration<DefaultMutableTreeNode> enumeration =
                         node.breadthFirstEnumeration();
                 // skip starting node
                 enumeration.nextElement();
                 for (DefaultMutableTreeNode n : Collections.list(enumeration)) {
-                    if (m_collapsed.contains(n)) {
-                        m_visible.put(n, new Rectangle());
-                        m_collapsed.remove(n);
+                    K k = (K)n.getUserObject();
+                    if (getCollapsed().contains(k)) {
+                        getVisible().put(k, new Rectangle());
+                        getCollapsed().remove(k);
                     }
                 }
                 layoutGraph();
@@ -669,19 +738,20 @@ public abstract class HierarchicalGraphView<K> {
                 // change in the preferred size.
                 m_component.revalidate();
                 // get surrounding rectangle of the opened subtree
-                Rectangle p = m_visible.get(node);
+                Rectangle p = getVisible().get(userObject);
                 Rectangle vis = new Rectangle(p);
                 List<Object> expandedSubtree =
                         Collections.list(node.breadthFirstEnumeration());
                 for (Object o : expandedSubtree) {
                     DefaultMutableTreeNode n = (DefaultMutableTreeNode)o;
-                    Rectangle rr = m_visible.get(n);
+                    K k = (K)n.getUserObject();
+                    Rectangle rr = getVisible().get(k);
                     if (null != rr) {
                         vis = vis.union(rr);
                     }
                 }
                 // Show also the sign for expanding childs
-                vis.height += m_layoutInfo.getLevelGap() / 2;
+                vis.height += m_layoutSettings.getLevelGap() / 2;
                 // Display node and all visible children
                 m_component.scrollRectToVisible(vis);
                 // Make sure that node will be displayed
@@ -690,39 +760,204 @@ public abstract class HierarchicalGraphView<K> {
                 return;
             }
         }
-        for (Map.Entry<DefaultMutableTreeNode, Rectangle> entry
-                : m_visible.entrySet()) {
+        for (Map.Entry<K, Rectangle> entry : getVisible().entrySet()) {
             if (entry.getValue().contains(e.getPoint())) {
-                if (m_selected.contains(entry.getKey()) && e.isControlDown()) {
-                    m_selected.remove(entry.getKey());
+                K k = entry.getKey();
+                if (m_selected == k && e.isControlDown()) {
+                    m_selected = null;
                 } else {
-                    m_selected.clear();
-                    m_selected.add(entry.getKey());
+                    m_selected = k;
                 }
+                // translate event
+                MouseEvent ee = new MouseEvent(
+                        e.getComponent(),
+                        e.getID(),
+                        e.getWhen(),
+                        e.getModifiers(),
+                        e.getX() - entry.getValue().x,
+                        e.getY() - entry.getValue().y,
+                        e.getXOnScreen(),
+                        e.getYOnScreen(),
+                        e.getClickCount(),
+                        e.isPopupTrigger(),
+                        e.getButton());
+                getWidgets().get(k).mousePressed(ee);
                 m_component.repaint();
                 return;
             }
         }
+    }
 
+
+    /**
+     * Get the selected node.
+     * @return the selected node
+     */
+    public K getSelected() {
+        return m_selected;
+    }
+
+    /**
+     * HiLite the given nodes.
+     * @param toHiLite the nodes to HiLite
+     */
+    public void hiLite(final Set<K> toHiLite) {
+        m_hilited.clear();
+        m_hilited.addAll(toHiLite);
+        m_component.repaint();
+    }
+
+    /**
+     * Unhilite all nodes.
+     */
+    public void clearHilite() {
+        m_hilited.clear();
+        m_component.repaint();
+    }
+
+    /**
+     * Returns the node at a certain point.
+     *
+     * @param p the point on screen
+     * @return the node at the given point
+     */
+    public K nodeAtPoint(final Point p) {
+        for (Map.Entry<K, Rectangle> entry
+                : getVisible().entrySet()) {
+            if (entry.getValue().contains(p)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the widgets for the nodes returned by getVisible() and
+     * getCollapsed().
+     * @return the widgets for visible and collapsed nodes
+     */
+    public Map<K, NodeWidget<K>> getWidgets() {
+        return m_widgets;
+    }
+
+    /**
+     * Returns the visible nodes and their bounds.
+     * @return the visible the visible nodes and their bounds.
+     */
+    protected Map<K, Rectangle> getVisible() {
+        return m_visible;
+    }
+
+    /**
+     * Returns the collapsed nodes. When a branch is collapsed, all visible
+     * nodes of that branch are moved to this set. When a branch is expanded,
+     * all collapsed nodes of that branch will be made visible. If there are no
+     * collapsed nodes the first level of the expanded branch will be made
+     * visible. Visible nodes can be retrieved by getVisible().
+     * @return the collapsed
+     */
+    protected Set<K> getCollapsed() {
+        return m_collapsed;
+    }
+
+    /**
+     * Changes the common width of the visible nodes. This method does not
+     * trigger repaint.
+     * Call following method for a relayout and a repaint:
+     *      layoutGraph();
+     *      getView().revalidate();
+     *      getView().repaint();
+     *
+     * @param nodeWidth the nodeWidth to set
+     */
+    protected void setNodeWidth(final int nodeWidth) {
+        m_nodeWidth = nodeWidth;
+    }
+
+    /**
+     * The common widht of the visible nodes.
+     * @return the nodeWidth
+     */
+    protected int getNodeWidth() {
+        return m_nodeWidth;
+    }
+
+    /**
+     * The root node. getRoot().getUserObject() returns the node given in
+     * the constructor and the node provided by set RootNode, respectivly.
+     * @return the root
+     */
+    protected DefaultMutableTreeNode getRoot() {
+        return m_root;
+    }
+
+    /**
+     * The keys are retrieved from getNodeWidgetFactory().getChildren(...).
+     * Calling getTreeMap(key).getUserObject() returns key.
+     * @return a dictionary of all nodes in the decision tree
+     */
+    Map<K, DefaultMutableTreeNode> getTreeMap() {
+        return m_treeMap;
+    }
+
+    /**
+     * Return an object width constants used for layout the graph.
+     * @return the layoutSettings
+     */
+    LayoutSettings getLayoutSettings() {
+        return m_layoutSettings;
+    }
+
+    /** Mutable class used during layout. */
+    private class LayoutInfo {
+        private int m_yOffset;
+
+        /**
+         * @return the yOffset
+         */
+        final int getYOffset() {
+            return m_yOffset;
+        }
+
+        /**
+         * @param yOffset the yOffset to set
+         */
+        final void setYOffset(final int yOffset) {
+            m_yOffset = yOffset;
+        }
     }
 
     /** Constants for the layout. */
-    private static class LayoutInfo {
+    static class LayoutSettings {
         private int m_levelGap = 100;
         private int m_branchGap = 20;
-        private Dimension m_nodeSize;
+        private int m_nodeWidth;
         private Dimension m_signSize;
         private Point m_signOffset;
 
-        public LayoutInfo(final Dimension nodeSize) {
-            m_nodeSize = new Dimension(nodeSize.width + 20,
-                    nodeSize.height + 5);
+        /**
+         * @param nodeWidth The width of the nodes.
+         */
+        public LayoutSettings(final int nodeWidth) {
+            m_nodeWidth = nodeWidth;
             m_signSize = new Dimension(12, 12);
             int delta = 4;
-            m_signOffset = new Point(
-                    m_nodeSize.width / 2 - m_signSize.width - delta,
-                    m_nodeSize.height + m_levelGap / 2
-                    - m_signSize.height - delta);
+            m_signOffset = new Point(-m_signSize.width - delta,
+                    m_levelGap / 2 - m_signSize.height - delta);
+        }
+
+        /**
+         * Compute bounds of the collapse/expand sign.
+         * @param parentNode The bounds of the node above the sign
+         * @return the bounds of the sign
+         */
+        public Rectangle getSignBounds(final Rectangle parentNode) {
+            Point p = new Point(getSignOffset());
+            p.translate(parentNode.x + parentNode.width / 2,
+                    parentNode.y + parentNode.height);
+            Rectangle collapseSign = new Rectangle(p,
+                    getSignSize());
+            return collapseSign;
         }
 
         /**
@@ -770,10 +1005,10 @@ public abstract class HierarchicalGraphView<K> {
             return 5;
         }
         /**
-         * @return the nodeSize
+         * @return the common width fo nodes
          */
-        final Dimension getNodeSize() {
-            return m_nodeSize;
+        final int getNodeWidth() {
+            return m_nodeWidth;
         }
         /**
          * @return the levelGap
@@ -783,48 +1018,4 @@ public abstract class HierarchicalGraphView<K> {
         }
       }
 
-    /**
-     * Get the selected nodes.
-     * @return the selected nodes
-     */
-    public List<K> getSelected() {
-        List<K> selected = new ArrayList<K>();
-        for (DefaultMutableTreeNode node : m_selected) {
-            selected.add((K)node.getUserObject());
-        }
-        return selected;
-    }
-
-    /**
-     * HiLite the given nodes.
-     */
-    public void hiLite(final Set<K> toHiLite) {
-        m_hilited.clear();
-        m_hilited.addAll(toHiLite);
-        m_component.repaint();
-    }
-
-    /**
-     * Unhilite all nodes.
-     */
-    public void clearHilite() {
-        m_hilited.clear();
-        m_component.repaint();
-    }
-
-    /**
-     * Returns the node at a certain point.
-     *
-     * @param p the point on screen
-     * @return the node at the given point
-     */
-    public K nodeAtPoint(final Point p) {
-        for (Map.Entry<DefaultMutableTreeNode, Rectangle> entry
-                : m_visible.entrySet()) {
-            if (entry.getValue().contains(p)) {
-                return (K)(entry.getKey().getUserObject());
-            }
-        }
-        return null;
-    }
 }

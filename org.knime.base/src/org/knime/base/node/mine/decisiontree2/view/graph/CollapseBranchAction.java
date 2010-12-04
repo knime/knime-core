@@ -40,50 +40,73 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ------------------------------------------------------------------------
  *
  * History
- *   14.03.2007 (mb): created
+ *   01.12.2010 (hofer): created
  */
-package org.knime.core.node.workflow;
+package org.knime.base.node.mine.decisiontree2.view.graph;
 
+import java.awt.event.ActionEvent;
+import java.util.Collections;
+import java.util.Enumeration;
 
+import javax.swing.AbstractAction;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
- * Special {@link FlowObject} holding loop information.
+ * An action to collapse the branch starting from the selected node in a
+ * {@link HierarchicalGraphView}.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Heiko Hofer
+ * @param <K> The type of the nodes user objects in a
+ * {@link HierarchicalGraphView}
  */
-public class FlowLoopContext extends FlowObject {
+public class CollapseBranchAction<K> extends AbstractAction {
+    private static final long serialVersionUID = 3829708621676376218L;
+    private HierarchicalGraphView<K> m_graph;
 
-    private NodeID m_tailNode;
-
-    public NodeID getHeadNode() {
-        return super.getOwner();
+    /**
+     * @param graph nodes of the graph are effected by this action
+     */
+    public CollapseBranchAction(final HierarchicalGraphView<K> graph) {
+        super("Collapse Branch");
+        m_graph = graph;
     }
 
-    public void setTailNode(final NodeID tail) {
-        m_tailNode = tail;
-    }
-
-    public NodeID getTailNode() {
-        return m_tailNode;
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
+    // DefaultMutableTreeNode does not support generics
+    @SuppressWarnings("unchecked")
     @Override
-    protected FlowObject cloneAndUnsetOwner() {
-        FlowLoopContext clone = (FlowLoopContext)super.cloneAndUnsetOwner();
-        clone.setTailNode(null);
-        return clone;
-    }
+    public void actionPerformed(final ActionEvent e) {
+        K selected = m_graph.getSelected();
+        if (null == selected) {
+            return;
+        }
+        DefaultMutableTreeNode node =
+            m_graph.getTreeMap().get(selected);
+        Enumeration<DefaultMutableTreeNode> enumeration =
+            node.breadthFirstEnumeration();
+        // skip starting node
+        enumeration.nextElement();
+        for (DefaultMutableTreeNode n : Collections.list(enumeration)) {
+            K k = (K)n.getUserObject();
+            m_graph.getVisible().remove(k);
+            m_graph.getCollapsed().remove(k);
+            m_graph.getWidgets().remove(k);
+        }
 
-    /** Executed start nodes will use this object during workflow load to
-     * indicate that a loop was potentially saved in a half-executed state. */
-    public static class RestoredFlowLoopContext extends FlowLoopContext {
-        // marker class
+        m_graph.layoutGraph();
+        // With this call parent components get informed about the
+        // change in the preferred size.
+        m_graph.getView().revalidate();
+
+        m_graph.getView().repaint();
+        return;
     }
 }

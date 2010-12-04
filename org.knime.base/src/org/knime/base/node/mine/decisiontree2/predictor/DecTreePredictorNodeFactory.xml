@@ -33,12 +33,13 @@
 	<views>
 		<view index="0" name="Decision Tree View">
 			The decision tree as given in the model port along with the 
-			classified data.
-		</view>
-		<view index="1" name="Decision Tree View (new)">
-            The decision tree as given in the model port along with the 
             classified data. The tree can be expanded and collapsed with the 
             plus/minus signs. 
+		</view>
+		<view index="1" name="Decision Tree View (simple)">
+		     The decision tree as given in the model port along with the 
+            classified data.
+            
         </view>
 	</views>
 </knimeNode>        

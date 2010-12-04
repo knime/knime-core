@@ -94,6 +94,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.InactiveBranchFlowLoopContext;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -721,7 +722,7 @@ public final class Node implements NodeModelWarningListener {
     public boolean isInactiveBranchConsumer() {
         return m_model instanceof InactiveBranchConsumer;
     }
-    
+
     /** Iterates the argument array and returns true if any element
      * is instance of {@link InactiveBranchPortObject}.
      * @param ins The input data
@@ -768,16 +769,30 @@ public final class Node implements NodeModelWarningListener {
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
         if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {
-            // one incoming object=IBPO is enough to skip
-            // the entire execution of this node. But first check
-            // if it's the end of a loop:
+            // inactive loop start node must indicate to their loop
+            // end node that they were inactive...
+            if (m_model instanceof LoopStartNode) {
+                FlowObjectStack outStack = getOutgoingFlowObjectStack();
+                outStack.push(new InactiveBranchFlowLoopContext());
+            }
+            // loop end nodes can be inactive if and only if their
+            // loop start node is inactive
             if (m_model instanceof LoopEndNode) {
-                // we can not handle this case: the End Loop node needs
-                // to trigger re-execution which it won't in an inactive
-                // branch
-                createErrorMessageAndNotify("Loop End node in inactive "
-                        + "branch not allowed.");
-                return false;
+                FlowObjectStack inStack = getFlowObjectStack();
+                InactiveBranchFlowLoopContext peek =
+                    inStack.peek(InactiveBranchFlowLoopContext.class);
+                if (peek == null) {
+                    // we can not handle this case: the End Loop node needs
+                    // to trigger re-execution which it won't in an inactive
+                    // branch
+                    createErrorMessageAndNotify("Loop End node in inactive "
+                            + "branch not allowed.");
+                    return false;
+                } else {
+                    // also the loop start node is inactive, so the entire
+                    // loop is inactive
+                    inStack.pop(InactiveBranchFlowLoopContext.class);
+                }
             }
             // normal node: skip execution
             PortObject[] outs = new PortObject[getNrOutPorts()];

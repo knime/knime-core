@@ -366,7 +366,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
-
         // holds the warning message displayed after execution
         StringBuilder warningMessageSb = new StringBuilder();
         ParallelProcessing parallelProcessing = new ParallelProcessing(
@@ -385,7 +384,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         assert (data != null && data.length == 1 && data[DATA_INPORT] != null);
 
         BufferedDataTable inData = (BufferedDataTable)data[DATA_INPORT];
-
+        // get column with color information
+        String colorColumn = null;
+        for (DataColumnSpec s : inData.getDataTableSpec()) {
+            if (s.getColorHandler() != null) {
+                colorColumn = s.getName();
+                break;
+            }
+        }
         // the data table must have more than 2 records
         if (inData.getRowCount() <= 1) {
             throw new IllegalArgumentException(
@@ -452,6 +458,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                     none, which means rows with missing values are not
                     classified. */
                 PMMLMissingValueStrategy.LAST_PREDICTION);
+        m_decisionTree.setColorColumn(colorColumn);
 
 
         // prune the tree

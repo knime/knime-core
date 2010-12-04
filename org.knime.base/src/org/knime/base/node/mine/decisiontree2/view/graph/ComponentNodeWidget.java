@@ -52,14 +52,17 @@ package org.knime.base.node.mine.decisiontree2.view.graph;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.AffineTransform;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-
-import org.knime.core.data.property.ColorAttr;
 
 /**
  * A {@link NodeWidget} consisting of single {@link JComponent}.
@@ -68,8 +71,7 @@ import org.knime.core.data.property.ColorAttr;
  * @param <K> The type
  */
 public abstract class ComponentNodeWidget<K> extends NodeWidget<K> {
-//    private Image m_image;
-
+    private JComponent m_component;
     /**
      * Creates a new instance.
      *
@@ -85,78 +87,163 @@ public abstract class ComponentNodeWidget<K> extends NodeWidget<K> {
      * Creates the component.
      * @return a component which this {@link NodeWidget} will display
      */
-    protected abstract JComponent getComponent();
+    protected abstract JComponent createComponent();
 
     /**
-     * {@inheritDoc}
+     * Returns the component which this {@link NodeWidget} will display.
+     * @return a component which this {@link NodeWidget} will display
      */
-    @Override
-    protected final Dimension getPreferredSize() {
-        Dimension d = getComponent().getPreferredSize();
-        return new Dimension(d.width + 6, d.height + 6);
+    private JComponent getComponent() {
+        if (m_component == null) {
+            JPanel p;
+            m_component = createComponent();
+            if (m_component instanceof JPanel) {
+                p = (JPanel)m_component;
+            } else {
+                p = new JPanel(new BorderLayout());
+                p.add(m_component, BorderLayout.CENTER);
+            }
+            Dimension d = getPreferredSize();
+            p.setBounds(0, 0, d.width, d.height);
+            // Space for selection and hiliting borders
+            p.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+            adjustComponentProperties(p);
+        }
+        return m_component;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected final void paint(final Graphics2D g) {
-//        if (null == m_image) {
-            JPanel p;
-            Component comp = getComponent();
-            if (comp instanceof JPanel) {
-                p = (JPanel)comp;
-            } else {
-                p = new JPanel(new BorderLayout());
-                p.add(comp, BorderLayout.CENTER);
-            }
-            Dimension d = getSize();
-            p.setBounds(0, 0, d.width, d.height);
-            // Space for selection and hiliting borders
-            p.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+    public final Dimension getPreferredSize() {
+        return getComponent().getPreferredSize();
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void paint(final Component c, final Graphics2D g,
+            final int x, final int y, final int width, final int height) {
+        JComponent comp = getComponent();
+        comp.setBounds(0, 0, width, height);
+        comp.doLayout();
+        adjustComponentProperties(comp);
 
-            //p.setBackground(Color.TRANSLUCENT);
+        AffineTransform previousTransform = g.getTransform();
+        AffineTransform trans = g.getTransform();
+        trans.concatenate(AffineTransform.getTranslateInstance(
+                x, y));
+        g.setTransform(trans);
+        comp.paint(g);
+        g.setTransform(previousTransform);
+    }
+
+    private void adjustComponentProperties(final JComponent p) {
+        if (p instanceof JPanel) {
             p.doLayout();
             /* see bug:
-             * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6668436
+             *http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6668436
              */
-            p.setDoubleBuffered(false);
+            ((JPanel)p).setDoubleBuffered(false);
+        }
+        for (Component cc : p.getComponents()) {
+            if (cc instanceof JComponent) {
+                adjustComponentProperties((JComponent)cc);
+            }
+        }
+    }
 
-            p.setOpaque(false);
-            for (Component c : p.getComponents()) {
-                ((JComponent)c).setOpaque(false);
-                if (c instanceof JPanel) {
-                    c.setBackground(ColorAttr.BACKGROUND);
-                    c.doLayout();
-                    /* see bug:
-                     *http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6668436
-                     */
-                    ((JPanel)c).setDoubleBuffered(false);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseClicked(final MouseEvent e) {
+        // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mousePressed(final MouseEvent e) {
+        sendToTarget(getComponent(), 0, 0, e);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseReleased(final MouseEvent e) {
+       // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseEntered(final MouseEvent e) {
+       // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mouseExited(final MouseEvent e) {
+       // do nothing
+    }
+
+    /**
+     * Find target of the event. This method is called recursively.
+     * @param component the possible target
+     * @return true when target is found an recursive search should be stopped.
+     */
+    private boolean sendToTarget(final Container component,
+            final int x, final int y, final MouseEvent e) {
+        if (!component.isVisible()) {
+            return false;
+        }
+        int xx = x + component.getX();
+        int yy = y + component.getY();
+        for (Component c : component.getComponents()) {
+            if (sendToTarget((Container)c, xx, yy, e)) {
+                return true;
+            }
+        }
+        Point p = new Point(e.getPoint());
+        p.translate(-x, -y);
+        boolean isIn = component.getBounds().contains(p);
+        if (isIn) {
+            // translate mouse event
+            MouseEvent ee = new MouseEvent(
+                    e.getComponent(),
+                    e.getID(),
+                    e.getWhen(),
+                    e.getModifiers(),
+                    e.getX() - x,
+                    e.getY() - y,
+                    e.getXOnScreen(),
+                    e.getYOnScreen(),
+                    e.getClickCount(),
+                    e.isPopupTrigger(),
+                    e.getButton());
+            for (MouseListener l : component.getMouseListeners()) {
+                l.mousePressed(ee);
+            }
+            if (component instanceof JComponent) {
+                JComponent jcomp = (JComponent)component;
+                if (jcomp.getBorder() instanceof MouseListener) {
+                    MouseListener l = (MouseListener)jcomp.getBorder();
+                    l.mousePressed(ee);
                 }
             }
-            p.paint(g);
-//
-//
-//
-//            GraphicsEnvironment ge = GraphicsEnvironment
-//                  .getLocalGraphicsEnvironment();
-//            GraphicsDevice gs = ge.getDefaultScreenDevice();
-//            GraphicsConfiguration gc = gs.getDefaultConfiguration();
-//            // Create an image that does not support transparency
-//            BufferedImage image = gc.createCompatibleImage(p.getWidth(),
-//                    p.getHeight(), Transparency.TRANSLUCENT);
-//            // Alternatively:
-//            //BufferedImage image = new BufferedImage(d.width, d.height,
-//                    BufferedImage.TYPE_INT_ARGB);
-//
-//            Graphics g2 = image.createGraphics();
-//
-//            p.paint(g2);
-//            g2.dispose();
-//            m_image = image;
-//        }
-//        g.drawImage(m_image, null, null);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 

@@ -217,9 +217,9 @@ public class ImportPreferencesAction extends Action {
                         (Class<? extends AbstractPreferenceInitializer>)o.getClass();
                 if (o instanceof AbstractPreferenceInitializer) {
                     ((AbstractPreferenceInitializer)o).initializeDefaultPreferences();
-                    System.out.println("Found class: " + clazz.getCanonicalName());
+                    LOGGER.debug("Found class: " + clazz.getCanonicalName());
                 } else {
-                    System.out.println("Skipped class: " + clazz.getCanonicalName());
+                    LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
                 }
 
             } catch (InvalidRegistryObjectException e) {

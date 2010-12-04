@@ -25,6 +25,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import javax.swing.JOptionPane;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -97,6 +99,19 @@ public class KNIMEApplication implements IApplication {
             // for now restart is used, and exit data properties are checked
             // here to substitute in the relaunch return code if needed
             if (returnCode != PlatformUI.RETURN_RESTART) {
+                return EXIT_OK;
+            }
+            boolean isWin64 =
+                    Platform.OS_WIN32.equals(Platform.getOS())
+                            && Platform.ARCH_X86_64
+                                    .equals(Platform.getOSArch());
+            if (isWin64) {
+                JOptionPane.showMessageDialog(null,
+                        "\nDue to a known issue with Windows 64bit the "
+                                + "automatic relauch is disabled.\n\n"
+                                + "Please re-start KNIME manually.\n\n",
+                                "Manually Re-start KNIME",
+                                JOptionPane.WARNING_MESSAGE);
                 return EXIT_OK;
             }
 

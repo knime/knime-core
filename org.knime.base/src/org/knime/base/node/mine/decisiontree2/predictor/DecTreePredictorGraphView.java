@@ -61,17 +61,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
-import org.knime.base.node.mine.decisiontree2.view.DecTreeNodeWidgetFactory;
-import org.knime.base.node.mine.decisiontree2.view.graph.HierarchicalGraphView;
-import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidgetFactory;
+import org.knime.base.node.mine.decisiontree2.view.DecTreeGraphView;
+import org.knime.base.node.mine.decisiontree2.view.graph.CollapseBranchAction;
+import org.knime.base.node.mine.decisiontree2.view.graph.ExpandBranchAction;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -102,7 +104,10 @@ final class DecTreePredictorGraphView
         DecisionTreeNode root =
             null != model.getDecisionTree() ? model.getDecisionTree()
                     .getRootNode() : null;
-        m_graph = new DecTreeGraphView(root);
+        String colorColumn =
+            null != model.getDecisionTree() ? model.getDecisionTree()
+                    .getColorColumn() : null;
+        m_graph = new DecTreeGraphView(root, colorColumn);
         JScrollPane treeView = new JScrollPane(m_graph.getView());
         Dimension prefSize = treeView.getPreferredSize();
         treeView.setPreferredSize(
@@ -123,11 +128,20 @@ final class DecTreePredictorGraphView
         this.getJMenuBar().add(m_hiLiteMenu);
         m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
         m_hiLiteHdl.addHiLiteListener(this);
+        // add menu entries for tree operations
+        this.getJMenuBar().add(createTreeMenu());
 
         m_popup = new JPopupMenu();
-        m_popup.add(createHiliteItem());
-        m_popup.add(createUnHiliteItem());
+        JMenuItem hiliteMenu = createHiliteItem();
+        hiliteMenu.setText("HiLite Branch");
+        m_popup.add(hiliteMenu);
+        JMenuItem unHiliteMenu = createUnHiliteItem();
+        unHiliteMenu.setText("UnHiLite Branch");
+        m_popup.add(unHiliteMenu);
         m_popup.add(createClearHiliteItem());
+        m_popup.add(new JSeparator());
+        m_popup.add(new ExpandBranchAction<DecisionTreeNode>(m_graph));
+        m_popup.add(new CollapseBranchAction<DecisionTreeNode>(m_graph));
 
         recreateHiLite();
 
@@ -198,6 +212,8 @@ final class DecTreePredictorGraphView
             m_hiLiteHdl.removeHiLiteListener(this);
             DecisionTree dt = model.getDecisionTree();
             if (dt != null) {
+                m_graph.setColorColumn(
+                        model.getDecisionTree().getColorColumn());
                 m_graph.setRootNode(dt.getRootNode());
 
                 // retrieve HiLiteHandler from Input port
@@ -208,17 +224,16 @@ final class DecTreePredictorGraphView
                 m_hiLiteHdl.addHiLiteListener(this);
                 recreateHiLite();
             } else {
+                m_graph.setColorColumn(null);
                 m_graph.setRootNode(null);
             }
         }
     }
 
     private void updateHiLite(final boolean state) {
-        List<DecisionTreeNode> selected = m_graph.getSelected();
+        DecisionTreeNode selected = m_graph.getSelected();
         Set<RowKey> covPat = new HashSet<RowKey>();
-        for (DecisionTreeNode node : selected) {
-            covPat.addAll(node.coveredPattern());
-        }
+        covPat.addAll(selected.coveredPattern());
         if (state) {
             m_hiLiteHdl.fireHiLiteEvent(covPat);
         } else {
@@ -226,7 +241,7 @@ final class DecTreePredictorGraphView
         }
     }
 
-    /*
+    /**
      * Create menu to control hiliting.
      *
      * @return A new JMenu with hiliting buttons
@@ -238,6 +253,25 @@ final class DecTreePredictorGraphView
         result.add(createHiliteItem());
         result.add(createUnHiliteItem());
         result.add(createClearHiliteItem());
+
+        return result;
+    }
+
+    /**
+     * Create menu to control tree.
+     *
+     * @return A new JMenu with tree operation buttons
+     */
+    private JMenu createTreeMenu() {
+        final JMenu result = new JMenu("Tree");
+        result.setMnemonic('T');
+
+        Action expand = new ExpandBranchAction<DecisionTreeNode>(m_graph);
+        expand.putValue(Action.NAME, "Expand Selected Branch");
+        Action collapse = new CollapseBranchAction<DecisionTreeNode>(m_graph);
+        collapse.putValue(Action.NAME, "Collapse Selected Branch");
+        result.add(expand);
+        result.add(collapse);
 
         return result;
     }
@@ -282,29 +316,6 @@ final class DecTreePredictorGraphView
     }
 
     /**
-     *
-     * @author Heiko Hofer
-     */
-    private static class DecTreeGraphView extends
-            HierarchicalGraphView<DecisionTreeNode> {
-
-        /**
-         * @param root
-         */
-        public DecTreeGraphView(final DecisionTreeNode root) {
-            super(root);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public NodeWidgetFactory<DecisionTreeNode> getNodeWidgetFactory() {
-            return new DecTreeNodeWidgetFactory(this);
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -330,7 +341,10 @@ final class DecTreePredictorGraphView
         DecisionTreeNode root = m_graph.getRootNode();
 
         List<DecisionTreeNode> toProcess = new LinkedList<DecisionTreeNode>();
-        toProcess.add(0, root);
+        if (null != root) {
+            toProcess.add(0, root);
+        }
+
         // Traverse the tree breadth first
         while (!toProcess.isEmpty()) {
             DecisionTreeNode curr = toProcess.remove(0);

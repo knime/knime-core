@@ -120,7 +120,7 @@ implements InactiveBranchConsumer {
     private final HiLiteTranslator m_hiliteTranslator = new HiLiteTranslator();
     /** Default hilite handler used if hilite translation is disabled. */
     private final HiLiteHandler m_dftHiliteHandler = new HiLiteHandler();
-    
+
     /**
      * Two inputs, one output.
      */
@@ -148,8 +148,8 @@ implements InactiveBranchConsumer {
             return new PortObjectSpec[]{inSpecs[0]};
         }
         // incompatible - refuse to configure
-        LOGGER.warn("Incompatible specs in EndIF.");
-        return null;
+        throw new InvalidSettingsException("The structures of both active input"
+                + " data tables are not compatible.");
     }
 
     /**
@@ -228,9 +228,8 @@ implements InactiveBranchConsumer {
             }
             return new BufferedDataTable[]{c.getTable()};
         }
-        // incompatible - refuse to execute
-        LOGGER.warn("Incompatible specs in EndIF.");
-        return null;
+        throw new Exception("Both input ports have data but the tables "
+                + "have incompatible specs");
     }
 
     /**

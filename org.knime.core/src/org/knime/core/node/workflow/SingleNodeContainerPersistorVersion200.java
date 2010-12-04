@@ -183,6 +183,8 @@ public class SingleNodeContainerPersistorVersion200 extends
 //                int tailID = sub.getInt("tailID");
             } else if ("loopcontext_execute".equals(type)) {
                 result.add(new InnerFlowLoopContext());
+            } else if ("loopcontext_inactive".equals(type)) {
+                result.add(new InactiveBranchFlowLoopContext());
             } else {
                 throw new InvalidSettingsException(
                         "Unknown flow object type: " + type);
@@ -316,6 +318,10 @@ public class SingleNodeContainerPersistorVersion200 extends
                 NodeSettingsWO sub =
                     stackSet.addNodeSettings("Loop_Execute_" + c);
                 sub.addString("type", "loopcontext_execute");
+            } else if (s instanceof InactiveBranchFlowLoopContext) {
+                NodeSettingsWO sub =
+                    stackSet.addNodeSettings("Inactive_Loop_" + c);
+                sub.addString("type", "loopcontext_inactive");
             } else {
                 getLogger().error("Saving of flow objects of type \""
                         + s.getClass().getSimpleName() +  "\" not implemented");

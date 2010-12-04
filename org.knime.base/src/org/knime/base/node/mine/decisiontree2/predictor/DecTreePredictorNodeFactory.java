@@ -89,9 +89,9 @@ public class DecTreePredictorNodeFactory
     public NodeView<DecTreePredictorNodeModel> createNodeView(
             final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
         if (viewIndex == 0) {
-            return new DecTreePredictorNodeView(nodeModel);
-        } else {
             return new DecTreePredictorGraphView(nodeModel);
+        } else {
+            return new DecTreePredictorNodeView(nodeModel);
         }
     }
 

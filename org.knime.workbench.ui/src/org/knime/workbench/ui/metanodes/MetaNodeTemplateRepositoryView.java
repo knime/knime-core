@@ -29,6 +29,7 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -36,7 +37,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * The view displaying the meta node templates.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class MetaNodeTemplateRepositoryView extends ViewPart {
@@ -46,41 +47,50 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
     private MetaNodeTemplateRepositoryManager m_manager;
 
     private static MetaNodeTemplateRepositoryView instance;
-    
-    private static final Image ICON = KNIMEUIPlugin.imageDescriptorFromPlugin(
-            KNIMEUIPlugin.PLUGIN_ID,
-            "icons/meta/metanode_template.png").createImage();
-    
+
+    private static final Image ICON;
+
+    static {
+        if (Display.getCurrent() != null) {
+            // do not load UI stuff if we run, e.g. the batch executor
+            ICON = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                    KNIMEUIPlugin.PLUGIN_ID,
+                    "icons/meta/metanode_template.png").createImage();
+        } else {
+            ICON = null;
+        }
+    }
+
     // for the tree viewer content provider (no children at all)
     private static final Object[] EMPTY_ARRAY = new Object[0];
-    
+
     /**
-     * 
-     * @return singleton instance - might be null, if newInstance was 
+     *
+     * @return singleton instance - might be null, if newInstance was
      *  never called
      */
     public static MetaNodeTemplateRepositoryView getInstance() {
         if (instance == null) {
             instance = new MetaNodeTemplateRepositoryView();
         }
-        return instance; 
+        return instance;
     }
-    
+
     /**
-     * 
+     *
      * @return true if singleton instance not <code>null</code>, false otherwise
      */
     public static boolean wasInitialized() {
         return instance != null;
     }
-    
+
     /**
      * Creates the {@link MetaNodeTemplateRepositoryManager} already loaded.
      */
     public MetaNodeTemplateRepositoryView() {
         m_manager = MetaNodeTemplateRepositoryManager.getInstance();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -93,7 +103,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         }
         m_viewer = new TreeViewer(parent,
                 SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
-        
+
         this.getSite().setSelectionProvider(m_viewer);
         Transfer[] transfers = new Transfer[]{
                 LocalSelectionTransfer.getTransfer()};
@@ -101,7 +111,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
                 new MetaNodeTemplateRepositoryDragSource(this));
         // content provider (which reads from repository)
         m_viewer.setContentProvider(new ITreeContentProvider() {
-            
+
 
             @Override
             public Object[] getElements(final Object inputElement) {
@@ -116,7 +126,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
             }
 
             @Override
-            public void inputChanged(final Viewer viewer, 
+            public void inputChanged(final Viewer viewer,
                     final Object oldInput, final Object newInput) {
                 m_manager = (MetaNodeTemplateRepositoryManager)newInput;
             }
@@ -135,7 +145,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
             public boolean hasChildren(final Object element) {
                 return false;
             }
-            
+
         });
         // set the input
         m_viewer.setInput(m_manager);
@@ -146,7 +156,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
                 return ICON;
 //                return super.getImage(element);
             }
-            
+
             @Override
             public String getText(final Object element) {
                 if (!(element instanceof MetaNodeTemplateRepositoryItem)) {
@@ -157,26 +167,26 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         });
         instance = this;
     }
-    
+
     /**
-     * Forwards request to the 
+     * Forwards request to the
      * {@link MetaNodeTemplateRepositoryManager#createMetaNodeTemplate(
      * String, WorkflowManager, NodeID)}.
-     * 
+     *
      * @param name name of the template
      * @param source {@link WorkflowManager} to copy the meta node from
-     * @param nodes the id of meta node 
+     * @param nodes the id of meta node
      */
-    public void createMetaNodeTemplate(final String name, 
+    public void createMetaNodeTemplate(final String name,
             final WorkflowManager source, final NodeID[] nodes) {
         m_manager.createMetaNodeTemplate(name, source, nodes[0]);
         m_manager.save();
         m_viewer.refresh();
     }
-    
+
     /**
-     * 
-     * @param item item to be deleted from the 
+     *
+     * @param item item to be deleted from the
      * {@link MetaNodeTemplateRepositoryManager}
      */
     public void deleteTemplate(final MetaNodeTemplateRepositoryItem item) {
@@ -184,9 +194,9 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         m_manager.save();
         m_viewer.refresh();
     }
-    
+
     /**
-     * 
+     *
      * @param name new name of a meta node template
      * @return true if the name is already used, false otherwise
      */
@@ -204,11 +214,11 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
      */
     @Override
     public void setFocus() {
-        
+
     }
-    
+
     /**
-     * 
+     *
      * @return the current seleted {@link MetaNodeTemplateRepositoryItem}
      */
     public IStructuredSelection getSelection() {

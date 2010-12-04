@@ -55,7 +55,6 @@ import java.util.List;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
-import org.knime.base.node.mine.decisiontree2.view.graph.HierarchicalGraphView;
 import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidget;
 import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidgetFactory;
 
@@ -66,29 +65,38 @@ import org.knime.base.node.mine.decisiontree2.view.graph.NodeWidgetFactory;
 public final class DecTreeNodeWidgetFactory
         implements NodeWidgetFactory<DecisionTreeNode> {
 
-    private HierarchicalGraphView<DecisionTreeNode> m_graph;
+    private DecTreeGraphView m_graph;
 
     /**
      * Creates a new instance.
      *
      * @param graph the graph
      */
-    public DecTreeNodeWidgetFactory(
-            final HierarchicalGraphView<DecisionTreeNode> graph) {
+    public DecTreeNodeWidgetFactory(final DecTreeGraphView graph) {
         m_graph = graph;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeWidget<DecisionTreeNode> createGraphNode(
             final DecisionTreeNode object) {
-        return new DecTreeNodeWidget(m_graph, object);
+        DecisionTreeNode parent = object.getParent();
+        DecTreeNodeWidget widget =
+            (DecTreeNodeWidget)m_graph.getWidgets().get(parent);
+        boolean tableCollapsed = null != widget ? widget.getTableCollapsed()
+                : false;
+        boolean chartCollapsed = null != widget ? widget.getChartCollapsed()
+                : false;
+        return new DecTreeNodeWidget(m_graph, object, m_graph.getColorColumn(),
+                tableCollapsed, chartCollapsed);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<DecisionTreeNode> getChildren(final DecisionTreeNode object) {
         if (!object.isLeaf()) {
             return Arrays.asList(((DecisionTreeNodeSplit)object).getChildren());
@@ -100,6 +108,7 @@ public final class DecTreeNodeWidgetFactory
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isLeaf(final DecisionTreeNode object) {
         return object.isLeaf();
     }

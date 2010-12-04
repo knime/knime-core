@@ -124,14 +124,14 @@ implements InactiveBranchConsumer {
     private final HiLiteTranslator m_hiliteTranslator = new HiLiteTranslator();
     /** Default hilite handler used if hilite translation is disabled. */
     private final HiLiteHandler m_dftHiliteHandler = new HiLiteHandler();
-    
+
     /**
      * Two inputs, one output.
      */
     protected EndcaseNodeModel() {
         super(createInTypes(3), new PortType[] {BufferedDataTable.TYPE});
     }
-    
+
     private static PortType[] createInTypes(final int nrIns) {
         PortType[] types = new PortType[nrIns];
         Arrays.fill(types, new PortType(BufferedDataTable.class, true));
@@ -146,7 +146,7 @@ implements InactiveBranchConsumer {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         Vector<DataTableSpec> specs = new Vector<DataTableSpec>();
-        for (int i = 0 ; i < getNrInPorts(); i++) {
+        for (int i = 0; i < getNrInPorts(); i++) {
             if (inSpecs[i] != null) {
                 // if connected...
                 if (!(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
@@ -159,19 +159,19 @@ implements InactiveBranchConsumer {
             // all inactive or not connected, return first spec (which must
             // be connected!)
             assert inSpecs[0] instanceof InactiveBranchPortObjectSpec;
-            return new PortObjectSpec[]{ inSpecs[0] };
+            return new PortObjectSpec[]{inSpecs[0]};
         }
         assert specs.size() > 0;
         // check compatibility of specs against first spec in list
-        for (int i = 1 ; i < specs.size(); i++) {
+        for (int i = 1; i < specs.size(); i++) {
             if (!(specs.get(0).equalStructure(specs.get(i)))) {
                 // incompatible - refuse to configure
-                LOGGER.warn("Incompatible specs in End CASE.");
-                return null;
+                throw new InvalidSettingsException("The table structures of"
+                        + " active ports are not compatible.");
             }
         }
         // all ok, return first spec:
-        return new PortObjectSpec[]{ specs.get(0) };
+        return new PortObjectSpec[]{specs.get(0)};
     }
 
     /**
@@ -181,7 +181,7 @@ implements InactiveBranchConsumer {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         Vector<BufferedDataTable> tables = new Vector<BufferedDataTable>();
-        for (int i = 0 ; i < getNrInPorts(); i++) {
+        for (int i = 0; i < getNrInPorts(); i++) {
             if (inData[i] != null) {
                 // if connected...
                 if (!(inData[i] instanceof InactiveBranchPortObject)) {
@@ -197,19 +197,20 @@ implements InactiveBranchConsumer {
             if (m_enableHiliting) {
                 // create empty hilite translation map (so we correctly
                 // handle the internals).
-                Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
+                Map<RowKey, Set<RowKey>> map =
+                        new HashMap<RowKey, Set<RowKey>>();
                 m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
             }
-            return new PortObject[]{ inData[0] };
+            return new PortObject[]{inData[0]};
         }
         assert tables.size() > 0;
         // check compatibility of specs against first spec in list
-        for (int i = 1 ; i < tables.size(); i++) {
+        for (int i = 1; i < tables.size(); i++) {
             if (!(tables.get(0).getSpec().equalStructure(
                     tables.get(i).getSpec()))) {
-                // incompatible - refuse to configure
-                LOGGER.warn("Incompatible specs in End CASE.");
-                return null;
+                // incompatible - refuse to execute
+                throw new Exception("The data table structures of the active "
+                        + "ports are not compatible.");
             }
         }
 
@@ -218,7 +219,7 @@ implements InactiveBranchConsumer {
         int i = 0;
         for (BufferedDataTable t : tables) {
             totalRowCount += t.getRowCount();
-            dtables[i] = (DataTable)t;
+            dtables[i] = t;
             i++;
         }
 
