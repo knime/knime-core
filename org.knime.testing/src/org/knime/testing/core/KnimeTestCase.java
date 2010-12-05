@@ -39,10 +39,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.KNIMETimer;
 
 // TODO: check, that the number of correct results corresponds to the number
@@ -220,12 +221,19 @@ public class KnimeTestCase extends TestCase {
             for (int i = 0; i < nodeCont.getNrViews(); i++) {
                 logger.debug("opening view nr. " + i + " for node "
                         + nodeCont.getName());
-                AbstractNodeView<? extends NodeModel> view =
+                final AbstractNodeView<? extends NodeModel> view =
                     nodeCont.getView(i);
+                final int index = i;
                 // store the view in order to close is after the test finishes
                 allViews.add(view);
                 // open it now.
-                Node.invokeOpenView(view, "View #" + i);
+                ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                    /** {@inheritDoc} */
+                    @Override
+                    public void run() {
+                        Node.invokeOpenView(view, "View #" + index);
+                    }
+                });
             }
         }
 
