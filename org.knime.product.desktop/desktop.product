@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.5"?>
 
-<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.3.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product application="org.knime.product.KNIME_APPLICATION" id="org.knime.product.KNIME_PRODUCT" includeLaunchers="true" name="KNIME Desktop Product" uid="org.knime.product.desktop" useFeatures="true" version="2.4.0.qualifier">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/knime64.gif"/>
       <text>
-         Welcome to KNIME v2.3.0.0025224
+         Welcome to KNIME v2.4.0.0025224
 the Konstanz Information Miner
 Copyright, 2003 - 2010
 email: contact@knime.org
@@ -34,10 +34,9 @@ All other trademarks are the property of their respective owners.
       <vmArgsMac>-XstartOnFirstThread -Xdock:icon=../Resources/knime.icns -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif" i128="/org.knime.product/icons/gif/knime128.gif"/>
+   <windowImages i128="/org.knime.product/icons/gif/knime128.gif" i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif"/>
 
-   <splash
-      location="org.knime.product" />
+   <splash location="org.knime.product"/>
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime128.xpm"/>
       <macosx icon="/org.knime.product/icons/knime.icns"/>
@@ -64,13 +63,13 @@ All other trademarks are the property of their respective owners.
    </features>
 
    <configurations>
-      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
-      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.equinox.p2.reconciler.dropins" autoStart="true" startLevel="4" />
-      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
-      <plugin id="org.eclipse.update.configurator" autoStart="true" startLevel="3" />
+      <plugin autoStart="true" id="org.eclipse.core.runtime" startLevel="4"/>
+      <plugin autoStart="true" id="org.eclipse.equinox.common" startLevel="2"/>
+      <plugin autoStart="true" id="org.eclipse.equinox.ds" startLevel="2"/>
+      <plugin autoStart="true" id="org.eclipse.equinox.event" startLevel="2"/>
+      <plugin autoStart="true" id="org.eclipse.equinox.p2.reconciler.dropins" startLevel="4"/>
+      <plugin autoStart="true" id="org.eclipse.equinox.simpleconfigurator" startLevel="1"/>
+      <plugin autoStart="true" id="org.eclipse.update.configurator" startLevel="3"/>
    </configurations>
 
 </product>

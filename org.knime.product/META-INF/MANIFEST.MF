@@ -1,29 +1,17 @@
 Manifest-Version: 1.0
-Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime,
- org.eclipse.core.resources,
- org.eclipse.ui.ide,
- org.knime.base,
- org.knime.core,
- org.knime.workbench,
- org.knime.workbench.core,
- org.knime.workbench.editor,
- org.knime.workbench.repository,
- org.knime.workbench.ui,
- org.eclipse.swt,
- org.eclipse.jface,
- org.eclipse.ui.workbench,
- org.eclipse.ui.intro,
- org.eclipse.core.net,
- org.eclipse.ui.net,
- org.eclipse.ui.console
 Export-Package: org.knime.product,org.knime.product.headless,org.knime
  .product.rcp
+Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.co
+ re.resources,org.eclipse.ui.ide,org.knime.base,org.knime.core,org.kni
+ me.workbench,org.knime.workbench.core,org.knime.workbench.editor,org.
+ knime.workbench.repository,org.knime.workbench.ui,org.eclipse.swt,org
+ .eclipse.jface,org.eclipse.ui.workbench,org.eclipse.ui.intro,org.ecli
+ pse.core.net,org.eclipse.ui.net,org.eclipse.ui.console
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-Version: 2.3.0.qualifier
+Bundle-Version: 2.4.0.qualifier
 Bundle-Name: KNIME Konstanz Information Miner
-Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-ManifestVersion: 2
+Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-SymbolicName: org.knime.product;singleton:=true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

@@ -1,29 +1,21 @@
 Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Unit-Tests for org.knime.core
-Bundle-SymbolicName: org.knime.core.testing;singleton:=true
-Bundle-Version: 2.3.0.qualifier
-Fragment-Host: org.knime.core;bundle-version="2.3.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Export-Package: org.knime.core,org.knime.core.data.container,org.knime
+ .core.data.def,org.knime.core.data.util,org.knime.core.data.vector.bi
+ tvector,org.knime.core.data.vector.bytevector,org.knime.core.node,org
+ .knime.core.node.port.pmml,org.knime.core.node.property.hilite,org.kn
+ ime.core.node.tableview,org.knime.core.util,org.knime.core.util.token
+ izer,org.knime.core.workflow,org.knime.core.workflow.bug2225_sourceNo
+ desInMetaNodes,org.knime.core.workflow.chainofnodesoneblocking,org.kn
+ ime.core.workflow.metaWithIndependentThroughConns,org.knime.core.work
+ flow.metawithsinglenode,org.knime.core.workflow.simplechainofnodes,or
+ g.knime.core.workflow.simpleLoop
+Require-Bundle: org.knime.testing;bundle-version="2.3.0",org.junit;bun
+ dle-version="4.8.1"
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.knime.testing;bundle-version="2.3.0",
- org.junit;bundle-version="4.8.1"
-Export-Package: org.knime.core,
- org.knime.core.data.container,
- org.knime.core.data.def,
- org.knime.core.data.util,
- org.knime.core.data.vector.bitvector,
- org.knime.core.data.vector.bytevector,
- org.knime.core.node,
- org.knime.core.node.port.pmml,
- org.knime.core.node.property.hilite,
- org.knime.core.node.tableview,
- org.knime.core.util,
- org.knime.core.util.tokenizer,
- org.knime.core.workflow,
- org.knime.core.workflow.bug2225_sourceNodesInMetaNodes,
- org.knime.core.workflow.chainofnodesoneblocking,
- org.knime.core.workflow.metaWithIndependentThroughConns,
- org.knime.core.workflow.metawithsinglenode,
- org.knime.core.workflow.simplechainofnodes,
- org.knime.core.workflow.simpleLoop
+Fragment-Host: org.knime.core;bundle-version="2.3.0"
+Bundle-Version: 2.4.0.qualifier
+Bundle-Name: Unit-Tests for org.knime.core
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.core.testing;singleton:=true
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+
