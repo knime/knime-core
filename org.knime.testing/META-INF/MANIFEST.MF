@@ -1,34 +1,22 @@
 Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Test-Node extension for KNIME Workbench
-Bundle-SymbolicName: org.knime.testing; singleton:=true
-Bundle-Version: 2.3.0.qualifier
+Export-Package: org.knime.testing,org.knime.testing.core,org.knime.tes
+ ting.data.blob,org.knime.testing.guiTests,org.knime.testing.node.bloc
+ king,org.knime.testing.node.datagenerator,org.knime.testing.node.diff
+ erModelContent,org.knime.testing.node.differNode,org.knime.testing.no
+ de.disturber,org.knime.testing.node.executioncount,org.knime.testing.
+ node.failing,org.knime.testing.node.runtime,org.knime.testing.stacktr
+ acedumper
+Require-Bundle: org.eclipse.core.runtime,org.knime.workbench.core,org.
+ knime.workbench.repository,org.knime.base,org.junit,org.junit4,org.ec
+ lipse.core.resources,org.apache.log4j,org.apache.ant;bundle-version="
+ 1.7.1",org.eclipse.ant.core;bundle-version="3.2.200"
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.eclipse.core.runtime,
- org.knime.workbench.core,
- org.knime.workbench.repository,
- org.knime.base,
- org.junit,
- org.junit4,
- org.eclipse.core.resources,
- org.apache.log4j,
- org.apache.ant;bundle-version="1.7.1",
- org.eclipse.ant.core;bundle-version="3.2.200"
-Eclipse-RegisterBuddy: org.knime.base
-Export-Package: org.knime.testing,
- org.knime.testing.core,
- org.knime.testing.data.blob,
- org.knime.testing.guiTests,
- org.knime.testing.node.blocking,
- org.knime.testing.node.datagenerator,
- org.knime.testing.node.differModelContent,
- org.knime.testing.node.differNode,
- org.knime.testing.node.disturber,
- org.knime.testing.node.executioncount,
- org.knime.testing.node.failing,
- org.knime.testing.node.runtime,
- org.knime.testing.stacktracedumper
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
+Bundle-Version: 2.4.0.qualifier
+Bundle-Name: Test-Node extension for KNIME Workbench
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.knime.testing; singleton:=true
+Eclipse-RegisterBuddy: org.knime.base
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 
