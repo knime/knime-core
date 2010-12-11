@@ -216,21 +216,26 @@ public class KnimeTestCase extends TestCase {
         final Set<AbstractNodeView<? extends NodeModel>> allViews =
             new HashSet<AbstractNodeView<? extends NodeModel>>();
 
-        // Collection<NodeView> views = new ArrayList<NodeView>();
-        for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+        // also perform view creation in EDT thread (inits some color chooser
+        // thingie) in at least the scatter plotter ... just as an attempt
+        // to workaround the SyntheticImageGenerator problem
+        // http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid=d544ef8157d74565d9f7aee881430?bug_id=6967484
+        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6419354
+        for (final NodeContainer nodeCont : m_manager.getNodeContainers()) {
             for (int i = 0; i < nodeCont.getNrViews(); i++) {
-                logger.debug("opening view nr. " + i + " for node "
-                        + nodeCont.getName());
-                final AbstractNodeView<? extends NodeModel> view =
-                    nodeCont.getView(i);
                 final int index = i;
-                // store the view in order to close is after the test finishes
-                allViews.add(view);
                 // open it now.
                 ViewUtils.invokeAndWaitInEDT(new Runnable() {
                     /** {@inheritDoc} */
                     @Override
                     public void run() {
+                        logger.debug("opening view nr. " + index + " for node "
+                                + nodeCont.getName());
+                        final AbstractNodeView<? extends NodeModel> view =
+                            nodeCont.getView(index);
+                        // store the view in order to close is after the test
+                        // finishes
+                        allViews.add(view);
                         Node.invokeOpenView(view, "View #" + index);
                     }
                 });
