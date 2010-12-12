@@ -546,12 +546,12 @@ public abstract class HierarchicalGraphView<K> {
             }
             // draw text on the connectors
             NodeWidget<K> widget = getWidgets().get(currK);
-            if (null != widget.getConnectorLabelAbove()) {
-                String text = widget.getConnectorLabelAbove();
+            String labelAbove = widget.getConnectorLabelAbove();
+            if (null != labelAbove && !labelAbove.isEmpty()) {
                 Font prevFont = g.getFont();
                 Font font = prevFont.deriveFont(Font.BOLD | Font.ITALIC);
                 g.setFont(font);
-                TextLayout textLayout = new TextLayout(text, font,
+                TextLayout textLayout = new TextLayout(labelAbove, font,
                         g.getFontRenderContext());
                 Rectangle textBounds = textLayout.getBounds().getBounds();
                 int w = textBounds.width;
@@ -567,13 +567,13 @@ public abstract class HierarchicalGraphView<K> {
                 g.setColor(prevColor);
                 g.setFont(prevFont);
             }
-            if (null != widget.getConnectorLabelBelow()
+            String labelBelow = widget.getConnectorLabelBelow();
+            if (null != labelBelow && !labelBelow.isEmpty()
                     && !visibleChilds.isEmpty()) {
-                String text = widget.getConnectorLabelBelow();
                 Font prevFont = g.getFont();
                 Font font = prevFont.deriveFont(Font.BOLD | Font.ITALIC);
                 g.setFont(font);
-                TextLayout textLayout = new TextLayout(text, font,
+                TextLayout textLayout = new TextLayout(labelBelow, font,
                         g.getFontRenderContext());
                 Rectangle textBounds = textLayout.getBounds().getBounds();
                 int w = textBounds.width;

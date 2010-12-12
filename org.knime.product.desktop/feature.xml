@@ -731,17 +731,10 @@ propagated with or for interoperation with KNIME.
 
    <includes id="org.knime.features.base" version="0.0.0"/>
 
-   <includes arch="x86" id="org.knime.binary.jre.linux.gtk.x86" os="linux" version="0.0.0"/>
-
-   <includes arch="x86_64" id="org.knime.binary.jre.linux.gtk.x86_64" os="linux" version="0.0.0"/>
-
-   <includes arch="x86" id="org.knime.binary.jre.win32.win32.x86" os="win32" version="0.0.0"/>
-
-   <includes arch="x86_64" id="org.knime.binary.jre.win32.win32.x86_64" os="win32" version="0.0.0"/>
+   <includes id="org.knime.binary.jre"  version="0.0.0"/>
 
    <requires>
-      <import feature="com.knime.features.enterprise.client.exampleserver" version="2.3.0"/>
+      <import feature="com.knime.features.enterprise.client.exampleserver" match="greaterOrEqual" version="2.3.0"/>
       <import feature="org.eclipse.equinox.p2.user.ui" match="greaterOrEqual" version="2.0.1"/>
    </requires>
-
 </feature>
