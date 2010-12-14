@@ -313,13 +313,14 @@ public final class NodeLogger {
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
+        l.info("# os.arch=" + System.getProperty("os.arch"));
         l
                 .info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
                 ? "on" : "off"));
         l.info("# host=" + getHostname());
-        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024) 
+        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024)
                 + "MB");
         l.info("#############################################################");
     }
@@ -712,10 +713,10 @@ public final class NodeLogger {
             return LEVEL.ALL;
         }
     }
-    
+
     private static String getHostname() {
         try {
-            InetAddress localMachine = InetAddress.getLocalHost();    
+            InetAddress localMachine = InetAddress.getLocalHost();
             return localMachine.getHostName();
         } catch (Exception uhe) {
             return "<unknown host>";
