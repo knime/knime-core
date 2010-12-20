@@ -245,7 +245,7 @@ public class ThreadPool {
                     } catch (ExecutionException ex) {
                         if ((ex.getCause() != null)
                                 || (ex.getCause() instanceof CanceledExecutionException)) {
-                            LOGGER.info("Runnable was canceled by user");
+                            // this is OK
                         } else {
                             LOGGER.error(
                                     "An exception occurred while executing "
