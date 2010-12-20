@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +62,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -276,6 +279,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                 knimeNode = doc.getDocumentElement();
                 icon = readIconFromXML(knimeNode);
 
+
                 try {
                     type = NodeType.valueOf(knimeNode.getAttribute("type"));
                 } catch (IllegalArgumentException ex) {
@@ -302,6 +306,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                 // that would call an abstract method from within the
                 // constructor - local fields in the derived NodeFactory have
                 // not been initialized
+
             } catch (Exception ex) {
                 m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
                 knimeNode = null;
@@ -314,11 +319,30 @@ public abstract class NodeFactory<T extends NodeModel> {
         m_icon = icon;
         m_nodeName = nodeName;
         m_type = type;
+        addBundleInformation();
         addLoadedFactory(this.getClass());
     }
 
     private static final Pattern ICON_PATH_PATTERN =
             Pattern.compile("[^\\./]+/\\.\\./");
+
+
+    private void addBundleInformation() {
+        if (m_knimeNode == null) {
+            // TODO create substitute document?
+            return;
+        }
+        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+        Dictionary<String, String> headers = bundle.getHeaders();
+
+        Document doc = m_knimeNode.getOwnerDocument();
+        Element bundleElement = doc.createElement("origin-bundle");
+        bundleElement.setAttribute("symbolic-name", bundle.getSymbolicName());
+        bundleElement.setAttribute("name", headers.get("Bundle-Name"));
+        bundleElement.setAttribute("vendor", headers.get("Bundle-Vendor"));
+        m_knimeNode.appendChild(bundleElement);
+
+    }
 
     /**
      * Reads the icon tag from the xml and returns the icon. If not available or
@@ -667,7 +691,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Creates and returns a new node view for the given index. 
+     * Creates and returns a new node view for the given index.
      *
      * @param viewIndex The index for the view to create.
      * @param nodeModel the underlying model
@@ -677,19 +701,19 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
-    public abstract NodeView<T> createNodeView(final int viewIndex, 
+    public abstract NodeView<T> createNodeView(final int viewIndex,
             final T nodeModel);
-    
+
     /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
-     * creation of a more flexible {@link AbstractNodeView}. Implementations 
-     * will typically overwrite the {@link #createNodeView(int, NodeModel)} 
-     * method unless they wish to return, e.g. an 
-     * {@link ExternalApplicationNodeView}. 
-     * 
-     * <p><strong>Note:</strong>This method is going to be removed in KNIME  
-     * v3.0, whereby the return type of the 
-     * {@link #createNodeView(int, NodeModel)} will be changed 
-     * to {@link AbstractNodeView}. (This change is postponed to v3.0 in order 
+     * creation of a more flexible {@link AbstractNodeView}. Implementations
+     * will typically overwrite the {@link #createNodeView(int, NodeModel)}
+     * method unless they wish to return, e.g. an
+     * {@link ExternalApplicationNodeView}.
+     *
+     * <p><strong>Note:</strong>This method is going to be removed in KNIME
+     * v3.0, whereby the return type of the
+     * {@link #createNodeView(int, NodeModel)} will be changed
+     * to {@link AbstractNodeView}. (This change is postponed to v3.0 in order
      * to ensure binary compatibility of 2.0.x plugins with the 2.x series).
      * @param viewIndex The index for the view to create
      * @param nodeModel the underlying model
