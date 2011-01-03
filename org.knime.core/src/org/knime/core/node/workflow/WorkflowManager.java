@@ -1868,6 +1868,81 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
             LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
+            // switch state from POSTEXECUTE to new state (EXECUTED or IDLE)
+            nc.performStateTransitionEXECUTED(status);
+            boolean canConfigureSuccessors = true;
+            if (nc instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                // remember previous message in case loop restart fails...
+                NodeMessage latestNodeMessage = snc.getNodeMessage();
+                if (success) {
+                    Node node = snc.getNode();
+                    // process loop context for "real" nodes:
+                    if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                        // if this was BEGIN, it's not anymore (until we do not
+                        // restart it explicitly!)
+                        node.setLoopEndNode(null);
+                    }
+                    if (node.getLoopStatus() != null) {
+                        // we are supposed to execute this loop again!
+                        // first retrieve FlowLoopContext object
+                        FlowLoopContext slc = node.getLoopStatus();
+                        // first check if the loop is properly configured:
+                        if (m_workflow.getNode(slc.getOwner()) == null) {
+                            // obviously not: origin of loop is not in this WFM!
+                            // nothing else to do: NC stays configured
+                            assert nc.getState()
+                                        == NodeContainer.State.CONFIGURED;
+                            // and choke
+                            latestNodeMessage = new NodeMessage(
+                                    NodeMessage.Type.ERROR,
+                                    "Loop nodes are not in the same workflow!");
+                            success = false;
+                        } else {
+                            // make sure the end of the loop is properly
+                            // configured:
+                            slc.setTailNode(nc.getID());
+                            // and try to restart loop
+                            try {
+                                restartLoop(slc);
+                            } catch (IllegalLoopException ile) {
+                                latestNodeMessage = new NodeMessage(
+                                        NodeMessage.Type.ERROR,
+                                        ile.getMessage());
+                                success = false;
+                            }
+                            // clear stack (= loop context)
+                            node.clearLoopStatus();
+                                // make sure we do not accidentally configure the
+                            // remainder of this node since we are not yet done
+                            // with the loop
+                            canConfigureSuccessors = false;
+                        }
+                    }
+                }
+                if (!success) {
+                    // clean up node interna and status (but keep org. message!)
+                    // switch from IDLE to CONFIGURED if possible!
+                    configureSingleNodeContainer(snc, /*keepNodeMessage=*/false);
+                    snc.setNodeMessage(latestNodeMessage);
+                }
+            }
+            if (nc.getWaitingLoops().size() >= 1) {
+                // looks as if some loops were waiting for this node to
+                // finish! Let's try to restart them:
+                for (FlowLoopContext slc : nc.getWaitingLoops()) {
+                    try {
+                        restartLoop(slc);
+                    } catch (IllegalLoopException ile) {
+                        // set error message in LoopEnd node not this one!
+                        NodeMessage nm = new NodeMessage(
+                                NodeMessage.Type.ERROR,
+                                ile.getMessage());
+                        getNodeContainer(slc.getTailNode()).setNodeMessage(nm);
+                    }
+                }
+                nc.clearWaitingLoopList();
+            }
             // first clean up all successors - especially MARKED-flags
             if (!success) {
                 // execution failed - clean up successors' execution-marks
@@ -1876,62 +1951,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // be executed.
                 for (FlowObject so : nc.getWaitingLoops()) {
                     disableNodeForExecution(so.getOwner());
-                }
-                nc.clearWaitingLoopList();
-            }
-            // switch state from POSTEXECUTE to new state (EXECUTED or IDLE)
-            nc.performStateTransitionEXECUTED(status);
-            boolean canConfigureSuccessors = true;
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (!success) {
-                    // clean up node interna and status (but keep org. message!)
-                    // switch from IDLE to CONFIGURED if possible!
-                    NodeMessage oldMessage = snc.getNodeMessage();
-                    configureSingleNodeContainer(snc, /*keepNodeMessage=*/false);
-                    snc.setNodeMessage(oldMessage);
-                } else {
-                    // process loop context for "real" nodes:
-                if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
-                    // if this was BEGIN, it's not anymore (until we do not
-                    // restart it explicitly!)
-                    snc.getNode().setLoopEndNode(null);
-                }
-                Node node = snc.getNode();
-                if (node.getLoopStatus() != null) {
-                    // we are supposed to execute this loop again!
-                    // first retrieve FlowLoopContext object
-                    FlowLoopContext slc = node.getLoopStatus();
-                    // first check if the loop is properly configured:
-                    if (m_workflow.getNode(slc.getOwner()) == null) {
-                            // obviously not: origin of loop is not in this WFM!
-                        // nothing else to do: NC stays configured
-                            assert nc.getState()
-                                    == NodeContainer.State.CONFIGURED;
-                        // and choke
-                        throw new IllegalFlowObjectStackException(
-                                "Loop nodes are not in the same workflow!");
-                    } else {
-                        // make sure the end of the loop is properly
-                        // configured:
-                        slc.setTailNode(nc.getID());
-                        // and try to restart loop
-                        restartLoop(slc);
-                        // clear stack (= loop context)
-                        node.clearLoopStatus();
-                            // make sure we do not accidentally configure the
-                        // remainder of this node since we are not yet done
-                        // with the loop
-                        canConfigureSuccessors = false;
-                    }
-                }
-            }
-            }
-            if (nc.getWaitingLoops().size() >= 1) {
-                // looks as if some loops were waiting for this node to
-                // finish! Let's try to restart them:
-                for (FlowLoopContext slc : nc.getWaitingLoops()) {
-                    restartLoop(slc);
                 }
                 nc.clearWaitingLoopList();
             }
@@ -1950,16 +1969,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param sc FlowLoopContext of the actual loop
      */
-    private void restartLoop(final FlowLoopContext slc) {
+    private void restartLoop(final FlowLoopContext slc)
+    throws IllegalLoopException {
         NodeContainer tailNode = m_workflow.getNode(slc.getTailNode());
         NodeContainer headNode = m_workflow.getNode(slc.getOwner());
         if ((tailNode == null) || (headNode == null)) {
-            throw new IllegalStateException("Loop Nodes must both"
+            throw new IllegalLoopException("Loop Nodes must both"
                     + " be in the same workflow!");
         }
         if (!(tailNode instanceof SingleNodeContainer)
                 || !(headNode instanceof SingleNodeContainer)) {
-            throw new IllegalStateException("Loop Nodes must both"
+            throw new IllegalLoopException("Loop Nodes must both"
                     + " be SingleNodeContainers!");
         }
         // (1) find all intermediate node, the loop's "body"
@@ -1999,6 +2019,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         //     do this now so that we have an executing node in this WFM
         //     and an intermediate state does not suggest everything is done.
         //     (this used to happen before (9))
+        // NOTE: if we ever queue nodes asynchronosly this might cause problems.
         SingleNodeContainer headSNC = ((SingleNodeContainer)headNode);
         assert headSNC.getLoopRole().equals(LoopRole.BEGIN);
         headSNC.enableReQueuing();
@@ -2006,14 +2027,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
         headSNC.getOutgoingFlowObjectStack().pop(InnerFlowLoopContext.class);
-//        headSNC.getFlowObjectStack().pop(InnerFlowLoopContext.class);
         // (4) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
         for (NodeAndInports nai : loopBodyNodes) {
             NodeID id = nai.getID();
             NodeContainer nc = m_workflow.getNode(id);
             if (nc == null) {
-                throw new IllegalStateException("Node in loop body not in"
+                throw new IllegalLoopException("Node in loop body not in"
                     + " same workflow as head&tail!");
             } else if (!nc.isResetable()) {
                 LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
@@ -2036,9 +2056,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         //     we will re-create the FlowObjectStack and
         //     remove the loop-object as well!
         configureNodeAndSuccessors(headNode.getID(), false);
-        // the current node may have thrown an exception inside
+        // the tail node may have thrown an exception inside
         // configure, so we have to check here if the node
-        // is really configured before...
+        // is really configured before. (Failing configures in
+        // loop body nodes do NOT affect the state of the tailNode.)
         if (tailNode.getState().equals(State.CONFIGURED)) {
             // (6) ... we enable the body to be queued again.
             for (NodeAndInports nai : loopBodyNodes) {
@@ -2060,6 +2081,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // and (7) mark end of loop for re-execution
             ((SingleNodeContainer)tailNode).markForExecution(true);
+        } else {
+            // configure of tailNode failed! Abort execution of loop:
+            throw new IllegalLoopException("Loop end node could not"
+                + " be executed. Aborting Loop execution.");
+            
         }
         // (8) allow access to tail node
         ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
@@ -2976,7 +3002,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // looks as if some loops were waiting for this node to
                     // finish! Let's try to restart them:
                     for (FlowLoopContext slc : getWaitingLoops()) {
-                        getParent().restartLoop(slc);
+                        try {
+                            getParent().restartLoop(slc);
+                        } catch (IllegalLoopException ile) {
+                            // set error message in LoopEnd node not this one!
+                            NodeMessage nm = new NodeMessage(
+                                    NodeMessage.Type.ERROR,
+                                    ile.getMessage());
+                            getParent().getNodeContainer(slc.getTailNode())
+                                .setNodeMessage(nm);
+                        }
                     }
                     clearWaitingLoopList();
                 }
