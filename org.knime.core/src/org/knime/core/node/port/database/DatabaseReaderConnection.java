@@ -153,6 +153,7 @@ public final class DatabaseReaderConnection {
                 final Connection conn = m_conn.createConnection();
                 try {
                     // try to see if prepared statements are supported
+                    LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
                     m_stmt = conn.prepareStatement(pQuery);
                     ((PreparedStatement) m_stmt).execute();
                     m_spec = createTableSpec(
@@ -162,6 +163,7 @@ public final class DatabaseReaderConnection {
                             + e.getMessage(), e);
                     // otherwise use standard statement
                     m_stmt = conn.createStatement();
+                    LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
                     result = m_stmt.executeQuery(pQuery);
                     m_spec = createTableSpec(result.getMetaData());
                 } finally {
@@ -216,7 +218,9 @@ public final class DatabaseReaderConnection {
                             + "\"" + Integer.MIN_VALUE + "\".");
                 }
             }
-            final ResultSet result = m_stmt.executeQuery(m_conn.getQuery());
+            final String query = m_conn.getQuery();
+            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            final ResultSet result = m_stmt.executeQuery(query);
             return exec.createBufferedDataTable(new DataTable() {
                 /**
                  * {@inheritDoc}
@@ -274,6 +278,7 @@ public final class DatabaseReaderConnection {
                     + ") table_" + hashAlias;
                 m_stmt.setMaxRows(cachedNoRows);
             }
+            LOGGER.debug("Executing SQL statement \"" + query + "\"");
             m_stmt.execute(query);
             final ResultSet result = m_stmt.getResultSet();
             DBRowIterator it = new DBRowIterator(result);
