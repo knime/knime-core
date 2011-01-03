@@ -1163,9 +1163,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * possible outports of this WFM.
      *
      * @param inPorts set of port indices of the WFM.
+     * @param markExecutedNodes if true also (re)mark executed nodes.
      */
     void markForExecutionNodesInWFMConnectedToInPorts(
-            final Set<Integer> inPorts) {
+            final Set<Integer> inPorts,
+            final boolean markExecutedNodes) {
         synchronized (m_workflowMutex) {
             boolean changed = false; // will be true in case of state changes
             ArrayList<NodeAndInports> nodes
@@ -1180,6 +1182,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         changed = true;
                         snc.markForExecution(true);
                         break;
+                    case EXECUTED:
+                        if (markExecutedNodes) {
+                            changed = true;
+                            snc.markForReExecutionInLoop();
+                            break;
+                        }
                     default:
                         // either executed or to-be-executed
                     }
@@ -1190,7 +1198,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // will propagate state changes by calling
                     // call checkForNodeStateChanges (likely too often)
                     wfm.markForExecutionNodesInWFMConnectedToInPorts(
-                                                       nai.getInports());
+                                                       nai.getInports(),
+                                                       markExecutedNodes);
                 }
             }
             if (changed) {
@@ -2022,70 +2031,95 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // NOTE: if we ever queue nodes asynchronosly this might cause problems.
         SingleNodeContainer headSNC = ((SingleNodeContainer)headNode);
         assert headSNC.getLoopRole().equals(LoopRole.BEGIN);
-        headSNC.enableReQueuing();
+        headSNC.markForReExecutionInLoop();
         // clean up all newly added objects on FlowVariable Stack
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
         headSNC.getOutgoingFlowObjectStack().pop(InnerFlowLoopContext.class);
-        // (4) reset the nodes in the body (only those -
-        //     make sure end of loop is NOT reset)
-        for (NodeAndInports nai : loopBodyNodes) {
-            NodeID id = nai.getID();
-            NodeContainer nc = m_workflow.getNode(id);
-            if (nc == null) {
-                throw new IllegalLoopException("Node in loop body not in"
-                    + " same workflow as head&tail!");
-            } else if (!nc.isResetable()) {
-                LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
-                        + "during loop run, it is " + nc.getState());
-                continue;
+        // (4-7) reset/configure loop body - or not...
+        if (headSNC.resetAndConfigureLoopBody()) {
+            // (4a) reset the nodes in the body (only those -
+            //     make sure end of loop is NOT reset)
+            for (NodeAndInports nai : loopBodyNodes) {
+                NodeID id = nai.getID();
+                NodeContainer nc = m_workflow.getNode(id);
+                if (nc == null) {
+                    throw new IllegalLoopException("Node in loop body not in"
+                        + " same workflow as head&tail!");
+                } else if (!nc.isResetable()) {
+                    LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
+                            + "during loop run, it is " + nc.getState());
+                    continue;
+                }
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).reset();
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    // only reset the nodes connected to relevant ports.
+                    // See also bug 2225
+                    ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(
+                                                                  nai.getInports());
+                }
             }
-            if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).reset();
+            // (5a) configure the nodes from start to rest (it's not
+            //     so important if we configure more than the body)
+            //     do NOT configure start of loop because otherwise
+            //     we will re-create the FlowObjectStack and
+            //     remove the loop-object as well!
+            configureNodeAndSuccessors(headNode.getID(), false);
+            // the tail node may have thrown an exception inside
+            // configure, so we have to check here if the node
+            // is really configured before. (Failing configures in
+            // loop body nodes do NOT affect the state of the tailNode.)
+            if (tailNode.getState().equals(State.CONFIGURED)) {
+                // (6a) ... we enable the body to be queued again.
+                for (NodeAndInports nai : loopBodyNodes) {
+                    NodeID id = nai.getID();
+                    NodeContainer nc = m_workflow.getNode(id);
+                    if (nc instanceof SingleNodeContainer) {
+                        // make sure it's not already done...
+                        if (nc.getState().equals(State.IDLE)
+                                || nc.getState().equals(State.CONFIGURED)) {
+                            ((SingleNodeContainer)nc).markForExecution(true);
+                        }
+                    } else {
+                        // Mark only idle or configured nodes for re-execution
+                        // which are part of the flow.
+                        ((WorkflowManager)nc)
+                                .markForExecutionNodesInWFMConnectedToInPorts(
+                                                 nai.getInports(), false);
+                    }
+                }
+                // and (7a) mark end of loop for re-execution
+                ((SingleNodeContainer)tailNode).markForExecution(true);
             } else {
-                assert nc instanceof WorkflowManager;
-                // only reset the nodes connected to relevant ports.
-                // See also bug 2225
-                ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(
-                                                              nai.getInports());
+                // configure of tailNode failed! Abort execution of loop:
+                throw new IllegalLoopException("Loop end node could not"
+                    + " be executed. Aborting Loop execution.");
+                
             }
-        }
-        // (5) configure the nodes from start to rest (it's not
-        //     so important if we configure more than the body)
-        //     do NOT configure start of loop because otherwise
-        //     we will re-create the FlowObjectStack and
-        //     remove the loop-object as well!
-        configureNodeAndSuccessors(headNode.getID(), false);
-        // the tail node may have thrown an exception inside
-        // configure, so we have to check here if the node
-        // is really configured before. (Failing configures in
-        // loop body nodes do NOT affect the state of the tailNode.)
-        if (tailNode.getState().equals(State.CONFIGURED)) {
-            // (6) ... we enable the body to be queued again.
+        } else {
+            // (4b-5b) skip reset/configure...
+            // (6b) ...only requeue loop body
             for (NodeAndInports nai : loopBodyNodes) {
                 NodeID id = nai.getID();
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
                     // make sure it's not already done...
-                    if (nc.getState().equals(State.IDLE)
-                            || nc.getState().equals(State.CONFIGURED)) {
-                        ((SingleNodeContainer)nc).markForExecution(true);
+                    if (nc.getState().equals(State.EXECUTED)) {
+                        ((SingleNodeContainer)nc).markForReExecutionInLoop();
                     }
                 } else {
-                    // Mark only reset (see above) nodes for re-execution
-                    // see bug 2225
+                    // Mark executed nodes for re-execution (will also mark
+                    // queuded and idle nodes but those don't exist)
                     ((WorkflowManager)nc)
                             .markForExecutionNodesInWFMConnectedToInPorts(
-                                                             nai.getInports());
+                                             nai.getInports(), true);
                 }
             }
-            // and (7) mark end of loop for re-execution
+            // and (7b) mark end of loop for re-execution
+            assert tailNode.getState().equals(State.CONFIGURED);
             ((SingleNodeContainer)tailNode).markForExecution(true);
-        } else {
-            // configure of tailNode failed! Abort execution of loop:
-            throw new IllegalLoopException("Loop end node could not"
-                + " be executed. Aborting Loop execution.");
-            
         }
         // (8) allow access to tail node
         ((SingleNodeContainer)headNode).getNode().setLoopEndNode(

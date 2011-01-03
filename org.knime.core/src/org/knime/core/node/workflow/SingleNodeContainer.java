@@ -530,11 +530,13 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Queue underlying node for re-execution (= update state accordingly).
+     * Mark underlying, executed node so that it can be re-executed
+     * (= update state accordingly). Used in loops to execute start
+     * more than once and when reset/configure is skipped in loop body.
      *
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void enableReQueuing() {
+    void markForReExecutionInLoop() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
@@ -1163,6 +1165,13 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
+    }
+    
+    /**
+     * @see NodeModel#resetAndConfigureLoopBody()
+     */
+    boolean resetAndConfigureLoopBody() {
+        return getNode().resetAndConfigureLoopBody();
     }
 
     ///////////////////////////////////

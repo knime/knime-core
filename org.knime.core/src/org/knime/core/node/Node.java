@@ -1881,6 +1881,14 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    /**
+     * @see NodeModel#resetAndConfigureLoopBody()
+     */
+    public boolean resetAndConfigureLoopBody() {
+        return getNodeModel().resetAndConfigureLoopBody();
+    }
+
+
     // ////////////////////////
     // Credentials handling
     // ////////////////////////
