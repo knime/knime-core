@@ -331,9 +331,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return ports;
     }
 
+    private NodeStateEvent m_latestNewState = null;
+    private final Object m_nodeStateEventSemaphore = new Object(); 
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
+        synchronized (m_nodeStateEventSemaphore) {
+            if (m_latestNewState == null) {
+                // make sure we notify others that we are working on
+                // the new state.
+                m_latestNewState = state;
+            } else {
+                // another state was waiting to be processed, simply
+                // overwrite this outdated state and return. Leave the
+                // work to the previously started thread.
+                m_latestNewState = state;
+                return;
+            }
+        }
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
@@ -344,25 +359,27 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                             (SingleNodeContainer)getNodeContainer();
                     isInactive = snc.isInactive();
                 }
-                fig.setState(state.getState(), isInactive);
-                updateNodeStatus();
-
-                // reset the tooltip text of the outports
-                for (Object part : getChildren()) {
-
-                    if (part instanceof NodeOutPortEditPart
-                            || part instanceof WorkflowInPortEditPart
-                            || part instanceof MetaNodeOutPortEditPart) {
-                        AbstractPortEditPart outPortPart =
-                                (AbstractPortEditPart)part;
-                        outPortPart.rebuildTooltip();
+                synchronized (m_nodeStateEventSemaphore) {
+                    fig.setState(m_latestNewState.getState(), isInactive);
+                    updateNodeStatus();
+                    // reset the tooltip text of the outports
+                    for (Object part : getChildren()) {
+    
+                        if (part instanceof NodeOutPortEditPart
+                                || part instanceof WorkflowInPortEditPart
+                                || part instanceof MetaNodeOutPortEditPart) {
+                            AbstractPortEditPart outPortPart =
+                                    (AbstractPortEditPart)part;
+                            outPortPart.rebuildTooltip();
+                        }
                     }
+                    // always refresh visuals
+                    refreshVisuals();
+                    // and let others know we are done with the update...
+                    m_latestNewState = null;
                 }
-                // always refresh visuals
-                refreshVisuals();
             }
         });
-
     }
 
     /** {@inheritDoc} */
