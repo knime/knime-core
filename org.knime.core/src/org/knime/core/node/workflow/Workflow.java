@@ -386,8 +386,8 @@ class Workflow {
         HashSet<Integer> outSet = new HashSet<Integer>();
         // Map to remember connected nodes with the index of the corresponding
         // input port
-        TreeMap<NodeID, Integer> nodesToCheck
-                            = new TreeMap<NodeID, Integer>();
+        LinkedHashMap<NodeID, Integer> nodesToCheck
+                            = new LinkedHashMap<NodeID, Integer>();
         // find everything that is connected to an input port of this workflow
         // with an index contained in the set:
         for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
@@ -931,6 +931,7 @@ class Workflow {
         assert (nai.getID().equals(startNode));
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
+            @Override
             public int compare(
                     final NodeAndInports n0, final NodeAndInports n1) {
                 return n0.m_depth - n1.m_depth;

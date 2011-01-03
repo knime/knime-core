@@ -64,6 +64,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
 
 import org.knime.core.data.property.ColorAttr;
 
@@ -85,6 +86,11 @@ final class HierarchicalGraphComponent<K> extends JPanel implements Scrollable {
         setLayout(null);
         setBackground(ColorAttr.BACKGROUND);
         addMouseListener(new MyMouseListener());
+
+        // Register to do tooltips so that tooltips of the graph will
+        // be displayed
+        ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+        toolTipManager.registerComponent(this);
     }
 
     /**
@@ -107,6 +113,19 @@ final class HierarchicalGraphComponent<K> extends JPanel implements Scrollable {
         }
         super.paint(g2);
         m_graph.paint(this, g2, 0, 0, this.getWidth(), this.getHeight());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText(final MouseEvent event) {
+        String tip = m_graph.getToolTipText(event);
+
+        if (null == tip) {
+            tip = getToolTipText();
+        }
+        return tip;
     }
 
     /**

@@ -51,8 +51,8 @@
 package org.knime.base.node.mine.decisiontree2.view.graph;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -61,7 +61,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
-import java.awt.font.TextLayout;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,6 +73,8 @@ import java.util.Set;
 import java.util.Stack;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.knime.core.data.property.ColorAttr;
@@ -106,6 +107,7 @@ public abstract class HierarchicalGraphView<K> {
     private List<GraphListener> m_graphListeners;
     private int m_nodeWidth;
     private Map<K, DefaultMutableTreeNode> m_treeMap;
+    private Map<Rectangle, String> m_toolTips;
 
     /**
      * Create a new instance.
@@ -130,6 +132,7 @@ public abstract class HierarchicalGraphView<K> {
         m_hilited = new HashSet<K>();
         m_treeMap = new HashMap<K, DefaultMutableTreeNode>();
         m_graphListeners = new ArrayList<GraphListener>();
+        m_toolTips = new HashMap<Rectangle, String>();
 
         m_component = new HierarchicalGraphComponent<K>(this);
         m_nodeWidth = 100;
@@ -465,6 +468,9 @@ public abstract class HierarchicalGraphView<K> {
         if (null == m_root) {
             return;
         }
+        // shared instance used to draw labels
+        JLabel label = new JLabel();
+        m_toolTips.clear();
         final Paint origPaint = g.getPaint();
         final Stroke origStroke = g.getStroke();
         g.setColor(ColorAttr.BORDER);
@@ -548,45 +554,36 @@ public abstract class HierarchicalGraphView<K> {
             NodeWidget<K> widget = getWidgets().get(currK);
             String labelAbove = widget.getConnectorLabelAbove();
             if (null != labelAbove && !labelAbove.isEmpty()) {
-                Font prevFont = g.getFont();
-                Font font = prevFont.deriveFont(Font.BOLD | Font.ITALIC);
-                g.setFont(font);
-                TextLayout textLayout = new TextLayout(labelAbove, font,
-                        g.getFontRenderContext());
-                Rectangle textBounds = textLayout.getBounds().getBounds();
-                int w = textBounds.width;
-                int h = textBounds.height;
+                label.setText(labelAbove);
+                label.setOpaque(true);
+                label.setBackground(ColorAttr.BACKGROUND);
+                label.setFont(g.getFont().deriveFont(Font.BOLD | Font.ITALIC));
+                int w = Math.min(m_layoutSettings.getNodeWidth() - 10,
+                        label.getPreferredSize().width);
+                int h = label.getPreferredSize().height;
                 int xx = bounds.x + (bounds.width - w) / 2;
                 int yy = bounds.y - h - 18;
-                Color prevColor = g.getColor();
-                g.setColor(ColorAttr.BACKGROUND);
-                g.fillRect(xx, yy - 2, w, h + 4);
-                g.setColor(Color.black.brighter());
-                g.setColor(ColorAttr.BORDER);
-                textLayout.draw(g, xx - textBounds.x, yy - textBounds.y);
-                g.setColor(prevColor);
-                g.setFont(prevFont);
+                Rectangle labelBounds = new Rectangle(xx, yy, w, h);
+                m_toolTips.put(labelBounds, labelAbove);
+                SwingUtilities.paintComponent(g, label, (Container)c,
+                        labelBounds);
             }
             String labelBelow = widget.getConnectorLabelBelow();
             if (null != labelBelow && !labelBelow.isEmpty()
                     && !visibleChilds.isEmpty()) {
-                Font prevFont = g.getFont();
-                Font font = prevFont.deriveFont(Font.BOLD | Font.ITALIC);
-                g.setFont(font);
-                TextLayout textLayout = new TextLayout(labelBelow, font,
-                        g.getFontRenderContext());
-                Rectangle textBounds = textLayout.getBounds().getBounds();
-                int w = textBounds.width;
-                int h = textBounds.height;
+                label.setText(labelBelow);
+                label.setOpaque(true);
+                label.setBackground(ColorAttr.BACKGROUND);
+                label.setFont(g.getFont().deriveFont(Font.BOLD | Font.ITALIC));
+                int w = Math.min(m_layoutSettings.getNodeWidth() - 10,
+                        label.getPreferredSize().width);
+                int h = label.getPreferredSize().height;
                 int xx = bounds.x + (bounds.width - w) / 2;
                 int yy = bounds.y + bounds.height + 10;
-                Color prevColor = g.getColor();
-                g.setColor(ColorAttr.BACKGROUND);
-                g.fillRect(xx, yy - 2, w, h + 4);
-                g.setColor(ColorAttr.BORDER);
-                textLayout.draw(g, xx - textBounds.x, yy - textBounds.y);
-                g.setColor(prevColor);
-                g.setFont(prevFont);
+                Rectangle labelBounds = new Rectangle(xx, yy, w, h);
+                m_toolTips.put(labelBounds, labelBelow);
+                SwingUtilities.paintComponent(g, label, (Container)c,
+                        labelBounds);
             }
         }
         for (Rectangle bounds : m_collapseSign.keySet()) {
@@ -653,6 +650,22 @@ public abstract class HierarchicalGraphView<K> {
                 bounds.width - 1, bounds.height - 1,
                 8, 8);
         g.setStroke(new BasicStroke(1f));
+    }
+
+    /** Returns the string to be used as the tooltip for event.
+     * @param event the mouse event
+     * @return the tooltip
+     */
+    public String getToolTipText(final MouseEvent event) {
+        String tip = null;
+        Point p = event.getPoint();
+
+        for (Rectangle r : m_toolTips.keySet()) {
+            if (r.contains(p)) {
+                tip = m_toolTips.get(r);
+            }
+        }
+        return tip;
     }
 
     /**
