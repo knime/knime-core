@@ -165,8 +165,11 @@ public class ExportPreferencesAction extends Action {
             NodeLogger.getLogger(ExportPreferencesAction.class).info(
                     "Exporting preferences to file "
                             + outFile.getAbsolutePath());
+            /* Do not export the default values, configuration and profile
+             * settings. Only instance settings get exported from KNIME. */
             prefService.exportPreferences(prefService.getRootNode(), out,
-                    new String[0]);//{"bundle_defaults", "configuration"});
+                    new String[]{
+                    "bundle_defaults", "configuration", "profile"});
         } catch (Throwable t) {
             String msg = "Unable to write preferences to output file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
