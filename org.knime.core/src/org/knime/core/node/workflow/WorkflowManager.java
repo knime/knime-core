@@ -1284,10 +1284,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer nc = m_workflow.getNode(id);
         if (nc != null) {
             switch (nc.getState()) {
-            case IDLE:
-            case CONFIGURED:
-                // nothing needs to be done - also with the successors!
-                return;
+//            case IDLE:
+//            case CONFIGURED:
+//                // nothing needs to be done - also with the successors!
+//                return;
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
                 if (nc instanceof SingleNodeContainer) {
@@ -1877,7 +1877,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
             LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
-            // switch state from POSTEXECUTE to new state (EXECUTED or IDLE)
+            // switch state from POSTEXECUTE to new state: EXECUTED/CONFIGURED
+            // in case of success (w/ or w/out loop) or IDLE in case of error.
             nc.performStateTransitionEXECUTED(status);
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
@@ -1929,12 +1930,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         }
                     }
                 }
+                // note that is NOT an else of the above if(success) - the
+                // flag can be modified in the if-branch.
                 if (!success) {
+                    // execution failed - clean up successors' execution-marks
+                    // (needs be done before we reset the state of the node!)
+                    disableNodeForExecution(nc.getID());
                     // clean up node interna and status (but keep org. message!)
                     // switch from IDLE to CONFIGURED if possible!
                     configureSingleNodeContainer(snc, /*keepNodeMessage=*/false);
                     snc.setNodeMessage(latestNodeMessage);
                 }
+            }
+            // if unsuccessful clean up all successors - especially MARKED-flags
+            if (!success) {
+                // execution failed - clean up successors' execution-marks
+                disableNodeForExecution(nc.getID());
+                // and also any nodes which were waiting for this one to
+                // be executed.
+                for (FlowLoopContext flc : nc.getWaitingLoops()) {
+                    disableNodeForExecution(flc.getTailNode());
+                }
+                nc.clearWaitingLoopList();
             }
             if (nc.getWaitingLoops().size() >= 1) {
                 // looks as if some loops were waiting for this node to
@@ -1949,17 +1966,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 ile.getMessage());
                         getNodeContainer(slc.getTailNode()).setNodeMessage(nm);
                     }
-                }
-                nc.clearWaitingLoopList();
-            }
-            // first clean up all successors - especially MARKED-flags
-            if (!success) {
-                // execution failed - clean up successors' execution-marks
-                disableNodeForExecution(nc.getID());
-                // and also any nodes which were waiting for this one to
-                // be executed.
-                for (FlowObject so : nc.getWaitingLoops()) {
-                    disableNodeForExecution(so.getOwner());
                 }
                 nc.clearWaitingLoopList();
             }
@@ -3045,6 +3051,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                     ile.getMessage());
                             getParent().getNodeContainer(slc.getTailNode())
                                 .setNodeMessage(nm);
+                            getParent().disableNodeForExecution(
+                                    slc.getTailNode());
                         }
                     }
                     clearWaitingLoopList();
@@ -3377,11 +3385,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
         }
-//        return configurationChanged;
+        return configurationChanged;
         // we have a problem here. Subsequent metanodes with through connections
         // need to be configured no matter what - they can change their state
         // because 3 nodes before in the pipeline the execute state changed...
-        return configurationChanged == configurationChanged;
+//        return configurationChanged == configurationChanged;
     }
 
     /** Configure the nodes in WorkflowManager, connected to a specific port.

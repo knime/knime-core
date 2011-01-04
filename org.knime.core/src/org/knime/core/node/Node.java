@@ -715,6 +715,15 @@ public final class Node implements NodeModelWarningListener {
                 : m_outputs[0].spec instanceof InactiveBranchPortObjectSpec;
     }
 
+    private boolean m_loopInProgress = false;
+    /** Return if this loop is the end node of an ongoing, active loop.
+     * This flag will be true once the first iteration has finished
+     * and will be false when the last iteration is executed.
+     */
+    boolean isLoopInProgress() {
+        return m_loopInProgress;
+    }
+    
     /** Returns true if the contained model is an instance of
      * {@link InactiveBranchConsumer}.
      * @return Such a property.
@@ -759,160 +768,162 @@ public final class Node implements NodeModelWarningListener {
      */
     public boolean execute(final PortObject[] rawData,
             final ExecutionContext exec) {
-        // reset the message object
-        createResetMessageAndNotify();
-        // notify state listeners
-        // TODO: NEWWFM State Event
-        // notifyStateListeners(new NodeStateChangedEvent(
-        // NodeStateChangedEvent.Type.START_EXECUTE));
+        // clear the message object
+        clearNodeMessageAndNotify();
 
-        // check if the node is part of a skipped branch and return
-        // appropriate objects without actually configuring the node.
-        if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {
-            // inactive loop start node must indicate to their loop
-            // end node that they were inactive...
-            if (m_model instanceof LoopStartNode) {
-                FlowObjectStack outStack = getOutgoingFlowObjectStack();
-                outStack.push(new InactiveBranchFlowLoopContext());
+        boolean temp_loopInProgress = false;
+        try {
+            // check if the node is part of a skipped branch and return
+            // appropriate objects without actually configuring the node.
+            if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {
+                // inactive loop start node must indicate to their loop
+                // end node that they were inactive...
+                if (m_model instanceof LoopStartNode) {
+                    FlowObjectStack outStack = getOutgoingFlowObjectStack();
+                    outStack.push(new InactiveBranchFlowLoopContext());
+                }
+                // loop end nodes can be inactive if and only if their
+                // loop start node is inactive
+                if (m_model instanceof LoopEndNode) {
+                    FlowObjectStack inStack = getFlowObjectStack();
+                    InactiveBranchFlowLoopContext peek =
+                        inStack.peek(InactiveBranchFlowLoopContext.class);
+                    if (peek == null) {
+                        // we can not handle this case: the End Loop node needs
+                        // to trigger re-execution which it won't in an inactive
+                        // branch
+                        createErrorMessageAndNotify("Loop End node in inactive "
+                                + "branch not allowed.");
+                        return false;
+                    } else {
+                        // also the loop start node is inactive, so the entire
+                        // loop is inactive
+                        inStack.pop(InactiveBranchFlowLoopContext.class);
+                    }
+                }
+                // normal node: skip execution
+                PortObject[] outs = new PortObject[getNrOutPorts()];
+                Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
+                setOutPortObjects(outs, false);
+                assert m_model.hasContent() == false;
+                return true;
             }
-            // loop end nodes can be inactive if and only if their
-            // loop start node is inactive
-            if (m_model instanceof LoopEndNode) {
-                FlowObjectStack inStack = getFlowObjectStack();
-                InactiveBranchFlowLoopContext peek =
-                    inStack.peek(InactiveBranchFlowLoopContext.class);
-                if (peek == null) {
-                    // we can not handle this case: the End Loop node needs
-                    // to trigger re-execution which it won't in an inactive
-                    // branch
-                    createErrorMessageAndNotify("Loop End node in inactive "
-                            + "branch not allowed.");
+    
+            // copy input port objects, ignoring the 0-variable port:
+            PortObject[] data = Arrays.copyOfRange(rawData, 1, rawData.length);
+    
+            PortObject[] inData = new PortObject[data.length];
+            // check for existence of all input tables
+            for (int i = 0; i < data.length; i++) {
+                if (data[i] == null && !m_inputs[i + 1].getType().isOptional()) {
+                    m_logger.error("execute failed, input contains null");
+                    // TODO NEWWFM state event
+                    // TODO: also notify message/progress listeners
+                    createErrorMessageAndNotify(
+                            "Couldn't get data from predecessor (Port No."
+                            + i + ").");
+                    // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                     return false;
+                }
+                if (data[i] == null) { // optional input
+                    inData[i] = null;  // (checked above)
+                } else if (data[i] instanceof BufferedDataTable) {
+                    inData[i] = data[i];
                 } else {
-                    // also the loop start node is inactive, so the entire
-                    // loop is inactive
-                    inStack.pop(InactiveBranchFlowLoopContext.class);
+                    exec.setMessage("Copying input object at port " +  i);
+                    ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                    try {
+                        inData[i] = copyPortObject(data[i], subExec);
+                    } catch (CanceledExecutionException e) {
+                        createWarningMessageAndNotify("Execution canceled");
+                        return false;
+                    } catch (Throwable e) {
+                        createErrorMessageAndNotify("Unable to clone input data "
+                                + "at port " + i + ": " + e.getMessage(), e);
+                        return false;
+                    }
                 }
             }
-            // normal node: skip execution
-            PortObject[] outs = new PortObject[getNrOutPorts()];
-            Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-            setOutPortObjects(outs, false);
-            assert m_model.hasContent() == false;
-            return true;
-        }
-
-        // copy input port objects, ignoring the 0-variable port:
-        PortObject[] data = Arrays.copyOfRange(rawData, 1, rawData.length);
-
-        PortObject[] inData = new PortObject[data.length];
-        // check for existence of all input tables
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] == null && !m_inputs[i + 1].getType().isOptional()) {
-                m_logger.error("execute failed, input contains null");
-                // TODO NEWWFM state event
-                // TODO: also notify message/progress listeners
-                createErrorMessageAndNotify(
-                        "Couldn't get data from predecessor (Port No."
-                        + i + ").");
-                // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
-                return false;
-            }
-            if (data[i] == null) { // optional input
-                inData[i] = null;  // (checked above)
-            } else if (data[i] instanceof BufferedDataTable) {
-                inData[i] = data[i];
-            } else {
-                exec.setMessage("Copying input object at port " +  i);
-                ExecutionMonitor subExec = exec.createSubProgress(0.0);
-                try {
-                    inData[i] = copyPortObject(data[i], subExec);
-                } catch (CanceledExecutionException e) {
+    
+            PortObject[] rawOutData; // the new DTs from the model
+            try {
+                // INVOKE MODEL'S EXECUTE
+                // (warnings will now be processed "automatically" - we listen)
+                rawOutData = m_model.executeModel(inData, exec);
+            } catch (Throwable th) {
+                boolean isCanceled = th instanceof CanceledExecutionException;
+                isCanceled = isCanceled || th instanceof InterruptedException;
+                // writing to a buffer is done asynchronously -- if this thread
+                // is interrupted while waiting for the IO thread to flush we take
+                // it as a graceful exit
+                isCanceled = isCanceled || (th instanceof DataContainerException
+                        && th.getCause() instanceof InterruptedException);
+                if (isCanceled) {
+                    // clear the flag so that the ThreadPool does not kill the
+                    // thread
+                    Thread.interrupted();
+    
+                    reset();
                     createWarningMessageAndNotify("Execution canceled");
                     return false;
-                } catch (Throwable e) {
-                    createErrorMessageAndNotify("Unable to clone input data "
-                            + "at port " + i + ": " + e.getMessage(), e);
-                    return false;
                 }
-            }
-        }
-
-        PortObject[] rawOutData; // the new DTs from the model
-        try {
-            // INVOKE MODEL'S EXECUTE
-            // (warnings will now be processed "automatically" - we listen)
-            rawOutData = m_model.executeModel(inData, exec);
-        } catch (Throwable th) {
-            boolean isCanceled = th instanceof CanceledExecutionException;
-            isCanceled = isCanceled || th instanceof InterruptedException;
-            // writing to a buffer is done asynchronously -- if this thread
-            // is interrupted while waiting for the IO thread to flush we take
-            // it as a graceful exit
-            isCanceled = isCanceled || (th instanceof DataContainerException
-                    && th.getCause() instanceof InterruptedException);
-            if (isCanceled) {
-                // clear the flag so that the ThreadPool does not kill the
-                // thread
-                Thread.interrupted();
-
+                String message = "Execute failed: ";
+                if (th.getMessage() != null && th.getMessage().length() >= 5) {
+                    message = message.concat(th.getMessage());
+                } else {
+                    message = message.concat("(\"" + th.getClass().getSimpleName()
+                            + "\"): " + th.getMessage());
+                }
                 reset();
-                createWarningMessageAndNotify("Execution canceled");
+                createErrorMessageAndNotify(message, th);
                 return false;
             }
-            String message = "Execute failed: ";
-            if (th.getMessage() != null && th.getMessage().length() >= 5) {
-                message = message.concat(th.getMessage());
-            } else {
-                message = message.concat("(\"" + th.getClass().getSimpleName()
-                        + "\"): " + th.getMessage());
+            // add variable port at index 0
+            PortObject[] newOutData = new PortObject[rawOutData.length + 1];
+            System.arraycopy(rawOutData, 0, newOutData, 1, rawOutData.length);
+            newOutData[0] = FlowVariablePortObject.INSTANCE;
+    
+            // check if we see a loop status in the NodeModel
+            FlowLoopContext slc = m_model.getLoopStatus();
+            boolean continuesLoop = (slc != null);
+            if (!setOutPortObjects(newOutData, continuesLoop)) {
+                return false;
             }
-            reset();
-            createErrorMessageAndNotify(message, th);
-            return false;
-        }
-        // add variable port at index 0
-        PortObject[] newOutData = new PortObject[rawOutData.length + 1];
-        System.arraycopy(rawOutData, 0, newOutData, 1, rawOutData.length);
-        newOutData[0] = FlowVariablePortObject.INSTANCE;
-
-        // check if we see a loop status in the NodeModel
-        FlowLoopContext slc = m_model.getLoopStatus();
-        boolean continuesLoop = (slc != null);
-        if (!setOutPortObjects(newOutData, continuesLoop)) {
-            return false;
-        }
-        for (int p = 1; p < getNrOutPorts(); p++) {
-            m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
-        }
-
-        if (m_model instanceof BufferedDataTableHolder) {
-            // copy the table array to prevent later modification by the user
-            BufferedDataTable[] internalTbls =
-                ((BufferedDataTableHolder)m_model).getInternalTables();
-            if (internalTbls != null) {
-                m_internalHeldTables =
-                    new BufferedDataTable[internalTbls.length];
-                for (int i = 0; i < internalTbls.length; i++) {
-                    BufferedDataTable t = internalTbls[i];
-                    if (t != null) {
-                        // if table is one of the input tables, wrap it in
-                        // WrappedTable (otherwise table get's copied)
-                        for (int in = 0; in < inData.length; in++) {
-                            if (t == inData[in]) {
-                                t = exec.createWrappedTable(t);
-                                break;
+            for (int p = 1; p < getNrOutPorts(); p++) {
+                m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
+            }
+    
+            if (m_model instanceof BufferedDataTableHolder) {
+                // copy the table array to prevent later modification by the user
+                BufferedDataTable[] internalTbls =
+                    ((BufferedDataTableHolder)m_model).getInternalTables();
+                if (internalTbls != null) {
+                    m_internalHeldTables =
+                        new BufferedDataTable[internalTbls.length];
+                    for (int i = 0; i < internalTbls.length; i++) {
+                        BufferedDataTable t = internalTbls[i];
+                        if (t != null) {
+                            // if table is one of the input tables, wrap it in
+                            // WrappedTable (otherwise table get's copied)
+                            for (int in = 0; in < inData.length; in++) {
+                                if (t == inData[in]) {
+                                    t = exec.createWrappedTable(t);
+                                    break;
+                                }
                             }
                         }
+                        m_internalHeldTables[i] = t;
                     }
-                    m_internalHeldTables[i] = t;
+                } else {
+                    m_internalHeldTables = null;
                 }
-            } else {
-                m_internalHeldTables = null;
             }
+            temp_loopInProgress = continuesLoop;
+            return true;
+        } finally {
+            m_loopInProgress = temp_loopInProgress;
         }
-        return true;
-    } // executeNode(ExecutionMonitor)
+    } // execute
 
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
@@ -1116,7 +1127,7 @@ public final class Node implements NodeModelWarningListener {
      * Notifies all registered {@link NodeMessageListener}s that the node's
      * message is cleared.
      */
-    private void createResetMessageAndNotify() {
+    private void clearNodeMessageAndNotify() {
         notifyMessageListeners(NodeMessage.NONE);
     }
 
@@ -1134,7 +1145,7 @@ public final class Node implements NodeModelWarningListener {
         if (warningMessage != null) {
             createWarningMessageAndNotify(warningMessage);
         } else {
-            createResetMessageAndNotify();
+            clearNodeMessageAndNotify();
         }
     }
 
@@ -1151,10 +1162,9 @@ public final class Node implements NodeModelWarningListener {
      */
     public void reset() {
         m_logger.debug("reset");
-        // if reset had no exception, reset node message
+        m_loopInProgress = false;
         m_model.resetModel();
-        createResetMessageAndNotify();
-        // and make sure output ports are empty as well
+        clearNodeMessageAndNotify();
         cleanOutPorts();
         // clear temporary tables that have been created during execute
         for (ContainerTable t : m_localTempTables) {
@@ -1375,7 +1385,7 @@ public final class Node implements NodeModelWarningListener {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            createResetMessageAndNotify();
+            clearNodeMessageAndNotify();
             // copy input port object specs, ignoring the 0-variable port:
             PortObjectSpec[] inSpecs =
                 Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
