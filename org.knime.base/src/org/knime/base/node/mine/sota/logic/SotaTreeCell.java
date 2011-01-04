@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,68 +44,67 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
 package org.knime.base.node.mine.sota.logic;
 
-import java.io.Serializable;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
 import org.knime.base.node.mine.sota.view.interaction.Hiliteable;
-import org.knime.base.node.mine.sota.view.interaction.Locatable;
 import org.knime.base.node.mine.sota.view.interaction.Selectable;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
+import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
+public class SotaTreeCell implements Hiliteable, Selectable,
         Serializable {
-    
+
     private static final String CFG_KEY_IS_CELL = "IsCell";
-    
+
     private static final String CFG_KEY_DATA = "Data";
-    
+
     private static final String CFG_KEY_CLASS = "CellClass";
-    
+
     private static final String CFG_KEY_LEFT = "Left";
-    
+
     private static final String CFG_KEY_RIGHT = "Right";
-    
+
     private static final String CFG_KEY_RESOURCE = "Resource";
-    
+
     private static final String CFG_KEY_MAX_DISTANCE = "MaxDistance";
-    
+
     private static final String CFG_KEY_LEVEL = "Level";
-    
+
     private static final String CFG_KEY_H_LEVEL = "HierarchyLevel";
-    
+
     private static final String CFG_KEY_LEVEL_IN_H = "LevelInHierarchy";
-    
+
     private static final String CFG_KEY_DATA_ID = "DataId";
-    
+
     private static final String CFG_KEY_ROW_KEY = "RowKey";
-    
+
     private static final String CFG_KEY_START_X = "StartX";
-    
+
     private static final String CFG_KEY_END_X = "EndX";
-    
+
     private static final String CFG_KEY_START_Y = "StartY";
-    
+
     private static final String CFG_KEY_END_Y = "EndY";
-    
+
     /**
      * Default cell class.
      */
     public static final String DEFAULT_CLASS = "NoClassDefined";
-    
+
     private SotaCell[] m_data;
 
     private boolean m_isCell;
@@ -129,7 +128,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     private int m_levelInHierarchy = 0;
 
     private ArrayList<Integer> m_dataIds;
-    
+
     private CellClassCounter m_classCounter = new CellClassCounter();
 
     // this list is only used when dealing with hierarchical fuzzy data.
@@ -138,30 +137,21 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     // final level.
     private ArrayList<RowKey> m_rowKeys;
 
-    // Related to interface Locatable
-    private int m_startY = Locatable.X;
-
-    private int m_startX = Locatable.Y;
-
-    private int m_endY = Locatable.X;
-
-    private int m_endX = Locatable.Y;
-
     // Related to interface Hilitable
     private transient boolean m_hilited = false;
 
     // Related to interface Selectable
     private transient boolean m_selected = false;
-    
+
     /**
      * Creates new instance of Cell with given dimension of data vector, given
      * level of hierarchy and given <code>isCell</code> flag.
-     * 
+     *
      * @param dimension Dimension of the data vector.
      * @param lev hierarchy level of the cell
      * @param isCell flags if cell is a Cell or a Node
      */
-    public SotaTreeCell(final int dimension, final int lev, 
+    public SotaTreeCell(final int dimension, final int lev,
             final boolean isCell) {
         this.m_data = new SotaCell[dimension];
         this.m_level = lev;
@@ -173,7 +163,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Creates new instance of Cell with given dimension of data vector and
      * given isCell flag. The hierarchz level ist set to 0 by default.
-     * 
+     *
      * @param dimension dimension of the data vector
      * @param isCell flags if cell is a Cell or a Node
      */
@@ -184,7 +174,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Creates new instance of Cell with given vector data, given level of
      * hierarchy and given isCell flag.
-     * 
+     *
      * @param dat data to set to the data vector
      * @param lev hierarchy level of the cell
      * @param isCell flags if Cell is a Cell or a Node
@@ -201,14 +191,14 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Creates new instance of Cell with given vector data and given isCell
      * flag. The level of hierarchy is set to 0 by default.
-     * 
+     *
      * @param dat data to set to the data vector
      * @param isCell flags if cell is a Cell or a Node
      */
     public SotaTreeCell(final SotaCell[] dat, final boolean isCell) {
         this(dat, 0, isCell);
     }
-    
+
     /**
      * @return the class of the tree cell.
      */
@@ -233,7 +223,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
      * Splits the current cell that it becomes a Node. The child cells have the
      * same data as the ancestor and the given level. The maximum distnace and
      * resource values are set to 0 be default and the data Id vector is empty.
-     * 
+     *
      * @param lev the level to set to the newly created cells
      * @param hierarchicalLev the fuzzy rule level (is only used when training
      *            with hierarchical fuzzy data)
@@ -278,7 +268,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
      * Splits the current cell that it becomes a Node. The child cells have the
      * same data and level as the ancestor. The maximum distance and resource
      * values are set to 0 be default and the data Id vector is empty.
-     * 
+     *
      * @param hierarchicalLev the fuzzy rule level (is only used when training
      *            with hierarchical fuzzy data)
      */
@@ -299,7 +289,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Returns the cells data as String. The values are comma separated and the
      * given decimal precision defines the decimal precision of the values.
-     * 
+     *
      * @param precision the decimal precision to use for the values
      * @return the cells data as string
      */
@@ -324,7 +314,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells ancestor.
-     * 
+     *
      * @return the cells ancestor
      */
     public SotaTreeCell getAncestor() {
@@ -333,7 +323,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the given ancestor value.
-     * 
+     *
      * @param anc the cells ancestor to set
      */
     public void setAncestor(final SotaTreeCell anc) {
@@ -356,7 +346,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells data array.
-     * 
+     *
      * @return the cells data array
      */
     public SotaCell[] getData() {
@@ -365,7 +355,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the given data array.
-     * 
+     *
      * @param dat the cells data array to set
      */
     public void setData(final SotaCell[] dat) {
@@ -374,7 +364,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells Ids of according data sets.
-     * 
+     *
      * @return the cells Ids of according data sets
      */
     public ArrayList<Integer> getDataIds() {
@@ -383,7 +373,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the given Ids of according data sets.
-     * 
+     *
      * @param ids the cells Ids of according data sets to set
      */
     public void setDataIds(final ArrayList<Integer> ids) {
@@ -393,7 +383,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Returns <code>true</code> if the cell is a Cell, <code>false</code>
      * if it is a Node.
-     * 
+     *
      * @return <code>true</code> if the cell is a Cell, <code>false</code>
      *         if it is a Node
      */
@@ -404,7 +394,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Sets the given isCell flag. If <code>true</code> it is a Cell else it
      * is a Node.
-     * 
+     *
      * @param cell if <code>true</code> it is a Cell else it is a Node
      */
     public void setCell(final boolean cell) {
@@ -413,7 +403,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the left child Cell of the current Node, or <code>null</code>.
-     * 
+     *
      * @return the left child Cell of the current Node, or <code>null</code>
      */
     public SotaTreeCell getLeft() {
@@ -422,7 +412,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the cells (Nodes) left child Cell.
-     * 
+     *
      * @param l the cells (Nodes) left child Cell to set
      */
     public void setLeft(final SotaTreeCell l) {
@@ -431,7 +421,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells level of hierarchy inside the binary tree.
-     * 
+     *
      * @return the cells level of hierarchy inside the binary tree
      */
     public int getLevel() {
@@ -440,7 +430,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the cells level of hierarchy inside the binary tree.
-     * 
+     *
      * @param lev the cells level of hierarchy inside the binary tree to set
      */
     public void setLevel(final int lev) {
@@ -449,7 +439,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the maximum distance between the data related to the cell.
-     * 
+     *
      * @return the maximum distance between the data related to the cell
      */
     public double getMaxDistance() {
@@ -459,7 +449,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     /**
      * Sets the given value as maximum distance between the data related to the
      * cell.
-     * 
+     *
      * @param maxDist the maximum distance between the data related to the cell
      *            to set
      */
@@ -469,7 +459,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells resource value.
-     * 
+     *
      * @return the cells resource value
      */
     public double getResource() {
@@ -478,7 +468,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the given value as the cells resource value.
-     * 
+     *
      * @param res the value to set as the cells resource value
      */
     public void setResource(final double res) {
@@ -487,7 +477,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Returns the cells (Nodes) right child Cell.
-     * 
+     *
      * @return the cells (Nodes) right child Cell
      */
     public SotaTreeCell getRight() {
@@ -496,67 +486,11 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the given Cell as the cells right child Cell.
-     * 
+     *
      * @param r the Cell to set as the cells right child Cell
      */
     public void setRight(final SotaTreeCell r) {
         this.m_right = r;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getStartX() {
-        return m_startX;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getStartY() {
-        return m_startY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getEndX() {
-        return m_endX;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int getEndY() {
-        return m_endY;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setStartX(final int x) {
-        m_startX = x;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setStartY(final int y) {
-        m_startY = y;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setEndX(final int x) {
-        m_endX = x;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setEndY(final int y) {
-        m_endY = y;
     }
 
     /**
@@ -575,7 +509,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the hilit flag to the cell without recursive method call.
-     * 
+     *
      * @param hilit flag to set
      */
     public void setCellHilited(final boolean hilit) {
@@ -584,7 +518,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the hilit flag to all the cells children recursively.
-     * 
+     *
      * @param cell current cell to set the hilit flag
      * @param hilit flag to set
      */
@@ -640,10 +574,10 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
         }
         return null;
     }
-    
+
     /**
      * Returns the RowKeys as a string separated with ",".
-     * 
+     *
      * @return the RowKeys as a string separated with ","
      */
     public String getRowKeysAsString() {
@@ -673,7 +607,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the selected flag to all the cells children recursively.
-     * 
+     *
      * @param cell current cell to set the selected flag
      * @param select flag to set
      */
@@ -691,7 +625,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     /**
      * Sets the select flag to the cell without recursive method call.
-     * 
+     *
      * @param select flag to set
      */
     public void setCellSelected(final boolean select) {
@@ -707,37 +641,31 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             getLeft().deselectSubtree();
             getRight().deselectSubtree();
         }
-    }    
-    
+    }
+
     /**
-     * Saves the value of the <code>SotaTreeCell</code> to the given 
+     * Saves the value of the <code>SotaTreeCell</code> to the given
      * <code>ModelContentWO</code>.
-     * 
+     *
      * @param modelContent The <code>ModelContentWO</code> to save the cells
-     * to. 
+     * to.
      * @param index The index of the cell to save.
      */
-    public final void saveTo(final ModelContentWO modelContent, 
+    public final void saveTo(final ModelContentWO modelContent,
             final int index) {
         int ind = index;
         ind++;
-        
+
         // save resource ect.
         modelContent.addBoolean(CFG_KEY_IS_CELL, m_isCell);
         modelContent.addDouble(CFG_KEY_RESOURCE, m_resource);
         modelContent.addDouble(CFG_KEY_MAX_DISTANCE, m_maxDistance);
-        
+
         // save level information
         modelContent.addInt(CFG_KEY_LEVEL, m_level);
         modelContent.addInt(CFG_KEY_H_LEVEL, m_hierarchyLevel);
         modelContent.addInt(CFG_KEY_LEVEL_IN_H, m_levelInHierarchy);
-        
-        // save coordinates
-        modelContent.addInt(CFG_KEY_START_X, m_startX);
-        modelContent.addInt(CFG_KEY_START_Y, m_startY);
-        modelContent.addInt(CFG_KEY_END_X, m_endX);
-        modelContent.addInt(CFG_KEY_END_Y, m_endY);
-        
+
         // save data ids
         int dataIdCount = 0;
         modelContent.addInt(CFG_KEY_DATA_ID + "SIZE", m_dataIds.size());
@@ -745,7 +673,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             modelContent.addInt(CFG_KEY_DATA_ID + dataIdCount, i);
             dataIdCount++;
         }
-        
+
         // save row keys
         modelContent.addInt(CFG_KEY_ROW_KEY + "SIZE", m_rowKeys.size());
         int rowKeyCount = 0;
@@ -753,7 +681,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             modelContent.addString(CFG_KEY_ROW_KEY + rowKeyCount, r.toString());
             rowKeyCount++;
         }
-        
+
         // save cell data
         modelContent.addInt(CFG_KEY_DATA + "SIZE", m_data.length);
         if (m_data.length > 0) {
@@ -764,11 +692,11 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
                     CFG_KEY_DATA + i);
             m_data[i].saveTo(subContent);
         }
-                
+
         // save data
-        modelContent.addString(CFG_KEY_CLASS, 
+        modelContent.addString(CFG_KEY_CLASS,
                 m_classCounter.getMostFrequentClass());
-        
+
         // save left and right
         if (m_left != null) {
             modelContent.addBoolean("HAS" + CFG_KEY_LEFT, true);
@@ -782,57 +710,51 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             modelContent.addBoolean("HAS" + CFG_KEY_RIGHT, true);
             ModelContentWO subContent = modelContent.addModelContent(
                     CFG_KEY_RIGHT + ind);
-            m_right.saveTo(subContent, ind);            
+            m_right.saveTo(subContent, ind);
         } else {
             modelContent.addBoolean("HAS" + CFG_KEY_RIGHT, false);
         }
-    }    
-    
-    
+    }
+
+
     /**
      * Loads the values from the given <code>ModelContentWO</code>.
-     * 
-     * @param modelContent The <code>ModelContentWO</code> to load the cells 
+     *
+     * @param modelContent The <code>ModelContentWO</code> to load the cells
      * from.
      * @param index The index of the cell to load.
      * @param anchestor The anchsetor cell of the cell to load.
      * @param isLeft Specifies if the cell to load is a cell at the left side of
      * its anchestor.
-     * 
+     *
      * @throws InvalidSettingsException If setting to load is not valid.
      */
     public void loadFrom(final ModelContentRO modelContent, final int index,
-            final SotaTreeCell anchestor, final boolean isLeft) 
+            final SotaTreeCell anchestor, final boolean isLeft)
     throws InvalidSettingsException {
-        
+
         int ind = index;
         ind++;
-                
+
         // load resource etc.
         m_isCell = modelContent.getBoolean(CFG_KEY_IS_CELL);
         m_resource = modelContent.getDouble(CFG_KEY_RESOURCE);
         m_maxDistance = modelContent.getDouble(CFG_KEY_MAX_DISTANCE);
-        
+
         // load level information
         m_level = modelContent.getInt(CFG_KEY_LEVEL);
         m_hierarchyLevel = modelContent.getInt(CFG_KEY_H_LEVEL);
         m_levelInHierarchy = modelContent.getInt(CFG_KEY_LEVEL_IN_H);
-        
-        // load coordinates
-        m_startX = modelContent.getInt(CFG_KEY_START_X);
-        m_startY = modelContent.getInt(CFG_KEY_START_Y);
-        m_endX = modelContent.getInt(CFG_KEY_END_X);
-        m_endY = modelContent.getInt(CFG_KEY_END_Y);
-     
+
         // load data ids
         int size = modelContent.getInt(CFG_KEY_DATA_ID + "SIZE");
-        m_dataIds = new ArrayList<Integer>(); 
+        m_dataIds = new ArrayList<Integer>();
         int dataIdCount = 0;
         for (int i = 0; i < size; i++) {
             m_dataIds.add(modelContent.getInt(CFG_KEY_DATA_ID + dataIdCount));
             dataIdCount++;
         }
-        
+
         // load row keys
         size = modelContent.getInt(CFG_KEY_ROW_KEY + "SIZE");
         m_rowKeys = new ArrayList<RowKey>();
@@ -842,7 +764,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
                     CFG_KEY_ROW_KEY + rowKeyCount)));
             rowKeyCount++;
         }
-        
+
         // load data
         String type = "";
         size = modelContent.getInt(CFG_KEY_DATA + "SIZE");
@@ -855,13 +777,13 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
                     CFG_KEY_DATA + i);
             m_data[i] = SotaCellFactory.createSotaCell(type);
             m_data[i].loadFrom(subContent);
-        }        
-        
+        }
+
         // load data
         String cellClass = modelContent.getString(CFG_KEY_CLASS);
         m_classCounter = new CellClassCounter();
         m_classCounter.addClass(cellClass);
-        
+
         // load left and right
         boolean hasLeft = modelContent.getBoolean("HAS" + CFG_KEY_LEFT);
         boolean hasRight = modelContent.getBoolean("HAS" + CFG_KEY_RIGHT);
@@ -877,11 +799,11 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             ModelContentRO subContent = modelContent.getModelContent(
                     CFG_KEY_RIGHT + ind);
             m_right = new SotaTreeCell(0, true);
-            m_right.loadFrom(subContent, ind, this, false);            
+            m_right.loadFrom(subContent, ind, this, false);
         } else {
             m_right = null;
         }
-        
+
         // set anchestor
         if (anchestor != null) {
             this.setAncestor(anchestor);

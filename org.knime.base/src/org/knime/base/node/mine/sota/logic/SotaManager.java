@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,17 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
 package org.knime.base.node.mine.sota.logic;
 
-import java.util.ArrayList;
-
 import org.knime.base.node.mine.sota.SotaConfigKeys;
 import org.knime.base.node.mine.sota.distances.DistanceManager;
 import org.knime.base.node.mine.sota.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.sota.view.interaction.SotaTreeCellLocations;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.core.data.DataCell;
@@ -69,8 +68,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaManager {
@@ -224,7 +226,7 @@ public class SotaManager {
     private DataArray m_origData;
 
     private double m_state = 0;
-    
+
     private int m_indexOfClassColumn = -1;
 
     /**
@@ -252,7 +254,7 @@ public class SotaManager {
 
         this.m_useVariability = SotaManager.USE_VARIABILITY;
         this.m_distance = DistanceManagerFactory.EUCLIDEAN_DIST;
-        this.m_useHierarchicalFuzzyData 
+        this.m_useHierarchicalFuzzyData
             = SotaManager.USE_HIERARCHICAL_FUZZY_DATA;
         this.m_trained = false;
 
@@ -279,7 +281,7 @@ public class SotaManager {
      * Initializes the tree by creating the root node and two children cells of
      * the root node. The nodes data are the mean values of the input data
      * rows.
-     * 
+     *
      * @param inData the table with the input data
      * @param originalData the original data
      * @param exec the execution monitor to set
@@ -288,7 +290,7 @@ public class SotaManager {
      * @throws CanceledExecutionException if user canceled the process
      */
     public void initializeTree(final DataTable inData,
-            final DataArray originalData, final ExecutionMonitor exec, 
+            final DataArray originalData, final ExecutionMonitor exec,
             final int indexOfClassColumn) throws CanceledExecutionException {
 
         this.m_indexOfClassColumn = indexOfClassColumn;
@@ -340,7 +342,7 @@ public class SotaManager {
         }
 
         m_exec.checkCanceled();
-        
+
         // Count all number cells in rows of row container
         m_dimension = m_helper.initializeDimension();
 
@@ -349,7 +351,7 @@ public class SotaManager {
         m_root.setLevel(1);
 
         m_exec.checkCanceled();
-        
+
         // assign all Data to the root cell which have no missing values
         for (int i = 0; i < m_inDataContainer.size(); i++) {
             if (m_root.getDataIds().indexOf(new Integer(i)) == -1) {
@@ -370,7 +372,7 @@ public class SotaManager {
     /**
      * Trains the tree as many cycles as it takes to reduce the variability
      * value to the given minimum and returns the variability value.
-     * 
+     *
      * @return the variability value
      * @throws CanceledExecutionException if training has been canceled
      */
@@ -395,7 +397,7 @@ public class SotaManager {
                 }
             } else {
                 while (m_currentMaxResource > m_minResource) {
-                    m_state = 1.0 - ((m_currentMaxResource - m_minResource) 
+                    m_state = 1.0 - ((m_currentMaxResource - m_minResource)
                             / maxDeltaRes);
                     m_exec.setProgress(m_state, "Cycle: " + m_cycle
                             + " has been trained ");
@@ -428,7 +430,7 @@ public class SotaManager {
     /**
      * Computes one cycle of the sota algorithm, does the spilt afterwards and
      * returns the variability.
-     * 
+     *
      * @return the variability of the tree after this cycle
      * @throws CanceledExecutionException if user canceled the process
      */
@@ -477,7 +479,7 @@ public class SotaManager {
         //
         if (m_currentMaxResourceCell != null) {
             if ((m_useVariability && var > m_minVariability)
-                    || (!m_useVariability && m_currentMaxResource 
+                    || (!m_useVariability && m_currentMaxResource
                             > m_minResource)) {
 
                 // split cell
@@ -496,17 +498,17 @@ public class SotaManager {
     /**
      * Computes one epoch of the sota algorithm and retunrs the error of the
      * tree after this epoch.
-     * 
+     *
      * @return the error of the tree after this epoch
      * @throws CanceledExecutionException is execution was canceled.
      */
     public double doEpoch() throws CanceledExecutionException {
         ArrayList<SotaTreeCell> cells = new ArrayList<SotaTreeCell>();
-        
+
         // get all cells
         SotaManager.getCells(cells, m_root);
 
-        // 
+        //
         // Go through all cells and train then accordant to their assigned
         // data
         //
@@ -532,7 +534,7 @@ public class SotaManager {
 
             for (int j = 0; j < cells.get(i).getDataIds().size(); j++) {
                 m_exec.checkCanceled();
-                
+
                 int index = cells.get(i).getDataIds().get(j).intValue();
                 DataRow row = m_inDataContainer.getRow(index);
 
@@ -564,7 +566,7 @@ public class SotaManager {
 
     /**
      * Collects all cells of the tree recursive.
-     * 
+     *
      * @param cells the ArrayList to store the cells in
      * @param currentCell the current cell to check
      */
@@ -578,14 +580,27 @@ public class SotaManager {
         }
     }
 
+    public static void initDefaultLocations(
+            final HashMap<SotaTreeCell, SotaTreeCellLocations> cellLocations,
+            final SotaTreeCell currentCell) {
+        cellLocations.put(currentCell, new SotaTreeCellLocations());
+        if (!currentCell.isCell()) {
+            SotaManager.initDefaultLocations(cellLocations,
+                    currentCell.getLeft());
+            SotaManager.initDefaultLocations(cellLocations,
+                    currentCell.getRight());
+        }
+    }
+
+
     /**
      * Computes the variability of rows which ids are given.
-     * 
+     *
      * @param ids IDs of DataRow to compute variability for
      * @return the variability value
      * @throws CanceledExecutionException if execution was canceled.
      */
-    private double getVariability(final ArrayList<Integer> ids) 
+    private double getVariability(final ArrayList<Integer> ids)
     throws CanceledExecutionException {
         double maxDist = 0;
         double tmpDist;
@@ -595,7 +610,7 @@ public class SotaManager {
 
             for (int j = 0; j < ids.size(); j++) {
                 m_exec.checkCanceled();
-                
+
                 if (i != j) {
                     DataRow row2 = this.m_inDataContainer.getRow(ids.get(j));
                     tmpDist = m_distanceManager.getDistance(row1, row2);
@@ -613,11 +628,11 @@ public class SotaManager {
     /**
      * Assigns the cells DataIds to its children. This is needed after a split
      * of a cell.
-     * 
+     *
      * @param cell cell with DataIds to assign to its children
      * @throws CanceledExecutionException if user canceled the process
      */
-    private void assignDataToChildren(final SotaTreeCell cell) 
+    private void assignDataToChildren(final SotaTreeCell cell)
     throws CanceledExecutionException {
         if (cell.getDataIds().size() > 2) {
             for (int i = 0; i < cell.getDataIds().size(); i++) {
@@ -652,7 +667,7 @@ public class SotaManager {
                         cellClass = ((StringValue)dataCell).getStringValue();
                     }
                 }
-                
+
                 adjustCell(winner, row, cellClass);
 
                 m_exec.checkCanceled();
@@ -686,10 +701,10 @@ public class SotaManager {
                     cellClass2 = ((StringValue)dataCell2).getStringValue();
                 }
             }
-            
+
             adjustCell(cell.getLeft(), row1, cellClass1);
             adjustCell(cell.getRight(), row2, cellClass2);
-            
+
             m_exec.checkCanceled();
         }
     }
@@ -697,11 +712,11 @@ public class SotaManager {
     /**
      * Adjusts the winner SotaTreeCell according to the given row. If its sister
      * cell is a cell too the sister and ancestor cell are adjusted too.
-     * 
+     *
      * @param winner winner cell to adjust
      * @param row row to adjust winner cell with
      */
-    private void adjustCell(final SotaTreeCell winner, final DataRow row, 
+    private void adjustCell(final SotaTreeCell winner, final DataRow row,
             final String cellClass) {
         // adjust winner weights and those of its neighbors.
         m_helper.adjustSotaCell(winner, row, m_learningrateWinner, cellClass);
@@ -715,7 +730,7 @@ public class SotaManager {
 
     /**
      * Removes all Data Ids from the given cells.
-     * 
+     *
      * @param cells cells to remove all data Ids from
      */
     private void cleanDataIdsOfCells(final ArrayList<SotaTreeCell> cells) {
@@ -736,11 +751,11 @@ public class SotaManager {
     /**
      * Assigns the row containers data to the given cells, accordant to their
      * distance to the data.
-     * 
+     *
      * @param cells cells to assign data to
      * @throws CanceledExecutionException if execution was canceled.
      */
-    private void assignNewData(final ArrayList<SotaTreeCell> cells) 
+    private void assignNewData(final ArrayList<SotaTreeCell> cells)
     throws CanceledExecutionException {
         for (int i = 0; i < m_inDataContainer.size(); i++) {
             DataRow row = m_inDataContainer.getRow(i);
@@ -750,7 +765,7 @@ public class SotaManager {
 
             for (int j = 0; j < cells.size(); j++) {
                 m_exec.checkCanceled();
-                
+
                 double dist = m_distanceManager.getDistance(row, cells.get(j));
                 if (dist < minDist) {
                     winner = cells.get(j);
@@ -950,7 +965,7 @@ public class SotaManager {
 
     /**
      * Saves settings of algorithm to given NodeSettings object.
-     * 
+     *
      * @param settings NodeSettings object to store settings in
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -981,7 +996,7 @@ public class SotaManager {
     /**
      * Reads settings out of given NodeSettings object and validates it. If
      * validateOnly is false, NodeSettings data will be stored in algorithm too.
-     * 
+     *
      * @param settings NodeSettings object to get settings from
      * @param validateOnly if <code>true</code>, settings will be validated
      *            only, if <code>false</code>, settings will be stored in
@@ -1097,7 +1112,7 @@ public class SotaManager {
 
     /**
      * Returns the original DataTableSpec.
-     * 
+     *
      * @return the original DataTableSpec
      */
     public DataArray getOriginalData() {
@@ -1106,7 +1121,7 @@ public class SotaManager {
 
     /**
      * Sets the maximum heirarchical level.
-     * 
+     *
      * @param maxLevel the maximum heirarchical level to set
      */
     public void setMaxHierarchicalLevel(final int maxLevel) {
@@ -1115,7 +1130,7 @@ public class SotaManager {
 
     /**
      * Sets the root node.
-     * 
+     *
      * @param root the root node to set
      */
     public void setRoot(final SotaTreeCell root) {
@@ -1124,7 +1139,7 @@ public class SotaManager {
 
     /**
      * Sets in data.
-     * 
+     *
      * @param inData in data to set
      */
     public void setInData(final DataArray inData) {
@@ -1133,7 +1148,7 @@ public class SotaManager {
 
     /**
      * Sets original data.
-     * 
+     *
      * @param origData original data to set
      */
     public void setOriginalData(final DataArray origData) {
