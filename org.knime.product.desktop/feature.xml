@@ -734,7 +734,7 @@ propagated with or for interoperation with KNIME.
    <includes id="org.knime.binary.jre"  version="0.0.0"/>
 
    <requires>
-      <import feature="com.knime.features.enterprise.client.exampleserver" match="greaterOrEqual" version="2.3.0"/>
+      <import feature="com.knime.features.enterprise.client.exampleserver" match="greaterOrEqual" version="2.4.0"/>
       <import feature="org.eclipse.equinox.p2.user.ui" match="greaterOrEqual" version="2.0.1"/>
    </requires>
 </feature>
