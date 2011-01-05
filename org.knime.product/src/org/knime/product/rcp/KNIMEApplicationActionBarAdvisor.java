@@ -64,6 +64,7 @@ import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -80,6 +81,9 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDEActionFactory;
+import org.eclipse.ui.internal.WorkbenchPlugin;
+import org.eclipse.ui.internal.registry.ActionSetRegistry;
+import org.eclipse.ui.internal.registry.IActionSetDescriptor;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
@@ -277,7 +281,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
 
-        MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
+        final MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
+
         MenuManager editMenu =
                 new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
         MenuManager viewMenu =
@@ -345,6 +350,20 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         helpMenu.add(m_helpSearchAction);
         // menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
+
+        final String[] unwanted = new String[] {
+                "org.eclipse.birt.report.designer.ui.LibraryPublisAction",
+                "org.eclipse.birt.report.designer.ui.TemplatepublisAction"};
+
+        fileMenu.addMenuListener(new IMenuListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void menuAboutToShow(final IMenuManager mgr) {
+                for (String id : unwanted) {
+                    fileMenu.remove(id);
+                }
+            }
+        });
 
     }
 
@@ -437,6 +456,35 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         result.setText(vDesc.getLabel());
         result.setImageDescriptor(vDesc.getImageDescriptor());
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void fillActionBars(final int flags) {
+        super.fillActionBars(flags);
+        ActionSetRegistry reg =
+                WorkbenchPlugin.getDefault().getActionSetRegistry();
+        IActionSetDescriptor[] actionSets = reg.getActionSets();
+
+        // remove open file menu action
+        String actionSetId = "org.eclipse.ui.actionSet.openFiles";
+        for (int i = 0; i < actionSets.length; i++) {
+            if (!actionSets[i].getId().equals(actionSetId))
+                continue;
+            IExtension ext = actionSets[i].getConfigurationElement().getDeclaringExtension();
+            reg.removeExtension(ext, new Object[]{actionSets[i]});
+        }
+
+        // remove convert line delimiters menu action
+        actionSetId = "org.eclipse.ui.edit.text.actionSet.convertLineDelimitersTo";
+        for (int i = 0; i < actionSets.length; i++) {
+            if (!actionSets[i].getId().equals(actionSetId))
+                continue;
+            IExtension ext = actionSets[i].getConfigurationElement().getDeclaringExtension();
+            reg.removeExtension(ext, new Object[]{actionSets[i]});
+        }
     }
 
 }
