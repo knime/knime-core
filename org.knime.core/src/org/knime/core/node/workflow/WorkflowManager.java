@@ -1284,10 +1284,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer nc = m_workflow.getNode(id);
         if (nc != null) {
             switch (nc.getState()) {
-//            case IDLE:
-//            case CONFIGURED:
-//                // nothing needs to be done - also with the successors!
-//                return;
+            case IDLE:
+            case CONFIGURED:
+                // nothing needs to be done - also with the successors!
+                return;
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
                 if (nc instanceof SingleNodeContainer) {
@@ -1877,6 +1877,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
             LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
+            if (!success) {
+                // execution failed - clean up successors' execution-marks
+                disableNodeForExecution(nc.getID());
+            }
             // switch state from POSTEXECUTE to new state: EXECUTED/CONFIGURED
             // in case of success (w/ or w/out loop) or IDLE in case of error.
             nc.performStateTransitionEXECUTED(status);
@@ -1893,10 +1897,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // restart it explicitly!)
                         node.setLoopEndNode(null);
                     }
-                    if (node.getLoopStatus() != null) {
+                    if (node.getLoopContext() != null) {
                         // we are supposed to execute this loop again!
                         // first retrieve FlowLoopContext object
-                        FlowLoopContext slc = node.getLoopStatus();
+                        FlowLoopContext slc = node.getLoopContext();
                         // first check if the loop is properly configured:
                         if (m_workflow.getNode(slc.getOwner()) == null) {
                             // obviously not: origin of loop is not in this WFM!
@@ -1921,33 +1925,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                         ile.getMessage());
                                 success = false;
                             }
-                            // clear stack (= loop context)
-                            node.clearLoopStatus();
-                                // make sure we do not accidentally configure the
+                            node.clearLoopContext();
+                            // make sure we do not accidentally configure the
                             // remainder of this node since we are not yet done
                             // with the loop
                             canConfigureSuccessors = false;
                         }
                     }
                 }
-                // note that is NOT an else of the above if(success) - the
-                // flag can be modified in the if-branch.
+                // not this is NOT the else of the if above - success can
+                // be modified...
                 if (!success) {
-                    // execution failed - clean up successors' execution-marks
-                    // (needs be done before we reset the state of the node!)
-                    disableNodeForExecution(nc.getID());
                     // clean up node interna and status (but keep org. message!)
                     // switch from IDLE to CONFIGURED if possible!
                     configureSingleNodeContainer(snc, /*keepNodeMessage=*/false);
                     snc.setNodeMessage(latestNodeMessage);
                 }
             }
-            // if unsuccessful clean up all successors - especially MARKED-flags
+            // now handle non success for all types of nodes:
             if (!success) {
-                // execution failed - clean up successors' execution-marks
-                disableNodeForExecution(nc.getID());
-                // and also any nodes which were waiting for this one to
-                // be executed.
+                // clean loops which were waiting for this one to be executed.
                 for (FlowLoopContext flc : nc.getWaitingLoops()) {
                     disableNodeForExecution(flc.getTailNode());
                 }
@@ -3041,18 +3038,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (getWaitingLoops().size() >= 1) {
                     // looks as if some loops were waiting for this node to
                     // finish! Let's try to restart them:
-                    for (FlowLoopContext slc : getWaitingLoops()) {
+                    for (FlowLoopContext flc : getWaitingLoops()) {
                         try {
-                            getParent().restartLoop(slc);
+                            getParent().restartLoop(flc);
                         } catch (IllegalLoopException ile) {
                             // set error message in LoopEnd node not this one!
                             NodeMessage nm = new NodeMessage(
                                     NodeMessage.Type.ERROR,
                                     ile.getMessage());
-                            getParent().getNodeContainer(slc.getTailNode())
+                            getParent().getNodeContainer(flc.getTailNode())
                                 .setNodeMessage(nm);
                             getParent().disableNodeForExecution(
-                                    slc.getTailNode());
+                                    flc.getTailNode());
                         }
                     }
                     clearWaitingLoopList();
@@ -3062,8 +3059,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // for this node: clean them up!
                 // (most likely this is just an IDLE node, however, which
                 // had other flows that were not executed (such as ROOT!)
-                for (FlowObject so : getWaitingLoops()) {
-                    getParent().disableNodeForExecution(so.getOwner());
+                for (FlowLoopContext flc : getWaitingLoops()) {
+                    getParent().disableNodeForExecution(flc.getTailNode());
                 }
                 clearWaitingLoopList();
             }

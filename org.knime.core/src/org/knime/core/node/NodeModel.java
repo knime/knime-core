@@ -498,7 +498,7 @@ public abstract class NodeModel {
         for (int i = 0; i < outData.length; i++) {
             // do not check for null output tables if this is the end node
             // of a loop and another loop iteration is requested
-            if ((getLoopStatus() == null) && (outData[i] == null)) {
+            if ((getLoopContext() == null) && (outData[i] == null)) {
                 m_logger.error("Execution failed: Incorrect implementation;"
                         + " the execute method in "
                         + this.getClass().getSimpleName()
@@ -1294,7 +1294,7 @@ public abstract class NodeModel {
             throw new IllegalStateException(
                     "Missing Loop Start in Pipeline!");
         }
-        m_loopStatus = slc;
+        m_loopContext = slc;
         // note that the WFM will set the tail ID so we can retrieve it
         // in the head node!
     }
@@ -1307,14 +1307,14 @@ public abstract class NodeModel {
         return true;
     }
 
-    private FlowLoopContext m_loopStatus;
+    private FlowLoopContext m_loopContext;
 
-    final FlowLoopContext getLoopStatus() {
-        return m_loopStatus;
+    final FlowLoopContext getLoopContext() {
+        return m_loopContext;
     }
 
-    final void clearLoopStatus() {
-        m_loopStatus = null;
+    final void clearLoopContext() {
+        m_loopContext = null;
     }
 
     private LoopEndNode m_loopEndNode = null;

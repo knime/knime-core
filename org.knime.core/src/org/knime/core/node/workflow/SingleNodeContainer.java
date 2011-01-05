@@ -731,7 +731,7 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case PREEXECUTE:
-                m_node.clearLoopStatus();
+                m_node.clearLoopContext();
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setState(State.EXECUTING);
                 } else {
@@ -769,19 +769,19 @@ public final class SingleNodeContainer extends NodeContainer {
             switch (getState()) {
             case POSTEXECUTE:
                 if (status.isSuccess()) {
-                    if (m_node.getLoopStatus() == null) {
+                    if (m_node.getLoopContext() == null) {
                         setState(State.EXECUTED);
-
                     } else {
                         // loop not yet done - "stay" configured until done.
+                        assert getLoopStatus().equals(LoopStatus.IN_PROGRESS);
                         setState(State.CONFIGURED);
                     }
                 } else {
                     // node will be configured in doAfterExecute.
-                    // for now we assume complete failure and clean up:
+                    // for now we assume complete failure and clean up (reset)
+                    // We do keep the message, though.
                     NodeMessage oldMessage = getNodeMessage();
                     m_node.reset();
-                    m_node.clearLoopStatus();
                     setNodeMessage(oldMessage);
                     setState(State.IDLE);
                 }
@@ -1260,6 +1260,21 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     public boolean isInactiveBranchConsumer() {
     	return m_node.isInactiveBranchConsumer();
+    }
+    
+    public static enum LoopStatus { NONE, IN_PROGRESS, FINISHED };
+    /**
+     */
+    public LoopStatus getLoopStatus() {
+        if (getNode().getLoopRole().equals(LoopRole.END)) {
+            if ((getNode().getLoopContext() != null)
+                    || (getState().executionInProgress())) {
+                return LoopStatus.IN_PROGRESS;
+            } else {
+                return LoopStatus.FINISHED;
+            }
+        }
+        return LoopStatus.NONE;
     }
 
     /**

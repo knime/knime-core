@@ -54,6 +54,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.IFigure;
@@ -84,6 +85,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
@@ -96,6 +98,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -331,55 +334,48 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return ports;
     }
 
-    private NodeStateEvent m_latestNewState = null;
-    private final Object m_nodeStateEventSemaphore = new Object(); 
+    private final AtomicBoolean m_updateInProgress = new AtomicBoolean(false);
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        synchronized (m_nodeStateEventSemaphore) {
-            if (m_latestNewState == null) {
-                // make sure we notify others that we are working on
-                // the new state.
-                m_latestNewState = state;
-            } else {
-                // another state was waiting to be processed, simply
-                // overwrite this outdated state and return. Leave the
-                // work to the previously started thread.
-                m_latestNewState = state;
-                return;
-            }
-        }
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-                boolean isInactive = false;
-                if (getNodeContainer() instanceof SingleNodeContainer) {
-                    SingleNodeContainer snc =
-                            (SingleNodeContainer)getNodeContainer();
-                    isInactive = snc.isInactive();
-                }
-                synchronized (m_nodeStateEventSemaphore) {
-                    fig.setState(m_latestNewState.getState(), isInactive);
+        // if another state is waiting to be processed, simply return
+        // and leave the work to the previously started thread. This
+        // works because we are retrieving the current state information!
+        if (m_updateInProgress.compareAndSet(false, true)) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    // let others know we are in the middle of processing
+                    // this update - they will now need to start their own job.
+                    NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+                    m_updateInProgress.set(false);
+                    NodeContainer nc = getNodeContainer();
+                    State latestState = nc.getState();
+                    boolean isInactive = false;
+                    LoopStatus loopStatus = LoopStatus.NONE;
+                    if (nc instanceof SingleNodeContainer) {
+                        SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        isInactive = snc.isInactive();
+                        loopStatus = snc.getLoopStatus();
+                    }
+                    fig.setState(latestState, isInactive);
+                    fig.setLoopStatus(loopStatus, latestState);
                     updateNodeStatus();
                     // reset the tooltip text of the outports
                     for (Object part : getChildren()) {
-    
                         if (part instanceof NodeOutPortEditPart
                                 || part instanceof WorkflowInPortEditPart
                                 || part instanceof MetaNodeOutPortEditPart) {
                             AbstractPortEditPart outPortPart =
-                                    (AbstractPortEditPart)part;
+                                (AbstractPortEditPart)part;
                             outPortPart.rebuildTooltip();
                         }
                     }
                     // always refresh visuals
                     refreshVisuals();
-                    // and let others know we are done with the update...
-                    m_latestNewState = null;
                 }
-            }
-        });
+            });
+        }
     }
 
     /** {@inheritDoc} */
