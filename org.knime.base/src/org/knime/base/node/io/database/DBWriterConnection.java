@@ -346,7 +346,6 @@ final class DBWriterConnection {
             }
         } finally {
             stmt.close();
-            conn.close();
         }
     }
 
