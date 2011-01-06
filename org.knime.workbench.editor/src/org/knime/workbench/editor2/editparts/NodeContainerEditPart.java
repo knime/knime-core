@@ -371,7 +371,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                             outPortPart.rebuildTooltip();
                         }
                     }
-                    // always refresh visuals
+                    // always refresh visuals (does not seem to do anything
+                    // by default though: call repaints on updated figures).
                     refreshVisuals();
                 }
             });

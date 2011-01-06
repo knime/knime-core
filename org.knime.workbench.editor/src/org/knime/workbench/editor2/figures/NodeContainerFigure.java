@@ -1182,6 +1182,7 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void setLoopStatus(final LoopStatus loopStatus,
             final NodeContainer.State state) {
+        Image oldFigure = m_loopStatusFigure;
         if (loopStatus.equals(LoopStatus.NONE)) {
             m_loopStatusFigure = null;
         } else if (loopStatus.equals(LoopStatus.IN_PROGRESS)) {
@@ -1193,6 +1194,10 @@ public class NodeContainerFigure extends RectangleFigure {
             } else {
                 m_loopStatusFigure = LOOP_NO_STATUS;
             }
+        }
+        if (m_loopStatusFigure != oldFigure) {
+            // only force repaint if things have changed.
+            repaint();
         }
     }
 
