@@ -103,7 +103,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/cancel.GIF");
+        return ImageRepository.getImageDescriptor("icons/resume.png");
     }
 
     /**
@@ -112,7 +112,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
         return ImageRepository
-                .getImageDescriptor("icons/cancel_diabled.PNG");
+                .getImageDescriptor("icons/resume_diabled.png");
     }
 
     /**
@@ -120,7 +120,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Step Loop Execution.";
+        return "Resume Loop Execution.";
     }
 
     /**
