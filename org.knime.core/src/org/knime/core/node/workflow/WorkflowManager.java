@@ -110,6 +110,7 @@ import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -1918,14 +1919,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             slc.setTailNode(nc.getID());
                             // and try to restart loop
                             try {
-                                restartLoop(slc);
+                                if (!snc.getNode().getPauseLoopExecution()) {
+                                    restartLoop(slc);
+                                } else {
+//                                    disableNodeForExecution(snc.getID());
+                                    snc.getNode().setPauseLoopExecution(false);
+                                }
                             } catch (IllegalLoopException ile) {
                                 latestNodeMessage = new NodeMessage(
                                         NodeMessage.Type.ERROR,
                                         ile.getMessage());
                                 success = false;
                             }
-                            node.clearLoopContext();
                             // make sure we do not accidentally configure the
                             // remainder of this node since we are not yet done
                             // with the loop
@@ -2575,9 +2580,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // check for WorkflowManager - which we handle differently
             if (nc instanceof WorkflowManager) {
                 return ((WorkflowManager)nc).hasExecutableNode();
-            } else {
-                return nc.getState().equals(State.CONFIGURED);
             }
+            return nc.getState().equals(State.CONFIGURED);
         }
     }
 
@@ -2634,6 +2638,62 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * Pause loop execution of the given NodeContainer (=loop end).
+     *
+     * @param nc node to be canceled
+     */
+    public void pauseLoopExecution(final NodeContainer nc) {
+        if (nc instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)nc;
+            if (snc.getNodeModel() instanceof LoopEndNode) {
+                synchronized (m_workflowMutex) {
+                    if (snc.getState().executionInProgress()) {
+                        // currently running
+                        snc.pauseLoopExecution();
+                    }
+                    if (snc.getState().equals(State.CONFIGURED)
+                        && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
+                        // currently paused - prepare "single step" execution
+                        snc.pauseLoopExecution();
+                    }
+                    checkForNodeStateChanges(true);
+                }
+            }
+        }
+    }
+
+    /** Resume operation of a paused loop. Depending on the flag we
+     * either step (= run only one iteration and pause again) or run
+     * until the loop is finished.
+     * 
+     * @param nc
+     */
+    public void resumeLoopExecution(final NodeContainer nc,
+            final boolean oneStep) {
+        if (nc instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)nc;
+            if (snc.getNodeModel() instanceof LoopEndNode) {
+                synchronized (m_workflowMutex) {
+                    if (snc.getState().equals(State.CONFIGURED)
+                        && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
+                        // currently paused - ok!
+                        FlowLoopContext flc = snc.getNode().getLoopContext();
+                        try {
+                            if (oneStep) {
+                                pauseLoopExecution(nc);
+                            }
+                            restartLoop(flc);
+                        } catch (IllegalLoopException ile) {
+                            nc.setNodeMessage(new NodeMessage(
+                                    NodeMessage.Type.ERROR, ile.getMessage()));
+                        }
+                    }
+                }
+            }                
+        }
+    }
+    
     /** Is the node with the given ID ready to take a new job manager. This
      * is generally true if the node is currently not executing.
      * @param nodeID The node in question.

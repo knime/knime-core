@@ -1163,7 +1163,7 @@ public final class SingleNodeContainer extends NodeContainer {
     /**
      * @return role of node within a loop
      */
-    Node.LoopRole getLoopRole() {
+    public Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
     
@@ -1173,6 +1173,20 @@ public final class SingleNodeContainer extends NodeContainer {
     boolean resetAndConfigureLoopBody() {
         return getNode().resetAndConfigureLoopBody();
     }
+
+    /** make sure that after the next execution of this loop end node
+     * the execution will be halted. This can also be called on a
+     * configured node which was halted (paused) during loop execution to
+     * trigger a "single step" execution.
+     */
+    void pauseLoopExecution() {
+        if (getState().executionInProgress()
+                || (getState().equals(State.CONFIGURED)
+                    && LoopStatus.IN_PROGRESS.equals(getLoopStatus()))) {
+            getNode().setPauseLoopExecution(true);
+        }
+    }
+    
 
     ///////////////////////////////////
     // NodeContainer->Node forwarding

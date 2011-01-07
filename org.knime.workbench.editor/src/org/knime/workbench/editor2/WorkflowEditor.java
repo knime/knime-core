@@ -151,8 +151,11 @@ import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
+import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
+import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
@@ -406,6 +409,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction executeAll = new ExecuteAllAction(this);
         AbstractNodeAction cancelAll = new CancelAllAction(this);
         AbstractNodeAction cancel = new CancelAction(this);
+        AbstractNodeAction pause = new PauseLoopExecutionAction(this);
+        AbstractNodeAction step = new StepLoopAction(this);
+        AbstractNodeAction resume = new ResumeLoopAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription =
@@ -433,6 +439,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(executeAll);
         m_actionRegistry.registerAction(cancelAll);
         m_actionRegistry.registerAction(cancel);
+        m_actionRegistry.registerAction(pause);
+        m_actionRegistry.registerAction(step);
+        m_actionRegistry.registerAction(resume);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(setNameAndDescription);
