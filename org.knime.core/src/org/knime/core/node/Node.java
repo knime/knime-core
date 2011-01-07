@@ -1148,6 +1148,7 @@ public final class Node implements NodeModelWarningListener {
     public void reset() {
         m_logger.debug("reset");
         clearLoopContext();
+        setPauseLoopExecution(false);
         m_model.resetModel();
         clearNodeMessageAndNotify();
         cleanOutPorts();
@@ -1840,6 +1841,14 @@ public final class Node implements NodeModelWarningListener {
         return m_model.getLoopContext();
     }
 
+    public boolean getPauseLoopExecution() {
+        return m_model.getPauseLoopExecution();
+    }
+    
+    public void setPauseLoopExecution(final boolean ple) {
+        m_model.setPauseLoopExecution(ple);
+    }
+    
     public static enum LoopRole { BEGIN, END, NONE };
 
     public final LoopRole getLoopRole() {

@@ -1316,6 +1316,16 @@ public abstract class NodeModel {
     final void clearLoopContext() {
         m_loopContext = null;
     }
+    
+    private boolean m_pauseAfterNextExecution = false;
+    
+    final void setPauseLoopExecution(final boolean ple) {
+        m_pauseAfterNextExecution = ple;
+    }
+    
+    final boolean getPauseLoopExecution() {
+        return m_pauseAfterNextExecution;
+    }
 
     private LoopEndNode m_loopEndNode = null;
 
