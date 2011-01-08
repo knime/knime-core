@@ -215,12 +215,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         // set the active (or disabled) state
         boolean isInactive = false;
+        LoopStatus loopStatus = LoopStatus.NONE;
         if (cont instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)cont;
             isInactive = snc.isInactive();
+            loopStatus = snc.getLoopStatus();
         }
-        ((NodeContainerFigure)getFigure()).setState(cont
-                .getState(), isInactive);
+        ((NodeContainerFigure)getFigure()).setState(
+                cont.getState(), loopStatus, isInactive);
         // set the node message
         updateNodeStatus();
 
@@ -358,8 +360,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         isInactive = snc.isInactive();
                         loopStatus = snc.getLoopStatus();
                     }
-                    fig.setState(latestState, isInactive);
-                    fig.setLoopStatus(loopStatus, latestState);
+                    fig.setState(latestState, loopStatus, isInactive);
                     updateNodeStatus();
                     // reset the tooltip text of the outports
                     for (Object part : getChildren()) {

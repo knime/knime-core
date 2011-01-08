@@ -142,7 +142,7 @@ public class StepLoopAction extends AbstractNodeAction {
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getLoopRole().equals(LoopRole.END)
-                && snc.getState().equals(State.CONFIGURED)
+                && snc.getState().equals(State.MARKEDFOREXEC)
                     && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
                 return true;
             }

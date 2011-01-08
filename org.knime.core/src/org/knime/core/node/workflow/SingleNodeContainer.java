@@ -774,7 +774,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     } else {
                         // loop not yet done - "stay" configured until done.
                         assert getLoopStatus().equals(LoopStatus.IN_PROGRESS);
-                        setState(State.CONFIGURED);
+                        setState(State.MARKEDFOREXEC);
                     }
                 } else {
                     // node will be configured in doAfterExecute.

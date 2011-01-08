@@ -2079,7 +2079,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // configure, so we have to check here if the node
             // is really configured before. (Failing configures in
             // loop body nodes do NOT affect the state of the tailNode.)
-            if (tailNode.getState().equals(State.CONFIGURED)) {
+            if (tailNode.getState().equals(State.MARKEDFOREXEC)) {
                 // (6a) ... we enable the body to be queued again.
                 for (NodeAndInports nai : loopBodyNodes) {
                     NodeID id = nai.getID();
@@ -2098,8 +2098,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                                  nai.getInports(), false);
                     }
                 }
-                // and (7a) mark end of loop for re-execution
-                ((SingleNodeContainer)tailNode).markForExecution(true);
+//                // and (7a) mark end of loop for re-execution
+//                ((SingleNodeContainer)tailNode).markForExecution(true);
             } else {
                 // configure of tailNode failed! Abort execution of loop:
                 throw new IllegalLoopException("Loop end node could not"
@@ -2126,8 +2126,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             // and (7b) mark end of loop for re-execution
-            assert tailNode.getState().equals(State.CONFIGURED);
-            ((SingleNodeContainer)tailNode).markForExecution(true);
+//            assert tailNode.getState().equals(State.CONFIGURED);
+//            ((SingleNodeContainer)tailNode).markForExecution(true);
+            assert tailNode.getState().equals(State.MARKEDFOREXEC);
         }
         // (8) allow access to tail node
         ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
@@ -2675,7 +2676,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getNodeModel() instanceof LoopEndNode) {
                 synchronized (m_workflowMutex) {
-                    if (snc.getState().equals(State.CONFIGURED)
+                    if (snc.getState().equals(State.MARKEDFOREXEC)
                         && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
                         // currently paused - ok!
                         FlowLoopContext flc = snc.getNode().getLoopContext();

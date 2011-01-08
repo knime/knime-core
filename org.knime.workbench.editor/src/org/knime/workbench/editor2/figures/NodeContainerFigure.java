@@ -78,6 +78,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -460,13 +461,11 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Replaces the status traffic light with the progress bar. This is done
-     * once the node is queued or executing.
+     * once the node is paused, queued or executing.
      *
-     * @param executing if true the progress bar displays a moving progress if
-     *            false an empty progress bar is set indicating the waiting
-     *            situation.
+     * @param the mode @see ProgressMode.
      */
-    private void setProgressBar(final boolean executing) {
+    private void setProgressBar(final ProgressMode mode) {
 
         // remove both intergangable onse
         if (isChild(m_statusFigure)) {
@@ -487,21 +486,27 @@ public class NodeContainerFigure extends RectangleFigure {
             alreadySet = true;
         }
 
-        if (executing) {
-
+        switch (mode) {
+        case EXECUTING:
             // temporarily remember the execution state of the progress bar
-            boolean barExecuting = m_progressFigure.isExecuting();
-            m_progressFigure.setExecuting(true);
+            ProgressMode oldMode = m_progressFigure.getProgressMode();
+            m_progressFigure.setProgressMode(ProgressMode.EXECUTING);
             m_progressFigure.setStateMessage("Executing");
 
             // if the progress bar was not set already
             // init it with an unknown progress first
-            if (!alreadySet || !barExecuting) {
+            if (!alreadySet || !ProgressMode.EXECUTING.equals(oldMode)) {
                 m_progressFigure.activateUnknownProgress();
             }
-        } else {
-            m_progressFigure.setExecuting(false);
+            break;
+        case QUEUED:
+            m_progressFigure.setProgressMode(ProgressMode.QUEUED);
             m_progressFigure.setStateMessage("Queued");
+            break;
+        case PAUSED:
+            m_progressFigure.setProgressMode(ProgressMode.PAUSED);
+            m_progressFigure.setStateMessage("Paused");
+            break;
         }
     }
 
@@ -514,7 +519,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (isChild(m_progressFigure)) {
             remove(m_progressFigure);
             m_progressFigure.stopUnknownProgress();
-            m_progressFigure.setExecuting(false);
+            m_progressFigure.setProgressMode(ProgressMode.QUEUED);
         }
 
         // and set the progress bar
@@ -531,6 +536,7 @@ public class NodeContainerFigure extends RectangleFigure {
      *            figure set.
      */
     public void setState(final NodeContainer.State state,
+            final LoopStatus loopStatus,
             final boolean isInactive) {
         if (!isInactive) {
             switch (state) {
@@ -550,18 +556,24 @@ public class NodeContainerFigure extends RectangleFigure {
             case EXECUTING:
             case EXECUTINGREMOTELY:
             case POSTEXECUTE:
-                setProgressBar(true);
+                setProgressBar(ProgressMode.EXECUTING);
                 break;
             case MARKEDFOREXEC:
+                if (LoopStatus.IN_PROGRESS.equals(loopStatus)) {
+                    setProgressBar(ProgressMode.PAUSED);
+                    break;
+                }
+                // if not - just handle it like QUEUED and U_ME
             case UNCONFIGURED_MARKEDFOREXEC:
             case QUEUED:
-                setProgressBar(false);
+                setProgressBar(ProgressMode.QUEUED);
                 break;
             }
         } else {
             setStatusAmple();
             m_statusFigure.setIcon(INACTIVE);
         }
+        setLoopStatus(loopStatus, state);
         m_statusFigure.repaint();
     }
 
@@ -1180,7 +1192,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param loopStatus loop status of the loop end node
      * @param state execution status of the node.
      */
-    public void setLoopStatus(final LoopStatus loopStatus,
+    private void setLoopStatus(final LoopStatus loopStatus,
             final NodeContainer.State state) {
         Image oldFigure = m_loopStatusFigure;
         if (loopStatus.equals(LoopStatus.NONE)) {
