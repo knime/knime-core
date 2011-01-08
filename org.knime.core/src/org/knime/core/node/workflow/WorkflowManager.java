@@ -65,6 +65,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -1481,7 +1482,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /**
      * Reset all nodes in this workflow that are connected to the given
-     * inports.
+     * inports. The reset is performed in the correct order, that is last
+     * nodes are reset first.
      * Note that this routine will NOT trigger any resets connected to
      * possible outports of this WFM.
      *
@@ -1495,7 +1497,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             ArrayList<NodeAndInports> nodes
               = m_workflow.findAllConnectedNodes(inPorts);
-            for (NodeAndInports nai : nodes) {
+            ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
+            while (li.hasPrevious()) {
+                NodeAndInports nai = li.previous();
                 NodeContainer nc = m_workflow.getNode(nai.getID());
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
@@ -2047,8 +2051,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // (4-7) reset/configure loop body - or not...
         if (headSNC.resetAndConfigureLoopBody()) {
             // (4a) reset the nodes in the body (only those -
-            //     make sure end of loop is NOT reset)
-            for (NodeAndInports nai : loopBodyNodes) {
+            //     make sure end of loop is NOT reset). Make sure reset()
+            //     is performed in the correct order (last nodes first!)
+            ListIterator<NodeAndInports> li = loopBodyNodes.listIterator(
+                    loopBodyNodes.size());
+            while (li.hasPrevious()) {
+                NodeAndInports nai = li.previous();
                 NodeID id = nai.getID();
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc == null) {
@@ -2066,7 +2074,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // only reset the nodes connected to relevant ports.
                     // See also bug 2225
                     ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(
-                                                                  nai.getInports());
+                                                              nai.getInports());
                 }
             }
             // (5a) configure the nodes from start to rest (it's not
