@@ -467,8 +467,8 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                removeOutputTablesFromGlobalRepository();
                 m_node.reset();
+                cleanOutPorts();
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -490,6 +490,14 @@ public final class SingleNodeContainer extends NodeContainer {
                 throwIllegalStateException();
             }
         }
+    }
+
+    /** Cleans outports, i.e. sets fields to null, calls clear() on BDT.
+     * Usually happens as part of a reset() (except for loops that have
+     * their body not reset between iterations. */
+    void cleanOutPorts() {
+        m_node.cleanOutPorts();
+        removeOutputTablesFromGlobalRepository();
     }
 
     /** Enable (or disable) queuing of underlying node for execution. This
@@ -540,7 +548,6 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                m_node.cleanOutPorts();
                 setState(State.MARKEDFOREXEC);
                 return;
             default:
@@ -1166,7 +1173,7 @@ public final class SingleNodeContainer extends NodeContainer {
     public Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
-    
+
     /**
      * @see NodeModel#resetAndConfigureLoopBody()
      */
@@ -1185,7 +1192,7 @@ public final class SingleNodeContainer extends NodeContainer {
             getNode().setPauseLoopExecution(enablePausing);
         }
     }
-    
+
 
     ///////////////////////////////////
     // NodeContainer->Node forwarding
@@ -1265,16 +1272,16 @@ public final class SingleNodeContainer extends NodeContainer {
     public boolean isInactive() {
         return m_node.isInactive();
     }
-    
+
     /** @return <code>true</code> if the underlying node is able to consume
-     * inactive objects (implements 
+     * inactive objects (implements
      * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
      * @see {@link Node#isInactiveBranchConsumer()}
      */
     public boolean isInactiveBranchConsumer() {
     	return m_node.isInactiveBranchConsumer();
     }
-    
+
     public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
      */

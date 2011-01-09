@@ -1152,11 +1152,6 @@ public final class Node implements NodeModelWarningListener {
         m_model.resetModel();
         clearNodeMessageAndNotify();
         cleanOutPorts();
-        // clear temporary tables that have been created during execute
-        for (ContainerTable t : m_localTempTables) {
-            t.clear();
-        }
-        m_localTempTables.clear();
     }
 
     public void cleanOutPorts() {
@@ -1179,6 +1174,11 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         m_internalHeldTables = null;
+        // clear temporary tables that have been created during execute
+        for (ContainerTable t : m_localTempTables) {
+            t.clear();
+        }
+        m_localTempTables.clear();
     }
 
     /**
@@ -1844,11 +1844,11 @@ public final class Node implements NodeModelWarningListener {
     public boolean getPauseLoopExecution() {
         return m_model.getPauseLoopExecution();
     }
-    
+
     public void setPauseLoopExecution(final boolean ple) {
         m_model.setPauseLoopExecution(ple);
     }
-    
+
     public static enum LoopRole { BEGIN, END, NONE };
 
     public final LoopRole getLoopRole() {
@@ -1860,7 +1860,7 @@ public final class Node implements NodeModelWarningListener {
             return LoopRole.NONE;
         }
     }
-    
+
     public void setLoopEndNode(final Node tail) {
         if (tail == null) {
             m_model.setLoopEndNode(null);

@@ -1521,6 +1521,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * Clean outports of nodes connected to set of input ports. Used while
+     * restarting the loop, whereby the loop body is not to be reset (special
+     * option in start nodes). Clearing is done in correct order: downstream
+     * nodes first.
+     * @param inPorts set of port indices of the WFM.
+     */
+    void cleanOutputPortsInWFMConnectedToInPorts(final Set<Integer> inPorts) {
+        synchronized (m_workflowMutex) {
+            ArrayList<NodeAndInports> nodes =
+                m_workflow.findAllConnectedNodes(inPorts);
+            ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
+            while (li.hasPrevious()) {
+                NodeAndInports nai = li.previous();
+                NodeContainer nc = m_workflow.getNode(nai.getID());
+                if (nc.isResetable()) {
+                    if (nc instanceof SingleNodeContainer) {
+                        ((SingleNodeContainer)nc).cleanOutPorts();
+                    } else {
+                        assert nc instanceof WorkflowManager;
+                        ((WorkflowManager)nc)
+                            .cleanOutputPortsInWFMConnectedToInPorts(
+                                nai.getInports());
+                    }
+                }
+            }
+        }
+    }
+
     /** mark these nodes and all not-yet-executed predecessors for execution.
      * They will be marked first, queued when all inputs are available and
      * finally executed.
@@ -2066,7 +2095,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     throw new IllegalLoopException("Node in loop body not in"
                         + " same workflow as head&tail!");
                 } else if (!nc.isResetable()) {
-                    LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
+                    LOGGER.warn("Node " + nc.getNameWithID() + " not resetable "
                             + "during loop run, it is " + nc.getState());
                     continue;
                 }
@@ -2080,6 +2109,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                                               nai.getInports());
                 }
             }
+            // clean outports of start but do not call reset
+            headSNC.cleanOutPorts();
             // (5a) configure the nodes from start to rest (it's not
             //     so important if we configure more than the body)
             //     do NOT configure start of loop because otherwise
@@ -2116,11 +2147,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // configure of tailNode failed! Abort execution of loop:
                 throw new IllegalLoopException("Loop end node could not"
                     + " be executed. Aborting Loop execution.");
-                
+
             }
         } else {
-            // (4b-5b) skip reset/configure...
-            // (6b) ...only requeue loop body
+            // (4b-5b) skip reset/configure... just clean outports
+            ListIterator<NodeAndInports> li = loopBodyNodes.listIterator(
+                    loopBodyNodes.size());
+            while (li.hasPrevious()) {
+                NodeAndInports nai = li.previous();
+                NodeID id = nai.getID();
+                NodeContainer nc = m_workflow.getNode(id);
+                if (nc == null) {
+                    throw new IllegalLoopException("Node in loop body not in"
+                        + " same workflow as head&tail!");
+                }
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).cleanOutPorts();
+                } else {
+                    WorkflowManager wm = (WorkflowManager)nc;
+                    wm.cleanOutputPortsInWFMConnectedToInPorts(nai.getInports());
+                }
+            }
+            // clean outports of start but do not call reset
+            headSNC.cleanOutPorts();
+            // (6b) ...only re-"mark" loop body (tail is already marked)
             for (NodeAndInports nai : loopBodyNodes) {
                 NodeID id = nai.getID();
                 NodeContainer nc = m_workflow.getNode(id);
@@ -2675,7 +2725,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Resume operation of a paused loop. Depending on the flag we
      * either step (= run only one iteration and pause again) or run
      * until the loop is finished.
-     * 
+     *
      * @param nc
      */
     public void resumeLoopExecution(final NodeContainer nc,
@@ -2698,10 +2748,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         }
                     }
                 }
-            }                
+            }
         }
     }
-    
+
     /** Is the node with the given ID ready to take a new job manager. This
      * is generally true if the node is currently not executing.
      * @param nodeID The node in question.
