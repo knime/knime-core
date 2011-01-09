@@ -142,8 +142,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getLoopRole().equals(LoopRole.END)
-                && snc.getState().equals(State.MARKEDFOREXEC)
-                    && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
+                && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                 return true;
             }
         }
@@ -165,7 +164,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
             if (nc instanceof SingleNodeContainer) {
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 if (snc.getLoopRole().equals(LoopRole.END)
-                    && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
+                    && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(snc, /*oneStep=*/false);
                 }
             }

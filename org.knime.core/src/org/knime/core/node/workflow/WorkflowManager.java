@@ -1926,8 +1926,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 if (!snc.getNode().getPauseLoopExecution()) {
                                     restartLoop(slc);
                                 } else {
+                                    // do nothing - leave successors marked...
 //                                    disableNodeForExecution(snc.getID());
-                                    snc.getNode().setPauseLoopExecution(false);
+                                    // and leave flag for now (will be reset
+                                    // when execution is resumed).
+//                                    snc.getNode().setPauseLoopExecution(false);
                                 }
                             } catch (IllegalLoopException ile) {
                                 latestNodeMessage = new NodeMessage(
@@ -2107,6 +2110,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
 //                // and (7a) mark end of loop for re-execution
+                // not needed anymore: end-of-loop state _is_ MARKEDFOREXEC!
 //                ((SingleNodeContainer)tailNode).markForExecution(true);
             } else {
                 // configure of tailNode failed! Abort execution of loop:
@@ -2136,6 +2140,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // and (7b) mark end of loop for re-execution
 //            assert tailNode.getState().equals(State.CONFIGURED);
 //            ((SingleNodeContainer)tailNode).markForExecution(true);
+            // see above - state is ok
             assert tailNode.getState().equals(State.MARKEDFOREXEC);
         }
         // (8) allow access to tail node
@@ -2657,14 +2662,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getNodeModel() instanceof LoopEndNode) {
                 synchronized (m_workflowMutex) {
-                    if (snc.getState().executionInProgress()) {
+                    if (snc.getLoopStatus().equals(LoopStatus.RUNNING)) {
                         // currently running
-                        snc.pauseLoopExecution();
-                    }
-                    if (snc.getState().equals(State.CONFIGURED)
-                        && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
-                        // currently paused - prepare "single step" execution
-                        snc.pauseLoopExecution();
+                        snc.pauseLoopExecution(true);
                     }
                     checkForNodeStateChanges(true);
                 }
@@ -2684,13 +2684,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getNodeModel() instanceof LoopEndNode) {
                 synchronized (m_workflowMutex) {
-                    if (snc.getState().equals(State.MARKEDFOREXEC)
-                        && snc.getLoopStatus().equals(LoopStatus.IN_PROGRESS)) {
+                    if (snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                         // currently paused - ok!
                         FlowLoopContext flc = snc.getNode().getLoopContext();
                         try {
-                            if (oneStep) {
-                                pauseLoopExecution(nc);
+                            if (!oneStep) {
+                                snc.pauseLoopExecution(false);
                             }
                             restartLoop(flc);
                         } catch (IllegalLoopException ile) {

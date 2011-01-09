@@ -224,7 +224,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         ((NodeContainerFigure)getFigure()).setState(
                 cont.getState(), loopStatus, isInactive);
         // set the node message
-        updateNodeStatus();
+        updateNodeMessage();
 
     }
 
@@ -361,7 +361,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         loopStatus = snc.getLoopStatus();
                     }
                     fig.setState(latestState, loopStatus, isInactive);
-                    updateNodeStatus();
+                    updateNodeMessage();
                     // reset the tooltip text of the outports
                     for (Object part : getChildren()) {
                         if (part instanceof NodeOutPortEditPart
@@ -399,7 +399,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
-                updateNodeStatus();
+                updateNodeMessage();
                 // always refresh visuals
                 refreshVisuals();
             }
@@ -438,7 +438,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         fig.setCustomName(getCustomName());
         fig.setCustomDescription(getNodeContainer().getCustomDescription());
         // check status of node
-        updateNodeStatus();
+        updateNodeMessage();
 
         // reset the tooltip text of the outports
         for (Object part : getChildren()) {
@@ -557,11 +557,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Checks the status of the this node and if there is a message in the
+     * Checks the message of the this node and if there is a message in the
      * <code>NodeStatus</code> object the message is set. Otherwise the
      * currently displayed message is removed.
      */
-    private void updateNodeStatus() {
+    private void updateNodeMessage() {
         NodeContainer nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = nc.getNodeMessage();

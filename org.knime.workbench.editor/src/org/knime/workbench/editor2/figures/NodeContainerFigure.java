@@ -559,7 +559,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 setProgressBar(ProgressMode.EXECUTING);
                 break;
             case MARKEDFOREXEC:
-                if (LoopStatus.IN_PROGRESS.equals(loopStatus)) {
+                if (LoopStatus.PAUSED.equals(loopStatus)) {
                     setProgressBar(ProgressMode.PAUSED);
                     break;
                 }
@@ -574,7 +574,7 @@ public class NodeContainerFigure extends RectangleFigure {
             m_statusFigure.setIcon(INACTIVE);
         }
         setLoopStatus(loopStatus, state);
-        m_statusFigure.repaint();
+        repaint();
     }
 
     /**
@@ -1194,10 +1194,10 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     private void setLoopStatus(final LoopStatus loopStatus,
             final NodeContainer.State state) {
-        Image oldFigure = m_loopStatusFigure;
         if (loopStatus.equals(LoopStatus.NONE)) {
             m_loopStatusFigure = null;
-        } else if (loopStatus.equals(LoopStatus.IN_PROGRESS)) {
+        } else if (loopStatus.equals(LoopStatus.RUNNING)
+                || loopStatus.equals(LoopStatus.PAUSED)) {
             m_loopStatusFigure = LOOP_IN_PROGRESS_SIGN;
         } else {
             assert loopStatus.equals(LoopStatus.FINISHED);
@@ -1206,10 +1206,6 @@ public class NodeContainerFigure extends RectangleFigure {
             } else {
                 m_loopStatusFigure = LOOP_NO_STATUS;
             }
-        }
-        if (m_loopStatusFigure != oldFigure) {
-            // only force repaint if things have changed.
-            repaint();
         }
     }
 

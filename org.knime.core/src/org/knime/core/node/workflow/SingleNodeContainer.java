@@ -773,7 +773,7 @@ public final class SingleNodeContainer extends NodeContainer {
                         setState(State.EXECUTED);
                     } else {
                         // loop not yet done - "stay" configured until done.
-                        assert getLoopStatus().equals(LoopStatus.IN_PROGRESS);
+                        assert getLoopStatus().equals(LoopStatus.RUNNING);
                         setState(State.MARKEDFOREXEC);
                     }
                 } else {
@@ -1174,16 +1174,15 @@ public final class SingleNodeContainer extends NodeContainer {
         return getNode().resetAndConfigureLoopBody();
     }
 
-    /** make sure that after the next execution of this loop end node
-     * the execution will be halted. This can also be called on a
-     * configured node which was halted (paused) during loop execution to
-     * trigger a "single step" execution.
+    /** enable (or disable) that after the next execution of this loop end node
+     * the execution will be halted. This can also be called on a paused node
+     * to trigger a "single step" execution.
+     * 
+     * @param if true, pause is enabled. Otherwise disabled.
      */
-    void pauseLoopExecution() {
-        if (getState().executionInProgress()
-                || (getState().equals(State.CONFIGURED)
-                    && LoopStatus.IN_PROGRESS.equals(getLoopStatus()))) {
-            getNode().setPauseLoopExecution(true);
+    void pauseLoopExecution(final boolean enablePausing) {
+        if (getState().executionInProgress()) {
+            getNode().setPauseLoopExecution(enablePausing);
         }
     }
     
@@ -1276,14 +1275,19 @@ public final class SingleNodeContainer extends NodeContainer {
     	return m_node.isInactiveBranchConsumer();
     }
     
-    public static enum LoopStatus { NONE, IN_PROGRESS, FINISHED };
+    public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
      */
     public LoopStatus getLoopStatus() {
         if (getNode().getLoopRole().equals(LoopRole.END)) {
             if ((getNode().getLoopContext() != null)
                     || (getState().executionInProgress())) {
-                return LoopStatus.IN_PROGRESS;
+                if ((getNode().getPauseLoopExecution())
+                        && (getState().equals(State.MARKEDFOREXEC))) {
+                    return LoopStatus.PAUSED;
+                } else {
+                    return LoopStatus.RUNNING;
+                }
             } else {
                 return LoopStatus.FINISHED;
             }
