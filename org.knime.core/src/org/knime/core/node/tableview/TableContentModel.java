@@ -301,6 +301,7 @@ public class TableContentModel extends AbstractTableModel
         } else {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
+                   @Override
                    public void run() {
                        setDataTableIntern(data);
                    }
@@ -578,6 +579,7 @@ public class TableContentModel extends AbstractTableModel
      * @return the number of columns in the underlying <code>DataTable</code>
      *         or 0 if {@link #hasData()} returns <code>false</code>.
      */
+    @Override
     public int getColumnCount() {
         return hasData() ? m_data.getDataTableSpec().getNumColumns() : 0;
     } // getColumnCount()
@@ -601,6 +603,7 @@ public class TableContentModel extends AbstractTableModel
      *
      * @return a lower bound for the number of rows in this model
      */
+    @Override
     public int getRowCount() {
         return m_rowCountOfInterest;
     } // getRowCount()
@@ -616,6 +619,7 @@ public class TableContentModel extends AbstractTableModel
      *         <code>DataTable</code> at position [<code>row, column</code>]
      * @throws IndexOutOfBoundsException if either argument violates its range
      */
+    @Override
     public DataCell getValueAt(final int row, final int column) {
         boundColumn(column);
         DataRow result = getRow(row);
@@ -625,6 +629,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowKey getRowKey(final int row) {
         DataRow result = getRow(row);
         return result.getKey();
@@ -779,6 +784,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isHiLit(final int row) {
         // ensure row is cached
         getRow(row);
@@ -793,6 +799,7 @@ public class TableContentModel extends AbstractTableModel
      * @param row The row of interest
      * @return The color information for that row
      */
+    @Override
     public ColorAttr getColorAttr(final int row) {
         // makes also sure row is cached
         DataRow r = getRow(row);
@@ -841,6 +848,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
+    @Override
     public void hiLite(final KeyEvent e) {
         processHiLiteEvent(e, true);
     } // hiLite(KeyEvent)
@@ -848,6 +856,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLite(final KeyEvent e) {
         processHiLiteEvent(e, false);
     } // unHiLite(KeyEvent)
@@ -856,6 +865,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         if (!hasData()) {
             return;
@@ -1005,6 +1015,17 @@ public class TableContentModel extends AbstractTableModel
         return true;
     } // cacheNextRow()
 
+    /** Get new iterator, only to be called when data is set. Gets an
+     * {@link BufferedDataTable#iteratorFailProve() fail prove iterator} if
+     * the table is an instance of {@link BufferedDataTable}. */
+    private RowIterator getNewDataIterator() {
+        assert hasData();
+        if (m_data instanceof BufferedDataTable) {
+            return ((BufferedDataTable)m_data).iteratorFailProve();
+        }
+        return m_data.iterator();
+    }
+
     /**
      * Clears cache, instantiates new Iterator.
      */
@@ -1015,7 +1036,7 @@ public class TableContentModel extends AbstractTableModel
         if (m_iterator instanceof CloseableRowIterator) {
             ((CloseableRowIterator)m_iterator).close();
         }
-        m_iterator = m_data.iterator();
+        m_iterator = getNewDataIterator();
         m_rowCountInIterator = 0;
         // all updated in nextBlock()
         m_rowCountOfInterestInIterator = 0;
@@ -1125,7 +1146,7 @@ public class TableContentModel extends AbstractTableModel
             // #rows that changed up to m_rowCountOfInterest
             int changedCount = 0;
             Set<RowKey> keySet = e.keys();
-            for (RowIterator it = m_data.iterator(); it.hasNext()
+            for (RowIterator it = getNewDataIterator(); it.hasNext()
                 && c < m_rowCountOfInterest;) {
                 RowKey currentRowKey = it.next().getKey();
                 boolean isNowOfInterest =
@@ -1240,7 +1261,7 @@ public class TableContentModel extends AbstractTableModel
             }
         } else { // iteration necessary: use new (private) iterator
             // TODO: check for correctness when m_showOnlyHilited is set
-            final RowIterator it = m_data.iterator();
+            final RowIterator it = getNewDataIterator();
             for (int i = 0; it.hasNext() && i <= lastSelected; i++) {
                 RowKey key = it.next().getKey();
                 if (i >= firstSelected && selModel.isSelectedIndex(i)) {
@@ -1297,6 +1318,7 @@ public class TableContentModel extends AbstractTableModel
             m_isRowCountOfInterestFinal = isFinal;
         }
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 fireTableRowsInserted(oldCount, newCount - 1);
             }
