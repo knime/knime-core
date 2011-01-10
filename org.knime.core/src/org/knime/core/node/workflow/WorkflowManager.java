@@ -1079,7 +1079,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
                 nc.loadSettings(settings);
-                configureNodeAndSuccessors(id, true);
+                // bug fix 2593: can't simply call configureNodeAndSuccessor
+                // with meta node as argument: will miss contained source nodes
+                if (nc instanceof SingleNodeContainer) {
+                    configureNodeAndSuccessors(id, true);
+                } else {
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
+                    configureNodeAndSuccessors(id, false);
+                }
             } else {
                 throw new IllegalStateException(
                         "Cannot load settings into node; it is executing or "
