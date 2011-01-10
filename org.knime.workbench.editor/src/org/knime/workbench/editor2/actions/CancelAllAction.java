@@ -129,7 +129,8 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        return getManager().getState().executionInProgress();
+        WorkflowManager manager = getManager();
+        return manager.getParent().canCancelNode(manager.getID());
     }
 
     /**

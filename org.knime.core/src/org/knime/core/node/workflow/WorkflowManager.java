@@ -2525,6 +2525,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Check if a node can be cancelled individually.
+    *
+    * @param nodeID id of node
+    * @return true if node can be cancelled
+    *             
+    */
+   public boolean canCancelNode(final NodeID nodeID) {
+       synchronized (m_workflowMutex) {
+           NodeContainer nc = m_workflow.getNode(nodeID);
+           if (nc == null) {
+               return false;
+           }
+           // don't allow individual cancellation of nodes in a remote exec flow
+           if (!isLocalWFM()) {
+               return false;
+           }
+           if (!nc.getState().executionInProgress()) {
+               return false;
+           }
+           return true;
+       }
+   }
+   
     /** @return true if any node contained in this workflow is executable,
      * that is configured.
      */
