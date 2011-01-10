@@ -1,4 +1,11 @@
 Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Core API
+Bundle-SymbolicName: org.knime.core;singleton:=true
+Bundle-Version: 2.3.1.qualifier
+Bundle-ClassPath: knime-core.jar
+Bundle-Activator: org.knime.core.internal.CorePlugin
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: log4j,
  org.knime.core,
  org.knime.core.data,
@@ -39,16 +46,9 @@ Export-Package: log4j,
  org.knime.core.util,
  org.knime.core.util.tokenizer,
  org.knime.core.xml
-Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: knime-core.jar
-Bundle-Name: KNIME Core API
+Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,
+ org.apache.log4j,
+ org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,org.apac
- he.log4j,org.eclipse.core.resources
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-Version: 2.3.0.qualifier
-Bundle-Activator: org.knime.core.internal.CorePlugin
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.knime.core;singleton:=true
+Bundle-ActivationPolicy: lazy
 Eclipse-RegisterBuddy: org.apache.log4j
-

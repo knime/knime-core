@@ -1,5 +1,10 @@
 Manifest-Version: 1.0
-Require-Bundle: org.knime.core;visibility:=reexport
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Base Nodes
+Bundle-SymbolicName: org.knime.base;singleton:=true
+Bundle-Version: 2.3.1.qualifier
+Bundle-ClassPath: knime-base.jar,lib/Jama-1.0.2.jar
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: Jama,
  Jama.examples,
  Jama.test,
@@ -235,12 +240,6 @@ Export-Package: Jama,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-ClassPath: knime-base.jar,lib/Jama-1.0.2.jar
-Bundle-Version: 2.3.0.qualifier
-Bundle-Name: KNIME Base Nodes
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.knime.base;singleton:=true
-Eclipse-RegisterBuddy: org.knime.core
+Require-Bundle: org.knime.core;visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-
+Eclipse-RegisterBuddy: org.knime.core

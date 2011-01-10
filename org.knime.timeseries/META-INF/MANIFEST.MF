@@ -1,4 +1,9 @@
 Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Time Series Nodes
+Bundle-SymbolicName: org.knime.timeseries; singleton:=true
+Bundle-Version: 2.3.1.qualifier
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.timeseries,
  org.knime.timeseries.node.diff,
  org.knime.timeseries.node.extract,
@@ -13,15 +18,11 @@ Export-Package: org.knime.timeseries,
  org.knime.timeseries.node.stringtotimestamp,
  org.knime.timeseries.node.time2string,
  org.knime.timeseries.util
-Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)
- ";visibility:=reexport,org.knime.workbench.repository;bundle-version=
- "[2.0.0,3.0.0)";visibility:=reexport,org.knime.base;bundle-version="[
- 2.0.0,3.0.0)";visibility:=reexport
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-ActivationPolicy: lazy
-Bundle-Version: 2.3.0.qualifier
-Bundle-Name: KNIME Time Series Nodes
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.knime.timeseries; singleton:=true
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,
+ 4.0.0)";visibility:=reexport,
+ org.knime.workbench.repository;bundle-version="[2.0.0,
+ 3.0.0)";visibility:=reexport,
+ org.knime.base;bundle-version="[2.0.0,
+ 3.0.0)";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-
+Bundle-ActivationPolicy: lazy

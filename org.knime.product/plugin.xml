@@ -1,91 +1,131 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-
 <plugin>
+
    <extension-point id="splashExtension" name="KNIME Splash Extensions" schema="schema/splashExtension.exsd"/>
 
-   <extension id="KNIME_APPLICATION" point="org.eclipse.core.runtime.applications">
+   <extension
+         id="KNIME_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
       <application>
-         <run class="org.knime.product.rcp.KNIMEApplication"/>
+         <run
+               class="org.knime.product.rcp.KNIMEApplication">
+         </run>
       </application>
    </extension>
-   <extension id="KNIME_PRODUCT" name="KNIME Workbench - Standalone Version" point="org.eclipse.core.runtime.products">
-      <product application="org.knime.product.KNIME_APPLICATION" description="An Integrated and Extensible Data Analysis Workbench" name="KNIME">
-         <property name="windowImage" value="icons/gif/knime16.gif"/>
-         <property name="aboutText" value="Welcome to KNIME 2.3.0&#10;the Konstanz Information Miner&#10;Copyright, 2003 - 2010&#10;email: contact@knime.org&#10;&#10;This version of KNIME is licensed under the GNU General Public License, Version 3.&#10;Please see the license file in the installation directory and &#10;contact us if you cannot locate it. More details can be found at&#10;http://www.knime.org&#10;&#10;Based on Eclipse, www.eclipse.org &#10;Uses: Java, GEF, Log4J&#10;&#10;KNIME is a registered trademark of KNIME GmbH, Germany.&#10;All other trademarks are the property of their respective owners."/>
-         <property name="aboutImage" value="icons/gif/knime128.gif"/>
-         <property name="appName" value="KNIME">
+   <extension
+         id="KNIME_PRODUCT"
+         name="KNIME Workbench - Standalone Version"
+         point="org.eclipse.core.runtime.products">
+      <product
+            name="KNIME"
+            application="org.knime.product.KNIME_APPLICATION"
+            description="An Integrated and Extensible Data Analysis Workbench">
+         <property
+               name="windowImage"
+               value="icons/gif/knime16.gif">
          </property>
-         <property name="preferenceCustomization" value="plugin_customization.ini">
+         <property
+               name="aboutText"
+               value="Welcome to KNIME 2.3.1
+the Konstanz Information Miner
+Copyright, 2003 - 2010
+email: contact@knime.org
+
+This version of KNIME is licensed under the GNU General Public License, Version 3.
+Please see the license file in the installation directory and 
+contact us if you cannot locate it. More details can be found at
+http://www.knime.org
+
+Based on Eclipse, www.eclipse.org 
+Uses: Java, GEF, Log4J
+
+KNIME is a registered trademark of KNIME GmbH, Germany.
+All other trademarks are the property of their respective owners.">
          </property>
-         <property name="windowImages" value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime48.gif,icons/gif/knime64.gif,icons/gif/knime128.gif">
+         <property
+               name="aboutImage"
+               value="icons/gif/knime128.gif">
+         </property>
+         <property
+               name="appName"
+               value="KNIME">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime48.gif,icons/gif/knime64.gif,icons/gif/knime128.gif">
          </property>
       </product>
    </extension>
-   <extension point="org.eclipse.ui.commands">
-      <command description="Creates a new KNIME project" id="open.new.project.wizard" name="New KNIME Project...">
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="New KNIME Project..."
+            description="Creates a new KNIME project"
+            id="open.new.project.wizard">
       </command>
    </extension>
-   <extension id="KNIME_BATCH_APPLICATION" point="org.eclipse.core.runtime.applications">
+   <extension
+         id="KNIME_BATCH_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
       <application>
-         <run class="org.knime.product.headless.KNIMEBatchApplication"/>
+         <run
+               class="org.knime.product.headless.KNIMEBatchApplication">
+         </run>
       </application>
    </extension>
-   <extension point="org.eclipse.ui.splashHandlers">
-      <splashHandler class="org.knime.product.KNIMESplashHandler" id="org.knime.product.splashHandlers.extensible">
+   <extension
+         point="org.eclipse.ui.splashHandlers">
+      <splashHandler
+            class="org.knime.product.KNIMESplashHandler"
+            id="org.knime.product.splashHandlers.extensible">
       </splashHandler>
-      <splashHandlerProductBinding productId="org.knime.product.KNIME_PRODUCT" splashId="org.knime.product.splashHandlers.extensible">
+      <splashHandlerProductBinding
+            splashId="org.knime.product.splashHandlers.extensible"
+            productId="org.knime.product.KNIME_PRODUCT">
       </splashHandlerProductBinding>
    </extension>
-   <!--
    <extension
-         point="org.knime.product.splashExtension">
-      <splashExtension
-            icon="icons/af.png"
-            id="af"
-            tooltip="Application Framework">
-      </splashExtension>
-      <splashExtension
-            icon="icons/embedded.png"
-            id="embedded"
-            tooltip="Embedded">
-      </splashExtension>
-      <splashExtension
-            icon="icons/enterprise.png"
-            id="enterprise"
-            tooltip="Enterprise">
-      </splashExtension>
-      <splashExtension
-            icon="icons/languages.png"
-            id="languages"
-            tooltip="Languages">
-      </splashExtension>
-      <splashExtension
-            icon="icons/rcp.png"
-            id="rcp"
-            tooltip="RCP">
-      </splashExtension>
-   </extension>
-   -->
-   <extension point="org.eclipse.ui.intro">
-      <intro class="org.eclipse.ui.intro.config.CustomizableIntroPart" icon="icons/gif/knime16.gif" id="org.knime.product.intro">
+         point="org.eclipse.ui.intro">
+      <intro
+            icon="icons/gif/knime16.gif"
+            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
+            id="org.knime.product.intro">
       </intro>
-      <introProductBinding introId="org.knime.product.intro" productId="org.knime.product.KNIME_PRODUCT">
+      <introProductBinding
+            introId="org.knime.product.intro"
+            productId="org.knime.product.KNIME_PRODUCT">
       </introProductBinding>
    </extension>
-   <extension point="org.eclipse.ui.intro.config">
-      <config content="intro/introContent.xml" id="org.knime.product.config" introId="org.knime.product.intro">
-         <presentation home-page-id="org.knime.product.presentation" standby-page-id="org.knime.product.presentation">
-            <implementation kind="html">
+   <extension
+         point="org.eclipse.ui.intro.config">
+      <config
+            introId="org.knime.product.intro"
+            content="intro/introContent.xml"
+            id="org.knime.product.config">
+         <presentation
+               home-page-id="org.knime.product.presentation"
+               standby-page-id="org.knime.product.presentation">
+            <implementation
+                  kind="html">
             </implementation>
          </presentation>
       </config>
    </extension>
-   
-   <extension point="org.eclipse.ui.intro.configExtension">
-    <action name="createProjectFromIntro" replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.NewProjectWizardIntroAction">
-    </action>
-    <action name="launchInstallWizard" replaces="runAction?pluginId=org.knime.workbench.ui&amp;class=org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction">
-    </action>
-    </extension>
+   <extension
+         point="org.eclipse.ui.intro.configExtension">
+      <action
+            replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.NewProjectWizardIntroAction"
+            name="createProjectFromIntro">
+      </action>
+      <action
+            replaces="runAction?pluginId=org.knime.workbench.ui&amp;class=org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction"
+            name="launchInstallWizard">
+      </action>
+   </extension>
+
 </plugin>

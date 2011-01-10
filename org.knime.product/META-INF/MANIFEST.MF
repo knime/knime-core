@@ -1,4 +1,13 @@
 Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Konstanz Information Miner
+Bundle-SymbolicName: org.knime.product;singleton:=true
+Bundle-Version: 2.3.1.qualifier
+Bundle-Activator: org.knime.product.ProductPlugin
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Export-Package: org.knime.product,
+ org.knime.product.headless,
+ org.knime.product.rcp
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -17,13 +26,4 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.net,
  org.eclipse.ui.net,
  org.eclipse.ui.console
-Export-Package: org.knime.product,org.knime.product.headless,org.knime
- .product.rcp
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-Version: 2.3.0.qualifier
-Bundle-Name: KNIME Konstanz Information Miner
-Bundle-Activator: org.knime.product.ProductPlugin
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.knime.product;singleton:=true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-

@@ -2,12 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Unit-Tests for org.knime.core
 Bundle-SymbolicName: org.knime.core.testing;singleton:=true
-Bundle-Version: 2.3.0.qualifier
-Fragment-Host: org.knime.core;bundle-version="2.3.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Version: 2.3.1.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.knime.testing;bundle-version="2.3.0",
- org.junit;bundle-version="4.8.1"
+Fragment-Host: org.knime.core;bundle-version="2.3.0"
 Export-Package: org.knime.core,
  org.knime.core.data.container,
  org.knime.core.data.def,
@@ -27,3 +24,6 @@ Export-Package: org.knime.core,
  org.knime.core.workflow.metawithsinglenode,
  org.knime.core.workflow.simplechainofnodes,
  org.knime.core.workflow.simpleLoop
+Require-Bundle: org.knime.testing;bundle-version="2.3.0",
+ org.junit;bundle-version="4.8.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

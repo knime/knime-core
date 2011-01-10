@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="2.3.0.qualifier"
+      version="2.3.1.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -18,7 +18,7 @@
    </copyright>
 
    <license>
-GNU GENERAL PUBLIC LICENSE with Additional Permissions according to Sec. 7
+      GNU GENERAL PUBLIC LICENSE with Additional Permissions according to Sec. 7
 *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
 Please see below the General Public License (GPL), Version 3, 
 and the Additional Permissions according to Sec. 7 

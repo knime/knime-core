@@ -1,4 +1,10 @@
 Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Deprecated Nodes
+Bundle-SymbolicName: org.knime.deprecated;singleton:=true
+Bundle-Version: 2.3.1.qualifier
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Fragment-Host: org.knime.base;bundle-version="2.2.0"
 Export-Package: org.knime.base.node.io.filereader,
  org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.mds,
@@ -24,11 +30,4 @@ Export-Package: org.knime.base.node.io.filereader,
  org.knime.base.node.viz.statistics,
  org.knime.core.node.defaultnodedialog
 Require-Bundle: org.knime.core
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Fragment-Host: org.knime.base;bundle-version="2.2.0"
-Bundle-Version: 2.3.0.qualifier
-Bundle-Name: KNIME Deprecated Nodes
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.knime.deprecated;singleton:=true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-
