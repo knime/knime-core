@@ -156,6 +156,7 @@ public final class ColPropertyDialog extends JDialog {
         // instantiate the components of the dialog
         m_skipColumn = new JCheckBox("DON'T include column in output table");
         m_skipColumn.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 skipColumnHasChanged();
             }
@@ -177,6 +178,7 @@ public final class ColPropertyDialog extends JDialog {
         m_typeChooser = new JComboBox(TYPES);
         m_typeChooser.setPrototypeDisplayValue("0123456789");
         m_typeChooser.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 typeSelectionChanged();
             }
@@ -202,6 +204,7 @@ public final class ColPropertyDialog extends JDialog {
         m_domainButton = new JButton("Domain...");
         domainPanel.add(m_domainButton);
         m_domainButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 openDomainDialog();
                 m_warnLabel.setText("");
@@ -214,6 +217,7 @@ public final class ColPropertyDialog extends JDialog {
         JButton ok = new JButton("OK");
         // add action listener
         ok.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onOK();
             }
@@ -221,6 +225,7 @@ public final class ColPropertyDialog extends JDialog {
         JButton cancel = new JButton("Cancel");
         // add action listener
         cancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 onCancel();
             }
@@ -396,8 +401,12 @@ public final class ColPropertyDialog extends JDialog {
         setTitle("New settings for column '" + theColSpec.getName().toString()
                 + "'");
 
+
         pack();
         centerDialog();
+
+        m_colNameField.selectAll();
+        m_colNameField.requestFocus();
 
         setVisible(true);
         /* ---- won't come back before dialog is disposed -------- */
