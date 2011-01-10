@@ -108,15 +108,18 @@ final class DBWriterConnection {
             ResultSet rs = null;
             try {
                 // try to count all rows to see if table exists
-                rs = conn.createStatement().executeQuery(
-                        "SELECT * FROM " + table);
+                final String query = "SELECT * FROM " + table;
+                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                rs = conn.createStatement().executeQuery(query);
             } catch (SQLException sqle) {
                 LOGGER.info("Table \"" + table
                         + "\" does not exist in database, "
                         + "will create new table.");
                 // and create new table
-                conn.createStatement().execute("CREATE TABLE " + table + " "
-                        + createStmt(spec, sqlTypes));
+                final String query = "CREATE TABLE " + table + " "
+                    + createStmt(spec, sqlTypes);
+                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                conn.createStatement().execute(query);
             }
             // if table exists
             if (rs != null) {
@@ -215,14 +218,18 @@ final class DBWriterConnection {
             }
             try {
                 // remove existing table (if any)
-                conn.createStatement().execute("DROP TABLE " + table);
+                final String query = "DROP TABLE " + table;
+                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                conn.createStatement().execute(query);
             } catch (Throwable t) {
                 LOGGER.info("Can't drop table \"" + table
                         + "\", will create new table.");
             }
             // and create new table
-            conn.createStatement().execute("CREATE TABLE " + table + " "
-                    + createStmt(spec, sqlTypes));
+            final String query = "CREATE TABLE " + table + " "
+                + createStmt(spec, sqlTypes);
+            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            conn.createStatement().execute(query);
         }
 
         // creates the wild card string based on the number of columns
@@ -246,8 +253,10 @@ final class DBWriterConnection {
         int allErrors = 0;
 
         // create table meta data with empty column information
-        final PreparedStatement stmt = conn.prepareStatement("INSERT INTO "
-                + table + " VALUES " + wildcard.toString());
+        final String query = "INSERT INTO "
+            + table + " VALUES " + wildcard.toString();
+        LOGGER.debug("Executing SQL statement \"" + query + "\"");
+        final PreparedStatement stmt = conn.prepareStatement(query);
         try {
             conn.setAutoCommit(false);
             for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
@@ -337,7 +346,6 @@ final class DBWriterConnection {
             }
         } finally {
             stmt.close();
-            conn.close();
         }
     }
 

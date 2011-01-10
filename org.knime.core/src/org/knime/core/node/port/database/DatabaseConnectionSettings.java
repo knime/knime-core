@@ -56,6 +56,8 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -77,6 +79,7 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.Pair;
 
 /**
  *
@@ -185,9 +188,15 @@ public class DatabaseConnectionSettings {
         m_credName = conn.m_credName;
     }
 
+    /** Map the keeps database connection based on the user and URL. */
+    private static final Map<Pair<String, String>, Connection> CONNECTION_MAP =
+        new LinkedHashMap<Pair<String,String>, Connection>();
+
     /**
-     * Create a database connection based on this settings.
-     * @return a new database connection object.
+     * Create a database connection based on this settings. Note, don't close
+     * the connection since it cached for subsequent calls or later reuse to 
+     * same database URL (under the same user name).
+     * @return a new database connection object
      * @throws SQLException {@link SQLException}
      * @throws InvalidSettingsException {@link InvalidSettingsException}
      * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
@@ -214,6 +223,24 @@ public class DatabaseConnectionSettings {
         final String password = m_pass;
         final String user = m_user;
 
+        Pair<String, String> databaseConnectionKey =
+            new Pair<String, String>(user, dbName);
+        Connection conn = CONNECTION_MAP.get(databaseConnectionKey);
+        // if connection already exists
+        if (conn != null) {
+            // and is closed
+            if (conn.isClosed()) {
+                CONNECTION_MAP.remove(databaseConnectionKey);
+            } else {
+                try {
+                    conn.clearWarnings();
+                    return conn;
+                } catch (Exception e) { // remove invalid connection
+                    CONNECTION_MAP.remove(databaseConnectionKey);
+                }
+            }
+        }
+        // if a connection is not available
         Callable<Connection> callable = new Callable<Connection>() {
             /** {@inheritDoc} */
             @Override
@@ -225,7 +252,9 @@ public class DatabaseConnectionSettings {
         };
         Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
         try {
-            return task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
+            conn = task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
+            CONNECTION_MAP.put(databaseConnectionKey, conn);
+            return conn;
         } catch (ExecutionException ee) {
             throw new SQLException(ee.getCause());
         } catch (Exception ie) {
@@ -382,6 +411,7 @@ public class DatabaseConnectionSettings {
         try {
             conn = createConnection();
             stmt = conn.createStatement();
+            LOGGER.debug("Executing SQL statement \"" + statement + "\"");
             stmt.execute(statement);
         } finally {
             if (stmt != null) {
@@ -389,7 +419,6 @@ public class DatabaseConnectionSettings {
                 stmt = null;
             }
             if (conn != null) {
-                conn.close();
                 conn = null;
             }
         }

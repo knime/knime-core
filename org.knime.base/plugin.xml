@@ -138,7 +138,7 @@
       <category
             icon="icons/missing.gif"
             level-id="subgroup"
-            name="Association Rules"
+            name="Item Sets / Association Rules"
             path="/mining"/>
       <category
             after="row"
@@ -301,7 +301,7 @@
             path="/">
       </category>
       <category
-            after="labs"
+            after="misc"
             description="Nodes provided by the KNIME community"
             icon="icons/16x16/category_community_nodes.png"
             level-id="community"

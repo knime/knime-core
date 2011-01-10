@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2010
@@ -44,11 +44,21 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 30, 2005 (Kilian Thiel): created
  */
 package org.knime.base.node.mine.sota.view;
+
+import org.knime.base.node.mine.sota.logic.SotaManager;
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
+import org.knime.base.node.mine.sota.view.interaction.SotaTreeCellLocations;
+import org.knime.base.node.util.DataArray;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.property.ColorAttr;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -60,6 +70,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -71,17 +82,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
 
-import org.knime.base.node.mine.sota.logic.SotaManager;
-import org.knime.base.node.mine.sota.logic.SotaTreeCell;
-import org.knime.base.node.util.DataArray;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteListener;
-
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaDrawingPane extends JPanel implements HiLiteListener {
@@ -103,7 +105,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     private static final int PIXEL_HEIGHT = 20;
 
     private static final int HILITE_HEIGHT = 7;
-    
+
     private static final int DATA_SEPARATOR_HEIGHT = 0;
 
     private int m_pixelWidth = 6;
@@ -120,6 +122,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     // indata, root tree node, tree cells and maximum level of tree
     private SotaTreeCell m_root;
+
+    private SotaTreeCellLocations m_rootLocation;
 
     private DataArray m_data;
 
@@ -138,6 +142,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     private Hashtable<Integer, Integer> m_hierarchicalMaxLevels;
 
     private ArrayList<SotaTreeCell> m_cells;
+
+    private HashMap<SotaTreeCell, SotaTreeCellLocations> m_cellLocations;
 
     // Hilited keys Selected keys and Hilitehandler
     private ArrayList<RowKey> m_selectedKeys;
@@ -179,7 +185,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * Creates new instance of SotaDrawingPane, which draws the given data and
      * the trained binary cluster tree given by its root node.
-     * 
+     *
      * @param root the root node of the binary tree to draw
      * @param data the data to draw
      * @param originalData the original data
@@ -195,6 +201,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         m_originalData = originalData;
         m_data = data;
         m_root = root;
+        m_rootLocation = new SotaTreeCellLocations();
         m_isHierarchicalFuzzyData = isHFuzzyData;
         m_drawHierarchicalFuzzyData = isHFuzzyData;
         m_drawHierarchicalSeparators = isHFuzzyData;
@@ -205,6 +212,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         m_selectedKeys = new ArrayList<RowKey>();
         m_hilitedKeys = new HashSet<RowKey>();
         m_cells = null;
+        m_cellLocations = null;
         m_hiliteHandler = null;
 
         m_dataCoordIndex = new Hashtable<Integer, Integer>();
@@ -280,7 +288,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Creates the Tree structure for the JTree and paints it.
-     * 
+     *
      * @param first if <code>true</code> size of JPanel will be recomputed
      */
     public void modelChanged(final boolean first) {
@@ -315,6 +323,12 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             m_cells = new ArrayList<SotaTreeCell>();
             SotaManager.getCells(m_cells, m_root);
 
+            // set default locations
+            m_cellLocations =
+                new HashMap<SotaTreeCell, SotaTreeCellLocations>();
+            SotaManager.initDefaultLocations(m_cellLocations, m_root);
+
+
             // compute maxmimum tree level
             m_maxLevel = getMaxLevel(m_maxLevel, m_root);
             m_clusterLineHeight = (int)Math.floor((m_jpHeight - PIXEL_HEIGHT)
@@ -336,8 +350,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             // and redurce them if they are.
             if (m_isHierarchicalFuzzyData && m_drawHierarchicalFuzzyData) {
                 // if clusterlines too high
-                if (m_root.getEndY() < 0) {
-                    int lineCount = (Math.abs(m_root.getEndY()) 
+                if (m_rootLocation.getEndY() < 0) {
+                    int lineCount = (Math.abs(m_rootLocation.getEndY())
                             + m_jpHeight - PIXEL_HEIGHT) / m_clusterLineHeight;
 
                     m_clusterLineHeight = (m_jpHeight - PIXEL_HEIGHT)
@@ -374,7 +388,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             setPreferredSize(new Dimension(m_jpWidth, m_jpHeight));
 
             modelChanged(false);
-        } else if ((m_jpWidth != getSize().width 
+        } else if ((m_jpWidth != getSize().width
                 || m_jpHeight != getSize().height)
                 && !m_zooming) {
             // If size of panel is smaller than size of frame and size of panel
@@ -390,7 +404,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         }
 
         // repaint all the data
-        if (m_data != null && m_root != null && m_cells != null 
+        if (m_data != null && m_root != null && m_cells != null
                 && m_originalData != null) {
             drawData(g);
             drawTree(g);
@@ -403,15 +417,15 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Draws the datapixels.
-     * 
+     *
      * @param g graphics instance to draw with
      */
     private void drawData(final Graphics g) {
-        
+
         if (m_originalData == null || m_data == null) {
             return;
         }
-        
+
         int startX = 0;
         int startY = m_jpHeight - PIXEL_HEIGHT;
         int tmpStartY = startY;
@@ -474,7 +488,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Draws the tree recursive by using drawTreeNode method.
-     * 
+     *
      * @param g graphics instance to draw with
      */
     private void drawTree(final Graphics g) {
@@ -485,7 +499,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * Draws the given {@link SotaTreeCell} and its children recursive, by using
      * their coordinates.
-     * 
+     *
      * @param g graphics instance to draw with
      * @param cell the cell to draw
      */
@@ -496,15 +510,16 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         }
 
         g.setColor(getCellColor(cell, false));
+        SotaTreeCellLocations cellLocation = m_cellLocations.get(cell);
 
         // Draw cluster line
-        g.drawLine(cell.getStartX(), cell.getStartY(), cell.getEndX(), cell
-                .getEndY());
+        g.drawLine(cellLocation.getStartX(), cellLocation.getStartY(),
+                cellLocation.getEndX(), cellLocation.getEndY());
 
         // Draw cluster rectangle
-        g.drawRect(cell.getEndX() - (m_clusterRectWidth / 2), cell.getEndY()
-                - (m_clusterRectWidth / 2), m_clusterRectWidth,
-                m_clusterRectWidth);
+        g.drawRect(cellLocation.getEndX() - (m_clusterRectWidth / 2),
+                cellLocation.getEndY() - (m_clusterRectWidth / 2),
+                m_clusterRectWidth, m_clusterRectWidth);
 
         SotaTreeCell sister = cell.getSister();
         if (sister == null) {
@@ -512,8 +527,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         }
         if (cell.isHilited() && sister.isHilited() && !cell.isSelected()) {
             g.setColor(m_hilit);
-        } else if (cell.isHilited() 
-                && sister.isHilited() 
+        } else if (cell.isHilited()
+                && sister.isHilited()
                 && cell.isSelected()) {
             g.setColor(m_selectedHilited);
         } else {
@@ -522,14 +537,18 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
         // Draw line between sisters
         if (cell.getSister() != null) {
-            g.drawLine(cell.getStartX(), cell.getEndY(), cell.getSister()
-                    .getStartX(), cell.getSister().getEndY());
+            SotaTreeCellLocations sisterCellLocation =
+                m_cellLocations.get(cell.getSister());
+
+            g.drawLine(cellLocation.getStartX(), cellLocation.getEndY(),
+                    sisterCellLocation.getStartX(),
+                    sisterCellLocation.getEndY());
         }
     }
 
     /**
      * Returns the color of the given cell.
-     * 
+     *
      * @param cell cell to return its color
      * @param ignoreUnusedClusters if <code>true</code>, the color for unused
      *            cells or clusters is not returned, but a regular color
@@ -565,7 +584,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Draws the separator lines before each hierarchical level.
-     * 
+     *
      * @param g graphics object to draw with
      */
     private void drawHierarchySeparatorLines(final Graphics g) {
@@ -609,9 +628,11 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             x += startX;
 
             // save coordinates
-            m_cells.get(j).setStartX(x);
-            m_cells.get(j).setEndX(x);
-            m_cells.get(j).setStartY(startY);
+            SotaTreeCellLocations cellLocation = m_cellLocations.get(
+                    m_cells.get(j));
+            cellLocation.setStartX(x);
+            cellLocation.setEndX(x);
+            cellLocation.setStartY(startY);
 
             int heightFactor;
             if (m_isHierarchicalFuzzyData && m_drawHierarchicalFuzzyData) {
@@ -632,7 +653,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                 heightFactor = m_maxLevel - m_cells.get(j).getLevel();
             }
 
-            m_cells.get(j).setEndY(
+            cellLocation.setEndY(
                     (startY - m_clusterLineHeight)
                             - (heightFactor * m_clusterLineHeight));
 
@@ -647,7 +668,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Computes the coordinates of the parents of the given children nodes.
-     * 
+     *
      * @param children the children of the parents to compute the coordinates
      *            for
      * @param level current tree level
@@ -665,10 +686,18 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                 if (!parents.contains(children.get(i).getAncestor())) {
                     parents.add(children.get(i).getAncestor());
 
-                    int x = (children.get(i).getStartX() + children.get(i)
-                            .getSister().getStartX()) / 2;
+//                    SotaTreeCell c = children.get(i);
+//                    SotaTreeCell cS = children.get(i).getSister();
 
-                    int startY = children.get(i).getEndY();
+                    SotaTreeCellLocations childrenCellLocation =
+                        m_cellLocations.get(children.get(i));
+                    SotaTreeCellLocations childrenSisterCellLocation =
+                        m_cellLocations.get(children.get(i).getSister());
+
+                    int x = (childrenCellLocation.getStartX()
+                            + childrenSisterCellLocation.getStartX()) / 2;
+
+                    int startY = childrenCellLocation.getEndY();
 
                     int heightFactor = 0;
                     if (m_isHierarchicalFuzzyData
@@ -689,7 +718,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                                     - children.get(i).getAncestor()
                                             .getLevelInHierarchy();
 
-                            for (int l = childrenHLevel - 1; l > currentHLevel; 
+                            for (int l = childrenHLevel - 1; l > currentHLevel;
                                 l--) {
                                 heightFactor += m_hierarchicalMaxLevels.get(l);
                             }
@@ -701,11 +730,15 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
                     int endY = startY - (heightFactor * m_clusterLineHeight);
 
-                    children.get(i).getAncestor().setStartX(x);
-                    children.get(i).getAncestor().setEndX(x);
+                    SotaTreeCellLocations childrenAncestorCellLocation =
+                        m_cellLocations.get(children.get(i).getAncestor());
+                    if (childrenAncestorCellLocation != null) {
+                        childrenAncestorCellLocation.setStartX(x);
+                        childrenAncestorCellLocation.setEndX(x);
 
-                    children.get(i).getAncestor().setStartY(startY);
-                    children.get(i).getAncestor().setEndY(endY);
+                        childrenAncestorCellLocation.setStartY(startY);
+                        childrenAncestorCellLocation.setEndY(endY);
+                    }
 
                     // Save the X coordinates and the related cell
                     addCellToCoordHash(x, children.get(i).getAncestor());
@@ -723,7 +756,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Computes the maximum level of the tree recursive.
-     * 
+     *
      * @param maxLevel the current maximum level
      * @param cell the cell to check its level
      * @return the new maximum level after checking the cells level and its
@@ -749,7 +782,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Computes the maximum level for given hierarchy level of the tree.
-     * 
+     *
      * @param maxLevel the current maximum level
      * @param cell the cell to check its level
      * @param hLevel hierarchical level to search maxmimal level for
@@ -763,7 +796,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             mLevel++;
         }
         if (!cell.isCell()) {
-            int maxLevLeft = getMaxLevelOfHLevel(mLevel, cell.getLeft(), 
+            int maxLevLeft = getMaxLevelOfHLevel(mLevel, cell.getLeft(),
                     hLevel);
             int maxLevRight = getMaxLevelOfHLevel(mLevel, cell.getRight(),
                     hLevel);
@@ -790,7 +823,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * Returns the row related to the given mouse position, if no row is related
      * to that position <code>null</code> is returned.
-     * 
+     *
      * @param x mouse position on x coordinate
      * @param y mouse position on y coordinate
      * @return the row related to the given mouse position or <code>null</code>
@@ -817,7 +850,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * Returns the cell related to the given mouse position, if no cell is
      * related to that position <code>null</code> is returned.
-     * 
+     *
      * @param x mouse position on x coordinate
      * @param y mouse position on y coordinate
      * @return the cell related to the given mouse position or <code>null</code>
@@ -844,8 +877,11 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                                 .get(xCoord);
                         if (list != null) {
                             for (int i = 0; i < list.size(); i++) {
-                                if (yCoord <= list.get(i).getStartY()
-                                        && yCoord >= list.get(i).getEndY()) {
+                                SotaTreeCellLocations cellLocation =
+                                    m_cellLocations.get(list.get(i));
+
+                                if (yCoord <= cellLocation.getStartY()
+                                        && yCoord >= cellLocation.getEndY()) {
                                     return list.get(i);
                                 }
                             }
@@ -859,7 +895,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Adds the given cell to Nodes_ccord_index Hashtable at given key x.
-     * 
+     *
      * @param x key to add the given cell at
      * @param cell cell to add to Hashtable
      */
@@ -902,7 +938,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     public void setOriginalData(final DataArray data) {
         m_originalData = data;
     }
-    
+
     /**
      * @return the data
      */
@@ -942,7 +978,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     /**
      * Controls the KeyEvents of the SotaDrawingPane.
-     * 
+     *
      * @author Kilian Thiel, University of Konstanz
      */
     class PaneController extends KeyAdapter implements MouseListener {
@@ -1023,7 +1059,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      * Stores the Cells data in given HashSet if given cell is a cell and not a
      * node, otherwise this method is called recursively with the given cells
      * children.
-     * 
+     *
      * @param cell cell to store its data.
      */
     private void selectCellData(final SotaTreeCell cell) {
@@ -1188,7 +1224,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     public static final String POPUP_UNHILITE = "Clear Hilite";
 
     /**
-     * 
+     *
      * @return a JMenu entry handling the hiliting of objects
      */
     public JMenu createHiLiteMenu() {
