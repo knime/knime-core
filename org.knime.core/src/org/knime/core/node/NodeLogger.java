@@ -204,6 +204,10 @@ public final class NodeLogger {
         InputStream in =
                 NodeLogger.class.getClassLoader().getResourceAsStream(
                         LATEST_LOG4J_CONFIG);
+        if (in == null) {
+            throw new IOException("Latest log4j-config '"
+                    + LATEST_LOG4J_CONFIG + "' not found");
+        }
         FileOutputStream out = new FileOutputStream(dest);
         FileUtil.copy(in, out);
         in.close();
