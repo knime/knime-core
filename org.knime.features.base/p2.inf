@@ -1,6 +1,6 @@
 instructions.configure=\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:0,location:http${#58}//www.knime.org/update/2.3);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:1,location:http${#58}//www.knime.org/update/2.3);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:0,location:http${#58}//www.knime.org/update/2.3,enabled:true);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:1,location:http${#58}//www.knime.org/update/2.3,enabled:true);
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:0,location:http${#58}//www.knime.org/update/2.4);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:1,location:http${#58}//www.knime.org/update/2.4);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:0,location:http${#58}//www.knime.org/update/2.4,enabled:true);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:1,location:http${#58}//www.knime.org/update/2.4,enabled:true);
   
