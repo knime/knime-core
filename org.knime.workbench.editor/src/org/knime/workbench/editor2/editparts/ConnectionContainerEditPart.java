@@ -68,6 +68,8 @@ import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionProgressEvent;
+import org.knime.core.node.workflow.ConnectionProgressListener;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
@@ -80,6 +82,7 @@ import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
+import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
@@ -91,7 +94,8 @@ import org.knime.workbench.editor2.figures.AbstractPortFigure;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements ZoomListener, ConnectionUIInformationListener {
+        implements ZoomListener, ConnectionUIInformationListener,
+        ConnectionProgressListener {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ConnectionContainerEditPart.class);
@@ -158,12 +162,14 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     public void activate() {
         super.activate();
         getModel().addUIInformationListener(this);
+        getModel().addProgressListener(this);
     }
 
     /** {@inheritDoc} */
     @Override
     public void deactivate() {
         getModel().removeUIInformationListener(this);
+        getModel().removeProgressListener(this);
         super.deactivate();
     }
 
@@ -204,7 +210,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected IFigure createFigure() {
-        PolylineConnection conn = (PolylineConnection)super.createFigure();
+
+        ProgressPolylineConnection conn = new ProgressPolylineConnection();
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
                 new SnapOffBendPointConnectionRouter();
@@ -347,5 +354,13 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     public void zoomChanged(final double zoom) {
         ((PolylineConnection)getFigure())
                 .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void progressChanged(final ConnectionProgressEvent pe) {
+        ProgressPolylineConnection conn =
+            (ProgressPolylineConnection)getFigure();
+        conn.progressChanged(pe.getConnectionProgress());
     }
 }

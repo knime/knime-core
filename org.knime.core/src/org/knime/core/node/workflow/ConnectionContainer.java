@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   14.03.2007 (mb): created
  */
@@ -56,10 +56,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Holds all information related to one connection between specific ports
  * of two nodes. It also holds additional information, which can be adjusted
  * from the outside (bend points on a layout, for example).
- * 
+ *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public class ConnectionContainer {
+public class ConnectionContainer implements ConnectionProgressListener {
 
     private final NodeID m_source;
     private final int m_sourcePort;
@@ -67,11 +67,13 @@ public class ConnectionContainer {
     private final int m_destPort;
     private boolean m_isDeletable = true;
     private UIInformation m_uiInfo;
-    private final CopyOnWriteArraySet<ConnectionUIInformationListener> 
-        m_uiListeners = 
+    private final CopyOnWriteArraySet<ConnectionUIInformationListener>
+        m_uiListeners =
             new CopyOnWriteArraySet<ConnectionUIInformationListener>();
+    private final CopyOnWriteArraySet<ConnectionProgressListener>
+    m_progressListeners = new CopyOnWriteArraySet<ConnectionProgressListener>();
 
-    
+
     enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
         /**
          * @return Whether this type is leaving a workflow (through or out)
@@ -85,9 +87,9 @@ public class ConnectionContainer {
         }
     };
     private final ConnectionType m_type;
-    
+
     /** Creates new connection.
-     * 
+     *
      * @param src source node
      * @param srcPort port of source node
      * @param dest destination node
@@ -95,7 +97,7 @@ public class ConnectionContainer {
      * @param type of connection
      */
     public ConnectionContainer(final NodeID src, final int srcPort,
-            final NodeID dest, final int destPort, final ConnectionType type) { 
+            final NodeID dest, final int destPort, final ConnectionType type) {
         if (src == null || dest == null || type == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
@@ -114,8 +116,8 @@ public class ConnectionContainer {
     /////////////////
     // Getter Methods
     /////////////////
-    
-    /** 
+
+    /**
      * @return the uiInfo
      */
     public UIInformation getUIInfo() {
@@ -149,14 +151,14 @@ public class ConnectionContainer {
     public int getSourcePort() {
         return m_sourcePort;
     }
-    
+
     /**
      * @return the isDeletable
      */
     public boolean isDeletable() {
         return m_isDeletable;
     }
-    
+
     /**
      * @param isDeletable the isDeletable to set
      */
@@ -172,7 +174,7 @@ public class ConnectionContainer {
     }
 
     /////////////////////////
-    
+
     /**
      * @param uiInfo the uiInfo to set
      */
@@ -180,7 +182,7 @@ public class ConnectionContainer {
         m_uiInfo = uiInfo;
         notifyUIListeners(new ConnectionUIInformationEvent(this, m_uiInfo));
     }
-    
+
     /** Add a listener to the list of registered listeners.
      * @param l The listener to add, must not be null.
      */
@@ -199,11 +201,54 @@ public class ConnectionContainer {
             final ConnectionUIInformationListener l) {
         m_uiListeners.remove(l);
     }
-    
+
+    /**
+     * Adds a listener to the list of registered progress listeners.
+     * @param listener The listener to add, must not be null.
+     */
+    public void addProgressListener(final ConnectionProgressListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
+        m_progressListeners.add(listener);
+    }
+
+    /**
+     * Removes a listener from the list of registered progress listeners.
+     * @param listener The listener to remove
+     */
+    public void removeProgressListener(
+            final ConnectionProgressListener listener) {
+        m_progressListeners.remove(listener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void progressChanged(final ConnectionProgressEvent pe) {
+        // set us as source
+        ConnectionProgressEvent event =
+                new ConnectionProgressEvent(this, pe.getConnectionProgress());
+        // forward the event
+        notifyProgressListeners(event);
+    }
+
+
     /** Removes all registered listeners in order to release references on
      * this object. */
     public void cleanup() {
         m_uiListeners.clear();
+        m_progressListeners.clear();
+    }
+
+    /** Notifies all registered progress listeners with the argument event.
+     * @param evt The event to fire.
+     */
+    protected void notifyProgressListeners(final ConnectionProgressEvent evt) {
+        for (ConnectionProgressListener l : m_progressListeners) {
+            l.progressChanged(evt);
+        }
     }
 
     /** Notifies all registered listeners with the argument event.
@@ -226,19 +271,20 @@ public class ConnectionContainer {
         && m_source.equals(cc.m_source) && (m_sourcePort == cc.m_sourcePort)
                 && m_type.equals(cc.m_type);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_dest.hashCode() + m_source.hashCode() + m_destPort
         + m_sourcePort + m_type.hashCode();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
         return getType() + "[" + getSource() + "(" + getSourcePort() + ") -> "
-            + getDest() + "( " + getDestPort() + ")]" 
+            + getDest() + "( " + getDestPort() + ")]"
             + (isDeletable() ? "" : " non deletable");
     }
+
 }
