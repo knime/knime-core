@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Core
 Bundle-SymbolicName: org.knime.workbench.core;singleton:=true
-Bundle-Version: 2.3.1.qualifier
+Bundle-Version: 2.4.0.qualifier
 Bundle-Activator: org.knime.workbench.core.KNIMECorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench.core,org.knime.workbench.core.preferences
