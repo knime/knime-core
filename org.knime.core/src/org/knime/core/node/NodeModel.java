@@ -498,7 +498,7 @@ public abstract class NodeModel {
         for (int i = 0; i < outData.length; i++) {
             // do not check for null output tables if this is the end node
             // of a loop and another loop iteration is requested
-            if ((getLoopStatus() == null) && (outData[i] == null)) {
+            if ((getLoopContext() == null) && (outData[i] == null)) {
                 m_logger.error("Execution failed: Incorrect implementation;"
                         + " the execute method in "
                         + this.getClass().getSimpleName()
@@ -1190,73 +1190,6 @@ public abstract class NodeModel {
         m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
     }
 
-    /** Informs WorkflowManager after execute to continue the loop.
-     * Call by the end of the loop! This will result in both
-     * this Node as well as the creator of the FlowLoopContext to be
-     * queued for execution once again. In this case the node can return
-     * an empty table after execution.
-     */
-    protected final void continueLoop() {
-        FlowLoopContext slc = m_flowObjectStack.peek(
-                FlowLoopContext.class);
-        if (slc == null) {
-            // wrong wiring of the pipeline: head seems to be missing!
-            throw new IllegalStateException(
-                    "Missing Loop Start in Pipeline!");
-        }
-        m_loopStatus = slc;
-        // note that the WFM will set the tail ID so we can retrieve it
-        // in the head node!
-    }
-
-    private FlowLoopContext m_loopStatus;
-
-    final FlowLoopContext getLoopStatus() {
-        return m_loopStatus;
-    }
-
-    final void clearLoopStatus() {
-        m_loopStatus = null;
-    }
-
-    private LoopEndNode m_loopEndNode = null;
-
-    /** Access method for loop start nodes to access their respective
-     * loop end. This method returns null if this node is not a loop start or
-     * the loop is not correctly closed by the user.
-     * @return The loop end node or null. Clients typically test and cast to
-     * an expected loop end instance.
-     * @see #getLoopStartNode()
-     */
-    protected final LoopEndNode getLoopEndNode() {
-        return m_loopEndNode;
-    }
-
-    /** Setter used by framework to update loop end node.
-     * @param end The end node of the loop (if this is a start node). */
-    void setLoopEndNode(final LoopEndNode end) {
-        m_loopEndNode = end;
-    }
-
-    private LoopStartNode m_loopStartNode = null;
-
-    /** Access method for loop end nodes to access their respective loop start.
-     * This method returns null if this node is not a loop end or the loop is
-     * not correctly closed by the user.
-     * @return The loop start node or null. Clients typically test and cast to
-     * an expected loop start instance.
-     * @see #getLoopEndNode()
-     */
-    protected final LoopStartNode getLoopStartNode() {
-        return m_loopStartNode;
-    }
-
-    /** Setter used by framework to update loop start node.
-     * @param start The start node of the loop (if this is a end node). */
-    void setLoopStartNode(final LoopStartNode start) {
-        m_loopStartNode = start;
-    }
-
     FlowObjectStack getFlowObjectStack() {
         return m_flowObjectStack;
     }
@@ -1330,6 +1263,106 @@ public abstract class NodeModel {
     @Deprecated
     protected final int peekScopeVariableInt(final String name) {
         return peekFlowVariableInt(name);
+    }
+
+    //////////////////////////////////////////
+    // Loop Support...
+    //
+    // TODO: maybe all of this should be moved into an adaptor class
+    // "LoopNodeModelAdaptor" which keeps the node's role and all of
+    // the loop specific stuff? Later...
+    //
+    //////////////////////////////////////////
+    
+    /** Informs WorkflowManager after execute to continue the loop.
+     * Call by the end of the loop! This will result in both
+     * this Node as well as the creator of the FlowLoopContext to be
+     * queued for execution once again. In this case the node can return
+     * an empty table after execution.
+     * 
+     * Called on LoopTail Node's only.
+     */
+    protected final void continueLoop() {
+        if (!(this instanceof LoopEndNode)) {
+            throw new IllegalStateException(
+                "continueLoop called from non-end node (Coding Error)!");
+        }
+        FlowLoopContext slc = m_flowObjectStack.peek(
+                FlowLoopContext.class);
+        if (slc == null) {
+            // wrong wiring of the pipeline: head seems to be missing!
+            throw new IllegalStateException(
+                    "Missing Loop Start in Pipeline!");
+        }
+        m_loopContext = slc;
+        // note that the WFM will set the tail ID so we can retrieve it
+        // in the head node!
+    }
+    
+    /** Informs WorkflowManager if the nodes inside the loop (= the loop
+     * body) have to be reset & configured inbetween iterations. Default
+     * behavior is to reset/configure everytime.
+     */
+    protected boolean resetAndConfigureLoopBody() {
+        return true;
+    }
+
+    private FlowLoopContext m_loopContext;
+
+    final FlowLoopContext getLoopContext() {
+        return m_loopContext;
+    }
+
+    final void clearLoopContext() {
+        m_loopContext = null;
+    }
+    
+    private boolean m_pauseAfterNextExecution = false;
+    
+    final void setPauseLoopExecution(final boolean ple) {
+        m_pauseAfterNextExecution = ple;
+    }
+    
+    final boolean getPauseLoopExecution() {
+        return m_pauseAfterNextExecution;
+    }
+
+    private LoopEndNode m_loopEndNode = null;
+
+    /** Access method for loop start nodes to access their respective
+     * loop end. This method returns null if this node is not a loop start or
+     * the loop is not correctly closed by the user.
+     * @return The loop end node or null. Clients typically test and cast to
+     * an expected loop end instance.
+     * @see #getLoopStartNode()
+     */
+    protected final LoopEndNode getLoopEndNode() {
+        return m_loopEndNode;
+    }
+
+    /** Setter used by framework to update loop end node.
+     * @param end The end node of the loop (if this is a start node). */
+    void setLoopEndNode(final LoopEndNode end) {
+        m_loopEndNode = end;
+    }
+
+    private LoopStartNode m_loopStartNode = null;
+
+    /** Access method for loop end nodes to access their respective loop start.
+     * This method returns null if this node is not a loop end or the loop is
+     * not correctly closed by the user.
+     * @return The loop start node or null. Clients typically test and cast to
+     * an expected loop start instance.
+     * @see #getLoopEndNode()
+     */
+    protected final LoopStartNode getLoopStartNode() {
+        return m_loopStartNode;
+    }
+
+    /** Setter used by framework to update loop start node.
+     * @param start The start node of the loop (if this is a end node). */
+    void setLoopStartNode(final LoopStartNode start) {
+        m_loopStartNode = start;
     }
 
 }

@@ -53,6 +53,7 @@ package org.knime.workbench.editor2.figures;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
 
 
@@ -97,7 +98,9 @@ public class SubworkflowFigure extends NodeContainerFigure {
      * Only reflects three different states: idle, executing, executed.
      */
     @Override
-    public void setState(final State state, final boolean isInactive) {
+    public void setState(final State state, 
+            final LoopStatus loopStatus,
+            final boolean isInactive) {
         switch (state) {
         case IDLE:
         case CONFIGURED:

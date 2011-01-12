@@ -53,6 +53,7 @@ package org.knime.workbench.editor2.editparts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.port.PortType;
@@ -154,21 +155,26 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     protected List<ConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
+    
+    private final AtomicBoolean m_updateInProgressFlag = new AtomicBoolean(false);
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                NodeOutPort outPort = (NodeOutPort)getModel();
-                NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
-                fig.setInactive(outPort.isInactive());
-                fig.repaint();
-            }
-        });
+        if (m_updateInProgressFlag.compareAndSet(false, true)) {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_updateInProgressFlag.set(false);
+                    NodeOutPort outPort = (NodeOutPort)getModel();
+                    NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
+                    fig.setInactive(outPort.isInactive());
+                    fig.repaint();
+                }
+            });
+        }
     }
 
 }

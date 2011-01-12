@@ -467,8 +467,8 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                removeOutputTablesFromGlobalRepository();
                 m_node.reset();
+                cleanOutPorts();
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -490,6 +490,14 @@ public final class SingleNodeContainer extends NodeContainer {
                 throwIllegalStateException();
             }
         }
+    }
+
+    /** Cleans outports, i.e. sets fields to null, calls clear() on BDT.
+     * Usually happens as part of a reset() (except for loops that have
+     * their body not reset between iterations. */
+    void cleanOutPorts() {
+        m_node.cleanOutPorts();
+        removeOutputTablesFromGlobalRepository();
     }
 
     /** Enable (or disable) queuing of underlying node for execution. This
@@ -530,15 +538,16 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Queue underlying node for re-execution (= update state accordingly).
+     * Mark underlying, executed node so that it can be re-executed
+     * (= update state accordingly). Used in loops to execute start
+     * more than once and when reset/configure is skipped in loop body.
      *
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void enableReQueuing() {
+    void markForReExecutionInLoop() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                m_node.cleanOutPorts();
                 setState(State.MARKEDFOREXEC);
                 return;
             default:
@@ -729,7 +738,7 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case PREEXECUTE:
-                m_node.clearLoopStatus();
+                m_node.clearLoopContext();
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setState(State.EXECUTING);
                 } else {
@@ -767,19 +776,19 @@ public final class SingleNodeContainer extends NodeContainer {
             switch (getState()) {
             case POSTEXECUTE:
                 if (status.isSuccess()) {
-                    if (m_node.getLoopStatus() == null) {
+                    if (m_node.getLoopContext() == null) {
                         setState(State.EXECUTED);
-
                     } else {
                         // loop not yet done - "stay" configured until done.
-                        setState(State.CONFIGURED);
+                        assert getLoopStatus().equals(LoopStatus.RUNNING);
+                        setState(State.MARKEDFOREXEC);
                     }
                 } else {
                     // node will be configured in doAfterExecute.
-                    // for now we assume complete failure and clean up:
+                    // for now we assume complete failure and clean up (reset)
+                    // We do keep the message, though.
                     NodeMessage oldMessage = getNodeMessage();
                     m_node.reset();
-                    m_node.clearLoopStatus();
                     setNodeMessage(oldMessage);
                     setState(State.IDLE);
                 }
@@ -1161,9 +1170,29 @@ public final class SingleNodeContainer extends NodeContainer {
     /**
      * @return role of node within a loop
      */
-    Node.LoopRole getLoopRole() {
+    public Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
+
+    /**
+     * @see NodeModel#resetAndConfigureLoopBody()
+     */
+    boolean resetAndConfigureLoopBody() {
+        return getNode().resetAndConfigureLoopBody();
+    }
+
+    /** enable (or disable) that after the next execution of this loop end node
+     * the execution will be halted. This can also be called on a paused node
+     * to trigger a "single step" execution.
+     * 
+     * @param if true, pause is enabled. Otherwise disabled.
+     */
+    void pauseLoopExecution(final boolean enablePausing) {
+        if (getState().executionInProgress()) {
+            getNode().setPauseLoopExecution(enablePausing);
+        }
+    }
+
 
     ///////////////////////////////////
     // NodeContainer->Node forwarding
@@ -1243,14 +1272,34 @@ public final class SingleNodeContainer extends NodeContainer {
     public boolean isInactive() {
         return m_node.isInactive();
     }
-    
+
     /** @return <code>true</code> if the underlying node is able to consume
-     * inactive objects (implements 
+     * inactive objects (implements
      * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
      * @see {@link Node#isInactiveBranchConsumer()}
      */
     public boolean isInactiveBranchConsumer() {
     	return m_node.isInactiveBranchConsumer();
+    }
+
+    public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
+    /**
+     */
+    public LoopStatus getLoopStatus() {
+        if (getNode().getLoopRole().equals(LoopRole.END)) {
+            if ((getNode().getLoopContext() != null)
+                    || (getState().executionInProgress())) {
+                if ((getNode().getPauseLoopExecution())
+                        && (getState().equals(State.MARKEDFOREXEC))) {
+                    return LoopStatus.PAUSED;
+                } else {
+                    return LoopStatus.RUNNING;
+                }
+            } else {
+                return LoopStatus.FINISHED;
+            }
+        }
+        return LoopStatus.NONE;
     }
 
     /**

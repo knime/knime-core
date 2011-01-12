@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -222,36 +224,41 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         LOGGER.debug("Job Manager changed for node  " + e.getSource());
         doRefresh(e.getSource());
     }
+    
+    private final AtomicBoolean m_updateInProgressFlag = new AtomicBoolean();
 
     private void doRefresh(final NodeID nodeResource) {
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            public void run() {
-                try {
-                    IPath path =
-                            ProjectWorkflowMap.findProjectFor(nodeResource);
-                    if (path != null) {
-                        // we have to find the resource again, hence we cannot
-                        // put the project's name with toLowercase into the map
-                        IResource rsrc =
-                                ResourcesPlugin.getWorkspace().getRoot()
-                                        .findMember(path);
-                        if (rsrc != null) {
-                            getTreeViewer().update(rsrc, null);
+        if (m_updateInProgressFlag.compareAndSet(false, true)) {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                public void run() {
+                    m_updateInProgressFlag.set(false);
+                    try {
+                        IPath path =
+                                ProjectWorkflowMap.findProjectFor(nodeResource);
+                        if (path != null) {
+                            // we have to find the resource again, hence we cannot
+                            // put the project's name with toLowercase into the map
+                            IResource rsrc =
+                                    ResourcesPlugin.getWorkspace().getRoot()
+                                            .findMember(path);
+                            if (rsrc != null) {
+                                getTreeViewer().update(rsrc, null);
+                            }
+                        } else {
+                            /*
+                             * this is a meta node used in a project. Currently we
+                             * don't need to refresh the tree because meta node
+                             * states are not shown in the tree
+                             */
+                            // LOGGER.debug("didn't find project name - do refresh");
+                            // getTreeViewer().refresh();
                         }
-                    } else {
-                        /*
-                         * this is a meta node used in a project. Currently we
-                         * don't need to refresh the tree because meta node
-                         * states are not shown in the tree
-                         */
-                        // LOGGER.debug("didn't find project name - do refresh");
-                        // getTreeViewer().refresh();
+                    } catch (IllegalArgumentException iae) {
+                        // node couldn't be found -> so we don't make a refresh
                     }
-                } catch (IllegalArgumentException iae) {
-                    // node couldn't be found -> so we don't make a refresh
                 }
-            }
-        });
+            });
+        }
     }
 
     /**

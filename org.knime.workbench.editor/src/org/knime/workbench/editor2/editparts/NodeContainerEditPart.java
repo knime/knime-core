@@ -54,6 +54,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.IFigure;
@@ -84,6 +85,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
@@ -96,6 +98,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -212,14 +215,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         // set the active (or disabled) state
         boolean isInactive = false;
+        LoopStatus loopStatus = LoopStatus.NONE;
         if (cont instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)cont;
             isInactive = snc.isInactive();
+            loopStatus = snc.getLoopStatus();
         }
-        ((NodeContainerFigure)getFigure()).setState(cont
-                .getState(), isInactive);
+        ((NodeContainerFigure)getFigure()).setState(
+                cont.getState(), loopStatus, isInactive);
         // set the node message
-        updateNodeStatus();
+        updateNodeMessage();
 
     }
 
@@ -331,38 +336,48 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return ports;
     }
 
+    private final AtomicBoolean m_updateInProgress = new AtomicBoolean(false);
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-                boolean isInactive = false;
-                if (getNodeContainer() instanceof SingleNodeContainer) {
-                    SingleNodeContainer snc =
-                            (SingleNodeContainer)getNodeContainer();
-                    isInactive = snc.isInactive();
-                }
-                fig.setState(state.getState(), isInactive);
-                updateNodeStatus();
-
-                // reset the tooltip text of the outports
-                for (Object part : getChildren()) {
-
-                    if (part instanceof NodeOutPortEditPart
-                            || part instanceof WorkflowInPortEditPart
-                            || part instanceof MetaNodeOutPortEditPart) {
-                        AbstractPortEditPart outPortPart =
-                                (AbstractPortEditPart)part;
-                        outPortPart.rebuildTooltip();
+        // if another state is waiting to be processed, simply return
+        // and leave the work to the previously started thread. This
+        // works because we are retrieving the current state information!
+        if (m_updateInProgress.compareAndSet(false, true)) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    // let others know we are in the middle of processing
+                    // this update - they will now need to start their own job.
+                    NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+                    m_updateInProgress.set(false);
+                    NodeContainer nc = getNodeContainer();
+                    State latestState = nc.getState();
+                    boolean isInactive = false;
+                    LoopStatus loopStatus = LoopStatus.NONE;
+                    if (nc instanceof SingleNodeContainer) {
+                        SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        isInactive = snc.isInactive();
+                        loopStatus = snc.getLoopStatus();
                     }
+                    fig.setState(latestState, loopStatus, isInactive);
+                    updateNodeMessage();
+                    // reset the tooltip text of the outports
+                    for (Object part : getChildren()) {
+                        if (part instanceof NodeOutPortEditPart
+                                || part instanceof WorkflowInPortEditPart
+                                || part instanceof MetaNodeOutPortEditPart) {
+                            AbstractPortEditPart outPortPart =
+                                (AbstractPortEditPart)part;
+                            outPortPart.rebuildTooltip();
+                        }
+                    }
+                    // always refresh visuals (does not seem to do anything
+                    // by default though: call repaints on updated figures).
+                    refreshVisuals();
                 }
-                // always refresh visuals
-                refreshVisuals();
-            }
-        });
-
+            });
+        }
     }
 
     /** {@inheritDoc} */
@@ -384,7 +399,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
-                updateNodeStatus();
+                updateNodeMessage();
                 // always refresh visuals
                 refreshVisuals();
             }
@@ -423,7 +438,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         fig.setCustomName(getCustomName());
         fig.setCustomDescription(getNodeContainer().getCustomDescription());
         // check status of node
-        updateNodeStatus();
+        updateNodeMessage();
 
         // reset the tooltip text of the outports
         for (Object part : getChildren()) {
@@ -542,11 +557,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Checks the status of the this node and if there is a message in the
+     * Checks the message of the this node and if there is a message in the
      * <code>NodeStatus</code> object the message is set. Otherwise the
      * currently displayed message is removed.
      */
-    private void updateNodeStatus() {
+    private void updateNodeMessage() {
         NodeContainer nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = nc.getNodeMessage();

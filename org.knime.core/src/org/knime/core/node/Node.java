@@ -759,12 +759,8 @@ public final class Node implements NodeModelWarningListener {
      */
     public boolean execute(final PortObject[] rawData,
             final ExecutionContext exec) {
-        // reset the message object
-        createResetMessageAndNotify();
-        // notify state listeners
-        // TODO: NEWWFM State Event
-        // notifyStateListeners(new NodeStateChangedEvent(
-        // NodeStateChangedEvent.Type.START_EXECUTE));
+        // clear the message object
+        clearNodeMessageAndNotify();
 
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
@@ -877,7 +873,7 @@ public final class Node implements NodeModelWarningListener {
         newOutData[0] = FlowVariablePortObject.INSTANCE;
 
         // check if we see a loop status in the NodeModel
-        FlowLoopContext slc = m_model.getLoopStatus();
+        FlowLoopContext slc = m_model.getLoopContext();
         boolean continuesLoop = (slc != null);
         if (!setOutPortObjects(newOutData, continuesLoop)) {
             return false;
@@ -912,7 +908,7 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         return true;
-    } // executeNode(ExecutionMonitor)
+    } // execute
 
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
@@ -1116,7 +1112,7 @@ public final class Node implements NodeModelWarningListener {
      * Notifies all registered {@link NodeMessageListener}s that the node's
      * message is cleared.
      */
-    private void createResetMessageAndNotify() {
+    private void clearNodeMessageAndNotify() {
         notifyMessageListeners(NodeMessage.NONE);
     }
 
@@ -1134,7 +1130,7 @@ public final class Node implements NodeModelWarningListener {
         if (warningMessage != null) {
             createWarningMessageAndNotify(warningMessage);
         } else {
-            createResetMessageAndNotify();
+            clearNodeMessageAndNotify();
         }
     }
 
@@ -1151,16 +1147,11 @@ public final class Node implements NodeModelWarningListener {
      */
     public void reset() {
         m_logger.debug("reset");
-        // if reset had no exception, reset node message
+        clearLoopContext();
+        setPauseLoopExecution(false);
         m_model.resetModel();
-        createResetMessageAndNotify();
-        // and make sure output ports are empty as well
+        clearNodeMessageAndNotify();
         cleanOutPorts();
-        // clear temporary tables that have been created during execute
-        for (ContainerTable t : m_localTempTables) {
-            t.clear();
-        }
-        m_localTempTables.clear();
     }
 
     public void cleanOutPorts() {
@@ -1183,6 +1174,11 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         m_internalHeldTables = null;
+        // clear temporary tables that have been created during execute
+        for (ContainerTable t : m_localTempTables) {
+            t.clear();
+        }
+        m_localTempTables.clear();
     }
 
     /**
@@ -1375,7 +1371,7 @@ public final class Node implements NodeModelWarningListener {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            createResetMessageAndNotify();
+            clearNodeMessageAndNotify();
             // copy input port object specs, ignoring the 0-variable port:
             PortObjectSpec[] inSpecs =
                 Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
@@ -1837,12 +1833,20 @@ public final class Node implements NodeModelWarningListener {
         return m_model.getOutgoingFlowObjectStack();
     }
 
-    public void clearLoopStatus() {
-        m_model.clearLoopStatus();
+    public void clearLoopContext() {
+        m_model.clearLoopContext();
     }
 
-    public FlowLoopContext getLoopStatus() {
-        return m_model.getLoopStatus();
+    public FlowLoopContext getLoopContext() {
+        return m_model.getLoopContext();
+    }
+
+    public boolean getPauseLoopExecution() {
+        return m_model.getPauseLoopExecution();
+    }
+
+    public void setPauseLoopExecution(final boolean ple) {
+        m_model.setPauseLoopExecution(ple);
     }
 
     public static enum LoopRole { BEGIN, END, NONE };
@@ -1880,6 +1884,14 @@ public final class Node implements NodeModelWarningListener {
             m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }
     }
+
+    /**
+     * @see NodeModel#resetAndConfigureLoopBody()
+     */
+    public boolean resetAndConfigureLoopBody() {
+        return getNodeModel().resetAndConfigureLoopBody();
+    }
+
 
     // ////////////////////////
     // Credentials handling

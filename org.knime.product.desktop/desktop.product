@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.3.1.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.4.0.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/knime64.gif"/>
       <text>
-         Welcome to KNIME v2.3.1.0025224
+         Welcome to KNIME v2.4.0
 the Konstanz Information Miner
 Copyright, 2003 - 2011
 email: contact@knime.org

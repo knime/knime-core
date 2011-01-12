@@ -66,8 +66,10 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
@@ -80,13 +82,17 @@ import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
+import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
+import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
+
 
 /**
  * Provider for the Workflow editor's context menus.
@@ -170,7 +176,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
 
-        // Add (some) available actions from the regisry to the context menu
+        // Add (some) available actions from the registry to the context menu
         // manager
 
         // openDialog
@@ -189,6 +195,32 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(CancelAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+        // show some menu items on LoopEndNodes only
+        List parts = m_viewer.getSelectedEditParts();
+        if (parts.size() == 1) {
+            EditPart p = (EditPart)parts.get(0);
+            if (p instanceof NodeContainerEditPart) {
+                NodeContainer container =
+                        (NodeContainer)((NodeContainerEditPart)p).getModel();
+                if (container instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)container;
+                    if (snc.getLoopRole().equals(LoopRole.END)) {
+                        // pause loop execution
+                        action = m_actionRegistry.getAction(PauseLoopExecutionAction.ID);
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        ((AbstractNodeAction)action).update();
+                        // step loop execution
+                        action = m_actionRegistry.getAction(StepLoopAction.ID);
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        ((AbstractNodeAction)action).update();
+                        // resume loop execution
+                        action = m_actionRegistry.getAction(ResumeLoopAction.ID);
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        ((AbstractNodeAction)action).update();
+                    }
+                }
+            }
+        }
         // reset
         action = m_actionRegistry.getAction(ResetAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
@@ -206,10 +238,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
         // depending on the current selection: add the actions for the port
         // views and the node views
-        // also check wether this node part is a meta-node
+        // also check whether this node part is a meta-node
         // if so offer the "edit meta-node" option
         // all these feature are only offered if exactly 1 part is selected
-        List parts = m_viewer.getSelectedEditParts();
+        parts = m_viewer.getSelectedEditParts();
         // by now, we only support one part...
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);

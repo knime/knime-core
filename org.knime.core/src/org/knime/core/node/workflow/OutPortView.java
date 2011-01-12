@@ -58,6 +58,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.Box;
 import javax.swing.JComponent;
@@ -132,6 +133,7 @@ public class OutPortView extends JFrame {
         JMenuItem item = new JMenuItem("Close");
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 setVisible(false);
             }
@@ -186,80 +188,131 @@ public class OutPortView extends JFrame {
                         screenSize.height, getHeight()));
     }
 
+
+    /** A utility class that aggregates all objects that are updated in the
+     * update method.
+     */
+    private static final class UpdateObject {
+        private final PortObject m_portObject;
+        private final PortObjectSpec m_portObjectSpec;
+        private final FlowObjectStack m_flowObjectStack;
+        private final CredentialsProvider m_credentialsProvider;
+
+        private UpdateObject(final PortObject po, final PortObjectSpec spec,
+                final FlowObjectStack stack, final CredentialsProvider prov) {
+            m_portObject = po;
+            m_portObjectSpec = spec;
+            m_flowObjectStack = stack;
+            m_credentialsProvider = prov;
+        }
+    }
+
+    private final AtomicReference<UpdateObject> m_updateObjectReference =
+        new AtomicReference<UpdateObject>();
+
     /**
      * Sets the content of the view.
      * @param portObject a data table, model content or other
-     * @param portObjectSpec data table spec or model content spec or other spec
+     * @param portObjectSpec data table spec or model content
+     *         spec or other spec
      * @param stack The {@link FlowObjectStack} of the node.
-     * @param credentials the {@link CredenialsProvider} used in out-port view
+     * @param credentials the CredenialsProvider used in out-port view
      */
     void update(final PortObject portObject,
             final PortObjectSpec portObjectSpec,
             final FlowObjectStack stack,
             final CredentialsProvider credentials) {
-        // TODO: maybe store the objects, compare them
-        // and only remove and add them if they are different...
+        UpdateObject updateObject = new UpdateObject(portObject,
+                portObjectSpec, stack, credentials);
+
+        // set update object, run update thread only if there was no previous
+        // update object (otherwise an update is currently ongoing)
+        if (m_updateObjectReference.getAndSet(updateObject) == null) {
+            UPDATE_EXECUTOR.execute(new Runnable() {
+                @Override
+                public void run() {
+                    UpdateObject upO;
+                    while ((upO = m_updateObjectReference.get()) != null) {
+                        updateInternal(upO);
+                        // invalidate update reference only if there is no
+                        // new update object in the reference, otherwise
+                        // do a new iteration.
+                        if (m_updateObjectReference.compareAndSet(upO, null)) {
+                            // break out here, do not rely on while() statement
+                            // as new UO may be set (another thread is queued)
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+    }
+
+    /** Internal update method that creates new tabs and displays them. */
+    private void updateInternal(final UpdateObject updateObject) {
         // add all port object tabs
         final Map<String, JComponent> views
             = new LinkedHashMap<String, JComponent>();
-        UPDATE_EXECUTOR.execute(new Runnable() {
+        PortObject portObject = updateObject.m_portObject;
+        PortObjectSpec portObjectSpec =
+            updateObject.m_portObjectSpec;
+        FlowObjectStack stack = updateObject.m_flowObjectStack;
+        CredentialsProvider credentials =
+            updateObject.m_credentialsProvider;
+        if (portObject != null) {
+            JComponent[] poViews = portObject.getViews();
+            if (poViews != null) {
+                for (JComponent comp : poViews) {
+                    // fix 2379: CredentialsProvider needed in
+                    // DatabasePortObject to create db connection
+                    // while accessing data for preview
+                    if (comp instanceof DatabaseOutPortPanel) {
+                        DatabaseOutPortPanel dbcomp
+                        = (DatabaseOutPortPanel) comp;
+                        dbcomp.setCredentialsProvider(credentials);
+                    }
+                    views.put(comp.getName(), comp);
+                }
+            }
+        } else {
+            // what to display, if no port object is available?
+            JPanel noDataPanel = new JPanel();
+            noDataPanel.setLayout(new BorderLayout());
+            Box boexle = Box.createHorizontalBox();
+            boexle.add(Box.createHorizontalGlue());
+            boexle.add(new JLabel("No data available!"));
+            boexle.add(Box.createHorizontalGlue());
+            noDataPanel.add(boexle, BorderLayout.CENTER);
+            noDataPanel.setName("No Table");
+            views.put("No Table", noDataPanel);
+        }
+        JComponent[] posViews = portObjectSpec == null
+        ? new JComponent[0] : portObjectSpec.getViews();
+        if (posViews != null) {
+            for (JComponent comp : posViews) {
+                views.put(comp.getName(), comp);
+            }
+        }
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+            FlowObjectStackView stackView = new FlowObjectStackView();
+            stackView.update(stack);
+            views.put("Flow Variables", stackView);
+        }
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
             @Override
             public void run() {
-                if (portObject != null) {
-                    JComponent[] poViews = portObject.getViews();
-                    if (poViews != null) {
-                        for (JComponent comp : poViews) {
-                            // fix 2379: CredentialsProvider needed in
-                            // DatabasePortObject to create db connection
-                            // while accessing data for preview
-                            if (comp instanceof DatabaseOutPortPanel) {
-                                DatabaseOutPortPanel dbcomp
-                                    = (DatabaseOutPortPanel) comp;
-                                dbcomp.setCredentialsProvider(credentials);
-                            }
-                            views.put(comp.getName(), comp);
-                        }
-                    }
-                } else {
-                    // what to display, if no port object is available?
-                    JPanel noDataPanel = new JPanel();
-                    noDataPanel.setLayout(new BorderLayout());
-                    Box boexle = Box.createHorizontalBox();
-                    boexle.add(Box.createHorizontalGlue());
-                    boexle.add(new JLabel("No data available!"));
-                    boexle.add(Box.createHorizontalGlue());
-                    noDataPanel.add(boexle, BorderLayout.CENTER);
-                    noDataPanel.setName("No Table");
-                    views.put("No Table", noDataPanel);
+                m_tabbedPane.removeAll();
+                for (Map.Entry<String, JComponent>entry
+                        : views.entrySet()) {
+                    m_tabbedPane.addTab(entry.getKey(),
+                            entry.getValue());
                 }
-                JComponent[] posViews = portObjectSpec == null
-                    ? new JComponent[0] : portObjectSpec.getViews();
-                if (posViews != null) {
-                    for (JComponent comp : posViews) {
-                        views.put(comp.getName(), comp);
-                    }
-                }
-                if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-                    FlowObjectStackView stackView = new FlowObjectStackView();
-                    stackView.update(stack);
-                    views.put("Flow Variables", stackView);
-                }
-                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_tabbedPane.removeAll();
-                        for (Map.Entry<String, JComponent>entry
-                                    : views.entrySet()) {
-                            m_tabbedPane.addTab(entry.getKey(),
-                                    entry.getValue());
-                        }
-                        remove(m_loadingPanel);
-                        add(m_tabbedPane);
-                        invalidate();
-                        validate();
-                        repaint();
-                    }
-                });
+                remove(m_loadingPanel);
+                add(m_tabbedPane);
+                invalidate();
+                validate();
+                repaint();
             }
         });
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,57 +43,23 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
+ * --------------------------------------------------------------------- *
+ * 
  * History
- *   Dec 18, 2006 (sieb): created
+ *   23.03.2007 (berthold): created
  */
-package org.knime.workbench.ui.p2.actions;
-
-import org.eclipse.equinox.p2.operations.ProvisioningJob;
-import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
-import org.eclipse.equinox.p2.ui.ProvisioningUI;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.PlatformUI;
+package org.knime.core.node.workflow;
 
 /**
- * Custom action to open the install wizard.
- *
- * @author Christoph Sieb, University of Konstanz
- * @author Thorsten Meinl, University of Konstanz
+ * Exception that is thrown when a loop is constructed illegally.
+ * 
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class InvokeInstallSiteAction extends AbstractP2Action {
-    private static final String ID = "INVOKE_INSTALL_SITE_ACTION";
+class IllegalLoopException extends Exception {
 
-    /**
-     *
-     */
-    public InvokeInstallSiteAction() {
-        super("Install KNIME Extensions...", "Opens the KNIME update site to "
-                + "install additional KNIME features.", ID);
+    /** @see RuntimeException#RuntimeException(String) */
+    public IllegalLoopException(final String message) {
+        super(message);
     }
 
-    @Override
-    protected void openWizard(final LoadMetadataRepositoryJob job,
-            final ProvisioningUI provUI) {
-        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                provUI.getPolicy().setRepositoriesVisible(false);
-                provUI.getPolicy().setRestartPolicy(
-                        ProvisioningJob.RESTART_NONE);
-                int retCode = provUI.openInstallWizard(null, null, job);
-                MessageBox box =
-                        new MessageBox(PlatformUI.getWorkbench().getDisplay().getActiveShell(),
-                                SWT.ICON_WARNING);
-                box.setText("Info");
-                box.setMessage("Return Code: " + retCode);
-                box.open();
-
-                provUI.getPolicy().setRepositoriesVisible(true);
-            }
-        });
-
-    }
 }
