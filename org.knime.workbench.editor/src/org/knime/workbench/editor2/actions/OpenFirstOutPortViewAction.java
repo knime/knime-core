@@ -130,7 +130,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
-            if (cont.getNrOutPorts() >= 1) {
+            // first port is flow var port
+            if (cont.getNrOutPorts() >= 2) {
                 return true;
             }
         }
@@ -150,7 +151,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
-            if (cont.getNrOutPorts() >= 1) {
+            // first port is flow var port
+            if (cont.getNrOutPorts() >= 2) {
                 SwingUtilities.invokeLater(new Runnable() {
                     /** {inheritDoc} */
                     @Override
