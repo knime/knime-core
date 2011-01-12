@@ -315,6 +315,9 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     abstract boolean isResetable();
 
+    /** @return true if this node is executed or contains executed nodes. */
+    abstract boolean canPerformReset();
+
     /** Enable (or disable) queuing of underlying node for execution. This
      * really only changes the state of the node and once all pre-conditions
      * for execution are fulfilled (e.g. configuration succeeded and all

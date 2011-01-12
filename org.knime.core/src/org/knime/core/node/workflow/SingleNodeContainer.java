@@ -460,6 +460,19 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
+    /** {@inheritDoc} */
+    @Override
+    boolean canPerformReset() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case EXECUTED:
+                return true;
+            default:
+                return false;
+            }
+        }
+    }
+
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
@@ -1243,9 +1256,9 @@ public final class SingleNodeContainer extends NodeContainer {
     public boolean isInactive() {
         return m_node.isInactive();
     }
-    
+
     /** @return <code>true</code> if the underlying node is able to consume
-     * inactive objects (implements 
+     * inactive objects (implements
      * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
      * @see {@link Node#isInactiveBranchConsumer()}
      */

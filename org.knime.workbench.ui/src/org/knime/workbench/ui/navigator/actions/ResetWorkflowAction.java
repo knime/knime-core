@@ -19,54 +19,52 @@
 package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class ResetWorkflowAction extends AbstractWorkflowAction {
-    
-    private static final ImageDescriptor IMG 
+
+    private static final ImageDescriptor IMG
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                KNIMEUIPlugin.PLUGIN_ID, 
+                KNIMEUIPlugin.PLUGIN_ID,
                 "icons/actions/reset.gif");
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getText() {
         return "Reset";
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
         return IMG;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean isEnabled() {
         if (super.isEnabled()) {
-            return getWorkflow().getState().equals(NodeContainer.State.EXECUTED)
-                && WorkflowManager.ROOT.canResetNode(getWorkflow().getID());
+            return WorkflowManager.ROOT.canResetNode(getWorkflow().getID());
         }
         return false;
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -74,5 +72,5 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
         WorkflowManager workflow = getWorkflow();
         WorkflowManager.ROOT.resetAndConfigureNode(workflow.getID());
     }
-    
+
 }
