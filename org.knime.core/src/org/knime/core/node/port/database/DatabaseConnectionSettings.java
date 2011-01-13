@@ -56,7 +56,8 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedHashMap;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -190,11 +191,17 @@ public class DatabaseConnectionSettings {
 
     /** Map the keeps database connection based on the user and URL. */
     private static final Map<Pair<String, String>, Connection> CONNECTION_MAP =
-        new LinkedHashMap<Pair<String,String>, Connection>();
+        Collections.synchronizedMap(
+                new HashMap<Pair<String,String>, Connection>());
+    /** Holding the database connection keys used to sync the open connection
+     * process. */
+    private static final Map<Pair<String, String>, Pair<String, String>>
+        CONNECTION_KEYS = new HashMap<Pair<String,String>,
+        Pair<String, String>>();
 
     /**
      * Create a database connection based on this settings. Note, don't close
-     * the connection since it cached for subsequent calls or later reuse to 
+     * the connection since it cached for subsequent calls or later reuse to
      * same database URL (under the same user name).
      * @return a new database connection object
      * @throws SQLException {@link SQLException}
@@ -223,42 +230,57 @@ public class DatabaseConnectionSettings {
         final String password = m_pass;
         final String user = m_user;
 
-        Pair<String, String> databaseConnectionKey =
+        // database connection key with user and database URL
+        Pair<String, String> databaseConnKey =
             new Pair<String, String>(user, dbName);
-        Connection conn = CONNECTION_MAP.get(databaseConnectionKey);
-        // if connection already exists
-        if (conn != null) {
-            // and is closed
-            if (conn.isClosed()) {
-                CONNECTION_MAP.remove(databaseConnectionKey);
+
+        // retrieve original key and/or modify connection key map
+        synchronized (CONNECTION_KEYS) {
+            if (CONNECTION_KEYS.containsKey(databaseConnKey)) {
+                databaseConnKey = CONNECTION_KEYS.get(databaseConnKey);
             } else {
-                try {
-                    conn.clearWarnings();
-                    return conn;
-                } catch (Exception e) { // remove invalid connection
-                    CONNECTION_MAP.remove(databaseConnectionKey);
-                }
+                CONNECTION_KEYS.put(databaseConnKey, databaseConnKey);
             }
         }
-        // if a connection is not available
-        Callable<Connection> callable = new Callable<Connection>() {
-            /** {@inheritDoc} */
-            @Override
-            public Connection call() throws Exception {
-                LOGGER.debug("Opening database connection to \""
-                        + dbName + "\"...");
-                return DriverManager.getConnection(dbName, user, password);
+
+        // sync database connection key: unique with database url and user name
+        synchronized (databaseConnKey) {
+            Connection conn = CONNECTION_MAP.get(databaseConnKey);
+            // if connection already exists
+            if (conn != null) {
+                try {
+                    // and is closed
+                    if (conn.isClosed()) {
+                        CONNECTION_MAP.remove(databaseConnKey);
+                    } else {
+                        conn.clearWarnings();
+                        return conn;
+                    }
+                } catch (Exception e) { // remove invalid connection
+                    CONNECTION_MAP.remove(databaseConnKey);
+                }
             }
-        };
-        Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
-        try {
-            conn = task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
-            CONNECTION_MAP.put(databaseConnectionKey, conn);
-            return conn;
-        } catch (ExecutionException ee) {
-            throw new SQLException(ee.getCause());
-        } catch (Exception ie) {
-            throw new SQLException(ie);
+            // if a connection is not available
+            Callable<Connection> callable = new Callable<Connection>() {
+                /** {@inheritDoc} */
+                @Override
+                public Connection call() throws Exception {
+                    LOGGER.debug("Opening database connection to \""
+                            + dbName + "\"...");
+                    return DriverManager.getConnection(dbName, user, password);
+                }
+            };
+            Future<Connection> task =
+                CONNECTION_CREATOR_EXECUTOR.submit(callable);
+            try {
+                conn = task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
+                CONNECTION_MAP.put(databaseConnKey, conn);
+                return conn;
+            } catch (ExecutionException ee) {
+                throw new SQLException(ee.getCause());
+            } catch (Throwable t) {
+                throw new SQLException(t);
+            }
         }
     }
 

@@ -52,6 +52,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -105,13 +106,19 @@ final class DBWriterConnection {
         final int[] mapping;
         // append data to existing table
         if (appendData) {
+            Statement statement = null;
             ResultSet rs = null;
             try {
                 // try to count all rows to see if table exists
                 final String query = "SELECT * FROM " + table;
                 LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                rs = conn.createStatement().executeQuery(query);
+                statement = conn.createStatement();
+                rs = statement.executeQuery(query);
             } catch (SQLException sqle) {
+                if (statement == null) {
+                    throw new SQLException("Could not create SQL statement, "
+                            + "reason: " + sqle.getMessage(), sqle);
+                }
                 LOGGER.info("Table \"" + table
                         + "\" does not exist in database, "
                         + "will create new table.");
@@ -119,7 +126,7 @@ final class DBWriterConnection {
                 final String query = "CREATE TABLE " + table + " "
                     + createStmt(spec, sqlTypes);
                 LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                conn.createStatement().execute(query);
+                statement.execute(query);
             }
             // if table exists
             if (rs != null) {
@@ -205,6 +212,7 @@ final class DBWriterConnection {
                     }
                 }
                 rs.close();
+                statement.close();
             } else {
                 mapping = new int[spec.getNumColumns()];
                 for (int k = 0; k < mapping.length; k++) {
@@ -216,12 +224,18 @@ final class DBWriterConnection {
             for (int k = 0; k < mapping.length; k++) {
                 mapping[k] = k;
             }
+            Statement statement = null;
             try {
+                statement = conn.createStatement();
                 // remove existing table (if any)
                 final String query = "DROP TABLE " + table;
                 LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                conn.createStatement().execute(query);
+                statement.execute(query);
             } catch (Throwable t) {
+                if (statement == null) {
+                    throw new SQLException("Could not create SQL statement, "
+                    		+ "reason: " + t.getMessage(), t);
+                }
                 LOGGER.info("Can't drop table \"" + table
                         + "\", will create new table.");
             }
@@ -229,11 +243,12 @@ final class DBWriterConnection {
             final String query = "CREATE TABLE " + table + " "
                 + createStmt(spec, sqlTypes);
             LOGGER.debug("Executing SQL statement \"" + query + "\"");
-            conn.createStatement().execute(query);
+            statement.execute(query);
+            statement.close();
         }
 
         // creates the wild card string based on the number of columns
-        // this string it used everytime an new row is inserted into the db
+        // this string it used every time an new row is inserted into the db
         final StringBuilder wildcard = new StringBuilder("(");
         for (int i = 0; i < mapping.length; i++) {
             if (i > 0) {
