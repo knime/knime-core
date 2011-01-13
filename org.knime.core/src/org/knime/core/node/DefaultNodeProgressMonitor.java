@@ -79,9 +79,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
-    /**
-     * Progress of the execution between 0 and 1, or null if not available.
-     */
+    /** Progress of the execution between 0 and 1, or null if not available. */
     private Double m_progress;
 
     /** The progress message. */
@@ -179,6 +177,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * NOTE: No notification is send to listeners!
      * {@inheritDoc}
      */
+    @Override
     public synchronized void reset() {
         if ((m_progress != null) || (m_message != null)) {
             m_changed = true;
@@ -204,6 +203,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *
      * @throws CanceledExecutionException If the execution has been canceled.
      */
+    @Override
     public void checkCanceled() throws CanceledExecutionException {
         if (isCanceled()) {
             throw new CanceledExecutionException(
@@ -214,6 +214,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Sets the cancel requested flag.
      */
+    @Override
     public void setExecuteCanceled() {
         m_cancelExecute = true;
     }
@@ -225,6 +226,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @param progress The (new) progress value.
      * @param message The text message shown in the progress monitor.
      */
+    @Override
     public synchronized void setProgress(final double progress,
             final String message) {
         boolean progressChanged = setProgressIntern(progress);
@@ -240,6 +242,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *
      * @param progress The value between 0 and 1.
      */
+    @Override
     public synchronized void setProgress(final double progress) {
         if (setProgressIntern(progress)) {
             m_changed = true;
@@ -249,6 +252,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setMessage(final String message) {
         setProgress(message);
     }
@@ -258,6 +262,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *
      * @param message The text message shown in the progress monitor.
      */
+    @Override
     public synchronized void setProgress(final String message) {
         if (setMessageIntern(message, null)) {
             m_changed = true;
@@ -311,6 +316,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return The current progress value, or <code>null</code> if not yet
      *         set.
      */
+    @Override
     public Double getProgress() {
         return m_progress;
     }
@@ -318,6 +324,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * @return The current progress message.
      */
+    @Override
     public String getMessage() {
         return m_message;
     }
@@ -325,6 +332,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addProgressListener(final NodeProgressListener l) {
         if ((l != null) && !m_listeners.contains(l)) {
             m_listeners.add(l);
@@ -334,6 +342,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeProgressListener(final NodeProgressListener l) {
         if (l != null) {
             m_listeners.remove(l);
@@ -343,6 +352,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeAllProgressListener() {
         m_listeners.clear();
     }
@@ -412,6 +422,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * Must not be called. Throws IllegalStateException.
          * {@inheritDoc}
          */
+        @Override
         public void addProgressListener(final NodeProgressListener l) {
             throw new IllegalStateException("This method must not be called.");
         }
@@ -421,6 +432,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          *
          * {@inheritDoc}
          */
+        @Override
         public void checkCanceled() throws CanceledExecutionException {
             m_parent.checkCanceled();
         }
@@ -428,6 +440,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
+        @Override
         public String getMessage() {
             if (m_message == null) {
                 return "";
@@ -441,6 +454,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          *
          * {@inheritDoc}
          */
+        @Override
         public Double getProgress() {
             return m_lastProg;
         }
@@ -448,6 +462,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void reset() {
             throw new IllegalStateException("This method must not be called.");
         }
@@ -457,6 +472,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          *
          * @see NodeProgressMonitor#removeAllProgressListener()
          */
+        @Override
         public void removeAllProgressListener() {
             throw new IllegalStateException("This method must not be called.");
         }
@@ -466,6 +482,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          *
          * {@inheritDoc}
          */
+        @Override
         public void removeProgressListener(final NodeProgressListener l) {
             throw new IllegalStateException("This method must not be called.");
         }
@@ -475,6 +492,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          *
          * {@inheritDoc}
          */
+        @Override
         public void setExecuteCanceled() {
             throw new IllegalStateException("This method must not be called.");
         }
@@ -482,6 +500,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setMessage(final String message) {
             setProgress(message);
         }
@@ -489,8 +508,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Delegates to parent.
          *
-          * {@inheritDoc}
+         * {@inheritDoc}
          */
+        @Override
         public void setProgress(final String message) {
             setProgress(message, true);
         }
@@ -526,6 +546,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final double progress, final String message) {
             synchronized (m_parent) {
                 this.setProgress(progress);
@@ -536,6 +557,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final double progress) {
             if (m_maxProg <= 0.0) { // don't report 0-progress ("unknown")
                 return;
