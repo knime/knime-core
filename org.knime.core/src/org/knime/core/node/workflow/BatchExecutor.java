@@ -67,8 +67,12 @@ import java.util.TimerTask;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -649,6 +653,7 @@ public final class BatchExecutor {
         InputStream in = new BufferedInputStream(
                 new FileInputStream(preferenceFile));
         IStatus status = Platform.getPreferencesService().importPreferences(in);
+        initializeDefaultPreferences();
         switch (status.getSeverity()) {
         case IStatus.CANCEL:
             LOGGER.error("Importing preferences was canceled");
@@ -665,6 +670,35 @@ public final class BatchExecutor {
         default:
             LOGGER.warn("Unknown return status from preference import: "
                     + status.getSeverity());
+        }
+    }
+    
+    /**
+     * Initializes the default preferences for all preference pages. This fixes
+     * most of the issues that occur when new preferences are imported
+     * without restarting KNIME.
+     */
+    private static void initializeDefaultPreferences() {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        for (IConfigurationElement element : registry
+                .getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
+            try {
+                final Object o = element.createExecutableExtension("class");
+                @SuppressWarnings("unchecked")
+                Class<? extends AbstractPreferenceInitializer> clazz =
+                        (Class<? extends AbstractPreferenceInitializer>)o.getClass();
+                if (o instanceof AbstractPreferenceInitializer) {
+                    ((AbstractPreferenceInitializer)o).initializeDefaultPreferences();
+                    LOGGER.debug("Found class: " + clazz.getCanonicalName());
+                } else {
+                    LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
+                }
+
+            } catch (InvalidRegistryObjectException e) {
+                throw new IllegalArgumentException(e);
+            } catch (CoreException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
     }
 
