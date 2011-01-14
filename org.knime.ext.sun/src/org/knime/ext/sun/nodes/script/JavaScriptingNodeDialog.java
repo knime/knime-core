@@ -108,8 +108,10 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         JavaScriptingSettings s = m_customizer.createSettings();
-        m_mainPanel.saveSettingsTo(s);
+        // first save jar panel so that settings contain additional
+        // libraries that may be required for test compilation
         m_jarPanel.saveSettingsTo(s);
+        m_mainPanel.saveSettingsTo(s);
         s.saveSettingsTo(settings);
     }
 }

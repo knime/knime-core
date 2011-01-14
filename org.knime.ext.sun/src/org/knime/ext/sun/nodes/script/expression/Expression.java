@@ -55,11 +55,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -192,32 +190,20 @@ public final class Expression {
             throw new CompilationFailedException(
                     "Unable to copy required class path files", e1);
         }
-        ArrayList<String> compileArgs = new ArrayList<String>();
-        String[] additionalJars = settings.getJarFiles();
-        List<File> classPathFiles = new ArrayList<File>();
-        classPathFiles.add(tempClassPath);
-        if (additionalJars.length > 0) {
-            compileArgs.add("-classpath");
-            StringBuilder b = new StringBuilder();
-            for (int i = 0; i < additionalJars.length; i++) {
-                b.append(i > 0 ? ":"  : "");
-                b.append(additionalJars[i]);
-                File file = new File(additionalJars[i]);
-                if (!file.exists()) {
-                    throw new CompilationFailedException("Can't read file \""
-                            + additionalJars[i] + "\"; invalid class path");
-                }
-                classPathFiles.add(file);
-            }
-            compileArgs.add(b.toString());
+        File[] additionalJarFiles;
+        try {
+            additionalJarFiles = settings.getJarFilesAsFiles();
+        } catch (InvalidSettingsException e1) {
+            throw new CompilationFailedException(e1.getMessage(), e1);
         }
-        compileArgs.add("-nowarn");
+        File[] classPathFiles = new File[additionalJarFiles.length + 1];
+        classPathFiles[0] = tempClassPath;
+        System.arraycopy(additionalJarFiles, 0,
+                classPathFiles, 1, additionalJarFiles.length);
+
         JavaCodeCompiler compiler = new JavaCodeCompiler();
-        compiler.setAdditionalCompileArgs(compileArgs.toArray(
-                new String[compileArgs.size()]));
         compiler.setSources(new InMemorySourceJavaFileObject(name, source));
-        compiler.setClasspaths(classPathFiles.toArray(
-                new File[classPathFiles.size()]));
+        compiler.setClasspaths(classPathFiles);
         compiler.compile();
         ClassLoader loader = compiler.createClassLoader(
                 compiler.getClass().getClassLoader());

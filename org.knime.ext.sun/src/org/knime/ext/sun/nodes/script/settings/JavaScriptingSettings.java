@@ -51,6 +51,7 @@
 package org.knime.ext.sun.nodes.script.settings;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Date;
 
 import org.knime.core.data.DataColumnSpec;
@@ -65,7 +66,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * Settings proxy used by dialog and model implementation.
- * @author Bernd Wwiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class JavaScriptingSettings {
 
@@ -174,10 +175,10 @@ public final class JavaScriptingSettings {
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
         m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
-        for (String s : getJarFiles()) {
-            if (!new File(s).isFile()) {
+        for (File f : getJarFilesAsFiles()) {
+            if (!f.isFile()) {
                 throw new InvalidSettingsException("No such java library file: "
-                        + s);
+                        + f);
             }
         }
         m_expressionVersion = settings.getInt(
@@ -341,6 +342,35 @@ public final class JavaScriptingSettings {
      */
     public String[] getJarFiles() {
         return m_jarFiles == null ? new String[0] : m_jarFiles;
+    }
+
+    /** Get jar files as file objects. Will also handle the case where the
+     * file is specified via URL (file:/...)
+     * @return The registered jar files in a File[]
+     * @throws InvalidSettingsException If any file is not present.
+     */
+    public File[] getJarFilesAsFiles() throws InvalidSettingsException {
+        String[] jarLocations = getJarFiles();
+        File[] resultFiles = new File[jarLocations.length];
+        for (int i = 0; i < jarLocations.length; i++) {
+            if (jarLocations[i].startsWith("file:/")) {
+                try {
+                    URL fileURL = new URL(jarLocations[i]);
+                    resultFiles[i] = new File(fileURL.toURI());
+                } catch (Exception e) {
+                    throw new InvalidSettingsException("Can't read file "
+                            + "URL \"" + jarLocations[i]
+                            + "\"; invalid class path", e);
+                }
+            } else {
+                resultFiles[i] = new File(jarLocations[i]);
+            }
+            if (!resultFiles[i].exists()) {
+                throw new InvalidSettingsException("Can't read file \""
+                        + jarLocations[i] + "\"; invalid class path");
+            }
+        }
+        return resultFiles;
     }
 
     /**

@@ -68,6 +68,7 @@ import javax.swing.JScrollPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
@@ -187,12 +188,17 @@ public class JavaScriptingJarListPanel extends JPanel {
      * @param s To load from.
      */
     public void loadSettingsFrom(final JavaScriptingSettings s) {
-        String[] jarFiles = s.getJarFiles();
         DefaultListModel jarListModel =
             (DefaultListModel)m_addJarList.getModel();
         jarListModel.removeAllElements();
-        for (String jarFile : jarFiles) {
-            jarListModel.addElement(jarFile);
+        File[] jarFiles;
+        try {
+            jarFiles = s.getJarFilesAsFiles();
+        } catch (InvalidSettingsException e) {
+            jarFiles = new File[0];
+        }
+        for (File jarFile : jarFiles) {
+            jarListModel.addElement(jarFile.getAbsolutePath());
         }
     }
 
