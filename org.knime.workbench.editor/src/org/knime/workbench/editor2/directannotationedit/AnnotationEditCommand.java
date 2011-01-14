@@ -60,8 +60,6 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  */
 public class AnnotationEditCommand extends Command {
 
-    private final AnnotationEditPart m_annoPart;
-
     private final WorkflowAnnotation m_newAnnotation;
 
     private WorkflowAnnotation m_oldAnnotation;
@@ -70,6 +68,7 @@ public class AnnotationEditCommand extends Command {
 
     /**
      * Creates a new command to change the user node name.
+     * @param annoPart unused
      * @param theAnnotation the annotation to change
      * @param newAnnotation an annotation containing the new values.
      */
@@ -77,7 +76,6 @@ public class AnnotationEditCommand extends Command {
             final WorkflowAnnotation newAnnotation) {
         m_newAnnotation = newAnnotation;
         m_theAnnotation = theAnnotation;
-        m_annoPart = annoPart;
     }
 
     /**
