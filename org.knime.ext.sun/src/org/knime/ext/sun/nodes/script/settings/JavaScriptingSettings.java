@@ -175,12 +175,6 @@ public final class JavaScriptingSettings {
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
         m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
-        for (File f : getJarFilesAsFiles()) {
-            if (!f.isFile()) {
-                throw new InvalidSettingsException("No such java library file: "
-                        + f);
-            }
-        }
         m_expressionVersion = settings.getInt(
                 CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
     }
@@ -353,24 +347,41 @@ public final class JavaScriptingSettings {
         String[] jarLocations = getJarFiles();
         File[] resultFiles = new File[jarLocations.length];
         for (int i = 0; i < jarLocations.length; i++) {
-            if (jarLocations[i].startsWith("file:/")) {
-                try {
-                    URL fileURL = new URL(jarLocations[i]);
-                    resultFiles[i] = new File(fileURL.toURI());
-                } catch (Exception e) {
-                    throw new InvalidSettingsException("Can't read file "
-                            + "URL \"" + jarLocations[i]
-                            + "\"; invalid class path", e);
-                }
-            } else {
-                resultFiles[i] = new File(jarLocations[i]);
-            }
-            if (!resultFiles[i].exists()) {
-                throw new InvalidSettingsException("Can't read file \""
-                        + jarLocations[i] + "\"; invalid class path");
-            }
+            resultFiles[i] = toFile(jarLocations[i]);
         }
         return resultFiles;
+    }
+
+    /** Convert jar file location to File. Also accepts file in URL format
+     * (e.g. local drop files as URL).
+     * @param location The location string.
+     * @return The file to the location
+     * @throws InvalidSettingsException if argument is null, empty or the file
+     * does not exist.
+     */
+    public static final File toFile(final String location)
+        throws InvalidSettingsException {
+        if (location == null || location.length() == 0) {
+            throw new InvalidSettingsException(
+                    "Invalid (empty) jar file location");
+        }
+        File result;
+        if (location.startsWith("file:/")) {
+            try {
+                URL fileURL = new URL(location);
+                result = new File(fileURL.toURI());
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Can't read file "
+                        + "URL \"" + location + "\"; invalid class path", e);
+            }
+        } else {
+            result = new File(location);
+        }
+        if (!result.exists()) {
+            throw new InvalidSettingsException("Can't read file \""
+                    + location + "\"; invalid class path");
+        }
+        return result;
     }
 
     /**
