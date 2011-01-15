@@ -191,14 +191,14 @@ public class JavaScriptingJarListPanel extends JPanel {
         DefaultListModel jarListModel =
             (DefaultListModel)m_addJarList.getModel();
         jarListModel.removeAllElements();
-        File[] jarFiles;
-        try {
-            jarFiles = s.getJarFilesAsFiles();
-        } catch (InvalidSettingsException e) {
-            jarFiles = new File[0];
-        }
-        for (File jarFile : jarFiles) {
-            jarListModel.addElement(jarFile.getAbsolutePath());
+        String[] files = s.getJarFiles();
+        for (String f : files) {
+            try {
+                File file = JavaScriptingSettings.toFile(f);
+                jarListModel.addElement(file.getAbsolutePath());
+            } catch (InvalidSettingsException e) {
+                // ignore
+            }
         }
     }
 
