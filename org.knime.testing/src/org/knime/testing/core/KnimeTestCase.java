@@ -24,8 +24,10 @@
  */
 package org.knime.testing.core;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimerTask;
@@ -246,6 +248,9 @@ public class KnimeTestCase extends TestCase {
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
+                String status =
+                    m_manager.printNodeSummary(m_manager.getID(), 0);
+                dumpToLogError(status);
                 String error = m_manager.toString();
                 // TODO: do we get a cancelExecution() for all nodes?!?
                 for (NodeContainer nc : m_manager.getNodeContainers()) {
@@ -314,6 +319,19 @@ public class KnimeTestCase extends TestCase {
             }
 
             wrapUp();
+        }
+    }
+
+    private void dumpToLogError(final String s) {
+        try {
+            BufferedReader reader = new BufferedReader(new StringReader(s));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                logger.error(line);
+            }
+            reader.close();
+        } catch (IOException ioe) {
+            logger.debug("unable to log string", ioe);
         }
     }
 
