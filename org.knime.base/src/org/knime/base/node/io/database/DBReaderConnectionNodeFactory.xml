@@ -4,21 +4,25 @@
 	<name>Database Connector</name>
 	
 	<shortDescription>
-	    Creates a database connection.
+	    Creates a database connection to the specified database.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	     Creates a database connection and cached the first number of specified rows.
-	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
-	     by default only but you can use the load button to register additional drivers from Zip or Jar.
+	     Creates a database connection to the specified database. Note, this 
+	     node does only open the connection to read the meta information, but
+	     does not read any data at this point.
+	     <br/>
+	     Make sure you have your vendor-specific database driver registered in
+         the KNIME preference page (section Database Driver). By default, the 
+         sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
 		</intro>
 		
 	<option name="Database driver">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
-        (Database drivers).
+        (Database Driver).
 	</option>
 	<option name="Database URL">
         Enter the database name here, for example 

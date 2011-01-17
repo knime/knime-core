@@ -4,17 +4,19 @@
 	<name>Database Writer</name>
 	
 	<shortDescription>
-	    Establishes and opens a database access connection to which data can 
+	    Establishes and opens a database access connection to which the entire
+	    input table is written to.
 	    be written.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
 	     Establishes and opens a database access connection to which the entire 
-	     input data can be written. Make sure you have your personal database 
-	     driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
-	     by default only but you can use the load button to register additional 
-	     drivers from Zip or Jar archives.
+	     input table is written to.
+	     <br/>
+	     Make sure you have your vendor-specific database driver registered in
+         the KNIME preference page (section Database Driver). By default, the 
+         sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
 		</intro>
 
     <tab name="Settings">
@@ -22,7 +24,7 @@
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
-        (Database drivers).
+        (Database Driver).
 	  </option>
 	  <option name="Database URL">
         Enter the database name here, for example: 
