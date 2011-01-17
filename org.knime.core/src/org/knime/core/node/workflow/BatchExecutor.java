@@ -679,27 +679,30 @@ public final class BatchExecutor {
      * without restarting KNIME.
      */
     private static void initializeDefaultPreferences() {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        for (IConfigurationElement element : registry
-                .getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
-            try {
-                final Object o = element.createExecutableExtension("class");
-                @SuppressWarnings("unchecked")
-                Class<? extends AbstractPreferenceInitializer> clazz =
-                        (Class<? extends AbstractPreferenceInitializer>)o.getClass();
-                if (o instanceof AbstractPreferenceInitializer) {
-                    ((AbstractPreferenceInitializer)o).initializeDefaultPreferences();
-                    LOGGER.debug("Found class: " + clazz.getCanonicalName());
-                } else {
-                    LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
-                }
-
-            } catch (InvalidRegistryObjectException e) {
-                throw new IllegalArgumentException(e);
-            } catch (CoreException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }
+		IExtensionRegistry registry = Platform.getExtensionRegistry();
+		for (IConfigurationElement element : registry
+				.getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
+			try {
+				Object o = element.createExecutableExtension("class");
+				@SuppressWarnings("unchecked")
+				Class<? extends AbstractPreferenceInitializer> clazz = (Class<? extends AbstractPreferenceInitializer>) o
+						.getClass();
+				if (o instanceof AbstractPreferenceInitializer) {
+					((AbstractPreferenceInitializer) o)
+							.initializeDefaultPreferences();
+					LOGGER.debug("Found class: " + clazz.getCanonicalName());
+				} else {
+					LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
+				}
+			} catch (CoreException e) {
+				LOGGER.error("An error occurred while initializing the default preferences: "
+						+ "Instance of the executable extension '" + element.getName() + "'could not be created.", e);
+			} catch (InvalidRegistryObjectException e) {
+				LOGGER.error("An error occurred while initializing the default preferences: "
+						+ "The configuration element is no longer valid.", e);
+			}
+			
+		}
     }
 
     private static void setupEncryptionKey(final boolean isPromptForPassword,

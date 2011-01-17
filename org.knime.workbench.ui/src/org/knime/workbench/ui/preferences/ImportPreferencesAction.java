@@ -221,12 +221,13 @@ public class ImportPreferencesAction extends Action {
                 } else {
                     LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
                 }
-
-            } catch (InvalidRegistryObjectException e) {
-                throw new IllegalArgumentException(e);
-            } catch (CoreException e) {
-                throw new IllegalArgumentException(e);
-            }
+			} catch (CoreException e) {
+				LOGGER.error("An error occurred while initializing the default preferences: "
+						+ "Instance of the executable extension '" + element.getName() + "'could not be created.", e);
+			} catch (InvalidRegistryObjectException e) {
+				LOGGER.error("An error occurred while initializing the default preferences: "
+						+ "The configuration element is no longer valid.", e);
+			}
         }
     }
 
