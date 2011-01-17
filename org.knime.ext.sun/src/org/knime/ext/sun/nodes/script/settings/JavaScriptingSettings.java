@@ -51,6 +51,7 @@
 package org.knime.ext.sun.nodes.script.settings;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Date;
 
 import org.knime.core.data.DataColumnSpec;
@@ -65,7 +66,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * Settings proxy used by dialog and model implementation.
- * @author Bernd Wwiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class JavaScriptingSettings {
 
@@ -174,12 +175,6 @@ public final class JavaScriptingSettings {
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
         m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
-        for (String s : getJarFiles()) {
-            if (!new File(s).isFile()) {
-                throw new InvalidSettingsException("No such java library file: "
-                        + s);
-            }
-        }
         m_expressionVersion = settings.getInt(
                 CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
     }
@@ -341,6 +336,52 @@ public final class JavaScriptingSettings {
      */
     public String[] getJarFiles() {
         return m_jarFiles == null ? new String[0] : m_jarFiles;
+    }
+
+    /** Get jar files as file objects. Will also handle the case where the
+     * file is specified via URL (file:/...)
+     * @return The registered jar files in a File[]
+     * @throws InvalidSettingsException If any file is not present.
+     */
+    public File[] getJarFilesAsFiles() throws InvalidSettingsException {
+        String[] jarLocations = getJarFiles();
+        File[] resultFiles = new File[jarLocations.length];
+        for (int i = 0; i < jarLocations.length; i++) {
+            resultFiles[i] = toFile(jarLocations[i]);
+        }
+        return resultFiles;
+    }
+
+    /** Convert jar file location to File. Also accepts file in URL format
+     * (e.g. local drop files as URL).
+     * @param location The location string.
+     * @return The file to the location
+     * @throws InvalidSettingsException if argument is null, empty or the file
+     * does not exist.
+     */
+    public static final File toFile(final String location)
+        throws InvalidSettingsException {
+        if (location == null || location.length() == 0) {
+            throw new InvalidSettingsException(
+                    "Invalid (empty) jar file location");
+        }
+        File result;
+        if (location.startsWith("file:/")) {
+            try {
+                URL fileURL = new URL(location);
+                result = new File(fileURL.toURI());
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Can't read file "
+                        + "URL \"" + location + "\"; invalid class path", e);
+            }
+        } else {
+            result = new File(location);
+        }
+        if (!result.exists()) {
+            throw new InvalidSettingsException("Can't read file \""
+                    + location + "\"; invalid class path");
+        }
+        return result;
     }
 
     /**

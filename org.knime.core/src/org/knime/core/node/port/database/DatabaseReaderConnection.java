@@ -126,6 +126,14 @@ public final class DatabaseReaderConnection {
             final DatabaseQueryConnectionSettings conn) {
         m_conn = conn;
         m_spec = null;
+        if (m_stmt != null) {
+            try {
+                m_stmt.close();
+            } catch (SQLException sqle) {
+                LOGGER.debug("Error while closing SQL statement, reason "
+                        + sqle.getMessage());
+            }
+        }
         m_stmt = null;
     }
 
@@ -172,6 +180,7 @@ public final class DatabaseReaderConnection {
                     }
                     // ensure we have a non-prepared statement to access data
                     if (m_stmt != null && m_stmt instanceof PreparedStatement) {
+                        m_stmt.close();
                         m_stmt = conn.createStatement();
                     }
                 }

@@ -322,8 +322,8 @@ final class Learner {
         if (rowCount < A.getColumnDimension()) {
             throw new IllegalStateException("The dataset must have at least "
                     + A.getColumnDimension() + " rows, but it has only "
-                    + rowCount + " rows. However it is recommended to use a "
-                    + "larger dataset in order to increas accuracy.");
+                    + rowCount + " rows. It is recommended to use a "
+                    + "larger dataset in order to increase accuracy.");
         }
         Matrix betaNew = A.solve(b);
         beta.setMatrix(0, 0, 0, (tcC - 1) * (rC + 1) - 1, betaNew.transpose());
@@ -439,6 +439,7 @@ final class Learner {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Iterator<TrainingRow> iterator() {
             return new TrainingDataIterator(m_data.iterator(),
                     m_parameterCount, m_learningCols,
@@ -538,6 +539,7 @@ final class Learner {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean hasNext() {
             return m_iter.hasNext();
         }
@@ -545,6 +547,7 @@ final class Learner {
         /**
          * {@inheritDoc}
          */
+        @Override
         public TrainingRow next() {
             return new TrainingRow(m_iter.next(), m_parameterCount,
                     m_learningCols,
@@ -555,6 +558,7 @@ final class Learner {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }

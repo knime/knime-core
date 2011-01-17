@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -87,6 +86,7 @@ public class WorkflowVariablesDialog extends Dialog {
         m_workflow = workflow;
         m_listener = new NodeStateChangeListener() {
 
+            @Override
             public void stateChanged(final NodeStateEvent state) {
                 final boolean inProgress = !state.getState()
                     .executionInProgress();
@@ -95,6 +95,7 @@ public class WorkflowVariablesDialog extends Dialog {
                     /**
                      * {@inheritDoc}
                      */
+                    @Override
                     public void run() {
                         setEditable(inProgress);
                     }
@@ -146,6 +147,7 @@ public class WorkflowVariablesDialog extends Dialog {
              *
              * {@inheritDoc}
              */
+            @Override
             public void doubleClick(final DoubleClickEvent event) {
                 Table table = m_table.getViewer().getTable();
                 int index = table.getSelectionIndex();
@@ -253,8 +255,7 @@ public class WorkflowVariablesDialog extends Dialog {
 
     private int openConfirmationDialog() {
         // if there are nodes to be reset -> ask for it
-        if (containsExecutedNodes(m_workflow)
-                && m_workflow.getParent().canResetNode(m_workflow.getID())) {
+        if (m_workflow.getParent().canResetNode(m_workflow.getID())) {
             MessageDialog dialog = new MessageDialog(getShell(),
                     "Add Workflow Variable Confirmation", getShell()
                             .getDisplay().getSystemImage(SWT.ICON_QUESTION),
@@ -270,18 +271,6 @@ public class WorkflowVariablesDialog extends Dialog {
             // (not isResetable)
             return 1;
         }
-    }
-
-    private boolean containsExecutedNodes(final WorkflowManager workflow) {
-        for (NodeContainer node : workflow.getNodeContainers()) {
-            if (node.getState().equals(NodeContainer.State.EXECUTED)) {
-                // we only check for executed nodes
-                // and not for canReset node (should be checked by the caller
-                // of this method
-                return true;
-            }
-        }
-        return false;
     }
 
     private void addWorkflowVariable() {

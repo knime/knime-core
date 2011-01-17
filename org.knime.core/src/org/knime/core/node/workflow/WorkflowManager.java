@@ -2242,6 +2242,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
+    boolean canPerformReset() {
+        // check for at least one executed and resetable node!
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc.getState().executionInProgress()) {
+                return false;
+            }
+            if (nc.canPerformReset()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     void markForExecution(final boolean flag) {
         assert !isLocalWFM() : "Setting execution mark on meta node not allowed"
             + " for locally executing (sub-)flows";
@@ -2389,21 +2404,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /**
      * Check if a node can be reset, meaning that it is executed and all of
-     * it's successors are idle or executed as well. We do not want to mess
+     * its successors are idle or executed as well. We do not want to mess
      * with executing chains.
      *
      * @param nodeID the id of the node
      * @return true if the node can safely be reset.
      */
     public boolean canResetNode(final NodeID nodeID) {
-        NodeContainer nc = m_workflow.getNode(nodeID);
-        if (nc == null) {
-            return false;
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = m_workflow.getNode(nodeID);
+            if (nc == null) {
+                return false;
+            }
+            // (a) this node is resetable
+            // (b) no successors is running or queued.
+            return (nc.canPerformReset()
+                    && (!hasSuccessorInProgress(nodeID)));
         }
-        // (a) this node is resetable
-        // (b) no successors is running or queued.
-        return (nc.isResetable()
-               && (!hasSuccessorInProgress(nodeID)));
     }
 
     // TODO: This function needs to go!
@@ -2563,6 +2580,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 "Can not reset node (wrong state of node or successors) " + id);
             }
         }
+        // TODO this should go into the synchronized block?
         checkForNodeStateChanges(true);
     }
 
@@ -2660,7 +2678,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     *
     * @param nodeID id of node
     * @return true if node can be cancelled
-    *             
+    *
     */
    public boolean canCancelNode(final NodeID nodeID) {
        synchronized (m_workflowMutex) {
@@ -2678,7 +2696,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
            return true;
        }
    }
-   
+
     /** @return true if any node contained in this workflow is executable,
      * that is configured.
      */

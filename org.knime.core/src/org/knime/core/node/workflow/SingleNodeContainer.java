@@ -182,15 +182,15 @@ public final class SingleNodeContainer extends NodeContainer {
     /** Get the underlying node.
      * @return the underlying Node
      */
-    Node getNode() {
+    public Node getNode() {
         return m_node;
     }
 
     /**
      * @return reference to underlying node.
-     * @deprecated Method will be reduced to package scope
-     * in future version, currently public to enable workaround for bug #2136
-     * (see also bug #2137)
+     * @deprecated Method is going to be removed in future versions. Use
+     * {@link #getNode()} instead.
+     * Currently used to enable workaround for bug #2136 (see also bug #2137)
      */
     @Deprecated
     public Node getNodeReferenceBug2136() {
@@ -457,6 +457,19 @@ public final class SingleNodeContainer extends NodeContainer {
             return true;
         default:
             return false;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    boolean canPerformReset() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case EXECUTED:
+                return true;
+            default:
+                return false;
+            }
         }
     }
 

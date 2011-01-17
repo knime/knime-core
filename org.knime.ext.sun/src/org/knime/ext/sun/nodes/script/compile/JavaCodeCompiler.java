@@ -56,6 +56,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -139,15 +142,13 @@ public final class JavaCodeCompiler {
             throw new CompilationFailedException("No sources set");
         }
         ArrayList<String> compileArgs = new ArrayList<String>();
-        File[] extraClasspathFiles =
-            m_classpaths == null ? new File[0] : m_classpaths;
-        if (extraClasspathFiles.length > 0) {
+        if (m_classpaths != null || m_classpaths.length > 0) {
             compileArgs.add("-classpath");
             StringBuilder b = new StringBuilder();
-            for (int i = 0; i < extraClasspathFiles.length; i++) {
+            for (int i = 0; i < m_classpaths.length; i++) {
                 b.append(i > 0 ? ":"  : "");
-                b.append(extraClasspathFiles[i]);
-                File file = extraClasspathFiles[i];
+                b.append(m_classpaths[i]);
+                File file = m_classpaths[i];
                 String filePath = file.getAbsolutePath();
                 if (!file.exists()) {
                     throw new CompilationFailedException("Can't read file \""
@@ -157,6 +158,9 @@ public final class JavaCodeCompiler {
             compileArgs.add(b.toString());
         }
         compileArgs.add("-nowarn");
+        if (m_additionalCompileArgs != null) {
+            compileArgs.addAll(Arrays.asList(m_additionalCompileArgs));
+        }
         final StringWriter logString = new StringWriter();
 //        ServiceLoader<JavaCompiler> serviceLoader =
 //            ServiceLoader.load(JavaCompiler.class);
@@ -270,12 +274,28 @@ public final class JavaCodeCompiler {
         }
     }
 
-    public ClassLoader createClassLoader(final ClassLoader parent) {
+    public ClassLoader createClassLoader(final ClassLoader parent)
+        throws CompilationFailedException {
         if (m_fileMgr == null) {
             throw new IllegalStateException(
                     "Did not call compile() or compilation failed");
         }
-        return new ClassLoader(parent) {
+        ClassLoader trueParent = parent;
+
+        if (m_classpaths != null && m_classpaths.length > 0) {
+            URL[] urls = new URL[m_classpaths.length];
+            for (int i = 0; i < m_classpaths.length; i++) {
+                try {
+                    urls[i] = m_classpaths[i].toURI().toURL();
+                } catch (MalformedURLException e) {
+                    throw new CompilationFailedException("Unable to retrieve "
+                            + "URL from jar file \""
+                            + m_classpaths[i].getAbsolutePath() + "\"", e);
+                }
+            }
+            trueParent = URLClassLoader.newInstance(urls, parent);
+        }
+        return new ClassLoader(trueParent) {
             /** {@inheritDoc} */
             @Override
             protected Class<?> findClass(final String name)

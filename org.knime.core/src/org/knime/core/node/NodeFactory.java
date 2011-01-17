@@ -333,15 +333,17 @@ public abstract class NodeFactory<T extends NodeModel> {
             return;
         }
         Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-        Dictionary<String, String> headers = bundle.getHeaders();
+        if (bundle != null) { // for running in non-osgi context
+            Dictionary<String, String> headers = bundle.getHeaders();
 
-        Document doc = m_knimeNode.getOwnerDocument();
-        Element bundleElement = doc.createElement("origin-bundle");
-        bundleElement.setAttribute("symbolic-name", bundle.getSymbolicName());
-        bundleElement.setAttribute("name", headers.get("Bundle-Name"));
-        bundleElement.setAttribute("vendor", headers.get("Bundle-Vendor"));
-        m_knimeNode.appendChild(bundleElement);
-
+            Document doc = m_knimeNode.getOwnerDocument();
+            Element bundleElement = doc.createElement("origin-bundle");
+            bundleElement.setAttribute(
+                    "symbolic-name", bundle.getSymbolicName());
+            bundleElement.setAttribute("name", headers.get("Bundle-Name"));
+            bundleElement.setAttribute("vendor", headers.get("Bundle-Vendor"));
+            m_knimeNode.appendChild(bundleElement);
+        }
     }
 
     /**
