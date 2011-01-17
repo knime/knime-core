@@ -146,7 +146,9 @@ public final class JavaCodeCompiler {
             compileArgs.add("-classpath");
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < m_classpaths.length; i++) {
-                b.append(i > 0 ? ":"  : "");
+                if (i > 0) {
+                    b.append(File.pathSeparatorChar);
+                }
                 b.append(m_classpaths[i]);
                 File file = m_classpaths[i];
                 String filePath = file.getAbsolutePath();
