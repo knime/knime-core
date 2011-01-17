@@ -67,12 +67,12 @@ import java.util.TimerTask;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.IExportedPreferences;
+import org.eclipse.core.runtime.preferences.IPreferenceFilter;
+import org.eclipse.core.runtime.preferences.IPreferencesService;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -652,57 +652,27 @@ public final class BatchExecutor {
         throws IOException, CoreException {
         InputStream in = new BufferedInputStream(
                 new FileInputStream(preferenceFile));
-        IStatus status = Platform.getPreferencesService().importPreferences(in);
-        initializeDefaultPreferences();
-        switch (status.getSeverity()) {
-        case IStatus.CANCEL:
-            LOGGER.error("Importing preferences was canceled");
-            break;
-        case IStatus.WARNING:
-            LOGGER.warn("Importing preferences raised warning: "
-                    + status.getMessage(), status.getException());
-            break;
-        case IStatus.INFO:
-            LOGGER.info("Importing preferences raised an info message: "
-                    + status.getMessage(), status.getException());
-        case IStatus.OK:
-            break;
-        default:
-            LOGGER.warn("Unknown return status from preference import: "
-                    + status.getSeverity());
-        }
-    }
-    
-    /**
-     * Initializes the default preferences for all preference pages. This fixes
-     * most of the issues that occur when new preferences are imported
-     * without restarting KNIME.
-     */
-    private static void initializeDefaultPreferences() {
-		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		for (IConfigurationElement element : registry
-				.getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
-			try {
-				Object o = element.createExecutableExtension("class");
-				@SuppressWarnings("unchecked")
-				Class<? extends AbstractPreferenceInitializer> clazz = (Class<? extends AbstractPreferenceInitializer>) o
-						.getClass();
-				if (o instanceof AbstractPreferenceInitializer) {
-					((AbstractPreferenceInitializer) o)
-							.initializeDefaultPreferences();
-					LOGGER.debug("Found class: " + clazz.getCanonicalName());
-				} else {
-					LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
-				}
-			} catch (CoreException e) {
-				LOGGER.error("An error occurred while initializing the default preferences: "
-						+ "Instance of the executable extension '" + element.getName() + "'could not be created.", e);
-			} catch (InvalidRegistryObjectException e) {
-				LOGGER.error("An error occurred while initializing the default preferences: "
-						+ "The configuration element is no longer valid.", e);
-			}
-			
-		}
+        IPreferencesService prefService = Platform.getPreferencesService();
+        IExportedPreferences prefs = prefService.readPreferences(in);
+        IPreferenceFilter filter = new IPreferenceFilter() {
+            @Override
+            public String[] getScopes() {
+                return new String[]{ InstanceScope.SCOPE,
+                        ConfigurationScope.SCOPE,
+                        "profile" };
+            }
+
+            @Override
+            @SuppressWarnings("rawtypes")
+            public Map getMapping(String scope) {
+                return null; // this filter is applicable for all nodes
+            }
+        };
+        /* Calling this method with filters and not the applyPreferences
+         * without filters is very important! The other method does not
+         * merge the preferences but deletes all default values. */
+        prefService.applyPreferences(prefs,
+                new IPreferenceFilter[] {filter});
     }
 
     private static void setupEncryptionKey(final boolean isPromptForPassword,

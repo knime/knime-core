@@ -55,20 +55,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IExportedPreferences;
+import org.eclipse.core.runtime.preferences.IPreferenceFilter;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -173,14 +171,27 @@ public class ImportPreferencesAction extends Action {
             IPreferencesService prefService = Platform.getPreferencesService();
            LOGGER.info("Importing preferences from file "
                             + inFile.getAbsolutePath() + " now ...");
-            /* Importing preferences still causes problems with the network
-             * preference page. After a restart of KNIME everything is back to
-             * normal. 
-             * (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=246754) */
             IExportedPreferences prefs = prefService.readPreferences(in);
-            prefService.applyPreferences(prefs);
+            IPreferenceFilter filter = new IPreferenceFilter() {
+                @Override
+                public String[] getScopes() {
+                    return new String[]{ InstanceScope.SCOPE,
+                            ConfigurationScope.SCOPE,
+                            "profile" };
+                }
+
+                @Override
+                @SuppressWarnings("rawtypes")
+                public Map getMapping(String scope) {
+                    return null; // this filter is applicable for all nodes
+                }
+            };
+            /* Calling this method with filters and not the applyPreferences
+             * without filters is very important! The other method does not
+             * merge the preferences but deletes all default values. */
+            prefService.applyPreferences(prefs,
+                    new IPreferenceFilter[] {filter});
             LOGGER.info("Import of preferences successfully finished.");
-            requestRestart();
         } catch (Throwable t) {
             String msg = "Unable to read preferences from selected file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
@@ -199,62 +210,5 @@ public class ImportPreferencesAction extends Action {
             }
         }
 
-    }
-
-    /**
-     * Initializes the default preferences for all preference pages. This fixes
-     * most of the issues that occur when new preferences are imported
-     * without restarting KNIME.
-     */
-    private void initializeDefaultPreferences() {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        for (IConfigurationElement element : registry
-                .getConfigurationElementsFor("org.eclipse.core.runtime.preferences")) {
-            try {
-                final Object o = element.createExecutableExtension("class");
-                @SuppressWarnings("unchecked")
-                Class<? extends AbstractPreferenceInitializer> clazz =
-                        (Class<? extends AbstractPreferenceInitializer>)o.getClass();
-                if (o instanceof AbstractPreferenceInitializer) {
-                    ((AbstractPreferenceInitializer)o).initializeDefaultPreferences();
-                    LOGGER.debug("Found class: " + clazz.getCanonicalName());
-                } else {
-                    LOGGER.debug("Skipped class: " + clazz.getCanonicalName());
-                }
-			} catch (CoreException e) {
-				LOGGER.error("An error occurred while initializing the default preferences: "
-						+ "Instance of the executable extension '" + element.getName() + "'could not be created.", e);
-			} catch (InvalidRegistryObjectException e) {
-				LOGGER.error("An error occurred while initializing the default preferences: "
-						+ "The configuration element is no longer valid.", e);
-			}
-        }
-    }
-
-    /**
-     * Request a restart of the platform according to the specified
-     * restart policy.
-     *
-     * @param restartPolicy
-     */
-    private void requestRestart() {
-        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (PlatformUI.getWorkbench().isClosing())
-                    return;
-                int retCode = new MessageDialog(Display.getCurrent().getActiveShell(),
-                        "Restart to complete settings import",
-                        null,
-                        "The settings have been imported. It is highly recommended to restart KNIME to complete the import of the preferences. Would you like to restart now?",
-                        MessageDialog.QUESTION,
-                        new String[] {"restart", "cancel"}, 0).open();
-                if (retCode == 0) {
-                    PlatformUI.getWorkbench().restart();
-                } else {
-                    initializeDefaultPreferences();
-                }
-            }
-        });
     }
 }
