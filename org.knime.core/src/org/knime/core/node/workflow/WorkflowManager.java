@@ -2724,10 +2724,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean waitWhileInExecution(final long time, final TimeUnit unit)
         throws InterruptedException {
-        State state = getState();
-        if (!state.executionInProgress()) {
-            return true;
-        }
         // lock supporting timeout
         final ReentrantLock lock = new ReentrantLock();
         final Condition condition = lock.newCondition();
@@ -2747,6 +2743,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         lock.lockInterruptibly();
         addNodeStateChangeListener(listener);
         try {
+        	State state = getState();
+        	if (!state.executionInProgress()) {
+        		return true;
+        	}
             if (time > 0) {
                 return condition.await(time, unit);
             } else {
