@@ -27,3 +27,4 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.net,
  org.eclipse.ui.console
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Localization: plugin
