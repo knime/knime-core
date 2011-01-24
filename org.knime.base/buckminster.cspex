@@ -22,6 +22,11 @@
 				upToDatePolicy="ACTOR" />
 		</private>
 	</actions>
+    <groups>
+        <public name="knime.source">
+            <attribute name="eclipse.build.source" />
+        </public>
+    </groups>
 	<alterGroups>
 		<private name="jar.contents">
 			<attribute name="knime.create.helpfiles" />

@@ -5,7 +5,9 @@ KNIME Product
 Quickstart guide:
 - Extract the archive (if you read this here, you likely already did so).
 - Under Windows launch knime.exe, for Linux use knime (either double
-  click in a file browser or execute it in a shell)
+  click in a file browser or execute it in a shell). For Mac OS X either 
+  double click the knime.app in Finder or execute 
+  /Applications/knime/knime.app/Contents/MacOS/knime in Terminal.
 - KNIME will open and prompt for a workspace directory, where it will put 
   its project files. It will create an empty workflow in the selected 
   workspace so that you can immediately start assembling a workflow. 

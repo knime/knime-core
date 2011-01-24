@@ -4,23 +4,23 @@
 	<name>Database Reader</name>
 	
 	<shortDescription>
-	    Establishes and opens a database access connection from which to read data.
+	    Establishes and opens a database access connection to read a table from.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	     Establishes and opens a database access connection from which to read 
-	     data. Make sure you have your personal database driver registered. The 
-	     sun.jdbc.odbc.JdbcOdbcDriver is available by default only but you can 
-	     use the load button to register additional drivers from Zip or Jar 
-	     archives.
+	     Establishes and opens a database access connection to read data from.
+	     <br/>
+	     Make sure you have your vendor-specific database driver registered in
+         the KNIME preference page (section Database Driver). By default, the 
+         sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
 		</intro>
 		
 	<option name="Database driver">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
-		(Database drivers).
+		(Database Driver).
 	</option>
 	<option name="Database URL">
         Enter the database name here, for example 

@@ -1763,15 +1763,20 @@ class Buffer implements KNIMEStreamConstants {
             // (parallel thread may set m_backIntoMemoryIterator to null)
             CloseableRowIterator backIntoMemoryIterator = 
                 m_backIntoMemoryIterator;
-            if (m_nextIndex < m_list.size()) {
-                return m_list.get(m_nextIndex++);
-            }
-            if (backIntoMemoryIterator == null) {
-                throw new InternalError("DataRow list contains fewer elements"
-                        + " than buffer (" + m_list.size() + " vs. "
-                        + size() + ")");
-            }
-            synchronized (backIntoMemoryIterator) {
+            
+            Object semaphore = backIntoMemoryIterator != null 
+            	? backIntoMemoryIterator : FromListIterator.this;
+            synchronized (semaphore) {
+            	// need to synchronize access to the list as the list is 
+            	// potentially modified by the backIntoMemoryIterator
+            	if (m_nextIndex < m_list.size()) {
+            		return m_list.get(m_nextIndex++);
+            	}
+            	if (backIntoMemoryIterator == null) {
+            		throw new InternalError("DataRow list contains fewer "
+            				+ " elements than buffer (" + m_list.size() 
+            				+ " vs. " + size() + ")");
+            	}
                 // intermediate change possible (by other iterator)
                 if (m_nextIndex < m_list.size()) {
                     return m_list.get(m_nextIndex++);
