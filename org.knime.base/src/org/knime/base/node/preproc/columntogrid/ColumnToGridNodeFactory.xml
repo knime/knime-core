@@ -19,6 +19,13 @@
             be displayed in a grid. If multiple columns are selected, the entire
             set will constitute a grid column.
         </option>
+        <option name="Enable Grouping">Select this option and choose a group 
+            column in order to separate input rows that do not belong to the 
+            same group. This is useful when visualizing, e.g. clustering 
+            results, whereby records from different clusters are represented 
+            by different output rows. The group column will be another column 
+            in the output table.
+        </option>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Table with column(s) to align in grid">

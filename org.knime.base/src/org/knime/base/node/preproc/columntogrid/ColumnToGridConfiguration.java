@@ -70,6 +70,7 @@ final class ColumnToGridConfiguration {
     private static final int DEF_COL_COUNT = 4;
 
     private String[] m_includes;
+    private String m_groupColumn;
     private int m_colCount;
 
     /** Creates new config, auto-guessing defaults if possible (prefers
@@ -99,6 +100,7 @@ final class ColumnToGridConfiguration {
         if (m_includes != null) {
             settings.addStringArray("includes", m_includes);
             settings.addInt("grid_col_count", m_colCount);
+            settings.addString("groupColumn", m_groupColumn);
         }
     }
 
@@ -117,6 +119,8 @@ final class ColumnToGridConfiguration {
             throw new InvalidSettingsException(
                     "Invalid grid col count: " + m_colCount);
         }
+        // added in v2.4
+        m_groupColumn = settings.getString("groupColumn", null);
     }
 
     /** Loads settings in dialog, inits default if invalid.
@@ -130,6 +134,7 @@ final class ColumnToGridConfiguration {
         if (m_colCount <= 0) {
             m_colCount = DEF_COL_COUNT;
         }
+        m_groupColumn = settings.getString("groupColumn", null);
     }
 
     /** @return the includes */
@@ -150,6 +155,16 @@ final class ColumnToGridConfiguration {
     /** @param colCount the colCount to set */
     void setColCount(final int colCount) {
         m_colCount = colCount;
+    }
+
+    /** @return the groupColumn (or null if no grouping enabled). */
+    String getGroupColumn() {
+        return m_groupColumn;
+    }
+
+    /** @param groupColumn the groupColumn to set */
+    void setGroupColumn(final String groupColumn) {
+        m_groupColumn = groupColumn;
     }
 
     /** Auto-guessing: choose first column that is not string, int, double

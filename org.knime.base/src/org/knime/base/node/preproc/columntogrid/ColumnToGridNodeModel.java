@@ -52,10 +52,14 @@ package org.knime.base.node.preproc.columntogrid;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -64,6 +68,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -76,6 +81,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Model for Column-to-Grid node.
@@ -106,12 +112,36 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable in = inData[0];
-        DataTableSpec spec = in.getDataTableSpec();
+        String[] includes = m_configuration.getIncludes();
+        String groupColumn = m_configuration.getGroupColumn();
+        final ExecutionMonitor mainExec;
+        final BufferedDataTable inputTable;
+        if (groupColumn != null) {
+            exec.setMessage("Sorting input table");
+            BufferedDataTable in = inData[0];
+            ExecutionContext sortExec = exec.createSubExecutionContext(0.5);
+            ColumnRearranger sortFilterRearranger =
+                new ColumnRearranger(in.getDataTableSpec());
+            String[] relevantCols = new String[includes.length + 1];
+            System.arraycopy(includes, 0, relevantCols, 0, includes.length);
+            relevantCols[relevantCols.length - 1] = groupColumn;
+            sortFilterRearranger.keepOnly(relevantCols);
+            BufferedDataTable toBeSortedTable = exec.createColumnRearrangeTable(
+                    in, sortFilterRearranger, exec.createSubProgress(0.0));
+            SortedTable sorter = new SortedTable(toBeSortedTable,
+                    Collections.singletonList(groupColumn),
+                    new boolean[] {true}, sortExec);
+            inputTable = sorter.getBufferedDataTable();
+            mainExec = exec.createSubProgress(0.5);
+        } else {
+            inputTable = inData[0];
+            mainExec = exec;
+        }
+        exec.setMessage("Assembling output");
+        DataTableSpec spec = inputTable.getDataTableSpec();
         DataTableSpec outSpec = createOutputSpec(spec);
         BufferedDataContainer cont = exec.createDataContainer(outSpec);
 
-        String[] includes = m_configuration.getIncludes();
         int[] includeIndices = new int[includes.length];
         for (int i = 0; i < includes.length; i++) {
             int index = spec.findColumnIndex(includes[i]);
@@ -119,26 +149,51 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
         }
         int gridCount = m_configuration.getColCount();
 
-        DataCell[] cells = new DataCell[includes.length * gridCount];
-        RowIterator it = in.iterator();
+        final int cellCount;
+        final int groupColIndex;
+        if (groupColumn != null) {
+            cellCount = includeIndices.length * gridCount + 1;
+            groupColIndex = spec.findColumnIndex(groupColumn);
+        } else {
+            cellCount = includeIndices.length * gridCount;
+            groupColIndex = -1;
+        }
+        final DataCell[] cells = new DataCell[cellCount];
+        PushBackRowIterator it = new PushBackRowIterator(inputTable.iterator());
         int currentRow = 0;
-        int totalRows = in.getRowCount();
+        int totalRows = inputTable.getRowCount();
         int currentOutRow = 0;
+        DataCell curGroupValue = null;
         while (it.hasNext()) {
             Arrays.fill(cells, DataType.getMissingCell());
+            // assign group column (if enabled)
+            if (groupColIndex >= 0) {
+                DataRow row = it.next();
+                curGroupValue = row.getCell(groupColIndex);
+                cells[cells.length - 1] = curGroupValue;
+                it.pushBack(row);
+            }
             for (int grid = 0; grid < gridCount; grid++) {
                 if (!it.hasNext()) {
                     break;
                 }
                 DataRow inRow = it.next();
-                exec.setProgress(0.2, //currentRow / (double)totalRows,
-                        "Processing row " + currentRow + "/" + totalRows
-                        + ": " + inRow.getKey());
-                currentRow += 1;
-                exec.checkCanceled();
-                for (int i = 0; i < includeIndices.length; i++) {
-                    cells[grid * includeIndices.length + i] =
-                        inRow.getCell(includeIndices[i]);
+                DataCell groupValue = groupColIndex < 0 ? null
+                        : inRow.getCell(groupColIndex);
+                if (ConvenienceMethods.areEqual(curGroupValue, groupValue)) {
+                    mainExec.setProgress(currentRow / (double)totalRows,
+                            "Processing row " + currentRow + "/" + totalRows
+                            + ": " + inRow.getKey());
+                    currentRow += 1;
+                    mainExec.checkCanceled();
+                    for (int i = 0; i < includeIndices.length; i++) {
+                        cells[grid * includeIndices.length + i] =
+                            inRow.getCell(includeIndices[i]);
+                    }
+                } else {
+                    // start new group, i.e. new row
+                    it.pushBack(inRow);
+                    break;
                 }
             }
             RowKey key = RowKey.createRowKey(currentOutRow++);
@@ -168,26 +223,45 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
             }
             inColSpecs[i] = c;
         }
+        DataColumnSpec groupColumn = null;
+        String groupColumnName = m_configuration.getGroupColumn();
+        if (groupColumnName != null) {
+            groupColumn = spec.getColumnSpec(groupColumnName);
+            if (groupColumn == null) {
+                throw new InvalidSettingsException("Group colunmn \""
+                        + groupColumnName + "\" not present in input table");
+            }
+        }
         int gridCount = m_configuration.getColCount();
         Set<String> cols = new HashSet<String>();
-        DataColumnSpec[] colSpecs =
-            new DataColumnSpec[gridCount * includes.length];
+        List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
         for (int grid = 0; grid < gridCount; grid++) {
             for (int i = 0; i < includes.length; i++) {
                 DataColumnSpec in = inColSpecs[i];
                 String name = in.getName() + " (" + grid + ")";
-                String colName = name;
-                int uniquifier = 1;
-                while (!cols.add(colName)) {
-                    colName = name + " (" + (uniquifier++) + ")";
-                }
+                String colName = getUniqueColumn(name, cols);
                 DataColumnSpecCreator newSpecC = new DataColumnSpecCreator(in);
                 newSpecC.setName(colName);
                 newSpecC.removeAllHandlers();
-                colSpecs[grid * includes.length + i] = newSpecC.createSpec();
+                colSpecs.add(newSpecC.createSpec());
             }
         }
-        return new DataTableSpec(spec.getName(), colSpecs);
+        if (groupColumn != null) {
+            colSpecs.add(groupColumn);
+        }
+        DataColumnSpec[] columnArray =
+            colSpecs.toArray(new DataColumnSpec[colSpecs.size()]);
+        return new DataTableSpec(spec.getName(), columnArray);
+    }
+
+    private static String getUniqueColumn(final String baseName,
+            final Set<String> nameHash) {
+        String colName = baseName;
+        int uniquifier = 1;
+        while (!nameHash.add(colName)) {
+            colName = baseName + " (" + (uniquifier++) + ")";
+        }
+        return colName;
     }
 
     /** {@inheritDoc} */
@@ -252,6 +326,42 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
     static final SettingsModelIntegerBounded createGridColCountModel() {
         return new SettingsModelIntegerBounded(
                 "grid_col_count", 4, 1, Integer.MAX_VALUE);
+    }
+
+    private static final class PushBackRowIterator extends RowIterator {
+
+        private final RowIterator m_delegate;
+        private DataRow m_lastReturned;
+        /**
+         *
+         */
+        PushBackRowIterator(final RowIterator delegate) {
+            m_delegate = delegate;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return m_lastReturned != null || m_delegate.hasNext();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public DataRow next() {
+            if (m_lastReturned != null) {
+                DataRow lastReturned = m_lastReturned;
+                m_lastReturned = null;
+                return lastReturned;
+            } else {
+                return m_delegate.next();
+            }
+        }
+
+        public void pushBack(final DataRow row) {
+            m_lastReturned = row;
+        }
+
+
     }
 
 }
