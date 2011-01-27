@@ -89,6 +89,14 @@ public final class BooleanCell extends DataCell implements BooleanValue,
     /** FALSE instance. */
     public static final BooleanCell FALSE = new BooleanCell(false);
 
+    /** Get singleton instance for given value.
+     * @param value The value
+     * @return the cell instance representing the value
+     */
+    public static final BooleanCell get(final boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
     /**
      * Convenience access member for
      * <code>DataType.getType(BooleanCell.class)</code>.
