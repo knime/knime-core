@@ -150,13 +150,13 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository) {
-        this(progMon, node, policy, tableRepository, 
+        this(progMon, node, policy, tableRepository,
                 new HashMap<Integer, ContainerTable>());
     }
-    
+
     /** Creates execution context with all required arguments. It's used
      * internally to also provided the execution context local table repository.
-     * 
+     *
      * @param progMon see other constructor.
      * @param node see other constructor.
      * @param policy see other constructor.
@@ -505,6 +505,10 @@ public class ExecutionContext extends ExecutionMonitor {
         return m_localTableRepository;
     }
 
+    /** @return the node */
+    Node getNode() {
+        return m_node;
+    }
 
     /**
      * Submits a job to an executor, which can be a threaded one, a cluster
