@@ -87,7 +87,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.util.MutableBoolean;
 
-
 /**
  * DataTable implementation that is passed along the KNIME workflow. This
  * implementation is provided in a NodeModel's
@@ -184,7 +183,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /** Creates a new buffered data table based on a changed columns table
-     * (only memorize rows that changed).
+     * (only memorize columns that changed).
      * @param table The reference.
      */
     BufferedDataTable(final RearrangeColumnsTable table) {
@@ -223,10 +222,27 @@ public final class BufferedDataTable implements DataTable, PortObject {
         this(table, generateNewID());
     }
 
+    /**
+     * Creates a new BufferedDataTable for an extended table type.
+     * @param table The extended table
+     */
+    BufferedDataTable(final ExtensionTable table) {
+        this(table, generateNewID());
+    }
+
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
         assert id <= LAST_ID.get() : "Table identifiers not unique";
         m_tableID = id;
+    }
+
+    /** Package scope getter for underlying table implementation. Only needed
+     * if underlying table is of special kind and can be treated differently/
+     * more efficiently by individual node implementations.
+     * @return underlying table.
+     */
+    /*package*/ KnowsRowCountTable getDelegate() {
+        return m_delegate;
     }
 
     /** Called after execution of node has finished to put the tables that
@@ -399,6 +415,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
     private static final String TABLE_TYPE_JOINED = "joined_table";
+    private static final String TABLE_TYPE_EXTENSION = "extension_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     private static final String TABLE_DESCRIPTION_FILE = "data.xml";
@@ -429,9 +446,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_WRAPPED);
             } else if (m_delegate instanceof JoinedTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_JOINED);
-            } else {
-                assert m_delegate instanceof ConcatenateTable;
+            } else if (m_delegate instanceof ConcatenateTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONCATENATE);
+            } else {
+                assert m_delegate instanceof ExtensionTable;
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_EXTENSION);
             }
             BufferedDataTable[] references = m_delegate.getReferenceTables();
             ArrayList<String> referenceDirs = new ArrayList<String>();
@@ -578,11 +597,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                             fileRef, spec, id, bufferRep);
             }
             t = new BufferedDataTable(fromContainer, id);
-        } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
-                || (tableType.equals(TABLE_TYPE_NEW_SPEC))
-                || (tableType.equals(TABLE_TYPE_WRAPPED))
-                || (tableType.equals(TABLE_TYPE_JOINED))
-                || (tableType.equals(TABLE_TYPE_CONCATENATE))) {
+        } else {
             String[] referenceDirs;
             // in version 1.2.x and before there was one reference table at most
             // (no concatenate table in those versions)
@@ -615,7 +630,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             } else if (tableType.equals(TABLE_TYPE_WRAPPED)) {
                 WrappedTable wt = WrappedTable.load(s, tblRep);
                 t = new BufferedDataTable(wt);
-            } else {
+            } else if (tableType.equals(TABLE_TYPE_NEW_SPEC)) {
                 TableSpecReplacerTable replTable;
                 if (isVersion11x) {
                     replTable = TableSpecReplacerTable.load11x(
@@ -624,10 +639,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     replTable = TableSpecReplacerTable.load(s, spec, tblRep);
                 }
                 t = new BufferedDataTable(replTable);
+            } else if (tableType.equals(TABLE_TYPE_EXTENSION)) {
+                ExtensionTable et = ExtensionTable.loadExtensionTable(
+                        fileRef, spec, s, tblRep, exec);
+                t = new BufferedDataTable(et);
+            } else {
+                throw new InvalidSettingsException("Unknown table identifier: "
+                        + tableType);
             }
-        } else {
-            throw new InvalidSettingsException("Unknown table identifier: "
-                    + tableType);
         }
         t.m_tableID = id;
         tblRep.put(id, t);
@@ -740,6 +759,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          */
         void removeFromTableRepository(
                 final HashMap<Integer, ContainerTable> rep);
+
     }
 
     /**
@@ -754,6 +774,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
             // the table is restored from disk, so let's help here and do the
             // copy in this non-UI thread
             ensureOpen();
+        }
+        if (m_delegate instanceof ExtensionTable) {
+            JComponent[] views = ((ExtensionTable)m_delegate).getViews(this);
+            if (views != null && views.length > 0) {
+                return views;
+            }
         }
         return new JComponent[] {new BufferedDataTableView(this)};
     }
