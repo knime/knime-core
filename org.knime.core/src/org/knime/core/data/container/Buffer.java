@@ -1181,8 +1181,7 @@ class Buffer implements KNIMEStreamConstants {
         }
         @SuppressWarnings("unchecked")
         DataCellSerializer<DataCell> serializer =
-            (DataCellSerializer<DataCell>)DataType.getCellSerializer(
-                    cellClass.getCellClass());
+            (DataCellSerializer<DataCell>)cellClass.getSerializer();
         if (!m_typeShortCuts.containsKey(cellClass)) {
             int size = m_typeShortCuts.size();
             if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {

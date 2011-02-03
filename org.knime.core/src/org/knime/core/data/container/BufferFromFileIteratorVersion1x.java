@@ -246,7 +246,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             }
         } else {
             DataCellSerializer<? extends DataCell> serializer =
-                DataType.getCellSerializer(cellClass);
+                type.getSerializer();
             assert serializer != null;
             return inStream.readDataCell(serializer);
         }
@@ -275,9 +275,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             }
         } else {
             CellClassInfo type = m_buffer.getTypeForChar(identifier);
-            Class<? extends DataCell> cellClass = type.getCellClass(); 
             DataCellSerializer<? extends DataCell> serializer =
-                DataType.getCellSerializer(cellClass);
+                type.getSerializer();
             assert serializer != null;
             try {
                 return inStream.readDataCell(serializer);
@@ -364,8 +363,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             in = new GZIPInputStream(in);
         }
         Class<? extends DataCell> cellClass = cl.getCellClass();
-        DataCellSerializer<? extends DataCell> ser =
-            DataType.getCellSerializer(cellClass);
+        DataCellSerializer<? extends DataCell> ser = cl.getSerializer();
         InputStream inStream = null;
         BlobDataCell result;
         try {

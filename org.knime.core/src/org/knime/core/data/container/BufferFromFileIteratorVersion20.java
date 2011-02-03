@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 8, 2008 (wiswedel): created
  */
@@ -67,24 +67,24 @@ import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.node.NodeLogger;
 
 /**
- * File iterator to read stream written by a {@link Buffer}. 
+ * File iterator to read stream written by a {@link Buffer}.
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BufferFromFileIteratorVersion20.class);
-    
+
     /** Associated buffer. */
     private final Buffer m_buffer;
-    
+
     /** Row pointer. */
     private int m_pointer;
-    
+
     /** Content of the rows that get returned in {@link #next()} when the
      * table is {@link #close()}'d. Will be instantiated lazy. */
     private DataCell[] m_missingCellsForClosedTable;
-    
+
     /** If an exception has been thrown while reading from this buffer (only
      * if it has been written to disc). If so, further error messages are
      * only written to debug output in order to reduce message spam on the
@@ -93,7 +93,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
 
     /** Stream to read from. */
     private DCObjectInputVersion2 m_inStream;
-    
+
     /** Utility object with designated functionality to deserialize datacell. */
     private DataCellStreamReader m_dataCellStreamReader;
 
@@ -109,7 +109,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         }
         m_buffer = buffer;
         assert m_buffer.getReadVersion() >= 6 : "Iterator is not backward "
-            + "compatible, use instead " 
+            + "compatible, use instead "
             + BufferFromFileIteratorVersion1x.class.getSimpleName();
         BufferedInputStream bufferedStream =
             new BufferedInputStream(new FileInputStream(buffer.getBinFile()));
@@ -147,12 +147,12 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         if (inStream == null) { // iterator was closed
             if (m_missingCellsForClosedTable == null) {
                 m_missingCellsForClosedTable = new DataCell[colCount];
-                Arrays.fill(m_missingCellsForClosedTable, 
+                Arrays.fill(m_missingCellsForClosedTable,
                         DataType.getMissingCell());
                 LOGGER.warn("Invalid access on table, "
                         + "iterator has been closed");
             }
-            RowKey key = new RowKey("INVALID_ROW (table is closed) - (Row " 
+            RowKey key = new RowKey("INVALID_ROW (table is closed) - (Row "
                     + m_pointer + ")");
             m_pointer++;
             return new BlobSupportDataRow(key, m_missingCellsForClosedTable);
@@ -195,10 +195,10 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         }
         return new BlobSupportDataRow(key, cells);
     }
-    
+
     /** Reads a row key from the stream and ends the block. In case of buffers
      * that don't persist their row keys ({@link NoKeyBuffer}), it returns
-     * a static key. 
+     * a static key.
      * @param inStream To read from
      * @return The row key as read right from the stream.
      * @throws IOException If reading fails for IO problems.
@@ -217,8 +217,8 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
 
     /** Handle exceptions, make sure to issue errors only once. */
     private void handleReadThrowable(final Throwable throwable) {
-        String warnMessage = "Errors while reading row " + (m_pointer + 1) 
-            + " from file \"" + m_buffer.getBinFile().getName() + "\": " 
+        String warnMessage = "Errors while reading row " + (m_pointer + 1)
+            + " from file \"" + m_buffer.getBinFile().getName() + "\": "
             + throwable.getMessage();
         if (!m_hasThrownReadException) {
             warnMessage = warnMessage.concat(
@@ -238,7 +238,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         }
         m_hasThrownReadException = true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     synchronized boolean performClose() throws IOException {
@@ -266,23 +266,23 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
          * when the VM closes. */
         close();
     }
-    
+
     /** Utility class that separates the logic of reading DataCells from the
      * stream. It is a separate class since the same logic is also used to read
      * files containing blob cells. */
     static class DataCellStreamReader {
-        
+
         /** Associated buffer. */
         private final Buffer m_buffer;
-        
-        /** Only memorizes the buffer. 
+
+        /** Only memorizes the buffer.
          * @param buffer associated buffer. */
         DataCellStreamReader(final Buffer buffer) {
             m_buffer = buffer;
         }
-        
-        /** Reads a data cell from the argument stream. Does not exception 
-         * handling, nor stream blocking. 
+
+        /** Reads a data cell from the argument stream. Does not exception
+         * handling, nor stream blocking.
          * @param inStream To read from.
          * @return the data cell being read
          * @throws IOException If exceptions occur.
@@ -300,7 +300,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 identifier = inStream.readControlByte();
             }
             CellClassInfo type = m_buffer.getTypeForChar(identifier);
-            Class<? extends DataCell> cellClass = type.getCellClass(); 
+            Class<? extends DataCell> cellClass = type.getCellClass();
             boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             if (isBlob) {
                 BlobAddress address = inStream.readBlobAddress();
@@ -322,12 +322,12 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 return inStream.readDataCellPerJavaSerialization();
             } else {
                 DataCellSerializer<? extends DataCell> serializer =
-                    DataType.getCellSerializer(cellClass);
+                    type.getSerializer();
                 assert serializer != null;
                 return inStream.readDataCellPerKNIMESerializer(serializer);
             }
         }
-        
+
         /**
          * Reads the blob from the given blob address.
          * @param blobAddress The address to read from.
@@ -338,8 +338,8 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         BlobDataCell readBlobDataCell(final BlobAddress blobAddress,
                 final CellClassInfo cl) throws IOException {
             Buffer buffer = m_buffer;
-            assert buffer.getBufferID() == blobAddress.getBufferID() 
-                : "Buffer IDs don't match: " + buffer.getBufferID() + " vs. " 
+            assert buffer.getBufferID() == blobAddress.getBufferID()
+                : "Buffer IDs don't match: " + buffer.getBufferID() + " vs. "
                 + blobAddress.getBufferID();
             int column = blobAddress.getColumn();
             int indexInColumn = blobAddress.getIndexOfBlobInColumn();
@@ -354,17 +354,16 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 in = new BufferedInputStream(in);
             }
             Class<? extends DataCell> cellClass = cl.getCellClass();
-            DataCellSerializer<? extends DataCell> ser =
-                DataType.getCellSerializer(cellClass);
-            DCObjectInputVersion2 inStream = 
+            DataCellSerializer<? extends DataCell> ser = cl.getSerializer();
+            DCObjectInputVersion2 inStream =
                 new DCObjectInputVersion2(in, this);
             BlobDataCell result;
             try {
                 if (ser != null) {
-                    // the DataType class will reject Serializer that do not 
+                    // the DataType class will reject Serializer that do not
                     // have the appropriate return type
                     result = (BlobDataCell)
-                        inStream.readDataCellPerKNIMESerializer(ser); 
+                        inStream.readDataCellPerKNIMESerializer(ser);
                 } else {
                     inStream.setCurrentClassLoader(cellClass.getClassLoader());
                     result = (BlobDataCell)
@@ -377,7 +376,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 inStream.close();
             }
         }
-        
+
     } // class DataCellStreamReader
-    
+
 }
