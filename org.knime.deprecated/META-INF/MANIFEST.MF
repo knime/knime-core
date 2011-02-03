@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Deprecated Nodes
 Bundle-SymbolicName: org.knime.deprecated;singleton:=true
-Bundle-Version: 2.3.1.qualifier
+Bundle-Version: 2.3.2.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Fragment-Host: org.knime.base;bundle-version="2.2.0"
 Export-Package: org.knime.base.node.io.filereader,
