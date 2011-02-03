@@ -436,6 +436,9 @@ public abstract class NodeModel {
         assert (exec != null);
 
         setWarningMessage(null);
+        // loops that override the resetAndConfigureLoopBody will not
+        // call reset between successive executions, force clear here
+        setHasContent(false);
 
         // check for compatible input PortObjects
         for (int i = 0; i < data.length; i++) {
@@ -662,12 +665,9 @@ public abstract class NodeModel {
             String name = t.getClass().getSimpleName();
             m_logger.coding("Reset failed due to a " + name, t);
         } finally {
-            // set state to not executed and not configured
-            m_hasContent = false;
             // reset these property handlers
             resetHiLiteHandlers();
-            // and notify all views
-            stateChanged();
+            setHasContent(false); // also fires stateChanged()
         }
     }
 
@@ -1273,13 +1273,13 @@ public abstract class NodeModel {
     // the loop specific stuff? Later...
     //
     //////////////////////////////////////////
-    
+
     /** Informs WorkflowManager after execute to continue the loop.
      * Call by the end of the loop! This will result in both
      * this Node as well as the creator of the FlowLoopContext to be
      * queued for execution once again. In this case the node can return
      * an empty table after execution.
-     * 
+     *
      * Called on LoopTail Node's only.
      */
     protected final void continueLoop() {
@@ -1298,7 +1298,7 @@ public abstract class NodeModel {
         // note that the WFM will set the tail ID so we can retrieve it
         // in the head node!
     }
-    
+
     /** Informs WorkflowManager if the nodes inside the loop (= the loop
      * body) have to be reset & configured inbetween iterations. Default
      * behavior is to reset/configure everytime.
@@ -1316,13 +1316,13 @@ public abstract class NodeModel {
     final void clearLoopContext() {
         m_loopContext = null;
     }
-    
+
     private boolean m_pauseAfterNextExecution = false;
-    
+
     final void setPauseLoopExecution(final boolean ple) {
         m_pauseAfterNextExecution = ple;
     }
-    
+
     final boolean getPauseLoopExecution() {
         return m_pauseAfterNextExecution;
     }
