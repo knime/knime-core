@@ -330,7 +330,8 @@ public class PMMLSVMPortObject extends PMMLPortObject {
 
         handler.startElement(null, null, "VectorDictionary", atts);
         atts = new AttributesImpl();
-        atts.addAttribute(null, null, "numberOfFields", CDATA, "" + 1);
+        atts.addAttribute(null, null, "numberOfFields", CDATA, ""
+                + colNames.size());
         handler.startElement(null, null, "VectorFields", atts);
         for (String colname : colNames) {
             atts = new AttributesImpl();
