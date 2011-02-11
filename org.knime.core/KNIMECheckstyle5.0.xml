@@ -129,7 +129,9 @@
             <property name="tokens" value="METHOD_DEF"/>
         </module>
     </module>
-    <module name="JavadocPackage"/>
+    <module name="JavadocPackage">
+        <property name="allowLegacy" value="true"/>
+    </module>
     <module name="NewlineAtEndOfFile">
         <property name="severity" value="ignore"/>
     </module>
