@@ -62,8 +62,20 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.AbstractConfigEntry;
+import org.knime.core.node.config.base.ConfigBase;
+import org.knime.core.node.config.base.ConfigBooleanEntry;
+import org.knime.core.node.config.base.ConfigByteEntry;
+import org.knime.core.node.config.base.ConfigCharEntry;
+import org.knime.core.node.config.base.ConfigDoubleEntry;
+import org.knime.core.node.config.base.ConfigEntries;
+import org.knime.core.node.config.base.ConfigFloatEntry;
+import org.knime.core.node.config.base.ConfigIntEntry;
+import org.knime.core.node.config.base.ConfigLongEntry;
+import org.knime.core.node.config.base.ConfigShortEntry;
+import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -89,8 +101,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * @return a new object of this class.
      * @throws InvalidSettingsException If setting can't be parsed
      */
-    public static ConfigEditTreeModel create(final Config settingsTree,
-            final Config variableTree) throws InvalidSettingsException {
+    public static ConfigEditTreeModel create(final ConfigBase settingsTree,
+            final ConfigBase variableTree) throws InvalidSettingsException {
         ConfigEditTreeModel result = create(settingsTree);
         result.getRoot().readVariablesFrom(variableTree, false);
         return result;
@@ -101,7 +113,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * @param settingsTree to be parsed.
      * @return a new object of this class.
      */
-    public static ConfigEditTreeModel create(final Config settingsTree) {
+    public static ConfigEditTreeModel create(final ConfigBase settingsTree) {
         ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree);
         recursiveAdd(rootNode, settingsTree);
         ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
@@ -111,14 +123,14 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
     /** Recursive construction of tree. */
     private static void recursiveAdd(final ConfigEditTreeNode treeNode,
-            final Config configValue) {
+            final ConfigBase configValue) {
         assert (configValue == treeNode.getUserObject().m_configEntry);
         for (String s : configValue.keySet()) {
             AbstractConfigEntry childValue = configValue.getEntry(s);
             ConfigEditTreeNode childTreeNode =
                 new ConfigEditTreeNode(childValue);
             if (childValue.getType().equals(ConfigEntries.config)) {
-                recursiveAdd(childTreeNode, (Config)childValue);
+                recursiveAdd(childTreeNode, (ConfigBase)childValue);
             }
             treeNode.add(childTreeNode);
         }
@@ -129,13 +141,13 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * actual type) can be converted into a desired type. In short: string
      * accepts also double and integer, double accepts integer, integer only
      * accepts integer.
-     * 
+     *
      * @param desiredType The type that is requested.
      * @param actualType The actual type.
      * @return If a flow variable of type <code>actualType</code> can be
      * used to represent a flow variable of type <code>desiredType</code>.
      */
-    public static boolean doesTypeAccept(final Type desiredType, 
+    public static boolean doesTypeAccept(final Type desiredType,
             final Type actualType) {
         if (desiredType == null || actualType == null) {
             throw new NullPointerException("Arguments must not be null");
@@ -168,7 +180,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
 
     /** Write the mask to a config object (for storage in node settings object).
      * @param config To save to. */
-    public void writeVariablesTo(final Config config) {
+    public void writeVariablesTo(final ConfigBase config) {
         // false = do not write "model" as root
         getRoot().writeVariablesTo(config, false);
     }
@@ -192,8 +204,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     public ConfigEditTreeNode getRoot() {
         return (ConfigEditTreeNode)super.getRoot();
     }
-    
-    /** Get the child tree node associated with the key path. 
+
+    /** Get the child tree node associated with the key path.
      * Returns null if there is no child.
      * @param keyPath The path the child.
      * @return the child (or a children's child) for the given key path.
@@ -267,7 +279,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     }
 
     /** Single Tree node implementation. */
-    public static final class ConfigEditTreeNode 
+    public static final class ConfigEditTreeNode
         extends DefaultMutableTreeNode {
 
         /** The tree model, which is null for all nodes accept for the root.
@@ -405,15 +417,15 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         private static final String CFG_EXPOSED_VALUE = "exposed_variable";
 
         /** Persistence method to restore the tree. */
-        private void readVariablesFrom(final Config variableTree,
+        private void readVariablesFrom(final ConfigBase variableTree,
                 final boolean readThisEntry) throws InvalidSettingsException {
-            Config subConfig;
+            ConfigBase subConfig;
             if (readThisEntry) {
                 String key = getConfigEntry().getKey();
                 if (!variableTree.containsKey(key)) {
                     return;
                 }
-                subConfig = variableTree.getConfig(key);
+                subConfig = variableTree.getConfigBase(key);
             } else {
                 subConfig = variableTree;
             }
@@ -429,15 +441,15 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         }
 
         /** Persistence method to save the tree. */
-        private void writeVariablesTo(final Config variableTree,
+        private void writeVariablesTo(final ConfigBase variableTree,
                 final boolean writeThisEntry) {
             if (!hasConfiguration()) {
                 return;
             }
-            Config subConfig;
+            ConfigBase subConfig;
             if (writeThisEntry) {
                 String key = getConfigEntry().getKey();
-                subConfig = variableTree.addConfig(key);
+                subConfig = variableTree.addConfigBase(key);
             } else {
                 subConfig = variableTree;
             }
@@ -728,7 +740,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                         + v.getType() + " (\"" + v + "\")");
             }
         }
-        
+
     }
 
     /** User object in tree node wrapping config entry, used variable name and

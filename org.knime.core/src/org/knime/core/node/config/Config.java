@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   19.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node.config;
 
@@ -57,19 +55,10 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
-import javax.swing.tree.TreeNode;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
@@ -98,6 +87,9 @@ import org.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.LongCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
+import org.knime.core.node.config.base.AbstractConfigEntry;
+import org.knime.core.node.config.base.ConfigBase;
+import org.knime.core.node.config.base.XMLConfig;
 import org.xml.sax.SAXException;
 
 import sun.misc.BASE64Decoder;
@@ -107,19 +99,17 @@ import sun.misc.BASE64Encoder;
  * Supports a mechanism to save settings by their type and a key. Furthermore,
  * it provides a method to recursively add new sub <code>Config</code> objects
  * to this Config object, which then results in a tree-like structure.
- *
  * <p>
- * This class provides several types of settings which are int, double, char,
- * short, byte, boolean, java.lang.String, java.lang.Class, DataCell, and
- * Config. For these supported elements, methods to add either a single or an
- * array or retrieve them back by throwing an
- * <code>InvalidSettingsException</code> or passing a default valid in advance
- * have been implemented.
+ * This class inherits all types from its super class ConfigBase and in addition
+ * DataCell, DataType, RowKey, and Config objects. For these supported elements,
+ * methods to add either a single or an  array or retrieve them back by throwing
+ * an <code>InvalidSettingsException</code> or passing a default valid in
+ * advance have been implemented.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class Config extends AbstractConfigEntry
-        implements Serializable, ConfigRO, ConfigWO {
+public abstract class Config extends ConfigBase
+        implements ConfigRO, ConfigWO {
 
     private static final long serialVersionUID = -1823858289784818403L;
 
@@ -129,13 +119,6 @@ public abstract class Config extends AbstractConfigEntry
     private static final String CFG_IS_NULL    = "is_null";
     private static final String CFG_DATA_CELL  = "datacell";
     private static final String CFG_DATA_CELL_SER = "datacell_serialized";
-
-    private final LinkedHashMap<String, AbstractConfigEntry> m_map;
-
-    private void put(final AbstractConfigEntry e) {
-        m_map.put(e.getKey(), e);
-        e.setParent(this); // (tg)
-    }
 
     /**
      * Interface for all registered <code>DataCell</code> objects.
@@ -166,6 +149,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addBoolean(CLASS.getSimpleName(),
                         ((BooleanCell) cell).getBooleanValue());
@@ -173,6 +157,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
             throws InvalidSettingsException {
                 boolean b = config.getBoolean(CLASS.getSimpleName());
@@ -191,6 +176,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addString(CLASS.getSimpleName(),
                         ((StringCell) cell).getStringValue());
@@ -198,6 +184,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new StringCell(config.getString(CLASS.getSimpleName()));
@@ -215,6 +202,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addDouble(CLASS.getSimpleName(),
                         ((DoubleCell) cell).getDoubleValue());
@@ -222,6 +210,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new DoubleCell(config.getDouble(CLASS.getSimpleName()));
@@ -239,6 +228,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addLong(CLASS.getSimpleName(),
                         ((LongCell) cell).getLongValue());
@@ -246,6 +236,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
             throws InvalidSettingsException {
                 return new LongCell(config.getLong(CLASS.getSimpleName()));
@@ -263,6 +254,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addInt(CLASS.getSimpleName(),
                         ((IntCell) cell).getIntValue());
@@ -270,6 +262,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return new IntCell(config.getInt(CLASS.getSimpleName()));
@@ -288,12 +281,14 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 ((DateAndTimeCell)cell).save(config);
             }
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
             throws InvalidSettingsException {
                 return DateAndTimeCell.load(config);
@@ -312,12 +307,14 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 // nothing to save here
             }
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 return DataType.getMissingCell();
@@ -339,6 +336,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 ComplexNumberCell ocell = (ComplexNumberCell) cell;
                 config.addDouble(CFG_REAL, ocell.getRealValue());
@@ -347,6 +345,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double r = config.getDouble(CFG_REAL);
@@ -370,6 +369,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyIntervalCell ocell =
                     (FuzzyIntervalCell) cell;
@@ -381,6 +381,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double minSupp = config.getDouble(CFG_MIN_SUPP);
@@ -406,6 +407,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyNumberCell ocell = (FuzzyNumberCell) cell;
                 config.addDouble(CFG_LEFT,  ocell.getMinSupport());
@@ -416,6 +418,7 @@ public abstract class Config extends AbstractConfigEntry
             /**
              * {@inheritDoc}
              */
+            @Override
             public DataCell createCell(final ConfigRO config)
                     throws InvalidSettingsException {
                 double left  = config.getDouble(CFG_LEFT);
@@ -460,8 +463,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key for this Config.
      */
     protected Config(final String key) {
-        super(ConfigEntries.config, key);
-        m_map = new LinkedHashMap<String, AbstractConfigEntry>(1, 0.8f);
+        super(key);
     }
 
     /**
@@ -470,7 +472,8 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The new Config's key.
      * @return A new instance of this Config.
      */
-    protected abstract Config getInstance(final String key);
+    @Override
+    public abstract Config getInstance(final String key);
 
     /**
      * Creates a new Config with the given key and returns it.
@@ -478,6 +481,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key An identifier.
      * @return A new Config object.
      */
+    @Override
     public final Config addConfig(final String key) {
         final Config config = getInstance(key);
         put(config);
@@ -508,224 +512,15 @@ public abstract class Config extends AbstractConfigEntry
      * @return A Config object.
      * @throws InvalidSettingsException If the key is not available.
      */
+    @Override
     public final Config getConfig(final String key)
-        throws InvalidSettingsException {
-        Object o = m_map.get(key);
+            throws InvalidSettingsException {
+        Object o = get(key);
         if (o == null || !(o instanceof Config)) {
             throw new InvalidSettingsException(
                     "Config for key \"" + key + "\" not found.");
         }
         return (Config) o;
-    }
-
-    /**
-     * Adds an int.
-     *
-     * @param key The key.
-     * @param value The int value.
-     */
-    public void addInt(final String key, final int value) {
-        put(new ConfigIntEntry(key, value));
-    }
-
-    /**
-     * Return int for key.
-     *
-     * @param key The key.
-     * @return A generic int.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public int getInt(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigIntEntry)) {
-            throw new InvalidSettingsException(
-                    "Int for key \"" + key + "\" not found.");
-        }
-        return ((ConfigIntEntry)o).getInt();
-    }
-
-    /**
-     * Adds a double by the given key.
-     *
-     * @param key The key.
-     * @param value The double value to add.
-     */
-    public void addDouble(final String key, final double value) {
-        put(new ConfigDoubleEntry(key, value));
-    }
-
-    /**
-     * Return double for key.
-     *
-     * @param key The key.
-     * @return A generic double.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public double getDouble(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigDoubleEntry)) {
-            throw new InvalidSettingsException(
-                    "Double for key \"" + key + "\" not found.");
-        }
-        return ((ConfigDoubleEntry)o).getDouble();
-    }
-
-    /**
-     * Adds a float by the given key.
-     *
-     * @param key The key.
-     * @param value The float value to add.
-     */
-    public void addFloat(final String key, final float value) {
-        put(new ConfigFloatEntry(key, value));
-    }
-
-    /**
-     * Return float for key.
-     *
-     * @param key The key.
-     * @return A generic float.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public float getFloat(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigFloatEntry)) {
-            throw new InvalidSettingsException(
-                    "Float for key \"" + key + "\" not found.");
-        }
-        return ((ConfigFloatEntry)o).getFloat();
-    }
-
-    /**
-     * Adds this char value to the Config by the given key.
-     *
-     * @param key The key.
-     * @param value The char to add.
-     */
-    public void addChar(final String key, final char value) {
-        put(new ConfigCharEntry(key, value));
-    }
-
-    /**
-     * Return char for key.
-     *
-     * @param key The key.
-     * @return A generic char.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public char getChar(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigCharEntry)) {
-            throw new InvalidSettingsException(
-                    "Char for key \"" + key + "\" not found.");
-        }
-        return ((ConfigCharEntry)o).getChar();
-    }
-
-    /**
-     * Adds this short value to the Config by the given key.
-     *
-     * @param key The key.
-     * @param value The short to add.
-     */
-    public void addShort(final String key, final short value) {
-        put(new ConfigShortEntry(key, value));
-    }
-
-    /**
-     * Return short for key.
-     *
-     * @param key The key.
-     * @return A generic short.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public short getShort(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigShortEntry)) {
-            throw new InvalidSettingsException(
-                    "Short for key \"" + key + "\" not found.");
-        }
-        return ((ConfigShortEntry)o).getShort();
-    }
-
-    /**
-     * Adds this long value to the Config by the given key.
-     *
-     * @param key The key.
-     * @param value The long to add.
-     */
-    public void addLong(final String key, final long value) {
-        put(new ConfigLongEntry(key, value));
-    }
-
-    /**
-     * Return long for key.
-     *
-     * @param key The key.
-     * @return A generic long.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public long getLong(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigLongEntry)) {
-            throw new InvalidSettingsException(
-                    "Long for key \"" + key + "\" not found.");
-        }
-        return ((ConfigLongEntry)o).getLong();
-    }
-
-
-    /**
-     * Adds this byte value to the Config by the given key.
-     *
-     * @param key The key.
-     * @param value The byte to add.
-     */
-    public void addByte(final String key, final byte value) {
-        put(new ConfigByteEntry(key, value));
-    }
-
-    /**
-     * Return byte for key.
-     *
-     * @param key The key.
-     * @return A generic byte.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public byte getByte(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigByteEntry)) {
-            throw new InvalidSettingsException(
-                    "Byte for key \"" + key + "\" not found.");
-        }
-        return ((ConfigByteEntry)o).getByte();
-    }
-
-    /**
-     * Adds this String object to the Config by the given key. The String can be
-     * null.
-     *
-     * @param key The key.
-     * @param value The boolean to add.
-     */
-    public void addString(final String key, final String value) {
-        put(new ConfigStringEntry(key, value));
-    }
-
-    /**
-     * Return String for key.
-     *
-     * @param key The key.
-     * @return A String object.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public String getString(final String key) throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigStringEntry)) {
-            throw new InvalidSettingsException(
-                    "String for key \"" + key + "\" not found.");
-        }
-        return ((ConfigStringEntry)o).getString();
     }
 
     /**
@@ -735,6 +530,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param cell The DataCell to add.
      */
+    @Override
     public void addDataCell(final String key, final DataCell cell) {
         ConfigWO config = addConfig(key);
         if (cell == null) {
@@ -768,6 +564,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param type The DataType object to add.
      */
+    @Override
     public void addDataType(final String key, final DataType type) {
         ConfigWO config = addConfig(key);
         if (type == null) {
@@ -785,6 +582,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return A DataCell.
      * @throws InvalidSettingsException If the key is not available.
      */
+    @Override
     public DataCell getDataCell(final String key)
             throws InvalidSettingsException {
         ConfigRO config = getConfig(key);
@@ -838,6 +636,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return A DataType.
      * @throws InvalidSettingsException If the key is not available.
      */
+    @Override
     public DataType getDataType(final String key)
             throws InvalidSettingsException {
         Config config = getConfig(key);
@@ -849,710 +648,6 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Returns an unmodifiable Set of keys in this Config.
-     *
-     * @return A Set of keys.
-     */
-    public Set<String> keySet() {
-        return Collections.unmodifiableSet(m_map.keySet());
-    }
-
-    /**
-     * @param otherConfig The other Config to check.
-     * @return true if both Config objects store identical entries.
-     */
-    @Override
-    public boolean hasIdenticalValue(final AbstractConfigEntry otherConfig) {
-
-        // this should be save as the super ensures identical classes
-        Config otherCfg = (Config)otherConfig;
-
-        if (this.m_map.size() != otherCfg.m_map.size()) {
-           return false;
-        }
-
-        for (String myKey : this.m_map.keySet()) {
-            // The other config must contain all keys we've stored.
-            if (!otherCfg.m_map.containsKey(myKey)) {
-                return false;
-            }
-            AbstractConfigEntry ce = this.m_map.get(myKey);
-            AbstractConfigEntry otherCe = otherCfg.m_map.get(myKey);
-            if (ce == null) {
-                if (otherCe != null) {
-                    return false;
-                }
-            } else {
-                // and must map an identical value with it.
-                if (!ce.isIdentical(otherCe)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-
-    }
-
-    /**
-     * Checks if this key for a particular type is in this Config.
-     *
-     * @param key The key.
-     * @return <b>true</b> if available, <b>false</b> if key is
-     *         <code>null</code> or not available.
-     */
-    public boolean containsKey(final String key) {
-        return m_map.containsKey(key);
-    }
-
-    /**
-     * Return boolean for key.
-     *
-     * @param key The key.
-     * @return A generic boolean.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public boolean getBoolean(final String key)
-            throws InvalidSettingsException {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigBooleanEntry)) {
-            throw new InvalidSettingsException(
-                    "Boolean for key \"" + key + "\" not found.");
-        }
-        return ((ConfigBooleanEntry)o).getBoolean();
-    }
-
-    /**
-     * Adds this boolean value to the Config by the given key.
-     *
-     * @param key The key.
-     * @param value The boolean to add.
-     */
-    public void addBoolean(final String key, final boolean value) {
-        put(new ConfigBooleanEntry(key, value));
-    }
-
-    /**
-     * Return int for key or the default value if not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic int.
-     */
-    public int getInt(final String key, final int def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigIntEntry)) {
-            return def;
-        }
-        return ((ConfigIntEntry)o).getInt();
-    }
-
-    /**
-     * Return int array which can be null for key, or the default array if the
-     * key is not available.
-     *
-     * @param key The key.
-     * @return An int array.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public int[] getIntArray(final String key) throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        int[] ret = new int[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getInt(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return int array which can be null for key, or the default array if the
-     * key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return An int array.
-     */
-    public int[] getIntArray(final String key, final int... def) {
-        try {
-            return getIntArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this int array to the Config by the given key.
-     *
-     * @param key The key.
-     * @param values The int array to add.
-     */
-    public void addIntArray(final String key, final int... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addInt(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return double for key or the default value if not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic double.
-     */
-    public double getDouble(final String key, final double def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigDoubleEntry)) {
-            return def;
-        }
-        return ((ConfigDoubleEntry)o).getDouble();
-    }
-
-    /**
-     * Return double array for key or the default value if not available.
-     *
-     * @param key The key.
-     * @return An array of double values.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public double[] getDoubleArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        double[] ret = new double[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getDouble(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return double array which can be null for key, or the default array if
-     * the key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A double array.
-     */
-    public double[] getDoubleArray(final String key, final double... def) {
-        try {
-            return getDoubleArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Return float for key or the default value if not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic float.
-     */
-    public float getFloat(final String key, final float def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigFloatEntry)) {
-            return def;
-        }
-        return ((ConfigFloatEntry)o).getFloat();
-    }
-
-    /**
-     * Return float array for key or the default value if not available.
-     *
-     * @param key The key.
-     * @return An array of float values.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public float[] getFloatArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        float[] ret = new float[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getFloat(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return float array which can be null for key, or the default array if
-     * the key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A float array.
-     */
-    public float[] getFloatArray(final String key, final float... def) {
-        try {
-            return getFloatArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this double array value to the Config by the given key. The array
-     * can be null.
-     *
-     * @param key The key.
-     * @param values The double array to add.
-     */
-    public void addDoubleArray(final String key, final double... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addDouble(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Adds this float array value to the Config by the given key. The array
-     * can be null.
-     *
-     * @param key The key.
-     * @param values The float array to add.
-     */
-    public void addFloatArray(final String key, final float... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addFloat(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return char for key or the default value if not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic char.
-     */
-    public char getChar(final String key, final char def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigCharEntry)) {
-            return def;
-        }
-        return ((ConfigCharEntry)o).getChar();
-    }
-
-    /**
-     * Return char array which can be null for key.
-     *
-     * @param key The key.
-     * @return A char array.
-     * @throws InvalidSettingsException If the the key is not available.
-     */
-    public char[] getCharArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        char[] ret = new char[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getChar(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return byte array which can be null for key, or the default value if not
-     * available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A byte array.
-     */
-    public byte[] getByteArray(final String key, final byte... def) {
-        try {
-            return getByteArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Return byte array which can be null for key.
-     *
-     * @param key The key.
-     * @return A byte array.
-     * @throws InvalidSettingsException If the the key is not available.
-     */
-    public byte[] getByteArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        byte[] ret = new byte[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getByte(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Adds this byte array to the Config by the given key. The array can be
-     * null.
-     *
-     * @param key The key.
-     * @param values The byte array to add.
-     */
-    public void addByteArray(final String key, final byte... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addByte(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return byte for key.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic byte.
-     */
-    public byte getByte(final String key, final byte def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigByteEntry)) {
-            return def;
-        }
-        return ((ConfigByteEntry)o).getByte();
-    }
-
-    /**
-     * Return a short array which can be null for key, or the default value if
-     * not available.
-     *
-     * @param key The key.
-     * @return A short array.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public short[] getShortArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        short[] ret = new short[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getShort(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return short array which can be null for key, or the default array if the
-     * key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A short array.
-     */
-    public short[] getShortArray(final String key, final short... def) {
-        try {
-            return getShortArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Return a long array which can be null for key, or the default value if
-     * not available.
-     *
-     * @param key The key.
-     * @return A long array.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public long[] getLongArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        long[] ret = new long[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getLong(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return long array which can be null for key, or the default array if the
-     * key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A long array.
-     */
-    public long[] getLongArray(final String key, final long... def) {
-        try {
-            return getLongArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this short array to the Config by the given key.
-     *
-     * @param key The key.
-     * @param values The short to add.
-     */
-    public void addShortArray(final String key, final short... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addShort(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return short value for key or the default if the key is not available.
-     *
-     * @param key The key.
-     * @param def The default values returned if the key is not available.
-     * @return A short value.
-     */
-    public short getShort(final String key, final short def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigShortEntry)) {
-            return def;
-        }
-        return ((ConfigShortEntry)o).getShort();
-    }
-
-    /**
-     * Adds this long array to the Config by the given key.
-     *
-     * @param key The key.
-     * @param values The long arry to add.
-     */
-    public void addLongArray(final String key, final long... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addLong(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return long value for key or the default if the key is not available.
-     *
-     * @param key The key.
-     * @param def The default values returned if the key is not available.
-     * @return A long value.
-     */
-    public long getLong(final String key, final long def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigLongEntry)) {
-            return def;
-        }
-        return ((ConfigLongEntry)o).getLong();
-    }
-
-    /**
-     * Return char array which can be null for key, or the default array if the
-     * key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A char array.
-     */
-    public char[] getCharArray(final String key, final char... def) {
-        try {
-            return getCharArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this char array to the Config by the given key.
-     *
-     * @param key The key.
-     * @param values The char array to add.
-     */
-    public void addCharArray(final String key, final char... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addChar(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return boolean for key or the default value if not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A generic boolean.
-     */
-    public boolean getBoolean(final String key, final boolean def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigBooleanEntry)) {
-            return def;
-        }
-        return ((ConfigBooleanEntry)o).getBoolean();
-    }
-
-    /**
-     * Return a boolean array for key which can be null.
-     *
-     * @param key The key.
-     * @return A boolean or null.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public boolean[] getBooleanArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        boolean[] ret = new boolean[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getBoolean(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return a boolean array which can be null for key, or the default value if
-     * not available.
-     *
-     * @param key The key.
-     * @param def Returned if no value available for the given key.
-     * @return A boolean array.
-     */
-    public boolean[] getBooleanArray(final String key, final boolean... def) {
-        try {
-            return getBooleanArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this boolean values to the Config by the given key. The array can be
-     * null.
-     *
-     * @param key The key.
-     * @param values The boolean array to add.
-     */
-    public void addBooleanArray(final String key, final boolean... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addBoolean(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
-     * Return String object which can be null, or the default array if the key
-     * is not available.
-     *
-     * @param key The key.
-     * @param def The default String returned if the key is not available.
-     * @return A String.
-     */
-    public String getString(final String key, final String def) {
-        Object o = m_map.get(key);
-        if (o == null || !(o instanceof ConfigStringEntry)) {
-            return def;
-        }
-        return ((ConfigStringEntry)o).getString();
-    }
-
-    /**
-     * Return String array which can be null for key.
-     *
-     * @param key The key.
-     * @return A String array.
-     * @throws InvalidSettingsException If the key is not available.
-     */
-    public String[] getStringArray(final String key)
-            throws InvalidSettingsException {
-        Config config = this.getConfig(key);
-        int size = config.getInt(CFG_ARRAY_SIZE, -1);
-        if (size == -1) {
-            return null;
-        }
-        String[] ret = new String[size];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getString(Integer.toString(i));
-        }
-        return ret;
-    }
-
-    /**
-     * Return String array which can be null for key, or the default array if
-     * the key is not available.
-     *
-     * @param key The key.
-     * @param def The default array returned if the key is not available.
-     * @return A String array.
-     */
-    public String[] getStringArray(final String key, final String... def) {
-        try {
-            return getStringArray(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
-    }
-
-    /**
-     * Adds this array of String object to the Config by the given key. The
-     * array and the elements can be null.
-     *
-     * @param key The key.
-     * @param values The String array to add.
-     */
-    public void addStringArray(final String key, final String... values) {
-        ConfigWO config = this.addConfig(key);
-        if (values != null) {
-            config.addInt(CFG_ARRAY_SIZE, values.length);
-            for (int i = 0; i < values.length; i++) {
-                config.addString(Integer.toString(i), values[i]);
-            }
-        }
-    }
-
-    /**
      * Return a DataCell which can be null, or the default value if the key is
      * not available.
      *
@@ -1560,6 +655,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default value, returned id the key is not available.
      * @return A DataCell object.
      */
+    @Override
     public DataCell getDataCell(final String key, final DataCell def) {
         try {
             return getDataCell(key);
@@ -1576,6 +672,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def Returned if no value available for the given key.
      * @return A DataType object or null, or the def value. generic boolean.
      */
+    @Override
     public DataType getDataType(final String key, final DataType def) {
         try {
             return getDataType(key);
@@ -1591,6 +688,7 @@ public abstract class Config extends AbstractConfigEntry
      * @return A DataCell array.
      * @throws InvalidSettingsException If the the key is not available.
      */
+    @Override
     public DataCell[] getDataCellArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
@@ -1613,6 +711,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param def The default array returned if the key is not available.
      * @return A char array.
      */
+    @Override
     public DataCell[] getDataCellArray(final String key,
             final DataCell... def) {
         try {
@@ -1703,6 +802,7 @@ public abstract class Config extends AbstractConfigEntry
      * @throws InvalidSettingsException The the object is not available for the
      *             given key.
      */
+    @Override
     public DataType[] getDataTypeArray(final String key)
             throws InvalidSettingsException {
         Config config = this.getConfig(key);
@@ -1725,6 +825,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param v The default array, returned if no entry available for the key.
      * @return An array of DataType objects.
      */
+    @Override
     public DataType[] getDataTypeArray(final String key, final DataType... v) {
         try {
             return getDataTypeArray(key);
@@ -1740,6 +841,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The data cells, elements can be null.
      */
+    @Override
     public void addDataCellArray(final String key, final DataCell... values) {
         ConfigWO config = this.addConfig(key);
         if (values != null) {
@@ -1757,6 +859,7 @@ public abstract class Config extends AbstractConfigEntry
      * @param key The key.
      * @param values The data types, elements can be null.
      */
+    @Override
     public void addDataTypeArray(final String key, final DataType... values) {
         ConfigWO config = this.addConfig(key);
         if (values != null) {
@@ -1768,47 +871,13 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Returns Config entry for a key.
-     *
-     * @param key The key.
-     * @return The Config entry for the key.
-     */
-    AbstractConfigEntry getEntry(final String key) {
-        return m_map.get(key);
-    }
-
-    /**
      * Adds the given Config entry to this Config.
      *
      * @param entry The Config entry to add.
      */
-    void addEntry(final AbstractConfigEntry entry) {
-        put(entry);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final Iterator<String> iterator() {
-        return keySet().iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public final String toStringValue() {
-        return super.getKey();
-    }
-
-    /**
-     * Adds this and all children String representations to the given buffer.
-     * @param buf The string buffer to which this Config's String all all
-     *        children String representation is added.
-     */
-    public final void toString(final StringBuffer buf) {
-        toString(0, buf);
-        buf.trimToSize();
+    public void addEntry(final AbstractConfigEntry entry) {
+        put(entry);
     }
 
     /**
@@ -1819,59 +888,7 @@ public abstract class Config extends AbstractConfigEntry
         return super.getKey();
     }
 
-    private static final int TAB_SIZE = 2;
-
-    private static final String SPACE = " ";
-    private static final String KEYEQ = "key=";
-    private static final String COMMA_TYPEEQ = ",type=";
-    private static final String LINE_BREAK = "\n";
-    private static final String DOT_LINE_BREAK = ":\n";
-    private static final String ARROW_NULL = "->null";
-    private static final String ARROW = "->";
-
-    private void toString(final int indent, final StringBuffer sb) {
-        assert (indent >= 0);
-        sb.ensureCapacity(1000);
-        for (String key : m_map.keySet()) {
-            for (int t = 0; t < indent * TAB_SIZE; t++) {
-                sb.append(SPACE);
-            }
-            AbstractConfigEntry e = getEntry(key);
-            sb.append(KEYEQ);
-            sb.append(key);
-            sb.append(COMMA_TYPEEQ);
-            sb.append(e.getType());
-            if (e instanceof Config) {
-                int myindent = indent;
-                sb.append(DOT_LINE_BREAK);
-                Config ms = (Config)e;
-                ms.toString(++myindent, sb);
-            } else {
-                String value = e.toStringValue();
-                if (value == null) {
-                    sb.append(ARROW_NULL);
-                } else {
-                    sb.append(ARROW);
-                    sb.append(value);
-                }
-                sb.append(LINE_BREAK);
-            }
-        }
-    }
-
     /* --- write and read from file --- */
-
-    /**
-     * Writes this Config into the given stream.
-     *
-     * @param oos Write Config to this stream.
-     * @throws IOException If the file can not be accessed.
-     */
-    public final void writeToFile(final ObjectOutputStream oos)
-            throws IOException {
-        oos.writeObject(this);
-        oos.close();
-    }
 
     /**
      * Creates new Config from the given file using the serialized object
@@ -1892,21 +909,6 @@ public abstract class Config extends AbstractConfigEntry
             e.initCause(cnfe);
             throw e;
         }
-    }
-
-    /**
-     * Writes this Config to the given stream as XML. The stream will be closed
-     * when finished.
-     *
-     * @param os The stream to write into.
-     * @throws IOException If this Config could be stored to the stream.
-     */
-    public final void saveToXML(final OutputStream os)
-            throws IOException {
-        if (os == null) {
-            throw new NullPointerException();
-        }
-        XMLConfig.save(this, os);
     }
 
     /**
@@ -1932,7 +934,8 @@ public abstract class Config extends AbstractConfigEntry
      * @param is The XML inputstream storing the configuration to read
      * @throws IOException If the stream could not be read.
      */
-    protected void load(final InputStream is) throws IOException {
+    @Override
+    public void load(final InputStream is) throws IOException {
         try {
             XMLConfig.load(this, is);
         } catch (SAXException se) {
@@ -2017,86 +1020,4 @@ public abstract class Config extends AbstractConfigEntry
         return ois.readObject();
     }
 
-
-
-    /**
-     * Makes a deep copy of this Config and all sub-configs.
-     *
-     * @param dest the destination this Config object is copied to.
-     */
-    public void copyTo(final ConfigWO dest) {
-        for (Map.Entry<String, AbstractConfigEntry> e : m_map.entrySet()) {
-            AbstractConfigEntry ace = e.getValue();
-            if (ace instanceof Config) {
-                Config config = dest.addConfig(ace.getKey());
-                ((Config) ace).copyTo(config);
-            } else {
-                ((Config) dest).addEntry(ace);
-            }
-        }
-    }
-
-    // tree node methods
-
-    /**
-     * The TreeNode for the given index.
-     * @param childIndex The index to retrieve the TreeNode for.
-     * @return The associated TreeNode.
-     */
-    @Override
-    public TreeNode getChildAt(final int childIndex) {
-        Iterator<String> it = m_map.keySet().iterator();
-        for (int i = 0; i < childIndex; i++) {
-            it.next();
-        }
-        TreeNode node = m_map.get(it.next());
-        return node;
-    }
-
-    /**
-     * @return The number of entries in this Config.
-     * @see javax.swing.tree.TreeNode#getChildCount()
-     */
-    @Override
-    public int getChildCount() {
-        return m_map.size();
-    }
-
-    /**
-     * Returns the index for a given TreeNode.
-     * @param node The TreeNode to get the index for.
-     * @return The index of the given node.
-     * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
-     */
-    @Override
-    public int getIndex(final TreeNode node) {
-        int i = 0;
-        for (Map.Entry<String, AbstractConfigEntry> e : m_map.entrySet()) {
-            if (e.getValue().equals(node)) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
-    }
-
-    /**
-     * @return true, only if the map is empty.
-     * @see javax.swing.tree.TreeNode#isLeaf()
-     */
-    @Override
-    public final boolean isLeaf() {
-        return m_map.isEmpty();
-    }
-
-    /**
-     * An enumeration of a values.
-     * @return All elements of this Config.
-     * @see javax.swing.tree.TreeNode#children()
-     */
-    @Override
-    public final Enumeration<TreeNode> children() {
-        return new Vector<TreeNode>(m_map.values()).elements();
-    }
-
-} // Config
+}

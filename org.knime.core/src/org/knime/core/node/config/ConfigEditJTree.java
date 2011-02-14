@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 29, 2008 (wiswedel): created
  */
@@ -64,26 +64,26 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowObjectStack;
 
 /**
- * A tree implementation that allows one to overwrite certain node settings 
+ * A tree implementation that allows one to overwrite certain node settings
  * using flow variables.
- * 
+ *
  * <p>This class is not meant for public use.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ConfigEditJTree extends JTree {
-    
+
     /** Fallback model. */
     private static final ConfigEditTreeModel EMPTY_MODEL =
         ConfigEditTreeModel.create(new NodeSettings("empty"));
-    
+
     /** To get the available variables from. */
     private FlowObjectStack m_flowObjectStack;
-    
+
     /** Constructor for empty tree. */
     public ConfigEditJTree() {
         this(EMPTY_MODEL);
     }
-    
+
     /** Shows given tree model.
      * @param model The model to show. */
     public ConfigEditJTree(final ConfigEditTreeModel model) {
@@ -97,7 +97,7 @@ public class ConfigEditJTree extends JTree {
         setEditable(true);
         setToolTipText("config tree"); // enable tooltip
     }
-    
+
     /** Overwritten to fail on model implementations which are not of class
      * {@link ConfigEditTreeModel}.
      * {@inheritDoc} */
@@ -110,31 +110,31 @@ public class ConfigEditJTree extends JTree {
         super.setModel(newModel);
         expandAll();
     }
-    
+
     /** Expand the tree. */
     public void expandAll() {
         for (int i = 0; i < getRowCount(); i++) {
             expandRow(i);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ConfigEditTreeModel getModel() {
         return (ConfigEditTreeModel)super.getModel();
     }
-    
+
     /** @param foStack the flow object stack to set */
     public void setFlowObjectStack(final FlowObjectStack foStack) {
         m_flowObjectStack = foStack;
     }
-    
+
     /** @return the flow object Stack */
     public FlowObjectStack getFlowObjectStack() {
         return m_flowObjectStack;
     }
-    
-    /** Public testing method that displays a simple tree with no flow 
+
+    /** Public testing method that displays a simple tree with no flow
      * variable stack, though.
      * @param args command line args, ignored here. */
     public static void main(final String[] args) {

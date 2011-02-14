@@ -76,6 +76,7 @@ import javax.swing.border.Border;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
+import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowObjectStack;

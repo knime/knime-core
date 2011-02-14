@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2008 (wiswedel): created
  */
@@ -69,31 +69,31 @@ import org.knime.core.node.workflow.FlowObjectStack;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
-    
+
     private final ConfigEditTreeNodePanel m_panelFull;
     private final ConfigEditTreeNodePanel m_panelPlain;
     private ConfigEditTreeNodePanel m_active;
-    
+
     /** Only creates fields. */
     public ConfigEditTreeRenderer() {
         m_panelFull = new ConfigEditTreeNodePanel(true);
         m_panelPlain = new ConfigEditTreeNodePanel(false);
         m_active = m_panelPlain;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Component getTreeCellRendererComponent(
-            final JTree tree, final Object value, final boolean isSelected, 
+            final JTree tree, final Object value, final boolean isSelected,
             final boolean expanded, final boolean leaf, final int row,
             final boolean isFocused) {
         setValue(tree, value);
         return super.getTreeCellRendererComponent(
                 tree, value, isSelected, expanded, leaf, row, isFocused);
     }
-    
+
     /** Called whenever a new value is to be renderer, updates underlying
-     * component. 
+     * component.
      * @param tree The associated tree (get the flow object stack from.)
      * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
@@ -117,12 +117,13 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         setClosedIcon(m_active.getIcon());
         setToolTipText(m_active.getToolTipText());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void setText(final String text) {
+        // empty
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Dimension getPreferredSize() {
@@ -135,14 +136,14 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         int height = 4 + Math.max(r.height, panelSize.height);
         return new Dimension(width, height);
     }
-    
+
     private final Rectangle m_rectangle = new Rectangle();
-    
+
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
         Insets ins = getInsets();
-        int iconWidth = getIcon() != null 
+        int iconWidth = getIcon() != null
             ? getIcon().getIconWidth() + 2 * getIconTextGap() : 0;
         int x = ins.left + iconWidth;
         int y = ins.top;
@@ -152,11 +153,11 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         Dimension d = new Dimension(width, height);
         m_active.setSize(d);
         m_active.validate();
-        m_active.setBackground(selected ? getBackgroundSelectionColor() 
+        m_active.setBackground(selected ? getBackgroundSelectionColor()
                 : getBackgroundNonSelectionColor());
         SwingUtilities.paintComponent(g, m_active, this, m_rectangle);
         super.paintComponent(g);
     }
-    
+
 
 }

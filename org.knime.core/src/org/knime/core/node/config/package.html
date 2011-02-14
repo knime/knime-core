@@ -50,13 +50,11 @@
 -->
 </head>
 <body>
-Contains a utility class {@link org.knime.core.node.config.Config} to store 
+Contains a utility class {@link org.knime.core.node.config.BaseConfig} to store 
 a general state (i.e. the user settings of all nodes, workflows, prediction 
 models, etc.) in form of key-value pairs. The key is always a string, the value 
-can be of type DataCell, DataType, and almost all generic types, and also another 
-<code>Config</code> object in order to build hierarchical state structures.<br>
-All entries extend {@link org.knime.core.node.config.AbstractConfigEntry},
-which provides a string representation of the value that can be serialized and 
-written out as XML stream to file. 
+can be most of the generic types, and also another <code>ConfigBase</code> 
+object in order to build hierarchical state 
+structures.
 </body>
 </html>
