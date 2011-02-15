@@ -749,6 +749,27 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     protected abstract NodeDialogPane createNodeDialogPane();
 
+//    /**
+//     * Create a configuration template for this node. Subclasses will overwrite
+//     * this method (added in v2.4, therefore not abstract!), register all
+//     * configuration parameters in the argument {@link ConfigRegistry} and
+//     * initialize a {@link NodeConfiguration} object with the pre-setup config
+//     * registry.
+//     *
+//     * @param registry The registry object to which client code needs to add
+//     *        valid parameters. These parameters (and only these) can later
+//     *        be accessed in the derived {@link NodeModel} implementation by
+//     *        calling {@link NodeModel#getNodeConfiguration()} and then reading
+//     *        the assigned values by one of the get methods.
+//     * @return A new {@link NodeConfiguration} object based on the argument
+//     *         registry, which has all node configuration parameters registered.
+//     */
+//    // to be made protected
+//    NodeConfiguration createNodeConfiguration(
+//            final ConfigRegistry registry) {
+//        return null;
+//    }
+
     /**
      * Returns the icon for the node.
      *

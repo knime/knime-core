@@ -497,6 +497,26 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+//    /** Calls {@link NodeFactory#createNodeConfiguration(ConfigRegistry)} and
+//     * returns it.
+//     * @return The config as defined by the factory.
+//     */
+//    // to be made private
+//    NodeConfiguration createNewEmptyNodeConfiguration() {
+//        ConfigRegistry configReg = ConfigRegistry.internalCreateNew("node");
+//        NodeConfiguration nc;
+//        try {
+//            nc = m_factory.createNodeConfiguration(configReg);
+//        } catch (final Exception e) {
+//            m_logger.coding("Failed to create node configuration "
+//                    + "from factory, node will have no settings", e);
+//            nc = new NodeConfiguration(configReg);
+//        }
+//        configReg.setDisallowElementAdding();
+//        // nc might be null for old obsolete node settings based nodes.
+//        return nc;
+//    }
+
     /**
      * Loads the settings (but not the data) from the given settings object.
      *

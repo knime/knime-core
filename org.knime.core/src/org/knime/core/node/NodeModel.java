@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
  *
- * History
- *   17.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node;
 
@@ -110,6 +108,71 @@ import org.knime.core.node.workflow.LoopStartNode;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeModel {
+
+
+    /* This code will go into the class header once we introduce
+     * NodeConfiguration in replacement for NodeSettings */
+
+//    /* @param <NC> The type of {@link NodeConfiguration} associated with this
+//    *         implementation. Most simply models will just use
+//    *         <code>NodeConfiguration</code> may wish to use a derived class.
+//    */
+
+//    /** The node configuration associated with this model. This field will
+//     * be assigned immediately after construction.
+//     */
+//    private NC m_nodeConfiguration;
+//    /** @param nodeConfiguration the nodeConfiguration to set */
+//    void setNodeConfiguration(final NC nodeConfiguration) {
+//        try {
+//            onNewNodeConfiguration(nodeConfiguration);
+//        } catch (final Throwable e) {
+//            m_logger.coding("Throwable while notifying node about "
+//                    + "new configuration", e);
+//        }
+//        m_nodeConfiguration = nodeConfiguration;
+//    }
+//
+//    /** Subclass hook to react on new configuration objects. This method is
+//     * called before the new configuration object is set in the abstract
+//     * NodeModel class.
+//     * @param nodeConfiguration The node configuration object that is going
+//     * to be set into the model after this method returns (whether normally
+//     * or abnormally.) The argument is never <code>null</code>.
+//     */
+//    protected void onNewNodeConfiguration(final NC nodeConfiguration) {
+//        // subclass hook.
+//    }
+//
+//    /**
+//     * Get the node configuration set on this model. Subclasses may simply use
+//     * this configuration and assume it is properly setup (i.e. there was at
+//     * least an attempt to auto-guess defaults for newly created nodes, the
+//     * configuration was loaded as part of the workflow loading for stored
+//     * workflows or the configuration has been filled in the node's dialog.)
+//     *
+//     * <p>
+//     * Subclasses should verify consistency with the input data in their
+//     * {@link #configure(DataTableSpec[]) configure} method, possibly throwing
+//     * and {@link InvalidSettingsException}.
+//     *
+//     * <p>
+//     * Derived classes should always use this method to get the current node
+//     * configuration rather than keeping the returned value as class field (as
+//     * the underlying configuration object changes when updated through the
+//     * dialog or other controls).
+//     *
+//     * <p>
+//     * The returned object should be considered read-only, i.e. derived classes
+//     * should always only read from the configuration but not modify it.
+//     *
+//     * @return The currently active node configuration. This method does not
+//     *         return null unless it is (indirectly) called from the NodeModel
+//     *         constructor.
+//     */
+//    protected NC getNodeConfiguration() {
+//        return m_nodeConfiguration;
+//    }
 
     /**
      * The node logger for this class; do not make static to make sure the right
