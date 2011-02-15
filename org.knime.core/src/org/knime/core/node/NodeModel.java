@@ -1267,10 +1267,18 @@ public abstract class NodeModel {
         m_outgoingFlowObjectStack = outgoingFlowObjectStack;
     }
 
-    /** @return list of added flow variables.
-     * @see Node#getOutgoingFlowVariables()
+    /** @return list of added flow variables in this node.
+     * @deprecated This method was never meant to be public API, the method
+     * scope will be reduced to package visibility in a future minor release.
+     * Clients should always use the
+     * {@link #pushFlowVariableDouble(String, double)} and
+     * {@link #peekFlowVariableDouble(String)} methods (similar for String or
+     * int).
+     * @since v2.3.0
      */
-    /** @return the outgoingFlowObjectStack */
+    // deprecated as of v2.3.2 - should reduce scope to package in the future
+    // (also removing deprecated flag), see bug 2641
+    @Deprecated
     public FlowObjectStack getOutgoingFlowObjectStack() {
         return m_outgoingFlowObjectStack;
     }
