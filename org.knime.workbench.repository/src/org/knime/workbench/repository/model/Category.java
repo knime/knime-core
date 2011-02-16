@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -52,14 +52,11 @@ package org.knime.workbench.repository.model;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.views.properties.IPropertySource;
-
-import org.knime.workbench.repository.model.props.CategoryPropertySource;
 
 /**
  * Implementation of a repository category. (usually contributed by extension
  * point)
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class Category extends AbstractContainerObject {
@@ -70,12 +67,12 @@ public class Category extends AbstractContainerObject {
     private Image m_icon;
 
     private ImageDescriptor m_iconDescriptor;
-    
+
     private String m_pluginID;
 
     /**
      * Creates a new repository category with the given level-id.
-     * 
+     *
      * @param id The id
      */
     public Category(final String id) {
@@ -95,17 +92,17 @@ public class Category extends AbstractContainerObject {
     public void setDescription(final String description) {
         m_description = description;
     }
-    
+
     /**
-     * 
+     *
      * @param pluginID the id of the declaring plug-in.
      */
     public void setPluginID(final String pluginID) {
         m_pluginID = pluginID;
     }
-    
+
     /**
-     * 
+     *
      * @return the id of the declaring plugin
      */
     public String getPluginID() {
@@ -145,16 +142,20 @@ public class Category extends AbstractContainerObject {
      */
     @Override
     public Object getAdapter(final Class adapter) {
-        if (adapter == IPropertySource.class) {
-            return new CategoryPropertySource(this);
-        }
+        /*
+         * Disabled since it is of no use for the user. Maybe it is useful for
+         * debugging purposes?
+         if (adapter == IPropertySource.class) {
+              return new CategoryPropertySource(this);
+         }
+         */
 
         return super.getAdapter(adapter);
     }
 
     /**
      * Sets the image descriptor for the icon.
-     * 
+     *
      * @param imageDescriptor The descriptor
      */
     public void setIconDescriptor(final ImageDescriptor imageDescriptor) {

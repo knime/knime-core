@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -78,6 +79,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.views.properties.IPropertySource;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
@@ -128,7 +130,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
         NodeUIInformationListener, EditPartListener, ConnectableEditPart,
-        JobManagerChangedListener, IPropertyChangeListener {
+        JobManagerChangedListener, IPropertyChangeListener, IAdaptable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainerEditPart.class);
@@ -841,6 +843,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             ((NodeContainerFigure)getFigure()).hideNodeName(getRootEditPart()
                     .hideNodeNames());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("rawtypes")
+    public Object getAdapter(final Class adapter) {
+        if (adapter == IPropertySource.class) {
+            return new NodeContainerProperties(getNodeContainer());
+        }
+        return super.getAdapter(adapter);
     }
 
 }

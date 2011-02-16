@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -53,21 +53,19 @@ package org.knime.workbench.repository.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.ui.views.properties.IPropertySource;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.workbench.repository.model.props.NodePropertySource;
 
 /**
  * Class that realizes a (contributed) node in the repository tree. This is used
  * as a "template" for actual instances of a node in the workflow editor.
- * 
+ *
  * Note: The type constants *must* match those defined in the "nodes"- extension
  * point (Node.exsd).
- * 
+ *
  * TODO introduce new fields: provider, url, license-tag (free/commercial) ...
  * ???
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeTemplate extends AbstractSimpleObject {
@@ -92,7 +90,7 @@ public class NodeTemplate extends AbstractSimpleObject {
     /** Type for nodes that are in fact meta nodes. */
     public static final String TYPE_META = "meta";
 
-    
+
     /** Type for nodes that can't be assigned to one of the other types. */
     public static final String TYPE_OTHER = "other";
 
@@ -112,11 +110,11 @@ public class NodeTemplate extends AbstractSimpleObject {
     private Class<NodeFactory<? extends NodeModel>> m_factory;
 
     private String m_type;
-    
+
 
     /**
      * Constructs a new NodeTemplate.
-     * 
+     *
      * @param id The id, usually parsed from the extension
      */
     public NodeTemplate(final String id) {
@@ -136,7 +134,7 @@ public class NodeTemplate extends AbstractSimpleObject {
      */
     @SuppressWarnings("unchecked")
     public void setFactory(
-            final Class<NodeFactory<? extends NodeModel>> 
+            final Class<NodeFactory<? extends NodeModel>>
             factory) {
         m_factory = factory;
     }
@@ -148,10 +146,14 @@ public class NodeTemplate extends AbstractSimpleObject {
     @Override
     @SuppressWarnings("unchecked")
     public Object getAdapter(final Class adapter) {
+        /*
+         * Disabled since it is of no use for the user. Maybe it is useful for
+         * debugging purposes?
+
         if (adapter == IPropertySource.class) {
             return new NodePropertySource(this);
         }
-
+         */
         return super.getAdapter(adapter);
     }
 
@@ -169,9 +171,9 @@ public class NodeTemplate extends AbstractSimpleObject {
         assert TYPES.contains(type) : "Illegal node type: " + type;
         m_type = type;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -179,9 +181,9 @@ public class NodeTemplate extends AbstractSimpleObject {
         // see equals method for comment on this
         return m_factory.getCanonicalName().hashCode();
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -197,14 +199,14 @@ public class NodeTemplate extends AbstractSimpleObject {
         }
         // avoid duplicate nodes in favorite nodes view
         // to be sure only check for the full class name
-        // seems that different built versions of the class have led to 
+        // seems that different built versions of the class have led to
         // duplicates
         return m_factory.getCanonicalName().equals(
                 ((NodeTemplate)obj).getFactory().getCanonicalName());
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -214,5 +216,5 @@ public class NodeTemplate extends AbstractSimpleObject {
         }
         return m_factory.getName();
     }
-    
+
 }
