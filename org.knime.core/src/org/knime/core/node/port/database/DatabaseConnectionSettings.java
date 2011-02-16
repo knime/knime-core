@@ -76,11 +76,11 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.core.util.Pair;
 
 /**
  *
@@ -154,10 +154,11 @@ public class DatabaseConnectionSettings {
     }
 
     private String m_driver;
+    private String m_credName = null;
+
     private String m_dbName;
     private String m_user = null;
     private String m_pass = null;
-    private String m_credName = null;
 
     /**
      * Create a default settings connection object.
@@ -190,14 +191,52 @@ public class DatabaseConnectionSettings {
     }
 
     /** Map the keeps database connection based on the user and URL. */
-    private static final Map<Pair<String, String>, Connection> CONNECTION_MAP =
-        Collections.synchronizedMap(
-                new HashMap<Pair<String,String>, Connection>());
+    private static final Map<ConnectionKey, Connection> CONNECTION_MAP =
+        Collections.synchronizedMap(new HashMap<ConnectionKey, Connection>());
     /** Holding the database connection keys used to sync the open connection
      * process. */
-    private static final Map<Pair<String, String>, Pair<String, String>>
-        CONNECTION_KEYS = new HashMap<Pair<String,String>,
-        Pair<String, String>>();
+    private static final Map<ConnectionKey, ConnectionKey>
+        CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
+
+    private final class ConnectionKey {
+        private final String m_un;
+        private final String m_pw;
+        private final String m_dn;
+        private ConnectionKey(final String userName, final String password,
+                final String databaseName) {
+            m_un = userName;
+            m_pw = password;
+            m_dn = databaseName;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null || !(obj instanceof ConnectionKey)) {
+                return false;
+            }
+            ConnectionKey ck = (ConnectionKey) obj;
+            if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
+                  || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
+                  || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return m_user.hashCode() ^ m_dbName.hashCode();
+        }
+    }
+
 
     /**
      * Create a database connection based on this settings. Note, don't close
@@ -227,12 +266,12 @@ public class DatabaseConnectionSettings {
         }
 
         final String dbName = m_dbName;
-        final String password = m_pass;
         final String user = m_user;
+        final String password = m_pass;
 
-        // database connection key with user and database URL
-        Pair<String, String> databaseConnKey =
-            new Pair<String, String>(user, dbName);
+        // database connection key with user, password and database URL
+        ConnectionKey databaseConnKey =
+            new ConnectionKey(user, password, dbName);
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -285,6 +324,22 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * Used to sync access to mySQL databases.
+     * @param connection (not null) used to sync mySQL database access
+     * @return sync object which is either the given connection inherit from
+     *         "com.mysql" or an new object (no sync necessary)
+     * @throws NullPointerException if the given connection is null
+     */
+    // FIX 2642: parallel database reader execution fails for mySQL
+    final Object syncConnection(final Connection connection) {
+        if (connection.getClass().getCanonicalName().startsWith("com.mysql")) {
+            return connection;
+        } else {
+            return new Object();
+        }
+    }
+
+    /**
      * Save settings.
      * @param settings connection settings
      */
@@ -297,8 +352,8 @@ public class DatabaseConnectionSettings {
                 if (m_pass == null) {
                     settings.addString("password", null);
                 } else {
-                    settings.addString("password",
-                        KnimeEncryption.encrypt(m_pass.toCharArray()));
+                    settings.addString("password", KnimeEncryption.encrypt(
+                            m_pass.toCharArray()));
                 }
             } catch (Throwable t) {
                 LOGGER.error("Could not encrypt password, reason: "
@@ -506,7 +561,7 @@ public class DatabaseConnectionSettings {
      * @param userName used to login to the database
      */
     public final void setUserName(final String userName) {
-         m_user = userName;
+        m_user = userName;
     }
 
     /**

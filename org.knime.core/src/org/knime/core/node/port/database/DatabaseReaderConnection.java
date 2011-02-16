@@ -119,7 +119,7 @@ public final class DatabaseReaderConnection {
     }
 
     /**
-     * Sets anew connection object.
+     * Sets a new connection object.
      * @param conn the connection
      */
     public void setDBQueryConnection(
@@ -153,19 +153,34 @@ public final class DatabaseReaderConnection {
      */
     public DataTableSpec getDataTableSpec() throws SQLException {
         if (m_spec == null || m_stmt == null) {
+            final Connection conn;
             try {
+                conn = m_conn.createConnection();
+            } catch (SQLException sql) {
+                if (m_stmt != null) {
+                    try {
+                        m_stmt.close();
+                    } catch (SQLException e) {
+                        LOGGER.debug(e);
+                    }
+                    m_stmt = null;
+                }
+                throw sql;
+            } catch (Throwable t) {
+                throw new SQLException(t);
+            }
+            synchronized (m_conn.syncConnection(conn)) {
                 final int hashAlias = System.identityHashCode(this);
                 String pQuery = "SELECT * FROM (" + m_conn.getQuery()
                     + ") table_" + hashAlias + " WHERE 1 = 0";
                 ResultSet result = null;
-                final Connection conn = m_conn.createConnection();
                 try {
                     // try to see if prepared statements are supported
                     LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
                     m_stmt = conn.prepareStatement(pQuery);
                     ((PreparedStatement) m_stmt).execute();
                     m_spec = createTableSpec(
-                            ((PreparedStatement) m_stmt).getMetaData());
+                        ((PreparedStatement) m_stmt).getMetaData());
                 } catch (Exception e) {
                     LOGGER.warn("PreparedStatment not support by database: "
                             + e.getMessage(), e);
@@ -184,18 +199,6 @@ public final class DatabaseReaderConnection {
                         m_stmt = conn.createStatement();
                     }
                 }
-            } catch (SQLException sql) {
-                if (m_stmt != null) {
-                    try {
-                        m_stmt.close();
-                    } catch (SQLException e) {
-                        LOGGER.debug(e);
-                    }
-                    m_stmt = null;
-                }
-                throw sql;
-            } catch (Throwable t) {
-                throw new SQLException(t);
             }
         }
         return m_spec;
@@ -210,62 +213,10 @@ public final class DatabaseReaderConnection {
      */
     public BufferedDataTable createTable(final ExecutionContext exec)
             throws CanceledExecutionException, SQLException {
-        try {
-            final DataTableSpec spec = getDataTableSpec();
-            if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                m_stmt.setFetchSize(
-                        DatabaseConnectionSettings.FETCH_SIZE);
-            } else {
-                // fix 2040: mySQL databases read everything into one, big
-                // ResultSet leading to an heap space error
-                // Integer.MIN_VALUE is an indicator in order to enable
-                // streaming results
-                if (m_stmt.getClass().getCanonicalName().equals(
-                        "com.mysql.jdbc.Statement")) {
-                    m_stmt.setFetchSize(Integer.MIN_VALUE);
-                    LOGGER.info("Database fetchsize for mySQL database set to "
-                            + "\"" + Integer.MIN_VALUE + "\".");
-                }
-            }
-            final String query = m_conn.getQuery();
-            LOGGER.debug("Executing SQL statement \"" + query + "\"");
-            final ResultSet result = m_stmt.executeQuery(query);
-            return exec.createBufferedDataTable(new DataTable() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public DataTableSpec getDataTableSpec() {
-                    return spec;
-                }
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public RowIterator iterator() {
-                    return new DBRowIterator(result);
-                }
-
-            }, exec);
-        } finally {
-            if (m_stmt != null) {
-                m_stmt.close();
-                m_stmt = null;
-            }
-        }
-    }
-
-    /**
-     * @param cachedNoRows number of rows cached for data preview
-     * @return buffered data table read from database
-     * @throws SQLException if the connection could not be opened
-     */
-    DataTable createTable(final int cachedNoRows) throws SQLException {
-        try {
-            final DataTableSpec spec = getDataTableSpec();
-            final String query;
-            if (cachedNoRows < 0) {
-                query = m_conn.getQuery();
+        final DataTableSpec spec = getDataTableSpec();
+        Object sync = m_conn.syncConnection(m_stmt.getConnection());
+        synchronized (sync) {
+            try {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                     m_stmt.setFetchSize(
                             DatabaseConnectionSettings.FETCH_SIZE);
@@ -277,30 +228,87 @@ public final class DatabaseReaderConnection {
                     if (m_stmt.getClass().getCanonicalName().equals(
                             "com.mysql.jdbc.Statement")) {
                         m_stmt.setFetchSize(Integer.MIN_VALUE);
-                        LOGGER.info("Database fetchsize for mySQL database "
-                                + "set to \"" + Integer.MIN_VALUE + "\".");
-            }
+                        LOGGER.info("Database fetchsize for mySQL database set to "
+                                + "\"" + Integer.MIN_VALUE + "\".");
+                    }
                 }
-            } else {
-                final int hashAlias = System.identityHashCode(this);
-                query = "SELECT * FROM (" + m_conn.getQuery()
-                    + ") table_" + hashAlias;
-                m_stmt.setMaxRows(cachedNoRows);
+                final String query = m_conn.getQuery();
+                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                final ResultSet result = m_stmt.executeQuery(query);
+                return exec.createBufferedDataTable(new DataTable() {
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public DataTableSpec getDataTableSpec() {
+                        return spec;
+                    }
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public RowIterator iterator() {
+                        return new DBRowIterator(result);
+                    }
+
+                }, exec);
+            } finally {
+                if (m_stmt != null) {
+                    m_stmt.close();
+                    m_stmt = null;
+                }
             }
-            LOGGER.debug("Executing SQL statement \"" + query + "\"");
-            m_stmt.execute(query);
-            final ResultSet result = m_stmt.getResultSet();
-            DBRowIterator it = new DBRowIterator(result);
-            DataContainer buf = new DataContainer(spec);
-            while (it.hasNext()) {
-                buf.addRowToTable(it.next());
-            }
-            buf.close();
-            return buf.getTable();
-        } finally {
-            if (m_stmt != null) {
-                m_stmt.close();
-                m_stmt = null;
+        }
+    }
+
+    /**
+     * @param cachedNoRows number of rows cached for data preview
+     * @return buffered data table read from database
+     * @throws SQLException if the connection could not be opened
+     */
+    DataTable createTable(final int cachedNoRows) throws SQLException {
+        final DataTableSpec spec = getDataTableSpec();
+        synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
+            try {
+                final String query;
+                if (cachedNoRows < 0) {
+                    query = m_conn.getQuery();
+                    if (DatabaseConnectionSettings.FETCH_SIZE != null) {
+                        m_stmt.setFetchSize(
+                                DatabaseConnectionSettings.FETCH_SIZE);
+                    } else {
+                        // fix 2040: mySQL databases read everything into one
+                        // big ResultSet leading to an heap space error
+                        // Integer.MIN_VALUE is an indicator in order to enable
+                        // streaming results
+                        if (m_stmt.getClass().getCanonicalName().equals(
+                                "com.mysql.jdbc.Statement")) {
+                            m_stmt.setFetchSize(Integer.MIN_VALUE);
+                            LOGGER.info("Database fetchsize for mySQL database "
+                                    + "set to \"" + Integer.MIN_VALUE + "\".");
+                }
+                    }
+                } else {
+                    final int hashAlias = System.identityHashCode(this);
+                    query = "SELECT * FROM (" + m_conn.getQuery()
+                        + ") table_" + hashAlias;
+                    m_stmt.setMaxRows(cachedNoRows);
+                }
+                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                m_stmt.execute(query);
+                final ResultSet result = m_stmt.getResultSet();
+                DBRowIterator it = new DBRowIterator(result);
+                DataContainer buf = new DataContainer(spec);
+                while (it.hasNext()) {
+                    buf.addRowToTable(it.next());
+                }
+                buf.close();
+                return buf.getTable();
+            } finally {
+                if (m_stmt != null) {
+                    m_stmt.close();
+                    m_stmt = null;
+                }
             }
         }
     }
