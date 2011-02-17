@@ -106,9 +106,9 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final JButton m_chooseButton;
 
-    private final String[] m_suffixes;
+    private String[] m_suffixes;
 
-    private final String m_historyID;  
+    private final String m_historyID;
 
 
     private final JLabel m_warnMsg;
@@ -134,7 +134,7 @@ public final class FilesHistoryPanel extends JPanel {
      *            {@link StringHistory}
      * @param suffixes the set of suffixes for the file chooser
      * @param fvm model to allow to use a variable instead of the text field.
-     * @param showErrorMessage if true there are error messages if the file 
+     * @param showErrorMessage if true there are error messages if the file
      * exists or the path is not available and so on.
      */
     public FilesHistoryPanel(final FlowVariableModel fvm,
@@ -152,8 +152,8 @@ public final class FilesHistoryPanel extends JPanel {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        
-      
+
+
         m_textBox.setPreferredSize(new Dimension(300, 25));
         m_textBox.setRenderer(new MyComboBoxRenderer());
         m_textBox.addItemListener(new ItemListener() {
@@ -168,9 +168,10 @@ public final class FilesHistoryPanel extends JPanel {
                 }
             }
         });
-        
+
         // install listeners to update warn message whenever file name changes
         m_textBox.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 fileLocationChanged();
             }
@@ -187,22 +188,26 @@ public final class FilesHistoryPanel extends JPanel {
         if (editor instanceof JTextComponent) {
             Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
             });
         }
-        
+
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 String newFile = getOutputFileName();
                 if (newFile != null) {
@@ -261,10 +266,10 @@ public final class FilesHistoryPanel extends JPanel {
      *
      * @param historyID identifier for the string history, see
      *            {@link StringHistory}
-     * @param showErrorMessage if true there are error messages if the file 
+     * @param showErrorMessage if true there are error messages if the file
      * exists or the path is not available and so on.
      */
-    public FilesHistoryPanel(final String historyID, 
+    public FilesHistoryPanel(final String historyID,
             final boolean showErrorMessage) {
         this(null, historyID, showErrorMessage);
     }
@@ -295,6 +300,18 @@ public final class FilesHistoryPanel extends JPanel {
             return file.getAbsolutePath();
         }
         return null;
+    }
+
+    /** Set file file as part of the suffix.
+     * @param suffixes The new list of valid suffixes.
+     */
+    public void setSuffixes(final String... suffixes) {
+        m_suffixes = suffixes;
+    }
+
+    /** @return the currently set list of file filter suffixes. */
+    public String[] getSuffixes() {
+        return m_suffixes;
     }
 
     /**
@@ -417,7 +434,7 @@ public final class FilesHistoryPanel extends JPanel {
         }
         return f;
     }
-    
+
     private void fileLocationChanged() {
         String newMsg = "";
         String selFile = getSelectedFile();
