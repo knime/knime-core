@@ -150,7 +150,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /** Loop End Node extra icon: No Status. */
     public static final Image LOOP_NO_STATUS = ImageRepository
             .getImage("icons/loop_nostatus.gif");
-    
+
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
 
@@ -183,7 +183,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** contains the "progress bar". * */
     private ProgressFigure m_progressFigure;
-    
+
     /** contains the image indicating the loop status (if available). */
     private Image m_loopStatusFigure = null;
 
@@ -732,6 +732,9 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_LOOPER_END =
                 "icons/node/background_looper_end.png";
 
+        private static final String BACKGROUND_QUICKFORM =
+            "icons/node/background_quickform.png";
+
         private final Label m_backgroundIcon;
 
         /**
@@ -831,6 +834,8 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_LOOPER_START;
             } else if (type.equals(NodeType.LoopEnd)) {
                 str = BACKGROUND_LOOPER_END;
+            } else if (type.equals(NodeType.QuickForm)) {
+                str = BACKGROUND_QUICKFORM;
             } else {
                 str = BACKGROUND_UNKNOWN;
             }
@@ -1185,10 +1190,10 @@ public class NodeContainerFigure extends RectangleFigure {
     public void hideNodeName(final boolean hide) {
         m_heading.setVisible(!hide);
     }
-    
+
     /**
      * Set the image indicating the loop status.
-     * 
+     *
      * @param loopStatus loop status of the loop end node
      * @param state execution status of the node.
      */

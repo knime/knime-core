@@ -110,6 +110,8 @@ public abstract class NodeFactory<T extends NodeModel> {
         LoopStart,
         /** End node of a loop. */
         LoopEnd,
+        /** A node contributing to quick/web form. */
+        QuickForm,
         /** All other nodes. */
         Other,
         /** If not specified. */
