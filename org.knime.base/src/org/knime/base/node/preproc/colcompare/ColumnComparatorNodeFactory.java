@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,60 +44,47 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
- * History
- *   16.07.2007 (gabriel): created
+ *
  */
 package org.knime.base.node.preproc.colcompare;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * Factory for the Column Comparator node.
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColumnComparatorNodeFactory extends NodeFactory {
+public class ColumnComparatorNodeFactory
+        extends NodeFactory<ColumnComparatorNodeModel> {
 
-    /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
-     */
+    /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
         return new ColumnComparatorNodeDialogPane();
     }
 
-    /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
-     */
+    /** {@inheritDoc} */
     @Override
-    public NodeModel createNodeModel() {
+    public ColumnComparatorNodeModel createNodeModel() {
         return new ColumnComparatorNodeModel();
     }
 
-    /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int, org.knime.core.node.NodeModel)
-     */
+    /** {@inheritDoc} */
     @Override
-    public NodeView createNodeView(int viewIndex, NodeModel nodeModel) {
-        // TODO Auto-generated method stub
+    public NodeView<ColumnComparatorNodeModel> createNodeView(
+            final int viewIndex, final ColumnComparatorNodeModel nodeModel) {
         return null;
     }
 
-    /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
-     */
+    /** {@inheritDoc} */
     @Override
     protected int getNrNodeViews() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
-    /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
-     */
+    /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
         return true;

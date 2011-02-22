@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,11 +44,19 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
- * History
- *   16.07.2007 (gabriel): created
+ *
  */
 package org.knime.base.node.preproc.colcompare;
+
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.REPL_OPTIONS;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createComparatorMethod;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createFirstColumnModel;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createMatchOption;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createMatchValue;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createMismatchOption;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createMismatchValue;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createNewColumnName;
+import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.createSecondColumnModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,27 +81,25 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
-import static org.knime.base.node.preproc.colcompare.ColumnComparatorNodeDialogPane.*;
-
 /**
  * The comparator node model which compares two columns by it values within one
  * row, and appends a new column with the value of the first column if both are
  * equals, or a replacement value if not.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColumnComparatorNodeModel extends NodeModel {
-    
+
     private final SettingsModelString m_operator = createComparatorMethod();
     private final SettingsModelString m_firstColumn = createFirstColumnModel();
-    private final SettingsModelString m_secondColumn = 
+    private final SettingsModelString m_secondColumn =
         createSecondColumnModel();
     private final SettingsModelString m_matchOption = createMatchOption();
     private final SettingsModelString m_mismatchOption = createMismatchOption();
     private final SettingsModelString m_matchValue = createMatchValue();
     private final SettingsModelString m_mismatchValue = createMismatchValue();
     private final SettingsModelString m_newColumn = createNewColumnName();
-    
+
     /**
      * Creates a new node model with one in- and outport.
      */
@@ -107,7 +113,7 @@ public class ColumnComparatorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_firstColumn.getStringValue() == null 
+        if (m_firstColumn.getStringValue() == null
                 || m_secondColumn.getStringValue() == null) {
             throw new InvalidSettingsException(
                     "No column is selected for comparison.");
@@ -139,7 +145,7 @@ public class ColumnComparatorNodeModel extends NodeModel {
             public DataCell getCell(final DataRow row) {
                 return null;
             }
-            
+
         });
         return new DataTableSpec[]{colRe.createSpec()};
     }
@@ -172,7 +178,7 @@ public class ColumnComparatorNodeModel extends NodeModel {
         }
         return newCSpec.createSpec();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -225,8 +231,8 @@ public class ColumnComparatorNodeModel extends NodeModel {
             exec.createColumnRearrangeTable(inData[0], colRe, exec);
         return new BufferedDataTable[]{outData};
     }
-    
-    private DataCell covertMatch(final DataCell cell) { 
+
+    private DataCell covertMatch(final DataCell cell) {
         String strMismatch = m_mismatchOption.getStringValue();
         if (strMismatch.equals(REPL_OPTIONS[3])) {
             return new StringCell(cell.toString());
@@ -234,8 +240,8 @@ public class ColumnComparatorNodeModel extends NodeModel {
             return cell;
         }
     }
-    
-    private DataCell covertMismatch(final DataCell cell) { 
+
+    private DataCell covertMismatch(final DataCell cell) {
         String strMatch = m_matchOption.getStringValue();
         if (strMatch.equals(REPL_OPTIONS[3])) {
             return new StringCell(cell.toString());
@@ -243,15 +249,15 @@ public class ColumnComparatorNodeModel extends NodeModel {
             return cell;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-
+        // no op
     }
 
     /**
@@ -275,24 +281,24 @@ public class ColumnComparatorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        // no op
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-
+        // no op
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_operator.saveSettingsTo(settings);
         m_firstColumn.saveSettingsTo(settings);
         m_secondColumn.saveSettingsTo(settings);
@@ -307,11 +313,11 @@ public class ColumnComparatorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(NodeSettingsRO settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString first = 
+        SettingsModelString first =
             m_firstColumn.createCloneWithValidatedValue(settings);
-        SettingsModelString second = 
+        SettingsModelString second =
             m_secondColumn.createCloneWithValidatedValue(settings);
         if (first.getStringValue() == null || second.getStringValue() == null) {
             throw new InvalidSettingsException(
@@ -319,14 +325,14 @@ public class ColumnComparatorNodeModel extends NodeModel {
         }
         if (first.getStringValue().equals(second.getStringValue())) {
             throw new InvalidSettingsException(
-                    "Left and right column are the same: " 
+                    "Left and right column are the same: "
                     + first.getStringValue());
         }
-        SettingsModelString matchOption = 
+        SettingsModelString matchOption =
             m_matchOption.createCloneWithValidatedValue(settings);
-        SettingsModelString mismatchOption = 
+        SettingsModelString mismatchOption =
             m_mismatchOption.createCloneWithValidatedValue(settings);
-        if (!matchOption.getStringValue().equals(REPL_OPTIONS[3]) 
+        if (!matchOption.getStringValue().equals(REPL_OPTIONS[3])
            && !mismatchOption.getStringValue().equals(REPL_OPTIONS[3])) {
             if (matchOption.getStringValue().equals(
                     mismatchOption.getStringValue())) {
