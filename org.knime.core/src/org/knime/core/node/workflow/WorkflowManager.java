@@ -5216,12 +5216,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
      * of the requested type. Intended purpose is to allow certain extensions
      * (reporting, web service, ...) access to specialized nodes.
-     * @param <T> Specific NodeModel type.
+     * @param <T> Specific NodeModel derivation or another interface
+     *            implemented by NodeModel instances.
      * @param nodeModelClass The class of interest
      * @param recurse Whether to recurse into contained meta nodes.
      * @return A (unsorted) list of nodes matching the class criterion
      */
-    public <T extends NodeModel>Map<NodeID, T> findNodes(
+    public <T> Map<NodeID, T> findNodes(
             final Class<T> nodeModelClass, final boolean recurse) {
         Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
         for (NodeContainer nc : m_workflow.getNodeValues()) {
