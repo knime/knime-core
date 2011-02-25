@@ -165,6 +165,7 @@ public final class StringHistory {
                     && m_list.size() < m_maxLength) {
                 m_list.add(hist);
             }
+            reader.close();
         } catch (IOException ioe) {
             LOGGER.warn("Can't read history file '"
                     + m_historyFile.getAbsolutePath() + "'", ioe);
