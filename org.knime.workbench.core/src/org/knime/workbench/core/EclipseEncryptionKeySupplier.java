@@ -91,7 +91,7 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
         IPreferenceStore coreStore =
             KNIMECorePlugin.getDefault().getPreferenceStore();
         coreStore.setDefault(
-                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, true);
+                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, false);
         // if an master key has been provided before, the pref page contains
         // an entry that this key was saved or not
         m_wasSet =
@@ -131,6 +131,7 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized String getEncryptionKey() {
         return init();
     }

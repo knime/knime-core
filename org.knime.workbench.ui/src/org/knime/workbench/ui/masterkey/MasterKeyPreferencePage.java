@@ -336,4 +336,14 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         this.performOk();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected void performDefaults() {
+        /* disable the masterkey fields first to avoid validation errors */
+        enableFields(false);
+        initPrefStore();
+        super.performDefaults();
+        enableFields(m_isMasterKey.getBooleanValue());
+    }
+
 }
