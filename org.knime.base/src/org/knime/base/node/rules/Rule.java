@@ -221,7 +221,7 @@ public class Rule {
             p++;
             expect('O');
             expect('T');
-            leftNode = parseBooleanExpression(spec);
+            leftNode = RuleNodeFactory.not(parseBooleanExpression(spec));
         } else if (s[p] == 'M') {
             p++;
             expect('I');
