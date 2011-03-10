@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
-Bundle-Version: 2.3.2.qualifier
+Bundle-Version: 2.3.3.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench.help.intro
 Require-Bundle: org.eclipse.core.runtime,
