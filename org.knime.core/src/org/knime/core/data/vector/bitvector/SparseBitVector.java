@@ -865,7 +865,8 @@ public class SparseBitVector {
     public String toHexString() {
         // TODO: needs to be optimized. No need to call get() for each bit.
         // the number of bits we store in the string
-        long max = (int)Math.min(m_length, (Integer.MAX_VALUE - 1) << 2);
+        long max = (int)Math.min(
+                m_length, ((long)(Integer.MAX_VALUE - 1)) << 2);
         // compute number of hex characters, which come in blocks of 4!
         final int nrHexChars = (int)(((max / 4 + 1) / 8 + 1) * 8);
         assert (nrHexChars % 8 == 0);
