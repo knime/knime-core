@@ -7,8 +7,7 @@
       plugin="org.knime.testing">
 
    <description>
-      Contains classes and nodes for testing KNIME&apos;s functionality 
-      through testing workflows.
+      Contains classes and nodes for testing KNIME&apos;s functionality through testing workflows.
    </description>
 
    <copyright>
