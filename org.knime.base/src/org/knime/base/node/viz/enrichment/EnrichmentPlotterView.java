@@ -55,11 +55,12 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterModel.EnrichmentPlot;
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.PlotMode;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.core.node.NodeView;
-import org.knime.base.node.viz.enrichment.EnrichmentPlotterModel.EnrichmentPlot;
 
 /**
  * This is the view for the enrichment plotter node that shows all specified
@@ -68,15 +69,14 @@ import org.knime.base.node.viz.enrichment.EnrichmentPlotterModel.EnrichmentPlot;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterView extends NodeView<EnrichmentPlotterModel> {
-    private static final Color[] COLORS =
-            {Color.black, Color.red, Color.blue, Color.green, Color.magenta,
-                    Color.orange, Color.cyan};
+    private static final Color[] COLORS = {Color.black, Color.red, Color.blue,
+            Color.green, Color.magenta, Color.orange, Color.cyan};
 
     private class EnrichmentDrawingPane extends BasicDrawingPane {
         private NumberFormat m_formatter = new DecimalFormat("0.0000");
 
         @Override
-        public void paintContent(final Graphics g) {
+        public synchronized void paintContent(final Graphics g) {
             super.paintContent(g);
 
             final int height = g.getFontMetrics().getHeight();
@@ -86,11 +86,10 @@ public class EnrichmentPlotterView extends NodeView<EnrichmentPlotterModel> {
             int maxWidth = 0;
             for (EnrichmentPlot p : curves) {
                 String s =
-                        p.getName() + " ("
-                                + m_formatter.format(p.getArea()) + ")";
+                        p.getName() + " (" + m_formatter.format(p.getArea())
+                                + ")";
                 maxWidth =
-                        Math.max(g.getFontMetrics().stringWidth(s),
-                                maxWidth);
+                        Math.max(g.getFontMetrics().stringWidth(s), maxWidth);
             }
 
             int i = 0;
@@ -102,8 +101,8 @@ public class EnrichmentPlotterView extends NodeView<EnrichmentPlotterModel> {
 
                 g.setColor(COLORS[i++ % COLORS.length]);
                 String s =
-                        p.getName() + " ("
-                                + m_formatter.format(p.getArea()) + ")";
+                        p.getName() + " (" + m_formatter.format(p.getArea())
+                                + ")";
                 g.drawString(s, x, y);
             }
             g.setColor(oldColor);
@@ -123,7 +122,6 @@ public class EnrichmentPlotterView extends NodeView<EnrichmentPlotterModel> {
 
             EnrichmentPlotterModel mod = getNodeModel();
 
-
             List<EnrichmentPlot> curves = mod.getCurves();
 
             int i = 0;
@@ -139,20 +137,22 @@ public class EnrichmentPlotterView extends NodeView<EnrichmentPlotterModel> {
                         maxY = Math.max(maxY, curve.getY()[k]);
                     }
 
-                    addLine(curve.getX(), curve.getY(),
-                            COLORS[i++ % COLORS.length], st);
+                    addLine(curve.getX(), curve.getY(), COLORS[i++
+                            % COLORS.length], st);
                 }
             }
 
             addLine(new double[]{0, maxX}, new double[]{0, maxY},
                     Color.lightGray, st);
-            addLine(new double[]{0, maxY}, new double[]{0, maxY},
-                    Color.lightGray, st);
+            if (mod.m_settings.plotMode() != PlotMode.PlotSum) {
+                addLine(new double[]{0, maxY}, new double[]{0, maxY},
+                        Color.lightGray, st);
+            }
         }
     }
 
-    private final MyPlotter m_plotter =
-            new MyPlotter(new EnrichmentDrawingPane());
+    private final MyPlotter m_plotter = new MyPlotter(
+            new EnrichmentDrawingPane());
 
     /**
      * Creates a new enrichment plotter view.
