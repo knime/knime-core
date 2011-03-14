@@ -1184,14 +1184,42 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         /*
          * TODO: We need to synchronize the NodeSettings object
          */
+        // make sure the filename entered gets commited
+        fileLocationChanged();
+
+        // make sure the delimiter is committed in case user entered a new one
+        // and didn't hit enter - starts an analysis if things changed
+        delimSettingsChanged();
 
         // if no valid settings exist, we need to analyze the file.
         if (m_frSettings.getNumberOfColumns() < 0) {
-            setErrorLabelText("Waiting for file analysis to finish..."
-                    + "Click \"Stop\" to cut it short.");
+            synchronized (m_analysisRunning) {
+                // start analysis only, if it is not already running
+                if (!m_analysisRunning.booleanValue()) {
+                    // the analysis thread should override the error label
+                    setErrorLabelText("Waiting for file analysis to finish..."
+                            + "Click \"Quick Scan\" to cut it short.");
+                    analyzeAction();
+                }
+            }
+        }
 
-            waitForAnalyzeAction();
-            // the analysis thread should override the error label
+        VariableFileReaderNodeSettings settingsToSave;
+
+        /*
+         * don't close dialog while analysis is running
+         */
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                throw new InvalidSettingsException(
+                        "File analysis currently running. Please wait for it to"
+                                + " finish, check the settings, and "
+                                + "click OK or Apply again");
+            } else {
+                // while we have the lock, clone the settings
+                settingsToSave =
+                    new VariableFileReaderNodeSettings(m_frSettings);
+            }
         }
 
         String errLabel = getErrorLabelText();
@@ -1199,44 +1227,11 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs: " + errLabel);
         }
-        if (m_previewTable != null && m_previewTable.getErrorOccurred()) {
+        if (m_previewTable == null || m_previewTable.getErrorOccurred()) {
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
-        }
-
-        VariableFileReaderNodeSettings settingsToSave = m_frSettings;
-
-        /*
-         * if an analysis is currently running we ask the user what to do
-         */
-        synchronized (m_analysisRunning) {
-            if (m_analysisRunning.booleanValue()) {
-                // quickly create a clone of the current settings before it
-                // finishes
-                VariableFileReaderNodeSettings clone =
-                        new VariableFileReaderNodeSettings(m_frSettings);
-                if (JOptionPane.showOptionDialog(getPanel(),
-                        "A file analysis is currently running. "
-                                + "Do you want to wait for it to "
-                                + "finish or use the " + "current settings?",
-                        "File Analysis Running", JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.QUESTION_MESSAGE, null, new String[]{
-                                "Use current settings, cancel analysis",
-                                "Wait for analysis to finish"},
-                        "Wait for analysis to finish") == 1) {
-                    throw new InvalidSettingsException(
-                            "Please check the settings"
-                                    + "after analysis finishes and "
-                                    + "click OK or Apply again");
-                }
-                // stop it.
-                m_analysisExecMonitor.setExecuteInterrupted();
-
-                settingsToSave = clone;
-            }
-
         }
 
         // transfers the URL from the textfield into the setting object
