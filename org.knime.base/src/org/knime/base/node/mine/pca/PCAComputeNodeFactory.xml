@@ -42,13 +42,13 @@
 		    The higher the absolute value, the higher the influence of the
 		    input dimension on the principal component. 
 			<br />
-		    In order to component an input rows mapping to, e.g. the first
-		    principal axis, you need to apply the following calculation (all 
-		    done in the PCA Apply node): For each dimension in the original 
-		    space subtract the dimension's mean value, then multiple the 
-		    resulting vector with the vector given by this table (the 
-		    first row in the spectral decomposition table to get the value on
-		    the first PC, the second row for the second PC and so on).    
+		    The mapping of the input rows to, e.g. the first principal axis, 
+		    is computed as follows (all done in the PCA Apply node): 
+		    For each dimension in the original space subtract the dimension's
+		    mean value and then multiply the resulting vector with the vector 
+		    given by this table (the first row in the spectral decomposition 
+		    table to get the value on the first PC, the second row for the 
+		    second PC and so on).    
 		</outPort>
 		<outPort index="2" name="Projection model">Model with projection to principal
 			components, used in the PCA Apply node to apply the transformation
