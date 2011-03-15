@@ -299,16 +299,16 @@ public class WrappedNodeDialog extends Dialog {
                 if (ke.keyCode == SWT.CTRL) {
                     btnOK.setText("OK");
                 }
+            }
+            /** {@inheritDoc} */
+            @Override
+            public void keyPressed(final KeyEvent ke) {
                 if (ke.keyCode == SWT.ESC) {
                     if (m_dialogPane.closeOnESC()) {
                         // close dialog on ESC
                         doCancel();
                     }
                 }
-            }
-            /** {@inheritDoc} */
-            @Override
-            public void keyPressed(final KeyEvent ke) {
                 if (ke.keyCode == SWT.CTRL) {
                     // change OK button label, when CTRL is pressed
                     btnOK.setText("OK - Execute");
