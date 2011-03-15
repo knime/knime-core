@@ -251,18 +251,10 @@ public class PMMLImport {
             SAXParser parser = fac.newSAXParser();
             PMMLMasterContentHandler masterHandler =
                     new PMMLMasterContentHandler();
-            DataDictionaryContentHandler ddHandler =
-                    new DataDictionaryContentHandler();
-            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                    ddHandler);
             ExtractModelTypeHandler modelTypeHdl =
                     new ExtractModelTypeHandler();
             masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
                     modelTypeHdl);
-            MiningSchemaContentHandler miningSchemaHdl =
-                    new MiningSchemaContentHandler();
-            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
-                    miningSchemaHdl);
             parser.parse(m_file, masterHandler);
             m_version = masterHandler.getVersion();
             m_modelType = modelTypeHdl.getModelType();
