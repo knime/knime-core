@@ -161,9 +161,7 @@ public class PCAComputeNodeModel extends NodeModel {
         return new PortObject[]{
                 PCANodeModel.createCovarianceTable(exec, m, m_inputColumnNames),
                 PCANodeModel.createDecompositionOutputTable(exec
-                        .createSubExecutionContext(0.1), evs, EigenValue
-                        .getSortedEigenVectors(evd.getV().getArray(), evs,
-                                evs.length)),
+                        .createSubExecutionContext(0.1), evd, m_inputColumnNames),
                 new PCAModelPortObject(evd.getV().getArray(), evs,
                         m_inputColumnNames, meanVector)};
 
@@ -239,7 +237,7 @@ public class PCAComputeNodeModel extends NodeModel {
         return new PortObjectSpec[]{
                 PCANodeModel.createCovarianceMatrixSpec(m_inputColumnNames),
                 PCANodeModel
-                        .createDecompositionTableSpec(m_inputColumnIndices.length),
+                        .createDecompositionTableSpec(m_inputColumnNames),
                 new PCAModelPortObjectSpec(m_inputColumnNames)};
     }
 
