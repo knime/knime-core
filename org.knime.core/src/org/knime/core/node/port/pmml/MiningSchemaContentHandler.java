@@ -161,13 +161,22 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
             String treatment = atts.getValue("invalidValueTreatment");
             if (!((m_oldKNIMESchema && treatment == null)
                     || "asIs".equalsIgnoreCase(treatment))) {
-                String treatmentText = treatment == null 
+                String treatmentText = treatment == null
                         ? "<default>" : treatment;
                 String msg = "MiningField \"" + colName + "\": Only \"asIs\" "
                         + "is supported for invalidValueTreatment. "
-                        + "invalidValueTreatment=\"" 
-                        + treatmentText +  "\" encountered.";
-                throw new RuntimeException(msg);
+                        + "invalidValueTreatment=\""
+                        + treatmentText +  "\" is treated as \"asIs\".";
+                /* At this point the predition does not
+                 * give the expected result for outliers (invalid values) from
+                 * a PMML point of view. But as this is very restrictive and
+                 * causes the RtoPMML functionality to fail and might be
+                 * unnecessary if there are no outliers. Hence only a warning
+                 * message is issued.
+                 * TODO: Extend the functionality of the PMML predictors to
+                 * support more invalid value treatment strategies. */
+//              throw new RuntimeException(msg);
+                LOGGER.warn(msg);
             }
             String usageType = atts.getValue("usageType");
             if (usageType == null) {
