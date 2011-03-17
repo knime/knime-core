@@ -1274,8 +1274,14 @@ public final class Node implements NodeModelWarningListener {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
-        cleanOutPorts();
         closeAllViews();
+        try {
+            m_model.onDispose();
+        } catch (Throwable t) {
+            m_logger.error(t.getClass().getSimpleName()
+                    + " during cleanup of node: " + t.getMessage(), t);
+        }
+        cleanOutPorts();
     }
 
     /** Used before configure, to apply the variable mask to the nodesettings,

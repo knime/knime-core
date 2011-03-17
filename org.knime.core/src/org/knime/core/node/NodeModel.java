@@ -745,6 +745,15 @@ public abstract class NodeModel {
      */
     protected abstract void reset();
 
+    /** Called by the framework when the node is disposed, for instance if
+     * the workflow is closed or the node is deleted by the user. Subclasses may
+     * override this method to do further cleanup. This method is called
+     * independent of whether this node is or has ever been executed.
+     */
+    protected void onDispose() {
+        // empty, potentially overridden in sub-classes
+    }
+
     /**
      * Notifies all registered views of a change of the underlying model. It is
      * called by functions of the abstract class that modify the model (like
@@ -1292,7 +1301,7 @@ public abstract class NodeModel {
      * only returns the variables provided at the input.
      * @return A new map of available flow variables in a non-modifiable map
      *         (never null).
-     * @since v2.3.3 
+     * @since v2.3.3
      */
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
         Map<String, FlowVariable> result =
