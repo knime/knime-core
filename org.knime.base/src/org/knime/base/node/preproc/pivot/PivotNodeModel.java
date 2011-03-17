@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
  *
- * History
- *   03.05.2007 (gabriel): created
  */
 package org.knime.base.node.preproc.pivot;
 
@@ -54,6 +52,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -163,7 +162,11 @@ public class PivotNodeModel extends NodeModel {
             if (m_ignoreMissValues.getBooleanValue()) {
                 final Set<DataCell> vals = new LinkedHashSet<DataCell>(
                         cspec.getDomain().getValues());
-                return new DataTableSpec[]{initSpec(vals)};
+                Set<String> pivotList = new LinkedHashSet<String>();
+                for (DataCell domValue : vals) {
+                    pivotList.add(domValue.toString());
+                }
+                return new DataTableSpec[]{initSpec(pivotList)};
             } else {
                 return new DataTableSpec[1];
             }
@@ -178,9 +181,7 @@ public class PivotNodeModel extends NodeModel {
      * @param vals possible values
      * @return possible values as DataTableSpec
      */
-    private DataTableSpec initSpec(final Set<DataCell> vals) {
-        final String[] names = new String[vals.size()];
-        final DataType[] types = new DataType[vals.size()];
+    private DataTableSpec initSpec(final Set<String> vals) {
         final DataType setType;
         if (m_makeAgg.getStringValue().equals(
                 PivotNodeDialogPane.MAKE_AGGREGATION[0])) {
@@ -188,12 +189,9 @@ public class PivotNodeModel extends NodeModel {
         } else {
             setType = DoubleCell.TYPE;
         }
-        int idx = 0;
-        for (final DataCell val : vals) {
-            names[idx] = val.toString();
-            types[idx] = setType;
-            idx++;
-        }
+        DataType[] types = new DataType[vals.size()];
+        Arrays.fill(types, setType);
+        String[] names = vals.toArray(new String[vals.size()]);
         return new DataTableSpec(names, types);
     }
 
@@ -217,16 +215,18 @@ public class PivotNodeModel extends NodeModel {
                         m_aggMethod.getStringValue());
         }
         // pair contains group and pivot plus the aggregation value
-        final Map<Pair<DataCell, DataCell>, Double[]> map =
-            new LinkedHashMap<Pair<DataCell, DataCell>, Double[]>();
+        final Map<Pair<String, String>, Double[]> map =
+            new LinkedHashMap<Pair<String, String>, Double[]>();
         // list of pivot values
-        final Set<DataCell> pivotList = new LinkedHashSet<DataCell>();
+        final Set<String> pivotList = new LinkedHashSet<String>();
         final DataColumnSpec pivotSpec = inspec.getColumnSpec(pivot);
         if (pivotSpec.getDomain().hasValues()) {
-            pivotList.addAll(pivotSpec.getDomain().getValues());
+            for (DataCell domValue : pivotSpec.getDomain().getValues()) {
+                pivotList.add(domValue.toString());
+            }
         }
         // list of group values
-        final Set<DataCell> groupList = new LinkedHashSet<DataCell>();
+        final Set<String> groupList = new LinkedHashSet<String>();
         final LinkedHashMap<RowKey, Set<RowKey>> mapping =
             new LinkedHashMap<RowKey, Set<RowKey>>();
         final double nrRows = inData[0].getRowCount();
@@ -238,8 +238,8 @@ public class PivotNodeModel extends NodeModel {
             subExec.setProgress(++rowCnt / nrRows,
                     "Aggregating row: \"" + row.getKey().getString() + "\" ("
                     + rowCnt + "\\" + (int) nrRows + ")");
-            final DataCell groupCell = row.getCell(group);
-            groupList.add(groupCell);
+            final String groupString = row.getCell(group).toString();
+            groupList.add(groupString);
             final DataCell pivotCell = row.getCell(pivot);
             // if missing values should be ignored
             if (pivotCell.isMissing()) {
@@ -247,9 +247,10 @@ public class PivotNodeModel extends NodeModel {
                     continue;
                 }
             }
-            pivotList.add(pivotCell);
-            final Pair<DataCell, DataCell> pair =
-                new Pair<DataCell, DataCell>(groupCell, pivotCell);
+            final String pivotString = pivotCell.toString();
+            pivotList.add(pivotString);
+            final Pair<String, String> pair =
+                new Pair<String, String>(groupString, pivotString);
             Double[] aggValue = map.get(pair);
             if (aggValue == null) {
                 aggValue = aggMethod.init();
@@ -262,7 +263,7 @@ public class PivotNodeModel extends NodeModel {
                 aggMethod.compute(aggValue, value);
             }
             if (m_hiliting.getBooleanValue()) {
-                final RowKey groupKey = new RowKey(groupCell.toString());
+                final RowKey groupKey = new RowKey(groupString);
                 Set<RowKey> set = mapping.get(groupKey);
                 if (set == null) {
                     set = new LinkedHashSet<RowKey>();
@@ -278,23 +279,23 @@ public class PivotNodeModel extends NodeModel {
         final double nrElements = groupList.size();
         int elementCnt = 0;
         subExec = exec.createSubExecutionContext(0.25);
-        for (final DataCell groupCell : groupList) {
+        for (final String groupString : groupList) {
             subExec.checkCanceled();
             subExec.setProgress(++elementCnt / nrElements,
-                    "Computing aggregation of group \"" + groupCell + "\" ("
+                    "Computing aggregation of group \"" + groupString + "\" ("
                     + elementCnt + "\\" + (int) nrElements + ")");
             // contains the aggregated values
             final DataCell[] aggValues = new DataCell[pivotList.size()];
             int idx = 0; // pivot index
-            for (final DataCell pivotCell : pivotList) {
-                final Pair<DataCell, DataCell> newPair =
-                    new Pair<DataCell, DataCell>(groupCell, pivotCell);
+            for (final String pivotString : pivotList) {
+                final Pair<String, String> newPair =
+                    new Pair<String, String>(groupString, pivotString);
                 final Double[] aggValue = map.get(newPair);
                 aggValues[idx] = aggMethod.done(aggValue);
                 idx++;
             }
             // create new row with the given group id and aggregation values
-            buf.addRowToTable(new DefaultRow(groupCell.toString(), aggValues));
+            buf.addRowToTable(new DefaultRow(groupString, aggValues));
         }
         buf.close();
         if (m_hiliting.getBooleanValue()) {

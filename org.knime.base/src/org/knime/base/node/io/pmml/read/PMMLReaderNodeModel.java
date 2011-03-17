@@ -49,6 +49,8 @@ package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -65,22 +67,22 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLReaderNodeModel extends NodeModel {
-    
-    private SettingsModelString m_file =
-            PMMLReaderNodeDialog.createFileChooserModel();
+
+    private SettingsModelString m_file = PMMLReaderNodeDialog
+            .createFileChooserModel();
 
     private PMMLImport m_importer;
-    
+
     /**
-     * 
+     *
      */
     public PMMLReaderNodeModel() {
-        super(new PortType[]{}, new PortType[]{
-                new PortType(PMMLPortObject.class)});
+        super(new PortType[]{}, new PortType[]{new PortType(
+                PMMLPortObject.class)});
     }
 
     /**
@@ -89,62 +91,52 @@ public class PMMLReaderNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-            // read the data dictionary and the mining schema and create a
-            // PMMLPortObjectSpec
-            if (m_file.getStringValue() == null 
-                    || m_file.getStringValue().isEmpty()) {
-                throw new InvalidSettingsException(
-                        "Please select a PMML file!");
-            }
-            File file = new File(m_file.getStringValue());
-            if (!file.exists() || !file.canRead()) {
-                throw new InvalidSettingsException("Can't access PMML file \""
-                        + file + "\".");
-            }
-            try {
-                m_importer = new PMMLImport(file);
-            } catch (SAXException e) {
-                setWarningMessage(
-                    "File \"" + file + "\" is not a valid PMML file:\n" 
-                        + e.getMessage());
-                throw new InvalidSettingsException(e);
-            }  
-            return new PortObjectSpec[]{m_importer.getPortObjectSpec()};
+        // read the data dictionary and the mining schema and create a
+        // PMMLPortObjectSpec
+        String fileS = m_file.getStringValue();
+        if (fileS == null || fileS.isEmpty()) {
+            throw new InvalidSettingsException("Please select a PMML file!");
+        }
+        File file = getFileFromSettings(fileS);
+        if (!file.exists() || !file.canRead()) {
+            throw new InvalidSettingsException("Can't access PMML file \""
+                    + file + "\".");
+        }
+        try {
+            m_importer = new PMMLImport(file);
+        } catch (SAXException e) {
+            setWarningMessage("File \"" + file
+                    + "\" is not a valid PMML file:\n" + e.getMessage());
+            throw new InvalidSettingsException(e);
+        }
+        return new PortObjectSpec[]{m_importer.getPortObjectSpec()};
     }
 
     /*
-    private void validate() throws Exception {
-        InputStream xsltStream = getSchemaInputStream(
-                "/schemata/pmml.xslt");
-        TransformerFactory transFac = TransformerFactory.newInstance();
-        StreamSource ss = new StreamSource(xsltStream);
-        
-        Transformer transformer = transFac.newTransformer(
-                ss);
-//        XFilter filter = new XFilter();
-//        filter.setParent(parser.getXMLReader());
-//        InputSource fileSource = new InputSource(
-//                new FileInputStream(new File(m_file.getStringValue())));
-//        SAXSource saxSrc = new SAXSource(filter, fileSource);
-//        TransformerFactory.newInstance().newTransformer().transform(
-//          saxSrc, result);
-        
-        StreamResult result = new StreamResult(System.out);
-//
-      SAXParserFactory saxFac = SAXParserFactory.newInstance();
-      saxFac.setValidating(false);
-      saxFac.setNamespaceAware(true);
-      SAXParser parser = saxFac.newSAXParser();
-        
-        SAXSource saxSrc = new SAXSource(parser.getXMLReader(),
-                new InputSource(new FileInputStream(
-                new File(m_file.getStringValue()))));
-        transformer.transform(saxSrc, result);
-        
-    }
-    */
-    
-   
+     * private void validate() throws Exception { InputStream xsltStream =
+     * getSchemaInputStream( "/schemata/pmml.xslt"); TransformerFactory transFac
+     * = TransformerFactory.newInstance(); StreamSource ss = new
+     * StreamSource(xsltStream);
+     *
+     * Transformer transformer = transFac.newTransformer( ss); // XFilter filter
+     * = new XFilter(); // filter.setParent(parser.getXMLReader()); //
+     * InputSource fileSource = new InputSource( // new FileInputStream(new
+     * File(m_file.getStringValue()))); // SAXSource saxSrc = new
+     * SAXSource(filter, fileSource); //
+     * TransformerFactory.newInstance().newTransformer().transform( // saxSrc,
+     * result);
+     *
+     * StreamResult result = new StreamResult(System.out); // SAXParserFactory
+     * saxFac = SAXParserFactory.newInstance(); saxFac.setValidating(false);
+     * saxFac.setNamespaceAware(true); SAXParser parser = saxFac.newSAXParser();
+     *
+     * SAXSource saxSrc = new SAXSource(parser.getXMLReader(), new
+     * InputSource(new FileInputStream( new File(m_file.getStringValue()))));
+     * transformer.transform(saxSrc, result);
+     *
+     * }
+     */
+
     /**
      * {@inheritDoc}
      */
@@ -153,13 +145,11 @@ public class PMMLReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         // retrieve selected PortObject class -> instantiate and load it
         if (m_importer == null) {
-            m_importer = new PMMLImport(new File(m_file.getStringValue()));
+            File f = getFileFromSettings(m_file.getStringValue());
+            m_importer = new PMMLImport(f);
         }
         return new PortObject[]{m_importer.getPortObject()};
     }
-    
-    
-
 
     /**
      * {@inheritDoc}
@@ -168,6 +158,41 @@ public class PMMLReaderNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file.loadSettingsFrom(settings);
+    }
+
+    /** Convert argument string to file, will also accept URL (only file:).
+      * @param fileS The file string
+      * @return The file (exists)
+      * @throws InvalidSettingsException If no valid file given.
+      */
+    static File getFileFromSettings(final String fileS)
+        throws InvalidSettingsException {
+        if (fileS == null || fileS.length() == 0) {
+            throw new InvalidSettingsException("No file specified");
+        }
+        File f;
+        if (fileS.startsWith("file:")) {
+            URI uri;
+            try {
+                URL url = new URL(fileS);
+                uri = url.toURI();
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Not a valid URL: \""
+                        + fileS + "\"", e);
+            }
+            f = new File(uri);
+        } else {
+            f = new File(fileS);
+        }
+        if (!f.isFile()) {
+            throw new InvalidSettingsException("File \"" + fileS
+                    + "\" does not exist.");
+        }
+        if (!f.canRead()) {
+            throw new InvalidSettingsException("Can't access PMML file \""
+                    + fileS + "\"");
+        }
+        return f;
     }
 
     /**

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   03.05.2007 (gabriel): created
  */
@@ -67,53 +67,54 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * Pivot dialog pane used to selected the pivot and group column, and 
+ * Pivot dialog pane used to selected the pivot and group column, and
  * optional an aggregation column.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
-    
+
     /**
      * Defines the labels for the radio buttons, count occurrences and
      * enable aggregation.
      */
     static final String[] MAKE_AGGREGATION = new String[]
             {"Count co-occurrences", "Enable aggregation"};
-    
+
     private final DialogComponentColumnNameSelection m_aggregation;
     private final DialogComponentStringSelection m_aggMethod;
     private final DialogComponentButtonGroup m_aggCheck;
-    
+
     /**
      * Creates a new pivot dialog pane with two column selection boxes, one
      * for the group column - used as row ID - and one as the pivot column -
-     * used in the column header, and (optional) an aggregation column. 
+     * used in the column header, and (optional) an aggregation column.
      */
     @SuppressWarnings("unchecked")
     PivotNodeDialogPane() {
-        DialogComponentColumnNameSelection pivot = 
-            new DialogComponentColumnNameSelection(createSettingsPivot(), 
+        DialogComponentColumnNameSelection pivot =
+            new DialogComponentColumnNameSelection(createSettingsPivot(),
                     "Pivot column: ", 0, DataValue.class);
-        DialogComponentColumnNameSelection group = 
-            new DialogComponentColumnNameSelection(createSettingsGroup(), 
+        DialogComponentColumnNameSelection group =
+            new DialogComponentColumnNameSelection(createSettingsGroup(),
                     "Group column: ", 0, DataValue.class);
-        
+
         final SettingsModelString aggModel = createSettingsAggregation();
-        m_aggregation = new DialogComponentColumnNameSelection(aggModel, 
+        m_aggregation = new DialogComponentColumnNameSelection(aggModel,
                     "Aggregation column: ", 0, false, DoubleValue.class);
-        
-        final SettingsModelString aggMethodModel = 
+
+        final SettingsModelString aggMethodModel =
             createSettingsAggregationMethod();
         m_aggMethod = new DialogComponentStringSelection(
                     aggMethodModel, "Aggregation method: ",
                     PivotAggregationMethod.METHODS.keySet());
-        final SettingsModelString aggMakeModel = 
+        final SettingsModelString aggMakeModel =
             createSettingsMakeAggregation();
         m_aggCheck = new DialogComponentButtonGroup(
                 aggMakeModel, true, MAKE_AGGREGATION[0], MAKE_AGGREGATION);
         aggMakeModel.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 if (aggMakeModel.isEnabled()) {
                     boolean b = aggMakeModel.getStringValue().equals(
@@ -144,7 +145,7 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
             + "containing missing values in pivot column.");
         addDialogComponent(missComponent);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -155,33 +156,33 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         boolean enable = (m_aggregation.getSelected() != null);
         m_aggCheck.getModel().setEnabled(enable);
     }
-    
+
     /**
      * @return settings model boolean for ignoring missing values
      */
     static final SettingsModelBoolean createSettingsMissingValues() {
         return new SettingsModelBoolean("missing_values", true);
     }
-    
+
     /**
      * @return a settings model string as group column
      */
     static final SettingsModelString createSettingsGroup() {
         return new SettingsModelString("group_column", null);
     }
-    
+
     /**
      * @return a settings model string as pivot column
      */
     static final SettingsModelString createSettingsPivot() {
         return new SettingsModelString("pivot_column", null);
     }
-    
+
     /**
      * @return a settings model string as pivot column
      */
     static final SettingsModelString createSettingsAggregation() {
-        SettingsModelString model = 
+        SettingsModelString model =
             new SettingsModelString("aggregation_column", null);
         model.setEnabled(false);
         return model;
@@ -203,7 +204,7 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
     static final SettingsModelString createSettingsMakeAggregation() {
         return new SettingsModelString("make_aggregation", MAKE_AGGREGATION[0]);
     }
-    
+
     /**
      * @return a settings model boolean to enable/disable hiliting
      */

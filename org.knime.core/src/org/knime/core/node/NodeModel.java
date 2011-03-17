@@ -53,6 +53,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -1263,12 +1265,44 @@ public abstract class NodeModel {
         m_outgoingFlowObjectStack = outgoingFlowObjectStack;
     }
 
-    /** @return list of added flow variables.
-     * @see Node#getOutgoingFlowVariables()
+    /** @return list of added flow variables in this node.
+     * @deprecated This method was never meant to be public API, the method
+     * scope will be reduced to package visibility in a future minor release.
+     * Clients should always use the
+     * {@link #pushFlowVariableDouble(String, double)} and
+     * {@link #peekFlowVariableDouble(String)} methods (similar for String or
+     * int) or {@link #getAvailableFlowVariables()}.
+     * @since v2.3.0
      */
-    /** @return the outgoingFlowObjectStack */
+    // deprecated as of v2.3.2 - should reduce scope to package in the future
+    // (also removing deprecated flag), see bug 2641 U
+    @Deprecated
     public FlowObjectStack getOutgoingFlowObjectStack() {
         return m_outgoingFlowObjectStack;
+    }
+
+    /** Get all flow variables currently available at this node. The keys of the
+     * returned map will be the identifiers of the flow variables and the values
+     * the flow variables itself. The map is non-modifiable.
+     *
+     * <p>The map contains all flow variables, i.e. the variables that are
+     * provided as part of (all) input connections and the variables that were
+     * pushed onto the stack by this node itself (which is different from
+     * the {@link NodeDialogPane#getAvailableFlowVariables()} method, which
+     * only returns the variables provided at the input.
+     * @return A new map of available flow variables in a non-modifiable map
+     *         (never null).
+     * @since v2.3.3 
+     */
+    public final Map<String, FlowVariable> getAvailableFlowVariables() {
+        Map<String, FlowVariable> result =
+            new LinkedHashMap<String, FlowVariable>();
+        if (m_flowObjectStack != null) {
+            result.putAll(m_flowObjectStack.getAvailableFlowVariables());
+            result.putAll(
+                    m_outgoingFlowObjectStack.getAvailableFlowVariables());
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     /** @deprecated This method has been replaced by

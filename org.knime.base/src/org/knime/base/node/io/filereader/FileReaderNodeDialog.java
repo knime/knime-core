@@ -115,9 +115,9 @@ import org.knime.core.util.FileReaderFileFilter;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.tokenizer.Comment;
 import org.knime.core.util.tokenizer.Delimiter;
+import org.knime.core.util.tokenizer.SettingsStatus;
 import org.knime.core.util.tokenizer.TokenizerException;
 import org.knime.core.util.tokenizer.TokenizerSettings;
-import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  *
@@ -129,8 +129,8 @@ import org.knime.core.util.tokenizer.SettingsStatus;
  */
 class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileReaderNodeDialog.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(FileReaderNodeDialog.class);
 
     private static final int HORIZ_SPACE = 10;
 
@@ -138,14 +138,13 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private static final int PANEL_WIDTH = 5000;
 
-    private static final Delimiter[] DEFAULT_DELIMS =
-            new Delimiter[]{
-                    // the <none> MUST be the first one (index zero!)!!!
-                    new Delimiter("<none>", false, false, false),
-                    new Delimiter(",", false, false, false),
-                    new Delimiter(" ", true, false, false),
-                    new Delimiter("\t", false, false, false),
-                    new Delimiter(";", false, false, false)};
+    private static final Delimiter[] DEFAULT_DELIMS = new Delimiter[]{
+            // the <none> MUST be the first one (index zero!)!!!
+            new Delimiter("<none>", false, false, false),
+            new Delimiter(",", false, false, false),
+            new Delimiter(" ", true, false, false),
+            new Delimiter("\t", false, false, false),
+            new Delimiter(";", false, false, false)};
 
     /*
      * the settings object holding the current state of all settings. The
@@ -271,8 +270,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(),
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(),
                 "Enter ASCII data file location: (press 'Enter' to update "
                         + "preview)"));
 
@@ -484,8 +483,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Preview"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Preview"));
 
         Box hintBox = Box.createHorizontalBox();
         Box tableBox = Box.createHorizontalBox();
@@ -565,8 +564,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 + " will be discarded (if not quoted)");
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 3));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Basic Settings"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Basic Settings"));
         // top row
         Box rowBox = Box.createHorizontalBox();
         rowBox.add(m_hasRowHeaders);
@@ -910,9 +909,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     // add that delimiter:
                     Delimiter selDelim = (Delimiter)o;
                     delimStr = selDelim.getDelimiter();
-                    m_frSettings.addDelimiterPattern(delimStr, selDelim
-                            .combineConsecutiveDelims(), selDelim
-                            .returnAsToken(), selDelim.includeInToken());
+                    m_frSettings
+                            .addDelimiterPattern(delimStr,
+                                    selDelim.combineConsecutiveDelims(),
+                                    selDelim.returnAsToken(),
+                                    selDelim.includeInToken());
                     m_delimApplied = delimStr;
                 } catch (IllegalArgumentException iae) {
                     setErrorLabelText(iae.getMessage());
@@ -1175,18 +1176,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
         /*
-         * This is a hack to speed up test flows. This will allow for setting a
-         * default data file location in the reader dialog. With this the only
-         * action in the file reader dialog is clicking okay (assuming the
-         * default settings of the analyzer are okay). This is a hack because
-         * settings that only contain the file name are not valid. So we accept
-         * a part of invalid settings here. It's really not good practice - but
-         * may help testing.
+         * This allows for setting a file location in the settings object
+         * without any other settings. It happens, when a file is dropped on the
+         * editor, only the source is set and the dialog opens. We must preserve
+         * the source then.
          */
         try {
             URL dataFileLocation =
-                    new URL(settings
-                            .getString(FileReaderSettings.CFGKEY_DATAURL));
+                    new URL(
+                            settings.getString(FileReaderSettings.CFGKEY_DATAURL));
             m_frSettings
                     .setDataFileLocationAndUpdateTableName(dataFileLocation);
         } catch (MalformedURLException mfue) {
@@ -1194,7 +1192,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         } catch (InvalidSettingsException ice) {
             // don't set the data location if it bombs
         }
-        /* end of hack */
 
         // transfer settings from the structure in the dialog's components
         if ((m_frSettings.getDataFileLocation() != null)
@@ -1224,6 +1221,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         /*
          * TODO: We need to synchronize the NodeSettings object
          */
+        // make sure the filename entered gets committed
+        fileLocationChanged();
 
         // make sure the delimiter is committed in case user entered a new one
         // and didn't hit enter - starts an analysis if things changed

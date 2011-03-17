@@ -50,6 +50,7 @@ package org.knime.core.node.port.pmml;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import org.knime.core.node.NodeLogger;
@@ -65,9 +66,13 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MiningSchemaContentHandler.class);
 
-    private List<String>m_learningFields;
-    private List<String>m_ignoredFields;
-    private List<String>m_targetFields;
+    private final List<String>m_learningFields;
+    private final List<String>m_ignoredFields;
+    private final List<String>m_targetFields;
+
+    /* Stores if we are processing a model produced with an KNIME version
+     * < 2.3.3. See below for details. */
+    private boolean m_oldKNIMESchema = false;
 
     /** ID of this handler. */
     public static final String ID = "MiningSchemaContentHandler";
@@ -153,6 +158,26 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
                         + "will be ignored. Skipping it");
             }
             String colName = atts.getValue("name");
+            String treatment = atts.getValue("invalidValueTreatment");
+            if (!((m_oldKNIMESchema && treatment == null)
+                    || "asIs".equalsIgnoreCase(treatment))) {
+                String treatmentText = treatment == null
+                        ? "<default>" : treatment;
+                String msg = "MiningField \"" + colName + "\": Only \"asIs\" "
+                        + "is supported for invalidValueTreatment. "
+                        + "invalidValueTreatment=\""
+                        + treatmentText +  "\" is treated as \"asIs\".";
+                /* At this point the predition does not
+                 * give the expected result for outliers (invalid values) from
+                 * a PMML point of view. But as this is very restrictive and
+                 * causes the RtoPMML functionality to fail and might be
+                 * unnecessary if there are no outliers. Hence only a warning
+                 * message is issued.
+                 * TODO: Extend the functionality of the PMML predictors to
+                 * support more invalid value treatment strategies. */
+//              throw new RuntimeException(msg);
+                LOGGER.warn(msg);
+            }
             String usageType = atts.getValue("usageType");
             if (usageType == null) {
                 usageType = "active";
@@ -164,7 +189,45 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
             } else if ("predicted".equals(usageType)) {
                 m_targetFields.add(colName);
             }
+        } else if ("Application".equals(name)) {
+            /* This check is only necessary to stay backward compatible. Before
+             * KNIME 2.3.3 we did not set the invalidValueTreatment attribute of
+             * the MiningField which defaults to "returnInvalid" but treated it
+             * as "asIs". To maintain this behavior "old" schemes produced by
+             * KNIME take "asIs" as default if the attribute is not specified.
+             */
+            if ("KNIME".equals(atts.getValue("name"))) {
+                String version = atts.getValue("version");
+                m_oldKNIMESchema = isOlderThanVersion233(version);
+            }
+
         }
+    }
+
+    private boolean isOlderThanVersion233(final String version) {
+        if (version != null) {
+            try {
+                StringTokenizer token = new StringTokenizer(
+                        version, ".");
+                for (int v  : new Integer[]{2, 3, 3}) {
+                    if (!token.hasMoreTokens()) {
+                        /* The parsed version is less specific and therefore
+                         * older. */
+                        return true;
+                    }
+                    int parsedRev = Integer.parseInt(token.nextToken());
+                    if (parsedRev > v) {
+                        return false;
+                    } else if (parsedRev < v) {
+                        return true;
+                    } /* else we have the same version so far and
+                        continue */
+                }
+            } catch (NumberFormatException e) {
+               /* An invalid version string is not older. */
+            }
+        }
+        return false;
     }
 
     /**

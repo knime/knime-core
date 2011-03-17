@@ -39,8 +39,8 @@
     <ports>
         <inPort index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</inPort>
         <inPort index="1" name="Optional second table to concatenate">Table contributing subsequent rows (optional).</inPort>
-        <inPort index="2" name="Optional second table to concatenate">Table contributing subsequent rows (optional).</inPort>
-        <inPort index="3" name="Optional second table to concatenate">Table contributing subsequent rows (optional).</inPort>
+        <inPort index="2" name="Optional third table to concatenate">Table contributing subsequent rows (optional).</inPort>
+        <inPort index="3" name="Optional fourth table to concatenate">Table contributing subsequent rows (optional).</inPort>
         <outPort index="0" name="Concatenated table">Table with rows from both tables.</outPort>
 	</ports>
 </knimeNode>

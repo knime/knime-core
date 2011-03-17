@@ -129,9 +129,8 @@ public abstract class NodeDialogPane {
     // collected even if all workflows are closed.
     private static final HierarchyListener HIERARCHY_LISTENER =
         new HierarchyListener() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
+            @Override
             public void hierarchyChanged(final HierarchyEvent e) {
                 noLightWeight(e.getComponent());
             }
@@ -237,7 +236,8 @@ public abstract class NodeDialogPane {
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
-    /**
+    /** Returns the panel holding the different tabs shown in the dialog. Note,
+     * don't modify this panel.
      * @return The underlying dialog panel which keeps the tabbed pane.
      */
     public final JPanel getPanel() {
@@ -330,6 +330,7 @@ public abstract class NodeDialogPane {
             addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
                 /** {@inheritDoc} */
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     if (m_pane.getSelectedComponent() == m_flowVariableTab) {
                         updateFlowVariablesTab();
@@ -815,6 +816,8 @@ public abstract class NodeDialogPane {
         final MutableInteger insertIdx = new MutableInteger(idx);
 
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
             public void run() {
                 int varTabIdx = m_pane.indexOfComponent(m_flowVariableTab);
                 int memIndex = m_pane.indexOfComponent(m_memPolicyTab);
@@ -884,6 +887,8 @@ public abstract class NodeDialogPane {
         }
 
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
             public void run() {
                 int tabIdx = m_pane.indexOfComponent(pane);
                 if (tabIdx < 0) {
@@ -967,6 +972,8 @@ public abstract class NodeDialogPane {
 
         if (comp != null) {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                /** {@inheritDoc} */
+                @Override
                 public void run() {
                     comp.removeHierarchyListener(HIERARCHY_LISTENER);
                     m_pane.remove(comp);
@@ -1036,6 +1043,7 @@ public abstract class NodeDialogPane {
         m_flowVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
             /** {@inheritDoc} */
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_flowVariablesModelChanged = true;
             }

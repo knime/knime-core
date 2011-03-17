@@ -52,12 +52,13 @@ package org.knime.base.node.mine.pca;
 
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 
 /**
- * This class describes an eigenvalue, eigenvector pair, comparable by absolute
+ * This class describes an eigenvalue - eigenvector pair, comparable by absolute
  * of eigenvalue.
  */
 public class EigenValue implements Comparable<EigenValue> {
@@ -153,7 +154,26 @@ public class EigenValue implements Comparable<EigenValue> {
     public static Matrix getSortedEigenVectors(final double[][] eigenVectors,
             final double[] eigenvalues, final int number) {
 
-        final int[] rowindices = new int[eigenvalues.length];
+        final List<EigenValue> list = createSortedList(eigenVectors,
+				eigenvalues);
+        final double[][] rm = new double[eigenvalues.length][number];
+        for (int i = 0; i < number; i++) {
+            final double[][] t = list.get(i).m_vector.getArray();
+            for (int j = 0; j < t.length; j++) {
+                rm[j][i] = t[j][0];
+            }
+        }
+        return new Matrix(rm);
+    }
+    /**
+     * create list of {@link EigenValue}s sorted by absolute value
+     * @param eigenVectors matrix of eigenvector (in columns)
+     * @param eigenvalues eigenvalues, same order as columns of eigenVectors
+     * @return sorted list of {@link EigenValue}s
+     */
+	public static List<EigenValue> createSortedList(
+			final double[][] eigenVectors, final double[] eigenvalues) {
+		final int[] rowindices = new int[eigenvalues.length];
         final Matrix v = new Matrix(eigenVectors);
         for (int i = 0; i < rowindices.length; i++) {
             rowindices[i] = i;
@@ -165,14 +185,7 @@ public class EigenValue implements Comparable<EigenValue> {
                     new int[]{i})));
         }
         Collections.sort(list);
-        final double[][] rm = new double[eigenvalues.length][number];
-        for (int i = 0; i < number; i++) {
-            final double[][] t = list.get(i).m_vector.getArray();
-            for (int j = 0; j < t.length; j++) {
-                rm[j][i] = t[j][0];
-            }
-        }
-        return new Matrix(rm);
-    }
+		return list;
+	}
 
 }

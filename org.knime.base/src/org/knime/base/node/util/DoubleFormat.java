@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 20, 2006 (wiswedel): created
  */
@@ -56,7 +56,7 @@ import java.text.DecimalFormat;
  * Convenience class that allows to format a double to a string. It will use
  * different {@link java.text.NumberFormat} instances depending on the value of
  * the double.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class DoubleFormat {
@@ -104,7 +104,7 @@ public final class DoubleFormat {
      * <td>0E0</td>
      * </tr>
      * </table>
-     * 
+     *
      * @param d the double to format
      * @return the string representation of <code>d</code>
      */
@@ -112,16 +112,20 @@ public final class DoubleFormat {
         if (d == 0.0 || Double.isInfinite(d) || Double.isNaN(d)) {
             return Double.toString(d);
         }
+        DecimalFormat format;
         double abs = Math.abs(d);
         if (abs < 0.0001) {
-            return SMALL_FORMAT.format(d);
+            format = SMALL_FORMAT;
         }
         if (abs <= 10) {
-            return NORMAL_FORMAT.format(d);
+            format = NORMAL_FORMAT;
         }
         if (abs < 10000) {
-            return LARGE_FORMAT.format(d);
+            format = LARGE_FORMAT;
         }
-        return VERY_LARGE_FORMAT.format(d);
+        format = VERY_LARGE_FORMAT;
+        synchronized (format) {
+            return format.format(d);
+        }
     }
 }

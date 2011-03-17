@@ -53,6 +53,8 @@ package org.knime.base.node.mine.svm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -318,20 +320,18 @@ public class PMMLSVMPortObject extends PMMLPortObject {
      */
     protected void addVectorDictionary(final TransformerHandler handler,
             final Svm[] svms, final List<String> colNames) throws SAXException {
-        DoubleVector[][] supVecs = new DoubleVector[svms.length][];
-        int totalNumber = 0;
+        Set<DoubleVector> supVecs = new LinkedHashSet<DoubleVector>();
         for (int i = 0; i < svms.length; i++) {
-            supVecs[i] = svms[i].getSupportVectors();
-            totalNumber += supVecs[i].length;
+            supVecs.addAll(Arrays.asList(svms[i].getSupportVectors()));
         }
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, "numberOfVectors", CDATA, ""
-                + totalNumber);
+        atts.addAttribute(null, null, "numberOfVectors", CDATA,
+                "" + supVecs.size());
 
         handler.startElement(null, null, "VectorDictionary", atts);
         atts = new AttributesImpl();
-        atts.addAttribute(null, null, "numberOfFields", CDATA, ""
-                + colNames.size());
+        atts.addAttribute(null, null, "numberOfFields", CDATA,
+                "" + colNames.size());
         handler.startElement(null, null, "VectorFields", atts);
         for (String colname : colNames) {
             atts = new AttributesImpl();
@@ -341,45 +341,42 @@ public class PMMLSVMPortObject extends PMMLPortObject {
         }
         handler.endElement(null, null, "VectorFields");
 
-        for (int i = 0; i < supVecs.length; i++) {
-            for (int j = 0; j < supVecs[i].length; j++) {
-                atts = new AttributesImpl();
-                atts.addAttribute(null, null, "id", CDATA, supVecs[i][j]
-                        .getClassValue()
-                        + "_" + supVecs[i][j].getKey().getString());
-                handler.startElement(null, null, "VectorInstance", atts);
-                int nrValues = supVecs[i][j].getNumberValues();
-                atts = new AttributesImpl();
-                atts.addAttribute(null, null, "n", CDATA, "" + nrValues);
-                handler.startElement(null, null, "REAL-SparseArray", atts);
-                atts = new AttributesImpl();
-                handler.startElement(null, null, "Indices", atts);
-                StringBuffer buff = new StringBuffer();
-                for (int x = 1; x <= nrValues; x++) {
-                    buff.append(x);
-                    if (x < nrValues) {
-                        buff.append(" ");
-                    }
+        for (DoubleVector vector : supVecs) {
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, vector.getClassValue()
+                    + "_" + vector.getKey().getString());
+            handler.startElement(null, null, "VectorInstance", atts);
+            int nrValues = vector.getNumberValues();
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "n", CDATA, "" + nrValues);
+            handler.startElement(null, null, "REAL-SparseArray", atts);
+            atts = new AttributesImpl();
+            handler.startElement(null, null, "Indices", atts);
+            StringBuffer buff = new StringBuffer();
+            for (int x = 1; x <= nrValues; x++) {
+                buff.append(x);
+                if (x < nrValues) {
+                    buff.append(" ");
                 }
-                char[] chars = buff.toString().toCharArray();
-                handler.characters(chars, 0, chars.length);
-                handler.endElement(null, null, "Indices");
-                handler.startElement(null, null, "REAL-Entries", null);
-                buff = new StringBuffer();
-                for (int x = 0; x < nrValues; x++) {
-                    double d = supVecs[i][j].getValue(x);
-                    buff.append(d);
-                    if (x < nrValues - 1) {
-                        buff.append(" ");
-                    }
-                }
-                chars = buff.toString().toCharArray();
-                handler.characters(chars, 0, chars.length);
-                handler.endElement(null, null, "REAL-Entries");
-                handler.endElement(null, null, "REAL-SparseArray");
-                handler.endElement(null, null, "VectorInstance");
-
             }
+            char[] chars = buff.toString().toCharArray();
+            handler.characters(chars, 0, chars.length);
+            handler.endElement(null, null, "Indices");
+            handler.startElement(null, null, "REAL-Entries", null);
+            buff = new StringBuffer();
+            for (int x = 0; x < nrValues; x++) {
+                double d = vector.getValue(x);
+                buff.append(d);
+                if (x < nrValues - 1) {
+                    buff.append(" ");
+                }
+            }
+            chars = buff.toString().toCharArray();
+            handler.characters(chars, 0, chars.length);
+            handler.endElement(null, null, "REAL-Entries");
+            handler.endElement(null, null, "REAL-SparseArray");
+            handler.endElement(null, null, "VectorInstance");
+
         }
         handler.endElement(null, null, "VectorDictionary");
     }

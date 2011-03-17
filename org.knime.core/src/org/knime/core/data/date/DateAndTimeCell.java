@@ -407,20 +407,24 @@ public class DateAndTimeCell extends DataCell
     @Override
     public String getStringValue() {
         Date date = getInternalUTCCalendarMember().getTime();
+        DateFormat format;
         if (m_hasDate && m_hasTime && m_hasMillis) {
-            return FORMAT_DATE_AND_TIME_AND_MS.format(date);
+            format = FORMAT_DATE_AND_TIME_AND_MS;
         } else if (m_hasDate && m_hasTime && !m_hasMillis) {
-            return FORMAT_DATE_AND_TIME.format(date);
+            format = FORMAT_DATE_AND_TIME;
         } else if (m_hasDate && !m_hasTime && !m_hasMillis) {
-            return FORMAT_DATE.format(date);
+            format = FORMAT_DATE;
         } else if (!m_hasDate && m_hasTime && m_hasMillis) {
-            return FORMAT_TIME_AND_MS.format(date);
+            format = FORMAT_TIME_AND_MS;
         } else if (!m_hasDate && m_hasTime && !m_hasMillis) {
-            return FORMAT_TIME.format(date);
+            format = FORMAT_TIME;
         } else {
             // ill-posed format (should have been rejected in constructor),
             // use full precision
-            return FORMAT_DATE_AND_TIME_AND_MS.format(date);
+            format = FORMAT_DATE_AND_TIME_AND_MS;
+        }
+        synchronized (format) {
+            return format.format(date);
         }
     }
 

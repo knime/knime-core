@@ -344,6 +344,8 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             AttributesImpl atts = new AttributesImpl();
             // don't write usageType = active (is default)
             atts.addAttribute(null, null, "name", CDATA, colSpec);
+            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
+                    "asIs");
             handler.startElement(null, null, MINING_FIELD, atts);
             handler.endElement(null, null, MINING_FIELD);
         }
@@ -354,6 +356,8 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             atts.addAttribute(null, null, "name", CDATA, colSpec);
             // usageType = active
             atts.addAttribute(null, null, "usageType", CDATA, "predicted");
+            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
+                    "asIs");
             handler.startElement(null, null, MINING_FIELD, atts);
             handler.endElement(null, null, MINING_FIELD);
         }
@@ -466,7 +470,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         atts = new AttributesImpl();
         atts.addAttribute(null, null, "name", CDATA, "KNIME");
         atts.addAttribute(null, null, "version", CDATA, KNIMEConstants.MAJOR
-                + "." + KNIMEConstants.MINOR);
+                + "." + KNIMEConstants.MINOR + "." + KNIMEConstants.REV);
         handler.startElement(null, null, "Application", atts);
         handler.endElement(null, null, "Application");
         handler.endElement(null, null, "Header");

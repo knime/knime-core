@@ -67,6 +67,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseWriterConnection;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -185,7 +186,7 @@ final class DBWriterNodeModel extends NodeModel {
             Exception {
         exec.setProgress("Opening database connection to write data...");
         // write entire data
-        String error = DBWriterConnection.writeData(
+        String error = DatabaseWriterConnection.writeData(
                 m_conn, m_table, inData[0], m_append, exec, m_types);
         if (error != null) {
             super.setWarningMessage(error);

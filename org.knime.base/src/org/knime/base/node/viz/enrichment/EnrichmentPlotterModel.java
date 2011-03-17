@@ -145,6 +145,7 @@ public class EnrichmentPlotterModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int compareTo(final Helper o) {
             return (int)Math.signum(this.a - o.a);
         }
@@ -217,7 +218,7 @@ public class EnrichmentPlotterModel extends NodeModel {
         }
     }
 
-    private final EnrichmentPlotterSettings m_settings =
+    final EnrichmentPlotterSettings m_settings =
             new EnrichmentPlotterSettings();
 
     /**

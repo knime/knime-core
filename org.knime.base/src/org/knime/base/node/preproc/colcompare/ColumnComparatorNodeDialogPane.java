@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,9 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
- * History
- *   16.07.2007 (gabriel): created
+ *
  */
 package org.knime.base.node.preproc.colcompare;
 
@@ -79,21 +77,21 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  * Comparator node dialog pane to select two columns for comparison, replacement
  * value or missing, and a new column name to append.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
-    
+
     private final DialogComponentColumnNameSelection m_firstColumn =
         new DialogComponentColumnNameSelection(
-                createFirstColumnModel(), "Column left: ", 0, 
+                createFirstColumnModel(), "Column left: ", 0,
                 DataValue.class);
-    
+
     private final DialogComponentColumnNameSelection m_secondColumn =
         new DialogComponentColumnNameSelection(
-                createSecondColumnModel(), "Column right: ", 0, 
+                createSecondColumnModel(), "Column right: ", 0,
                 DataValue.class);
-    
+
     private final DialogComponentStringSelection m_operator =
             new DialogComponentStringSelection(
                     createComparatorMethod(), "Operator: ",
@@ -101,20 +99,18 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_replaceMatch;
     private final DialogComponentStringSelection m_replaceMismatch;
-    
+
     private final DialogComponentString m_valueMatch;
     private final DialogComponentString m_valueMismatch;
-    
+
     private final DialogComponentString m_newColumn =
         new DialogComponentString(createNewColumnName(), "Name: ");
-    
+
     /**
      * Create new dialog pane with default components.
      */
     ColumnComparatorNodeDialogPane() {
-        JPanel panel = super.getPanel();
-        panel.removeAll();
-        panel.setLayout(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout());
         JPanel northPanel = new JPanel(new GridLayout(1, 3));
         northPanel.setBorder(
                 BorderFactory.createTitledBorder(" Column and Operator "));
@@ -133,9 +129,8 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
         final SettingsModelString matchModel = createMatchOption();
         final SettingsModelString mismatchModel = createMismatchOption();
         matchModel.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 if (matchModel.getStringValue().equals(
                         REPL_OPTIONS[3])) {
@@ -146,9 +141,8 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         });
         mismatchModel.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 if (mismatchModel.getStringValue().equals(
                         REPL_OPTIONS[3])) {
@@ -158,11 +152,11 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
                 }
             }
         });
-        m_replaceMatch = new DialogComponentStringSelection(matchModel, 
+        m_replaceMatch = new DialogComponentStringSelection(matchModel,
                 "Operator result 'true': ", Arrays.asList(REPL_OPTIONS));
         centerPanel.add(m_replaceMatch.getComponentPanel());
         centerPanel.add(m_valueMatch.getComponentPanel());
-        m_replaceMismatch = new DialogComponentStringSelection(mismatchModel, 
+        m_replaceMismatch = new DialogComponentStringSelection(mismatchModel,
                 "Operator result 'false': ", Arrays.asList(REPL_OPTIONS));
         centerPanel.add(m_replaceMismatch.getComponentPanel());
         centerPanel.add(m_valueMismatch.getComponentPanel());
@@ -171,13 +165,14 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
         southPanel.setBorder(BorderFactory.createTitledBorder(" New Column "));
         southPanel.add(m_newColumn.getComponentPanel());
         panel.add(southPanel, BorderLayout.SOUTH);
+        super.addTab("Options", panel);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, 
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         if (specs[0].getNumColumns() < 2) {
             throw new NotConfigurableException(
@@ -192,12 +187,12 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
         m_valueMatch.loadSettingsFrom(settings, specs);
         m_valueMismatch.loadSettingsFrom(settings, specs);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_firstColumn.saveSettingsTo(settings);
         m_secondColumn.saveSettingsTo(settings);
@@ -208,84 +203,84 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
         m_valueMatch.saveSettingsTo(settings);
         m_valueMismatch.saveSettingsTo(settings);
     }
-    
+
     /**
      * @return model comparator method
      */
     static SettingsModelString createComparatorMethod() {
-        return new SettingsModelString("comparator_method", 
+        return new SettingsModelString("comparator_method",
                 ComparatorMethod.EQUAL.toString());
     }
-    
+
     /**
      * @return settings model for first column selection
      */
     static SettingsModelString createFirstColumnModel() {
         return new SettingsModelString("first_column", null);
     }
-    
+
     /**
      * @return settings model for second column selection
      */
     static SettingsModelString createSecondColumnModel() {
         return new SettingsModelString("second_column", null);
     }
-    
+
     /**
      * Replacement options: LEFT_VALUE, RIGHT_VALUE, MISSING, and USER_DEFINED.
      */
     public final static String[] REPL_OPTIONS =
         new String[]{"LEFT_VALUE", "RIGHT_VALUE", "MISSING", "USER_DEFINED"};
-    
+
     /**
      * @return check box model for missing value replacement
      */
     static SettingsModelString createMismatchOption() {
-        return new SettingsModelString("mismatch_option", 
+        return new SettingsModelString("mismatch_option",
                 REPL_OPTIONS[1]);
     }
-    
+
     /**
      * @return check box model for missing value replacement
      */
     static SettingsModelString createMatchOption() {
-        return new SettingsModelString("match_option", 
+        return new SettingsModelString("match_option",
                 REPL_OPTIONS[0]);
     }
-    
+
     /**
      * @return settings model for replacement value
      */
     static SettingsModelString createMatchValue() {
-        SettingsModelString model = 
+        SettingsModelString model =
             new SettingsModelString("match_value", "TRUE");
         model.setEnabled(false);
         return model;
     }
-    
+
     /**
      * @return settings model for replacement value
      */
     static SettingsModelString createMismatchValue() {
-        SettingsModelString model = 
+        SettingsModelString model =
             new SettingsModelString("mismatch_value", "FALSE");
         model.setEnabled(false);
         return model;
     }
-    
+
     /**
      * @return settings model for new column
      */
     static SettingsModelString createNewColumnName() {
         return new SettingsModelString("new_col_name", "compare_result");
     }
-    
+
     /**
      * Comparator methods.
      */
     public enum ComparatorMethod {
         /**
-         * 
+         *
          */
         EQUAL {
             /**
@@ -304,7 +299,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         },
         /**
-         * 
+         *
          */
         NOTEQUAL {
             /**
@@ -323,7 +318,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         },
         /**
-         * 
+         *
          */
         LESS {
             /**
@@ -342,7 +337,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         },
         /**
-         * 
+         *
          */
         LESSEQUAL {
             /**
@@ -361,7 +356,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         },
         /**
-         * 
+         *
          */
         GREATER {
             /**
@@ -380,7 +375,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         },
         /**
-         * 
+         *
          */
         GREATEREQUAL {
             /**
@@ -414,12 +409,12 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
          * @return true, if both are equal
          */
         int compareValue(final DataCell cell1, final DataCell cell2) {
-            DataType type = DataType.getCommonSuperType(cell1.getType(), 
+            DataType type = DataType.getCommonSuperType(cell1.getType(),
                     cell2.getType());
             DataValueComparator comp = type.getComparator();
             return (comp == null ? 0 : comp.compare(cell1, cell2));
         };
-        private static final List<String> COMPARATOR_LIST = 
+        private static final List<String> COMPARATOR_LIST =
             new ArrayList<String>();
         static {
             for (ComparatorMethod method : ComparatorMethod.values()) {
@@ -427,7 +422,7 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             }
         }
         /**
-         * Returns the comparator method, specified within the 
+         * Returns the comparator method, specified within the
          * {@link ComparatorMethod#toString()}.
          * @param str comparator method's toString return value
          * @return a comparator method
@@ -442,5 +437,5 @@ public class ColumnComparatorNodeDialogPane extends NodeDialogPane {
             return null;
         }
     };
-    
+
 }

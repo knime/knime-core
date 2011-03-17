@@ -97,6 +97,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Object getElementAt(final int index) {
             return m_settings.getCurve(index);
         }
@@ -104,6 +105,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getSize() {
             return m_settings.getCurveCount();
         }
@@ -225,6 +227,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         c.insets = new Insets(2, 2, 2, 2);
 
         ActionListener al = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hitThreshold.setEnabled(m_plotHits.isSelected());
                 m_minClusterMembers.setEnabled(m_plotClusters.isSelected());
@@ -261,6 +264,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         c.gridx = 0;
         JButton b = new JButton("  Add curve  ");
         b.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_listModel.addCurve();
             }
@@ -270,6 +274,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         c.gridx = 1;
         b = new JButton("Remove curve");
         b.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_listModel.removeCurve();
             }
