@@ -1207,6 +1207,20 @@
             expert-flag="false"
             factory-class="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
             id="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory">
+      </node>
+      <!--  
+      <node
+            category-path="misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.image.writepng.WritePNGNodeFactory"
+            id="org.knime.base.node.image.writepng.WritePNGNodeFactory">
+      </node>
+      -->
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
+            id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
       </node>  
    </extension>
       <extension
