@@ -4911,6 +4911,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_credentialsStore;
     }
 
+    /** Update user/password fields in the credentials store assigned to the
+     * workflow and update the node configuration.
+     * @param credentialsList the list of credentials to be updated. It will
+     *  find matching crendentials in this workflow and update their fields.
+     * @throws IllegalArgumentException If any of the credentials is unknown
+     */
+    public void updateCredentials(final Credentials... credentialsList) {
+        synchronized (m_workflowMutex) {
+            if (getCredentialsStore().update(credentialsList)) {
+                configureAllNodesInWFM(false);
+            }
+        }
+    }
+
     /** Get the name of the workflow. If none has been set, a name is derived
      * from the workflow directory name. If no directory has been set, a static
      * string is returned. This method never returns null.

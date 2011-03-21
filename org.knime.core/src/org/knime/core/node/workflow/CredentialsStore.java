@@ -116,7 +116,7 @@ public final class CredentialsStore implements Observer {
         c.addClient(client);
         return c;
     }
-    
+
     /**
      * Read out credentials under a given name. The name is the (global)
      * identifier under which this credentials are store (see
@@ -133,7 +133,7 @@ public final class CredentialsStore implements Observer {
         }
         return c;
     }
-    
+
     /**
      * Checks, if a {@link CredentialsStore} is contained in this store under
      * the given name.
@@ -143,18 +143,23 @@ public final class CredentialsStore implements Observer {
     public synchronized boolean contains(final String name) {
         return m_credentials.containsKey(name);
     }
-    
+
     /**
-     * Update the {@link Credentials} with the name from the given
-     * crendentials object. Only the login and password are updated.
-     * @param credentials the name of the credential to be replaced
+     * Update the {@link Credentials} with the names from the given
+     * crendentials list. Only the login and password are updated.
+     * @param credentialsList the list of credentials to change
+     * return if there were changes in any of the fields
      * @throws IllegalArgumentException If the identifier is unknown
      */
-    public synchronized void update(final Credentials credentials) {
-        Credentials c = get(credentials.getName());
-        c.setPassword(credentials.getPassword());
-        c.setLogin(credentials.getLogin());
-    } 
+    synchronized boolean update(final Credentials... credentialsList) {
+        for (Credentials credentials : credentialsList) {
+            Credentials c = get(credentials.getName());
+            c.setPassword(credentials.getPassword());
+            c.setLogin(credentials.getLogin());
+        }
+        // this could be done smarter, e.g. only notify when things change
+        return credentialsList.length > 0;
+    }
 
     /** Get iterable for credentials. Used internally (load/save). Caller
      * must not modify the list!
