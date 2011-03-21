@@ -782,6 +782,11 @@ public final class Node implements NodeModelWarningListener {
         // clear the message object
         clearNodeMessageAndNotify();
 
+        // loops that override the resetAndConfigureLoopBody (returning true)
+        // will not call reset between successive executions
+        // => force a clear of the model's content here
+        m_model.setHasContent(false);
+
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
         if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {

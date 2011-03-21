@@ -501,9 +501,6 @@ public abstract class NodeModel {
         assert (exec != null);
 
         setWarningMessage(null);
-        // loops that override the resetAndConfigureLoopBody will not
-        // call reset between successive executions, force clear here
-        setHasContent(false);
 
         // check for compatible input PortObjects
         for (int i = 0; i < data.length; i++) {
