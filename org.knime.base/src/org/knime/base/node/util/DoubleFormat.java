@@ -116,14 +116,13 @@ public final class DoubleFormat {
         double abs = Math.abs(d);
         if (abs < 0.0001) {
             format = SMALL_FORMAT;
-        }
-        if (abs <= 10) {
+        } else if (abs <= 10) {
             format = NORMAL_FORMAT;
-        }
-        if (abs < 10000) {
+        } else if (abs < 10000) {
             format = LARGE_FORMAT;
+        } else {
+            format = VERY_LARGE_FORMAT;
         }
-        format = VERY_LARGE_FORMAT;
         synchronized (format) {
             return format.format(d);
         }
