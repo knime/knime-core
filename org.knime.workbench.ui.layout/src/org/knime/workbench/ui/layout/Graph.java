@@ -52,8 +52,10 @@ package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class implements a simple graph data structure using an adjacency-list
@@ -83,7 +85,7 @@ public class Graph {
 	/**
 	 * used to label the nodes (increased by one whenever a new node is created)
 	 */
-	private int nodeLabel = 0;
+	private int nodeIndex = 0;
 
 	/**
 	 * constructor initializing an empty graph
@@ -130,15 +132,15 @@ public class Graph {
 	 * @return the newly created node or null if the node could not be inserted
 	 *         to the internal list of nodes
 	 */
-	public Node createNode() {
-		nodeLabel++; // increase label counter
-		Node node = new Node("" + nodeLabel);
+	public Node createNode(String label) {
+		nodeIndex++; // increase label counter
+		Node node = new Node(nodeIndex, label);
 		return nodes.add(node) ? node : null;
 	}
 	
-	public Node createNode(double x, double y) {
-		nodeLabel++; // increase label counter
-		Node node = new Node("" + nodeLabel, x, y);
+	public Node createNode(String label, double x, double y) {
+		nodeIndex++; // increase label counter
+		Node node = new Node(nodeIndex, label, x, y);
 		return nodes.add(node) ? node : null;
 	}
 
@@ -163,19 +165,61 @@ public class Graph {
 	}
 
 	/**
-	 * @return an iterator for the nodes contained in this graph (in order of
+	 * @return an iterable for the nodes contained in this graph (in order of
 	 *         creation)
 	 */
-	public Iterator<Node> nodes() {
-		return nodes.iterator();
+	public Iterable<Node> nodes() {
+		return new Iterable<Graph.Node>() {
+			
+			@Override
+			public Iterator<Node> iterator() {
+				return nodes.iterator();
+			}
+		};
 	}
 
 	/**
-	 * @return an iterator for the edges contained in this graph (in order of
+	 * @return an iterable for the edges contained in this graph (in order of
 	 *         creation)
 	 */
-	public Iterator<Edge> edges() {
-		return edges.iterator();
+	public Iterable<Edge> edges() {
+		return new Iterable<Graph.Edge>() {
+			
+			@Override
+			public Iterator<Edge> iterator() {
+				return edges.iterator();
+			}
+		};
+	}
+	
+	public Iterable<Edge> edges(final Node n){
+		return new Iterable<Graph.Edge>() {
+			
+			@Override
+			public Iterator<Edge> iterator() {
+				return n.edges();
+			}
+		};
+	}
+	
+	public Iterable<Edge> inEdges(final Node n){
+		return new Iterable<Graph.Edge>() {
+			
+			@Override
+			public Iterator<Edge> iterator() {
+				return n.inEdges();
+			}
+		};
+	}
+	
+	public Iterable<Edge> outEdges(final Node n){
+		return new Iterable<Graph.Edge>() {
+			
+			@Override
+			public Iterator<Edge> iterator() {
+				return n.outEdges();
+			}
+		};
 	}
 
 	/**
@@ -221,6 +265,7 @@ public class Graph {
 		for (Iterator<Edge> it = node.edges(); it.hasNext();) {
 			Edge edge = it.next();
 			edge.opposite(node).removeEdge(edge);
+			edges.remove(edge);
 		}
 		// remove node from graph's node-list
 		return nodes.remove(node) ? node : null;
@@ -255,7 +300,16 @@ public class Graph {
 		n.y=y;
 	}
 
-	
+	/**
+	 * create a map storing values for each node in the graph.
+	 * @return a node map containing <code>null</code> for each node
+	 */
+	public Map<Node, Object> createNodeMap(){
+		HashMap<Node, Object> map = new HashMap<Graph.Node, Object>(n());
+		for (Node n: nodes)
+			map.put(n, null);
+		return map;
+	}
 
 	@Override
 	public String toString() {
@@ -276,6 +330,9 @@ public class Graph {
 		 * the internal list of edges incident to this node.
 		 */
 		private List<Edge> edges;
+		private List<Edge> inEdges;
+		private List<Edge> outEdges;
+		private int index = -1;
 		/**
 		 * this nodes' label
 		 */
@@ -290,15 +347,22 @@ public class Graph {
 		 * @param label
 		 *            this nodes' label
 		 */
-		private Node(String label) {
+		private Node(int index, String label) {
+			this.index = index;
 			this.label = label;
 			edges = new ArrayList<Edge>();
+			inEdges = new ArrayList<Edge>();
+			outEdges = new ArrayList<Edge>();
 		}
 		
-		private Node(String label, double x, double y){
-			this(label);
+		private Node(int index, String label, double x, double y){
+			this(index, label);
 			this.x = x;
 			this.y = y;
+		}
+		
+		public int index() {
+			return index;
 		}
 
 		/**
@@ -307,6 +371,14 @@ public class Graph {
 		public int degree() {
 			return edges.size();
 		}
+		
+		public int inDegree(){
+			return inEdges.size();
+		}
+		
+		public int outDegree(){
+			return outEdges.size();
+		}
 
 		/**
 		 * @return an iterator for all incident edges (in order of creation)
@@ -314,6 +386,20 @@ public class Graph {
 		public Iterator<Edge> edges() {
 			return edges.iterator();
 		}
+		
+		/**
+		 * @return an iterator for all incoming edges (in order of creation)
+		 */
+		public Iterator<Edge> inEdges() {
+			return inEdges.iterator();
+		}
+		/**
+		 * @return an iterator for all incident edges (in order of creation)
+		 */
+		public Iterator<Edge> outEdges() {
+			return outEdges.iterator();
+		}
+		
 
 		/**
 		 * returns the edge connecting this node with a given node
@@ -332,23 +418,35 @@ public class Graph {
 		}
 
 		/**
-		 * adds the given edge to this nodes' incidence-list.
+		 * adds the given edge to this nodes' incidence-lists.
 		 * 
 		 * @param edge
 		 * @return the added edge
 		 */
 		private Edge addEdge(Edge edge) {
-			return edges.add(edge) ? edge : null;
+			boolean ok = true;
+			ok = ok && edges.add(edge);
+			if (this == edge.source())
+				ok = ok && outEdges.add(edge);
+			else if (this == edge.target())
+				ok = ok && inEdges.add(edge);
+			return ok ? edge : null;
 		}
 
 		/**
-		 * removes the given edge from this nodes' incidence list
+		 * removes the given edge from this nodes' incidence lists.
 		 * 
 		 * @param edge
 		 * @return the removed edge
 		 */
 		private Edge removeEdge(Edge edge) {
-			return edges.remove(edge) ? edge : null;
+			boolean ok = true;
+			ok = ok && edges.remove(edge);
+			if (this == edge.source())
+				ok = ok && outEdges.remove(edge);
+			else if (this == edge.target())
+				ok = ok && inEdges.remove(edge);
+			return ok ? edge : null;
 		}
 
 		@Override
