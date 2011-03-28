@@ -78,7 +78,7 @@ public class LayoutManager {
     private Graph m_g;
 
     /**
-     * Conschtruggdor.
+     * The constructor.
      *
      * @param wfManager contains the flow being laid out
      */
@@ -105,9 +105,9 @@ public class LayoutManager {
                 int[] bounds = nui.getBounds();
                 x = bounds[0];
                 y = bounds[1];
-                gNode = m_g.createNode(x, y);
+                gNode = m_g.createNode(nc.getNameWithID(), x, y);
             } else {
-                gNode = m_g.createNode();
+                gNode = m_g.createNode(nc.getNameWithID());
             }
             m_workbenchToGraphNodes.put(nc, gNode);
         }
