@@ -237,7 +237,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
     /**
      * @return the underlying editor for this action
      */
-    WorkflowEditor getEditor() {
+    protected WorkflowEditor getEditor() {
         return m_editor;
     }
 }
