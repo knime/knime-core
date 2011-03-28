@@ -52,6 +52,7 @@ package org.knime.workbench.ui.layout.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.ui.layout.LayoutManager;
 
 /**
  *
@@ -74,8 +75,9 @@ public class AutoLayoutCommand extends Command {
     @Override
     public void execute() {
 
-        System.out.println("Layouted nicely - thank you very much!");
-
+        LayoutManager layoutMgr = new LayoutManager(m_wfm);
+        layoutMgr.doLayout();
+        // read back the new coordinates
     }
 
     /**
