@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            id="org.knime.workbench.ui.layout.autolayout"
+            targetID="org.knime.workbench.editor.WorkflowEditor">
+            <action
+               class="org.knime.workbench.ui.layout.actions.AutoLayoutEditorAction"
+               disabledIcon="icons/step_disabled.png"
+               icon="icons/step.png"
+               id="org.knime.workbench.ui.layout.autolayout"
+               label="Auto Layout"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Auto Layout"/>
+      </editorContribution>
+   </extension>
+
+</plugin>
