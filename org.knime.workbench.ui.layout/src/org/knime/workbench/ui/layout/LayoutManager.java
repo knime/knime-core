@@ -44,44 +44,105 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 28.03.2011
  * Author: Martin Mader
  */
 package org.knime.workbench.ui.layout;
 
+import java.util.Collection;
 import java.util.HashMap;
 
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class LayoutManager {
 
-	private WorkflowManager wfm;
-	private HashMap<NodeContainer, Node> workbenchToGraphNodes;
-	private Graph g;
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(LayoutManager.class);
 
-	public LayoutManager(WorkflowManager wfManager) {
-		wfm = wfManager;
-		workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
-		g = new Graph();
-	}
+    private WorkflowManager m_wfm;
 
-	public void doLayout() {
-		// create graph
-		// i.e. for workflow nodes n : {Node newN = g.createNode(x,y);
-		// map.put(n, newN)}
-		// create edges -> g.createEdge(source, target)
+    private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
 
-		new SimpleLayouter().doLayout(g);
+    private Graph m_g;
 
-		// translate coordinates back to workflow
-		// g.getX(node), g.getY(node)
-	}
+    /**
+     * Conschtruggdor.
+     *
+     * @param wfManager contains the flow being laid out
+     */
+    public LayoutManager(final WorkflowManager wfManager) {
+        m_wfm = wfManager;
+        m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_g = new Graph();
+    }
+
+    /**
+     *
+     */
+    public void doLayout() {
+
+        // add all nodes (no input /output ports yet (meta nodes))
+        Collection<NodeContainer> allNodes = m_wfm.getNodeContainers();
+        for (NodeContainer nc : allNodes) {
+            UIInformation uiInfo = nc.getUIInformation();
+            int x = 0;
+            int y = 0;
+            Node gNode;
+            if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
+                NodeUIInformation nui = (NodeUIInformation)uiInfo;
+                int[] bounds = nui.getBounds();
+                x = bounds[0];
+                y = bounds[1];
+                gNode = m_g.createNode(x, y);
+            } else {
+                gNode = m_g.createNode();
+            }
+            m_workbenchToGraphNodes.put(nc, gNode);
+        }
+
+        // add all connections
+        Collection<ConnectionContainer> allConns =
+                m_wfm.getConnectionContainers();
+        for (ConnectionContainer conn : allConns) {
+            m_g.createEdge(m_workbenchToGraphNodes.get(conn.getSource()),
+                    m_workbenchToGraphNodes.get(conn.getDest()));
+        }
+
+        new SimpleLayouter().doLayout(m_g);
+
+        // transfer new coordinates back to nodes
+        for (NodeContainer nc : allNodes) {
+            UIInformation uiInfo = nc.getUIInformation();
+            if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
+                Node gNode = m_workbenchToGraphNodes.get(nc);
+                NodeUIInformation nui = (NodeUIInformation)uiInfo;
+                int[] b = nui.getBounds();
+                int x =
+                        (int)Math.round(m_g.getX(gNode)
+                                * NodeContainerFigure.WIDTH * 2.34);
+                int y =
+                        (int)Math.round(m_g.getY(gNode)
+                                * NodeContainerFigure.HEIGHT * 2.34);
+                NodeUIInformation newCoord =
+                        new NodeUIInformation(x, y, b[2], b[3],
+                                nui.hasAbsoluteCoordinates());
+                LOGGER.debug("Node " + nc + " gets auto-layout coordinates "
+                        + newCoord);
+                nc.setUIInformation(newCoord);
+            }
+        }
+    }
 
 }
