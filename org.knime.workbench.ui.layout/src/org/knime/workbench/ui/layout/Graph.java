@@ -310,6 +310,16 @@ public class Graph {
 			map.put(n, null);
 		return map;
 	}
+	/**
+	 * create a map storing an {@link Integer} for each node in the graph.
+	 * @return a node map containing <code>null</code> for each node
+	 */
+	public Map<Node, Integer> createIntNodeMap(){
+		HashMap<Node, Integer> map = new HashMap<Graph.Node, Integer>(n());
+		for (Node n: nodes)
+			map.put(n, null);
+		return map;
+	}
 
 	@Override
 	public String toString() {
