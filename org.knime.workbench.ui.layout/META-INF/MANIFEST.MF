@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Workflow Layout
+Bundle-SymbolicName: org.knime.workbench.ui.layout
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.knime.workbench.ui.layout.Activator
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
