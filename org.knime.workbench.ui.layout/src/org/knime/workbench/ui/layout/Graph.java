@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.ui.layout;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -320,6 +321,25 @@ public class Graph {
 			map.put(n, null);
 		return map;
 	}
+	
+	/**
+	 * return the list of bend-points of a given edge
+	 * @param e
+	 * @return
+	 */
+	public ArrayList<Point2D> bends(Edge e){
+		return e.bends;
+	}
+	
+	/**
+	 * add a bend-point to the given edge
+	 * @param e
+	 * @param x
+	 * @param y
+	 */
+	public void addBend(Edge e, double x, double y){
+		e.bends.add(new Point2D.Double(x, y));
+	}
 
 	@Override
 	public String toString() {
@@ -481,6 +501,10 @@ public class Graph {
 		 * this edges' target node
 		 */
 		private Node target;
+		/**
+		 * this edges' bend points
+		 */
+		private ArrayList<Point2D> bends = new ArrayList<Point2D>();
 
 		/**
 		 * creates an edge (source, target). Will only be called by
