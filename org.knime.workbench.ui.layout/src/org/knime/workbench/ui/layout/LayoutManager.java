@@ -187,23 +187,22 @@ public class LayoutManager {
                 m_oldBendpoints.put(conn.getID(), null);
             }
 
+            ConnectionUIInformation newUI = new ConnectionUIInformation();
             Edge e = m_workbenchToGraphEdges.get(conn);
             ArrayList<Point2D> newBends = m_g.bends(e);
             if (newBends != null && !newBends.isEmpty()) {
-                ConnectionUIInformation newUI = new ConnectionUIInformation();
                 // add more X to every other bendpoint
-                int extraX = 32;
+                int extraX = 16; // half the node icon size...
+                int extraY = 24;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
                     newUI.addBendpoint((int)Math.round(b.getX() * X_STRETCH)
-                            + X_OFFSET + ((i % 2) * extraX),
-                            (int)Math.round(b.getY() * Y_STRETCH) + Y_OFFSET,
-                            i);
+                            + X_OFFSET + extraX,
+                            (int)Math.round(b.getY() * Y_STRETCH) + Y_OFFSET
+                                    + extraY, i);
                 }
-                conn.setUIInfo(newUI);
-            } else {
-                conn.setUIInfo(null);
             }
+            conn.setUIInfo(newUI);
         }
 
     }
