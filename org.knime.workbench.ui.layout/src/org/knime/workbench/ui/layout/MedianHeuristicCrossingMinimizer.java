@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 29.03.2011
  * Author: mader
  */
@@ -53,7 +53,6 @@ package org.knime.workbench.ui.layout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
 
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
@@ -61,15 +60,15 @@ import org.knime.workbench.ui.layout.Graph.Node;
 /**
  * reduces crossings of a given layering according to the median heuristic
  * (Eades and Wormald, 1994)
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class MedianHeuristicCrossingMinimizer {
 	private Graph m_g;
 	private ArrayList<ArrayList<Node>> m_layers;
 
-	public MedianHeuristicCrossingMinimizer(Graph g,
-			ArrayList<ArrayList<Node>> layers) {
+	public MedianHeuristicCrossingMinimizer(final Graph g,
+			final ArrayList<ArrayList<Node>> layers) {
 		m_g = g;
 		m_layers = layers;
 	}
@@ -99,8 +98,8 @@ public class MedianHeuristicCrossingMinimizer {
 		} while (crossings < oldCrossings);
 	}
 
-	private void orderByMedian(ArrayList<Node> curLayer,
-			ArrayList<Node> prevLayer) {
+	private void orderByMedian(final ArrayList<Node> curLayer,
+			final ArrayList<Node> prevLayer) {
 		for (Node v : curLayer) {
 			ArrayList<Node> neighbors = getNeighbors(v, prevLayer);
 			int size = neighbors.size();
@@ -121,7 +120,7 @@ public class MedianHeuristicCrossingMinimizer {
 	/**
 	 * counts the number of crossings in the current layering. THIS IS REALLY
 	 * BRUTE FORCE AND CAN BE MADE MORE EFFICIENT!
-	 * 
+	 *
 	 * @return
 	 */
 	private int numberOfCrossings() {
@@ -153,12 +152,12 @@ public class MedianHeuristicCrossingMinimizer {
 
 	/**
 	 * return the neighbors of a node n on the given layer
-	 * 
+	 *
 	 * @param n
 	 * @param layer
 	 * @return
 	 */
-	private ArrayList<Node> getNeighbors(Node n, ArrayList<Node> layer) {
+	private ArrayList<Node> getNeighbors(final Node n, final ArrayList<Node> layer) {
 		ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
 		for (Edge e : m_g.edges(n)) {
 			Node m = e.opposite(n);
@@ -170,7 +169,7 @@ public class MedianHeuristicCrossingMinimizer {
 
 	/**
 	 * check whether to edges (u1,v1) and (u2,v2) create a crossing
-	 * 
+	 *
 	 * @param u1
 	 *            node of first edge on first layer
 	 * @param v1
@@ -181,7 +180,7 @@ public class MedianHeuristicCrossingMinimizer {
 	 *            node of second edge on second layer
 	 * @return 1 if edges cross, 0 otherwise
 	 */
-	private int checkCrossing(Node u1, Node v1, Node u2, Node v2) {
+	private int checkCrossing(final Node u1, final Node v1, final Node u2, final Node v2) {
 		if (m_g.getY(u1) < m_g.getY(u2) && m_g.getY(v1) > m_g.getY(v2))
 			return 1;
 		else if (m_g.getY(u1) > m_g.getY(u2) && m_g.getY(v1) < m_g.getY(v2))
@@ -195,12 +194,12 @@ public class MedianHeuristicCrossingMinimizer {
 
 		ArrayList<Node> m_otherLayer;
 
-		public LayerSortComparator(ArrayList<Node> otherLayer) {
+		public LayerSortComparator(final ArrayList<Node> otherLayer) {
 			m_otherLayer = otherLayer;
 		}
 
 		@Override
-		public int compare(Node o1, Node o2) {
+		public int compare(final Node o1, final Node o2) {
 			if (m_g.getY(o1) < m_g.getY(o2))
 				return -1;
 			else if (m_g.getY(o1) > m_g.getY(o2))
