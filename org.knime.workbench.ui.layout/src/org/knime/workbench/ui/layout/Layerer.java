@@ -64,20 +64,19 @@ import org.knime.workbench.ui.layout.Graph.Node;
  */
 public class Layerer {
 
-	private static final int SCALE = 120;
-
 	/**
-	 * Perform an improved topological sort to assign layers in x-direction.
+	 * Perform a topological sort to assign layers to nodes.
 	 *
 	 * @param g
 	 *            the graph to be layered
 	 * @param nodeLayer
 	 *            a map storing the layer of each node
-	 * @return the list of layers, each layer containing a list of nodes
+	 * @return the list of layers, each layer containing an array list of nodes
 	 */
-	static ArrayList<List<Node>> assignLayers(final Graph g, final Map<Node, Integer> nodeLayer) {
+	static ArrayList<ArrayList<Node>> assignLayers(Graph g, Map<Node, Integer> nodeLayer) {
+
 		// initialize residual degrees, and find first sources
-		ArrayList<List<Node>> layers = new ArrayList<List<Node>>();
+		ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
 		Map<Node, Integer> residualDegree = g.createIntNodeMap();
 		ArrayList<Node> sources = new ArrayList<Node>();
 		for (Node n : g.nodes()) {
@@ -93,7 +92,6 @@ public class Layerer {
 			// put all of the current sources on the current layer
 			layers.add(sources);
 			for (Node n : sources) {
-				g.setCoordinates(n, layer * SCALE, g.getY(n));
 				nodeLayer.put(n, layer);
 				// reduce residual degree of neighbours
 				for (Edge e : g.outEdges(n)) {

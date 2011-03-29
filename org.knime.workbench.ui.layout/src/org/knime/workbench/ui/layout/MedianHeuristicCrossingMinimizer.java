@@ -44,81 +44,29 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * Created: 28.03.2011
+ * 
+ * Created: 29.03.2011
  * Author: mader
  */
 package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
- *
+ * 
  * @author mader, University of Konstanz
  */
-public class SimpleLayeredLayouter {
-
-	public void doLayout(final Graph g) throws RuntimeException {
-		
-		// get layering of the graph
-		Map<Node, Integer> nodeLayer = g.createIntNodeMap();
-		ArrayList<ArrayList<Node>> layers = Layerer.assignLayers(g, nodeLayer);
-		
-		// add dummy vertices for edges spanning several layers
-		ArrayList<Edge> hiddenEdges = new ArrayList<Graph.Edge>();
-		HashMap<Edge, ArrayList<Node>> hiddenEdgeToDummyVertices = new HashMap<Graph.Edge, ArrayList<Node>>();
-		for (Edge e:g.edges()){
-			int startLayer = nodeLayer.get(e.source()).intValue();
-			int endLayer = nodeLayer.get(e.target()).intValue();
-			int span = endLayer-startLayer;
-			if (span > 1){
-				hiddenEdges.add(e);
-				ArrayList<Node> dummyVertices = new ArrayList<Graph.Node>();
-				Node last = e.source();
-				for (int i=1; i< span; i++){
-					Node current = g.createNode("bend");
-					// add dummy to its layer
-					nodeLayer.put(current, startLayer + i);
-					layers.get(startLayer+i).add(current);
-					// add dummy edge to graph
-					g.createEdge(last, current);
-					// add dummy vertex to the list of dummies for the original edge
-					dummyVertices.add(current);
-					// proceed
-					last = current;
-				}
-				// add last dummy edge
-				g.createEdge(last, e.target());
-				// store list of dummy nodes for original edge
-				hiddenEdgeToDummyVertices.put(e, dummyVertices);
-			}
-		}
-		// remove hidden edges
-		for (Edge e:hiddenEdges){
-			g.removeEdge(e);
-		}
-		
-		// set initial coordinates by layer
-		int layer = 0;
-		for (ArrayList<Node> currentLayer : layers){
-			int verticalCoord = 0;
-			for (Node n : currentLayer){
-				g.setCoordinates(n, layer, verticalCoord);
-				verticalCoord++;
-			}
-			layer++;
-		}
-		
-		/* DO CROSSING MINIMIZATION */
-		
-		
-		/* UNHIDE REPLACED EDGES */
-
+public class MedianHeuristicCrossingMinimizer {
+	private Graph m_g;
+	private Map<Node, Integer> m_nodeLayer;
+	private ArrayList<ArrayList<Node>> m_layers;
+	
+	public MedianHeuristicCrossingMinimizer(Graph g, Map<Node, Integer> nodeLayer, ArrayList<ArrayList<Node>> layers) {
+		m_g = g;
+		m_nodeLayer = nodeLayer;
+		m_layers = layers;
 	}
-
 }
