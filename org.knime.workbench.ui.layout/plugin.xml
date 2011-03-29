@@ -18,8 +18,8 @@
                tooltip="Auto Layout"/>
             <action
                class="org.knime.workbench.ui.layout.actions.HorizAlignLayoutEditorAction"
-               disabledIcon="icons/step_disabled.png"
-               icon="icons/step.png"
+               disabledIcon="icons/align_disabled.png"
+               icon="icons/align.png"
                id="org.knime.workbench.ui.layout.horizalignlayout"
                label="Align Horizontally"
                menubarPath="org.knime.workbench.editor.menu/group1"

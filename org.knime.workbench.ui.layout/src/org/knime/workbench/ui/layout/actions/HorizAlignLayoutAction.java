@@ -89,7 +89,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/skip.png");
+        return ImageRepository.getImageDescriptor("icons/align.png");
     }
 
     /**
@@ -97,7 +97,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/skip_disabled.png");
+        return ImageRepository.getImageDescriptor("icons/align_disabled.png");
     }
 
     /**
