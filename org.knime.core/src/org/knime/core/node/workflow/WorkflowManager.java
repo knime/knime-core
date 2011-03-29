@@ -1023,7 +1023,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * the specified port.
      * @param id id of the node of interest
      * @param portIdx port index
-     * @return incoming connection at that port of the given node
+     * @return incoming connection at that port of the given node or null if it
+     *     doesn't exist
      */
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
@@ -1051,6 +1052,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             getNodeContainer(id); // for exception handling
             return new LinkedHashSet<ConnectionContainer>(
                     m_workflow.getConnectionsByDest(id));
+        }
+    }
+
+    /**
+     * Gets a connection by id.
+     * @param id of the connection to return
+     * @return the connection with the specified id
+     */
+    public ConnectionContainer getConnection(final ConnectionID id) {
+        synchronized (m_workflowMutex) {
+            return getIncomingConnectionFor(id.getDestinationNode(),
+                    id.getDestinationPort());
         }
     }
 

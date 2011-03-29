@@ -173,6 +173,13 @@ public class ConnectionContainer implements ConnectionProgressListener {
         return m_type;
     }
 
+    /**
+     * @return the ID for this connection.
+     */
+    public ConnectionID getID() {
+        return new ConnectionID(m_dest, m_destPort);
+    }
+
     /////////////////////////
 
     /**
