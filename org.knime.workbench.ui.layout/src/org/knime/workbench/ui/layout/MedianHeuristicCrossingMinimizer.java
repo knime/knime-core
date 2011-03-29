@@ -69,4 +69,8 @@ public class MedianHeuristicCrossingMinimizer {
 		m_nodeLayer = nodeLayer;
 		m_layers = layers;
 	}
+	
+	public void run(){
+		
+	}
 }
