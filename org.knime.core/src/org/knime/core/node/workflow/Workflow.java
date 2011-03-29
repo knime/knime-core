@@ -823,6 +823,7 @@ class Workflow {
      * 
      * @param id The requested start node (instanceof LoopStart) 
      * @throws IllegalLoopException if loop setup is wrong
+     * @throws IllegalArgumentException if argument is not a LoopStart node
      * @return id of end node or null if no such node was found.
      */
     NodeID getMatchingLoopEnd(final NodeID id) 
@@ -875,7 +876,65 @@ class Workflow {
         }
         return foundEnd;
     }
-    
+
+    /** Return matching LoopStart node for the given LoopEnd
+     * 
+     * @param id The requested end node (instanceof LoopEnd) 
+     * @throws IllegalLoopException if loop setup is wrong
+     * @throws IllegalArgumentException if argument is not a LoopEnd node
+     * @return id of start node or null if no such node was found.
+     */
+    NodeID getMatchingLoopStart(final NodeID id) 
+    throws IllegalLoopException, IllegalArgumentException {
+        NodeContainer nc = getNode(id);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException("Not a Loop End Node " + id);
+        }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!LoopRole.END.equals(snc.getLoopRole())) {
+            throw new IllegalArgumentException("Not a Loop End Node " + id);
+        }
+        NodeID foundStart = null;
+        // create stack for Breitensuche: also store the level of loop nesting
+        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
+        st.push(new Pair<NodeID, Integer>(id, 0));
+        while (!st.isEmpty()) {
+            Pair<NodeID, Integer> p = st.pop();
+            NodeID currentID = p.getFirst();
+            int currentDepth = p.getSecond();
+            for (ConnectionContainer cc
+                    : m_connectionsByDest.get(currentID)) {
+                assert currentID.equals(cc.getDest());
+                NodeID srcID = cc.getSource();
+                if (this.getID().equals(srcID)) {
+                    throw new IllegalLoopException("Loops can not start"
+                            + " from outside of a workflow!");
+                }
+                NodeContainer srcNC = getNode(srcID);
+                if (srcNC instanceof SingleNodeContainer) {
+                    SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
+                    if (LoopRole.BEGIN.equals(srcSNC.getLoopRole())) {
+                        if (currentDepth == 0) {
+                            if (foundStart != null) {
+                                throw new IllegalLoopException("Loops can not"
+                                    + " have more than one Start Node!");
+                            }
+                            foundStart = srcID;
+                            continue;
+                        } else {
+                            currentDepth--;
+                        }
+                    }
+                    if (LoopRole.END.equals(srcSNC.getLoopRole())) {
+                        currentDepth++;
+                    }
+                }
+                st.push(new Pair<NodeID, Integer>(srcID, currentDepth));
+            }
+        }
+        return foundStart;
+    }
+
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
      * do not connect back to the end-node. Used to re-execute all nodes
