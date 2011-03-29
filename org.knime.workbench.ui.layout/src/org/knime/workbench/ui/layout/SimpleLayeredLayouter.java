@@ -44,27 +44,25 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 28.03.2011
  * Author: mader
  */
 package org.knime.workbench.ui.layout;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class SimpleLayeredLayouter {
-	
+
 	public void doLayout(final Graph g) throws RuntimeException {
 		Map<Node, Integer> nodeLayer = g.createIntNodeMap();
-		ArrayList<List<Node>> layers = Layerer.assignLayers(g, nodeLayer);
+		Layerer.assignLayers(g, nodeLayer);
 	}
 
 }

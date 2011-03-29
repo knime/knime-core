@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 28.03.2011
  * Author: mader
  */
@@ -59,23 +59,23 @@ import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
  * assigns layers to the nodes of a graph by topological sorting
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class Layerer {
-	
+
 	private static final int SCALE = 120;
 
 	/**
 	 * Perform an improved topological sort to assign layers in x-direction.
-	 * 
+	 *
 	 * @param g
 	 *            the graph to be layered
 	 * @param nodeLayer
 	 *            a map storing the layer of each node
 	 * @return the list of layers, each layer containing a list of nodes
 	 */
-	static ArrayList<List<Node>> assignLayers(Graph g, Map<Node, Integer> nodeLayer) {
+	static ArrayList<List<Node>> assignLayers(final Graph g, final Map<Node, Integer> nodeLayer) {
 		// initialize residual degrees, and find first sources
 		ArrayList<List<Node>> layers = new ArrayList<List<Node>>();
 		Map<Node, Integer> residualDegree = g.createIntNodeMap();

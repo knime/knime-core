@@ -44,20 +44,45 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 28.03.2011
  * Author: mader
  */
 package org.knime.workbench.ui.layout;
 
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
+import org.knime.workbench.ui.layout.Graph.Node;
+
 /**
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class SimpleLayouter {
-	
-	public void doLayout(Graph g){
-		
+
+	public void doLayout(final Graph g) throws RuntimeException {
+	    double x = 1;
+	    double y = 50;
+	    Node start = null;
+	    for (Node n : g.nodes()) {
+	        if (!n.inEdges().hasNext()) {
+	            start = n;
+	            break;
+	        }
+		}
+	    if (start == null) {
+	        throw new RuntimeException("No start node found");
+	    }
+	    y = g.getY(start);
+	    while (start != null) {
+	        System.out.println("Node " + start + ": " + x + ", " + y);
+	        g.setCoordinates(start, x, y);
+	        x += NodeContainerFigure.WIDTH * 1.5;
+	        if (start.outEdges().hasNext()) {
+	            start = start.outEdges().next().target();
+	        } else {
+	            start = null;
+	        }
+	    }
 	}
 
 }

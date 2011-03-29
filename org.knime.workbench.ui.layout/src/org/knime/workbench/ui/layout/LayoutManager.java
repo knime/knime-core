@@ -51,15 +51,19 @@
 package org.knime.workbench.ui.layout;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
@@ -76,6 +80,10 @@ public class LayoutManager {
     private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
 
     private Graph m_g;
+
+    private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
+
+    private HashMap<ConnectionID, ConnectionUIInformation> m_oldBendpoints;
 
     /**
      * The constructor.
@@ -116,11 +124,20 @@ public class LayoutManager {
         Collection<ConnectionContainer> allConns =
                 m_wfm.getConnectionContainers();
         for (ConnectionContainer conn : allConns) {
-            m_g.createEdge(m_workbenchToGraphNodes.get(conn.getSource()),
-                    m_workbenchToGraphNodes.get(conn.getDest()));
+            NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
+            NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
+
+            m_g.createEdge(m_workbenchToGraphNodes.get(s),
+                    m_workbenchToGraphNodes.get(d));
         }
 
-        new SimpleLayouter().doLayout(m_g);
+        // new SimlpleLayouter().doLayout(m_g);
+
+        new SimpleLayeredLayouter().doLayout(m_g);
+
+        // preserver the old stuff for undoers
+        m_oldBendpoints = new HashMap<ConnectionID, ConnectionUIInformation>();
+        m_oldCoordinates = new HashMap<NodeID, NodeUIInformation>();
 
         // transfer new coordinates back to nodes
         for (NodeContainer nc : allNodes) {
@@ -129,20 +146,37 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x =
-                        (int)Math.round(m_g.getX(gNode)
-                                * NodeContainerFigure.WIDTH * 2.34);
-                int y =
-                        (int)Math.round(m_g.getY(gNode)
-                                * NodeContainerFigure.HEIGHT * 2.34);
+                int x = (int)Math.round(m_g.getX(gNode) + 25);
+                int y = (int)Math.round(m_g.getY(gNode));
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
                 LOGGER.debug("Node " + nc + " gets auto-layout coordinates "
                         + newCoord);
+                // save old coordinates for undo
+                m_oldCoordinates.put(nc.getID(), nui);
+                // triggers gui update
                 nc.setUIInformation(newCoord);
             }
         }
+
+        // delete old bendpoints
+        for (ConnectionContainer conn : allConns) {
+            UIInformation ui = conn.getUIInfo();
+            if (ui != null && ui instanceof ConnectionUIInformation) {
+                ConnectionUIInformation cui = (ConnectionUIInformation)ui;
+                m_oldBendpoints.put(conn.getID(), cui);
+                conn.setUIInfo(null);
+            }
+        }
+
     }
 
+    public Map<NodeID, NodeUIInformation> getOldNodeCoordinates() {
+        return Collections.unmodifiableMap(m_oldCoordinates);
+    }
+
+    public Map<ConnectionID, ConnectionUIInformation> getOldBendpoints() {
+        return Collections.unmodifiableMap(m_oldBendpoints);
+    }
 }

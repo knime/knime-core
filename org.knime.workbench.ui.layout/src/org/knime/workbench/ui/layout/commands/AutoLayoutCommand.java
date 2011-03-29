@@ -50,7 +50,15 @@
  */
 package org.knime.workbench.ui.layout.commands;
 
+import java.util.Map;
+
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.layout.LayoutManager;
 
@@ -61,6 +69,8 @@ import org.knime.workbench.ui.layout.LayoutManager;
 public class AutoLayoutCommand extends Command {
 
     private final WorkflowManager m_wfm;
+
+    private LayoutManager m_layoutMgr;
 
     /**
      * @param wfm
@@ -74,10 +84,8 @@ public class AutoLayoutCommand extends Command {
      */
     @Override
     public void execute() {
-
-        LayoutManager layoutMgr = new LayoutManager(m_wfm);
-        layoutMgr.doLayout();
-        // read back the new coordinates
+        m_layoutMgr = new LayoutManager(m_wfm);
+        m_layoutMgr.doLayout();
     }
 
     /**
@@ -85,7 +93,7 @@ public class AutoLayoutCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        return false;
+        return m_layoutMgr != null;
     }
 
     /**
@@ -93,5 +101,27 @@ public class AutoLayoutCommand extends Command {
      */
     @Override
     public void undo() {
+        Map<NodeID, NodeUIInformation> oldPositions =
+                m_layoutMgr.getOldNodeCoordinates();
+        Map<ConnectionID, ConnectionUIInformation> oldBendpoints =
+                m_layoutMgr.getOldBendpoints();
+        // re-position nodes
+        for (Map.Entry<NodeID, NodeUIInformation> e : oldPositions.entrySet()) {
+            NodeContainer nc = m_wfm.getNodeContainer(e.getKey());
+            if (nc == null) {
+                continue;
+            }
+            nc.setUIInformation(e.getValue());
+        }
+        // re-create bendpoints
+        for (Map.Entry<ConnectionID, ConnectionUIInformation> e : oldBendpoints
+                .entrySet()) {
+            ConnectionContainer cc = m_wfm.getConnection(e.getKey());
+            if (cc == null) {
+                continue;
+            }
+            cc.setUIInfo(e.getValue());
+        }
+
     }
 }
