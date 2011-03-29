@@ -74,7 +74,7 @@ import java.util.Map;
  * 
  */
 public class Graph {
-	
+
 	/**
 	 * list of nodes in this graph
 	 */
@@ -138,7 +138,7 @@ public class Graph {
 		Node node = new Node(nodeIndex, label);
 		return nodes.add(node) ? node : null;
 	}
-	
+
 	public Node createNode(String label, double x, double y) {
 		nodeIndex++; // increase label counter
 		Node node = new Node(nodeIndex, label, x, y);
@@ -164,8 +164,8 @@ public class Graph {
 		target.addEdge(edge);
 		return edges.add(edge) ? edge : null;
 	}
-	
-	public Edge reinsert(Edge e){
+
+	public Edge reinsert(Edge e) {
 		Node source = e.source();
 		Node target = e.target();
 		// if the two nodes are already adjacent
@@ -184,7 +184,7 @@ public class Graph {
 	 */
 	public Iterable<Node> nodes() {
 		return new Iterable<Graph.Node>() {
-			
+
 			@Override
 			public Iterator<Node> iterator() {
 				return nodes.iterator();
@@ -198,37 +198,37 @@ public class Graph {
 	 */
 	public Iterable<Edge> edges() {
 		return new Iterable<Graph.Edge>() {
-			
+
 			@Override
 			public Iterator<Edge> iterator() {
 				return edges.iterator();
 			}
 		};
 	}
-	
-	public Iterable<Edge> edges(final Node n){
+
+	public Iterable<Edge> edges(final Node n) {
 		return new Iterable<Graph.Edge>() {
-			
+
 			@Override
 			public Iterator<Edge> iterator() {
 				return n.edges();
 			}
 		};
 	}
-	
-	public Iterable<Edge> inEdges(final Node n){
+
+	public Iterable<Edge> inEdges(final Node n) {
 		return new Iterable<Graph.Edge>() {
-			
+
 			@Override
 			public Iterator<Edge> iterator() {
 				return n.inEdges();
 			}
 		};
 	}
-	
-	public Iterable<Edge> outEdges(final Node n){
+
+	public Iterable<Edge> outEdges(final Node n) {
 		return new Iterable<Graph.Edge>() {
-			
+
 			@Override
 			public Iterator<Edge> iterator() {
 				return n.outEdges();
@@ -284,73 +284,119 @@ public class Graph {
 		// remove node from graph's node-list
 		return nodes.remove(node) ? node : null;
 	}
-	
+
 	/**
 	 * return the x-coordinate of a given node n.
-	 * @param n a node
+	 * 
+	 * @param n
+	 *            a node
 	 * @return n's x-coordinate
 	 */
-	public double getX(Node n){
+	public double getX(Node n) {
 		return n.x;
 	}
-	
+
 	/**
 	 * return the y-coordinate of a given node n.
-	 * @param n a node
+	 * 
+	 * @param n
+	 *            a node
 	 * @return n's y-coordinate
 	 */
-	public double getY(Node n){
+	public double getY(Node n) {
 		return n.y;
 	}
-	
+
+	/**
+	 * set the x-coordinate of a node
+	 * 
+	 * @param n
+	 * @param x
+	 */
+	public void setX(Node n, double x) {
+		n.x = x;
+	}
+
+	/**
+	 * set the y-coordinate of a node
+	 * 
+	 * @param n
+	 * @param y
+	 */
+	public void setY(Node n, double y) {
+		n.y = y;
+	}
+
 	/**
 	 * set the coordinates of a given node n.
-	 * @param n a node
-	 * @param x the x-coordinate
-	 * @param y the y-coordinate
+	 * 
+	 * @param n
+	 *            a node
+	 * @param x
+	 *            the x-coordinate
+	 * @param y
+	 *            the y-coordinate
 	 */
-	public void setCoordinates(Node n, double x, double y){
+	public void setCoordinates(Node n, double x, double y) {
 		n.x = x;
-		n.y=y;
+		n.y = y;
+	}
+
+	/**
+	 * for each edge, remove all bendpoints that have the same y-coordinate as
+	 * their predecessor and successor.
+	 */
+	public void cleanBends() {
+		for (Edge e : edges()){
+			ArrayList<Point2D> bends = bends(e);
+			if (bends.size()>0){
+				// check 
+			}
+		}
 	}
 
 	/**
 	 * create a map storing values for each node in the graph.
+	 * 
 	 * @return a node map containing <code>null</code> for each node
 	 */
-	public Map<Node, Object> createNodeMap(){
+	public Map<Node, Object> createNodeMap() {
 		HashMap<Node, Object> map = new HashMap<Graph.Node, Object>(n());
-		for (Node n: nodes)
+		for (Node n : nodes)
 			map.put(n, null);
 		return map;
 	}
+
 	/**
 	 * create a map storing an {@link Integer} for each node in the graph.
+	 * 
 	 * @return a node map containing <code>null</code> for each node
 	 */
-	public Map<Node, Integer> createIntNodeMap(){
+	public Map<Node, Integer> createIntNodeMap() {
 		HashMap<Node, Integer> map = new HashMap<Graph.Node, Integer>(n());
-		for (Node n: nodes)
+		for (Node n : nodes)
 			map.put(n, null);
 		return map;
 	}
-	
+
 	/**
 	 * return the list of bend-points of a given edge
+	 * 
 	 * @param e
 	 * @return
 	 */
-	public ArrayList<Point2D> bends(Edge e){
+	public ArrayList<Point2D> bends(Edge e) {
 		return e.bends;
 	}
-	
+
 	/**
 	 * add a bend-point to the given edge
+	 * 
 	 * @param e
 	 * @param x
 	 * @param y
 	 */
-	public void addBend(Edge e, double x, double y){
+	public void addBend(Edge e, double x, double y) {
 		e.bends.add(new Point2D.Double(x, y));
 	}
 
@@ -397,13 +443,13 @@ public class Graph {
 			inEdges = new ArrayList<Edge>();
 			outEdges = new ArrayList<Edge>();
 		}
-		
-		private Node(int index, String label, double x, double y){
+
+		private Node(int index, String label, double x, double y) {
 			this(index, label);
 			this.x = x;
 			this.y = y;
 		}
-		
+
 		public int index() {
 			return index;
 		}
@@ -414,12 +460,12 @@ public class Graph {
 		public int degree() {
 			return edges.size();
 		}
-		
-		public int inDegree(){
+
+		public int inDegree() {
 			return inEdges.size();
 		}
-		
-		public int outDegree(){
+
+		public int outDegree() {
 			return outEdges.size();
 		}
 
@@ -429,20 +475,20 @@ public class Graph {
 		public Iterator<Edge> edges() {
 			return edges.iterator();
 		}
-		
+
 		/**
 		 * @return an iterator for all incoming edges (in order of creation)
 		 */
 		public Iterator<Edge> inEdges() {
 			return inEdges.iterator();
 		}
+
 		/**
 		 * @return an iterator for all incident edges (in order of creation)
 		 */
 		public Iterator<Edge> outEdges() {
 			return outEdges.iterator();
 		}
-		
 
 		/**
 		 * returns the edge connecting this node with a given node
@@ -570,4 +616,3 @@ public class Graph {
 		}
 	}
 }
-

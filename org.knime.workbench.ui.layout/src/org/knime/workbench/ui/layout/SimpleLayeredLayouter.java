@@ -126,7 +126,7 @@ public class SimpleLayeredLayouter {
 
 		/* DO CROSSING MINIMIZATION */
 		MedianHeuristicCrossingMinimizer cm = new MedianHeuristicCrossingMinimizer(
-				g, nodeLayer, layers);
+				g, layers);
 		cm.run();
 
 		/*
@@ -140,6 +140,8 @@ public class SimpleLayeredLayouter {
 				g.removeNode(n); // also removes dummy edges!
 			}
 		}
+		
+		g.cleanBends();
 
 	}
 
