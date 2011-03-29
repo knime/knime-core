@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="./xpath.png">
+    <name>XPath</name>
+    <shortDescription>Performs a XPath query on a XML column.</shortDescription>
+    <fullDescription>
+        <intro>
+            The node takes the XML Documents of the selected column and 
+            performs a XPath query on them. The node supports XPath 1.0.
+		</intro>
+        <option name="XML column">The column containing the XML cells.</option>
+        <option name="New column name">
+            Name of the new column in the output table.
+        </option>
+        <option name="Remove source column">
+            Check when the source column should not show up in the output table.
+        </option>
+        <option name="XPath query">Define the XPath query here.</option>
+        <option name="Return type">Choose the result type of your XPath query.
+            The result type will be match to a KNIME type with this mapping.
+            <ul>
+              <li>Boolean -> Boolean cell type</li>
+              <li>Number -> Double cell type</li>
+              <li>String -> String cell type</li>
+              <li>Node -> XML cell type</li>
+              <li>NodeList -> Collection cell type (Collection of XML cells)</li>  
+            </ul>  
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Input Table">
+            Input table containing at least one XML column.
+        </inPort>
+        <outPort index="0" name="Output Table">
+            The input table with additional column containing the result of the XPath query.
+        </outPort>        
+    </ports>
+</knimeNode>
+
+

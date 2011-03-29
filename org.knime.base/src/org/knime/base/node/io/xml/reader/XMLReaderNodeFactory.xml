@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source" icon="./xmlread.png">
+    <name>XML Reader</name>
+    <shortDescription>Reads a XML File.</shortDescription>
+    <fullDescription>
+        <intro>
+            Reads a well formed XML File. The file is parsed in a DOM.
+		</intro>
+        <option name="File Chooser">
+            Choose the file to read.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <outPort name="Read table" index="0">
+            The XML document contained in the selected file.
+        </outPort>
+    </ports>
+</knimeNode>
+
+
