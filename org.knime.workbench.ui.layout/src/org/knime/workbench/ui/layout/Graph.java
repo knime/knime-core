@@ -164,6 +164,19 @@ public class Graph {
 		target.addEdge(edge);
 		return edges.add(edge) ? edge : null;
 	}
+	
+	public Edge reinsert(Edge e){
+		Node source = e.source();
+		Node target = e.target();
+		// if the two nodes are already adjacent
+		if (source.getEdge(target) != null)
+			return null;
+		// create edge and insert it affected nodes' incidence-lists and to this
+		// graphs' edge-list
+		source.addEdge(e);
+		target.addEdge(e);
+		return edges.add(e) ? e : null;
+	}
 
 	/**
 	 * @return an iterable for the nodes contained in this graph (in order of

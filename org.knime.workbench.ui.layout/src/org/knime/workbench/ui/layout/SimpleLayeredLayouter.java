@@ -134,7 +134,7 @@ public class SimpleLayeredLayouter {
 		 * edges
 		 */
 		for (Edge hEdge : hiddenEdges) {
-			Edge e = g.createEdge(hEdge.source(), hEdge.target());
+			Edge e = g.reinsert(hEdge);
 			for (Node n : hiddenEdgeToDummyVertices.get(hEdge)) {
 				g.addBend(e, g.getX(n), g.getY(n));
 				g.removeNode(n); // also removes dummy edges!
