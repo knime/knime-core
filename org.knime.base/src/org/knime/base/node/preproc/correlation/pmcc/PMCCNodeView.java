@@ -83,6 +83,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -263,8 +264,10 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
                 String rowName = getContentModel().getRowKey(row).toString();
                 String colName = getColumnName(column);
                 if (jresult != null) {
-                    jresult.setToolTipText(((DoubleValue)val).getDoubleValue()
-                            + " (" + rowName + " - " + colName + ")");
+                    double corr = ((DoubleValue)val).getDoubleValue();
+                    String dS = DoubleFormat.formatDouble(corr);
+                    jresult.setToolTipText(dS + " (" 
+                            + rowName + " - " + colName + ")");
                 }
             } else {
                 if (jresult != null) {
