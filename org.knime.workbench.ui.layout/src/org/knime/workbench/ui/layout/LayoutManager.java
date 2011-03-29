@@ -64,6 +64,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
@@ -146,8 +147,12 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x = (int)Math.round(m_g.getX(gNode) + 25);
-                int y = (int)Math.round(m_g.getY(gNode));
+                int x =
+                        (int)Math.round(m_g.getX(gNode)
+                                * NodeContainerFigure.WIDTH * 1.5 + 25);
+                int y =
+                        (int)Math.round(m_g.getY(gNode)
+                                * NodeContainerFigure.HEIGHT * 1.5);
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
