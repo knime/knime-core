@@ -829,6 +829,8 @@ class Workflow {
      * @param endNode if of tail of loop
      * @return list of nodes within loop body & any dangling branches. The list
      *   also contains the used input ports of each node.
+     * @throws IllegalLoopException 
+     *    If there is a ill-posed loop (dangling branches)
      *
      * @FIXME: this is an almost complete replication of the function
      *   findAllConnectedNodes - they should both call a more general
@@ -836,9 +838,7 @@ class Workflow {
      */
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
-            final NodeID endNode)
-         throws IllegalLoopException
-        {
+            final NodeID endNode) throws IllegalLoopException {
         ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
