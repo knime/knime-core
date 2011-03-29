@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -835,7 +836,9 @@ class Workflow {
      */
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
-            final NodeID endNode) {
+            final NodeID endNode)
+         throws IllegalLoopException
+        {
         ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
@@ -880,7 +883,7 @@ class Workflow {
                     NodeID destID = cc.getDest();
                     if (destID.equals(this.getID())) {
                         // if any branch leaves this WFM, complain!
-                        throw new IllegalFlowObjectStackException(
+                        throw new IllegalLoopException(
                             "Loops are not permitted to leave workflows!");
                     }
                     if ((!destID.equals(endNode))) {
@@ -929,6 +932,16 @@ class Workflow {
         // remove start node
         NodeAndInports nai = tempOutput.remove(0);
         assert (nai.getID().equals(startNode));
+        // make sure we have no branches from within the loop body reconnecting
+        // to the flow after the loop end node
+        HashMap<NodeID, Set<Integer>> nodesAfterEndNode =
+            createBreadthFirstSortedList(Collections.singleton(endNode), true);
+        for (NodeAndInports nai2 : tempOutput) {
+            if (nodesAfterEndNode.containsKey(nai2.getID())) {
+                throw new IllegalLoopException(
+                        "Branches are not permitted to leave loops!");
+            }
+        }
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
             @Override

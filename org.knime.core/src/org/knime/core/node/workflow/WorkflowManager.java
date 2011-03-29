@@ -1939,6 +1939,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         node.setLoopEndNode(null);
                     }
                     if (node.getLoopContext() != null) {
+                        assert snc.getLoopRole() == LoopRole.END;
                         // we are supposed to execute this loop again!
                         // first retrieve FlowLoopContext object
                         FlowLoopContext slc = node.getLoopContext();
@@ -1978,6 +1979,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // remainder of this node since we are not yet done
                             // with the loop
                             canConfigureSuccessors = false;
+                        }
+                        if (!success) {
+                            // make sure any marks are removed off (only for loop ends!)
+                            disableNodeForExecution(snc.getID());
+                            snc.getNode().clearLoopContext();
                         }
                     }
                 }
