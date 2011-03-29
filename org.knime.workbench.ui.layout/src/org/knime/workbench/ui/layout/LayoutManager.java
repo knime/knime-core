@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.ui.layout;
 
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,6 +67,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
+import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
@@ -80,6 +83,8 @@ public class LayoutManager {
 
     private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
 
+    private HashMap<ConnectionContainer, Edge> m_workbenchToGraphEdges;
+
     private Graph m_g;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
@@ -94,6 +99,8 @@ public class LayoutManager {
     public LayoutManager(final WorkflowManager wfManager) {
         m_wfm = wfManager;
         m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_workbenchToGraphEdges =
+                new HashMap<ConnectionContainer, Graph.Edge>();
         m_g = new Graph();
     }
 
@@ -101,6 +108,11 @@ public class LayoutManager {
      *
      */
     public void doLayout() {
+
+        final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
+        final int X_OFFSET = 25;
+        final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2;
+        final int Y_OFFSET = 25;
 
         // add all nodes (no input /output ports yet (meta nodes))
         Collection<NodeContainer> allNodes = m_wfm.getNodeContainers();
@@ -124,12 +136,15 @@ public class LayoutManager {
         // add all connections
         Collection<ConnectionContainer> allConns =
                 m_wfm.getConnectionContainers();
+        Edge gEdge;
         for (ConnectionContainer conn : allConns) {
             NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
             NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
 
-            m_g.createEdge(m_workbenchToGraphNodes.get(s),
-                    m_workbenchToGraphNodes.get(d));
+            gEdge =
+                    m_g.createEdge(m_workbenchToGraphNodes.get(s),
+                            m_workbenchToGraphNodes.get(d));
+            m_workbenchToGraphEdges.put(conn, gEdge);
         }
 
         // new SimlpleLayouter().doLayout(m_g);
@@ -147,12 +162,8 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x =
-                        (int)Math.round(m_g.getX(gNode)
-                                * NodeContainerFigure.WIDTH * 1.5 + 25);
-                int y =
-                        (int)Math.round(m_g.getY(gNode)
-                                * NodeContainerFigure.HEIGHT * 1.5);
+                int x = (int)Math.round(m_g.getX(gNode) * X_STRETCH) + X_OFFSET;
+                int y = (int)Math.round(m_g.getY(gNode) * Y_STRETCH) + Y_OFFSET;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
@@ -165,12 +176,29 @@ public class LayoutManager {
             }
         }
 
-        // delete old bendpoints
+        // delete old bendpoints - transfer new ones
         for (ConnectionContainer conn : allConns) {
+            // store old bendpoint for undo
             UIInformation ui = conn.getUIInfo();
             if (ui != null && ui instanceof ConnectionUIInformation) {
                 ConnectionUIInformation cui = (ConnectionUIInformation)ui;
                 m_oldBendpoints.put(conn.getID(), cui);
+            } else {
+                m_oldBendpoints.put(conn.getID(), null);
+            }
+
+            Edge e = m_workbenchToGraphEdges.get(conn);
+            ArrayList<Point2D> newBends = m_g.bends(e);
+            if (newBends != null && !newBends.isEmpty()) {
+                ConnectionUIInformation newUI = new ConnectionUIInformation();
+                for (int i = 0; i < newBends.size(); i++) {
+                    Point2D b = newBends.get(i);
+                    newUI.addBendpoint((int)Math.round(b.getX() * X_STRETCH)
+                            + X_OFFSET, (int)Math.round(b.getY() * Y_STRETCH)
+                            + Y_OFFSET, i);
+                }
+                conn.setUIInfo(newUI);
+            } else {
                 conn.setUIInfo(null);
             }
         }

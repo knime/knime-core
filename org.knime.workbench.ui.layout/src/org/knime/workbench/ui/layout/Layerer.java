@@ -51,29 +51,28 @@
 package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
- * assigns layers to the nodes of a graph by topological sorting
+ * assigns layers to the nodes of a graph by topological sorting.
  *
  * @author mader, University of Konstanz
  */
 public class Layerer {
 
-	/**
-	 * Perform a topological sort to assign layers to nodes.
-	 *
-	 * @param g
-	 *            the graph to be layered
-	 * @param nodeLayer
-	 *            a map storing the layer of each node
-	 * @return the list of layers, each layer containing an array list of nodes
-	 */
-	static ArrayList<ArrayList<Node>> assignLayers(Graph g, Map<Node, Integer> nodeLayer) {
+    /**
+     * Perform a topological sort to assign layers to nodes.
+     *
+     * @param g
+     *            the graph to be layered
+     * @param nodeLayer
+     *            a map storing the layer of each node
+     * @return the list of layers, each layer containing an array list of nodes
+     */
+    static ArrayList<ArrayList<Node>> assignLayers(final Graph g, final Map<Node, Integer> nodeLayer) {
 
 		// initialize residual degrees, and find first sources
 		ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
