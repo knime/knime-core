@@ -58,9 +58,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.util.Pair;
 
 /** Container class wrapping wrapping the network of nodes forming
  * a workflow together with some of the basic functionality, especially
@@ -818,13 +821,59 @@ class Workflow {
     
     /** Return matching LoopEnd node for the given LoopStart
      * 
-     * @param loopStart The requested start node (instanceof LoopStart) 
+     * @param id The requested start node (instanceof LoopStart) 
      * @throws IllegalLoopException if loop setup is wrong
      * @return id of end node or null if no such node was found.
      */
-    NodeID getMatchingLoopEnd(final NodeID loopStart) 
-    throws IllegalLoopException {
-        return null;
+    NodeID getMatchingLoopEnd(final NodeID id) 
+    throws IllegalLoopException, IllegalArgumentException {
+        NodeContainer nc = getNode(id);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException("Not a Loop Start Node " + id);
+        }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!LoopRole.BEGIN.equals(snc.getLoopRole())) {
+            throw new IllegalArgumentException("Not a Loop Start Node " + id);
+        }
+        NodeID foundEnd = null;
+        // create stack for Breitensuche: also store the level of loop nesting
+        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
+        st.push(new Pair<NodeID, Integer>(id, 0));
+        while (!st.isEmpty()) {
+            Pair<NodeID, Integer> p = st.pop();
+            NodeID currentID = p.getFirst();
+            int currentDepth = p.getSecond();
+            for (ConnectionContainer cc
+                    : m_connectionsBySource.get(currentID)) {
+                assert currentID.equals(cc.getSource());
+                NodeID destID = cc.getDest();
+                if (this.getID().equals(destID)) {
+                    throw new IllegalLoopException("Loops can not leave"
+                    		+ " workflow!");
+                }
+                NodeContainer destNC = getNode(destID);
+                if (destNC instanceof SingleNodeContainer) {
+                    SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
+                    if (LoopRole.END.equals(destSNC.getLoopRole())) {
+                        if (currentDepth == 0) {
+                            if (foundEnd != null) {
+                                throw new IllegalLoopException("Loops can not"
+                                	+ " connect to more than one End Node!");
+                            }
+                            foundEnd = destID;
+                            continue;
+                        } else {
+                            currentDepth--;
+                        }
+                    }
+                    if (LoopRole.BEGIN.equals(destSNC.getLoopRole())) {
+                        currentDepth++;
+                    }
+                }
+                st.push(new Pair<NodeID, Integer>(destID, currentDepth));
+            }
+        }
+        return foundEnd;
     }
     
     /** Create list of nodes (id)s that are part of a loop body. Note that
