@@ -347,10 +347,28 @@ public class Graph {
 	 * their predecessor and successor.
 	 */
 	public void cleanBends() {
-		for (Edge e : edges()){
+		for (Edge e : edges()) {
 			ArrayList<Point2D> bends = bends(e);
-			if (bends.size()>0){
-				// check 
+			if (bends.size() > 0) {
+				// traverse bends in reverse order (to be able to remove them
+				// from array list
+				double lastY = e.target().y;
+				double curY, nextY;
+
+				for (int i = bends.size() - 1; i >= 0; i--) {
+					curY = bends.get(i).getY();
+					if (i == 0)
+						nextY = e.source().y;
+					else
+						nextY = bends.get(i - 1).getY();
+
+					if (curY == lastY && curY == nextY) {
+						bends.remove(i);
+					} else {
+						lastY = curY;
+					}
+				}
+				e.bends = bends;
 			}
 		}
 	}
