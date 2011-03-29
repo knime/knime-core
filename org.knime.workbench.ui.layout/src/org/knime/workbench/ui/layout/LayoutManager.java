@@ -191,11 +191,14 @@ public class LayoutManager {
             ArrayList<Point2D> newBends = m_g.bends(e);
             if (newBends != null && !newBends.isEmpty()) {
                 ConnectionUIInformation newUI = new ConnectionUIInformation();
+                // add more X to every other bendpoint
+                int extraX = 32;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
                     newUI.addBendpoint((int)Math.round(b.getX() * X_STRETCH)
-                            + X_OFFSET, (int)Math.round(b.getY() * Y_STRETCH)
-                            + Y_OFFSET, i);
+                            + X_OFFSET + ((i % 2) * extraX),
+                            (int)Math.round(b.getY() * Y_STRETCH) + Y_OFFSET,
+                            i);
                 }
                 conn.setUIInfo(newUI);
             } else {
