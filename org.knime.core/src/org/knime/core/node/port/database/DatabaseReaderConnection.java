@@ -91,6 +91,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -147,15 +148,17 @@ public final class DatabaseReaderConnection {
     /**
      * Returns a data table spec that reflects the meta data form the database
      * result set.
+     * @param cp {@link CredentialsProvider} providing user/password
      * @return data table spec
      * @throws SQLException if the connection to the database could not be
      *         established
      */
-    public DataTableSpec getDataTableSpec() throws SQLException {
+    public DataTableSpec getDataTableSpec(final CredentialsProvider cp)
+            throws SQLException {
         if (m_spec == null || m_stmt == null) {
             final Connection conn;
             try {
-                conn = m_conn.createConnection();
+                conn = m_conn.createConnection(cp);
             } catch (SQLException sql) {
                 if (m_stmt != null) {
                     try {
@@ -207,13 +210,15 @@ public final class DatabaseReaderConnection {
     /**
      * Read data from database.
      * @param exec used for progress info
+     * @param cp {@link CredentialsProvider} providing user/password
      * @return buffered data table read from database
      * @throws CanceledExecutionException if canceled in between
      * @throws SQLException if the connection could not be opened
      */
-    public BufferedDataTable createTable(final ExecutionContext exec)
+    public BufferedDataTable createTable(final ExecutionContext exec,
+            final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
-        final DataTableSpec spec = getDataTableSpec();
+        final DataTableSpec spec = getDataTableSpec(cp);
         Object sync = m_conn.syncConnection(m_stmt.getConnection());
         synchronized (sync) {
             try {
@@ -228,8 +233,8 @@ public final class DatabaseReaderConnection {
                     if (m_stmt.getClass().getCanonicalName().equals(
                             "com.mysql.jdbc.Statement")) {
                         m_stmt.setFetchSize(Integer.MIN_VALUE);
-                        LOGGER.info("Database fetchsize for mySQL database set to "
-                                + "\"" + Integer.MIN_VALUE + "\".");
+                        LOGGER.info("Database fetchsize for mySQL database set"
+                                + " to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
                 final String query = m_conn.getQuery();
@@ -261,13 +266,15 @@ public final class DatabaseReaderConnection {
         }
     }
 
-    /**
+    /** Called from the database port to read the first n-number of rows.
      * @param cachedNoRows number of rows cached for data preview
+     * @param cp {@link CredentialsProvider} providing user/password
      * @return buffered data table read from database
      * @throws SQLException if the connection could not be opened
      */
-    DataTable createTable(final int cachedNoRows) throws SQLException {
-        final DataTableSpec spec = getDataTableSpec();
+    DataTable createTable(final int cachedNoRows, final CredentialsProvider cp)
+            throws SQLException {
+        final DataTableSpec spec = getDataTableSpec(cp);
         synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
             try {
                 final String query;

@@ -69,6 +69,7 @@ import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  * Creates a connection to write to database.
@@ -84,23 +85,24 @@ public final class DatabaseWriterConnection {
         // empty default constructor
     }
 
-    /**
-     * Create connection to write into database.
+    /** Create connection to write into database.
      * @param dbConn a database connection object
      * @param data The data to write.
      * @param table name of table to write
      * @param appendData if checked the data is appended to an existing table
      * @param exec Used the cancel writing.
      * @param sqlTypes A mapping from column name to SQL-type.
+     * @param cp {@link CredentialsProvider} providing user/password
      * @return error string or null, if non
      * @throws Exception if connection could not be established
      */
-    public static final String writeData(
+    public final static String writeData(
             final DatabaseConnectionSettings dbConn,
             final String table, final BufferedDataTable data,
             final boolean appendData, final ExecutionMonitor exec,
-            final Map<String, String> sqlTypes) throws Exception {
-        final Connection conn = dbConn.createConnection();
+            final Map<String, String> sqlTypes,
+            final CredentialsProvider cp) throws Exception {
+        final Connection conn = dbConn.createConnection(cp);
         synchronized (dbConn.syncConnection(conn)) {
             DataTableSpec spec = data.getDataTableSpec();
             // mapping from spec columns to database columns
@@ -117,8 +119,8 @@ public final class DatabaseWriterConnection {
                     rs = statement.executeQuery(query);
                 } catch (SQLException sqle) {
                     if (statement == null) {
-                        throw new SQLException("Could not create SQL statement, "
-                                + "reason: " + sqle.getMessage(), sqle);
+                        throw new SQLException("Could not create SQL statement,"
+                                + " reason: " + sqle.getMessage(), sqle);
                     }
                     LOGGER.info("Table \"" + table
                             + "\" does not exist in database, "
@@ -139,18 +141,19 @@ public final class DatabaseWriterConnection {
                                 spec.getColumnSpec(i).getName()).toLowerCase();
                         columnNames.put(colName, i);
                     }
-                    // sanity check to lock if all input column are present in db
+                    // sanity check to lock if all input columns are in db
                     ArrayList<String> columnNotInSpec = new ArrayList<String>(
                             columnNames.keySet());
                     for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                        String colName = rsmd.getColumnName(i + 1).toLowerCase();
+                        String colName =
+                            rsmd.getColumnName(i + 1).toLowerCase();
                         if (columnNames.containsKey(colName)) {
                             columnNotInSpec.remove(colName);
                         }
                     }
                     if (columnNotInSpec.size() > 0) {
-                        throw new RuntimeException("No. of columns in input table"
-                                + " > in database; not existing columns: "
+                        throw new RuntimeException("No. of columns in input"
+                                + " table > in database; not existing columns: "
                                 + columnNotInSpec.toString());
                     }
                     mapping = new int[rsmd.getColumnCount()];
@@ -234,8 +237,8 @@ public final class DatabaseWriterConnection {
                     statement.execute(query);
                 } catch (Throwable t) {
                     if (statement == null) {
-                        throw new SQLException("Could not create SQL statement, "
-                        		+ "reason: " + t.getMessage(), t);
+                        throw new SQLException("Could not create SQL statement,"
+                            + " reason: " + t.getMessage(), t);
                     }
                     LOGGER.info("Can't drop table \"" + table
                             + "\", will create new table.");
@@ -261,8 +264,8 @@ public final class DatabaseWriterConnection {
             wildcard.append(")");
 
             // problems writing more than 13 columns. the prepare statement
-            // ensures that we can set the columns directly row-by-row, the database
-            // will handle the commit
+            // ensures that we can set the columns directly row-by-row, the
+            // database will handle the commit
             int rowCount = data.getRowCount();
             int cnt = 1;
             int errorCnt = 0;
@@ -314,8 +317,8 @@ public final class DatabaseWriterConnection {
                             } else {
                                 DateAndTimeValue dateCell =
                                     (DateAndTimeValue) cell;
-                            	if (!dateCell.hasTime()
-                            	        && !dateCell.hasMillis()) {
+                                if (!dateCell.hasTime()
+                                        && !dateCell.hasMillis()) {
                             		java.sql.Date date = new java.sql.Date(
                             				dateCell.getUTCTimeInMillis());
                             		stmt.setDate(dbIdx, date);

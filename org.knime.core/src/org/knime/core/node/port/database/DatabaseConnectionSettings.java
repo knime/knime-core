@@ -198,7 +198,7 @@ public class DatabaseConnectionSettings {
     private static final Map<ConnectionKey, ConnectionKey>
         CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
 
-    private final class ConnectionKey {
+    private static final class ConnectionKey {
         private final String m_un;
         private final String m_pw;
         private final String m_dn;
@@ -208,9 +208,7 @@ public class DatabaseConnectionSettings {
             m_pw = password;
             m_dn = databaseName;
         }
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         public boolean equals(final Object obj) {
             if (obj == this) {
@@ -228,18 +226,14 @@ public class DatabaseConnectionSettings {
             return true;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return m_user.hashCode() ^ m_dbName.hashCode();
+            return m_un.hashCode() ^ m_dn.hashCode();
         }
     }
 
-
-    /**
-     * Create a database connection based on this settings. Note, don't close
+    /** Create a database connection based on this settings. Note, don't close
      * the connection since it cached for subsequent calls or later reuse to
      * same database URL (under the same user name).
      * @return a new database connection object
@@ -249,8 +243,29 @@ public class DatabaseConnectionSettings {
      * @throws BadPaddingException {@link BadPaddingException}
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
+     * @deprecated use {@link #createConnection(CredentialsProvider)}
      */
+    @Deprecated
     public Connection createConnection()
+            throws InvalidSettingsException, SQLException,
+            BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException {
+        return createConnection(null);
+    }
+
+    /** Create a database connection based on this settings. Note, don't close
+     * the connection since it cached for subsequent calls or later reuse to
+     * same database URL (under the same user name).
+     * @return a new database connection object
+     * @param cp {@link CredentialsProvider} provides user/password pairs
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
+     */
+    public Connection createConnection(final CredentialsProvider cp)
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
@@ -266,12 +281,20 @@ public class DatabaseConnectionSettings {
         }
 
         final String dbName = m_dbName;
-        final String user = m_user;
-        final String password = m_pass;
+        final String user;
+        final String pass;
+        if (cp == null || m_credName == null) {
+            user = m_user;
+            pass = m_pass;
+        } else {
+            ICredentials cred = cp.get(m_credName);
+            user = cred.getLogin();
+            pass = cred.getPassword();
+        }
 
         // database connection key with user, password and database URL
         ConnectionKey databaseConnKey =
-            new ConnectionKey(user, password, dbName);
+            new ConnectionKey(user, pass, dbName);
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -306,7 +329,7 @@ public class DatabaseConnectionSettings {
                 public Connection call() throws Exception {
                     LOGGER.debug("Opening database connection to \""
                             + dbName + "\"...");
-                    return DriverManager.getConnection(dbName, user, password);
+                    return DriverManager.getConnection(dbName, user, pass);
                 }
             };
             Future<Connection> task =
@@ -471,6 +494,7 @@ public class DatabaseConnectionSettings {
     /**
      * Execute statement on current database connection.
      * @param statement to be executed
+     * @param cp {@link CredentialsProvider} providing user/password
      * @throws SQLException {@link SQLException}
      * @throws InvalidSettingsException {@link InvalidSettingsException}
      * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
@@ -478,7 +502,7 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    public void execute(final String statement)
+    public void execute(final String statement, final CredentialsProvider cp)
                 throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
@@ -486,7 +510,7 @@ public class DatabaseConnectionSettings {
         Connection conn = null;
         Statement stmt = null;
         try {
-            conn = createConnection();
+            conn = createConnection(cp);
             stmt = conn.createStatement();
             LOGGER.debug("Executing SQL statement \"" + statement + "\"");
             stmt.execute(statement);
@@ -527,48 +551,47 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * @param cp {@link CredentialsProvider}
      * @return user name used to login to the database
      */
+    public final String getUserName(final CredentialsProvider cp) {
+        if (cp == null || m_credName == null) {
+            return m_user;
+        } else {
+            ICredentials cred = cp.get(m_credName);
+            return cred.getLogin();
+        }
+    }
+
+    /**
+     * @param cp {@link CredentialsProvider}
+     * @return password (decrypted) used to login to the database
+     */
+    public final String getPassword(final CredentialsProvider cp) {
+        if (cp == null || m_credName == null) {
+            return m_pass;
+        } else {
+            ICredentials cred = cp.get(m_credName);
+            return cred.getPassword();
+        }
+    }
+
+    /**
+     * @return user name used to login to the database
+     * @deprecated use {@link #getUserName(CredentialsProvider)}
+     */
+    @Deprecated
     public final String getUserName() {
-        return m_user;
+        return getUserName(null);
     }
 
     /**
      * @return password (decrypted) used to login to the database
+     * @deprecated use {@link #getPassword(CredentialsProvider)}
      */
+    @Deprecated
     public final String getPassword() {
-        return m_pass;
+        return getPassword(null);
     }
 
-    /**
-     * Set a new database driver.
-     * @param driver used to open the connection
-     */
-    public final void setDriver(final String driver) {
-        m_driver = driver;
-    }
-
-    /**
-     * Set a new database name.
-     * @param databaseName used to access the database URL
-     */
-    public final void setDBName(final String databaseName) {
-        m_dbName = databaseName;
-    }
-
-    /**
-     * Set a new user name.
-     * @param userName used to login to the database
-     */
-    public final void setUserName(final String userName) {
-        m_user = userName;
-    }
-
-    /**
-     * Set a new password.
-     * @param password (decrypted) used to login to the database
-     */
-    public final void setPassword(final String password) {
-        m_pass = password;
-    }
 }

@@ -133,7 +133,7 @@ public class DatabasePortObject implements PortObject {
             DatabaseReaderConnection load = new DatabaseReaderConnection(
                 new DatabaseQueryConnectionSettings(
                        m_spec.getConnectionModel(), m_credentials));
-            return load.createTable(cacheNoRows);
+            return load.createTable(cacheNoRows, m_credentials);
         } catch (Throwable t) {
             LOGGER.error("Could not fetch data from database, reason: "
                     + t.getMessage(), t);

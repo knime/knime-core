@@ -187,7 +187,8 @@ final class DBWriterNodeModel extends NodeModel {
         exec.setProgress("Opening database connection to write data...");
         // write entire data
         String error = DatabaseWriterConnection.writeData(
-                m_conn, m_table, inData[0], m_append, exec, m_types);
+                m_conn, m_table, inData[0], m_append, exec, m_types,
+                getCredentialsProvider());
         if (error != null) {
             super.setWarningMessage(error);
         }

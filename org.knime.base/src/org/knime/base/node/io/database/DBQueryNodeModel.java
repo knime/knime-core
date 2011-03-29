@@ -62,6 +62,7 @@ import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  *
@@ -126,16 +127,17 @@ final class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-    	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-    	DatabaseQueryConnectionSettings conn =
-    		new DatabaseQueryConnectionSettings(
-    		    spec.getConnectionModel(), getCredentialsProvider());
+        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+        DatabaseQueryConnectionSettings conn =
+            new DatabaseQueryConnectionSettings(
+                        spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
             DatabaseReaderConnection reader =
                 new DatabaseReaderConnection(conn);
-            DataTableSpec outSpec = reader.getDataTableSpec();
+            DataTableSpec outSpec = reader.getDataTableSpec(
+                    getCredentialsProvider());
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                     outSpec, conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
@@ -152,13 +154,14 @@ final class DBQueryNodeModel extends DBNodeModel {
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+        CredentialsProvider cp = getCredentialsProvider();
         DatabaseQueryConnectionSettings conn =
                 new DatabaseQueryConnectionSettings(
-                dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
+                dbObj.getSpec().getConnectionModel(), cp);
         String newQuery = createQuery(conn.getQuery());
-        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery);
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
-        DataTableSpec outSpec = load.getDataTableSpec();
+        DataTableSpec outSpec = load.getDataTableSpec(cp);
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                 outSpec, conn.createConnectionModel());
         DatabasePortObject outObj = new DatabasePortObject(dbSpec);

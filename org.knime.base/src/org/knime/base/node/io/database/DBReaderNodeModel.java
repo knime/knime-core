@@ -66,6 +66,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  *
@@ -101,9 +102,10 @@ class DBReaderNodeModel extends NodeModel
         try {
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
                     m_load.getQueryConnection(), parseQuery(m_query)));
-            m_lastSpec = m_load.getDataTableSpec();
+            CredentialsProvider cp = getCredentialsProvider();
+            m_lastSpec = m_load.getDataTableSpec(cp);
             exec.setProgress("Reading data from database...");
-            return new BufferedDataTable[]{m_load.createTable(exec)};
+            return new BufferedDataTable[]{m_load.createTable(exec, cp)};
         } catch (CanceledExecutionException cee) {
             throw cee;
         } catch (Exception e) {
@@ -214,7 +216,7 @@ class DBReaderNodeModel extends NodeModel
             }
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
                     conn, parseQuery(m_query)));
-            m_lastSpec = m_load.getDataTableSpec();
+            m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;

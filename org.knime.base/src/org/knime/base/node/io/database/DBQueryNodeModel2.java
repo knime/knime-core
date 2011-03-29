@@ -124,16 +124,17 @@ final class DBQueryNodeModel2 extends DBNodeModel
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-    	DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-    	DatabaseQueryConnectionSettings conn =
-    		new DatabaseQueryConnectionSettings(
-    		    spec.getConnectionModel(), getCredentialsProvider());
+        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+        DatabaseQueryConnectionSettings conn =
+            new DatabaseQueryConnectionSettings(
+                     spec.getConnectionModel(), getCredentialsProvider());
         String newQuery = parseQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
             DatabaseReaderConnection reader =
                 new DatabaseReaderConnection(conn);
-            DataTableSpec outSpec = reader.getDataTableSpec();
+            DataTableSpec outSpec = reader.getDataTableSpec(
+                    getCredentialsProvider());
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                     outSpec, conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
@@ -154,9 +155,10 @@ final class DBQueryNodeModel2 extends DBNodeModel
                 new DatabaseQueryConnectionSettings(
                 dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
         String newQuery = parseQuery(conn.getQuery());
-        conn = createDBQueryConnection(dbObj.getSpec(),	newQuery);
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
-        DataTableSpec outSpec = load.getDataTableSpec();
+        DataTableSpec outSpec = load.getDataTableSpec(
+                getCredentialsProvider());
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                 outSpec, conn.createConnectionModel());
         DatabasePortObject outObj = new DatabasePortObject(dbSpec);

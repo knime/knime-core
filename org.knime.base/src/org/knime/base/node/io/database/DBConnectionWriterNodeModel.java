@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  *
@@ -97,13 +98,14 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         DatabaseQueryConnectionSettings conn =
             new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel(), getCredentialsProvider());
+        CredentialsProvider cp = getCredentialsProvider();
         try {
-            conn.execute("DROP TABLE " + tableName);
+            conn.execute("DROP TABLE " + tableName, cp);
         } catch (Exception e) {
             // suppress exception thrown when table does not exist in database
         }
         conn.execute("CREATE TABLE " + tableName
-                + " AS (" + conn.getQuery() + ")");
+                + " AS (" + conn.getQuery() + ")", cp);
         return new BufferedDataTable[0];
     }
 
@@ -149,7 +151,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
             DatabaseQueryConnectionSettings conn =
                 new DatabaseQueryConnectionSettings(
                     spec.getConnectionModel(), getCredentialsProvider());
-            conn.createConnection();
+            conn.createConnection(getCredentialsProvider());
         } catch (InvalidSettingsException ise) {
             throw ise;
         } catch (Throwable t) {
