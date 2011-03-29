@@ -815,6 +815,18 @@ class Workflow {
         public void setDepth(final int d) { m_depth = d; }
         public int getDepth() { return m_depth; }
     }
+    
+    /** Return matching LoopEnd node for the given LoopStart
+     * 
+     * @param loopStart The requested start node (instanceof LoopStart) 
+     * @throws IllegalLoopException if loop setup is wrong
+     * @return id of end node or null if no such node was found.
+     */
+    NodeID getMatchingLoopEnd(final NodeID loopStart) 
+    throws IllegalLoopException {
+        return null;
+    }
+    
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
      * do not connect back to the end-node. Used to re-execute all nodes

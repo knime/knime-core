@@ -2042,19 +2042,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Return matching LoopEnd node for the given LoopStart
-     * 
-     * @throws IllegalLoopException if loop setup is wrong
-     * @return id of end node or null if no such node was found.
-     */
-    NodeID getMatchingLoopEnd(final NodeID loopStart)
-    throws IllegalLoopException
-    {
-        
-        return null;
-    }
-    
-
     /** Restart execution of a loop if possible. Can delay restart if
      * we are still waiting for some node in the loop body (or any
      * dangling loop branches) to finish execution
