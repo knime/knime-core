@@ -76,7 +76,7 @@ public interface PortObjectValue extends DataValue {
     public static class PortObjectUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(PortObjectValue.class, "/portobjectpng.png");
+            loadIcon(PortObjectValue.class, "../icon/porticon.png");
 
         private static final PortObjectValueComparator PORTOBJECT_COMPARATOR =
             new PortObjectValueComparator();
