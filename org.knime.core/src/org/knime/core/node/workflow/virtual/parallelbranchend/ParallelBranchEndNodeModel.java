@@ -97,6 +97,8 @@ NodeStateChangeListener {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        // spec of the one chunk arriving here is representative for the
+        // entire table.
         return inSpecs;
     }
 
@@ -107,6 +109,19 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
+	    boolean done = false;
+	    while (!done) {
+	        try {
+	            Thread.sleep(500); 
+	        } catch (InterruptedException ie) {
+	        }
+	        try {
+	            exec.checkCanceled();
+	        } catch (CanceledExecutionException cee) {
+	            // TODO: cancel all branches
+	            throw cee;
+	        }
+	    }
 		return inObjects;
 	}
 	
@@ -191,7 +206,7 @@ NodeStateChangeListener {
     public void stateChanged(NodeStateEvent state) {
         NodeID endNode = state.getSource();
         if (m_branches.containsKey(endNode)) {
-            
+            this.notify();
         }
     }
 
