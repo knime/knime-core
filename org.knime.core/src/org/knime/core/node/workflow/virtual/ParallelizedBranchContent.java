@@ -53,6 +53,7 @@ package org.knime.core.node.workflow.virtual;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  * An object representing the copied content of a branch that is executed in
@@ -131,5 +132,20 @@ public class ParallelizedBranchContent {
                 .addNodeStateChangeListener(nmodel);
     }
 	
-
+    /**
+     * Remove all nodes (and connections) of this branch.
+     */
+    public void removeAllNodesFromWorkflow() {
+        for (NodeID id : m_copiedLoopContent) {
+            m_manager.removeNode(id);
+        }
+    }
+    
+    /**
+     * @return true if branch is completely executed.
+     */
+    public boolean isExecuted() {
+        return State.EXECUTED.equals(
+                m_manager.getNodeContainer(m_virtualOutputID).getState());
+    }
 }

@@ -111,15 +111,27 @@ NodeStateChangeListener {
 			throws Exception {
 	    boolean done = false;
 	    while (!done) {
+	        // wait a bit
 	        try {
 	            Thread.sleep(500); 
 	        } catch (InterruptedException ie) {
 	        }
+	        // check if execution was canceled
 	        try {
 	            exec.checkCanceled();
 	        } catch (CanceledExecutionException cee) {
 	            // TODO: cancel all branches
 	            throw cee;
+	        }
+	        // check if any of the branches are finished
+	        for (ParallelizedBranchContent pbc : m_branches.values()) {
+	            if (pbc.isExecuted()) {
+	                // TODO: copy results from branch
+	                pbc.removeAllNodesFromWorkflow();
+	                m_branches.remove(pbc.getVirtualOutputID());
+	            }
+	            // TODO: also do something with failures and nodes
+	            // that do not execute anymore.
 	        }
 	    }
 		return inObjects;
@@ -134,13 +146,11 @@ NodeStateChangeListener {
         m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
     }
 
-    /** Add a new parallel branch to this node - the node will take
-     * care of watching and handling of the result and also cleanup of this
-     * branch once execution is terminated.
-     * 
-     * @param index
+    /**
+     * {@inheritDoc}
      */
-	void addParallelBranch(final ParallelizedBranchContent pbc)
+    @Override
+	public void addParallelBranch(final ParallelizedBranchContent pbc)
 	{
 	    if (m_branches.containsKey(pbc.getVirtualOutputID())) {
 	        throw new IllegalArgumentException("Can't insert branch with duplicate key!");
