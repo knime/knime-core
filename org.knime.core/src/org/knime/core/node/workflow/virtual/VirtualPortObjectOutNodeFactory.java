@@ -50,127 +50,72 @@
  */
 package org.knime.core.node.workflow.virtual;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortType;
-
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class VirtualPortObjectOutNodeModel extends NodeModel {
-	
-	private PortObjectSpec[] m_outSpecs;
-	private PortObject[] m_outObjects;
-	
+public class VirtualPortObjectOutNodeFactory extends
+		NodeFactory<VirtualPortObjectOutNodeModel> {
+
+	private final PortType[] m_inTypes;
+
 	/**
-	 * @param inTypes 
 	 * 
 	 */
-	public VirtualPortObjectOutNodeModel(final PortType[] inTypes) {
-		super(inTypes, inTypes);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		m_outSpecs = inSpecs;
-		return inSpecs;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-			throws Exception {
-		m_outObjects = inObjects;
-		m_outSpecs = new PortObjectSpec[inObjects.length];
-		for (int i = 0; i < inObjects.length; i++) {
-			m_outSpecs[i] = inObjects[i].getSpec();
+	public VirtualPortObjectOutNodeFactory(final PortType[] inTypes) {
+		if (inTypes == null) {
+			throw new NullPointerException(
+					"Port type array argument must not be null");
 		}
-		return inObjects;
-	}
-	
-	/**
-	 * @return the outObjects
-	 */
-	public PortObject[] getOutObjects() {
-		return m_outObjects;
-	}
-	
-	/**
-	 * @return the outSpecs
-	 */
-	public PortObjectSpec[] getOutSpecs() {
-		return m_outSpecs;
+		m_inTypes = inTypes;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void reset() {
-		// no internals
+	public VirtualPortObjectOutNodeModel createNodeModel() {
+		return new VirtualPortObjectOutNodeModel(m_inTypes);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
+	protected int getNrNodeViews() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
+	public NodeView<VirtualPortObjectOutNodeModel> createNodeView(
+			final int viewIndex, 
+			final VirtualPortObjectOutNodeModel nodeModel) {
+		return null;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
+	protected boolean hasDialog() {
+		return false;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void loadInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
+	protected NodeDialogPane createNodeDialogPane() {
+		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
 }

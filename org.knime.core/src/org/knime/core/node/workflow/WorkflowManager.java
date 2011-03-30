@@ -122,6 +122,9 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -2230,27 +2233,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public void parallelizeLoop(final NodeID startID, 
     		final int maxParallelCount) throws IllegalLoopException {
     	synchronized (m_workflowMutex) {
-//    		NodeContainer startNode = getNodeContainer(startID);
-    		final NodeID endNode = m_workflow.getMatchingLoopEnd(startID);
+    		final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
     		try {
     			// just for validation
     			castNodeModel(startID, LoopStartParallelizeNode.class);
-    			castNodeModel(endNode, LoopEndParallelizeNode.class);
+    			castNodeModel(endID, LoopEndParallelizeNode.class);
     		} catch (IllegalArgumentException iae) {
     			throw new IllegalLoopException(iae.getMessage(), iae);
     		}
     		
     		final ArrayList<NodeAndInports> loopBody = 
-    			m_workflow.findAllNodesConnectedToLoopBody(startID, endNode);
-    		NodeID[] loopNodes = new NodeID[loopBody.size() + 2];
+    			m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
+    		NodeID[] loopNodes = new NodeID[loopBody.size()];
     		loopNodes[0] = startID;
     		for (int i = 0; i < loopBody.size(); i++) {
-    			loopNodes[i + 1] = loopBody.get(i).getID();
+    			loopNodes[i] = loopBody.get(i).getID();
     		}
-    		loopNodes[loopNodes.length - 1] = endNode;
     		for (int i = 0; i < maxParallelCount; i++) {
 //    			NodeID[] copiedNodes = 
-    			    duplicateLoopBodyAndAttach(loopNodes);
+    			    duplicateLoopBodyAndAttach(startID, endID, loopNodes);
 //    			NodeID copiedStartID = copiedNodes[0];
 //    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
 //    			LoopStartParallelize copiedStart = 
@@ -2261,30 +2262,50 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 		}
     }
     
-    private NodeID[] duplicateLoopBodyAndAttach(final NodeID[] oldIDs) {
+    private ParallelizedBranchContent duplicateLoopBodyAndAttach(
+    		final NodeID startID, final NodeID endID, final NodeID[] oldIDs) {
     	assert Thread.holdsLock(m_workflowMutex);
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
-    	Set<NodeID> oldIDsHash = new HashSet<NodeID>(Arrays.asList(oldIDs));
     	copyContent.setNodeIDs(oldIDs);
+    	NodeContainer startNode = getNodeContainer(startID);
+    	PortType[] outTypes = startNode.getOutputTypes();
+    	NodeID virtualStartID = createAndAddNode(
+    			new VirtualPortObjectInNodeFactory(outTypes));
+    	
+    	NodeContainer endNode = getNodeContainer(endID);
+    	PortType[] inTypes = endNode.getInputTypes();
+    	NodeID virtualEndID = createAndAddNode(
+    			new VirtualPortObjectOutNodeFactory(inTypes));
+    	
     	WorkflowCopyContent newBody = copyFromAndPasteHere(this, copyContent);
     	NodeID[] newIDs = newBody.getNodeIDs();
-    	// restore connections to nodes outside the loop (only incoming)
-		for (int i = 0; i < oldIDs.length; i++) {
-			NodeContainer oldNode = getNodeContainer(oldIDs[i]);
+    	Map<NodeID, NodeID> oldToNewMap = new HashMap<NodeID, NodeID>();
+    	for (int i = 0; i < oldIDs.length; i++) {
+    		oldToNewMap.put(oldIDs[i], newIDs[i]);
+    	}
+    	oldToNewMap.put(endID, virtualEndID);
+    	// restore connections to nodes outside the loop body (only incoming)
+    	for (Map.Entry<NodeID, NodeID> e : oldToNewMap.entrySet()) {
+			NodeContainer oldNode = getNodeContainer(e.getKey());
 			for (int p = 0; p < oldNode.getNrInPorts(); p++) {
-				ConnectionContainer c = getIncomingConnectionFor(oldIDs[i], p);
+				ConnectionContainer c = getIncomingConnectionFor(e.getKey(), p);
 				if (c == null) {
 					// ignore: no incoming connection
-				} else if (oldIDsHash.contains(c.getSource())) {
-					// ignore: connection already contained
+				} else if (oldToNewMap.containsKey(c.getSource())) {
+					// ignore: connection already retained by paste persistor
+				} else if (c.getSource().equals(startID)) {
+					// used to connect to start node, connect to virtual in now
+					addConnection(virtualStartID, c.getSourcePort(), 
+							e.getValue(), c.getDestPort());
 				} else { 
 					// source node not part of loop
 					addConnection(c.getSource(), c.getSourcePort(), 
-							newIDs[i], c.getDestPort());
+							e.getValue(), c.getDestPort());
 				}
 			}
     	}
-		return newIDs;
+		return new ParallelizedBranchContent(
+				this, virtualStartID, virtualEndID, newIDs);
     }
 
     /** check if node can be safely reset. In case of a WFM we will check

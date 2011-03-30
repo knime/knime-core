@@ -50,7 +50,6 @@
  */
 package org.knime.core.node.workflow.virtual;
 
-import org.knime.core.node.Node;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -65,7 +64,7 @@ public class ParallelizedBranchContent {
 	private final WorkflowManager m_manager;
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
-	private final Node[] m_copiedLoopContent;
+	private final NodeID[] m_copiedLoopContent;
 	/**
 	 * @param manager
 	 * @param virtualInputID
@@ -76,7 +75,7 @@ public class ParallelizedBranchContent {
 	 */
 	public ParallelizedBranchContent(final WorkflowManager manager,
 			final NodeID virtualInputID, final NodeID virtualOutputID,
-			final Node[] copiedLoopContent) {
+			final NodeID[] copiedLoopContent) {
 		m_manager = manager;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
@@ -103,7 +102,7 @@ public class ParallelizedBranchContent {
 	/**
 	 * @return the copiedLoopContent
 	 */
-	public Node[] getCopiedLoopContent() {
+	public NodeID[] getCopiedLoopContent() {
 		return m_copiedLoopContent;
 	}
 	
@@ -127,7 +126,7 @@ public class ParallelizedBranchContent {
      * @param parallelBranchEndNodeModel
      */
     public void registerLoopEndStateChangeListener(
-            LoopEndParallelizeNode nmodel) {
+            final LoopEndParallelizeNode nmodel) {
         m_manager.getNodeContainer(m_virtualOutputID)
                 .addNodeStateChangeListener(nmodel);
     }
