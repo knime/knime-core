@@ -94,8 +94,6 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
                     return new PortObjectCell(po);
                 } catch (CanceledExecutionException cee) {
                     throw new IOException(cee);
-                } finally {
-                    // is.close();
                 }
             }
             /** {@inheritDoc} */
@@ -107,8 +105,6 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
                     PortUtil.writeObjectToStream(cell.m_content, os, null);
                 } catch (CanceledExecutionException cee) {
                     throw new IOException(cee);
-                } finally {
-                    // os.close();
                 }
             }
         };

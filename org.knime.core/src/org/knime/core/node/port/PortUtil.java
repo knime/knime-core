@@ -156,7 +156,12 @@ public final class PortUtil {
     public static void writeObjectToFile(final PortObject po, final File file,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        writeObjectToStream(po, new FileOutputStream(file), exec);
+        FileOutputStream os = new FileOutputStream(file);
+        try {
+            writeObjectToStream(po, os, exec);
+        } finally {
+            os.close();
+        }
     }
 
     public static void writeObjectToStream(final PortObject po,
@@ -189,14 +194,17 @@ public final class PortUtil {
         PortObjectSerializer objSer = getPortObjectSerializer(po.getClass());
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
-
-        out.close();
     }
 
     public static PortObject readObjectFromFile(final File file,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        return readObjectFromStream(new FileInputStream(file), exec);
+        FileInputStream is = new FileInputStream(file);
+        try {
+            return readObjectFromStream(is, exec);
+        } finally {
+            is.close();
+        }
     }
 
     public static PortObject readObjectFromStream(final InputStream input,
@@ -245,9 +253,7 @@ public final class PortUtil {
         PortObjectSerializer<?> objSer =
             PortUtil.getPortObjectSerializer(cl
                     .asSubclass(PortObject.class));
-        PortObject po = objSer.loadPortObject(objIn, spec, exec);
-        in.close();
-        return po;
+        return objSer.loadPortObject(objIn, spec, exec);
     }
 
     public static PortObjectSpec readObjectSpecFromFile(final File file)
