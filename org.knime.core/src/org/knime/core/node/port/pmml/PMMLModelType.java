@@ -47,6 +47,9 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Enum to describe valid PMML models as of version 3.2.
  *
@@ -71,12 +74,53 @@ public enum PMMLModelType {
         SequenceModel,
         /** PMML Support Vector Machine Model. */
         SupportVectorMachineModel,
-        /** PMML Model Composition */
+        /** PMML Model Composition. */
         MiningModel,
-        /** PMML RuleSetModel */
+        /** PMML RuleSetModel. */
         RuleSetModel,
-        /** PMML TextModel */
+        /** PMML TextModel. */
         TextModel,
         /** No valid PMML model was found. */
-        None
+        None;
+
+        private static final Map<String, PMMLModelType> NAMES;
+        /**
+         * A string representation of all PMMLModelTypes.
+         */
+        public static final String TYPESTRING;
+
+        static {
+            PMMLModelType[] values = PMMLModelType.values();
+            NAMES = new HashMap<String, PMMLModelType>(
+                    values.length);
+            StringBuffer sb = new StringBuffer();
+            boolean first = true;
+            for (PMMLModelType type : values) {
+                String name = type.toString();
+                NAMES.put(name, type);
+                if (!first) {
+                    sb.append(", ");
+                }
+                sb.append(name);
+                first = false;
+            }
+            TYPESTRING = sb.toString();
+        }
+
+        /**
+         * @param name the name of the pmml model
+         * @return the model type corresponding to the name or null if there
+         *      is no model type of the given name
+         */
+        public static PMMLModelType getType(final String name) {
+            return NAMES.get(name);
+        }
+
+        /**
+         * @param name the name of the pmml model
+         * @return true, if a pmml model of this type exists, false otherwise
+         */
+        public static boolean contains(final String name) {
+            return NAMES.containsKey(name);
+        }
 }
