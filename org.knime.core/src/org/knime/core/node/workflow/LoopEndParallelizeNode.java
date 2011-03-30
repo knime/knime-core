@@ -50,11 +50,21 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
+
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public interface LoopEndParallelizeNode
 extends LoopEndNode, NodeStateChangeListener {
+
+    /** Add a new parallel branch to this node - the node will take
+     * care of watching and handling of the result and also cleanup of this
+     * branch once execution is terminated.
+     * 
+     * @param index
+     */
+    void addParallelBranch(final ParallelizedBranchContent pbc);
 
 }
