@@ -8,5 +8,19 @@
             JobManagerFactory="org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory">
       </NodeExecutionJobManagerFactory>
    </extension>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            category-path="/"
+            expert-flag="false"
+            factory-class="org.knime.core.node.workflow.virtual.parallelbranchend.ParallelBranchEndNodeFactory"
+            id="org.knime.core.node.workflow.virtual.parallelbranchend.ParallelBranchEndNodeFactory">
+      </node>
+      <node
+            expert-flag="false"
+            factory-class="org.knime.core.node.workflow.virtual.parallelbranchstart.ParallelBranchStartNodeFactory"
+            id="ParallelBranchStartNodeFactory">
+      </node>
+   </extension>
     
 </plugin>

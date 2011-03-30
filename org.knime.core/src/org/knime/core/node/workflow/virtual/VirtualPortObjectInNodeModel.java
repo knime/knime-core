@@ -108,10 +108,9 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 		return null;
 	}
 	
-	public void setOutputPortObjects(final PortObject[] objects)
-			throws InvalidSettingsException {
+	public void setOutputPortObjects(final PortObject[] objects) {
 		if (objects.length != getNrOutPorts()) {
-			throw new InvalidSettingsException(
+			throw new IllegalArgumentException(
 					"Invalid length of output objects: expected: " 
 					+ getNrOutPorts() + " actual: " + objects.length);
 		}

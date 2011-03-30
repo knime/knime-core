@@ -124,6 +124,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
 import org.knime.core.util.FileUtil;
 
@@ -1949,9 +1950,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (success) {
                     Node node = snc.getNode();
                     // process start of bundle of parallel branches
-                    if (nc instanceof LoopStartParallelizeNode) {
+                    if (node.getNodeModel() 
+                    		instanceof LoopStartParallelizeNode) {
                         try {
-                            parallelizeLoop(nc.getID(), 42);
+                            parallelizeLoop(nc.getID(), 2);
                         } catch (Exception e) {
                             latestNodeMessage = new NodeMessage(
                                     NodeMessage.Type.ERROR,
@@ -2276,7 +2278,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
     		final int branchIndex, final int branchCount) {
     	assert Thread.holdsLock(m_workflowMutex);
-    	final int[] moveUIDist = new int[]{0, (branchIndex + 1) * 20, 0, 0};
+    	final int[] moveUIDist = new int[]{(branchIndex + 1) * 10, 
+    			(branchIndex + 1) * 80, 0, 0};
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
@@ -2303,9 +2306,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     	
     	WorkflowCopyContent newBody = copyFromAndPasteHere(this, copyContent);
     	NodeID[] newIDs = newBody.getNodeIDs();
-    	Map<NodeID, NodeID> oldToNewMap = new HashMap<NodeID, NodeID>();
+    	Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
     	for (int i = 0; i < oldIDs.length; i++) {
-    		oldToNewMap.put(oldIDs[i], newIDs[i]);
+    		oldIDsHash.put(oldIDs[i], newIDs[i]);
     		NodeContainer nc = getNodeContainer(newIDs[i]);
     		UIInformation uiInfo = nc.getUIInformation();
     		if (uiInfo instanceof NodeUIInformation) {
@@ -2313,27 +2316,50 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 				nc.setUIInformation(ui.createNewWithOffsetPosition(moveUIDist));
 			}
     	}
-    	oldToNewMap.put(endID, virtualEndID);
     	// restore connections to nodes outside the loop body (only incoming)
-    	for (Map.Entry<NodeID, NodeID> e : oldToNewMap.entrySet()) {
-			NodeContainer oldNode = getNodeContainer(e.getKey());
+    	for (int i = 0; i < newIDs.length; i++) {
+			NodeContainer oldNode = getNodeContainer(oldIDs[i]);
 			for (int p = 0; p < oldNode.getNrInPorts(); p++) {
-				ConnectionContainer c = getIncomingConnectionFor(e.getKey(), p);
+				ConnectionContainer c = getIncomingConnectionFor(oldIDs[i], p);
 				if (c == null) {
 					// ignore: no incoming connection
-				} else if (oldToNewMap.containsKey(c.getSource())) {
+				} else if (oldIDsHash.containsKey(c.getSource())) {
 					// ignore: connection already retained by paste persistor
 				} else if (c.getSource().equals(startID)) {
 					// used to connect to start node, connect to virtual in now
 					addConnection(virtualStartID, c.getSourcePort(), 
-							e.getValue(), c.getDestPort());
+							newIDs[i], c.getDestPort());
 				} else { 
 					// source node not part of loop
 					addConnection(c.getSource(), c.getSourcePort(), 
-							e.getValue(), c.getDestPort());
+							newIDs[i], c.getDestPort());
 				}
 			}
     	}
+		for (int p = 0; p < endNode.getNrInPorts(); p++) {
+			ConnectionContainer c = getIncomingConnectionFor(endID, p);
+			if (c == null) {
+				// ignore: no incoming connection
+			} else if (oldIDsHash.containsKey(c.getSource())) {
+				NodeID source = oldIDsHash.get(c.getSource());
+				addConnection(source, c.getSourcePort(), 
+						virtualEndID, c.getDestPort());
+			} else if (c.getSource().equals(startID)) {
+				// used to connect to start node, connect to virtual in now
+				addConnection(virtualStartID, c.getSourcePort(), 
+						virtualEndID, c.getDestPort());
+			} else { 
+				// source node not part of loop
+				addConnection(c.getSource(), c.getSourcePort(), 
+						virtualEndID, c.getDestPort());
+			}
+		}
+		LoopStartParallelizeNode startModel = 
+			castNodeModel(startID, LoopStartParallelizeNode.class);
+		PortObject[] chunkData = startModel.getPortObjectForChunk(branchIndex);
+		VirtualPortObjectInNodeModel virtualInModel =
+			castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
+		virtualInModel.setOutputPortObjects(chunkData);
 		return new ParallelizedBranchContent(this, virtualStartID, 
 				virtualEndID, newIDs, branchIndex, branchCount);
     }
