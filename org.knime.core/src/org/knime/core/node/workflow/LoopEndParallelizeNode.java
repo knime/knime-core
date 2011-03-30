@@ -54,6 +54,7 @@ package org.knime.core.node.workflow;
  * 
  * @author wiswedel, University of Konstanz
  */
-public interface LoopEndParallelizeNode extends LoopEndNode {
+public interface LoopEndParallelizeNode
+extends LoopEndNode, NodeStateChangeListener {
 
 }

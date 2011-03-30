@@ -52,6 +52,7 @@ package org.knime.core.node.workflow.virtual.parallelbranchend;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -66,15 +67,21 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public class ParallelBranchEndNodeModel extends NodeModel
-implements LoopEndParallelizeNode {
+implements LoopEndParallelizeNode,
+NodeStateChangeListener {
 
-	private PortObject[] m_objects;
+    /* Store map of end node IDs and corresponding branch objects */
+    private LinkedHashMap<NodeID, ParallelizedBranchContent> m_branches;
+    
 
 	/**
 	 * @param outPortTypes
@@ -84,7 +91,16 @@ implements LoopEndParallelizeNode {
 		        new PortType[]{ BufferedDataTable.TYPE});
 	}
 	
-	/**
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        return inSpecs;
+    }
+
+    /**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -94,30 +110,30 @@ implements LoopEndParallelizeNode {
 		return inObjects;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		return inSpecs;
-	}
-	
-	void addParallelBranch(final int index,
-	        final NodeID[] copiedNodes,
-	        final NodeID startNode,
-	        final NodeID endNode)
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        // TODO: cancel and delete all branches
+        m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+    }
+
+    /** Add a new parallel branch to this node - the node will take
+     * care of watching and handling of the result and also cleanup of this
+     * branch once execution is terminated.
+     * 
+     * @param index
+     */
+	void addParallelBranch(final ParallelizedBranchContent pbc)
 	{
-	    
+	    if (m_branches.containsKey(pbc.getVirtualOutputID())) {
+	        throw new IllegalArgumentException("Can't insert branch with duplicate key!");
+	    }
+	    m_branches.put(pbc.getVirtualOutputID(), pbc);
+	    pbc.registerLoopEndStateChangeListener(this);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-		// no internals
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -164,5 +180,19 @@ implements LoopEndParallelizeNode {
 			CanceledExecutionException {
 		// no internals
 	}
+
+	//////////////////////////////////////////
+	// NodeStateChangeListener Methods
+	//////////////////////////////////////////
+	
+    /**
+     * {@inheritDoc}
+     */
+    public void stateChanged(NodeStateEvent state) {
+        NodeID endNode = state.getSource();
+        if (m_branches.containsKey(endNode)) {
+            
+        }
+    }
 
 }
