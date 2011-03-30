@@ -5,7 +5,7 @@
     <file-match-pattern match-pattern=".*\.java$" include-pattern="true"/>
     <file-match-pattern match-pattern=".*Test\.java$" include-pattern="false"/>
   </fileset>
-  <fileset name="Unit Test Files" enabled="true" check-config-name="UniKN KNIME UnitTest" local="false">
+  <fileset name="Unit Test Files" enabled="true" check-config-name="UniKN KNIME Unittest" local="false">
     <file-match-pattern match-pattern=".*Test\.java$" include-pattern="true"/>
   </fileset>
 </fileset-config>
