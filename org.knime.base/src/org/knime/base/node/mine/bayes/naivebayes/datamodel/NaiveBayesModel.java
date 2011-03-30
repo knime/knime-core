@@ -58,6 +58,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -219,6 +220,8 @@ public class NaiveBayesModel {
             } else if (colType.isCompatible(NominalValue.class)) {
                 model = new NominalAttributeModel(colName, skipMissingVals,
                         maxNoOfNominalVals);
+            } else if (colType.isCompatible(BitVectorValue.class)) {
+                model = new BitVectorAttributeModel(colName, skipMissingVals);
             } else {
                 continue;
             }

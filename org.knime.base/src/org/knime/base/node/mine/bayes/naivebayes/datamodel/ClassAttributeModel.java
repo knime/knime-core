@@ -277,8 +277,11 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        return AttributeModel.createHTMLTable(null, "Class: ",
-                "Count: ", 10, m_recsCounterByClassVal, true);
+        final StringBuilder buf = new StringBuilder();
+        buf.append(AttributeModel.createHTMLTable(null, "Class: ",
+                "Count: ", 10, m_recsCounterByClassVal, true));
+        buf.append("<b>Total count: </b>" + totalNoOfRecs + "<br><br>");
+        return buf.toString();
     }
 
     /**

@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -509,6 +510,7 @@ class NominalAttributeModel extends AttributeModel {
 
     private static String createSummarySection(final int totalRowCount,
             final int[] rowsPerValCounts) {
+        final NumberFormat nf = NumberFormat.getPercentInstance();
         final StringBuilder buf = new StringBuilder();
         buf.append("<tr>");
         buf.append("<th>");
@@ -516,9 +518,7 @@ class NominalAttributeModel extends AttributeModel {
         buf.append("</th>");
         for (int i = 0, length = rowsPerValCounts.length; i < length; i++) {
             buf.append("<td align='center'>");
-            buf.append(rowsPerValCounts[i]);
-            buf.append("/");
-            buf.append(totalRowCount);
+            buf.append(nf.format(rowsPerValCounts[i] / (double)totalRowCount));
             buf.append("</td>");
         }
         buf.append("</tr>");
