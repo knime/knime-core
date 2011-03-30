@@ -44,14 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   13.03.2008 (Fabian Dill): created
  */
 package org.knime.workbench.ui.favorites;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -59,6 +62,10 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageListener;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.model.NodeTemplate;
@@ -66,20 +73,20 @@ import org.knime.workbench.repository.view.RepositoryContentProvider;
 import org.knime.workbench.repository.view.RepositoryLabelProvider;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class FavoritesView extends ViewPart implements NodeUsageListener {
-    
+
     private TreeViewer m_viewer;
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void createPartControl(final Composite parent) {
-        m_viewer = new TreeViewer(parent, 
+        m_viewer = new TreeViewer(parent,
                 SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
         this.getSite().setSelectionProvider(m_viewer);
         Transfer[] transfers = new Transfer[]{
@@ -90,25 +97,54 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
                 new FavoriteNodesDropTarget(this));
         m_viewer.setLabelProvider(new RepositoryLabelProvider());
         m_viewer.setContentProvider(new RepositoryContentProvider());
-        
+
         // no sorting
         m_viewer.setComparator(null);
-        
-        // lazy initialization of the manager 
+
+        // lazy initialization of the manager
         Display.getDefault().syncExec(new Runnable() {
 
-            public void run() {                
+            public void run() {
                 m_viewer.setInput(FavoriteNodesManager.getInstance().getRoot());
                 Object category = FavoriteNodesManager.getInstance().getRoot()
                     .getChildByID(FavoriteNodesManager.FAV_CAT_ID, false);
                 m_viewer.expandToLevel(category, 1);
             }
-            
+
         });
+        hookDoubleClickAction();
         NodeUsageRegistry.addNodeUsageListener(this);
     }
 
-    
+    private void hookDoubleClickAction() {
+
+        m_viewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
+            public void doubleClick(final DoubleClickEvent event) {
+                Object o =
+                        ((IStructuredSelection)event.getSelection())
+                                .getFirstElement();
+                if (o instanceof NodeTemplate) {
+                    NodeTemplate tmplt = (NodeTemplate)o;
+                    NodeFactory<? extends NodeModel> nodeFact;
+                    try {
+                        nodeFact = tmplt.getFactory().newInstance();
+                    } catch (Exception e) {
+                        NodeLogger.getLogger(FavoritesView.class).error(
+                                "Unable to instantiate the selected node "
+                                + tmplt.getFactory().getName(), e);
+                        return;
+                    }
+                    boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
+                    if (added) {
+                        NodeUsageRegistry.addNode(tmplt);
+                    }
+                }
+            }
+        });
+    }
+
+
 
     /**
      * {@inheritDoc}
@@ -116,17 +152,17 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
     @Override
     public void setFocus() {
     }
-    
+
     /**
-     * 
+     *
      * @return the selection of the underlying list
      */
     public ISelection getSelection() {
         return m_viewer.getSelection();
     }
-   
+
     /**
-     * 
+     *
      * @param template adds this node template to the favorites
      */
     void addNodeTemplate(final NodeTemplate template) {
@@ -138,9 +174,9 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
 
 
     /**
-     * Removes the given node from the personal favorites and refreshes the 
+     * Removes the given node from the personal favorites and refreshes the
      * tree.
-     * @param node node to be removed from the personal favorite nodes 
+     * @param node node to be removed from the personal favorite nodes
      */
     public void removeFavorite(final NodeTemplate node) {
         FavoriteNodesManager.getInstance().removeFavoriteNode(node);
@@ -154,7 +190,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
     public void expandAll() {
         m_viewer.expandAll();
     }
-    
+
     /**
      * Collapses the whole tree.
      */
@@ -162,44 +198,44 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         m_viewer.collapseAll();
     }
 
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void nodeAdded() {
         FavoriteNodesManager.getInstance().updateNodes();
         Display.getDefault().syncExec(new Runnable() {
 
-            public void run() {   
+            public void run() {
                 if (!m_viewer.getControl().isDisposed()) {
                     m_viewer.refresh();
                 }
             }
-            
+
         });
     }
 
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void frequentHistoryChanged() {
         FavoriteNodesManager.getInstance().updateFrequentUsedNodes();
         Display.getDefault().syncExec(new Runnable() {
 
-            public void run() {   
+            public void run() {
                 if (!m_viewer.getControl().isDisposed()) {
                     m_viewer.refresh();
                 }
             }
-            
+
         });
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void usedHistoryChanged() {
@@ -209,12 +245,12 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         // we could refresh more specifically this categroy
         Display.getDefault().syncExec(new Runnable() {
 
-            public void run() {   
+            public void run() {
                 if (!m_viewer.getControl().isDisposed()) {
                     m_viewer.refresh();
                 }
             }
-            
+
         });
     }
 

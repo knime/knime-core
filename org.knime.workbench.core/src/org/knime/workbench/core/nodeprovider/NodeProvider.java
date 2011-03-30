@@ -44,40 +44,88 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
+ *
+ * Created: Mar 30, 2011
+ * Author: ohl
  */
-package org.knime.workbench.core.preferences;
+package org.knime.workbench.core.nodeprovider;
 
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.workbench.core.KNIMECorePlugin;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 
 /**
+ * Used by views to initiate a node addition in a workflow editor. The workflow
+ * editors listen to the provider(s) and will be notified when
+ * {@link #addNode(NodeFactory)}) is called. Editors will then - if
+ * circumstances permit - add the specified node. <br>
+ * This would be used e.g. on a double-click or similar actions. Drag/drop
+ * events should go through the appropriate mechanisms as they also provide
+ * location.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author ohl, University of Konstanz
  */
-public class HeadlessPreferencesInitializer extends
-        AbstractPreferenceInitializer {
+public final class NodeProvider {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initializeDefaultPreferences() {
-        IPreferenceStore store = KNIMECorePlugin.getDefault()
-            .getPreferenceStore();
-        store.setDefault(HeadlessPreferencesConstants.P_MAXIMUM_THREADS,
-                2 * Runtime.getRuntime().availableProcessors());
+    /** the only and single instance of this class. */
+    public static final NodeProvider INSTANCE = new NodeProvider();
 
-        store.setDefault(HeadlessPreferencesConstants.P_TEMP_DIR,
-                System.getProperty("java.io.tmpdir"));
-
-        store.setDefault(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
-                LEVEL.DEBUG.name());
-
-        // set default values
-        store.setDefault(KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
-                LEVEL.WARN.name());
+    private NodeProvider() {
+        // there is only one instance of this.
     }
 
+    private final CopyOnWriteArrayList<EventListener> m_listeners =
+            new CopyOnWriteArrayList<EventListener>();
+
+    /**
+     * For example workflow editors will register as listeners.
+     *
+     * @param listener to be notified about add events
+     */
+    public void addListener(final EventListener listener) {
+        if (!m_listeners.contains(listener)) {
+            m_listeners.add(listener);
+        }
+    }
+
+    /**
+     * Remove the listener.
+     *
+     * @param listener to be removed.
+     */
+    public void removeListener(final EventListener listener) {
+        m_listeners.remove(listener);
+    }
+
+    /**
+     * Triggers an event at all registered listeners.
+     *
+     * @param nodeFactory the node factory to create the new node from
+     * @return true, if at least one listener actually added the node.
+     */
+    public boolean addNode(final NodeFactory<? extends NodeModel> nodeFactory) {
+        boolean added = false;
+        for (EventListener l : m_listeners) {
+            added |= l.addNode(nodeFactory);
+        }
+        return added;
+    }
+
+    /**
+     * Interface for interested listeners.
+     *
+     * @author ohl, University of Konstanz
+     */
+    public interface EventListener {
+        /**
+         * Called when a node should be added to the workflow editor. Only the
+         * active editor should respond to the request.
+         *
+         * @param nodeFactory to create the new node from
+         * @return true if this listener actually added the node
+         */
+        public boolean addNode(
+                final NodeFactory<? extends NodeModel> nodeFactory);
+    }
 }
