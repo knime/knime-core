@@ -5316,7 +5316,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         a {@link SingleNodeContainer} or the model does not implement the
      *         requested type.
      */
-    private <T> T castNodeModel(final NodeID id, final Class<T> cl) {
+    public <T> T castNodeModel(final NodeID id, final Class<T> cl) {
 		NodeContainer nc = getNodeContainer(id);
 		if (!(nc instanceof SingleNodeContainer)) {
 			throw new IllegalArgumentException("Node \"" + nc 
