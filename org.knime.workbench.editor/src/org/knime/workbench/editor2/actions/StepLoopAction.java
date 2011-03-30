@@ -171,8 +171,8 @@ public class StepLoopAction extends AbstractNodeAction {
                     && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(snc, /*oneStep=*/true);
                 } else if (manager.canExecuteNode(nc.getID())) {
-                    manager.pauseLoopExecution(nc);
                     manager.executeUpToHere(nc.getID());
+                    manager.pauseLoopExecution(nc);
                 }
             }
         }
