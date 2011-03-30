@@ -1948,6 +1948,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeMessage latestNodeMessage = snc.getNodeMessage();
                 if (success) {
                     Node node = snc.getNode();
+                    // process start of bundle of parallel branches
+                    if (nc instanceof LoopStartParallelizeNode) {
+                        try {
+                            parallelizeLoop(nc.getID(), 42);
+                        } catch (Exception e) {
+                            latestNodeMessage = new NodeMessage(
+                                    NodeMessage.Type.ERROR,
+                                    "Parallel Branch Start Failure! ("
+                                    + e.getMessage() +")");
+                            success = false;
+                        }
+                    }
                     // process loop context for "real" nodes:
                     if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                         // if this was BEGIN, it's not anymore (until we do not
@@ -2234,10 +2246,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		final int maxParallelCount) throws IllegalLoopException {
     	synchronized (m_workflowMutex) {
     		final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
+            LoopEndParallelizeNode endNode;
     		try {
     			// just for validation
     			castNodeModel(startID, LoopStartParallelizeNode.class);
-    			castNodeModel(endID, LoopEndParallelizeNode.class);
+    			endNode = castNodeModel(endID, LoopEndParallelizeNode.class);
     		} catch (IllegalArgumentException iae) {
     			throw new IllegalLoopException(iae.getMessage(), iae);
     		}
@@ -2250,14 +2263,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     			loopNodes[i] = loopBody.get(i).getID();
     		}
     		for (int i = 0; i < maxParallelCount; i++) {
-//    			NodeID[] copiedNodes = 
+    			ParallelizedBranchContent copiedNodes = 
     			    duplicateLoopBodyAndAttach(startID, endID, loopNodes);
-//    			NodeID copiedStartID = copiedNodes[0];
-//    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
-//    			LoopStartParallelize copiedStart = 
-//    				castNodeModel(copiedStartID, LoopStartParallelizeNode.class);
-//    			LoopEndParallelizeNode copiedEnd = 
-//    				castNodeModel(copiedEndID, LoopEndParallelizeNode.class);
+                executeUpToHere(copiedNodes.getVirtualOutputID());
+    			endNode.addParallelBranch(copiedNodes);
     		}
 		}
     }
