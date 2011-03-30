@@ -58,17 +58,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -342,7 +341,7 @@ public class SortedTable implements DataTable {
 
         // cont will hold the sorted chunks
         List<Iterable<DataRow>> chunksCont =
-            new ArrayList<Iterable<DataRow>>();
+            new LinkedList<Iterable<DataRow>>();
 
         ArrayList<DataRow> buffer = new ArrayList<DataRow>();
 
@@ -368,7 +367,7 @@ public class SortedTable implements DataTable {
                 DataRow row = iter.next();
                 buffer.add(row);
             } else {
-            	LOGGER.debug("Writing chunk [" + chunkStartRow + ":" 
+            	LOGGER.debug("Writing chunk [" + chunkStartRow + ":"
             			+ counter + "] - mem usage: " + getMemUsage());
                 int estimatedIncrements = dataTable.getRowCount() - counter
                     + buffer.size();
@@ -385,7 +384,7 @@ public class SortedTable implements DataTable {
                 for (int i = 0; i < totalBufferSize; i++) {
                     exec.setMessage("Writing temporary table -- "
                             + i + "/" + totalBufferSize);
-                    // must not use Iterator#remove as it causes 
+                    // must not use Iterator#remove as it causes
                     // array copies
                     DataRow next = buffer.set(i, null);
                     diskCont.addRowToTable(next);
@@ -399,11 +398,11 @@ public class SortedTable implements DataTable {
 
                 // Force full gc to be sure that there is not too much
                 // garbage
-                LOGGER.debug("Wrote chunk [" + chunkStartRow + ":" 
+                LOGGER.debug("Wrote chunk [" + chunkStartRow + ":"
                 		+ counter + "] - mem usage: " + getMemUsage());
                 Runtime.getRuntime().gc();
-                
-                LOGGER.debug("Forced gc() when reading rows, new mem usage: " 
+
+                LOGGER.debug("Forced gc() when reading rows, new mem usage: "
                 		+ getMemUsage());
                 chunkStartRow = counter + 1;
             }
@@ -451,36 +450,33 @@ public class SortedTable implements DataTable {
             }
             // merge container in toMergeCont into cont
             PriorityQueue<MergeEntry> currentRows =
-                new PriorityQueue<MergeEntry>(
-                        toMergeCont.size(), m_rowComparator);
+                new PriorityQueue<MergeEntry>(toMergeCont.size());
             for (int i = 0; i < toMergeCont.size(); i++) {
                 Iterator<DataRow> iter = toMergeCont.get(i).iterator();
                 if (iter.hasNext()) {
-                    currentRows.add(new MergeEntry(iter.next(), iter));
+                    currentRows.add(new MergeEntry(iter, i, m_rowComparator));
                 }
             }
             while (currentRows.size() > 0) {
                 MergeEntry first = currentRows.poll();
-                cont.addRowToTable(first.getDataRow());
+                DataRow least = first.poll();
+                cont.addRowToTable(least);
                 // increment progress
                 progress += incProgress;
                 exec.setProgress(progress);
                 // read next row in first
-                Iterator<DataRow> iter = first.getIterator();
-                if (iter.hasNext()) {
-                    DataRow next = iter.next();
-                    currentRows.add(new MergeEntry(next, iter));
+                if (null != first.peek()) {
+                    currentRows.add(first);
                 }
-
             }
             cont.close();
             // Add cont to the pending containers
-            chunksCont.add(cont.getTable());
+            chunksCont.add(0, cont.getTable());
         }
 
         m_sortedTable = cont.getTable();
     }
-    
+
     private String getMemUsage() {
     	Runtime runtime = Runtime.getRuntime();
     	long free = runtime.freeMemory();
@@ -492,70 +488,62 @@ public class SortedTable implements DataTable {
     	String freeS = NumberFormat.getInstance().format(freeD);
     	String totalS = NumberFormat.getInstance().format(totalD);
     	String availS = NumberFormat.getInstance().format(availD);
-    	return "avail: " + availS + "MB, total: " + totalS 
+    	return "avail: " + availS + "MB, total: " + totalS
     		+ "MB, free: " + freeS + "MB";
     }
 
-    private static class MergeEntry implements DataRow {
+    private static class MergeEntry implements Comparable<MergeEntry> {
         private DataRow m_row;
         private Iterator<DataRow> m_iterator;
+        private int m_index;
+        private Comparator<DataRow> m_comparator;
 
         /**
          * @param row
          * @param iterator
          */
-        public MergeEntry(final DataRow row, final Iterator<DataRow> iterator) {
-            m_row = row;
+        public MergeEntry(final Iterator<DataRow> iterator, final int index,
+                final Comparator<DataRow> comparator) {
             m_iterator = iterator;
+            m_row = m_iterator.hasNext() ? m_iterator.next() : null;
+            m_index = index;
+            m_comparator = comparator;
         }
 
         /**
          * @return the row
          */
-        public DataRow getDataRow() {
+        public DataRow peek() {
             return m_row;
         }
 
         /**
-         * {@inheritDoc}
+         * @return the row
          */
-        public DataCell getCell(final int index) {
-            return m_row.getCell(index);
+        public DataRow poll() {
+            DataRow row = m_row;
+            m_row = m_iterator.hasNext() ? m_iterator.next() : null;
+            return row;
         }
 
         /**
          * {@inheritDoc}
          */
-        public RowKey getKey() {
-            return m_row.getKey();
+        @Override
+        public int compareTo(final MergeEntry that) {
+            int value = m_comparator.compare(this.m_row, that.m_row);
+            if (value == 0) {
+                return this.m_index - that.m_index;
+            } else {
+                return value;
+            }
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int getNumCells() {
-            return m_row.getNumCells();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Iterator<DataCell> iterator() {
-            return m_row.iterator();
-        }
-
-        /**
-         * @return the iterator
-         */
-        public Iterator<DataRow> getIterator() {
-            return m_iterator;
-        }
-
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_sortedTable.getDataTableSpec();
     }
@@ -563,6 +551,7 @@ public class SortedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         return m_sortedTable.iterator();
     }
@@ -588,6 +577,7 @@ public class SortedTable implements DataTable {
          * @param dr2 another datarow to be compared with dr1
          * @return -1 if dr1 < dr2, 0 if dr1 == dr2 and 1 if dr1 > dr2
          */
+        @Override
         public int compare(final DataRow dr1, final DataRow dr2) {
 
             if (dr1 == dr2) {
