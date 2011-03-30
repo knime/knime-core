@@ -121,14 +121,18 @@ public class LayoutManager {
             int x = 0;
             int y = 0;
             Node gNode;
+            String label = nc.getCustomName();
+            if (label == null || label.isEmpty()) {
+                label = "Node " + nc.getID().getIDWithoutRoot();
+            }
             if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] bounds = nui.getBounds();
                 x = bounds[0];
                 y = bounds[1];
-                gNode = m_g.createNode(nc.getNameWithID(), x, y);
+                gNode = m_g.createNode(label, x, y);
             } else {
-                gNode = m_g.createNode(nc.getNameWithID());
+                gNode = m_g.createNode(label);
             }
             m_workbenchToGraphNodes.put(nc, gNode);
         }
