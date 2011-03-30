@@ -85,6 +85,8 @@ public class SimpleLayeredLayouter {
 		// cannot modify graph in for-loop above, since it would create
 		// concurrent modification due to iterator
 		for (Edge e : hiddenEdges) {
+		    // list for this edges dummy nodes
+		    ArrayList<Node> eDummyNodes = new ArrayList<Graph.Node>();
 			int startLayer = nodeLayer.get(e.source()).intValue();
 			int endLayer = nodeLayer.get(e.target()).intValue();
 			int span = endLayer - startLayer;
@@ -98,14 +100,16 @@ public class SimpleLayeredLayouter {
 				Edge dEdge = g.createEdge(last, current);
 				dummyEdges.add(dEdge);
 				// add dummy vertex to the list of dummies for the original edge
-				dummyNodes.add(current);
+				eDummyNodes.add(current);
 				// proceed
 				last = current;
 			}
 			// add last dummy edge
 			g.createEdge(last, e.target());
 			// store list of dummy nodes for original edge
-			hiddenEdgeToDummyVertices.put(e, dummyNodes);
+			hiddenEdgeToDummyVertices.put(e, eDummyNodes);
+			// add this edges dummy Nodes to the list of all dummy nodes
+			dummyNodes.addAll(eDummyNodes);
 		}
 
 		// remove hidden edges

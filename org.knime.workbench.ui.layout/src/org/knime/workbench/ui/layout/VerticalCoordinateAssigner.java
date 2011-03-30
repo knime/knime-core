@@ -51,6 +51,8 @@
 package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import org.knime.workbench.ui.layout.Graph.Edge;
@@ -64,95 +66,140 @@ import org.knime.workbench.ui.layout.Graph.Node;
  */
 public class VerticalCoordinateAssigner {
 
-	private Graph m_g;
-	private ArrayList<ArrayList<Node>> m_layers;
-	private HashMap<Edge, Boolean> m_innerSegment;
-	private HashMap<Edge, Boolean> m_marked;
-	private HashMap<Node, Node> m_align;
-	private HashMap<Node, Node> m_root;
+    private Graph m_g;
 
-	public VerticalCoordinateAssigner(Graph g,
-			ArrayList<ArrayList<Node>> layers, ArrayList<Node> dummyNodes,
-			ArrayList<Edge> dummyEdges) {
-		m_g = g;
-		m_layers = layers;
-		m_innerSegment = new HashMap<Graph.Edge, Boolean>();
-		m_marked = new HashMap<Graph.Edge, Boolean>();
-		m_align = new HashMap<Graph.Node, Graph.Node>();
-		m_root = new HashMap<Graph.Node, Graph.Node>();
-		for (Edge e : m_g.edges()) {
-			m_marked.put(e, false);
-			// initialize inner segments, corrected later
-			m_innerSegment.put(e, false);
-		}
-		for (Node n : m_g.nodes()) {
-			m_align.put(n, n);
-			m_root.put(n, n);
-		}
-		// determine inner segments
-		for (Edge e : dummyEdges) {
-			if (dummyNodes.contains(e.source())
-					&& dummyNodes.contains(e.target()))
-				m_innerSegment.put(e, true);
-		}
-	}
+    private ArrayList<ArrayList<Node>> m_layers;
 
-	public void run() {
-		markConflicts();
-		horizontalAlignment();
-		verticalCompaction();
-	}
+    private HashMap<Edge, Boolean> m_innerSegment;
 
-	private void verticalCompaction() {
-		// TODO Auto-generated method stub
+    private HashMap<Edge, Boolean> m_marked;
 
-	}
+    private HashMap<Node, Node> m_align;
 
-	private void horizontalAlignment() {
-		// TODO Auto-generated method stub
+    private HashMap<Node, Node> m_root;
 
-	}
+    public VerticalCoordinateAssigner(Graph g,
+            ArrayList<ArrayList<Node>> layers, ArrayList<Node> dummyNodes,
+            ArrayList<Edge> dummyEdges) {
+        m_g = g;
+        m_layers = layers;
+        m_innerSegment = new HashMap<Graph.Edge, Boolean>();
+        m_marked = new HashMap<Graph.Edge, Boolean>();
+        m_align = new HashMap<Graph.Node, Graph.Node>();
+        m_root = new HashMap<Graph.Node, Graph.Node>();
+        for (Edge e : m_g.edges()) {
+            m_marked.put(e, false);
+            // initialize inner segments, corrected later
+            m_innerSegment.put(e, false);
+        }
+        for (Node n : m_g.nodes()) {
+            m_align.put(n, n);
+            m_root.put(n, n);
+        }
+        // determine inner segments
+        for (Edge e : dummyEdges) {
+            if (dummyNodes.contains(e.source())
+                    && dummyNodes.contains(e.target()))
+                m_innerSegment.put(e, true);
+        }
+    }
 
-	private void markConflicts() {
-		if (m_layers.size() < 4)
-			// no conflicts possible since there cannot be any inner segments
-			return;
-		// inner segments can not occur between first and second layer, and
-		// next-to-last and last layer
-		for (int i = 1; i < m_layers.size() - 2; i++) {
-			int k0 = 0;
-			int l = 0;
-			for (int l1 = 0; l1 < m_layers.get(i + 1).size(); l1++) {
-				Node v_l1 = m_layers.get(i + 1).get(l1);
-				Edge innerSegment = getInnerSegmentIncidentTo(v_l1);
-				if (l1 == m_layers.get(i + 1).size() - 1
-						|| innerSegment!=null) {
-					int k1 = m_layers.get(i).size()-1;
-					if (innerSegment!=null)
-						k1 = m_layers.get(i).indexOf(innerSegment.opposite(v_l1));
-					while (l<=l1) {
-						Node v_l = m_layers.get(i+1).get(l);
-						for (Edge e:m_g.inEdges(v_l)){
-							Node v_k = e.opposite(v_l);
-							int k = m_layers.get(i).indexOf(v_k);
-							if (k<k0 || k>k1)
-								m_marked.put(e, true);
-						}
-						l++;
-					}
-					k0 = k1;
-				}
-			}
-		}
+    public void run() {
+        markConflicts();
+        horizontalAlignment();
+        verticalCompaction();
+    }
 
-	}
+    private void verticalCompaction() {
+        // TODO Auto-generated method stub
 
-	private Edge getInnerSegmentIncidentTo(Node node) {
-		for (Edge e : m_g.inEdges(node))
-			// if node is incident to inner segment this will be the only
-			// incoming edge
-			if (m_innerSegment.get(e))
-				return e;
-		return null;
-	}
+    }
+
+    private void horizontalAlignment() {
+        for (int i = 0; i < m_layers.size(); i++) {
+            int r = 0;
+            for (int k = 0; k < m_layers.get(i).size(); k++) {
+                Node v_k = m_layers.get(i).get(k);
+                ArrayList<Node> leftNeighbors = getLeftNeighbors(v_k);
+                if (!leftNeighbors.isEmpty()) {
+                    int d = leftNeighbors.size();
+                    int m1 = (int)Math.floor((d + 1) / 2.0) - 1;
+                    int m2 = (int)Math.ceil((d + 1) / 2.0) - 1;
+                    for (int m = m1; m <= m2; m++) {
+                        Node u_m = m_layers.get(i - 1).get(m);
+                        if (!m_marked.get(u_m.getEdge(v_k))
+                                && r < m_layers.get(i - 1).indexOf(u_m)) {
+                            m_align.put(u_m, v_k);
+                            m_root.put(v_k, m_root.get(u_m));
+                            m_align.put(v_k, m_root.get(v_k));
+                            r = m_layers.get(i - 1).indexOf(u_m);
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    private ArrayList<Node> getLeftNeighbors(Node n) {
+        ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
+        for (Edge e : m_g.inEdges(n))
+            neighbors.add(e.source());
+        // sort by order in layer
+        Collections.sort(neighbors, new Comparator<Node>() {
+
+            @Override
+            public int compare(Node o1, Node o2) {
+                return new Double(m_g.getY(o1)).compareTo(new Double(m_g
+                        .getY(o2)));
+            }
+        });
+        return neighbors;
+    }
+
+    private void markConflicts() {
+        if (m_layers.size() < 4)
+            // no conflicts possible since there cannot be any inner segments
+            return;
+        // inner segments can not occur between first and second layer, and
+        // next-to-last and last layer
+        for (int i = 1; i < m_layers.size() - 2; i++) {
+            int k0 = 0;
+            int l = 0;
+            for (int l1 = 0; l1 < m_layers.get(i + 1).size(); l1++) {
+                Node v_l1 = m_layers.get(i + 1).get(l1);
+                Edge innerSegment = getInnerSegmentIncidentTo(v_l1);
+                if (l1 == m_layers.get(i + 1).size() - 1
+                        || innerSegment != null) {
+                    int k1 = m_layers.get(i).size() - 1;
+                    if (innerSegment != null)
+                        k1 =
+                                m_layers.get(i).indexOf(
+                                        innerSegment.opposite(v_l1));
+                    while (l <= l1) {
+                        Node v_l = m_layers.get(i + 1).get(l);
+                        for (Edge e : m_g.inEdges(v_l)) {
+                            Node v_k = e.opposite(v_l);
+                            int k = m_layers.get(i).indexOf(v_k);
+                            if (k < k0 || k > k1)
+                                m_marked.put(e, true);
+                        }
+                        l++;
+                    }
+                    k0 = k1;
+                }
+            }
+        }
+
+    }
+
+    private Edge getInnerSegmentIncidentTo(Node node) {
+        for (Edge e : m_g.inEdges(node))
+            // if node is incident to inner segment this will be the only
+            // incoming edge
+            if (m_innerSegment.get(e))
+                return e;
+        return null;
+    }
 }
