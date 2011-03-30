@@ -2234,7 +2234,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		final NodeID endNode = m_workflow.getMatchingLoopEnd(startID);
     		try {
     			// just for validation
-    			castNodeModel(startID, LoopStartParallelize.class);
+    			castNodeModel(startID, LoopStartParallelizeNode.class);
     			castNodeModel(endNode, LoopEndParallelizeNode.class);
     		} catch (IllegalArgumentException iae) {
     			throw new IllegalLoopException(iae.getMessage(), iae);
@@ -2254,7 +2254,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //    			NodeID copiedStartID = copiedNodes[0];
 //    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
 //    			LoopStartParallelize copiedStart = 
-//    				castNodeModel(copiedStartID, LoopStartParallelize.class);
+//    				castNodeModel(copiedStartID, LoopStartParallelizeNode.class);
 //    			LoopEndParallelizeNode copiedEnd = 
 //    				castNodeModel(copiedEndID, LoopEndParallelizeNode.class);
     		}

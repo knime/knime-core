@@ -54,7 +54,7 @@ package org.knime.core.node.workflow;
  * 
  * @author wiswedel, University of Konstanz
  */
-public interface LoopStartParallelize extends LoopStartNode {
+public interface LoopStartParallelizeNode extends LoopStartNode {
 	
 	public void setRunAs(final int chunkID);
 
