@@ -51,9 +51,9 @@
 package org.knime.core.node.workflow.virtual;
 
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  * An object representing the copied content of a branch that is executed in
@@ -66,18 +66,22 @@ public class ParallelizedBranchContent {
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
 	private final NodeID[] m_copiedLoopContent;
+	private final int m_index;
 	/**
 	 * @param manager
 	 * @param virtualInputID
 	 * @param virtualOutputID
 	 * @param copiedLoopContent
+	 * @param index An index to the copy (copies are enumerated)
 	 * @throws IllegalArgumentException If the input/output nodes are not
 	 * of the expected type.
 	 */
 	public ParallelizedBranchContent(final WorkflowManager manager,
 			final NodeID virtualInputID, final NodeID virtualOutputID,
-			final NodeID[] copiedLoopContent) {
+			final NodeID[] copiedLoopContent,
+			final int index) {
 		m_manager = manager;
+		m_index = index;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
 				virtualInputID, VirtualPortObjectInNodeModel.class);
@@ -105,6 +109,13 @@ public class ParallelizedBranchContent {
 	 */
 	public NodeID[] getCopiedLoopContent() {
 		return m_copiedLoopContent;
+	}
+	
+	/**
+	 * @return the index
+	 */
+	public int getIndex() {
+		return m_index;
 	}
 	
 	/** Gets the underlying model of the virtual input node.

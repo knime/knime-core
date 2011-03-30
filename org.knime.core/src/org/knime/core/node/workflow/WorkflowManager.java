@@ -2264,7 +2264,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		}
     		for (int i = 0; i < maxParallelCount; i++) {
     			ParallelizedBranchContent copiedNodes = 
-    			    duplicateLoopBodyAndAttach(startID, endID, loopNodes);
+    			    duplicateLoopBodyAndAttach(startID, endID, loopNodes, i);
                 executeUpToHere(copiedNodes.getVirtualOutputID());
     			endNode.addParallelBranch(copiedNodes);
     		}
@@ -2272,25 +2272,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
     
     private ParallelizedBranchContent duplicateLoopBodyAndAttach(
-    		final NodeID startID, final NodeID endID, final NodeID[] oldIDs) {
+    		final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
+    		final int index) {
     	assert Thread.holdsLock(m_workflowMutex);
+    	final int[] moveUIDist = new int[]{0, (index + 1) * 20, 0, 0};
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
     	PortType[] outTypes = startNode.getOutputTypes();
     	NodeID virtualStartID = createAndAddNode(
     			new VirtualPortObjectInNodeFactory(outTypes));
+    	NodeUIInformation startUI = ((NodeUIInformation)startNode.
+    			getUIInformation()).createNewWithOffsetPosition(moveUIDist);
+		getNodeContainer(virtualStartID).setUIInformation(startUI);
     	
     	NodeContainer endNode = getNodeContainer(endID);
     	PortType[] inTypes = endNode.getInputTypes();
     	NodeID virtualEndID = createAndAddNode(
     			new VirtualPortObjectOutNodeFactory(inTypes));
+    	NodeUIInformation endUI = ((NodeUIInformation)endNode.
+    			getUIInformation()).createNewWithOffsetPosition(moveUIDist);
+    	getNodeContainer(virtualEndID).setUIInformation(endUI);
     	
     	WorkflowCopyContent newBody = copyFromAndPasteHere(this, copyContent);
     	NodeID[] newIDs = newBody.getNodeIDs();
     	Map<NodeID, NodeID> oldToNewMap = new HashMap<NodeID, NodeID>();
     	for (int i = 0; i < oldIDs.length; i++) {
     		oldToNewMap.put(oldIDs[i], newIDs[i]);
+    		NodeContainer nc = getNodeContainer(newIDs[i]);
+    		NodeUIInformation ui = (NodeUIInformation) nc.getUIInformation();
+    		nc.setUIInformation(ui.createNewWithOffsetPosition(moveUIDist));
     	}
     	oldToNewMap.put(endID, virtualEndID);
     	// restore connections to nodes outside the loop body (only incoming)
@@ -2314,7 +2325,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 			}
     	}
 		return new ParallelizedBranchContent(
-				this, virtualStartID, virtualEndID, newIDs);
+				this, virtualStartID, virtualEndID, newIDs, index);
     }
 
     /** check if node can be safely reset. In case of a WFM we will check
