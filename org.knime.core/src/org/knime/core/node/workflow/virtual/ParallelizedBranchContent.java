@@ -61,28 +61,30 @@ import org.knime.core.node.workflow.WorkflowManager;
  * parallel.
  * @author wiswedel, University of Konstanz
  */
-public class ParallelizedBranchContent {
+public final class ParallelizedBranchContent {
 
 	private final WorkflowManager m_manager;
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
 	private final NodeID[] m_copiedLoopContent;
-	private final int m_index;
+	private final int m_branchIndex;
+	private final int m_branchCount;
 	/**
 	 * @param manager
 	 * @param virtualInputID
 	 * @param virtualOutputID
 	 * @param copiedLoopContent
-	 * @param index An index to the copy (copies are enumerated)
+	 * @param branchIndex An index to the copy (copies are enumerated)
+	 * @param branchCount The overall count of parallel branches
 	 * @throws IllegalArgumentException If the input/output nodes are not
 	 * of the expected type.
 	 */
 	public ParallelizedBranchContent(final WorkflowManager manager,
 			final NodeID virtualInputID, final NodeID virtualOutputID,
 			final NodeID[] copiedLoopContent,
-			final int index) {
+			final int branchIndex, final int branchCount) {
 		m_manager = manager;
-		m_index = index;
+		m_branchIndex = branchIndex;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
 				virtualInputID, VirtualPortObjectInNodeModel.class);
@@ -91,6 +93,7 @@ public class ParallelizedBranchContent {
 		m_virtualInputID = virtualInputID;
 		m_virtualOutputID = virtualOutputID;
 		m_copiedLoopContent = copiedLoopContent;
+		m_branchCount = branchCount;
 	}
 
 	/**
@@ -115,8 +118,15 @@ public class ParallelizedBranchContent {
 	/**
 	 * @return the index
 	 */
-	public int getIndex() {
-		return m_index;
+	public int getBranchIndex() {
+		return m_branchIndex;
+	}
+	
+	/**
+	 * @return the branchCount
+	 */
+	public int getBranchCount() {
+		return m_branchCount;
 	}
 	
 	/** Gets the underlying model of the virtual input node.
