@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2010
+ *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,36 +40,81 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ------------------------------------------------------------------------
  * 
  * History
- *   23.03.2007 (berthold): created
+ *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.virtual;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortType;
 
 /**
- * Exception that is thrown when a loop is constructed illegally.
  * 
- * @author Bernd Wiswedel, University of Konstanz
+ * @author wiswedel, University of Konstanz
  */
-class IllegalLoopException extends Exception {
+public class VirtualPortObjectInNodeFactory extends
+		NodeFactory<VirtualPortObjectInNodeModel> {
 
-    /** @see RuntimeException#RuntimeException(String) */
-    public IllegalLoopException(final String message) {
-        super(message);
-    }
+	private final PortType[] m_outTypes;
 
 	/**
-	 * @param message
-	 * @param cause
+	 * 
 	 */
-	public IllegalLoopException(String message, Throwable cause) {
-		super(message, cause);
+	public VirtualPortObjectInNodeFactory(final PortType[] outTypes) {
+		if (outTypes == null) {
+			throw new NullPointerException(
+					"Port type array argument must not be null");
+		}
+		m_outTypes = outTypes;
 	}
-    
-    
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public VirtualPortObjectInNodeModel createNodeModel() {
+		return new VirtualPortObjectInNodeModel(m_outTypes);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<VirtualPortObjectInNodeModel> createNodeView(
+			final int viewIndex, final VirtualPortObjectInNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return null;
+	}
 
 }

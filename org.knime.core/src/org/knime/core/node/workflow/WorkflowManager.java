@@ -2226,6 +2226,65 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
     }
+    
+    public void parallelizeLoop(final NodeID startID, 
+    		final int maxParallelCount) throws IllegalLoopException {
+    	synchronized (m_workflowMutex) {
+    		NodeContainer startNode = getNodeContainer(startID);
+    		final NodeID endNode = m_workflow.getMatchingLoopEnd(startID);
+    		try {
+    			// just for validation
+    			castNodeModel(startID, LoopStartParallelize.class);
+    			castNodeModel(endNode, LoopEndParallelizeNode.class);
+    		} catch (IllegalArgumentException iae) {
+    			throw new IllegalLoopException(iae.getMessage(), iae);
+    		}
+    		
+    		final ArrayList<NodeAndInports> loopBody = 
+    			m_workflow.findAllNodesConnectedToLoopBody(startID, endNode);
+    		NodeID[] loopNodes = new NodeID[loopBody.size() + 2];
+    		loopNodes[0] = startID;
+    		for (int i = 0; i < loopBody.size(); i++) {
+    			loopNodes[i + 1] = loopBody.get(i).getID();
+    		}
+    		loopNodes[loopNodes.length - 1] = endNode;
+    		for (int i = 0; i < maxParallelCount; i++) {
+    			NodeID[] copiedNodes = duplicateLoopBodyAndAttach(loopNodes);
+    			NodeID copiedStartID = copiedNodes[0];
+    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
+    			LoopStartParallelize copiedStart = 
+    				castNodeModel(copiedStartID, LoopStartParallelize.class);
+    			LoopEndParallelizeNode copiedEnd = 
+    				castNodeModel(copiedEndID, LoopEndParallelizeNode.class);
+    		}
+		}
+    }
+    
+    private NodeID[] duplicateLoopBodyAndAttach(final NodeID[] oldIDs) {
+    	assert Thread.holdsLock(m_workflowMutex);
+    	WorkflowCopyContent copyContent = new WorkflowCopyContent();
+    	Set<NodeID> oldIDsHash = new HashSet<NodeID>(Arrays.asList(oldIDs));
+    	copyContent.setNodeIDs(oldIDs);
+    	WorkflowCopyContent newBody = copyFromAndPasteHere(this, copyContent);
+    	NodeID[] newIDs = newBody.getNodeIDs();
+    	// restore connections to nodes outside the loop (only incoming)
+		for (int i = 0; i < oldIDs.length; i++) {
+			NodeContainer oldNode = getNodeContainer(oldIDs[i]);
+			for (int p = 0; p < oldNode.getNrInPorts(); p++) {
+				ConnectionContainer c = getIncomingConnectionFor(oldIDs[i], p);
+				if (c == null) {
+					// ignore: no incoming connection
+				} else if (oldIDsHash.contains(c.getSource())) {
+					// ignore: connection already contained
+				} else { 
+					// source node not part of loop
+					addConnection(c.getSource(), c.getSourcePort(), 
+							newIDs[i], c.getDestPort());
+				}
+			}
+    	}
+		return newIDs;
+    }
 
     /** check if node can be safely reset. In case of a WFM we will check
      * if one of the internal nodes can be reset and none of the nodes
@@ -5245,6 +5304,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /* -------------------------------------------------------------------*/
 
 
+    /**
+     * Retrieves the node with the given ID, fetches the underlying 
+     * {@link NodeModel} and casts it to the argument class.
+     * @param id The node of interest
+     * @param cl The class object the underlying NodeModel needs to implement
+     * @param <T> The type the class
+     * @return The casted node model.
+     * @throws IllegalArgumentException If the node does not exist, is not 
+     *         a {@link SingleNodeContainer} or the model does not implement the
+     *         requested type.
+     */
+    private <T> T castNodeModel(final NodeID id, final Class<T> cl) {
+		NodeContainer nc = getNodeContainer(id);
+		if (!(nc instanceof SingleNodeContainer)) {
+			throw new IllegalArgumentException("Node \"" + nc 
+					+ "\" not a single node container");
+		}
+		NodeModel model = ((SingleNodeContainer)nc).getNodeModel();
+		if (!cl.isInstance(model)) {
+			throw new IllegalArgumentException("Node \"" + nc 
+					+ "\" not instance of " + cl.getSimpleName());
+		}
+		return cl.cast(model);
+    }
 
     /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
      * of the requested type. Intended purpose is to allow certain extensions
