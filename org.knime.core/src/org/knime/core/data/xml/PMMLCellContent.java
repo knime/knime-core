@@ -25,15 +25,22 @@ package org.knime.core.data.xml;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
 
 /**
  * @author morent
@@ -87,17 +94,48 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
      */
     @Override
     public String getPMMLVersion() {
-       return null;
+        Node pmml = getDocument().getElementsByTagName(
+                PMMLPortObject.PMML_ELEMENT).item(0);
+        return pmml.getAttributes().getNamedItem("version").getNodeValue();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PMMLModelType> getModelTypes() {
-        // TODO Auto-generated method stub
-        return null;
+    public Set<PMMLModelType> getModelTypes() {
+        Set<PMMLModelType> types = new TreeSet<PMMLModelType>();
+        for (Node node : getModels()) {
+            types.add(PMMLModelType.getType(node.getNodeName()));
+        }
+        return types;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Node> getModels(final PMMLModelType type) {
+        List<Node> nodes = new LinkedList<Node>();
+        NodeList list = getDocument().getElementsByTagName(type.toString());
+        for (int i = 0; i < list.getLength(); i++) {
+            nodes.add(list.item(i));
+        }
+        return nodes;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Node> getModels() {
+        List<Node> nodes = new LinkedList<Node>();
+        for (PMMLModelType type : PMMLModelType.values()) {
+            nodes.addAll(getModels(type));
+        }
+        return nodes;
+    }
+
 
     /**
      * @return The XML Document as a string.

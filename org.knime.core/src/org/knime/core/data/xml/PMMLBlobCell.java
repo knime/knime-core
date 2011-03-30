@@ -52,6 +52,7 @@ package org.knime.core.data.xml;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
@@ -65,6 +66,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.node.port.pmml.PMMLModelType;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
@@ -195,8 +197,26 @@ public class PMMLBlobCell extends BlobDataCell
      * {@inheritDoc}
      */
     @Override
-    public List<PMMLModelType> getModelTypes() {
+    public Set<PMMLModelType> getModelTypes() {
         return m_content.getModelTypes();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Node> getModels(final PMMLModelType type) {
+        return m_content.getModels(type);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Node> getModels() {
+        return m_content.getModels();
     }
 
 }

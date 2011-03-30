@@ -51,6 +51,12 @@
             name="Other"
             path="/manipulation/row"/>
       <category
+            description="Nodes for processing XML"
+            icon="icons/16x16/category_xml.png"
+            level-id="xml"
+            name="XML"
+            path="/manipulation" />
+      <category
             after="statistics"
             icon="icons/16x16/category_learner.gif"
             level-id="mining"
@@ -1222,6 +1228,24 @@
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
       </node>  
+      <node
+            category-path="/io/read"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.xml.reader.XMLReaderNodeFactory"
+            id="org.knime.xml.node.reader.XMLReaderNodeFactory">
+      </node>
+      <node
+            category-path="/io/write"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.xml.writer.XMLWriterNodeFactory"
+            id="org.knime.xml.node.writer.XMLWriterNodeFactory">
+      </node> 
+      <node
+            category-path="/manipulation"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.xml.xpath.XPathNodeFactory"
+            id="org.knime.xml.node.xpath.XPathNodeFactory">
+      </node>    
    </extension>
       <extension
          point="org.knime.base.pmmlports">
