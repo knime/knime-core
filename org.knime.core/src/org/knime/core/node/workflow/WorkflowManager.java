@@ -2230,7 +2230,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public void parallelizeLoop(final NodeID startID, 
     		final int maxParallelCount) throws IllegalLoopException {
     	synchronized (m_workflowMutex) {
-    		NodeContainer startNode = getNodeContainer(startID);
+//    		NodeContainer startNode = getNodeContainer(startID);
     		final NodeID endNode = m_workflow.getMatchingLoopEnd(startID);
     		try {
     			// just for validation
@@ -2249,13 +2249,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		}
     		loopNodes[loopNodes.length - 1] = endNode;
     		for (int i = 0; i < maxParallelCount; i++) {
-    			NodeID[] copiedNodes = duplicateLoopBodyAndAttach(loopNodes);
-    			NodeID copiedStartID = copiedNodes[0];
-    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
-    			LoopStartParallelize copiedStart = 
-    				castNodeModel(copiedStartID, LoopStartParallelize.class);
-    			LoopEndParallelizeNode copiedEnd = 
-    				castNodeModel(copiedEndID, LoopEndParallelizeNode.class);
+//    			NodeID[] copiedNodes = 
+    			    duplicateLoopBodyAndAttach(loopNodes);
+//    			NodeID copiedStartID = copiedNodes[0];
+//    			NodeID copiedEndID = copiedNodes[copiedNodes.length - 1];
+//    			LoopStartParallelize copiedStart = 
+//    				castNodeModel(copiedStartID, LoopStartParallelize.class);
+//    			LoopEndParallelizeNode copiedEnd = 
+//    				castNodeModel(copiedEndID, LoopEndParallelizeNode.class);
     		}
 		}
     }
