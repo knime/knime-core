@@ -68,8 +68,7 @@ public final class PortUtil {
         }
         PortObjectSpecSerializer<T> result;
         try {
-            result = (PortObjectSpecSerializer<T>)
-            SerializerMethodLoader.getSerializer(cl, 
+            result = SerializerMethodLoader.getSerializer(cl,
                     PortObjectSpecSerializer.class,
                             "getPortObjectSpecSerializer", true);
         } catch (NoSuchMethodException e) {
@@ -104,8 +103,7 @@ public final class PortUtil {
         }
         PortObjectSerializer<T> result;
         try {
-            result = (PortObjectSerializer<T>)
-            SerializerMethodLoader.getSerializer(cl, PortObjectSerializer.class,
+            result = SerializerMethodLoader.getSerializer(cl, PortObjectSerializer.class,
                             "getPortObjectSerializer", true);
         } catch (NoSuchMethodException e) {
             LOGGER.coding("Errors while accessing serializer object", e);
@@ -157,12 +155,18 @@ public final class PortUtil {
 
     public static void writeObjectToFile(final PortObject po, final File file,
             final ExecutionMonitor exec)
-    throws IOException, CanceledExecutionException {
-        PortObjectSpec spec = po.getSpec();
+            throws IOException, CanceledExecutionException {
+        writeObjectToStream(po, new FileOutputStream(file), exec);
+    }
+
+    public static void writeObjectToStream(final PortObject po,
+            final OutputStream output, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
         final ZipOutputStream out = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(file)));
+                new BufferedOutputStream(output));
         out.setLevel(0);
 
+        PortObjectSpec spec = po.getSpec();
         out.putNextEntry(new ZipEntry("content.xml"));
         ModelContent toc = new ModelContent("content");
         toc.addInt("version", 1);
@@ -191,9 +195,15 @@ public final class PortUtil {
 
     public static PortObject readObjectFromFile(final File file,
             final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+        return readObjectFromStream(new FileInputStream(file), exec);
+    }
+
+    public static PortObject readObjectFromStream(final InputStream input,
+            final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         ZipInputStream in = new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(file)));
+                new BufferedInputStream(input));
 
         ZipEntry entry = in.getNextEntry();
         if (!"content.xml".equals(entry.getName())) {
