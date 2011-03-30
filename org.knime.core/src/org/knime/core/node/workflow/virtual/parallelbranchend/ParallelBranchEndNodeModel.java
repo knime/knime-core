@@ -151,6 +151,9 @@ NodeStateChangeListener {
 	            // TODO: also do something with failures and nodes
 	            // that do not execute anymore.
 	        }
+	        if (m_branches.size() == 0) {
+	            done = true;
+	        }
 	    }
 	    BufferedDataTable result = null;
         if (bdc != null) {
