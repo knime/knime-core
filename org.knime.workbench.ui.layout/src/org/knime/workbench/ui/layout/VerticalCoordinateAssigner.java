@@ -44,110 +44,115 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * Created: 28.03.2011
+ * 
+ * Created: 30.03.2011
  * Author: mader
  */
 package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
+ * handles vertical assignment of coordinates within layers, see
+ * "Brandes, Köpf, 2001: Fast and simple horizontal coordinate assignment"
  * 
  * @author mader, University of Konstanz
  */
-public class SimpleLayeredLayouter {
+public class VerticalCoordinateAssigner {
 
-	public void doLayout(final Graph g) throws RuntimeException {
+	private Graph m_g;
+	private ArrayList<ArrayList<Node>> m_layers;
+	private HashMap<Edge, Boolean> m_innerSegment;
+	private HashMap<Edge, Boolean> m_marked;
+	private HashMap<Node, Node> m_align;
+	private HashMap<Node, Node> m_root;
 
-		// get layering of the graph
-		Map<Node, Integer> nodeLayer = g.createIntNodeMap();
-		ArrayList<ArrayList<Node>> layers = Layerer.assignLayers(g, nodeLayer);
-
-		// add dummy vertices for edges spanning several layers
-		ArrayList<Edge> hiddenEdges = new ArrayList<Graph.Edge>();
-		ArrayList<Node> dummyNodes = new ArrayList<Graph.Node>();
-		ArrayList<Edge> dummyEdges = new ArrayList<Graph.Edge>();
-		HashMap<Edge, ArrayList<Node>> hiddenEdgeToDummyVertices = new HashMap<Graph.Edge, ArrayList<Node>>();
-		for (Edge e : g.edges()) {
-			int startLayer = nodeLayer.get(e.source()).intValue();
-			int endLayer = nodeLayer.get(e.target()).intValue();
-			int span = endLayer - startLayer;
-			if (span > 1) {
-				hiddenEdges.add(e);
-			}
+	public VerticalCoordinateAssigner(Graph g,
+			ArrayList<ArrayList<Node>> layers, ArrayList<Node> dummyNodes,
+			ArrayList<Edge> dummyEdges) {
+		m_g = g;
+		m_layers = layers;
+		m_innerSegment = new HashMap<Graph.Edge, Boolean>();
+		m_marked = new HashMap<Graph.Edge, Boolean>();
+		m_align = new HashMap<Graph.Node, Graph.Node>();
+		m_root = new HashMap<Graph.Node, Graph.Node>();
+		for (Edge e : m_g.edges()) {
+			m_marked.put(e, false);
+			// initialize inner segments, corrected later
+			m_innerSegment.put(e, false);
 		}
-		// cannot modify graph in for-loop above, since it would create
-		// concurrent modification due to iterator
-		for (Edge e : hiddenEdges) {
-			int startLayer = nodeLayer.get(e.source()).intValue();
-			int endLayer = nodeLayer.get(e.target()).intValue();
-			int span = endLayer - startLayer;
-			Node last = e.source();
-			for (int i = 1; i < span; i++) {
-				Node current = g.createNode("bend");
-				// add dummy to its layer
-				nodeLayer.put(current, startLayer + i);
-				layers.get(startLayer + i).add(current);
-				// add dummy edge to graph
-				Edge dEdge = g.createEdge(last, current);
-				dummyEdges.add(dEdge);
-				// add dummy vertex to the list of dummies for the original edge
-				dummyNodes.add(current);
-				// proceed
-				last = current;
-			}
-			// add last dummy edge
-			g.createEdge(last, e.target());
-			// store list of dummy nodes for original edge
-			hiddenEdgeToDummyVertices.put(e, dummyNodes);
+		for (Node n : m_g.nodes()) {
+			m_align.put(n, n);
+			m_root.put(n, n);
 		}
-
-		// remove hidden edges
-		for (Edge e : hiddenEdges) {
-			g.removeEdge(e);
+		// determine inner segments
+		for (Edge e : dummyEdges) {
+			if (dummyNodes.contains(e.source())
+					&& dummyNodes.contains(e.target()))
+				m_innerSegment.put(e, true);
 		}
+	}
 
-		// set initial coordinates by layer
-		int layer = 0;
-		for (ArrayList<Node> currentLayer : layers) {
-			int verticalCoord = 0;
-			for (Node n : currentLayer) {
-				g.setCoordinates(n, layer, verticalCoord);
-				verticalCoord++;
-			}
-			layer++;
-		}
+	public void run() {
+		markConflicts();
+		horizontalAlignment();
+		verticalCompaction();
+	}
 
-		/* DO CROSSING MINIMIZATION */
-		MedianHeuristicCrossingMinimizer cm = new MedianHeuristicCrossingMinimizer(
-				g, layers);
-		cm.run();
-
-		/* Do vertical placement */
-		// VerticalCoordinateAssigner vca = new VerticalCoordinateAssigner(g,
-		// layers, dummyNodes, dummyEdges);
-		// vca.run();
-
-		/*
-		 * Reinsert hidden edges with bendpoints, and remove dummy nodes and
-		 * edges
-		 */
-		for (Edge hEdge : hiddenEdges) {
-			Edge e = g.reinsert(hEdge);
-			for (Node n : hiddenEdgeToDummyVertices.get(hEdge)) {
-				g.addBend(e, g.getX(n), g.getY(n));
-				g.removeNode(n); // also removes dummy edges!
-			}
-		}
-
-		g.cleanBends();
+	private void verticalCompaction() {
+		// TODO Auto-generated method stub
 
 	}
 
+	private void horizontalAlignment() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void markConflicts() {
+		if (m_layers.size() < 4)
+			// no conflicts possible since there cannot be any inner segments
+			return;
+		// inner segments can not occur between first and second layer, and
+		// next-to-last and last layer
+		for (int i = 1; i < m_layers.size() - 2; i++) {
+			int k0 = 0;
+			int l = 0;
+			for (int l1 = 0; l1 < m_layers.get(i + 1).size(); l1++) {
+				Node v_l1 = m_layers.get(i + 1).get(l1);
+				Edge innerSegment = getInnerSegmentIncidentTo(v_l1);
+				if (l1 == m_layers.get(i + 1).size() - 1
+						|| innerSegment!=null) {
+					int k1 = m_layers.get(i).size()-1;
+					if (innerSegment!=null)
+						k1 = m_layers.get(i).indexOf(innerSegment.opposite(v_l1));
+					while (l<=l1) {
+						Node v_l = m_layers.get(i+1).get(l);
+						for (Edge e:m_g.inEdges(v_l)){
+							Node v_k = e.opposite(v_l);
+							int k = m_layers.get(i).indexOf(v_k);
+							if (k<k0 || k>k1)
+								m_marked.put(e, true);
+						}
+						l++;
+					}
+					k0 = k1;
+				}
+			}
+		}
+
+	}
+
+	private Edge getInnerSegmentIncidentTo(Node node) {
+		for (Edge e : m_g.inEdges(node))
+			// if node is incident to inner segment this will be the only
+			// incoming edge
+			if (m_innerSegment.get(e))
+				return e;
+		return null;
+	}
 }
