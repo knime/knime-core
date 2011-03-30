@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow.virtual;
 
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
@@ -158,5 +159,12 @@ public class ParallelizedBranchContent {
     public boolean isExecuted() {
         return State.EXECUTED.equals(
                 m_manager.getNodeContainer(m_virtualOutputID).getState());
+    }
+    
+    /**
+     * @return array with PortObjects at the end node of this branch.
+     */
+    public PortObject[] getOutportContent() {
+        return getVirtualOutputModel().getOutObjects();
     }
 }
