@@ -1953,7 +1953,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (node.getNodeModel() 
                     		instanceof LoopStartParallelizeNode) {
                         try {
-                            parallelizeLoop(nc.getID(), 2);
+                            parallelizeLoop(nc.getID());
                         } catch (Exception e) {
                             latestNodeMessage = new NodeMessage(
                                     NodeMessage.Type.ERROR,
@@ -2244,14 +2244,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         queueIfQueuable(headNode);
     }
     
-    public void parallelizeLoop(final NodeID startID, 
-    		final int maxParallelCount) throws IllegalLoopException {
+    public void parallelizeLoop(final NodeID startID)
+    throws IllegalLoopException {
     	synchronized (m_workflowMutex) {
     		final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
             LoopEndParallelizeNode endNode;
+            LoopStartParallelizeNode startNode;
     		try {
     			// just for validation
-    			castNodeModel(startID, LoopStartParallelizeNode.class);
+    			startNode = castNodeModel(startID, LoopStartParallelizeNode.class);
     			endNode = castNodeModel(endID, LoopEndParallelizeNode.class);
     		} catch (IllegalArgumentException iae) {
     			throw new IllegalLoopException(iae.getMessage(), iae);
@@ -2264,10 +2265,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		for (int i = 0; i < loopBody.size(); i++) {
     			loopNodes[i] = loopBody.get(i).getID();
     		}
-    		for (int i = 0; i < maxParallelCount; i++) {
+    		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedBranchContent copiedNodes = 
     			    duplicateLoopBodyAndAttach(
-    			    		startID, endID, loopNodes, i, maxParallelCount);
+    			    		startID, endID, loopNodes, i, startNode.getNrChunks());
                 executeUpToHere(copiedNodes.getVirtualOutputID());
     			endNode.addParallelBranch(copiedNodes);
     		}

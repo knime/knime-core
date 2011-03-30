@@ -52,7 +52,6 @@ package org.knime.core.node.workflow.virtual.parallelbranchstart;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -91,10 +90,10 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
 	@Override
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
-		int threadCount = 2 * Runtime.getRuntime().availableProcessors();
+//		int threadCount = 2 * Runtime.getRuntime().availableProcessors();
+        int numOfChunks = 5; // threadCount;
 		BufferedDataTable in = inData[0];
-        int numOfChunks = threadCount;
-        PortObject[] splitInTables; 
+        BufferedDataTable[] splitInTables; 
 
         if (in.getRowCount() <= 1) {
             // empty or one-row input table...
@@ -137,8 +136,7 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
             i++;
         }
         assert i == numOfChunks;
-        m_splitInTables = Arrays.copyOf(
-        		splitInTables, splitInTables.length - 1);
+        m_splitInTables = splitInTables;
         return new BufferedDataTable[]{(BufferedDataTable) 
         		splitInTables[splitInTables.length - 1]};
 	}
@@ -160,6 +158,14 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
 		return new PortObject[]{m_splitInTables[i]};
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getNrChunks() {
+	    return m_splitInTables.length;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

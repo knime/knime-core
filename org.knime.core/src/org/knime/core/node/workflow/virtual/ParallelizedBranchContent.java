@@ -161,6 +161,8 @@ public final class ParallelizedBranchContent {
         for (NodeID id : m_copiedLoopContent) {
             m_manager.removeNode(id);
         }
+        m_manager.removeNode(m_virtualOutputID);
+        m_manager.removeNode(m_virtualInputID);
     }
     
     /**

@@ -52,6 +52,7 @@ package org.knime.core.node.workflow.virtual.parallelbranchend;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 import org.knime.core.data.DataRow;
@@ -111,6 +112,9 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
+	    if (m_branches == null) {
+	        m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+	    }
 	    // start by copying the results of this branch to the output...
 	    BufferedDataTable lastBranch = (BufferedDataTable)inObjects[0];
 	    BufferedDataContainer bdc
@@ -134,7 +138,9 @@ NodeStateChangeListener {
 	            throw cee;
 	        }
 	        // check if any of the branches are finished
-	        for (ParallelizedBranchContent pbc : m_branches.values()) {
+	        for (Iterator<ParallelizedBranchContent> pbc_it
+	                = m_branches.values().iterator(); pbc_it.hasNext();) {
+	            ParallelizedBranchContent pbc = pbc_it.next();
 	            if (pbc.isExecuted()) {
 	                // copy results from branch
 	                // TODO: try to keep the order...
@@ -143,8 +149,8 @@ NodeStateChangeListener {
 	                for (DataRow row : bdt) {
 	                    bdc.addRowToTable(row);
 	                }
+                    pbc_it.remove();
 	                pbc.removeAllNodesFromWorkflow();
-	                m_branches.remove(pbc.getVirtualOutputID());
 	                exec.setProgress((double)m_branches.size()
 	                                 /(double)pbc.getBranchCount());
 	            }
@@ -181,6 +187,9 @@ NodeStateChangeListener {
     @Override
 	public void addParallelBranch(final ParallelizedBranchContent pbc)
 	{
+        if (m_branches == null) {
+            m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+        }
 	    if (m_branches.containsKey(pbc.getVirtualOutputID())) {
 	        throw new IllegalArgumentException("Can't insert branch with duplicate key!");
 	    }
@@ -245,7 +254,7 @@ NodeStateChangeListener {
     public void stateChanged(NodeStateEvent state) {
         NodeID endNode = state.getSource();
         if (m_branches.containsKey(endNode)) {
-            this.notify();
+//            this.notify();
         }
     }
 

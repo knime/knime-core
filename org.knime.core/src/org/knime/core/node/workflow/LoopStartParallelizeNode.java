@@ -59,4 +59,6 @@ import org.knime.core.node.port.PortObject;
 public interface LoopStartParallelizeNode extends LoopStartNode {
 	
 	public PortObject[] getPortObjectForChunk(final int i);
+
+    public int getNrChunks();
 }

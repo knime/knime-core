@@ -857,7 +857,10 @@ class Workflow {
                     SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
                     if (LoopRole.END.equals(destSNC.getLoopRole())) {
                         if (currentDepth == 0) {
-                            if (foundEnd != null) {
+                            if ((foundEnd != null)
+                                    && (!foundEnd.equals(destID))) {
+                                // we can reach it twice but we should never
+                                // reach another end node!
                                 throw new IllegalLoopException("Loops can not"
                                 	+ " connect to more than one End Node!");
                             }
@@ -915,7 +918,10 @@ class Workflow {
                     SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
                     if (LoopRole.BEGIN.equals(srcSNC.getLoopRole())) {
                         if (currentDepth == 0) {
-                            if (foundStart != null) {
+                            if ((foundStart != null)
+                                && (!foundStart.equals(srcID))) {
+                                    // we can reach it twice but we should never
+                                    // reach another end node!
                                 throw new IllegalLoopException("Loops can not"
                                     + " have more than one Start Node!");
                             }
