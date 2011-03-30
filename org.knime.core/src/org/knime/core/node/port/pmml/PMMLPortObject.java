@@ -117,6 +117,8 @@ public abstract class PMMLPortObject implements PortObject {
     private static final Map<String, String> VERSION_NAMESPACE_MAP
             = new HashMap<String, String>();
 
+    public static final String PMML_ELEMENT = "PMML";
+
     private List<PMMLPreprocOperation> m_operations;
 
 
@@ -164,7 +166,7 @@ public abstract class PMMLPortObject implements PortObject {
     /**
      * Default constructor necessary for loading. Derived classes also
      * <em>must</em> provide a default constructor, otherwise loading will fail.
-     * Calling this constructor is discouraged. It is only available for 
+     * Calling this constructor is discouraged. It is only available for
      * internal calls.
      */
     public PMMLPortObject() {
