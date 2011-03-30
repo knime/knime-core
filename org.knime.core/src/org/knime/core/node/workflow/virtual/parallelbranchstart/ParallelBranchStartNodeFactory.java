@@ -46,17 +46,60 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 29, 2011 (wiswedel): created
+ *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.virtual.parallelbranchstart;
 
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public interface LoopStartParallelizeNode extends LoopStartNode {
-	
-	public PortObject[] getPortObjectForChunk(final int i);
+public class ParallelBranchStartNodeFactory extends
+		NodeFactory<ParallelBranchStartNodeModel> {
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ParallelBranchStartNodeModel createNodeModel() {
+		return new ParallelBranchStartNodeModel();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<ParallelBranchStartNodeModel> createNodeView(final int viewIndex,
+			final ParallelBranchStartNodeModel nodeModel) {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean hasDialog() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return null;
+	}
+
 }
