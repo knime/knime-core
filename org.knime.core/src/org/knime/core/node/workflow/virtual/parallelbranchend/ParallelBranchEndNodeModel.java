@@ -54,6 +54,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
+import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -109,12 +111,14 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
+	    BufferedDataContainer bdc = null;
 	    boolean done = false;
 	    while (!done) {
 	        // wait a bit
 	        try {
 	            Thread.sleep(500); 
 	        } catch (InterruptedException ie) {
+	            // nothing to do, just continue
 	        }
 	        // check if execution was canceled
 	        try {
@@ -126,15 +130,34 @@ NodeStateChangeListener {
 	        // check if any of the branches are finished
 	        for (ParallelizedBranchContent pbc : m_branches.values()) {
 	            if (pbc.isExecuted()) {
-	                // TODO: copy results from branch
+	                // copy results from branch
+	                // TODO: try to keep the order...
+	                BufferedDataTable bdt
+	                        = (BufferedDataTable)pbc.getOutportContent()[0];
+	                if (bdc == null) {
+	                    bdc = exec.createDataContainer(bdt.getDataTableSpec());
+	                }
+	                for (DataRow row : bdt) {
+	                    bdc.addRowToTable(row);
+	                }
 	                pbc.removeAllNodesFromWorkflow();
 	                m_branches.remove(pbc.getVirtualOutputID());
+	                exec.setProgress((double)m_branches.size()
+	                                 /(double)pbc.getBranchCount());
 	            }
 	            // TODO: also do something with failures and nodes
 	            // that do not execute anymore.
 	        }
 	    }
-		return inObjects;
+	    BufferedDataTable result = null;
+        if (bdc != null) {
+            bdc.close();
+            result = bdc.getTable();
+        }
+        if (result == null) {
+            throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
+        }
+		return new PortObject[] { result };
 	}
 	
     /**
