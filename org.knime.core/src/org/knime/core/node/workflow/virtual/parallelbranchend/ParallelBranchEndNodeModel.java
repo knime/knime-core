@@ -111,7 +111,13 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
-	    BufferedDataContainer bdc = null;
+	    // start by copying the results of this branch to the output...
+	    BufferedDataTable lastBranch = (BufferedDataTable)inObjects[0];
+	    BufferedDataContainer bdc
+	            = exec.createDataContainer(lastBranch.getDataTableSpec());
+        for (DataRow row : lastBranch) {
+            bdc.addRowToTable(row);
+        }
 	    boolean done = false;
 	    while (!done) {
 	        // wait a bit
@@ -134,9 +140,6 @@ NodeStateChangeListener {
 	                // TODO: try to keep the order...
 	                BufferedDataTable bdt
 	                        = (BufferedDataTable)pbc.getOutportContent()[0];
-	                if (bdc == null) {
-	                    bdc = exec.createDataContainer(bdt.getDataTableSpec());
-	                }
 	                for (DataRow row : bdt) {
 	                    bdc.addRowToTable(row);
 	                }
