@@ -1387,14 +1387,13 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private Point toRelative(final Point absLoc) {
         ScalableFreeformRootEditPart rootEditPart
-        = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
+            = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
         Viewport viewport = (Viewport) rootEditPart.getFigure();
         Rectangle area = viewport.getClientArea();
-
         Point loc = absLoc.getCopy();
         double z = getZoomfactor();
-        loc.x -= (int)Math.round(area.x * z);
-        loc.y -= (int)Math.round(area.y * z);
+        loc.x = (int)Math.round((loc.x - area.x) * z);
+        loc.y = (int)Math.round((loc.y - area.y) * z);
         return loc;
     }
 
