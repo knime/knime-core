@@ -78,7 +78,8 @@ import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 public class ParallelChunkStartNodeModel extends NodeModel implements
 		LoopStartParallelizeNode {
 	
-
+	private ParallelChunkStartNodeConfiguration m_configuration =
+		new ParallelChunkStartNodeConfiguration();
 	private PortObject[] m_splitInTables;
 	
 	/**
@@ -94,8 +95,7 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
-//		int threadCount = 2 * Runtime.getRuntime().availableProcessors();
-        int numOfChunks = 5; // threadCount;
+        int numOfChunks = m_configuration.getChunkCount();
 		BufferedDataTable in = inData[0];
         BufferedDataTable[] splitInTables; 
 
@@ -186,7 +186,9 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	 */
 	@Override
 	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
+		if (m_configuration != null) {
+			m_configuration.saveConfiguration(settings);
+		}
 	}
 
 	/**
@@ -195,7 +197,9 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected void validateSettings(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
-		// no settings
+		ParallelChunkStartNodeConfiguration c =
+			new ParallelChunkStartNodeConfiguration();
+		c.loadConfigurationModel(settings);
 	}
 
 	/**
@@ -204,7 +208,10 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
-		// no settings
+		ParallelChunkStartNodeConfiguration c =
+			new ParallelChunkStartNodeConfiguration();
+		c.loadConfigurationModel(settings);
+		m_configuration = c;
 	}
 
 	/**
@@ -224,5 +231,5 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 			throws IOException, CanceledExecutionException {
 		// no internals
 	}
-
+	
 }

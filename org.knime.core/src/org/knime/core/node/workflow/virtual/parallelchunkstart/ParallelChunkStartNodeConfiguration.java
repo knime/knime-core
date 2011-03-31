@@ -46,60 +46,60 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 30, 2011 (wiswedel): created
+ *   Mar 31, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual.parallelchunkstart;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class ParallelChunkStartNodeFactory extends
-		NodeFactory<ParallelChunkStartNodeModel> {
+final class ParallelChunkStartNodeConfiguration {
+	
+	static final int DEFAULT_PROC_COUNT = (int)Math.ceil(
+			1.5 * Runtime.getRuntime().availableProcessors());
+
+	private int m_chunkCount = -1;
 
 	/**
-	 * {@inheritDoc}
+	 * @return the chunkCount
 	 */
-	@Override
-	public ParallelChunkStartNodeModel createNodeModel() {
-		return new ParallelChunkStartNodeModel();
+	public int getChunkCount() {
+		return isAutomaticChunking() 
+		? ParallelChunkStartNodeConfiguration.DEFAULT_PROC_COUNT
+				: m_chunkCount;
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * @param chunkCount the chunkCount to set
 	 */
-	@Override
-	protected int getNrNodeViews() {
-		return 0;
+	public void setChunkCount(final int chunkCount) {
+		m_chunkCount = chunkCount;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeView<ParallelChunkStartNodeModel> createNodeView(final int viewIndex,
-			final ParallelChunkStartNodeModel nodeModel) {
-		return null;
+	
+	public boolean isAutomaticChunking() {
+		return m_chunkCount <= 0;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected boolean hasDialog() {
-		return true;
+	
+	public void setAutomaticChunking() {
+		m_chunkCount = -1;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected NodeDialogPane createNodeDialogPane() {
-		return new ParallelChunkStartNodeDialogPane();
+	
+	void saveConfiguration(final NodeSettingsWO settings) {
+		settings.addInt("chunkCount", m_chunkCount);
+	}
+	
+	void loadConfigurationDialog(final NodeSettingsRO settings) {
+		m_chunkCount = settings.getInt("chunkCount", -1);
+	}
+	
+	void loadConfigurationModel(final NodeSettingsRO settings) 
+		throws InvalidSettingsException {
+		m_chunkCount = settings.getInt("chunkCount");
 	}
 
 }
