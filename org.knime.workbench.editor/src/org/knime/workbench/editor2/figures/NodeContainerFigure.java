@@ -48,6 +48,14 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
+
 import java.util.List;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -70,13 +78,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -141,15 +142,15 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** Loop End Node extra icon: In Progress. */
     public static final Image LOOP_IN_PROGRESS_SIGN = ImageRepository
-            .getImage("icons/loop_in_progress.gif");
+            .getImage("icons/loop_in_progress.png");
 
     /** Loop End Node extra icon: Done. */
     public static final Image LOOP_DONE_SIGN = ImageRepository
-            .getImage("icons/loop_done.gif");
+            .getImage("icons/loop_done.png");
 
     /** Loop End Node extra icon: No Status. */
     public static final Image LOOP_NO_STATUS = ImageRepository
-            .getImage("icons/loop_nostatus.gif");
+            .getImage("icons/loop_nostatus.png");
 
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
@@ -162,9 +163,9 @@ public class NodeContainerFigure extends RectangleFigure {
     private static String fontName() {
         // I (Bernd) had problem using the hardcoded font "Arial" -
         // this static block derives the fonts from the system font.
-        Display current = Display.getCurrent();
-        Font systemFont = current.getSystemFont();
-        FontData[] systemFontData = systemFont.getFontData();
+        final Display current = Display.getCurrent();
+        final Font systemFont = current.getSystemFont();
+        final FontData[] systemFontData = systemFont.getFontData();
         String name = "Arial"; // fallback
         if (systemFontData.length >= 1) {
             name = systemFontData[0].getName();
@@ -236,13 +237,13 @@ public class NodeContainerFigure extends RectangleFigure {
         // add sub-figures
         setLayoutManager(new DelegatingLayout());
 
-        IPreferenceStore store =
+        final IPreferenceStore store =
                 KNIMEUIPlugin.getDefault().getPreferenceStore();
-        int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
-        String fontName = fontName();
-        Display current = Display.getDefault();
-        Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
-        Font boldFont = new Font(current, fontName, height, SWT.BOLD);
+        final int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
+        final String fontName = fontName();
+        final Display current = Display.getDefault();
+        final Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
+        final Font boldFont = new Font(current, fontName, height, SWT.BOLD);
 
         // Heading (Label)
         m_heading = new Label();
@@ -378,18 +379,18 @@ public class NodeContainerFigure extends RectangleFigure {
         if (text.trim().indexOf(" ") < 0) {
             return text.trim();
         }
-        int middle = text.length() / 2;
+        final int middle = text.length() / 2;
         // now go left and right to the next space
         // the closest space is used for a split
         int indexLeft = middle;
         int indexRight = middle + 1;
         for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
             if (text.charAt(indexLeft) == ' ') {
-                StringBuilder sb = new StringBuilder(text);
+                final StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
             }
             if (text.charAt(indexRight) == ' ') {
-                StringBuilder sb = new StringBuilder(text);
+                final StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexRight, indexRight + 1, "\n").toString();
             }
         }
@@ -450,7 +451,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     private boolean isChild(final Figure figure) {
-        for (Object contentFigure : getChildren()) {
+        for (final Object contentFigure : getChildren()) {
             if (contentFigure == figure) {
                 return true;
             }
@@ -489,7 +490,7 @@ public class NodeContainerFigure extends RectangleFigure {
         switch (mode) {
         case EXECUTING:
             // temporarily remember the execution state of the progress bar
-            ProgressMode oldMode = m_progressFigure.getProgressMode();
+            final ProgressMode oldMode = m_progressFigure.getProgressMode();
             m_progressFigure.setProgressMode(ProgressMode.EXECUTING);
             m_progressFigure.setStateMessage("Executing");
 
@@ -679,7 +680,7 @@ public class NodeContainerFigure extends RectangleFigure {
         graphics.setBackgroundColor(getBackgroundColor());
         super.paintFigure(graphics);
         if (m_loopStatusFigure != null) {
-            Rectangle r = getSymbolFigure().getBounds();
+            final Rectangle r = getSymbolFigure().getBounds();
             graphics.drawImage(m_loopStatusFigure,
                     new Point(r.x + 32, r.y + 32));
         }
@@ -753,7 +754,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public SymbolFigure() {
             // delegating layout, children provide a Locator as constraint
-            DelegatingLayout layout = new DelegatingLayout();
+            final DelegatingLayout layout = new DelegatingLayout();
             setLayoutManager(layout);
             setOpaque(false);
             setFill(false);
@@ -839,7 +840,7 @@ public class NodeContainerFigure extends RectangleFigure {
             } else {
                 str = BACKGROUND_UNKNOWN;
             }
-            Image img = ImageRepository.getImage(str);
+            final Image img = ImageRepository.getImage(str);
 
             return img == null ? ImageRepository.getImage(BACKGROUND_OTHER)
                     : img;
@@ -918,7 +919,7 @@ public class NodeContainerFigure extends RectangleFigure {
             // a flow layout is used to arrange all signs in
             // a line
 
-            FlowLayout layout = new FlowLayout(true);
+            final FlowLayout layout = new FlowLayout(true);
             layout.setMajorAlignment(FlowLayout.ALIGN_CENTER);
             layout.setMinorAlignment(FlowLayout.ALIGN_CENTER);
             layout.setMajorSpacing(3);
@@ -949,11 +950,11 @@ public class NodeContainerFigure extends RectangleFigure {
             // but after the info sign, it must be checked in the case there
             // is only one sign so far at which position to insert the
             // warning sign
-            List<Figure> children = getChildren();
+            final List<Figure> children = getChildren();
 
             // check if there is already a warning sign
             boolean alreadyInserted = false;
-            for (Figure child : children) {
+            for (final Figure child : children) {
                 if (child == m_warningFigure) {
                     alreadyInserted = true;
                 }
@@ -968,7 +969,7 @@ public class NodeContainerFigure extends RectangleFigure {
                     add(m_warningFigure, 1);
                 } else {
                     // else there is exact 1 child
-                    Figure figure = children.get(0);
+                    final Figure figure = children.get(0);
                     // in case of the error sign, the warning sign has to be
                     // inserted before the error sign
                     if (figure == m_errorFigure) {
@@ -1025,7 +1026,7 @@ public class NodeContainerFigure extends RectangleFigure {
             // status figure must have exact same dimensions as progress bar
             setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
-            ToolbarLayout layout = new ToolbarLayout(false);
+            final ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
@@ -1079,7 +1080,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public InfoWarnErrorFigure() {
 
-            ToolbarLayout layout = new ToolbarLayout(false);
+            final ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
@@ -1165,16 +1166,16 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void setFontSize(final int fontSize) {
         // apply new font for node name
-        Font font1 = m_heading.getFont();
-        FontData fontData1 = font1.getFontData()[0];
+        final Font font1 = m_heading.getFont();
+        final FontData fontData1 = font1.getFontData()[0];
         fontData1.setHeight(fontSize);
         m_heading.setFont(new Font(Display.getDefault(), fontData1));
         font1.dispose();
         // apply new font for node label
-        Font font2 = m_name.getFont();
-        FontData fontData2 = font2.getFontData()[0];
+        final Font font2 = m_name.getFont();
+        final FontData fontData2 = font2.getFontData()[0];
         fontData2.setHeight(fontSize);
-        Font newFont2 = new Font(Display.getDefault(), fontData2);
+        final Font newFont2 = new Font(Display.getDefault(), fontData2);
         m_name.setFont(newFont2);
         // apply the standard node label font also to its parent figure to allow
         // editing the node label with the same font (size)
@@ -1228,9 +1229,9 @@ public class NodeContainerFigure extends RectangleFigure {
      * @since KNIME 2.3.0
      */
     public Point getOffsetToRefPoint(final NodeUIInformation uiInfo) {
-        int yDiff = m_heading.getPreferredSize().height
+        final int yDiff = m_heading.getPreferredSize().height
                 + NodeContainerLocator.GAP * 2;
-        Rectangle t = this.getBounds();
+        final Rectangle t = this.getBounds();
         int thiswidth = uiInfo.getBounds()[2];
         if (thiswidth <= 0) {
             thiswidth = t.width;
@@ -1239,9 +1240,9 @@ public class NodeContainerFigure extends RectangleFigure {
                 thiswidth = getPreferredSize().width;
             }
         }
-        int xDiff = (thiswidth - m_symbolFigure.getPreferredSize().width) / 2;
+        final int xDiff = (thiswidth - m_symbolFigure.getPreferredSize().width) / 2;
 
-        Point r = new Point(xDiff, yDiff);
+        final Point r = new Point(xDiff, yDiff);
         return r;
     }
 
