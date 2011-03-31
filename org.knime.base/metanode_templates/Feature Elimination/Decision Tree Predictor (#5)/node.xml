@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
-<entry key="name" type="xstring" value="Backward Feature Elimination Filter"/>
+<entry key="name" type="xstring" value="Decision Tree Predictor"/>
 <config key="model">
-<entry key="nrOfFeatures" type="xint" value="0"/>
-<entry key="includeTargetColumn" type="xboolean" value="false"/>
+<config key="UseGainRatio_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="UseGainRatio" type="xint" value="10000"/>
+<config key="ShowDistribution_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="ShowDistribution" type="xboolean" value="false"/>
 </config>
 <entry key="hasContent" type="xboolean" value="false"/>
 <entry key="isInactive" type="xboolean" value="false"/>
