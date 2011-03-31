@@ -141,6 +141,7 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
         }
         assert i == numOfChunks;
         m_splitInTables = splitInTables;
+        pushFlowVariableInt("chunk_index", splitInTables.length - 1); 
         return new BufferedDataTable[]{splitInTables[splitInTables.length - 1]};
 	}
 
@@ -150,6 +151,7 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
+		pushFlowVariableInt("chunk_index", 0); 
 		return inSpecs;
 	}
 	
