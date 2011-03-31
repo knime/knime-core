@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./missing.png" type="LoopEnd">
+<knimeNode icon="./parallelChunkEnd.png" type="LoopEnd">
     <name>Parallel Chunk End</name>
     <shortDescription>Represents the end of a parallel chunked flow.</shortDescription>
     <fullDescription>

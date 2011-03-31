@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./missing.png" type="LoopStart">
+<knimeNode icon="./parallelChunkStart.png" type="LoopStart">
     <name>Parallel Chunk Start</name>
     <shortDescription>Represents the start of a parallel chunked flow.</shortDescription>
     <fullDescription>
@@ -22,7 +22,7 @@
             The input data, split into chunks by the node.
         </inPort>
         <outPort index="0" name="Chunked Data">
-            A representation of the data chunk that is processed by the 
+            A representation of the data chunk that is processed by the
             parallel branch workflow body.
         </outPort>
     </ports>
