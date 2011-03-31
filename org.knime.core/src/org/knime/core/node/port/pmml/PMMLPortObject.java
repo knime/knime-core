@@ -209,6 +209,18 @@ public class PMMLPortObject implements PortObject {
     }
 
     /**
+     * Creates a new PMML port object. Models can be added later by calling
+     * {@link #addPMMLModel(Node)}.
+     * @param spec the referring {@link PMMLPortObjectSpec}
+     * @param dom the pmml document
+     */
+    public PMMLPortObject(final PMMLPortObjectSpec spec, final Document dom) {
+        m_spec = spec;
+        m_masterHandler = new PMMLMasterContentHandler();
+        m_content = (PMMLValue)PMMLCellFactory.create(dom);
+    }
+
+    /**
      * @param spec the port object spec
      * @param handler the pmml content handler that adds the model content
      * @throws SAXException if the pmml model could not be added
@@ -256,11 +268,11 @@ public class PMMLPortObject implements PortObject {
     public final void save(final OutputStream out)
             throws TransformerFactoryConfigurationError, TransformerException,
             IOException {
-        try {
-            validate();
-        } catch (SAXException e) {
-            throw new IOException(e);
-        }
+//        try {
+//            validate();
+//        } catch (SAXException e) {
+//            throw new IOException(e);
+//        }
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
