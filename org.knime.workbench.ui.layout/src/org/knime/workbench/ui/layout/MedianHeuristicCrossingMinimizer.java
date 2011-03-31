@@ -80,7 +80,7 @@ public class MedianHeuristicCrossingMinimizer {
 		int crossings = numberOfCrossings();
 		do {
 			// rightward sweep
-			for (int i = 2; i < m_layers.size(); i++) {
+			for (int i = 1; i < m_layers.size(); i++) {
 				ArrayList<Node> curLayer = m_layers.get(i);
 				ArrayList<Node> prevLayer = m_layers.get(i - 1);
 				// set node to median position
@@ -103,10 +103,16 @@ public class MedianHeuristicCrossingMinimizer {
 		for (Node v : curLayer) {
 			ArrayList<Node> neighbors = getNeighbors(v, prevLayer);
 			int size = neighbors.size();
+			int m1 = (int) Math.ceil(size / 2.0) - 1;
+			int m2 = (int) Math.ceil(size / 2.0) - 1; //needed for even degree
 			if (size > 0) {
-				m_g.setY(
-						v,
-						m_g.getY(neighbors.get((int) Math.ceil(size / 2.0) - 1)));
+				if (size%2 == 1) {
+                    m_g.setY(v, m_g.getY(neighbors.get(m1)));
+                } else {
+                    double y1 = m_g.getY(neighbors.get(m1));
+                    double y2 = m_g.getY(neighbors.get(m2));
+                    m_g.setY(v, (y1+y2)/2);
+                }
 			}
 		}
 		Collections.sort(curLayer, new LayerSortComparator(prevLayer));

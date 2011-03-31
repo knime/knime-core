@@ -51,6 +51,7 @@
 package org.knime.workbench.ui.layout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -66,35 +67,69 @@ import org.knime.workbench.ui.layout.Graph.Node;
  */
 public class VerticalCoordinateAssigner {
 
+    private static final Double delta = 1.0;
+
     private Graph m_g;
 
     private ArrayList<ArrayList<Node>> m_layers;
 
-    private HashMap<Edge, Boolean> m_innerSegment;
+    private HashMap<Node, Integer> m_pos = new HashMap<Graph.Node, Integer>();
 
-    private HashMap<Edge, Boolean> m_marked;
+    private HashMap<Node, Node> m_pred = new HashMap<Graph.Node, Graph.Node>();
 
-    private HashMap<Node, Node> m_align;
+    private HashMap<Edge, Boolean> m_innerSegment =
+            new HashMap<Graph.Edge, Boolean>();
 
-    private HashMap<Node, Node> m_root;
+    private HashMap<Edge, Boolean> m_marked =
+            new HashMap<Graph.Edge, Boolean>();
+
+    private HashMap<Node, Node> m_align = new HashMap<Graph.Node, Graph.Node>();
+
+    private HashMap<Node, Node> m_root = new HashMap<Graph.Node, Graph.Node>();
+
+    private HashMap<Node, Node> m_sink = new HashMap<Graph.Node, Graph.Node>();
+
+    private HashMap<Node, Double> m_shift = new HashMap<Graph.Node, Double>();
+
+    private HashMap<Node, Double> m_y = new HashMap<Graph.Node, Double>();
+
+    private HashMap<Node, Double> m_yLT = new HashMap<Graph.Node, Double>();
+
+    private HashMap<Node, Double> m_yLB = new HashMap<Graph.Node, Double>();
+
+    private HashMap<Node, Double> m_yRT = new HashMap<Graph.Node, Double>();
+
+    private HashMap<Node, Double> m_yRB = new HashMap<Graph.Node, Double>();
 
     public VerticalCoordinateAssigner(Graph g,
             ArrayList<ArrayList<Node>> layers, ArrayList<Node> dummyNodes,
             ArrayList<Edge> dummyEdges) {
         m_g = g;
         m_layers = layers;
-        m_innerSegment = new HashMap<Graph.Edge, Boolean>();
-        m_marked = new HashMap<Graph.Edge, Boolean>();
-        m_align = new HashMap<Graph.Node, Graph.Node>();
-        m_root = new HashMap<Graph.Node, Graph.Node>();
+        // initialize pos and pred
+        for (int i = 0; i < m_layers.size(); i++) {
+            ArrayList<Node> layer = m_layers.get(i);
+            for (int pos = 0; pos < layer.size(); pos++) {
+                m_pos.put(layer.get(pos), pos);
+                if (pos == 0)
+                    m_pred.put(layer.get(pos), null);
+                else
+                    m_pred.put(layer.get(pos), layer.get(pos - 1));
+            }
+        }
+        // initialize edge maps
         for (Edge e : m_g.edges()) {
             m_marked.put(e, false);
             // initialize inner segments, corrected later
             m_innerSegment.put(e, false);
         }
+        // initialize node maps
         for (Node n : m_g.nodes()) {
             m_align.put(n, n);
             m_root.put(n, n);
+            m_sink.put(n, n);
+            m_shift.put(n, Double.POSITIVE_INFINITY);
+            m_y.put(n, Double.NaN);
         }
         // determine inner segments
         for (Edge e : dummyEdges) {
@@ -105,56 +140,250 @@ public class VerticalCoordinateAssigner {
     }
 
     public void run() {
+
+        // preprocessing
         markConflicts();
-        horizontalAlignment();
+        // run alignment and compaction 4 times, once for each directional
+        // choice
+        initNodeMaps();
+        horizontalAlignmentLeftTopmost();
         verticalCompaction();
+        storeCoordinates(m_yLT);
+        initNodeMaps();
+        horizontalAlignmentLeftBottommost();
+        verticalCompaction();
+        storeCoordinates(m_yLB);
+        initNodeMaps();
+        horizontalAlignmentRightTopmost();
+        verticalCompaction();
+        storeCoordinates(m_yRT);
+        initNodeMaps();
+        horizontalAlignmentRightBottommost();
+        verticalCompaction();
+        storeCoordinates(m_yRB);
+        initNodeMaps();
+        // balance between 4 alignments
+        balance();
+        // set final coordinates
+        for (Node n : m_g.nodes()) {
+            m_g.setY(n, m_y.get(n));
+        }
+
+    }
+
+    private void storeCoordinates(HashMap<Node, Double> y) {
+        for (Node n : m_g.nodes()) {
+            y.put(n, m_y.get(n));
+        }
+    }
+
+    private void initNodeMaps() {
+        for (Node n : m_g.nodes()) {
+            m_align.put(n, n);
+            m_root.put(n, n);
+            m_sink.put(n, n);
+            m_shift.put(n, Double.POSITIVE_INFINITY);
+            m_y.put(n, Double.NaN);
+        }
+    }
+
+    private void balance() {
+        // align to smallest height layout
+        double[] height = new double[4];
+        height[0] = getHeight(m_yLT);
+        height[1] = getHeight(m_yLB);
+        height[2] = getHeight(m_yRT);
+        height[3] = getHeight(m_yRB);
+
+        // ....
+
+        // average median
+        for (Node n : m_g.nodes()) {
+            double[] y = new double[4];
+            y[0] = m_yLT.get(n);
+            y[1] = m_yLB.get(n);
+            y[2] = m_yRT.get(n);
+            y[3] = m_yRB.get(n);
+            Arrays.sort(y);
+            m_y.put(n, (y[1] + y[2]) / 2);
+        }
+
+    }
+
+    private double getHeight(HashMap<Node, Double> y) {
+        double max = 0;
+        double min = Double.POSITIVE_INFINITY;
+        for (Node n : m_g.nodes()) {
+            max = Math.max(max, y.get(n));
+            min = Math.min(min, y.get(n));
+        }
+        return max - min;
     }
 
     private void verticalCompaction() {
-        // TODO Auto-generated method stub
+        for (Node v : m_g.nodes()) {
+            if (m_root.get(v) == v)
+                placeBlock(v);
+        }
+        for (Node v : m_g.nodes()) {
+            double y = m_y.get(m_root.get(v)).doubleValue();
+            m_y.put(v, y);
+            double shift = m_shift.get(m_sink.get(m_root.get(v))).doubleValue();
+            if (shift < Double.POSITIVE_INFINITY) {
+                m_y.put(v, y + shift);
+            }
+        }
 
     }
 
-    private void horizontalAlignment() {
+    private void placeBlock(Node v) {
+        if (m_y.get(v).equals(Double.NaN)) {
+            m_y.put(v, 0.0);
+            Node w = v;
+            do {
+                if (m_pos.get(w) > 0) {
+                    Node u = m_root.get(m_pred.get(w));
+                    placeBlock(u);
+                    if (m_sink.get(v) == v)
+                        m_sink.put(v, m_sink.get(u));
+                    if (m_sink.get(v) != m_sink.get(u)) {
+                        double shiftSinkU =
+                                Math.min(m_shift.get(m_sink.get(u)), m_y.get(v)
+                                        - m_y.get(u) - delta);
+                        m_shift.put(m_sink.get(u), shiftSinkU);
+                    } else {
+                        m_y.put(v, Math.max(m_y.get(v), m_y.get(u) + delta));
+                    }
+                }
+                w = m_align.get(w);
+            } while (w != v);
+        }
+
+    }
+
+    private void horizontalAlignmentLeftTopmost() {
         for (int i = 0; i < m_layers.size(); i++) {
-            int r = 0;
+            int r = -1;
             for (int k = 0; k < m_layers.get(i).size(); k++) {
-                Node v_k = m_layers.get(i).get(k);
-                ArrayList<Node> leftNeighbors = getLeftNeighbors(v_k);
-                if (!leftNeighbors.isEmpty()) {
-                    int d = leftNeighbors.size();
+                Node vk = m_layers.get(i).get(k);
+                ArrayList<Node> neighbors = getNeighbors(vk, true);
+                if (!neighbors.isEmpty()) {
+                    int d = neighbors.size();
                     int m1 = (int)Math.floor((d + 1) / 2.0) - 1;
                     int m2 = (int)Math.ceil((d + 1) / 2.0) - 1;
                     for (int m = m1; m <= m2; m++) {
-                        Node u_m = m_layers.get(i - 1).get(m);
-                        if (!m_marked.get(u_m.getEdge(v_k))
-                                && r < m_layers.get(i - 1).indexOf(u_m)) {
-                            m_align.put(u_m, v_k);
-                            m_root.put(v_k, m_root.get(u_m));
-                            m_align.put(v_k, m_root.get(v_k));
-                            r = m_layers.get(i - 1).indexOf(u_m);
+                        if (m_align.get(vk) == vk) {
+                            Node um = neighbors.get(m);
+                            if (!m_marked.get(um.getEdge(vk))
+                                    && r < m_pos.get(um)) {
+                                m_align.put(um, vk);
+                                m_root.put(vk, m_root.get(um));
+                                m_align.put(vk, m_root.get(vk));
+                                r = m_pos.get(um);
+                            }
                         }
                     }
                 }
 
             }
         }
-
     }
 
-    private ArrayList<Node> getLeftNeighbors(Node n) {
-        ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
-        for (Edge e : m_g.inEdges(n))
-            neighbors.add(e.source());
-        // sort by order in layer
-        Collections.sort(neighbors, new Comparator<Node>() {
+    private void horizontalAlignmentLeftBottommost() {
+        for (int i = 0; i < m_layers.size(); i++) {
+            int r = m_layers.size();
+            for (int k = m_layers.get(i).size() - 1; k >= 0; k--) {
+                Node vk = m_layers.get(i).get(k);
+                ArrayList<Node> neighbors = getNeighbors(vk, true);
+                if (!neighbors.isEmpty()) {
+                    int d = neighbors.size();
+                    int m1 = (int)Math.floor((d + 1) / 2.0) - 1;
+                    int m2 = (int)Math.ceil((d + 1) / 2.0) - 1;
+                    for (int m = m2; m >= m1; m--) {
+                        if (m_align.get(vk) == vk) {
+                            Node um = neighbors.get(m);
+                            if (!m_marked.get(um.getEdge(vk))
+                                    && r > m_pos.get(um)) {
+                                m_align.put(um, vk);
+                                m_root.put(vk, m_root.get(um));
+                                m_align.put(vk, m_root.get(vk));
+                                r = m_pos.get(um);
+                            }
+                        }
+                    }
+                }
 
-            @Override
-            public int compare(Node o1, Node o2) {
-                return new Double(m_g.getY(o1)).compareTo(new Double(m_g
-                        .getY(o2)));
             }
-        });
+        }
+    }
+
+    private void horizontalAlignmentRightTopmost() {
+        for (int i = m_layers.size() - 1; i >= 0; i--) {
+            int r = -1;
+            for (int k = 0; k < m_layers.get(i).size(); k++) {
+                Node vk = m_layers.get(i).get(k);
+                ArrayList<Node> neighbors = getNeighbors(vk, false);
+                if (!neighbors.isEmpty()) {
+                    int d = neighbors.size();
+                    int m1 = (int)Math.floor((d + 1) / 2.0) - 1;
+                    int m2 = (int)Math.ceil((d + 1) / 2.0) - 1;
+                    for (int m = m1; m <= m2; m++) {
+                        if (m_align.get(vk) == vk) {
+                            Node um = neighbors.get(m);
+                            if (!m_marked.get(um.getEdge(vk))
+                                    && r < m_pos.get(um)) {
+                                m_align.put(um, vk);
+                                m_root.put(vk, m_root.get(um));
+                                m_align.put(vk, m_root.get(vk));
+                                r = m_pos.get(um);
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    private void horizontalAlignmentRightBottommost() {
+        for (int i = m_layers.size() - 1; i >= 0; i--) {
+            int r = m_layers.size();
+            for (int k = m_layers.get(i).size() - 1; k >= 0; k--) {
+                Node vk = m_layers.get(i).get(k);
+                ArrayList<Node> neighbors = getNeighbors(vk, false);
+                if (!neighbors.isEmpty()) {
+                    int d = neighbors.size();
+                    int m1 = (int)Math.floor((d + 1) / 2.0) - 1;
+                    int m2 = (int)Math.ceil((d + 1) / 2.0) - 1;
+                    for (int m = m2; m >= m1; m--) {
+                        if (m_align.get(vk) == vk) {
+                            Node um = neighbors.get(m);
+                            if (!m_marked.get(um.getEdge(vk))
+                                    && r > m_pos.get(um)) {
+                                m_align.put(um, vk);
+                                m_root.put(vk, m_root.get(um));
+                                m_align.put(vk, m_root.get(vk));
+                                r = m_pos.get(um);
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    private ArrayList<Node> getNeighbors(Node n, boolean left) {
+        ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
+        Iterable<Edge> incidentEdges;
+        if (left)
+            incidentEdges = m_g.inEdges(n);
+        else
+            incidentEdges = m_g.outEdges(n);
+        for (Edge e : incidentEdges)
+            neighbors.add(e.opposite(n));
+        // sort by order in layer
+        Collections.sort(neighbors, new Util.NodeByYComparator(m_g));
         return neighbors;
     }
 
