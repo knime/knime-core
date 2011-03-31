@@ -84,7 +84,8 @@ NodeStateChangeListener {
 
     /* Store map of end node IDs and corresponding chunk objects */
     private LinkedHashMap<NodeID, ParallelizedChunkContent> m_chunks;
-    
+    /* hold intermediate BufferedDataTables from parallelize chunks */
+    private BufferedDataTable[] m_results;
 
 	/**
 	 */
@@ -111,16 +112,23 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
+	    // if chunks have not been set, something's wrong.
 	    if (m_chunks == null) {
-	        m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
+	        throw new IllegalStateException("Parallel Chunk End node"
+	                + " without any registered branches.");
 	    }
-	    // start by copying the results of this chunk to the output...
+	    // reserve space for output chunks
+	    m_results = new BufferedDataTable[m_chunks.size() + 1];
+	    // start by copying the results of this chunk to the last output...
 	    BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
 	    BufferedDataContainer bdc
 	            = exec.createDataContainer(lastChunk.getDataTableSpec());
         for (DataRow row : lastChunk) {
             bdc.addRowToTable(row);
         }
+        bdc.close();
+        m_results[m_results.length - 1] = bdc.getTable();
+        // now wait for other parallel branches to finish...
 	    boolean done = false;
 	    while (!done) {
 	        // wait a bit
@@ -142,12 +150,16 @@ NodeStateChangeListener {
 	            ParallelizedChunkContent pbc = pbc_it.next();
 	            if (pbc.isExecuted()) {
 	                // copy results from chunk
-	                // TODO: try to keep the order...
+	                bdc = exec.createDataContainer(lastChunk.getDataTableSpec());
 	                BufferedDataTable bdt
 	                        = (BufferedDataTable)pbc.getOutportContent()[0];
 	                for (DataRow row : bdt) {
 	                    bdc.addRowToTable(row);
 	                }
+	                // and put it into the correct slot
+	                bdc.close();
+	                m_results[pbc.getChunkIndex()] = bdc.getTable();
+	                // and finally remove branch and all its nodes
                     pbc_it.remove();
 	                pbc.removeAllNodesFromWorkflow();
 	                exec.setProgress((double)m_chunks.size()
@@ -160,11 +172,7 @@ NodeStateChangeListener {
 	            done = true;
 	        }
 	    }
-	    BufferedDataTable result = null;
-        if (bdc != null) {
-            bdc.close();
-            result = bdc.getTable();
-        }
+	    BufferedDataTable result = exec.createConcatenateTable(exec, m_results);
         if (result == null) {
             throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
         }
@@ -177,7 +185,8 @@ NodeStateChangeListener {
     @Override
     protected void reset() {
         // TODO: cancel and delete all chunks
-        m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
+        m_chunks = null;
+        m_results = null;
     }
 
     /**
@@ -254,7 +263,24 @@ NodeStateChangeListener {
 	public void stateChanged(final NodeStateEvent state) {
         NodeID endNode = state.getSource();
         if (m_chunks.containsKey(endNode)) {
-//            this.notify();
+//            ParallelizedChunkContent pcc = m_chunks.get(endNode);
+//            if (pcc.isExecuted()) {
+//                // copy results from chunk
+//                BufferedDataTable bdt
+//                   = (BufferedDataTable)pcc.getOutportContent()[0];
+//                BufferedDataContainer bdc
+//                   = exec.createDataContainer(bdt.getDataTableSpec());
+//                for (DataRow row : bdt) {
+//                    bdc.addRowToTable(row);
+//                }
+//                // and put it into the correct slot
+//                bdc.close();
+//                m_results[pcc.getChunkIndex()] = bdc.getTable();
+//                // and finally remove branch and all its nodes
+//                m_chunks.remove(endNode);
+//                pcc.removeAllNodesFromWorkflow();
+////            this.notify();
+//            }
         }
     }
 
