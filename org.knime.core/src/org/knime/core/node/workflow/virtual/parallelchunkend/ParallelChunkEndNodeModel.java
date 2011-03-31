@@ -56,6 +56,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 import org.knime.core.data.DataRow;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -86,6 +87,8 @@ NodeStateChangeListener {
     private LinkedHashMap<NodeID, ParallelizedChunkContent> m_chunks;
     /* hold intermediate BufferedDataTables from parallelize chunks */
     private BufferedDataTable[] m_results;
+    
+    private boolean m_addChunkID = true;
 
 	/**
 	 */
@@ -124,6 +127,10 @@ NodeStateChangeListener {
 	    BufferedDataContainer bdc
 	            = exec.createDataContainer(lastChunk.getDataTableSpec());
         for (DataRow row : lastChunk) {
+            if (m_addChunkID) {
+                row = new DefaultRow(row.getKey()
+                        + "_#" + (m_results.length-1), row);
+            }
             bdc.addRowToTable(row);
         }
         bdc.close();
@@ -154,6 +161,10 @@ NodeStateChangeListener {
 	                BufferedDataTable bdt
 	                        = (BufferedDataTable)pbc.getOutportContent()[0];
 	                for (DataRow row : bdt) {
+	                    if (m_addChunkID) {
+	                        row = new DefaultRow(row.getKey()
+	                                + "_#" + pbc.getChunkIndex(), row);
+	                    }
 	                    bdc.addRowToTable(row);
 	                }
 	                // and put it into the correct slot
