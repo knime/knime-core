@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./missing.png" type="loopend">
+    <name>Parallel Chunk End</name>
+    <shortDescription>Represents the end of a parallel chunked flow.</shortDescription>
+    <fullDescription>
+    <intro>
+    Represents the end of a parallel chunked flow. It collects the results
+    from all parallel executions and concatenates them.
+    </intro>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Input Data">
+            The data chunks arriving from the parallel branches.
+        </inPort>
+        <outPort index="0" name="Aggregated Data">
+            The aggregated data from all parallel chunks.
+        </outPort>
+    </ports>
+</knimeNode>

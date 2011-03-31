@@ -87,7 +87,6 @@ NodeStateChangeListener {
     
 
 	/**
-	 * @param outPortTypes
 	 */
 	ParallelChunkEndNodeModel() {
 		super(new PortType[]{ BufferedDataTable.TYPE},
