@@ -15,7 +15,7 @@
  * email: contact@knime.com
  * ---------------------------------------------------------------------
  *
- * Created: Mar 29, 2011
+ * Created: Mar 31, 2011
  * Author: ohl
  */
 package org.knime.workbench.ui.layout.align;
@@ -36,12 +36,12 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author ohl, University of Konstanz
  */
-public final class HorizAlignmentCenter {
+public class VerticAlignmentCenter {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(HorizAlignmentCenter.class);
+            .getLogger(VerticAlignmentCenter.class);
 
-    private HorizAlignmentCenter() {
+    private VerticAlignmentCenter() {
         // nothing in here.
     }
 
@@ -50,7 +50,8 @@ public final class HorizAlignmentCenter {
      * @param nodeParts the nodes to align
      * @return a map with offsets for the nodes
      */
-    static Map<NodeContainerEditPart, Integer> doLayout(final WorkflowManager wfm,
+    static Map<NodeContainerEditPart, Integer> doLayout(
+            final WorkflowManager wfm,
             final NodeContainerEditPart[] nodeParts) {
 
         if (nodeParts.length == 0) {
@@ -58,7 +59,7 @@ public final class HorizAlignmentCenter {
         }
 
         NodeContainerEditPart[] nodes = nodeParts.clone();
-        // sorts by the x position
+        // sorts by the y position
         Arrays.sort(nodes, new Comparator<NodeContainerEditPart>() {
             @Override
             public int compare(final NodeContainerEditPart o1,
@@ -72,10 +73,10 @@ public final class HorizAlignmentCenter {
                 if (ui1 == null || ui2 == null) {
                     return 0;
                 }
-                if (ui1.getBounds()[0] < ui2.getBounds()[0]) {
+                if (ui1.getBounds()[1] < ui2.getBounds()[1]) {
                     return -1;
                 } else {
-                    return (ui1.getBounds()[0] > ui2.getBounds()[0]) ? 1 : 0;
+                    return (ui1.getBounds()[1] > ui2.getBounds()[1]) ? 1 : 0;
                 }
             }
         });
@@ -90,15 +91,16 @@ public final class HorizAlignmentCenter {
             LOGGER.warn("Only nodes with location information can be aligned.");
             return Collections.emptyMap();
         }
-        int refY = nui.getBounds()[1];
+        int refX = nui.getBounds()[0];
 
         for (int i = 1 /* idx 0 is anchor */; i < nodes.length; i++) {
             NodeContainer nc = nodes[i].getNodeContainer();
             NodeUIInformation ui = (NodeUIInformation)nc.getUIInformation();
-            if (ui.getBounds()[1] != refY) {
-                offsets.put(nodes[i], refY - ui.getBounds()[1]);
+            if (ui.getBounds()[0] != refX) {
+                offsets.put(nodes[i], refX - ui.getBounds()[0]);
             }
         }
         return offsets;
     }
+
 }
