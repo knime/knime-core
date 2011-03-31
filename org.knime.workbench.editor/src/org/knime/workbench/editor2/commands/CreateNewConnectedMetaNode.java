@@ -49,7 +49,7 @@ public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
      */
     public CreateNewConnectedMetaNode(final WorkflowManager destination,
             final WorkflowManager source, final NodeID sourceID,
-            final Point location, final NodeContainer connectTo) {
+            final Point location, final NodeID connectTo) {
         super(destination, null, location, connectTo);
         m_destination = destination;
         m_source = source;

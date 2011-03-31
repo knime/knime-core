@@ -73,6 +73,7 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -453,7 +454,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected EditPart createChild(final Object model) {
-        EditPart part = super.createChild(model);
+        final EditPart part = super.createChild(model);
         LOGGER.debug("part: " + part);
         if (part instanceof NodeContainerEditPart) {
             getViewer().deselect(this);
@@ -468,6 +469,13 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 getViewer().appendSelection(part);
                 m_futureSelection.remove(id);
             }
+            // reveal the editpart after it has been created completely
+            Display.getCurrent().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    getViewer().reveal(part);
+                }
+            });
         }
         if (model instanceof WorkflowAnnotation) {
             getViewer().deselect(this);

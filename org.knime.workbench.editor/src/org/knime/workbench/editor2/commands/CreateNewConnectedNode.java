@@ -51,7 +51,7 @@ public class CreateNewConnectedNode extends Command {
 
     private final Point m_location;
 
-    private final NodeContainer m_connectTo;
+    private final NodeID m_connectTo;
 
     private NodeID m_newNode;
 
@@ -65,7 +65,7 @@ public class CreateNewConnectedNode extends Command {
      */
     public CreateNewConnectedNode(final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory,
-            final Point location, final NodeContainer connectTo) {
+            final Point location, final NodeID connectTo) {
         m_manager = manager;
         m_factory = factory;
         m_location = location;
@@ -124,23 +124,28 @@ public class CreateNewConnectedNode extends Command {
         if (m_connectTo == null) {
             return;
         }
+        NodeContainer sourceNode = m_manager.getNodeContainer(m_connectTo);
+        if (sourceNode == null) {
+            // it's gone...
+            return;
+        }
         NodeContainer nc = m_manager.getNodeContainer(m_newNode);
-        int[] matchingPorts = getMatchingPorts(m_connectTo, nc);
+        int[] matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts == null) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
                     + "no matching port type found at node "
-                    + m_connectTo.getNameWithID());
+                    + sourceNode.getNameWithID());
             return;
         }
 
         LOGGER.info("Autoconnect: Connecting new node " + m_newNode + " port "
-                + matchingPorts[1] + " with existing node " + m_connectTo
+                + matchingPorts[1] + " with existing node " + sourceNode
                 + " port " + matchingPorts[0]);
         try {
-            m_manager.addConnection(m_connectTo.getID(), matchingPorts[0],
+            m_manager.addConnection(m_connectTo, matchingPorts[0],
                     m_newNode, matchingPorts[1]).getID();
         } catch (Exception e) {
-            String from = m_connectTo.getNameWithID();
+            String from = sourceNode.getNameWithID();
             String to = nc.getNameWithID();
             String msg =
                     "Unable to add connection from " + from + " port "

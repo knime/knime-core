@@ -1245,6 +1245,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param id the id of the meta node in the source manager
      * @return if the meta node was actually added
      */
+    @Override
     public boolean addMetaNode(final WorkflowManager sourceManager,
             final NodeID id) {
         if (id == null || sourceManager == null) {
@@ -1255,18 +1256,21 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         NodeContainerEditPart preNode = getTheOneSelectedNode();
+        NodeID preID = null;
         Point nodeLoc = null;
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
             nodeLoc = toAbsolute(nodeLoc);
         } else {
             nodeLoc = getLocationRightOf(preNode);
+            preID = preNode.getNodeContainer().getID();
         }
         Command newNodeCmd =
                 new CreateNewConnectedMetaNode(m_manager, sourceManager, id,
-                        nodeLoc, preNode.getNodeContainer());
+                        nodeLoc, preID);
         getCommandStack().execute(newNodeCmd);
-        scrollToVisible(nodeLoc);
+        // after adding a node the editor should get the focus
+        setFocus();
         return true;
     }
 
@@ -1277,6 +1281,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * selected in the editor, to which the new node will then be connected to.
      * {@inheritDoc}
      */
+    @Override
     public boolean addNode(final NodeFactory<? extends NodeModel> nodeFactory) {
 
         if (!isEditorActive()) {
@@ -1294,11 +1299,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
                 new CreateNewConnectedNode(m_manager, nodeFactory, nodeLoc,
-                        preNode.getNodeContainer());
-            scrollToVisible(nodeLoc);
+                        preNode.getNodeContainer().getID());
         }
 
         getCommandStack().execute(newNodeCmd);
+        // after adding a node the editor should get the focus
+        setFocus();
         return true;
     }
 
@@ -1315,15 +1321,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         IEditorPart editor = page.getActiveEditor();
         return editor == this;
-    }
-
-    private void scrollToVisible(final Point absoluteLoc) {
-
-//      ScalableFreeformRootEditPart rootEditPart
-//      = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
-//      Viewport viewport = (Viewport) rootEditPart.getFigure();
-//      viewport.setViewLocation(toRelative(nodeLoc));
-
     }
 
     /**
@@ -1426,16 +1423,16 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (ep == null) {
             return false;
         }
-        while (!(ep instanceof WorkflowRootEditPart)) {
+        while (!(ep instanceof RootEditPart)) {
+            if (ep instanceof NodeContainerEditPart) {
+                return true;
+            }
             EditPart parent = ep.getParent();
             // avoid endless loops
             if (parent == null || ep == parent) {
                 return false;
             }
-            if (parent instanceof NodeContainerEditPart) {
-                return true;
-            }
-            ep = ep.getParent();
+            ep = parent;
         }
         return false;
     }
