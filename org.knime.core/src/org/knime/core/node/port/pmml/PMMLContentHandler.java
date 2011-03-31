@@ -47,11 +47,33 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -194,8 +216,99 @@ public abstract class PMMLContentHandler extends DefaultHandler
         return versions;
     }
 
+    /**
+     * Parses the given node.
+     *
+     * @param node the node to be parsed
+     * @throws SAXException if something with the parsing goes wrong
+     */
+    public void parse(final Node node) throws SAXException {
+        SAXParserFactory fac = SAXParserFactory.newInstance();
+        SAXParser parser;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayInputStream in = null;
+        try {
+            parser = fac.newSAXParser();
 
+            Transformer xformer = TransformerFactory
+                .newInstance().newTransformer();
+            Source source = new DOMSource(node);
+            xformer.transform(source, new StreamResult(out));
+            in = new ByteArrayInputStream(out.toByteArray());
+            parser.parse(new InputSource(in), this);
+        } catch (ParserConfigurationException e) {
+            throw new SAXException(e);
+        } catch (TransformerConfigurationException e) {
+            throw new SAXException(e);
+        } catch (TransformerException e) {
+            throw new SAXException(e);
+        } catch (IOException e) {
+            throw new SAXException(e);
+        } finally {
+            try {
+                out.close();
+            if (in != null) {
+                in.close();
+            }
+            } catch (IOException e) {
+               // ignore if closing the streams fail
+            }
+        }
+    }
 
+    /**
+     * @param fragment the document fragment to add the model to
+     * @param spec the pmml port object spec
+     * @throws SAXException if the model cannot be added
+     */
+    public final void addPMMLModel(
+            final DocumentFragment fragment, final PMMLPortObjectSpec spec)
+            throws SAXException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        SAXTransformerFactory fac =
+                (SAXTransformerFactory)TransformerFactory.newInstance();
+        TransformerHandler handler;
+        try {
+            handler = fac.newTransformerHandler();
+        } catch (TransformerConfigurationException e) {
+            throw new SAXException(e);
+        }
+        Transformer t = handler.getTransformer();
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        t.setOutputProperty(OutputKeys.INDENT, "yes");
+        handler.setResult(new StreamResult(out));
+        handler.startDocument();
 
+        /* Here the subclasses can insert the content by overriding the
+         * addModelContent method.*/
+        addModelPMMLContent(handler, spec);
+
+        handler.endDocument();
+
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        SAXSource s = new SAXSource(new InputSource(in));
+        DOMResult r = new DOMResult(fragment);
+        try {
+            t.transform(s, r);
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            throw new SAXException(e);
+        }
+    }
+
+    /**
+     * Derived classes should override this method to add the model content.
+     * They can assume that the document is started and will be ended and should
+     * only provided the content.
+     * @param handler the transformer handler
+     * @param spec the port object spec
+     * @throws SAXException if the model cannot be added
+     */
+    @SuppressWarnings("unused")
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+        // empty in the base class
+    }
 
 }

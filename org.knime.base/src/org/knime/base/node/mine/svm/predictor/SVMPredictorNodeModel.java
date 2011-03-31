@@ -52,9 +52,10 @@ package org.knime.base.node.mine.svm.predictor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
-import org.knime.base.node.mine.svm.PMMLSVMPortObject;
+import org.knime.base.node.mine.svm.PMMLSVMHandler;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -64,22 +65,27 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.w3c.dom.Node;
 
 /**
  * NodeModel of the SVM Predictor Node.
  * @author cebron, University of Konstanz
  */
 public class SVMPredictorNodeModel extends NodeModel {
-
+    /** The node logger for this class. */
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(SVMPredictorNodeModel.class);
     /*
      * The extracted Support Vector Machines.
      */
@@ -94,7 +100,7 @@ public class SVMPredictorNodeModel extends NodeModel {
      * Constructor, one model and data input, one (classified) data output.
      */
     public SVMPredictorNodeModel() {
-        super(new PortType[] {PMMLSVMPortObject.TYPE, BufferedDataTable.TYPE },
+        super(new PortType[] {PMMLPortObject.TYPE, BufferedDataTable.TYPE },
                 new PortType[] {
                 BufferedDataTable.TYPE});
     }
@@ -136,7 +142,22 @@ public class SVMPredictorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        m_svms = ((PMMLSVMPortObject)inData[0]).getSvms();
+        PMMLPortObject port = (PMMLPortObject)inData[0];
+
+        List<Node> models = port.getPMMLValue().getModels(
+                PMMLModelType.SupportVectorMachineModel);
+        if (models.isEmpty()) {
+            String msg = "SVM evaluation failed: "
+                   + "No support vector machine model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        PMMLSVMHandler handler = new PMMLSVMHandler();
+        handler.parse(models.get(0));
+
+        List<Svm> svms = handler.getSVMs();
+        m_svms = svms.toArray(new Svm[svms.size()]);
         DataTableSpec testSpec =
                 ((BufferedDataTable)inData[1]).getDataTableSpec();
         DataTableSpec trainingSpec =

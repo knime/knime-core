@@ -55,6 +55,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,7 +66,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.knime.base.node.mine.svm.PMMLSVMPortObject;
+import org.knime.base.node.mine.svm.PMMLSVMHandler;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
@@ -93,6 +94,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.util.KNIMETimer;
@@ -144,13 +146,13 @@ public class SVMLearnerNodeModel extends NodeModel {
     /*
      * The c parameter value.
      */
-    private SettingsModelDouble m_paramC =
+    private final SettingsModelDouble m_paramC =
             new SettingsModelDouble(CFG_PARAMC, DEFAULT_PARAMC);
 
     /*
      * Class column
      */
-    private SettingsModelString m_classcol =
+    private final SettingsModelString m_classcol =
             new SettingsModelString(CFG_CLASSCOL, "");
 
     /*
@@ -158,7 +160,7 @@ public class SVMLearnerNodeModel extends NodeModel {
      */
     private KernelType m_kernelType = KernelFactory.getDefaultKernelType();
 
-    private HashMap<KernelType, Vector<SettingsModelDouble>> m_kernelParameters;
+    private final HashMap<KernelType, Vector<SettingsModelDouble>> m_kernelParameters;
 
     /*
      * For each category, a BinarySvm that splits the category from the others.
@@ -199,7 +201,7 @@ public class SVMLearnerNodeModel extends NodeModel {
      */
     public SVMLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{PMMLSVMPortObject.TYPE});
+                new PortType[]{PMMLPortObject.TYPE});
         m_kernelParameters = createKernelParams();
     }
 
@@ -237,7 +239,7 @@ public class SVMLearnerNodeModel extends NodeModel {
 
         // convert input data
         ArrayList<DoubleVector> inputData = new ArrayList<DoubleVector>();
-        ArrayList<String> categories = new ArrayList<String>();
+        List<String> categories = new ArrayList<String>();
         StringValue classvalue = null;
         for (DataRow row : trainTable) {
             exec.checkCanceled();
@@ -343,8 +345,9 @@ public class SVMLearnerNodeModel extends NodeModel {
         pmmlcreate.setTargetCol(trainSpec.getColumnSpec(m_classcol
                 .getStringValue()));
         PMMLPortObjectSpec pmmlspec = pmmlcreate.createSpec();
-        PMMLSVMPortObject pmml =
-                new PMMLSVMPortObject(pmmlspec, kernel, m_svms);
+        PMMLPortObject pmml =
+            new PMMLPortObject(pmmlspec, new PMMLSVMHandler(categories,
+                    Arrays.asList(m_svms), kernel));
         return new PortObject[]{pmml};
     }
 

@@ -121,7 +121,7 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
         if (name.equals("PMML")) {
             if (atts.getValue("xmlns") != null
                     && atts.getValue("xmlns").startsWith(
-                            "http://www.dmg.org/PMML-3")) {
+                            "http://www.dmg.org/PMML-")) {
                 m_hasNamespace = true;
             }
         }

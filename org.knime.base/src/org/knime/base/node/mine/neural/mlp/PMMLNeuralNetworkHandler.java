@@ -50,12 +50,18 @@
  */
 package org.knime.base.node.mine.neural.mlp;
 
+import static org.knime.core.node.port.pmml.PMMLPortObject.CDATA;
+
 import java.util.EmptyStackException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.Vector;
+
+import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.HiddenLayer;
@@ -66,11 +72,15 @@ import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.Perceptron;
 import org.knime.base.data.neural.SigmoidPerceptron;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * PMMLHandler to read in a PMML file and create a KNIME
@@ -80,7 +90,7 @@ import org.xml.sax.SAXException;
  */
 public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
 
-    private Stack<String> m_elementStack = new Stack<String>();
+    private final Stack<String> m_elementStack = new Stack<String>();
 
     private int m_mlpMethod;
 
@@ -113,6 +123,26 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
     private MultiLayerPerceptron m_mlp;
 
     private double m_curThreshold;
+
+
+    /**
+     * Creates an initialized neural network handler that can be used to
+     * output the neural network model by invoking
+     * {@link #addPMMLModel(org.w3c.dom.DocumentFragment, PMMLPortObjectSpec)}.
+     * @param mlp the neural network
+     */
+    public PMMLNeuralNetworkHandler(final MultiLayerPerceptron mlp) {
+        this();
+        m_mlp = mlp;
+    }
+
+    /**
+     * Creates a new neural network handler. The initialization has to
+     * be performed by registering the handler to a parser.
+     */
+    public PMMLNeuralNetworkHandler() {
+        super();
+    }
 
     /**
      * {@inheritDoc}
@@ -283,5 +313,224 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_2);
         return versions;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "modelName", CDATA,
+                "KNIME Neural Network");
+        if (m_mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+            atts.addAttribute(null, null, "functionName", CDATA,
+                    "classification");
+        } else if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+            atts.addAttribute(null, null, "functionName", CDATA, "regression");
+        }
+        atts.addAttribute(null, null, "algorithmName", CDATA, "RProp");
+        atts.addAttribute(null, null, "activationFunction", CDATA, "logistic");
+        atts.addAttribute(null, null, "normalizationMethod", CDATA, "none");
+        atts.addAttribute(null, null, "width", CDATA, "" + 0);
+        atts.addAttribute(null, null, "numberOfLayers", CDATA, ""
+                // in PMML the input layer is not counted as a layer
+                // in contrast to our MLP understanding
+                + (m_mlp.getNrLayers() - 1));
+
+        handler.startElement(null, null, "NeuralNetwork", atts);
+        PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+        addTargets(handler, m_mlp, spec);
+        // input layer
+        addInputLayer(handler, m_mlp);
+        // hidden layers
+        for (int i = 1; i < m_mlp.getNrLayers(); i++) {
+            addLayer(handler, m_mlp, i);
+        }
+        // and output layer
+        addOutputLayer(handler, m_mlp, spec);
+        handler.endElement(null, null, "NeuralNetwork");
+    }
+
+
+
+    /**
+     * Writes the PMML target attributes.
+     *
+     * @param handler to write to.
+     * @param mlp the underlying {@link MultiLayerPerceptron}.
+     * @param spec the port object spec
+     * @throws SAXException if something goes wrong.
+     */
+    protected void addTargets(final TransformerHandler handler,
+            final MultiLayerPerceptron mlp, final PMMLPortObjectSpec spec)
+            throws SAXException {
+        List<DataColumnSpec> targetCols = spec.getTargetCols();
+        assert (targetCols.size() == 1) : "Only one target column allowed";
+        DataColumnSpec classcol = targetCols.iterator().next();
+        // open targets schema
+        handler.startElement(null, null, "Targets", null);
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "field", CDATA, classcol.getName());
+        if (mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+            atts.addAttribute(null, null, "optype", CDATA, "categorical");
+            handler.startElement(null, null, "Target", atts);
+            atts = new AttributesImpl();
+            for (DataCell target : classcol.getDomain().getValues()) {
+                // add target values
+                atts.addAttribute(null, null, "value", CDATA,
+                        ((StringValue)target).getStringValue());
+                handler.startElement(null, null, "TargetValue", atts);
+                handler.endElement(null, null, "TargetValue");
+            }
+            // close targets schema
+            handler.endElement(null, null, "Target");
+        } else if (mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+            atts.addAttribute(null, null, "optype", CDATA, "continuous");
+            handler.startElement(null, null, "Target", atts);
+            handler.endElement(null, null, "Target");
+        }
+        handler.endElement(null, null, "Targets");
+    }
+
+    /**
+     * Writes the PMML input layer of the MLP.
+     *
+     * @param handler to write to.
+     * @param mlp the underlying {@link MultiLayerPerceptron}.
+     * @throws SAXException if something goes wrong.
+     */
+    protected void addInputLayer(final TransformerHandler handler,
+            final MultiLayerPerceptron mlp) throws SAXException {
+        Layer inputlayer = mlp.getLayer(0);
+        Perceptron[] inputperceptrons = inputlayer.getPerceptrons();
+        HashMap<String, Integer> inputmap = mlp.getInputMapping();
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "numberOfInputs", CDATA, ""
+                + inputperceptrons.length);
+        handler.startElement(null, null, "NeuralInputs", atts);
+        for (int i = 0; i < inputperceptrons.length; i++) {
+            atts = new AttributesImpl();
+            // id = layer + , + neuron number
+            atts.addAttribute(null, null, "id", CDATA, 0 + "," + i);
+            handler.startElement(null, null, "NeuralInput", atts);
+            // search corresponding input column
+            String colname = "";
+            for (Entry<String, Integer> e : inputmap.entrySet()) {
+                if (e.getValue().equals(i)) {
+                    colname = e.getKey();
+                }
+            }
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "optype", CDATA, "continuous");
+            atts.addAttribute(null, null, "dataType", CDATA, "double");
+            handler.startElement(null, null, "DerivedField", atts);
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "field", CDATA, colname);
+            handler.startElement(null, null, "FieldRef", atts);
+            handler.endElement(null, null, "FieldRef");
+            handler.endElement(null, null, "DerivedField");
+            handler.endElement(null, null, "NeuralInput");
+        }
+        handler.endElement(null, null, "NeuralInputs");
+    }
+
+    /**
+     * Writes a layer of the MLP.
+     *
+     * @param handler to write to.
+     * @param mlp the underlying {@link MultiLayerPerceptron}.
+     * @param layer the number of the current layer.
+     * @throws SAXException if something goes wrong.
+     */
+    protected void addLayer(final TransformerHandler handler,
+            final MultiLayerPerceptron mlp, final int layer)
+            throws SAXException {
+        Layer curLayer = mlp.getLayer(layer);
+        Perceptron[] perceptrons = curLayer.getPerceptrons();
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "numberOfNeurons", CDATA, ""
+                + perceptrons.length);
+        handler.startElement(null, null, "NeuralLayer", atts);
+        for (int i = 0; i < perceptrons.length; i++) {
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, layer + "," + i);
+            atts.addAttribute(null, null, "bias", CDATA, ""
+                    + perceptrons[i].getThreshold());
+            handler.startElement(null, null, "Neuron", atts);
+            double[] weights = perceptrons[i].getWeights();
+            int predLayerLength = weights.length;
+            for (int j = 0; j < predLayerLength; j++) {
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "from", CDATA, (layer - 1) + ","
+                        + j);
+                atts.addAttribute(null, null, "weight", CDATA, "" + weights[j]);
+                handler.startElement(null, null, "Con", atts);
+                handler.endElement(null, null, "Con");
+            }
+            handler.endElement(null, null, "Neuron");
+        }
+        handler.endElement(null, null, "NeuralLayer");
+    }
+
+    /**
+     * Writes the PMML output layer of the MLP.
+     *
+     * @param handler to write to.
+     * @param mlp the underlying {@link MultiLayerPerceptron}.
+     * @param spec the port object spec
+     * @throws SAXException if something goes wrong.
+     */
+    protected void addOutputLayer(final TransformerHandler handler,
+            final MultiLayerPerceptron mlp, final PMMLPortObjectSpec spec)
+            throws SAXException {
+        int lastlayer = mlp.getNrLayers() - 1;
+        String targetCol = spec.getTargetFields().iterator().next();
+        Layer outputlayer = mlp.getLayer(lastlayer);
+        Perceptron[] outputperceptrons = outputlayer.getPerceptrons();
+        HashMap<DataCell, Integer> outputmap = mlp.getClassMapping();
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "numberOfOutputs", CDATA, ""
+                + outputperceptrons.length);
+        handler.startElement(null, null, "NeuralOutputs", atts);
+        for (int i = 0; i < outputperceptrons.length; i++) {
+            atts = new AttributesImpl();
+            // id = layer + , + neuron number
+            atts.addAttribute(null, null, "outputNeuron", CDATA, lastlayer
+                    + "," + i);
+            handler.startElement(null, null, "NeuralOutput", atts);
+            // search corresponding output value
+            String colname = "";
+            for (Entry<DataCell, Integer> e : outputmap.entrySet()) {
+                if (e.getValue().equals(i)) {
+                    colname = ((StringValue)e.getKey()).getStringValue();
+                }
+            }
+            atts = new AttributesImpl();
+            if (mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+                atts.addAttribute(null, null, "optype", CDATA, "categorical");
+                atts.addAttribute(null, null, "dataType", CDATA, "string");
+            } else if (mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+                atts.addAttribute(null, null, "optype", CDATA, "continuous");
+                atts.addAttribute(null, null, "dataType", CDATA, "double");
+            }
+            handler.startElement(null, null, "DerivedField", atts);
+            atts = new AttributesImpl();
+            if (mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+                atts.addAttribute(null, null, "field", CDATA, targetCol);
+                atts.addAttribute(null, null, "value", CDATA, colname);
+                handler.startElement(null, null, "NormDiscrete", atts);
+                handler.endElement(null, null, "NormDiscrete");
+            } else if (mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+                atts.addAttribute(null, null, "field", CDATA, targetCol);
+                handler.startElement(null, null, "FieldRef", atts);
+                handler.endElement(null, null, "FieldRef");
+            }
+            handler.endElement(null, null, "DerivedField");
+            handler.endElement(null, null, "NeuralOutput");
+        }
+        handler.endElement(null, null, "NeuralOutputs");
+    }
+
 
 }

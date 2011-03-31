@@ -65,7 +65,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
-import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeHandler;
 import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
@@ -99,6 +99,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
@@ -308,7 +309,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * Counter for the generated decision tree nodes. This is an atomic integer
      * to guarantee thread safety.
      */
-    private AtomicInteger m_counter = new AtomicInteger(0);
+    private final AtomicInteger m_counter = new AtomicInteger(0);
 
     /**
      * Counts the number of rows already assigned to a leaf node. This value is
@@ -350,7 +351,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public DecisionTreeLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{PMMLDecisionTreePortObject.TYPE});
+                new PortType[]{PMMLPortObject.TYPE});
     }
 
     /**
@@ -484,9 +485,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
-        return new PortObject[]{
-                new PMMLDecisionTreePortObject(m_decisionTree,
-                        createPMMLPortObjectSpec(inData.getDataTableSpec()))};
+        PMMLPortObjectSpec pmmlOutSpec = createPMMLPortObjectSpec(
+                inData.getDataTableSpec());
+        PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
+                new PMMLDecisionTreeHandler(m_decisionTree));
+        return new PortObject[]{pmmlPort};
     }
 
     private PMMLPortObjectSpec createPMMLPortObjectSpec(

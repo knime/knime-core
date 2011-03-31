@@ -50,6 +50,7 @@ package org.knime.core.node.port.pmml;
 import java.awt.BorderLayout;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -59,38 +60,46 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeView;
 import org.xml.sax.InputSource;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLPortObjectView extends JComponent {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLPortObjectView.class);
-    
+
     private final PMMLPortObject m_portObject;
-    
+
     private final Object m_lock = new Object();
-    
+
     private final JTree m_tree;
-    
+
     /**
      * Displays the XML tree of the PMML.
-     * 
+     *
      * @param portObject the object to display
      */
     public PMMLPortObjectView(final PMMLPortObject portObject) {
         setLayout(new BorderLayout());
         setBackground(NodeView.COLOR_BACKGROUND);
         m_portObject = portObject;
-        if (portObject.getModelType() == null) {            
+
+        Set<PMMLModelType> types = portObject.getPMMLValue().getModelTypes();
+        if (types.isEmpty()) {
             setName("Unknown PMML model");
         } else {
-            setName("PMML: " + portObject.getModelType().name());
+            StringBuffer sb = new StringBuffer();
+            sb.append("PMML: ");
+            for (PMMLModelType pmmlModelType : types) {
+                sb.append(pmmlModelType.getClass().getName());
+                sb.append(" ");
+            }
+            setName(sb.toString());
         }
         m_tree = new JTree();
         create();
@@ -121,6 +130,6 @@ public class PMMLPortObjectView extends JComponent {
             }
         }
     }
-    
+
 
 }

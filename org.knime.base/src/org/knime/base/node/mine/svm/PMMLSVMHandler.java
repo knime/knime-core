@@ -50,11 +50,17 @@
  */
 package org.knime.base.node.mine.svm;
 
+import static org.knime.core.node.port.pmml.PMMLPortObject.CDATA;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+
+import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
@@ -63,8 +69,10 @@ import org.knime.base.node.mine.svm.util.DoubleVector;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * {@link PMMLContentHandler} for a SVM PMML model.
@@ -75,13 +83,13 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private StringBuffer m_buffer;
 
-    private Stack<String> m_elementStack = new Stack<String>();
+    private final Stack<String> m_elementStack = new Stack<String>();
 
     private String m_curVecID;
 
     private Kernel m_kernel;
 
-    private List<String> m_datafields = new ArrayList<String>();
+    private final List<String> m_datafields = new ArrayList<String>();
 
     private DoubleVector[] m_doubleVectors;
 
@@ -89,17 +97,45 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private String m_curSVMTargetCategory;
 
-    private List<String> m_curSVMVectors = new ArrayList<String>();
+    private final List<String> m_curSVMVectors = new ArrayList<String>();
 
-    private List<Double> m_curSVMAlphas = new ArrayList<Double>();
+    private final List<Double> m_curSVMAlphas = new ArrayList<Double>();
 
     private double m_curSVMThreshold;
 
-    private List<String> m_targetValues = new ArrayList<String>();
+    private final List<String> m_targetValues;
 
-    private List<Svm> m_svms = new ArrayList<Svm>();
+    private final List<Svm> m_svms;
 
     private int[] m_curIndices;
+
+
+    /**
+     * Creates a new empty svm handler. The initialization has to
+     * be performed by registering the handler to a parser.
+     */
+    public PMMLSVMHandler() {
+        super();
+        m_svms = new ArrayList<Svm>();
+        m_targetValues = new ArrayList<String>();
+    }
+
+    /**
+     * Creates an initialized svm handler that can be used to
+     * output the svm model by invoking
+     * {@link #addPMMLModel(org.w3c.dom.DocumentFragment, PMMLPortObjectSpec)}.
+     * @param targetValues  the values of the target column
+     * @param svms the svms
+     * @param kernel the kernel
+     */
+    public PMMLSVMHandler(final List<String> targetValues,
+            final List<Svm> svms, final Kernel kernel) {
+        super();
+        m_targetValues = targetValues;
+        m_kernel = kernel;
+        m_svms = svms;
+    }
+
 
     /**
      * {@inheritDoc}
@@ -223,7 +259,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-        if ((name.equals("Indices") || name.equals("REAL-Entries") 
+        if ((name.equals("Indices") || name.equals("REAL-Entries")
                 || name.equals("Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             m_buffer = new StringBuffer();
@@ -286,6 +322,310 @@ public class PMMLSVMHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
         return versions;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+        // create the SVM model
+        // with the attributes...
+        AttributesImpl atts = new AttributesImpl();
+        // modelName
+        atts.addAttribute(null, null, "modelName", CDATA, "SVM");
+        // functionName
+        atts.addAttribute(null, null, "functionName", CDATA, "classification");
+        // algorithmName
+        atts.addAttribute(null, null, "algorithmName", CDATA,
+                "Sequential Minimal Optimization (SMO)");
+        // svmRepresentation
+        atts.addAttribute(null, null, "svmRepresentation", CDATA,
+                "SupportVectors");
+        handler.startElement(null, null, "SupportVectorMachineModel", atts);
+        PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+        addTargets(handler, spec.getTargetFields().iterator().next(),
+                m_targetValues);
+        addKernel(handler, m_kernel);
+        addVectorDictionary(handler, m_svms, spec.getLearningFields());
+        addSVMs(handler, m_svms);
+        handler.endElement(null, null, "SupportVectorMachineModel");
+    }
+
+    /**
+     * Writes the PMML target attributes.
+     *
+     * @param handler to write to
+     * @param classcolName name of the class column.
+     * @param targetVals the target values of the SVMs
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addTargets(final TransformerHandler handler,
+            final String classcolName, final List<String> targetVals)
+            throws SAXException {
+        // open targets schema
+        handler.startElement(null, null, "Targets", null);
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "field", CDATA, classcolName);
+        atts.addAttribute(null, null, "optype", CDATA, "categorical");
+        handler.startElement(null, null, "Target", atts);
+        atts = new AttributesImpl();
+        for (String target : targetVals) {
+            // add target values
+            atts.addAttribute(null, null, "value", CDATA, target.toString());
+            handler.startElement(null, null, "TargetValue", atts);
+            handler.endElement(null, null, "TargetValue");
+        }
+        // close targets schema
+        handler.endElement(null, null, "Target");
+        handler.endElement(null, null, "Targets");
+    }
+
+    /**
+     * Writes the PMML kernel attributes.
+     *
+     * @param handler to write to.
+     * @param kernel the used Kernel of the SVM.
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addKernel(final TransformerHandler handler,
+            final Kernel kernel) throws SAXException {
+        switch (kernel.getType()) {
+        case Polynomial:
+            addPolynomialKernel(handler, kernel);
+            return;
+        case HyperTangent:
+            addHypertangentKernel(handler, kernel);
+            return;
+        case RBF:
+            addRBFKernel(handler, kernel);
+            return;
+        default:
+            throw new SAXException("Can not add Kernel "
+                    + kernel.getType().toString());
+        }
+    }
+
+    /**
+     * Writes the PMML polynomial kernel attributes.
+     *
+     * @param handler to write to.
+     * @param kernel the used Kernel of the SVM.
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addPolynomialKernel(final TransformerHandler handler,
+            final Kernel kernel) throws SAXException {
+
+        double bias = kernel.getParameter(0);
+        double power = kernel.getParameter(1);
+        double gamma = kernel.getParameter(2);
+        AttributesImpl atts = new AttributesImpl();
+
+        atts.addAttribute(null, null, "gamma", CDATA, "" + gamma);
+        atts.addAttribute(null, null, "coef0", CDATA, "" + bias);
+        atts.addAttribute(null, null, "degree", CDATA, "" + power);
+
+        handler.startElement(null, null, "PolynomialKernelType", atts);
+        handler.endElement(null, null, "PolynomialKernelType");
+    }
+
+    /**
+     * Writes the PMML sigmoid kernel attributes.
+     *
+     * @param handler to write to.
+     * @param kernel the used Kernel of the SVM.
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addHypertangentKernel(
+            final TransformerHandler handler,
+            final Kernel kernel) throws SAXException {
+        double kappa = kernel.getParameter(0);
+        double delta = kernel.getParameter(1);
+
+        AttributesImpl atts = new AttributesImpl();
+
+        atts.addAttribute(null, null, "gamma", CDATA, "" + kappa);
+        atts.addAttribute(null, null, "coef0", CDATA, "" + delta);
+
+        handler.startElement(null, null, "SigmoidKernelType", atts);
+        handler.endElement(null, null, "SigmoidKernelType");
+    }
+
+    /**
+     * Writes the PMML RBF kernel attributes.
+     *
+     * @param handler to write to.
+     * @param kernel the used Kernel of the SVM.
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addRBFKernel(final TransformerHandler handler,
+            final Kernel kernel) throws SAXException {
+        double sigma = kernel.getParameter(0);
+        double gamma = 1.0 / (2.0 * (sigma * sigma));
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "gamma", CDATA, "" + gamma);
+        handler.startElement(null, null, "RadialBasisKernelType", atts);
+        handler.endElement(null, null, "RadialBasisKernelType");
+    }
+
+    /**
+     * Writes the PMML VectorDictionary containing all support vectors
+     * for all support vector machines.
+     *
+     * @param handler to write to.
+     * @param svms the trained Support Vector Machines.
+     * @param colNames the column names in the training data.
+     * @throws SAXException if something goes wrong.
+     */
+    protected static void addVectorDictionary(final TransformerHandler handler,
+            final List<Svm> svms, final List<String> colNames)
+    throws SAXException {
+        Set<DoubleVector> supVecs = new LinkedHashSet<DoubleVector>();
+        for (Svm svm : svms) {
+            supVecs.addAll(Arrays.asList(svm.getSupportVectors()));
+        }
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "numberOfVectors", CDATA,
+                "" + supVecs.size());
+
+        handler.startElement(null, null, "VectorDictionary", atts);
+        atts = new AttributesImpl();
+        atts.addAttribute(null, null, "numberOfFields", CDATA,
+                "" + colNames.size());
+        handler.startElement(null, null, "VectorFields", atts);
+        for (String colname : colNames) {
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "field", CDATA, "" + colname);
+            handler.startElement(null, null, "FieldRef", atts);
+            handler.endElement(null, null, "FieldRef");
+        }
+        handler.endElement(null, null, "VectorFields");
+
+        for (DoubleVector vector : supVecs) {
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, vector.getClassValue()
+                    + "_" + vector.getKey().getString());
+            handler.startElement(null, null, "VectorInstance", atts);
+            int nrValues = vector.getNumberValues();
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "n", CDATA, "" + nrValues);
+            handler.startElement(null, null, "REAL-SparseArray", atts);
+            atts = new AttributesImpl();
+            handler.startElement(null, null, "Indices", atts);
+            StringBuffer buff = new StringBuffer();
+            for (int x = 1; x <= nrValues; x++) {
+                buff.append(x);
+                if (x < nrValues) {
+                    buff.append(" ");
+                }
+            }
+            char[] chars = buff.toString().toCharArray();
+            handler.characters(chars, 0, chars.length);
+            handler.endElement(null, null, "Indices");
+            handler.startElement(null, null, "REAL-Entries", null);
+            buff = new StringBuffer();
+            for (int x = 0; x < nrValues; x++) {
+                double d = vector.getValue(x);
+                buff.append(d);
+                if (x < nrValues - 1) {
+                    buff.append(" ");
+                }
+            }
+            chars = buff.toString().toCharArray();
+            handler.characters(chars, 0, chars.length);
+            handler.endElement(null, null, "REAL-Entries");
+            handler.endElement(null, null, "REAL-SparseArray");
+            handler.endElement(null, null, "VectorInstance");
+
+        }
+        handler.endElement(null, null, "VectorDictionary");
+    }
+
+    /**
+     * Writes the PMML support vector machines.
+     *
+     * @param handler to write to.
+     * @param svms the trained support vector machines.
+     * @throws SAXException if something goes wrong.
+     */
+    protected void addSVMs(final TransformerHandler handler,
+            final List<Svm> svms)
+            throws SAXException {
+        if (svms.size() == 0) {
+            // create empty support vector machine model
+            for (String target : m_targetValues) {
+                AttributesImpl atts = new AttributesImpl();
+                atts.addAttribute(null, null, "targetCategory", CDATA, target);
+                handler.startElement(null, null, "SupportVectorMachine", atts);
+
+                // add an empty support vector
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "numberOfSupportVectors", CDATA,
+                        "" + 0);
+                handler.startElement(null, null, "SupportVectors", atts);
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "vectorId", CDATA, "dummy");
+                handler.startElement(null, null, "SupportVector", atts);
+                handler.endElement(null, null, "SupportVector");
+                handler.endElement(null, null, "SupportVectors");
+
+                // add an empty coefficient
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "numberOfCoefficients", CDATA,
+                        "" + 0);
+                handler.startElement(null, null, "Coefficients", atts);
+                atts = new AttributesImpl();
+                handler.startElement(null, null, "Coefficient", atts);
+                handler.endElement(null, null, "Coefficient");
+                handler.endElement(null, null, "Coefficients");
+                handler.endElement(null, null, "SupportVectorMachine");
+            }
+        }
+        for (Svm svm : svms) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "targetCategory", CDATA, svm
+                    .getPositive());
+            handler.startElement(null, null, "SupportVectorMachine", atts);
+
+            // add support vectors
+            DoubleVector[] supVecs = svm.getSupportVectors();
+            atts = new AttributesImpl();
+            atts.addAttribute(null, null, "numberOfAttributes", CDATA, ""
+                    + supVecs[0].getNumberValues());
+            atts.addAttribute(null, null, "numberOfSupportVectors", CDATA, ""
+                    + supVecs.length);
+            handler.startElement(null, null, "SupportVectors", atts);
+            for (int v = 0; v < supVecs.length; v++) {
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "vectorId", CDATA, supVecs[v]
+                        .getClassValue()
+                        + "_" + supVecs[v].getKey().getString());
+                handler.startElement(null, null, "SupportVector", atts);
+                handler.endElement(null, null, "SupportVector");
+            }
+
+            handler.endElement(null, null, "SupportVectors");
+
+            // add coefficients
+            atts = new AttributesImpl();
+            double[] alphas = svm.getAlphas();
+            atts.addAttribute(null, null, "numberOfCoefficients", CDATA, ""
+                    + alphas.length);
+            atts.addAttribute(null, null, "absoluteValue", CDATA, ""
+                    + svm.getThreshold());
+            handler.startElement(null, null, "Coefficients", atts);
+            for (int a = 0; a < alphas.length; a++) {
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "value", CDATA, "" + alphas[a]);
+                handler.startElement(null, null, "Coefficient", atts);
+                handler.endElement(null, null, "Coefficient");
+            }
+
+            handler.endElement(null, null, "Coefficients");
+            handler.endElement(null, null, "SupportVectorMachine");
+        }
+
     }
 
 }

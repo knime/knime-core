@@ -47,6 +47,11 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,27 +59,43 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
+import org.knime.core.data.xml.PMMLCellFactory;
+import org.knime.core.data.xml.PMMLValue;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation.PMMLWriteElement;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -83,16 +104,22 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class PMMLPortObject implements PortObject {
+public class PMMLPortObject implements PortObject {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(PMMLPortObject.class);
+
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(PMMLPortObject.class);
 
     /** Constant for CDATA. */
-    protected static final String CDATA = "CDATA";
+    public static final String CDATA = "CDATA";
     /** Constant for DataDictionary. */
-    protected static final String DATA_DICT = "DataDictionary";
+    public static final String DATA_DICT = "DataDictionary";
     /** Constant for DataField. */
-    protected static final String DATA_FIELD = "DataField";
+    public static final String DATA_FIELD = "DataField";
+    /** Constant for PMML Element. */
+    public static final String PMML_ELEMENT = "PMML";
+
     /** Constant for Value. */
     protected static final String VALUE = "Value";
     /** Constant for the LocalTransformations tag. */
@@ -117,9 +144,9 @@ public abstract class PMMLPortObject implements PortObject {
     private static final Map<String, String> VERSION_NAMESPACE_MAP
             = new HashMap<String, String>();
 
-    public static final String PMML_ELEMENT = "PMML";
-
     private List<PMMLPreprocOperation> m_operations;
+
+    private PMMLValue m_content;
 
 
     /**
@@ -140,13 +167,10 @@ public abstract class PMMLPortObject implements PortObject {
         VERSION_NAMESPACE_MAP.put(PMML_V3_2, "http://www.dmg.org/PMML-3_2");
     }
 
-    /** Ensures that the load method is called once at most. */
-    private boolean m_isLoaded;
 
     private PMMLPortObjectSpec m_spec;
-    private PMMLModelType m_modelType;
 
-    private PMMLMasterContentHandler m_masterHandler;
+    private final PMMLMasterContentHandler m_masterHandler;
 
     private static PMMLPortObjectSerializer serializer;
 
@@ -171,54 +195,40 @@ public abstract class PMMLPortObject implements PortObject {
      */
     public PMMLPortObject() {
         m_masterHandler = new PMMLMasterContentHandler();
-        m_isLoaded = false;
     }
 
     /**
+     * Creates a new PMML port object. Models can be added later by calling
+     * {@link #addPMMLModel(Node)}.
      * @param spec the referring {@link PMMLPortObjectSpec}
-     * @param type the type of the PMML model
      */
-    public PMMLPortObject(final PMMLPortObjectSpec spec,
-            final PMMLModelType type) {
+    public PMMLPortObject(final PMMLPortObjectSpec spec) {
         m_spec = spec;
         m_masterHandler = new PMMLMasterContentHandler();
-        m_modelType = type;
-        m_isLoaded = true;
+        initializePMMLDocument();
     }
 
-
     /**
-     * Adds a content handler to the master content handler. The master content
-     * handler forwards all relevant events from PMML file parsing to all
-     * registered content handlers.
-     *
-     * @param id to later on retrieve the registered content handler
-     * @param defaultHandler specialized content handler interested in certain
-     * parts of the PMML file (ClusteringModel, TreeModel, etc.)
-     * @return true if the handler was added, false if it is already registered
+     * @param spec the port object spec
+     * @param handler the pmml content handler that adds the model content
+     * @throws SAXException if the pmml model could not be added
      */
-    public boolean addPMMLContentHandler(final String id,
-            final PMMLContentHandler defaultHandler) {
-        return m_masterHandler.addContentHandler(id, defaultHandler);
+    public PMMLPortObject(final PMMLPortObjectSpec spec,
+            final PMMLContentHandler handler) throws SAXException {
+        this(spec);
+        DocumentFragment fragment
+                = m_content.getDocument().createDocumentFragment();
+        handler.addPMMLModel(fragment, spec);
+        addPMMLModel(fragment);
     }
 
     /**
      *
-     * @param id the id which was used for registration of the handler
-     * @return the handler registered with this id or null if no handler with
-     *  this id can be found
-     */
-    public PMMLContentHandler getPMMLContentHandler(final String id) {
-        return m_masterHandler.getDefaultHandler(id);
-    }
-
-    /**
-     *
-     * @return the type of model
+     * @return a list with all pmml models
      * @see PMMLModelType
      */
-    public PMMLModelType getModelType() {
-        return m_modelType;
+    public Set<PMMLModelType> getModelTypes() {
+        return m_content.getModelTypes();
     }
 
     /**
@@ -231,132 +241,138 @@ public abstract class PMMLPortObject implements PortObject {
         return PMML_V3_1;
     }
 
-
-    private TransformerHandler createTransformerHandlerForSave(
-            final OutputStream out)
-            throws TransformerConfigurationException, SAXException {
-        String version = getWriteVersion();
-        SAXTransformerFactory fac =
-            (SAXTransformerFactory)TransformerFactory.newInstance();
-        TransformerHandler handler = fac.newTransformerHandler();
-
-        Transformer t = handler.getTransformer();
-        t.setOutputProperty(OutputKeys.METHOD, "xml");
-        t.setOutputProperty(OutputKeys.INDENT, "yes");
-
-        handler.setResult(new StreamResult(out));
-
-        // PMML root element, namespace declaration, etc.
-        handler.startDocument();
-        AttributesImpl attr = new AttributesImpl();
-        if (!VERSION_NAMESPACE_MAP.containsKey(version)) {
-            throw new SAXException("PMML model seems to be of an "
-                    + "unsupported version. Only PMML versions "
-                    + VERSION_NAMESPACE_MAP.keySet()
-                    + " are supported. Found " + version);
-        }
-        attr.addAttribute(null, null, "version", CDATA, version);
-        attr.addAttribute(null, null, "xmlns", CDATA,
-                VERSION_NAMESPACE_MAP.get(version));
-        attr.addAttribute(null, null, "xmlns:xsi", CDATA,
-            "http://www.w3.org/2001/XMLSchema-instance");
-        handler.startElement(null, null, "PMML", attr);
-        return handler;
-    }
-
     /**
      * Writes the port object to valid PMML. Subclasses should not override this
-     * method but the {@link #writePMMLModel(TransformerHandler)} instead.
+     * method.
      *
      *
      * @param out zipped stream which reads the PMML file
-     * @throws SAXException if something goes wrong during writing of PMML
+     * @throws TransformerFactoryConfigurationError if something goes wrong with
+     *          the transformation handler
+     * @throws TransformerException if something goes wrong in the
+     *      transformation process
      * @throws IOException if the file cannot be written to the directory
-     * @throws TransformerConfigurationException if something goes wrong with
-     *  the transformation handler
      */
-    public void save(final OutputStream out)
-        throws SAXException, IOException, TransformerConfigurationException {
-        String version = getWriteVersion();
-        TransformerHandler handler = createTransformerHandlerForSave(out);
-        PMMLPortObjectSpec.writeHeader(handler, version);
-        PMMLPortObjectSpec.writeDataDictionary(getSpec().getDataTableSpec(),
-                handler, version);
-        writePMMLModel(handler);
-        handler.endElement(null, null, "PMML");
-        handler.endDocument();
+    public final void save(final OutputStream out)
+            throws TransformerFactoryConfigurationError, TransformerException,
+            IOException {
+        try {
+            validate();
+        } catch (SAXException e) {
+            throw new IOException(e);
+        }
+        Transformer t = TransformerFactory.newInstance().newTransformer();
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        t.setOutputProperty(OutputKeys.INDENT, "yes");
+        Source source = new DOMSource(m_content.getDocument());
+        t.transform(source,  new StreamResult(out));
         out.close();
     }
 
+   /**
+     * Creates a pmml document from scratch (still without a model) and stores
+     * it as the PMMLValue of this class.
+     */
+    private void initializePMMLDocument() {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            String version = getWriteVersion();
+            SAXTransformerFactory fac =
+                    (SAXTransformerFactory)TransformerFactory.newInstance();
+            TransformerHandler handler;
+            handler = fac.newTransformerHandler();
+            Transformer t = handler.getTransformer();
+            t.setOutputProperty(OutputKeys.METHOD, "xml");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            handler.setResult(new StreamResult(out));
+
+            // PMML root element, namespace declaration, etc.
+            handler.startDocument();
+            AttributesImpl attr = new AttributesImpl();
+            attr.addAttribute(null, null, "version", CDATA, version);
+            attr.addAttribute(null, null, "xmlns", CDATA,
+                    VERSION_NAMESPACE_MAP.get(version));
+            attr.addAttribute(null, null, "xmlns:xsi", CDATA,
+                    "http://www.w3.org/2001/XMLSchema-instance");
+            handler.startElement(null, null, "PMML", attr);
+            PMMLPortObjectSpec.writeHeader(handler, version);
+            PMMLPortObjectSpec.writeDataDictionary(
+                    getSpec().getDataTableSpec(), handler, version);
+            /*
+             * No model is written yet. It has to be added by calling
+             * addPMMLModel.
+             */
+            handler.endElement(null, null, "PMML");
+            handler.endDocument();
+            m_content = (PMMLValue)PMMLCellFactory.create(
+                    new ByteArrayInputStream(out.toByteArray()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                out.close();
+            } catch (IOException e) {
+                // ignore if closing the stream fails
+            }
+        }
+    }
 
 
     /** {@inheritDoc} */
     @Override
-    public abstract String getSummary();
+    public String getSummary() {
+        return  "PMML document with version " + m_content.getPMMLVersion()
+            + "and models: " + m_content.getModelTypes();
+    }
+
+
 
     /**
-     *
+     * This method should no longer be used. The version parameter is ignored.
+     * Use {@link #loadFrom(PMMLPortObjectSpec, InputStream)} instead.
+    *
+    * @param spec the referring spec of this object
+    * @param in the input stream to write to
+    * @param version the version (3.0 - 3.2)
+    * @throws SAXException if something goes wrong during writing
+    * @throws ParserConfigurationException if the parser cannot be instantiated
+    * @throws IOException if the file cannot be found
+    */
+    @Deprecated
+    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in,
+            @SuppressWarnings("unused") final String version)
+            throws IOException, ParserConfigurationException, SAXException {
+        // Version is ignored and only maintained due to compatibility reasons
+        loadFrom(spec, in);
+    }
+
+    /**
+     * Initializes the pmml port object based on the xml input stream.
      * @param spec the referring spec of this object
-     * @param in the input stream to write to
-     * @param version the version (3.0 - 3.2)
+     * @param is the pmml input stream
      * @throws SAXException if something goes wrong during writing
      * @throws ParserConfigurationException if the parser cannot be instantiated
      * @throws IOException if the file cannot be found
      */
-    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in,
-            final String version)
-            throws SAXException, ParserConfigurationException, IOException {
-        if (m_isLoaded) {
-            throw new IOException(getClass().getSimpleName()
-                    + " is not loadable or has already been loaded");
-        }
-        m_isLoaded = true;
-        SAXParserFactory fac = SAXParserFactory.newInstance();
-
-        SchemaFactory schemaFac = SchemaFactory.newInstance(
-                XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFac.newSchema(new StreamSource(
-                getSchemaInputStream(version)));
-        fac.setSchema(schema);
-        fac.setNamespaceAware(true);
-
-        SAXParser parser = fac.newSAXParser();
-        // removes all X- elements!!!
-        // and inserts namespace
-        XFilter filter = new XFilter(version);
-        filter.setParent(parser.getXMLReader());
-
-        ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
-
-        m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
-                modelTypeHdl);
-        filter.setContentHandler(m_masterHandler);
-        filter.setErrorHandler(m_masterHandler);
-        filter.parse(new InputSource(in));
-        ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
-            .getDefaultHandler(ExtractModelTypeHandler.ID);
-        m_modelType = hdl.getModelType();
-        if (m_modelType == null) {
-            m_modelType = PMMLModelType.None;
+    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream is)
+            throws IOException, ParserConfigurationException, SAXException {
+        try {
+            m_content = (PMMLValue)PMMLCellFactory.create(is);
+        } catch (XMLStreamException e) {
+            throw new SAXException(e);
         }
         m_spec = spec;
-
-        /*
-         * The PMML version parsed by the master handler is not used for the
-         * PMML port object as we are interpreting the parsed PMML. It is only
-         * used to validate if we support the parsed version. The port
-         * object has to decide itself which version it writes. This can be set
-         * in the constructor (3.1 is the default) or with the provided setter.
-         */
     }
 
 
-    private InputStream getSchemaInputStream(final String version) {
+
+    private InputStream getSchemaInputStream(final String location) {
         ClassLoader loader = PMMLPortObject.class.getClassLoader();
         String packagePath =
                 PMMLPortObject.class.getPackage().getName().replace('.', '/');
         return loader.getResourceAsStream(
-                packagePath + VERSION_SCHEMA_MAP.get(version));
+                packagePath + location);
     }
 
 
@@ -371,14 +387,30 @@ public abstract class PMMLPortObject implements PortObject {
 
 
     /**
-     * @param handler the handler responsible for writing the PMML
+     * Adds a local transformation element to the document fragment if some
+     * are defined.
+     * @param localTrans the local transformation document fragment
      * @throws SAXException if something goes wrong during writing the PMML
-     * */
-
-    protected void writeLocalTransformations(final TransformerHandler handler)
+     */
+    private void addLocalTransformations(final DocumentFragment localTrans)
             throws SAXException {
-        if (m_operations == null)
+        if (m_operations == null) {
             return;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        SAXTransformerFactory fac =
+                (SAXTransformerFactory)TransformerFactory.newInstance();
+        TransformerHandler handler;
+        try {
+            handler = fac.newTransformerHandler();
+        } catch (TransformerConfigurationException e) {
+            throw new SAXException(e);
+        }
+        Transformer t = handler.getTransformer();
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        t.setOutputProperty(OutputKeys.INDENT, "yes");
+        handler.setResult(new StreamResult(out));
+        handler.startDocument();
 
         handler.startElement(null, null, LOCAL_TRANS, null);
         for (PMMLPreprocOperation op : m_operations) {
@@ -387,16 +419,63 @@ public abstract class PMMLPortObject implements PortObject {
             }
         }
         handler.endElement(null, null, LOCAL_TRANS);
+
+        handler.endDocument();
+
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        SAXSource s = new SAXSource(new InputSource(in));
+        DOMResult r = new DOMResult(localTrans);
+        try {
+            t.transform(s, r);
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            throw new SAXException(e);
+        }
     }
 
-    /**
-     *
-     * @param handler the handler responsible for writing the PMML
-     * @throws SAXException if something goes wrong during writing the PMML
-     */
-    protected abstract void writePMMLModel(final TransformerHandler handler)
-        throws SAXException;
 
+
+
+    /**
+     * Appends the pmml model to the pmml document. Only fragments that have
+     * been retrieved by the {@link #getDocFragment()} method can be added.
+     * Only {@link PMMLModelType} elements can be added.
+     *
+     * @param model the model fragment to add
+     * @throws SAXException if the pmml model could not be added
+     */
+    private void addPMMLModel(final DocumentFragment model)
+            throws SAXException{
+        String modelName = model.getFirstChild().getNodeName();
+        if (!PMMLModelType.contains(modelName)) {
+            throw new IllegalArgumentException(modelName + " cannot be added "
+                    + "as pmml model. Only " + PMMLModelType.TYPESTRING
+                    + " are supported.");
+        }
+        Node pmmlNode = m_content.getDocument()
+                .getElementsByTagName(PMML_ELEMENT).item(0);
+
+        // add the local transformations
+        DocumentFragment localTrans = m_content.getDocument()
+                .createDocumentFragment();
+        addLocalTransformations(localTrans);
+
+        /* Find the next sibling of the mining scheme and insert the local
+         * transformations in between. */
+        NodeList childNodes = model.getFirstChild().getChildNodes();
+        Node node = null;
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            node = childNodes.item(i);
+            if (PMMLPortObjectSpec.MINING_SCHEMA.equalsIgnoreCase(
+                    node.getNodeName())) {
+                node = childNodes.item(i + 1);
+                break;
+            }
+        }
+        model.insertBefore(localTrans, node);
+        pmmlNode.appendChild(model);
+    }
 
     /**
      *
@@ -430,5 +509,117 @@ public abstract class PMMLPortObject implements PortObject {
                     + "all operations before integrating them.");
         }
         m_operations = new ArrayList<PMMLPreprocOperation>(operations);
+    }
+
+    /**
+     * Returns the PMML value.
+     *
+     * @return the pmml value
+     */
+    public PMMLValue getPMMLValue() {
+        return m_content;
+    }
+
+    private void validate() throws SAXException {
+        try {
+            String pmmlVersion = m_content.getPMMLVersion();
+            LOGGER.debug("Validating PMML output. Version = " + pmmlVersion);
+            SchemaFactory schemaFac =
+                    SchemaFactory
+                            .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            fac.setNamespaceAware(true);
+
+            Schema schema = null;
+            if (pmmlVersion == null) {
+                throw new SAXException("Input file is not a valid PMML file. "
+                        + "Attribute \"version\" is missing");
+            }
+            String schemaLocation =
+                    PMMLPortObject.getLocalSchemaLocation(pmmlVersion);
+            if (schemaLocation == null) {
+                throw new SAXException("Version " + pmmlVersion
+                        + " is not supported!");
+            }
+            InputStream stream = getSchemaInputStream(schemaLocation);
+            InputSource inputSource = new InputSource(
+                            stream);
+            SAXSource saxSource = new SAXSource(
+                    inputSource);
+            schema = schemaFac.newSchema(saxSource);
+            XFilter filter = new XFilter(pmmlVersion);
+            filter.setParent(fac.newSAXParser().getXMLReader());
+            // use validator here
+            Validator validator = schema.newValidator();
+            // register error handler
+//            validator.setErrorHandler(m_errorHandler);
+            validator.validate(new DOMSource(m_content.getDocument()));
+        } catch (IOException io) {
+            throw new SAXException(io);
+        } catch (ParserConfigurationException pce) {
+            throw new SAXException(pce);
+        }
+    }
+
+    /**
+     * @param file the pmml file to parse the spec from
+     * @return the pmml port object spec
+     * @throws SAXException
+     */
+    public static PMMLPortObjectSpec parseSpec(final File file)
+            throws SAXException {
+        try {
+            return parseSpec(new FileInputStream(file));
+        } catch (FileNotFoundException e) {
+            throw new SAXException(e);
+        }
+    }
+
+    /**
+     * @param doc the document to parse the spec from
+     * @return the pmml port object spec
+     * @throws SAXException
+     */
+    public static PMMLPortObjectSpec parseSpec(final Document doc)
+            throws SAXException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Source in = new DOMSource(doc);
+        Result out = new StreamResult(outputStream);
+        try {
+            TransformerFactory.newInstance().newTransformer().transform(
+                    in, out);
+        } catch (Exception e) {
+            throw new SAXException(e);
+        }
+        InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
+        return parseSpec(is);
+    }
+
+    private static PMMLPortObjectSpec parseSpec(final InputStream in)
+            throws SAXException {
+        try {
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            SAXParser parser = fac.newSAXParser();
+            PMMLMasterContentHandler masterHandler =
+                    new PMMLMasterContentHandler();
+            DataDictionaryContentHandler ddHandler =
+                    new DataDictionaryContentHandler();
+            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
+                    ddHandler);
+            MiningSchemaContentHandler miningSchemaHdl =
+                    new MiningSchemaContentHandler();
+            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
+                    miningSchemaHdl);
+            parser.parse(in, masterHandler);
+            PMMLPortObjectSpecCreator creator =
+                    new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
+            creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
+            creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
+            return creator.createSpec();
+        } catch (IOException e) {
+            throw new SAXException(e);
+        } catch (ParserConfigurationException pce) {
+            throw new SAXException(pce);
+        }
     }
 }
