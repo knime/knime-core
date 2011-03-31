@@ -2282,6 +2282,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     	assert Thread.holdsLock(m_workflowMutex);
     	final int[] moveUIDist = new int[]{(chunkIndex + 1) * 10, 
     			(chunkIndex + 1) * 80, 0, 0};
+    	Arrays.sort(oldIDs); // pasted content is also sorted
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
