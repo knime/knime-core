@@ -577,6 +577,9 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             final String attName, final String elementName)
         throws SAXException {
         String value = atts.getValue(attName);
+        if(value == null) {
+			return "none";
+		}
         if (value == null || value.length() == 0) {
             throw new SAXException("No value for attribute \"" + attName
                     + "\" in xml element \"" + elementName + "\"");
