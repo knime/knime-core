@@ -69,6 +69,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
+import org.knime.workbench.ui.layout.layeredlayout.SimpleLayeredLayouter;
 
 /**
  *

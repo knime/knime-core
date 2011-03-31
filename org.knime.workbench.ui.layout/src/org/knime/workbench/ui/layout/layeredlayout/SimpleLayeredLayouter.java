@@ -48,13 +48,14 @@
  * Created: 28.03.2011
  * Author: mader
  */
-package org.knime.workbench.ui.layout;
+package org.knime.workbench.ui.layout.layeredlayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.workbench.ui.layout.Graph;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
@@ -65,6 +66,22 @@ import org.knime.workbench.ui.layout.Graph.Node;
 public class SimpleLayeredLayouter {
 
     public void doLayout(final Graph g) throws RuntimeException {
+
+        // add virtual "super"-source and sink
+        // Node virtualSource = g.createNode("source");
+        // Node virtualSink = g.createNode("sink");
+        // ArrayList<Node> sources = new ArrayList<Graph.Node>();
+        // ArrayList<Node> sinks = new ArrayList<Graph.Node>();
+        // for (Node n:g.nodes()){
+        // if (n.inDegree() == 0)
+        // sources.add(n);
+        // if (n.outDegree() == 0)
+        // sinks.add(n);
+        // }
+        // for (Node n:sources)
+        // g.createEdge(virtualSource, n);
+        // for (Node n:sinks)
+        // g.createEdge(n, virtualSink);
 
         // get layering of the graph
         Map<Node, Integer> nodeLayer = g.createIntNodeMap();
@@ -94,7 +111,9 @@ public class SimpleLayeredLayouter {
             int span = endLayer - startLayer;
             Node last = e.source();
             for (int i = 1; i < span; i++) {
-                Node current = g.createNode("bend "+e+" "+i);
+                Node current =
+                        g.createNode("bend " + e + ", " + i, startLayer + i,
+                                g.getY(last));
                 // add dummy to its layer
                 nodeLayer.put(current, startLayer + i);
                 layers.get(startLayer + i).add(current);
@@ -123,7 +142,7 @@ public class SimpleLayeredLayouter {
         int layer = 0;
         for (ArrayList<Node> currentLayer : layers) {
             Collections.shuffle(currentLayer);
-            //Collections.sort(currentLayer, new Util.NodeByYComparator(g));
+            // Collections.sort(currentLayer, new Util.NodeByYComparator(g));
             int verticalCoord = 0;
             for (Node n : currentLayer) {
                 g.setCoordinates(n, layer, verticalCoord);
@@ -133,8 +152,7 @@ public class SimpleLayeredLayouter {
         }
 
         /* DO CROSSING MINIMIZATION */
-        MedianHeuristicCrossingMinimizer cm =
-                new MedianHeuristicCrossingMinimizer(g, layers);
+        CrossingMinimizer cm = new CrossingMinimizer(g, layers);
         cm.run();
 
         /* Do vertical placement */
@@ -156,6 +174,10 @@ public class SimpleLayeredLayouter {
         }
 
         g.cleanBends();
+
+        // remove virtual source and sink
+        // g.removeNode(virtualSource);
+        // g.removeNode(virtualSink);
 
     }
 

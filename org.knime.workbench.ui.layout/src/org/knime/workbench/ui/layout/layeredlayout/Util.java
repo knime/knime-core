@@ -48,10 +48,11 @@
  * Created: 31.03.2011
  * Author: mader
  */
-package org.knime.workbench.ui.layout;
+package org.knime.workbench.ui.layout.layeredlayout;
 
 import java.util.Comparator;
 
+import org.knime.workbench.ui.layout.Graph;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
