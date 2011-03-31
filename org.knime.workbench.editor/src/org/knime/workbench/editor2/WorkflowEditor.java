@@ -135,6 +135,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -167,6 +168,7 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
+import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNode;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNode;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -1226,6 +1228,48 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
+    /*
+     * --------- methods for adding a auto-placed and auto-connected node -----
+     */
+
+    /**
+     * {@inheritDoc}
+     * Listener interface method of the {@link NodeProvider}.
+     * Called when other instances want to add a meta node to the workflow in
+     * the editor. <br>
+     * The implementation only adds it if the editor is active. If one other
+     * node is selected in the editor, to which the new node will then be
+     * connected to.
+     *
+     * @param sourceManager wfm to copy the meta node from
+     * @param id the id of the meta node in the source manager
+     * @return if the meta node was actually added
+     */
+    public boolean addMetaNode(final WorkflowManager sourceManager,
+            final NodeID id) {
+        if (id == null || sourceManager == null) {
+            return false;
+        }
+        if (!isEditorActive()) {
+            return false;
+        }
+
+        NodeContainerEditPart preNode = getTheOneSelectedNode();
+        Point nodeLoc = null;
+        if (preNode == null) {
+            nodeLoc = getViewportCenterLocation();
+            nodeLoc = toAbsolute(nodeLoc);
+        } else {
+            nodeLoc = getLocationRightOf(preNode);
+        }
+        Command newNodeCmd =
+                new CreateNewConnectedMetaNode(m_manager, sourceManager, id,
+                        nodeLoc, preNode.getNodeContainer());
+        getCommandStack().execute(newNodeCmd);
+        scrollToVisible(nodeLoc);
+        return true;
+    }
+
     /**
      * Listener interface method of the {@link NodeProvider}. Called when other
      * instances want to add a node to the workflow in the editor. <br>
@@ -1235,50 +1279,51 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public boolean addNode(final NodeFactory<? extends NodeModel> nodeFactory) {
 
-        // find out if we are the active editor (any easier way than that???)
-        IEditorPart editor = null;
-        IWorkbenchWindow window =
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-            IWorkbenchPage page = window.getActivePage();
-            if (page != null) {
-                editor = page.getActiveEditor();
-                if (editor != this) {
-                    return false;
-                }
-            }
+        if (!isEditorActive()) {
+            return false;
         }
 
-        Point nodeLoc = null;
         NodeContainerEditPart preNode = getTheOneSelectedNode();
+        Point nodeLoc = null;
         Command newNodeCmd = null;
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
-            // make sure we have a free spot
-            while (isNodeAtRel(nodeLoc)) {
-                // move it a bit
-                nodeLoc.x += 10;
-                nodeLoc.y += 10;
-            }
             // this command accepts/requires relative coordinates
             newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc);
         } else {
-            nodeLoc = getAutoLocation(preNode);
+            nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
                 new CreateNewConnectedNode(m_manager, nodeFactory, nodeLoc,
                         preNode.getNodeContainer());
-
-//            ScalableFreeformRootEditPart rootEditPart
-//            = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
-//            Viewport viewport = (Viewport) rootEditPart.getFigure();
-//            viewport.setViewLocation(toRelative(nodeLoc));
-
+            scrollToVisible(nodeLoc);
         }
 
         getCommandStack().execute(newNodeCmd);
-
-
         return true;
+    }
+
+    private boolean isEditorActive() {
+        // find out if we are the active editor (any easier way than that???)
+        IWorkbenchWindow window =
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window == null) {
+            return false;
+        }
+        IWorkbenchPage page = window.getActivePage();
+        if (page == null) {
+            return false;
+        }
+        IEditorPart editor = page.getActiveEditor();
+        return editor == this;
+    }
+
+    private void scrollToVisible(final Point absoluteLoc) {
+
+//      ScalableFreeformRootEditPart rootEditPart
+//      = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
+//      Viewport viewport = (Viewport) rootEditPart.getFigure();
+//      viewport.setViewLocation(toRelative(nodeLoc));
+
     }
 
     /**
@@ -1308,18 +1353,27 @@ public class WorkflowEditor extends GraphicalEditor implements
         Dimension viewSize = viewPort.getSize();
         int relX = viewSize.width / 2;
         int relY = viewSize.height / 2;
-        return new Point(relX, relY);
+        Point nodeLoc = new Point(relX, relY);
+        // make sure we have a free spot
+        while (isNodeAtRel(nodeLoc)) {
+            // move it a bit
+            nodeLoc.x += 10;
+            nodeLoc.y += 10;
+        }
+        return nodeLoc;
+
 
     }
 
-    private Point getAutoLocation(final NodeContainerEditPart refNode) {
+    private Point getLocationRightOf(final NodeContainerEditPart refNode) {
         NodeUIInformation ui =
                 (NodeUIInformation)refNode.getNodeContainer()
                         .getUIInformation();
         int xOffset = 100;
         int yOffset = 120;
         // first try: right of reference node
-        Point loc = new Point(ui.getBounds()[0] + xOffset, ui.getBounds()[1]);
+        Point loc = new Point(ui.getBounds()[0] + (ui.getBounds()[2] / 2) + xOffset,
+                ui.getBounds()[1]);
 
         // make sure we have a free spot
         while (isNodeAtAbs(loc)) {
@@ -1347,13 +1401,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         return loc;
     }
 
-    private double getZoomfactor() {
-        ZoomManager zoomManager =
-                (ZoomManager)(getViewer().getProperty(ZoomManager.class
-                        .toString()));
-        return zoomManager.getZoom();
-    }
-
     private Point toAbsolute(final Point relLoc) {
         ScalableFreeformRootEditPart rootEditPart
         = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
@@ -1361,10 +1408,17 @@ public class WorkflowEditor extends GraphicalEditor implements
         Rectangle area = viewport.getClientArea();
 
         Point loc = relLoc.getCopy();
-        double z = getZoomfactor();
-        loc.x += (int)Math.round(area.x * z);
-        loc.y += (int)Math.round(area.y * z);
+        loc.x += area.x;
+        loc.y += area.y;
         return loc;
+    }
+
+
+    private double getZoomfactor() {
+        ZoomManager zoomManager =
+                (ZoomManager)(getViewer().getProperty(ZoomManager.class
+                        .toString()));
+        return zoomManager.getZoom();
     }
 
     private boolean isNodeAtRel(final Point relativeLoc) {
@@ -1385,6 +1439,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         return false;
     }
+
+    /*
+     * ---------- end of auto-placing and auto-connecting --------------
+     */
+
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      *

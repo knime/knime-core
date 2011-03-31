@@ -54,6 +54,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Used by views to initiate a node addition in a workflow editor. The workflow
@@ -113,6 +115,23 @@ public final class NodeProvider {
     }
 
     /**
+     * Triggers an event at all registered listeners.
+     *
+     * @param sourceMgr the manager to copy the meta node from
+     * @param sourceID the id of the node in the source mgr
+     * @return true, if at least one listener actually added the node.
+     */
+    public boolean addMetaNode(final WorkflowManager sourceMgr,
+            final NodeID sourceID) {
+        boolean added = false;
+        for (EventListener l : m_listeners) {
+            added |= l.addMetaNode(sourceMgr, sourceID);
+        }
+        return added;
+
+    }
+
+    /**
      * Interface for interested listeners.
      *
      * @author ohl, University of Konstanz
@@ -127,5 +146,16 @@ public final class NodeProvider {
          */
         public boolean addNode(
                 final NodeFactory<? extends NodeModel> nodeFactory);
+
+        /**
+         * Called when a meta node should be added to the workflow editor. Only
+         * the active editor should respond to the request.
+         *
+         * @param sourceMgr the mgr to copy the meta node from
+         * @param sourceID the id of the meta node in the source mgr
+         * @return true, if this listener actually added the node
+         */
+        public boolean addMetaNode(final WorkflowManager sourceMgr,
+                final NodeID sourceID);
     }
 }

@@ -84,10 +84,19 @@ public class CreateNewConnectedNode extends Command {
     /** {@inheritDoc} */
     @Override
     public void execute() {
+
+        m_newNode = createNewNode();
+        if (m_newNode != null && m_connectTo != null) {
+            autoConnectNewNode();
+        }
+
+    }
+
+    protected NodeID createNewNode() {
         // Add node to workflow and get the container
-        NodeContainer nc = null;
+        NodeID newID = null;
         try {
-            m_newNode = m_manager.createAndAddNode(m_factory);
+            newID = m_manager.createAndAddNode(m_factory);
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
@@ -98,17 +107,24 @@ public class CreateNewConnectedNode extends Command {
             mb.setMessage("The node could not be created "
                     + "due to the following reason:\n" + t.getMessage());
             mb.open();
-            return;
+            return null;
         }
-        nc = m_manager.getNodeContainer(m_newNode);
         // create extra info and set it
         NodeUIInformation info =
                 new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
+        NodeContainer nc = m_manager.getNodeContainer(newID);
         nc.setUIInformation(info);
+        return newID;
+    }
 
+    protected void autoConnectNewNode() {
+        if (m_newNode == null) {
+            return;
+        }
         if (m_connectTo == null) {
             return;
         }
+        NodeContainer nc = m_manager.getNodeContainer(m_newNode);
         int[] matchingPorts = getMatchingPorts(m_connectTo, nc);
         if (matchingPorts == null) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
@@ -116,12 +132,6 @@ public class CreateNewConnectedNode extends Command {
                     + m_connectTo.getNameWithID());
             return;
         }
-        //
-        // CreateConnectionSimpleCommand ccsc =
-        // new CreateConnectionSimpleCommand(m_manager,
-        // m_connectTo.getID(), matchingPorts[0],
-        // m_newNode.getID(), matchingPorts[1]);
-        // m_cmdStack.execute(ccsc);
 
         LOGGER.info("Autoconnect: Connecting new node " + m_newNode + " port "
                 + matchingPorts[1] + " with existing node " + m_connectTo
@@ -138,6 +148,7 @@ public class CreateNewConnectedNode extends Command {
                             + matchingPorts[1] + ": " + e.getMessage();
             LOGGER.error(msg);
         }
+
 
     }
 
