@@ -53,9 +53,8 @@ package org.knime.base.node.mine.regression.linear;
 import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.RegressionTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -66,8 +65,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -137,9 +138,10 @@ public final class LinearRegressionContent {
      *
      * @return a port object
      * @throws InvalidSettingsException if the settings are invalid
+     * @throws SAXException 
      */
-    public PMMLRegressionPortObject createPortObject()
-        throws InvalidSettingsException {
+    public PMMLPortObject createPortObject()
+        throws InvalidSettingsException, SAXException {
         PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
         PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
         c.setAlgorithmName("LinearRegression");
@@ -150,7 +152,7 @@ public final class LinearRegressionContent {
                     m_spec.getColumnSpec(i).getName(), 1, m_multipliers[i]);
         }
         c.setRegressionTable(new RegressionTable(m_offset, nps));
-        return new PMMLRegressionPortObject(spec, c);
+        return new PMMLPortObject(spec, c);
     }
 
     /**

@@ -63,9 +63,6 @@ import java.util.Set;
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -94,8 +91,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.RegressionTable;
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.NumericPredictor;
+import org.xml.sax.SAXException;
 
 /**
  * This node performs polynomial regression on an input table with numeric-only
@@ -126,7 +127,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      */
     public PolyRegLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-                BufferedDataTable.TYPE, PMMLRegressionPortObject.TYPE});
+                BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**
@@ -333,8 +334,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         return bdt;
     }
 
-    private PMMLRegressionPortObject createPMMLModel(final DataTableSpec inSpec)
-        throws InvalidSettingsException {
+    private PMMLPortObject createPMMLModel(final DataTableSpec inSpec)
+        throws InvalidSettingsException, SAXException {
         NumericPredictor[] preds = new NumericPredictor[m_betas.length - 1];
 
         int deg = m_settings.getDegree();
@@ -356,7 +357,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         ch.setAlgorithmName("PolynomialRegression");
         ch.setModelName("KNIME Polynomial Regression");
 
-        return new PMMLRegressionPortObject(spec, ch);
+        return new PMMLPortObject(spec, ch);
     }
 
     private CellFactory getCellFactory(final int dependentIndex) {

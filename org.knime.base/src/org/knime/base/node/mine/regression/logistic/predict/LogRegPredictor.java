@@ -59,7 +59,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
@@ -217,14 +217,16 @@ public final class LogRegPredictor extends AbstractCellFactory {
      * @param includeProbabilites add probabilities to the output
      * @throws InvalidSettingsException when inSpec and regModel do not match
      */
-    public LogRegPredictor(final PMMLGeneralRegressionPortObject regModel,
-            final DataTableSpec inSpec, final boolean includeProbabilites)
+    public LogRegPredictor(final PMMLGeneralRegressionContentHandler handler,
+            final DataTableSpec inSpec,
+            final PMMLPortObjectSpec  spec,
+            final boolean includeProbabilites)
             throws InvalidSettingsException {
-        super(LogRegPredictor.createColumnSpec(regModel.getSpec(), inSpec,
+        super(LogRegPredictor.createColumnSpec(spec, inSpec,
                 includeProbabilites));
 
         m_includeProbs = includeProbabilites;
-        m_content = regModel.getContent();
+        m_content = handler.getContent();
         m_ppMatrix = new PPMatrix(m_content.getPPMatrix());
         m_parameters = new ArrayList<String>();
         m_predictors = new ArrayList<String>();
@@ -236,9 +238,10 @@ public final class LogRegPredictor extends AbstractCellFactory {
             m_parameterI.put(parameter.getName(),
                     inSpec.findColumnIndex(predictor));
         }
-        m_trainingSpec = regModel.getSpec().getDataTableSpec();
+        
+        m_trainingSpec = spec.getDataTableSpec();
         DataColumnSpec targetCol =
-            m_trainingSpec.getColumnSpec(regModel.getTargetVariableName());
+            m_trainingSpec.getColumnSpec(handler.getTargetVariableName());
         m_targetCategories = new ArrayList<DataCell>();
         m_targetCategories.addAll(targetCol.getDomain().getValues());
         Collections.sort(m_targetCategories,

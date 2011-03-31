@@ -52,9 +52,11 @@ package org.knime.base.node.mine.regression.logistic.predict;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -68,13 +70,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.w3c.dom.Node;
 
 /**
  * Node model for the general regression predictor.
@@ -83,10 +89,15 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  */
 public class GeneralRegressionPredictorNodeModel extends NodeModel {
     private final GeneralRegressionPredictorSettings m_settings;
+    
+    /** The node logger for this class. */
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(GeneralRegressionPredictorNodeModel.class);
+
 
     /** Initialization with 1 data input, 1 model input and 1 data output. */
     public GeneralRegressionPredictorNodeModel() {
-        super(new PortType[]{PMMLGeneralRegressionPortObject.TYPE,
+        super(new PortType[]{PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
         m_settings = new GeneralRegressionPredictorSettings();
@@ -124,11 +135,23 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        PMMLGeneralRegressionPortObject regModel =
-                (PMMLGeneralRegressionPortObject)inData[0];
+        PMMLPortObject port =
+                (PMMLPortObject)inData[0];
+        List<Node> models = port.getPMMLValue().getModels(
+                PMMLModelType.GeneralRegressionModel);
+        if (models.isEmpty()) {
+            String msg = "No General Regression model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+        PMMLGeneralRegressionContentHandler handler  
+        			= new PMMLGeneralRegressionContentHandler(
+        				(PMMLPortObjectSpec)inData[0].getSpec());
+        handler.parse(models.get(0));    
+        
         BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
-        ColumnRearranger c = createRearranger(regModel, spec);
+        ColumnRearranger c = createRearranger(handler, spec);
         BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
     }
@@ -164,15 +187,15 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
     }
 
     private ColumnRearranger createRearranger(
-            final PMMLGeneralRegressionPortObject regModel,
+            final PMMLGeneralRegressionContentHandler handler,
             final DataTableSpec inSpec)
             throws InvalidSettingsException {
-        if (regModel == null) {
+        if (handler == null) {
             throw new InvalidSettingsException("No input");
         }
 
         // content stores information about the model
-        PMMLGeneralRegressionContent content = regModel.getContent();
+        PMMLGeneralRegressionContent content = handler.getContent();
 
         // the predictor can only predict logistic regression models
         if (!content.getModelType().equals(ModelType.multinomialLogistic)) {
@@ -217,7 +240,7 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         }
 
         ColumnRearranger c = new ColumnRearranger(inSpec);
-        c.append(new LogRegPredictor(regModel, inSpec,
+        c.append(new LogRegPredictor(handler, inSpec, handler.getSpec(),
                 m_settings.getIncludeProbabilities()));
 
         return c;

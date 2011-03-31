@@ -51,6 +51,8 @@
 package org.knime.base.node.mine.regression;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -58,8 +60,8 @@ import java.util.TreeSet;
 
 import javax.xml.transform.sax.TransformerHandler;
 
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
-import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
+
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
@@ -83,9 +85,10 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     private PMMLPortObjectSpec m_spec;
     private String m_modelName;
     private String m_algorithmName;
-    private String m_writeVersion;
+    // TODO No longer needed?
+    //private String m_writeVersion;
 
-    private PMMLRegressionPortObject m_port;
+
 
     /**
      * Creates a new PMML content handler for regression models.
@@ -106,16 +109,17 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
      * @param po a PMML regression port object
      * @param writeVersion The PMML version to write
      */
-    public PMMLRegressionContentHandler(final PMMLRegressionPortObject po,
-            final String writeVersion) {
-        m_modelName = po.getModelName();
-        m_writeVersion = writeVersion;
-        m_regressionTable = po.getRegressionTable();
-        m_spec = po.getSpec();
-        m_port = po;
+    public PMMLRegressionContentHandler(String modelName,
+//    		final String writeVersion,
+    		RegressionTable regressionTable,
+    		PMMLPortObjectSpec spec) {
+        m_modelName = modelName;
+//        m_writeVersion = writeVersion;
+        m_regressionTable = regressionTable;
+        m_spec = spec;
     }
 
-    /**
+	/**
      * Checks if the internal regression has been set and if all predictors
      * are assigned. If not an {@link IllegalStateException} is thrown.
      *
@@ -214,28 +218,23 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_algorithmName = algorithmName;
     }
 
-    /**
-     * Writes the PMML regression model to the given handler.
-     *
-     * @param h a transform handler
-     * @throws SAXException if anything goes wrong while serializing the model
-     */
-    public void writePMMLRegressionModel(final TransformerHandler h)
-        throws SAXException {
-        AttributesImpl a = new AttributesImpl();
+    protected  void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+          AttributesImpl a = new AttributesImpl();
         a.addAttribute("", "", "functionName", "CDATA", "regression");
         if (m_algorithmName != null && m_algorithmName.length() > 0) {
             a.addAttribute("", "", "algorithmName", "CDATA", m_algorithmName);
         }
         a.addAttribute("", "", "targetFieldName", "CDATA", getTargetField());
-        h.startElement("", "", "RegressionModel", a);
-        PMMLPortObjectSpec.writeMiningSchema(m_spec, h, m_writeVersion);
-        m_port.writeLocalTransformations(h);
-        addRegressionTable(h);
-        h.endElement("", "", "RegressionModel");
+        handler.startElement("", "", "RegressionModel", a);
+        PMMLPortObjectSpec.writeMiningSchema(m_spec, handler);
+        //TODO implement the local tranformations
+//        m_port.writeLocalTransformations(h);
+        addRegressionTable(handler);
+        handler.endElement("", "", "RegressionModel");
     }
 
-    private void addRegressionTable(final TransformerHandler h)
+    private  void addRegressionTable(final TransformerHandler h)
     throws SAXException {
         AttributesImpl a = new AttributesImpl();
         String interceptS = Double.toString(m_regressionTable.getIntercept());
@@ -595,5 +594,97 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
         return versions;
+    }
+    
+    /**
+     * This class represents a single numeric predictor with its name (usually
+     * the column name it is responsible for), the exponent and the coefficient.
+     *
+     * @author Bernd Wiswedel, University of Konstanz
+     */
+    public static final class NumericPredictor {
+        private final String m_name;
+
+        private final int m_exponent;
+
+        private final double m_coefficient;
+
+        /**
+         * Creates a new numeric predictor.
+         *
+         * @param name the predictor's name (usually the column name)
+         * @param exponent the exponent
+         * @param coefficient the coefficient
+         */
+        public NumericPredictor(final String name, final int exponent,
+                final double coefficient) {
+            m_name = name;
+            m_exponent = exponent;
+            m_coefficient = coefficient;
+        }
+
+        /** @return the name */
+        public String getName() {
+            return m_name;
+        }
+
+        /** @return the exponent */
+        public int getExponent() {
+            return m_exponent;
+        }
+
+        /** @return the value */
+        public double getCoefficient() {
+            return m_coefficient;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return m_name + " (coefficient = "
+                    + DoubleFormat.formatDouble(m_coefficient)
+                    + ", exponent = " + m_exponent + ")";
+        }
+    }
+
+    /**
+     * This table wraps a polynomial regression formula for use inside a PMML
+     * model.
+     *
+     * @author Bernd Wiswedel, University of Konstanz
+     */
+    public static final class RegressionTable {
+        private final double m_intercept;
+
+        private final List<NumericPredictor> m_variables;
+
+        /**
+         * Creates a new regression table.
+         *
+         * @param intercept the constant intercept of the regression formula
+         * @param variables the regression variables
+         */
+        public RegressionTable(final double intercept,
+                final NumericPredictor[] variables) {
+            m_intercept = intercept;
+            m_variables =
+                    Collections.unmodifiableList(Arrays.asList(variables));
+        }
+
+        /** @return the intercept */
+        public double getIntercept() {
+            return m_intercept;
+        }
+
+        /** @return the variables */
+        public List<NumericPredictor> getVariables() {
+            return m_variables;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return "RegressionTable: " + m_variables.size() + " variables";
+        }
     }
 }

@@ -62,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCovCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
@@ -83,8 +83,10 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.xml.sax.SAXException;
 
 import Jama.Matrix;
 
@@ -433,9 +435,10 @@ public final class LogisticRegressionContent {
      *
      * @return a port object
      * @throws InvalidSettingsException if the settings are invalid
+     * @throws SAXException 
      */
-    public PMMLGeneralRegressionPortObject createPMMLPortObject()
-            throws InvalidSettingsException {
+    public PMMLPortObject createPMMLPortObject()
+            throws InvalidSettingsException, SAXException {
         List<PMMLPredictor> factors = new ArrayList<PMMLPredictor>();
         for (String factor : m_factorList) {
             PMMLPredictor predictor = new PMMLPredictor(factor);
@@ -508,8 +511,10 @@ public final class LogisticRegressionContent {
                     ppMatrix.toArray(new PMMLPPCell[0]),
                     pCovMatrix.toArray(new PMMLPCovCell[0]),
                     paramMatrix.toArray(new PMMLPCell[0]));
+        
 
-        return new PMMLGeneralRegressionPortObject(m_outSpec, content);
+        return new PMMLPortObject(m_outSpec,
+        		new PMMLGeneralRegressionContentHandler(m_outSpec, content));
     }
 
     private static final String CFG_TARGET = "target";

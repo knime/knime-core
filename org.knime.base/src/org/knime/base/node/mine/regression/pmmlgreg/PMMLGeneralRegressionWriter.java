@@ -52,6 +52,7 @@ package org.knime.base.node.mine.regression.pmmlgreg;
 
 import javax.xml.transform.sax.TransformerHandler;
 
+
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -61,11 +62,10 @@ import org.xml.sax.helpers.AttributesImpl;
  * @author Heiko Hofer
  */
 final class PMMLGeneralRegressionWriter {
-    private PMMLGeneralRegressionPortObject m_port;
+
     private PMMLPortObjectSpec m_spec;
 
 
-    private String m_writeVersion;
 
     private PMMLGeneralRegressionContent m_content;
 
@@ -78,13 +78,10 @@ final class PMMLGeneralRegressionWriter {
      * @param writeVersion the PMML version to write
      */
     PMMLGeneralRegressionWriter(
-            final PMMLGeneralRegressionPortObject port,
-            final PMMLGeneralRegressionContent content,
-            final String writeVersion) {
-        m_writeVersion = writeVersion;
-        m_port = port;
-        m_spec = port.getSpec();
-        m_content = content;
+            final PMMLPortObjectSpec spec,
+            final PMMLGeneralRegressionContentHandler content) {
+        m_spec = spec;
+        m_content = content.getContent();
     }
 
     /**
@@ -111,8 +108,8 @@ final class PMMLGeneralRegressionWriter {
                 m_content.getFunctionName().toString());
 
         handler.startElement("", "", "GeneralRegressionModel", a);
-        PMMLPortObjectSpec.writeMiningSchema(m_spec, handler, m_writeVersion);
-        m_port.writeLocalTransformations(handler);
+        PMMLPortObjectSpec.writeMiningSchema(m_spec, handler);
+
         addParameterList(handler);
         addFactorList(handler);
         addCovariateList(handler);

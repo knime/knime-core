@@ -53,10 +53,12 @@ package org.knime.base.node.mine.cluster.assign;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
-import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
+import org.knime.base.node.mine.cluster.PMMLClusterHandler;
+import org.knime.base.node.mine.cluster.PMMLClusterHandler.ComparisonMeasure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -71,13 +73,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.w3c.dom.Node;
 
 /**
  * 
@@ -87,13 +93,17 @@ public class ClusterAssignerNodeModel extends NodeModel {
    
    private static final int PMML_PORT = 0;
    private static final int DATA_PORT = 1;
+   
+   /** The node logger for this class. */
+   private static final NodeLogger LOGGER =
+           NodeLogger.getLogger(ClusterAssignerNodeModel.class);
 
     /**
      * 
      */
     public ClusterAssignerNodeModel() {
         super(new PortType[] {
-                PMMLClusterPortObject.TYPE,
+                PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[] {BufferedDataTable.TYPE});
     }
@@ -106,9 +116,12 @@ public class ClusterAssignerNodeModel extends NodeModel {
         PMMLPortObjectSpec spec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT]);
         DataTableSpec dataSpec = (DataTableSpec) inSpecs[DATA_PORT];
         ColumnRearranger colre = new ColumnRearranger(dataSpec);
+      
         colre.append(new ClusterAssignFactory(
                 null, null, createNewOutSpec(dataSpec), 
-                findLearnedColumnIndices(dataSpec, spec.getLearningCols())));
+                findLearnedColumnIndices(dataSpec, 
+                		 new HashSet<String>(spec.getLearningFields()))));
+        
         DataTableSpec out = colre.createSpec();
         return new DataTableSpec[]{out};
     }
@@ -126,11 +139,22 @@ public class ClusterAssignerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        PMMLClusterPortObject model = (PMMLClusterPortObject) inData[PMML_PORT];
-        ComparisonMeasure measure = model.getComparisonMeasure();
+        PMMLPortObject port = (PMMLPortObject) inData[PMML_PORT];
+
+        List<Node> models = port.getPMMLValue().getModels(
+                PMMLModelType.ClusteringModel);
+        if (models.isEmpty()) {
+            String msg = "No Clustering Model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+        PMMLClusterHandler handler = new PMMLClusterHandler();
+        handler.parse(models.get(0));        
+       
+        ComparisonMeasure measure = handler.getComparisonMeasure();
         List<Prototype> prototypes = new ArrayList<Prototype>();
-        String[] labels = model.getLabels();
-        double[][] protos = model.getPrototypes();
+        String[] labels = handler.getLabels();
+        double[][] protos = handler.getPrototypes();
         for (int i = 0; i < protos.length; i++) {
             double[] prototype = protos[i];
             prototypes.add(new Prototype(prototype, 
@@ -141,22 +165,22 @@ public class ClusterAssignerNodeModel extends NodeModel {
         colre.append(new ClusterAssignFactory(
                 measure, prototypes, createNewOutSpec(data.getDataTableSpec()), 
                 findLearnedColumnIndices(data.getSpec(), 
-                        model.getSpec().getLearningCols())));
+                		handler.getUsedColumns())));
         BufferedDataTable bdt =
                 exec.createColumnRearrangeTable(data, colre, exec);
         return new BufferedDataTable[]{bdt};
     }
     
     private static int[] findLearnedColumnIndices(final DataTableSpec ospec,
-            final List<DataColumnSpec> learnedCols) 
+            final Set<String> learnedCols) 
             throws InvalidSettingsException {
         int[] colIndices = new int[learnedCols.size()];
         int idx = 0;
-        for (DataColumnSpec cspec : learnedCols) {
-            int i = ospec.findColumnIndex(cspec.getName());
+        for (String s : learnedCols) {
+            int i = ospec.findColumnIndex(s);
             if (i < 0) {
                 throw new InvalidSettingsException("Column \""
-                        + cspec.getName() + "\" not found in data input spec.");
+                        + s + "\" not found in data input spec.");
             }
             colIndices[idx++] = i;
         }

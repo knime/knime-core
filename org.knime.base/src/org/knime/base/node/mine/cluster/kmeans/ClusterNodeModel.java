@@ -61,7 +61,7 @@ import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
+import org.knime.base.node.mine.cluster.PMMLClusterHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -180,7 +180,7 @@ public class ClusterNodeModel extends NodeModel {
         super(new PortType[] {BufferedDataTable.TYPE},
                 new PortType[] {
                     BufferedDataTable.TYPE,
-                    PMMLClusterPortObject.TYPE});
+                    PMMLPortObject.TYPE});
     }
 
     /**
@@ -711,13 +711,38 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     private PMMLPortObject getPMMLOutPortObject() throws Exception {
-        PMMLClusterPortObject outport =
-                new PMMLClusterPortObject(m_clusters, m_nrOfClusters
-                        .getIntValue(), createPMMLSpec(m_spec));
-        outport.setClusterCoverage(m_clusterCoverage);
-        return outport;
+
+    	  PMMLPortObjectSpec pmmlOutSpec 
+          			= createPMMLSpec(m_spec);
+    	  Set<String> columns = new HashSet<String>();
+    	  for(String s: pmmlOutSpec.getLearningFields()){
+    		  columns.add(s);
+    	  }
+          PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
+                  new PMMLClusterHandler(
+                  		org.knime.base.node.mine.cluster.
+                  		PMMLClusterHandler.ComparisonMeasure.squaredEuclidean, 
+                  		m_nrOfClusters.getIntValue(), 
+                  		m_clusters, 
+                  		m_clusterCoverage, 
+                  		columns));
+          return pmmlPort;
     }
 
+    private static List<DataColumnSpec> getColumnSpecsFor(
+    		final List<String> colNames,
+            final DataTableSpec tableSpec) {
+        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
+        for (String colName : colNames) {
+            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
+            if (colName == null) {
+                throw new IllegalArgumentException(
+                        "Column " + colName + " not found in data table spec!");
+            }
+            colSpecs.add(colSpec);
+        }
+        return colSpecs;
+    }
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec)
             throws InvalidSettingsException {
         List<String> includes;

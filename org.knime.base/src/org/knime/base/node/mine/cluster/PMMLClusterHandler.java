@@ -54,18 +54,32 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
-import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
+import javax.xml.transform.sax.TransformerHandler;
+
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLClusterHandler extends PMMLContentHandler {
+
+	/**
+     * Constants indicating whether the squared euclidean or the euclidean
+     * comparison measure should be used.
+     */
+    public enum ComparisonMeasure {
+        /** Squared Euclidean distance. */
+        squaredEuclidean,
+        /** Euclidean distance. */
+        euclidean
+    }
 
     // number of clusters <ClusterModel numberOfClusters="">
     // prototypes <Cluster><Array>values </Array>
@@ -114,7 +128,8 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     private double[][] m_prototypes;
     private String[] m_labels;
     private int[] m_clusterCoverage;
-    private Set<String> m_usedColumns = new LinkedHashSet<String>();
+
+   private Set<String> m_usedColumns = new LinkedHashSet<String>();
 
     private StringBuffer m_buffer;
     private int m_currentCluster = 0;
@@ -126,8 +141,39 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     private Map<String, LinearNorm>m_linearNorms;
     private LinearNorm m_currentLinearNorm;
 
+    
 
-    /**
+    public PMMLClusterHandler(ComparisonMeasure measure, int nrOfClusters, 
+    		double[][] prototypes,  int[] clusterCoverage, 
+    		Set<String> colSpecs) {
+    	  m_measure = measure;
+
+    	    m_nrOfClusters = nrOfClusters;
+    	   m_prototypes = prototypes;
+    	 
+    	   m_clusterCoverage = clusterCoverage;
+
+    	    
+    	    m_usedColumns = new LinkedHashSet<String>();
+    	    for(String dcs : colSpecs){
+    	    	m_usedColumns.add(dcs);
+    	    }
+            
+            m_labels = new String[m_nrOfClusters];
+            for (int i = 0; i < m_nrOfClusters; i++) {
+                m_labels[i] = "cluster_" + i;
+            }
+            m_prototypes = prototypes;
+            for (int i = 0; i < prototypes.length; i++) {
+                m_prototypes[i] = prototypes[i];
+            }
+	}
+
+    public PMMLClusterHandler() {
+		// nothing to do.
+	}
+
+	/**
      *
      * @return number of clusters
      */
@@ -376,4 +422,109 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         return versions;
     }
 
+   
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+        
+        // create the cluster model
+        // with the attributes...
+        AttributesImpl atts = new AttributesImpl();
+        // modelName
+        atts.addAttribute(null, null, "modelName", 
+        		PMMLPortObject.CDATA, "k-means");
+        // functionName
+        atts.addAttribute(null, null, "functionName", 
+        		PMMLPortObject.CDATA, "clustering");
+        // modelClass
+        atts.addAttribute(null, null, "modelClass", 
+        		PMMLPortObject.CDATA, "centerBased");
+        // numberOfClusters
+        atts.addAttribute(null, null, "numberOfClusters", PMMLPortObject.CDATA,
+                "" + m_nrOfClusters);
+        handler.startElement(null, null, "ClusteringModel", atts);
+        if (m_usedColumns != null) {
+            PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+            // TODO write the local transformtions
+//            writeLocalTransformations(handler);
+            addUsedDistanceMeasure(handler);
+            addClusteringFields(handler);
+            addClusters(handler);
+        }
+        handler.endElement(null, null, "ClusteringModel");
+    }
+    
+    /**
+     * Writes the used distance measure - so far it is euclidean.
+     * @param handler to write to
+     * @throws SAXException if something goes wrong
+     */
+    protected void addUsedDistanceMeasure(
+    		final TransformerHandler handler)
+        throws SAXException {
+        // add kind="distance" to ComparisonMeasure element
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "kind", PMMLPortObject.CDATA, "distance");
+        handler.startElement(null, null, "ComparisonMeasure", atts);
+        // for now hard-coded squared euclidean
+        handler.startElement(null, null,
+                m_measure.name(), null);
+        handler.endElement(null, null, m_measure.name());
+        handler.endElement(null, null, "ComparisonMeasure");
+    }
+
+    /**
+     * Writes the clustering fields (name).
+     *
+     * @param handler to write to
+     * @throws SAXException if something goes wrong
+     */
+    protected void addClusteringFields(final TransformerHandler handler
+    				) throws SAXException {
+        for (String colName : m_usedColumns) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, 
+            		"field", PMMLPortObject.CDATA, colName);
+            atts.addAttribute(null, null, 
+            		"compareFunction", PMMLPortObject.CDATA, "absDiff");
+            handler.startElement(null, null, "ClusteringField", atts);
+            handler.endElement(null, null, "ClusteringField");
+        }
+    }
+
+    /**
+     * Writes the actual cluster prototypes.
+     *
+     * @param handler to write to
+     * @throws SAXException if something goes wrong
+     */
+    protected void addClusters(final TransformerHandler handler
+            ) throws SAXException {
+        int i = 0;
+        for (double[] prototype : m_prototypes) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "name", 
+            		PMMLPortObject.CDATA, "cluster_" + i);
+            if (m_clusterCoverage != null
+                    && m_clusterCoverage.length == m_prototypes.length) {
+            atts.addAttribute(null, null, "size", PMMLPortObject.CDATA,
+                    "" + m_clusterCoverage[i]);
+            }
+            i++;
+            handler.startElement(null, null, "Cluster", atts);
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "n", PMMLPortObject.CDATA,
+                            "" + prototype.length);
+                atts.addAttribute(null, null, "type", 
+                		PMMLPortObject.CDATA, "real");
+                handler.startElement(null, null, "Array", atts);
+                StringBuffer buff = new StringBuffer();
+                for (double d : prototype) {
+                    buff.append(d + " ");
+                }
+                char[] chars = buff.toString().toCharArray();
+                handler.characters(chars, 0, chars.length);
+                handler.endElement(null, null, "Array");
+            handler.endElement(null, null, "Cluster");
+        }
+    }
 }
