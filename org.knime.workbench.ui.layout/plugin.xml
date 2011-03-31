@@ -8,8 +8,8 @@
             targetID="org.knime.workbench.editor.WorkflowEditor">
             <action
                class="org.knime.workbench.ui.layout.actions.AutoLayoutEditorAction"
-               disabledIcon="icons/step_disabled.png"
-               icon="icons/step.png"
+               disabledIcon="icons/layout_disabled.png"
+               icon="icons/layout.png"
                id="org.knime.workbench.ui.layout.autolayout"
                label="Auto Layout"
                menubarPath="org.knime.workbench.editor.menu/group1"

@@ -89,7 +89,7 @@ public class AutoLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/hideNodeNames.png");
+        return ImageRepository.getImageDescriptor("icons/layout.png");
     }
 
     /**
@@ -98,7 +98,7 @@ public class AutoLayoutAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
         return ImageRepository
-                .getImageDescriptor("icons/hideNodeNames_disabled.png");
+                .getImageDescriptor("icons/layout_disabled.png");
     }
 
     /**
