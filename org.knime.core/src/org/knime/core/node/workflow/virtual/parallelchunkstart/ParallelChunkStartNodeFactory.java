@@ -46,9 +46,9 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 30, 2011 (mb): created
+ *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parallelbranchend;
+package org.knime.core.node.workflow.virtual.parallelchunkstart;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -56,17 +56,17 @@ import org.knime.core.node.NodeView;
 
 /**
  * 
- * @author M. Berthold, University of Konstanz
+ * @author wiswedel, University of Konstanz
  */
-public class ParallelBranchEndNodeFactory extends
-		NodeFactory<ParallelBranchEndNodeModel> {
+public class ParallelChunkStartNodeFactory extends
+		NodeFactory<ParallelChunkStartNodeModel> {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public ParallelBranchEndNodeModel createNodeModel() {
-		return new ParallelBranchEndNodeModel();
+	public ParallelChunkStartNodeModel createNodeModel() {
+		return new ParallelChunkStartNodeModel();
 	}
 
 	/**
@@ -81,8 +81,8 @@ public class ParallelBranchEndNodeFactory extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	public NodeView<ParallelBranchEndNodeModel> createNodeView(
-			final int viewIndex, final ParallelBranchEndNodeModel nodeModel) {
+	public NodeView<ParallelChunkStartNodeModel> createNodeView(final int viewIndex,
+			final ParallelChunkStartNodeModel nodeModel) {
 		return null;
 	}
 

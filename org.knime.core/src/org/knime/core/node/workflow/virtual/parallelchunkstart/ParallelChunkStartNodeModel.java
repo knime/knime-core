@@ -48,10 +48,12 @@
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parallelbranchstart;
+package org.knime.core.node.workflow.virtual.parallelchunkstart;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -65,13 +67,15 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopStartParallelizeNode;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class ParallelBranchStartNodeModel extends NodeModel implements
+public class ParallelChunkStartNodeModel extends NodeModel implements
 		LoopStartParallelizeNode {
 	
 
@@ -80,7 +84,7 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
 	/**
 	 * 
 	 */
-	public ParallelBranchStartNodeModel() {
+	public ParallelChunkStartNodeModel() {
 		super(1, 1);
 	}
 
@@ -137,8 +141,7 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
         }
         assert i == numOfChunks;
         m_splitInTables = splitInTables;
-        return new BufferedDataTable[]{(BufferedDataTable) 
-        		splitInTables[splitInTables.length - 1]};
+        return new BufferedDataTable[]{splitInTables[splitInTables.length - 1]};
 	}
 
 	/**
@@ -150,12 +153,16 @@ public class ParallelBranchStartNodeModel extends NodeModel implements
 		return inSpecs;
 	}
 	
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PortObject[] getPortObjectForChunk(final int i) {
-		return new PortObject[]{m_splitInTables[i]};
+	public VirtualNodeInput getVirtualNodeInput(final int chunkIndex) {
+		PortObject[] objects = new PortObject[]{m_splitInTables[chunkIndex]};
+		List<FlowVariable> flowVars = Arrays.asList(
+				new FlowVariable("chunk_index", chunkIndex));
+		return new VirtualNodeInput(objects, flowVars, chunkIndex);
 	}
 
 	/**

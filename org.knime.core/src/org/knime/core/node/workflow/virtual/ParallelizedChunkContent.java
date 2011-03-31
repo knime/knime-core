@@ -57,34 +57,34 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * An object representing the copied content of a branch that is executed in
+ * An object representing the copied content of a chunk that is executed in
  * parallel.
  * @author wiswedel, University of Konstanz
  */
-public final class ParallelizedBranchContent {
+public final class ParallelizedChunkContent {
 
 	private final WorkflowManager m_manager;
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
 	private final NodeID[] m_copiedLoopContent;
-	private final int m_branchIndex;
-	private final int m_branchCount;
+	private final int m_chunkIndex;
+	private final int m_ChunkCount;
 	/**
 	 * @param manager
 	 * @param virtualInputID
 	 * @param virtualOutputID
 	 * @param copiedLoopContent
-	 * @param branchIndex An index to the copy (copies are enumerated)
-	 * @param branchCount The overall count of parallel branches
+	 * @param chunkIndex An index to the copy (copies are enumerated)
+	 * @param chunkCount The overall count of parallel chunks
 	 * @throws IllegalArgumentException If the input/output nodes are not
 	 * of the expected type.
 	 */
-	public ParallelizedBranchContent(final WorkflowManager manager,
+	public ParallelizedChunkContent(final WorkflowManager manager,
 			final NodeID virtualInputID, final NodeID virtualOutputID,
 			final NodeID[] copiedLoopContent,
-			final int branchIndex, final int branchCount) {
+			final int chunkIndex, final int chunkCount) {
 		m_manager = manager;
-		m_branchIndex = branchIndex;
+		m_chunkIndex = chunkIndex;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
 				virtualInputID, VirtualPortObjectInNodeModel.class);
@@ -93,7 +93,7 @@ public final class ParallelizedBranchContent {
 		m_virtualInputID = virtualInputID;
 		m_virtualOutputID = virtualOutputID;
 		m_copiedLoopContent = copiedLoopContent;
-		m_branchCount = branchCount;
+		m_ChunkCount = chunkCount;
 	}
 
 	/**
@@ -118,15 +118,15 @@ public final class ParallelizedBranchContent {
 	/**
 	 * @return the index
 	 */
-	public int getBranchIndex() {
-		return m_branchIndex;
+	public int getChunkIndex() {
+		return m_chunkIndex;
 	}
 	
 	/**
-	 * @return the branchCount
+	 * @return the chunkCount
 	 */
-	public int getBranchCount() {
-		return m_branchCount;
+	public int getChunkCount() {
+		return m_ChunkCount;
 	}
 	
 	/** Gets the underlying model of the virtual input node.
@@ -146,7 +146,7 @@ public final class ParallelizedBranchContent {
 	}
 
     /**
-     * @param parallelBranchEndNodeModel
+     * @param nmodel
      */
     public void registerLoopEndStateChangeListener(
             final LoopEndParallelizeNode nmodel) {
@@ -155,7 +155,7 @@ public final class ParallelizedBranchContent {
     }
 	
     /**
-     * Remove all nodes (and connections) of this branch.
+     * Remove all nodes (and connections) of this chunk.
      */
     public void removeAllNodesFromWorkflow() {
         for (NodeID id : m_copiedLoopContent) {
@@ -166,7 +166,7 @@ public final class ParallelizedBranchContent {
     }
     
     /**
-     * @return true if branch is completely executed.
+     * @return true if chunk is completely executed.
      */
     public boolean isExecuted() {
         return State.EXECUTED.equals(
@@ -174,7 +174,7 @@ public final class ParallelizedBranchContent {
     }
     
     /**
-     * @return array with PortObjects at the end node of this branch.
+     * @return array with PortObjects at the end node of this chunk.
      */
     public PortObject[] getOutportContent() {
         return getVirtualOutputModel().getOutObjects();

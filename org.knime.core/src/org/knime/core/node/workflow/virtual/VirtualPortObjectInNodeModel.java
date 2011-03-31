@@ -63,6 +63,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * 
@@ -70,7 +71,7 @@ import org.knime.core.node.port.PortType;
  */
 public class VirtualPortObjectInNodeModel extends NodeModel {
 
-	private PortObject[] m_objects;
+	private VirtualNodeInput m_input;
 
 	/**
 	 * @param outPortTypes
@@ -85,11 +86,27 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 	@Override
 	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
 			throws Exception {
-		if (m_objects == null) {
+		if (m_input == null) {
 			throw new Exception("Output objects in virtual input node have " 
 					+ "not been set");
 		}
-		return m_objects;
+		for (FlowVariable f : m_input.getFlowVariables()) {
+			switch (f.getType()) {
+			case DOUBLE:
+				pushFlowVariableDouble(f.getName(), f.getDoubleValue());
+				break;
+			case INTEGER:
+				pushFlowVariableInt(f.getName(), f.getIntValue());
+				break;
+			case STRING:
+				pushFlowVariableString(f.getName(), f.getStringValue());
+				break;
+			default:
+				throw new Exception("Unsupported flow variable type: " 
+						+ f.getType());
+			}
+		}
+		return m_input.getInputObjects();
 	}
 	
 	/**
@@ -98,23 +115,18 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 	@Override
 	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
 			throws InvalidSettingsException {
-		if (m_objects != null) {
-			PortObjectSpec[] specs = new PortObjectSpec[m_objects.length];
-			for (int i = 0; i < specs.length; i++) {
-				specs[i] = m_objects[i].getSpec();
-			}
-			return specs;
-		}
+		// let's do everyting in execute (includes flow var population)
 		return null;
 	}
 	
-	public void setOutputPortObjects(final PortObject[] objects) {
+	public void setVirtualNodeInput(final VirtualNodeInput input) {
+		PortObject[] objects = input.getInputObjects();
 		if (objects.length != getNrOutPorts()) {
 			throw new IllegalArgumentException(
 					"Invalid length of output objects: expected: " 
 					+ getNrOutPorts() + " actual: " + objects.length);
 		}
-		m_objects = objects;
+		m_input = input;
 	}
 
 	/**
@@ -122,7 +134,7 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 	 */
 	@Override
 	protected void reset() {
-		// no internals
+		m_input = null;
 	}
 
 	/**

@@ -48,7 +48,7 @@
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parallelbranchend;
+package org.knime.core.node.workflow.virtual.parallelchunkend;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,24 +72,24 @@ import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class ParallelBranchEndNodeModel extends NodeModel
+public class ParallelChunkEndNodeModel extends NodeModel
 implements LoopEndParallelizeNode,
 NodeStateChangeListener {
 
-    /* Store map of end node IDs and corresponding branch objects */
-    private LinkedHashMap<NodeID, ParallelizedBranchContent> m_branches;
+    /* Store map of end node IDs and corresponding chunk objects */
+    private LinkedHashMap<NodeID, ParallelizedChunkContent> m_chunks;
     
 
 	/**
 	 * @param outPortTypes
 	 */
-	ParallelBranchEndNodeModel() {
+	ParallelChunkEndNodeModel() {
 		super(new PortType[]{ BufferedDataTable.TYPE},
 		        new PortType[]{ BufferedDataTable.TYPE});
 	}
@@ -112,14 +112,14 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
-	    if (m_branches == null) {
-	        m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+	    if (m_chunks == null) {
+	        m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
 	    }
-	    // start by copying the results of this branch to the output...
-	    BufferedDataTable lastBranch = (BufferedDataTable)inObjects[0];
+	    // start by copying the results of this chunk to the output...
+	    BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
 	    BufferedDataContainer bdc
-	            = exec.createDataContainer(lastBranch.getDataTableSpec());
-        for (DataRow row : lastBranch) {
+	            = exec.createDataContainer(lastChunk.getDataTableSpec());
+        for (DataRow row : lastChunk) {
             bdc.addRowToTable(row);
         }
 	    boolean done = false;
@@ -134,15 +134,15 @@ NodeStateChangeListener {
 	        try {
 	            exec.checkCanceled();
 	        } catch (CanceledExecutionException cee) {
-	            // TODO: cancel all branches
+	            // TODO: cancel all chunks
 	            throw cee;
 	        }
-	        // check if any of the branches are finished
-	        for (Iterator<ParallelizedBranchContent> pbc_it
-	                = m_branches.values().iterator(); pbc_it.hasNext();) {
-	            ParallelizedBranchContent pbc = pbc_it.next();
+	        // check if any of the chunks are finished
+	        for (Iterator<ParallelizedChunkContent> pbc_it
+	                = m_chunks.values().iterator(); pbc_it.hasNext();) {
+	            ParallelizedChunkContent pbc = pbc_it.next();
 	            if (pbc.isExecuted()) {
-	                // copy results from branch
+	                // copy results from chunk
 	                // TODO: try to keep the order...
 	                BufferedDataTable bdt
 	                        = (BufferedDataTable)pbc.getOutportContent()[0];
@@ -151,13 +151,13 @@ NodeStateChangeListener {
 	                }
                     pbc_it.remove();
 	                pbc.removeAllNodesFromWorkflow();
-	                exec.setProgress((double)m_branches.size()
-	                                 /(double)pbc.getBranchCount());
+	                exec.setProgress((double)m_chunks.size()
+	                                 /(double)pbc.getChunkCount());
 	            }
 	            // TODO: also do something with failures and nodes
 	            // that do not execute anymore.
 	        }
-	        if (m_branches.size() == 0) {
+	        if (m_chunks.size() == 0) {
 	            done = true;
 	        }
 	    }
@@ -177,23 +177,23 @@ NodeStateChangeListener {
      */
     @Override
     protected void reset() {
-        // TODO: cancel and delete all branches
-        m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+        // TODO: cancel and delete all chunks
+        m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-	public void addParallelBranch(final ParallelizedBranchContent pbc)
+	public void addParallelChunk(final ParallelizedChunkContent pbc)
 	{
-        if (m_branches == null) {
-            m_branches = new LinkedHashMap<NodeID, ParallelizedBranchContent>();
+        if (m_chunks == null) {
+            m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
         }
-	    if (m_branches.containsKey(pbc.getVirtualOutputID())) {
-	        throw new IllegalArgumentException("Can't insert branch with duplicate key!");
+	    if (m_chunks.containsKey(pbc.getVirtualOutputID())) {
+	        throw new IllegalArgumentException("Can't insert chunk with duplicate key!");
 	    }
-	    m_branches.put(pbc.getVirtualOutputID(), pbc);
+	    m_chunks.put(pbc.getVirtualOutputID(), pbc);
 	    pbc.registerLoopEndStateChangeListener(this);
 	}
 	
@@ -251,9 +251,10 @@ NodeStateChangeListener {
     /**
      * {@inheritDoc}
      */
-    public void stateChanged(NodeStateEvent state) {
+    @Override
+	public void stateChanged(final NodeStateEvent state) {
         NodeID endNode = state.getSource();
-        if (m_branches.containsKey(endNode)) {
+        if (m_chunks.containsKey(endNode)) {
 //            this.notify();
         }
     }

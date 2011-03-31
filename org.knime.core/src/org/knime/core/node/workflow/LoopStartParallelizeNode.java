@@ -50,7 +50,7 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 
 /**
  * 
@@ -58,7 +58,7 @@ import org.knime.core.node.port.PortObject;
  */
 public interface LoopStartParallelizeNode extends LoopStartNode {
 	
-	public PortObject[] getPortObjectForChunk(final int i);
+	public VirtualNodeInput getVirtualNodeInput(final int chunkIndex);
 
     public int getNrChunks();
 }

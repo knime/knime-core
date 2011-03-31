@@ -122,7 +122,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
-import org.knime.core.node.workflow.virtual.ParallelizedBranchContent;
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
@@ -1949,7 +1950,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeMessage latestNodeMessage = snc.getNodeMessage();
                 if (success) {
                     Node node = snc.getNode();
-                    // process start of bundle of parallel branches
+                    // process start of bundle of parallel chunks
                     if (node.getNodeModel() 
                     		instanceof LoopStartParallelizeNode) {
                         try {
@@ -2266,21 +2267,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     			loopNodes[i] = loopBody.get(i).getID();
     		}
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
-    			ParallelizedBranchContent copiedNodes = 
+    			ParallelizedChunkContent copiedNodes = 
     			    duplicateLoopBodyAndAttach(
     			    		startID, endID, loopNodes, i, startNode.getNrChunks());
                 executeUpToHere(copiedNodes.getVirtualOutputID());
-    			endNode.addParallelBranch(copiedNodes);
+    			endNode.addParallelChunk(copiedNodes);
     		}
 		}
     }
     
-    private ParallelizedBranchContent duplicateLoopBodyAndAttach(
+    private ParallelizedChunkContent duplicateLoopBodyAndAttach(
     		final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
-    		final int branchIndex, final int branchCount) {
+    		final int chunkIndex, final int chunkCount) {
     	assert Thread.holdsLock(m_workflowMutex);
-    	final int[] moveUIDist = new int[]{(branchIndex + 1) * 10, 
-    			(branchIndex + 1) * 80, 0, 0};
+    	final int[] moveUIDist = new int[]{(chunkIndex + 1) * 10, 
+    			(chunkIndex + 1) * 80, 0, 0};
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
@@ -2355,14 +2356,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 						virtualEndID, c.getDestPort());
 			}
 		}
+		addConnection(startID, 0, virtualStartID, 0);
 		LoopStartParallelizeNode startModel = 
 			castNodeModel(startID, LoopStartParallelizeNode.class);
-		PortObject[] chunkData = startModel.getPortObjectForChunk(branchIndex);
+		VirtualNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
 		VirtualPortObjectInNodeModel virtualInModel =
 			castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
-		virtualInModel.setOutputPortObjects(chunkData);
-		return new ParallelizedBranchContent(this, virtualStartID, 
-				virtualEndID, newIDs, branchIndex, branchCount);
+		virtualInModel.setVirtualNodeInput(data);
+		return new ParallelizedChunkContent(this, virtualStartID, 
+				virtualEndID, newIDs, chunkIndex, chunkCount);
     }
 
     /** check if node can be safely reset. In case of a WFM we will check

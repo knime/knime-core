@@ -13,13 +13,13 @@
       <node
             category-path="/"
             expert-flag="false"
-            factory-class="org.knime.core.node.workflow.virtual.parallelbranchend.ParallelBranchEndNodeFactory"
-            id="org.knime.core.node.workflow.virtual.parallelbranchend.ParallelBranchEndNodeFactory">
+            factory-class="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndNodeFactory"
+            id="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndNodeFactory">
       </node>
       <node
             expert-flag="false"
-            factory-class="org.knime.core.node.workflow.virtual.parallelbranchstart.ParallelBranchStartNodeFactory"
-            id="ParallelBranchStartNodeFactory">
+            factory-class="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory"
+            id="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory">
       </node>
    </extension>
     
