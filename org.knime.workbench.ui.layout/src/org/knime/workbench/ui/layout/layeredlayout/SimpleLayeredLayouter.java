@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.knime.workbench.ui.layout.Graph;
 import org.knime.workbench.ui.layout.Graph.Edge;
@@ -72,6 +73,26 @@ import org.knime.workbench.ui.layout.Graph.Node;
  * @author Martin Mader, University of Konstanz
  */
 public class SimpleLayeredLayouter {
+
+    private Random m_rnd = new Random();
+
+    /**
+     * initializes the seed used for initially shuffling layers.
+     * 
+     * @param seed the seed
+     */
+    public SimpleLayeredLayouter(final long seed) {
+        setSeed(seed);
+    }
+
+    /**
+     * set the seed for the random number generator shuffling layers.
+     * 
+     * @param seed the seed
+     */
+    public void setSeed(final long seed) {
+        m_rnd = new Random(seed);
+    }
 
     /**
      * computes an hierarchical layout of the given graph. If nodes are fixed by
@@ -179,7 +200,7 @@ public class SimpleLayeredLayouter {
                 // times in the crossing minimization phase.
                 // I.e., every execution of the algorithm potentially yields
                 // another result!
-                Collections.shuffle(currentLayer);
+                Collections.shuffle(currentLayer, m_rnd);
                 // ordering could also be initialized by the current ordering
                 // from y-coordinates.
                 // Collections.sort(currentLayer, new
