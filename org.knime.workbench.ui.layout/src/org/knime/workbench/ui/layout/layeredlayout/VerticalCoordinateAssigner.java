@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * Created: 30.03.2011
  * Author: mader
  */
@@ -53,7 +53,6 @@ package org.knime.workbench.ui.layout.layeredlayout;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 
 import org.knime.workbench.ui.layout.Graph;
@@ -63,7 +62,7 @@ import org.knime.workbench.ui.layout.Graph.Node;
 /**
  * handles vertical assignment of coordinates within layers, see
  * "Brandes, Köpf, 2001: Fast and simple horizontal coordinate assignment"
- * 
+ *
  * @author mader, University of Konstanz
  */
 public class VerticalCoordinateAssigner {
@@ -102,9 +101,9 @@ public class VerticalCoordinateAssigner {
 
     private HashMap<Node, Double> m_yRB = new HashMap<Graph.Node, Double>();
 
-    public VerticalCoordinateAssigner(Graph g,
-            ArrayList<ArrayList<Node>> layers, ArrayList<Node> dummyNodes,
-            ArrayList<Edge> dummyEdges) {
+    public VerticalCoordinateAssigner(final Graph g,
+            final ArrayList<ArrayList<Node>> layers, final ArrayList<Node> dummyNodes,
+            final ArrayList<Edge> dummyEdges) {
         m_g = g;
         m_layers = layers;
         // initialize pos and pred
@@ -172,7 +171,7 @@ public class VerticalCoordinateAssigner {
 
     }
 
-    private void storeCoordinates(HashMap<Node, Double> y) {
+    private void storeCoordinates(final HashMap<Node, Double> y) {
         for (Node n : m_g.nodes()) {
             y.put(n, m_y.get(n));
         }
@@ -211,7 +210,7 @@ public class VerticalCoordinateAssigner {
 
     }
 
-    private double getHeight(HashMap<Node, Double> y) {
+    private double getHeight(final HashMap<Node, Double> y) {
         double max = 0;
         double min = Double.POSITIVE_INFINITY;
         for (Node n : m_g.nodes()) {
@@ -237,7 +236,7 @@ public class VerticalCoordinateAssigner {
 
     }
 
-    private void placeBlock(Node v) {
+    private void placeBlock(final Node v) {
         if (m_y.get(v).equals(Double.NaN)) {
             m_y.put(v, 0.0);
             Node w = v;
@@ -374,7 +373,7 @@ public class VerticalCoordinateAssigner {
         }
     }
 
-    private ArrayList<Node> getNeighbors(Node n, boolean left) {
+    private ArrayList<Node> getNeighbors(final Node n, final boolean left) {
         ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
         Iterable<Edge> incidentEdges;
         if (left)
@@ -424,7 +423,7 @@ public class VerticalCoordinateAssigner {
 
     }
 
-    private Edge getInnerSegmentIncidentTo(Node node) {
+    private Edge getInnerSegmentIncidentTo(final Node node) {
         for (Edge e : m_g.inEdges(node))
             // if node is incident to inner segment this will be the only
             // incoming edge

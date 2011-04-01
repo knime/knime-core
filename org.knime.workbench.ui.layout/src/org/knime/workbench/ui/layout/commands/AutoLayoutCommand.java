@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.ui.layout.commands;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.gef.commands.Command;
@@ -70,13 +71,18 @@ public class AutoLayoutCommand extends Command {
 
     private final WorkflowManager m_wfm;
 
+    private final Collection<NodeContainer> m_nodes;
+
     private LayoutManager m_layoutMgr;
 
     /**
      * @param wfm
+     * @param nodes if null, all nodes are laid out
      */
-    public AutoLayoutCommand(final WorkflowManager wfm) {
+    public AutoLayoutCommand(final WorkflowManager wfm,
+            final Collection<NodeContainer> nodes) {
         m_wfm = wfm;
+        m_nodes = nodes;
     }
 
     /**
@@ -85,7 +91,7 @@ public class AutoLayoutCommand extends Command {
     @Override
     public void execute() {
         m_layoutMgr = new LayoutManager(m_wfm);
-        m_layoutMgr.doLayout();
+        m_layoutMgr.doLayout(m_nodes);
     }
 
     /**

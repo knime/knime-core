@@ -51,8 +51,11 @@
  */
 package org.knime.workbench.ui.layout.actions;
 
+import java.util.ArrayList;
+
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -122,7 +125,14 @@ public class AutoLayoutAction extends AbstractNodeAction {
             return;
         }
 
-        AutoLayoutCommand alc = new AutoLayoutCommand(getManager());
+        ArrayList<NodeContainer> nodes = null;
+        if (parts != null && parts.length > 0) {
+            nodes = new ArrayList<NodeContainer>(parts.length);
+            for (NodeContainerEditPart p : parts) {
+                nodes.add(p.getNodeContainer());
+            }
+        }
+        AutoLayoutCommand alc = new AutoLayoutCommand(getManager(), nodes);
         getCommandStack().execute(alc); // enables undo
 
         // update the actions

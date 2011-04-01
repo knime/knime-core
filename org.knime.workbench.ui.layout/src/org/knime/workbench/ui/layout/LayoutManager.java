@@ -86,6 +86,18 @@ public class LayoutManager {
 
     private HashMap<ConnectionContainer, Edge> m_workbenchToGraphEdges;
 
+    // nodes not laid out - but connected to nodes being laid out
+    private HashMap<NodeContainer, Node> m_workbenchIncomingNodes;
+
+    // nodes not laid out - but connected to nodes being laid out
+    private HashMap<NodeContainer, Node> m_workbenchOutgoingNodes;
+
+    // Meta node incoming port indices
+    private HashMap<Integer, Node> m_workbenchWFMInports;
+
+    // Meta node outgoing port indices
+    private HashMap<Integer, Node> m_workbenchWFMOutports;
+
     private Graph m_g;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
@@ -102,39 +114,32 @@ public class LayoutManager {
         m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchToGraphEdges =
                 new HashMap<ConnectionContainer, Graph.Edge>();
+        m_workbenchIncomingNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_workbenchOutgoingNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_workbenchWFMInports = new HashMap<Integer, Graph.Node>();
+        m_workbenchWFMOutports = new HashMap<Integer, Graph.Node>();
         m_g = new Graph();
     }
 
     /**
+     * @param nodes the nodes that should be laid out. If null, all nodes of the
+     *            workflow manager passed to the constructor are laid out.
      *
      */
-    public void doLayout() {
+    public void doLayout(final Collection<NodeContainer> nodes) {
 
         final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
         final int X_OFFSET = 25;
         final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2;
         final int Y_OFFSET = 25;
 
-        // add all nodes (no input /output ports yet (meta nodes))
-        Collection<NodeContainer> allNodes = m_wfm.getNodeContainers();
+        // add all nodes that should be laid out to the graph
+        Collection<NodeContainer> allNodes = nodes;
+        if (allNodes == null) {
+            allNodes = m_wfm.getNodeContainers();
+        }
         for (NodeContainer nc : allNodes) {
-            UIInformation uiInfo = nc.getUIInformation();
-            int x = 0;
-            int y = 0;
-            Node gNode;
-            String label = nc.getCustomName();
-            if (label == null || label.isEmpty()) {
-                label = "Node " + nc.getID().getIDWithoutRoot();
-            }
-            if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
-                NodeUIInformation nui = (NodeUIInformation)uiInfo;
-                int[] bounds = nui.getBounds();
-                x = bounds[0];
-                y = bounds[1];
-                gNode = m_g.createNode(label, x, y);
-            } else {
-                gNode = m_g.createNode(label);
-            }
+            Node gNode = createGraphNodeForNC(nc);
             m_workbenchToGraphNodes.put(nc, gNode);
         }
 
@@ -145,16 +150,80 @@ public class LayoutManager {
         for (ConnectionContainer conn : allConns) {
             NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
             NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
+            Node srcGraphNode;
+            Node destGraphNode;
+            if (s == m_wfm) {
+                // it connects to a meta node input port:
+                int portIdx = conn.getSourcePort();
+                srcGraphNode = m_workbenchWFMInports.get(portIdx);
+                if (srcGraphNode == null) {
+                    srcGraphNode =
+                            m_g.createNode("Incoming " + portIdx, 0, portIdx
+                                    * Y_STRETCH);
+                    m_workbenchWFMInports.put(portIdx, srcGraphNode);
+                }
+            } else {
+                srcGraphNode = m_workbenchToGraphNodes.get(s);
+                if (srcGraphNode == null) {
+                    // then it connects to an "outside" node
+                    srcGraphNode = m_workbenchIncomingNodes.get(s);
+                    if (srcGraphNode == null) {
+                        srcGraphNode = createGraphNodeForNC(s);
+                        m_workbenchIncomingNodes.put(s, srcGraphNode);
+                    }
+                } // else it is a connection inside the layout cluster
+            }
+            if (d == m_wfm) {
+                // it connects to a meta node output port
+                int portIdx = conn.getDestPort();
+                destGraphNode = m_workbenchWFMOutports.get(portIdx);
+                if (destGraphNode == null) {
+                    destGraphNode =
+                            m_g.createNode("Outgoing " + portIdx, 250, portIdx
+                                    * Y_STRETCH);
+                    m_workbenchWFMOutports.put(portIdx, srcGraphNode);
+                }
+            } else {
+                destGraphNode = m_workbenchToGraphNodes.get(d);
+                if (destGraphNode == null) {
+                    // then it connects to an "outside" node
+                    destGraphNode = m_workbenchOutgoingNodes.get(d);
+                    if (destGraphNode == null) {
+                        destGraphNode = createGraphNodeForNC(d);
+                        m_workbenchOutgoingNodes.put(d, destGraphNode);
+                    }
+                } // else it is a connection within the layout cluster
+            }
 
-            gEdge =
-                    m_g.createEdge(m_workbenchToGraphNodes.get(s),
-                            m_workbenchToGraphNodes.get(d));
+            gEdge = m_g.createEdge(srcGraphNode, destGraphNode);
             m_workbenchToGraphEdges.put(conn, gEdge);
         }
 
-        // new SimlpleLayouter().doLayout(m_g);
+        // AFTER creating all nodes, mark the incoming/outgoing nodes as fixed
+        boolean anchorsExist = false;
+        Map<Node, Boolean> anchorNodes = m_g.createBoolNodeMap();
+        for (Node n : m_workbenchIncomingNodes.values()) {
+            anchorsExist = true;
+            anchorNodes.put(n, Boolean.TRUE);
+        }
+        for (Node n : m_workbenchOutgoingNodes.values()) {
+            anchorsExist = true;
+            anchorNodes.put(n, Boolean.TRUE);
+        }
+        for (Node n : m_workbenchWFMInports.values()) {
+            anchorsExist = true;
+            anchorNodes.put(n, Boolean.TRUE);
+        }
+        for (Node n : m_workbenchWFMOutports.values()) {
+            anchorsExist = true;
+            anchorNodes.put(n, Boolean.TRUE);
+        }
 
-        new SimpleLayeredLayouter().doLayout(m_g);
+        if (anchorsExist) {
+            new SimpleLayeredLayouter().doLayout(m_g, anchorNodes);
+        } else {
+            new SimpleLayeredLayouter().doLayout(m_g, null);
+        }
 
         // preserver the old stuff for undoers
         m_oldBendpoints = new HashMap<ConnectionID, ConnectionUIInformation>();
@@ -162,6 +231,7 @@ public class LayoutManager {
 
         // transfer new coordinates back to nodes
         for (NodeContainer nc : allNodes) {
+
             UIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
@@ -208,6 +278,33 @@ public class LayoutManager {
                 }
             }
             conn.setUIInfo(newUI);
+        }
+
+    }
+
+    /**
+     * Creates a new graph node with the coordinates from the UI info and the
+     * label set to custom name.
+     *
+     * @param nc
+     * @return
+     */
+    private Node createGraphNodeForNC(final NodeContainer nc) {
+        UIInformation uiInfo = nc.getUIInformation();
+        int x = 0;
+        int y = 0;
+        String label = nc.getCustomName();
+        if (label == null || label.isEmpty()) {
+            label = "Node " + nc.getID().getIDWithoutRoot();
+        }
+        if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
+            NodeUIInformation nui = (NodeUIInformation)uiInfo;
+            int[] bounds = nui.getBounds();
+            x = bounds[0];
+            y = bounds[1];
+            return m_g.createNode(label, x, y);
+        } else {
+            return m_g.createNode(label);
         }
 
     }
