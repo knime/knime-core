@@ -92,10 +92,10 @@ public class LayoutManager {
     // nodes not laid out - but connected to nodes being laid out
     private HashMap<NodeContainer, Node> m_workbenchOutgoingNodes;
 
-    // Meta node incoming port indices
+    // Meta node incoming port indices connected to nodes being laid out
     private HashMap<Integer, Node> m_workbenchWFMInports;
 
-    // Meta node outgoing port indices
+    // Meta node outgoing port indices connected to nodes being laid out
     private HashMap<Integer, Node> m_workbenchWFMOutports;
 
     private Graph m_g;
@@ -129,7 +129,7 @@ public class LayoutManager {
     public void doLayout(final Collection<NodeContainer> nodes) {
 
         final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
-        final int X_OFFSET = 25;
+        final int X_OFFSET = 20;
         final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2;
         final int Y_OFFSET = 25;
 
@@ -138,21 +138,53 @@ public class LayoutManager {
         if (allNodes == null) {
             allNodes = m_wfm.getNodeContainers();
         }
+        // keep the left upper corner of the node cluster.
+        // Nodes laid out are placed right and below
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        // add all nodes that are to be laid out
         for (NodeContainer nc : allNodes) {
             Node gNode = createGraphNodeForNC(nc);
             m_workbenchToGraphNodes.put(nc, gNode);
+            NodeUIInformation ui = (NodeUIInformation)nc.getUIInformation();
+            minX = (ui.getBounds()[0] < minX) ? ui.getBounds()[0] : minX;
+            minY = (ui.getBounds()[1] < minY) ? ui.getBounds()[1] : minY;
         }
 
-        // add all connections
-        Collection<ConnectionContainer> allConns =
-                m_wfm.getConnectionContainers();
+        // find all connections that connect from/to our nodes,
+        // keep a flag that states: isClusterInternal
+        HashMap<ConnectionContainer, Boolean> allConns =
+                new HashMap<ConnectionContainer, Boolean>();
+        for (ConnectionContainer conn : m_wfm.getConnectionContainers()) {
+            Node src = null;
+            if (!conn.getSource().equals(m_wfm.getID())) {
+                // if it's not a meta node incoming connection
+                src =
+                        m_workbenchToGraphNodes.get(m_wfm.getNodeContainer(conn
+                                .getSource()));
+            }
+            Node dest = null;
+            if (!conn.getDest().equals(m_wfm.getID())) {
+                // if it is not a meta node outgoing connection
+                dest =
+                        m_workbenchToGraphNodes.get(m_wfm.getNodeContainer(conn
+                                .getDest()));
+
+            }
+            boolean isInternal = (src != null && dest != null);
+            // if at least one node is auto laid out we need the connection
+            if (src != null || dest != null) {
+                allConns.put(conn, isInternal);
+            }
+        }
+
+        // Add all connections (internal and leading in/out the cluster)
+        // to the graph
         Edge gEdge;
-        for (ConnectionContainer conn : allConns) {
-            NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
-            NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
+        for (ConnectionContainer conn : allConns.keySet()) {
             Node srcGraphNode;
             Node destGraphNode;
-            if (s == m_wfm) {
+            if (conn.getSource().equals(m_wfm.getID())) {
                 // it connects to a meta node input port:
                 int portIdx = conn.getSourcePort();
                 srcGraphNode = m_workbenchWFMInports.get(portIdx);
@@ -163,6 +195,7 @@ public class LayoutManager {
                     m_workbenchWFMInports.put(portIdx, srcGraphNode);
                 }
             } else {
+                NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
                 srcGraphNode = m_workbenchToGraphNodes.get(s);
                 if (srcGraphNode == null) {
                     // then it connects to an "outside" node
@@ -173,7 +206,7 @@ public class LayoutManager {
                     }
                 } // else it is a connection inside the layout cluster
             }
-            if (d == m_wfm) {
+            if (conn.getDest().equals(m_wfm.getID())) {
                 // it connects to a meta node output port
                 int portIdx = conn.getDestPort();
                 destGraphNode = m_workbenchWFMOutports.get(portIdx);
@@ -184,6 +217,7 @@ public class LayoutManager {
                     m_workbenchWFMOutports.put(portIdx, srcGraphNode);
                 }
             } else {
+                NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
                 destGraphNode = m_workbenchToGraphNodes.get(d);
                 if (destGraphNode == null) {
                     // then it connects to an "outside" node
@@ -196,6 +230,7 @@ public class LayoutManager {
             }
 
             gEdge = m_g.createEdge(srcGraphNode, destGraphNode);
+
             m_workbenchToGraphEdges.put(conn, gEdge);
         }
 
@@ -237,8 +272,12 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x = (int)Math.round(m_g.getX(gNode) * X_STRETCH) + X_OFFSET;
-                int y = (int)Math.round(m_g.getY(gNode) * Y_STRETCH) + Y_OFFSET;
+                int x =
+                        (int)Math.round(m_g.getX(gNode) * X_STRETCH) + X_OFFSET
+                                + minX;
+                int y =
+                        (int)Math.round(m_g.getY(gNode) * Y_STRETCH) + Y_OFFSET
+                                + minY;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
@@ -252,7 +291,12 @@ public class LayoutManager {
         }
 
         // delete old bendpoints - transfer new ones
-        for (ConnectionContainer conn : allConns) {
+        for (ConnectionContainer conn : allConns.keySet()) {
+            // only change bendpoints of cluster internal connections
+//            if (!allConns.get(conn)) {
+//                continue;
+//            }
+
             // store old bendpoint for undo
             UIInformation ui = conn.getUIInfo();
             if (ui != null && ui instanceof ConnectionUIInformation) {
@@ -266,15 +310,14 @@ public class LayoutManager {
             Edge e = m_workbenchToGraphEdges.get(conn);
             ArrayList<Point2D> newBends = m_g.bends(e);
             if (newBends != null && !newBends.isEmpty()) {
-                // add more X to every other bendpoint
                 int extraX = 16; // half the node icon size...
                 int extraY = 24;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
                     newUI.addBendpoint((int)Math.round(b.getX() * X_STRETCH)
-                            + X_OFFSET + extraX,
+                            + X_OFFSET + extraX + minX,
                             (int)Math.round(b.getY() * Y_STRETCH) + Y_OFFSET
-                                    + extraY, i);
+                                    + extraY + minY, i);
                 }
             }
             conn.setUIInfo(newUI);
