@@ -32,7 +32,11 @@
 			</option>		
  		<option name="Write row ID">If checked, the row IDs will be
  			added to the output, as first item in each line.
-			</option>		
+		</option>		
+ 		<option name="Compress output file (gzip)">Compress the output file
+ 		    in gzip format. If enabled, you will not be able to append to an
+ 		    existing file.
+		</option>		
  		<option name="If file exists...">Specify the behavior of the node in 
  		    case the output file already exists. <i>Overwrite</i> will replace any 
  		    existing file, <i>Append</i> will append the input table to the end

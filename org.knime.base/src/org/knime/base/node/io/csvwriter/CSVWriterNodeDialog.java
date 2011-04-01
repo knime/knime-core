@@ -104,6 +104,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     private final CommentPanel m_commentPanel;
 
     private final DecimalSeparatorPanel m_decSeparatorPanel;
+    
+    private final JCheckBox m_useGzipChecker;
 
 
     /**
@@ -129,6 +131,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 .createEtchedBorder(), "Writer options:"));
 
         ItemListener l = new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 checkCheckerState();
             }
@@ -157,6 +160,31 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         bg.add(m_overwritePolicyAbortButton);
         m_overwritePolicyAbortButton.addActionListener(al);
         m_overwritePolicyAbortButton.doClick();
+        
+        m_useGzipChecker = new JCheckBox("Compress output file (gzip)");
+        m_useGzipChecker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                String file = m_textBox.getSelectedFile();
+                if (m_useGzipChecker.isSelected()) {
+                    if (m_overwritePolicyAppendButton.isSelected()) {
+                        m_overwritePolicyAbortButton.doClick();
+                    }
+                    m_overwritePolicyAppendButton.setEnabled(false);
+                    if (file != null && file.length() > 0 
+                    		&& !file.toLowerCase().endsWith(".gz")) {
+                        m_textBox.setSelectedFile(file + ".gz");
+                    }
+                } else {
+                    if (file != null && file.toLowerCase().endsWith(".gz")) {
+                        m_textBox.setSelectedFile(file.substring(
+                                0, file.length() - ".gz".length()));
+                    }
+                    m_overwritePolicyAppendButton.setEnabled(true);
+                }
+            }
+        });
+        
 
         final JPanel colHeaderPane = new JPanel();
         colHeaderPane.setLayout(new BoxLayout(colHeaderPane, BoxLayout.X_AXIS));
@@ -171,6 +199,10 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         rowHeaderPane.setLayout(new BoxLayout(rowHeaderPane, BoxLayout.X_AXIS));
         rowHeaderPane.add(m_rowHeaderChecker);
         rowHeaderPane.add(Box.createHorizontalGlue());
+        final JPanel gzipPane = new JPanel();
+        gzipPane.setLayout(new BoxLayout(gzipPane, BoxLayout.X_AXIS));
+        gzipPane.add(m_useGzipChecker);
+        gzipPane.add(Box.createHorizontalGlue());
         final JPanel overwriteFileLabelPane = new JPanel();
         overwriteFileLabelPane.setLayout(
                 new BoxLayout(overwriteFileLabelPane, BoxLayout.X_AXIS));
@@ -191,6 +223,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         optionsPanel.add(colHeaderPane2);
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(rowHeaderPane);
+        optionsPanel.add(Box.createVerticalStrut(5));
+        optionsPanel.add(gzipPane);
         optionsPanel.add(Box.createVerticalStrut(15));
         optionsPanel.add(overwriteFileLabelPane);
         optionsPanel.add(Box.createVerticalStrut(3));
@@ -257,6 +291,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         default: // Fail
             m_overwritePolicyAbortButton.doClick();
         }
+        m_useGzipChecker.setSelected(newValues.isGzipOutput());
 
         m_quotePanel.loadValuesIntoPanel(newValues);
         m_advancedPanel.loadValuesIntoPanel(newValues);
@@ -293,6 +328,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
             overwritePolicy = FileOverwritePolicy.Abort;
         }
         values.setFileOverwritePolicy(overwritePolicy);
+        values.setGzipOutput(m_useGzipChecker.isSelected());
 
         m_quotePanel.saveValuesFromPanelInto(values);
         m_advancedPanel.saveValuesFromPanelInto(values);
