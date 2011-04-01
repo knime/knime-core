@@ -73,7 +73,18 @@ import org.knime.workbench.ui.layout.Graph.Node;
  */
 public class SimpleLayeredLayouter {
 
-    public void doLayout(final Graph g) throws RuntimeException {
+    /**
+     * computes an hierarchical layout of the given graph. If nodes are fixed by
+     * means of the given map, they will end up on the first or last layer,
+     * ordered by their original y-coordinate. Precondition: g must be a
+     * directed acyclic graph!
+     * 
+     * @param g
+     * @param fixedNodes
+     * @throws RuntimeException
+     */
+    public void doLayout(final Graph g, Map<Node, Boolean> fixedNodes)
+            throws RuntimeException {
 
         // get layering of the graph
         Map<Node, Integer> nodeLayer = g.createIntNodeMap();
