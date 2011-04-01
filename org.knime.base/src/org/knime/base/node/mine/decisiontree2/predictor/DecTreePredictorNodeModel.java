@@ -191,7 +191,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inPorts,
+    public PortObject[] execute(final PortObject[] inPorts,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setMessage("Decision Tree Predictor: Loading predictor...");

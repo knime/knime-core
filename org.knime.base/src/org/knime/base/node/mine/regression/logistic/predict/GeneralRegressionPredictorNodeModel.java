@@ -133,7 +133,7 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         PMMLPortObject port =
                 (PMMLPortObject)inData[0];
@@ -145,8 +145,8 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             throw new RuntimeException(msg);
         }
         PMMLGeneralRegressionContentHandler handler  
-        			= new PMMLGeneralRegressionContentHandler(
-        				(PMMLPortObjectSpec)inData[0].getSpec());
+			 = new PMMLGeneralRegressionContentHandler(
+							(PMMLPortObjectSpec) inData[0].getSpec());
         handler.parse(models.get(0));    
         
         BufferedDataTable data = (BufferedDataTable)inData[1];

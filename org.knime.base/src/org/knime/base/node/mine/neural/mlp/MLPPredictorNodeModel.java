@@ -188,7 +188,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable testdata = (BufferedDataTable)inData[1];
         PMMLPortObject pmmlPort = (PMMLPortObject)inData[0];

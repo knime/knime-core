@@ -140,7 +140,7 @@ public class SVMPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         PMMLPortObject port = (PMMLPortObject)inData[0];
 

@@ -137,7 +137,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         PMMLPortObject port = (PMMLPortObject) inData[PMML_PORT];
 
