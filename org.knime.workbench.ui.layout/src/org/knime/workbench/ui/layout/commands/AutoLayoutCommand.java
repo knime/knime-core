@@ -52,6 +52,7 @@ package org.knime.workbench.ui.layout.commands;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Random;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -75,6 +76,8 @@ public class AutoLayoutCommand extends Command {
 
     private LayoutManager m_layoutMgr;
 
+    private long m_seed;
+
     /**
      * @param wfm
      * @param nodes if null, all nodes are laid out
@@ -90,8 +93,21 @@ public class AutoLayoutCommand extends Command {
      */
     @Override
     public void execute() {
-        m_layoutMgr = new LayoutManager(m_wfm);
+        m_seed = new Random().nextLong();
+        doLayout(m_seed);
+    }
+
+    private void doLayout(final long seed) {
+        m_layoutMgr = new LayoutManager(m_wfm, seed);
         m_layoutMgr.doLayout(m_nodes);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void redo() {
+        doLayout(m_seed);
     }
 
     /**

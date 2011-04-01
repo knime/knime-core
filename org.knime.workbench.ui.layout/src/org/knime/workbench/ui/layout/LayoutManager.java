@@ -82,6 +82,8 @@ public class LayoutManager {
 
     private WorkflowManager m_wfm;
 
+    private long m_initPlacementSeed;
+
     private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
 
     private HashMap<ConnectionContainer, Edge> m_workbenchToGraphEdges;
@@ -109,8 +111,10 @@ public class LayoutManager {
      *
      * @param wfManager contains the flow being laid out
      */
-    public LayoutManager(final WorkflowManager wfManager) {
+    public LayoutManager(final WorkflowManager wfManager,
+            final long initialPlacementSeed) {
         m_wfm = wfManager;
+        m_initPlacementSeed = initialPlacementSeed;
         m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchToGraphEdges =
                 new HashMap<ConnectionContainer, Graph.Edge>();
@@ -129,9 +133,9 @@ public class LayoutManager {
     public void doLayout(final Collection<NodeContainer> nodes) {
 
         final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
-        final int X_OFFSET = 20;
+        final int X_OFFSET = 0;
         final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2;
-        final int Y_OFFSET = 25;
+        final int Y_OFFSET = -0;
 
         // add all nodes that should be laid out to the graph
         Collection<NodeContainer> allNodes = nodes;
@@ -235,29 +239,30 @@ public class LayoutManager {
         }
 
         // AFTER creating all nodes, mark the incoming/outgoing nodes as fixed
-        boolean anchorsExist = false;
+        boolean incomingExist = false;
+        boolean outgoingExist = false;
         Map<Node, Boolean> anchorNodes = m_g.createBoolNodeMap();
         for (Node n : m_workbenchIncomingNodes.values()) {
-            anchorsExist = true;
+            incomingExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchOutgoingNodes.values()) {
-            anchorsExist = true;
+            outgoingExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchWFMInports.values()) {
-            anchorsExist = true;
+            incomingExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchWFMOutports.values()) {
-            anchorsExist = true;
+            outgoingExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
 
-        if (anchorsExist) {
-            new SimpleLayeredLayouter().doLayout(m_g, anchorNodes);
+        if (incomingExist || outgoingExist) {
+            new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, anchorNodes);
         } else {
-            new SimpleLayeredLayouter().doLayout(m_g, null);
+            new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, null);
         }
 
         // preserver the old stuff for undoers
@@ -265,6 +270,10 @@ public class LayoutManager {
         m_oldCoordinates = new HashMap<NodeID, NodeUIInformation>();
 
         // transfer new coordinates back to nodes
+
+        // if we have incoming anchors the first level (xCoord == 0) is not
+        // part of the cluster.
+        int coordOffset = incomingExist ? 1 : 0;
         for (NodeContainer nc : allNodes) {
 
             UIInformation uiInfo = nc.getUIInformation();
@@ -272,12 +281,10 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x =
-                        (int)Math.round(m_g.getX(gNode) * X_STRETCH) + X_OFFSET
-                                + minX;
-                int y =
-                        (int)Math.round(m_g.getY(gNode) * Y_STRETCH) + Y_OFFSET
-                                + minY;
+                int x = (int)Math.round((m_g.getX(gNode) - coordOffset)
+                        * X_STRETCH) + X_OFFSET + minX;
+                int y = (int)Math.round((m_g.getY(gNode) - coordOffset)
+                        * Y_STRETCH) + Y_OFFSET + minY;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
@@ -292,10 +299,6 @@ public class LayoutManager {
 
         // delete old bendpoints - transfer new ones
         for (ConnectionContainer conn : allConns.keySet()) {
-            // only change bendpoints of cluster internal connections
-//            if (!allConns.get(conn)) {
-//                continue;
-//            }
 
             // store old bendpoint for undo
             UIInformation ui = conn.getUIInfo();
