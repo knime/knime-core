@@ -75,562 +75,578 @@ import java.util.Map;
  */
 public class Graph {
 
-	/**
-	 * list of nodes in this graph
-	 */
-	private List<Node> nodes;
-	/**
-	 * list of edges in this graph
-	 */
-	private List<Edge> edges;
-	/**
-	 * used to label the nodes (increased by one whenever a new node is created)
-	 */
-	private int nodeIndex = 0;
+    /**
+     * list of nodes in this graph
+     */
+    private List<Node> nodes;
 
-	/**
-	 * constructor initializing an empty graph
-	 */
-	public Graph() {
-		nodes = new ArrayList<Node>();
-		edges = new ArrayList<Edge>();
-	}
+    /**
+     * list of edges in this graph
+     */
+    private List<Edge> edges;
 
-	/**
-	 * @return true if the graph is empty (i.e., does not contain any nodes) or
-	 *         false otherwise
-	 */
-	public boolean isEmpty() {
-		return nodes.isEmpty();
-	}
+    /**
+     * used to label the nodes (increased by one whenever a new node is created)
+     */
+    private int nodeIndex = 0;
 
-	/**
-	 * test whether an edge specified by its source and target node is contained
-	 * in the graph.
-	 * 
-	 * @param source
-	 * @param target
-	 * @return true if edge (source, target) is contained in the graph, false
-	 *         otherwise
-	 */
-	public boolean containsEdge(Node source, Node target) {
-		return source.getEdge(target) != null;
-	}
+    /**
+     * constructor initializing an empty graph
+     */
+    public Graph() {
+        nodes = new ArrayList<Node>();
+        edges = new ArrayList<Edge>();
+    }
 
-	/**
-	 * test whether the given node is contained in the graph.
-	 * 
-	 * @param node
-	 * @return true if node is contained, false otherwise
-	 */
-	public boolean containsNode(Node node) {
-		return nodes.contains(node);
-	}
+    /**
+     * @return true if the graph is empty (i.e., does not contain any nodes) or
+     *         false otherwise
+     */
+    public boolean isEmpty() {
+        return nodes.isEmpty();
+    }
 
-	/**
-	 * creates a new node.
-	 * 
-	 * @return the newly created node or null if the node could not be inserted
-	 *         to the internal list of nodes
-	 */
-	public Node createNode(String label) {
-		nodeIndex++; // increase label counter
-		Node node = new Node(nodeIndex, label);
-		return nodes.add(node) ? node : null;
-	}
+    /**
+     * test whether an edge specified by its source and target node is contained
+     * in the graph.
+     * 
+     * @param source
+     * @param target
+     * @return true if edge (source, target) is contained in the graph, false
+     *         otherwise
+     */
+    public boolean containsEdge(Node source, Node target) {
+        return source.getEdge(target) != null;
+    }
 
-	public Node createNode(String label, double x, double y) {
-		nodeIndex++; // increase label counter
-		Node node = new Node(nodeIndex, label, x, y);
-		return nodes.add(node) ? node : null;
-	}
+    /**
+     * test whether the given node is contained in the graph.
+     * 
+     * @param node
+     * @return true if node is contained, false otherwise
+     */
+    public boolean containsNode(Node node) {
+        return nodes.contains(node);
+    }
 
-	/**
-	 * creates an edge between given source and target nodes.
-	 * 
-	 * @param source
-	 * @param target
-	 * @return the newly created edge, or null if the edge already exists or
-	 *         could not be inserted to the internal edge list
-	 */
-	public Edge createEdge(Node source, Node target) {
-		// if the two nodes are already adjacent
-		if (source.getEdge(target) != null)
-			return null;
-		// create edge and insert it affected nodes' incidence-lists and to this
-		// graphs' edge-list
-		Edge edge = new Edge(source, target);
-		source.addEdge(edge);
-		target.addEdge(edge);
-		return edges.add(edge) ? edge : null;
-	}
+    /**
+     * creates a new node.
+     * 
+     * @return the newly created node or null if the node could not be inserted
+     *         to the internal list of nodes
+     */
+    public Node createNode(String label) {
+        nodeIndex++; // increase label counter
+        Node node = new Node(nodeIndex, label);
+        return nodes.add(node) ? node : null;
+    }
 
-	public Edge reinsert(Edge e) {
-		Node source = e.source();
-		Node target = e.target();
-		// if the two nodes are already adjacent
-		if (source.getEdge(target) != null)
-			return null;
-		// create edge and insert it affected nodes' incidence-lists and to this
-		// graphs' edge-list
-		source.addEdge(e);
-		target.addEdge(e);
-		return edges.add(e) ? e : null;
-	}
+    public Node createNode(String label, double x, double y) {
+        nodeIndex++; // increase label counter
+        Node node = new Node(nodeIndex, label, x, y);
+        return nodes.add(node) ? node : null;
+    }
 
-	/**
-	 * @return an iterable for the nodes contained in this graph (in order of
-	 *         creation)
-	 */
-	public Iterable<Node> nodes() {
-		return new Iterable<Graph.Node>() {
+    /**
+     * creates an edge between given source and target nodes.
+     * 
+     * @param source
+     * @param target
+     * @return the newly created edge, or null if the edge already exists or
+     *         could not be inserted to the internal edge list
+     */
+    public Edge createEdge(Node source, Node target) {
+        // if the two nodes are already adjacent
+        if (source.getEdge(target) != null)
+            return null;
+        // create edge and insert it affected nodes' incidence-lists and to this
+        // graphs' edge-list
+        Edge edge = new Edge(source, target);
+        source.addEdge(edge);
+        target.addEdge(edge);
+        return edges.add(edge) ? edge : null;
+    }
 
-			@Override
-			public Iterator<Node> iterator() {
-				return nodes.iterator();
-			}
-		};
-	}
+    public Edge reinsert(Edge e) {
+        Node source = e.source();
+        Node target = e.target();
+        // if the two nodes are already adjacent
+        if (source.getEdge(target) != null)
+            return null;
+        // create edge and insert it affected nodes' incidence-lists and to this
+        // graphs' edge-list
+        source.addEdge(e);
+        target.addEdge(e);
+        return edges.add(e) ? e : null;
+    }
 
-	/**
-	 * @return an iterable for the edges contained in this graph (in order of
-	 *         creation)
-	 */
-	public Iterable<Edge> edges() {
-		return new Iterable<Graph.Edge>() {
+    /**
+     * @return an iterable for the nodes contained in this graph (in order of
+     *         creation)
+     */
+    public Iterable<Node> nodes() {
+        return new Iterable<Graph.Node>() {
 
-			@Override
-			public Iterator<Edge> iterator() {
-				return edges.iterator();
-			}
-		};
-	}
+            @Override
+            public Iterator<Node> iterator() {
+                return nodes.iterator();
+            }
+        };
+    }
 
-	public Iterable<Edge> edges(final Node n) {
-		return new Iterable<Graph.Edge>() {
+    /**
+     * @return an iterable for the edges contained in this graph (in order of
+     *         creation)
+     */
+    public Iterable<Edge> edges() {
+        return new Iterable<Graph.Edge>() {
 
-			@Override
-			public Iterator<Edge> iterator() {
-				return n.edges();
-			}
-		};
-	}
+            @Override
+            public Iterator<Edge> iterator() {
+                return edges.iterator();
+            }
+        };
+    }
 
-	public Iterable<Edge> inEdges(final Node n) {
-		return new Iterable<Graph.Edge>() {
+    public Iterable<Edge> edges(final Node n) {
+        return new Iterable<Graph.Edge>() {
 
-			@Override
-			public Iterator<Edge> iterator() {
-				return n.inEdges();
-			}
-		};
-	}
+            @Override
+            public Iterator<Edge> iterator() {
+                return n.edges();
+            }
+        };
+    }
 
-	public Iterable<Edge> outEdges(final Node n) {
-		return new Iterable<Graph.Edge>() {
+    public Iterable<Edge> inEdges(final Node n) {
+        return new Iterable<Graph.Edge>() {
 
-			@Override
-			public Iterator<Edge> iterator() {
-				return n.outEdges();
-			}
-		};
-	}
+            @Override
+            public Iterator<Edge> iterator() {
+                return n.inEdges();
+            }
+        };
+    }
 
-	/**
-	 * @return the number of edges contained in this graph
-	 */
-	public int m() {
-		return edges.size();
-	}
+    public Iterable<Edge> outEdges(final Node n) {
+        return new Iterable<Graph.Edge>() {
 
-	/**
-	 * @return the number of nodes contained in this graph
-	 */
-	public int n() {
-		return nodes.size();
-	}
+            @Override
+            public Iterator<Edge> iterator() {
+                return n.outEdges();
+            }
+        };
+    }
 
-	/**
-	 * removes a given edge from the graph
-	 * 
-	 * @param edge
-	 * @return the removed edge, or null if the edge could not be removed from
-	 *         the internal edge list
-	 */
-	public Edge removeEdge(Edge edge) {
-		Node source = edge.source();
-		Node target = edge.target();
-		// remove edge from edge-list and from the incidence-lists of its two
-		// nodes
-		source.removeEdge(edge);
-		target.removeEdge(edge);
-		return edges.remove(edge) ? edge : null;
-	}
+    /**
+     * @return the number of edges contained in this graph
+     */
+    public int m() {
+        return edges.size();
+    }
 
-	/**
-	 * removes a given node from the graph
-	 * 
-	 * @param node
-	 * @return the removed node, or null if the node could not be removed from
-	 *         the internal node list
-	 */
-	public Node removeNode(Node node) {
-		// remove all incident edges from neighbors' incidence-lists
-		for (Iterator<Edge> it = node.edges(); it.hasNext();) {
-			Edge edge = it.next();
-			edge.opposite(node).removeEdge(edge);
-			edges.remove(edge);
-		}
-		// remove node from graph's node-list
-		return nodes.remove(node) ? node : null;
-	}
+    /**
+     * @return the number of nodes contained in this graph
+     */
+    public int n() {
+        return nodes.size();
+    }
 
-	/**
-	 * return the x-coordinate of a given node n.
-	 * 
-	 * @param n
-	 *            a node
-	 * @return n's x-coordinate
-	 */
-	public double getX(Node n) {
-		return n.x;
-	}
+    /**
+     * removes a given edge from the graph
+     * 
+     * @param edge
+     * @return the removed edge, or null if the edge could not be removed from
+     *         the internal edge list
+     */
+    public Edge removeEdge(Edge edge) {
+        Node source = edge.source();
+        Node target = edge.target();
+        // remove edge from edge-list and from the incidence-lists of its two
+        // nodes
+        source.removeEdge(edge);
+        target.removeEdge(edge);
+        return edges.remove(edge) ? edge : null;
+    }
 
-	/**
-	 * return the y-coordinate of a given node n.
-	 * 
-	 * @param n
-	 *            a node
-	 * @return n's y-coordinate
-	 */
-	public double getY(Node n) {
-		return n.y;
-	}
+    /**
+     * removes a given node from the graph
+     * 
+     * @param node
+     * @return the removed node, or null if the node could not be removed from
+     *         the internal node list
+     */
+    public Node removeNode(Node node) {
+        // remove all incident edges from neighbors' incidence-lists
+        for (Iterator<Edge> it = node.edges(); it.hasNext();) {
+            Edge edge = it.next();
+            edge.opposite(node).removeEdge(edge);
+            edges.remove(edge);
+        }
+        // remove node from graph's node-list
+        return nodes.remove(node) ? node : null;
+    }
 
-	/**
-	 * set the x-coordinate of a node
-	 * 
-	 * @param n
-	 * @param x
-	 */
-	public void setX(Node n, double x) {
-		n.x = x;
-	}
+    /**
+     * return the x-coordinate of a given node n.
+     * 
+     * @param n a node
+     * @return n's x-coordinate
+     */
+    public double getX(Node n) {
+        return n.x;
+    }
 
-	/**
-	 * set the y-coordinate of a node
-	 * 
-	 * @param n
-	 * @param y
-	 */
-	public void setY(Node n, double y) {
-		n.y = y;
-	}
+    /**
+     * return the y-coordinate of a given node n.
+     * 
+     * @param n a node
+     * @return n's y-coordinate
+     */
+    public double getY(Node n) {
+        return n.y;
+    }
 
-	/**
-	 * set the coordinates of a given node n.
-	 * 
-	 * @param n
-	 *            a node
-	 * @param x
-	 *            the x-coordinate
-	 * @param y
-	 *            the y-coordinate
-	 */
-	public void setCoordinates(Node n, double x, double y) {
-		n.x = x;
-		n.y = y;
-	}
+    /**
+     * set the x-coordinate of a node
+     * 
+     * @param n
+     * @param x
+     */
+    public void setX(Node n, double x) {
+        n.x = x;
+    }
 
-	/**
-	 * for each edge, remove all bendpoints that have the same y-coordinate as
-	 * their predecessor and successor.
-	 */
-	public void cleanBends() {
-		for (Edge e : edges()) {
-			ArrayList<Point2D> bends = bends(e);
-			if (bends.size() > 0) {
-				// traverse bends in reverse order (to be able to remove them
-				// from array list
-				double lastY = e.target().y;
-				double curY, nextY;
+    /**
+     * set the y-coordinate of a node
+     * 
+     * @param n
+     * @param y
+     */
+    public void setY(Node n, double y) {
+        n.y = y;
+    }
 
-				for (int i = bends.size() - 1; i >= 0; i--) {
-					curY = bends.get(i).getY();
-					if (i == 0)
-						nextY = e.source().y;
-					else
-						nextY = bends.get(i - 1).getY();
+    /**
+     * set the coordinates of a given node n.
+     * 
+     * @param n a node
+     * @param x the x-coordinate
+     * @param y the y-coordinate
+     */
+    public void setCoordinates(Node n, double x, double y) {
+        n.x = x;
+        n.y = y;
+    }
 
-					if (curY == lastY && curY == nextY) {
-						bends.remove(i);
-					} else {
-						lastY = curY;
-					}
-				}
-				e.bends = bends;
-			}
-		}
-	}
+    /**
+     * for each edge, remove all bendpoints that have the same y-coordinate as
+     * their predecessor and successor.
+     */
+    public void cleanBends() {
+        for (Edge e : edges()) {
+            ArrayList<Point2D> bends = bends(e);
+            if (bends.size() > 0) {
+                // traverse bends in reverse order (to be able to remove them
+                // from array list
+                double lastY = e.target().y;
+                double curY, nextY;
 
-	/**
-	 * create a map storing values for each node in the graph.
-	 * 
-	 * @return a node map containing <code>null</code> for each node
-	 */
-	public Map<Node, Object> createNodeMap() {
-		HashMap<Node, Object> map = new HashMap<Graph.Node, Object>(n());
-		for (Node n : nodes)
-			map.put(n, null);
-		return map;
-	}
+                for (int i = bends.size() - 1; i >= 0; i--) {
+                    curY = bends.get(i).getY();
+                    if (i == 0)
+                        nextY = e.source().y;
+                    else
+                        nextY = bends.get(i - 1).getY();
 
-	/**
-	 * create a map storing an {@link Integer} for each node in the graph.
-	 * 
-	 * @return a node map containing <code>null</code> for each node
-	 */
-	public Map<Node, Integer> createIntNodeMap() {
-		HashMap<Node, Integer> map = new HashMap<Graph.Node, Integer>(n());
-		for (Node n : nodes)
-			map.put(n, null);
-		return map;
-	}
+                    if (curY == lastY && curY == nextY) {
+                        bends.remove(i);
+                    } else {
+                        lastY = curY;
+                    }
+                }
+                e.bends = bends;
+            }
+        }
+    }
 
-	/**
-	 * return the list of bend-points of a given edge
-	 * 
-	 * @param e
-	 * @return
-	 */
-	public ArrayList<Point2D> bends(Edge e) {
-		return e.bends;
-	}
+    /**
+     * create a map storing values for each node in the graph.
+     * 
+     * @return a node map containing <code>null</code> for each node
+     */
+    public Map<Node, Object> createNodeMap() {
+        HashMap<Node, Object> map = new HashMap<Graph.Node, Object>(n());
+        for (Node n : nodes)
+            map.put(n, null);
+        return map;
+    }
 
-	/**
-	 * add a bend-point to the given edge
-	 * 
-	 * @param e
-	 * @param x
-	 * @param y
-	 */
-	public void addBend(Edge e, double x, double y) {
-		e.bends.add(new Point2D.Double(x, y));
-	}
+    /**
+     * create a map storing a {@link Boolean} for each node in the graph
+     * 
+     * @return a node map containing <code>false</code> for each node
+     */
+    public Map<Node, Boolean> createBoolNodeMap() {
+        HashMap<Node, Boolean> map = new HashMap<Graph.Node, Boolean>();
+        for (Node n : nodes)
+            map.put(n, false);
+        return map;
+    }
 
-	@Override
-	public String toString() {
-		return "Nodes: " + Arrays.toString(nodes.toArray()) + "\nEdges: "
-				+ Arrays.toString(edges.toArray());
-	}
+    /**
+     * create a map storing an {@link Integer} for each node in the graph.
+     * 
+     * @return a node map containing <code>null</code> for each node
+     */
+    public Map<Node, Integer> createIntNodeMap() {
+        HashMap<Node, Integer> map = new HashMap<Graph.Node, Integer>(n());
+        for (Node n : nodes)
+            map.put(n, null);
+        return map;
+    }
 
-	/**
-	 * implements a simple node data structure, using an incidence-list storing
-	 * incident edges.
-	 * 
-	 * @author Martin Mader, University Konstanz
-	 * 
-	 */
-	public class Node {
+    /**
+     * return the list of bend-points of a given edge
+     * 
+     * @param e
+     * @return
+     */
+    public ArrayList<Point2D> bends(Edge e) {
+        return e.bends;
+    }
 
-		/**
-		 * the internal list of edges incident to this node.
-		 */
-		private List<Edge> edges;
-		private List<Edge> inEdges;
-		private List<Edge> outEdges;
-		private int index = -1;
-		/**
-		 * this nodes' label
-		 */
-		private String label = "";
-		private double x;
-		private double y;
+    /**
+     * add a bend-point to the given edge
+     * 
+     * @param e
+     * @param x
+     * @param y
+     */
+    public void addBend(Edge e, double x, double y) {
+        e.bends.add(new Point2D.Double(x, y));
+    }
 
-		/**
-		 * constructor creating a node with empty incidence-list. Will only be
-		 * called by {@link AbstractGraph}.
-		 * 
-		 * @param label
-		 *            this nodes' label
-		 */
-		private Node(int index, String label) {
-			this.index = index;
-			this.label = label;
-			edges = new ArrayList<Edge>();
-			inEdges = new ArrayList<Edge>();
-			outEdges = new ArrayList<Edge>();
-		}
+    @Override
+    public String toString() {
+        return "Nodes: " + Arrays.toString(nodes.toArray()) + "\nEdges: "
+                + Arrays.toString(edges.toArray());
+    }
 
-		private Node(int index, String label, double x, double y) {
-			this(index, label);
-			this.x = x;
-			this.y = y;
-		}
+    /**
+     * implements a simple node data structure, using an incidence-list storing
+     * incident edges.
+     * 
+     * @author Martin Mader, University Konstanz
+     * 
+     */
+    public class Node {
 
-		public int index() {
-			return index;
-		}
+        /**
+         * the internal list of edges incident to this node.
+         */
+        private List<Edge> edges;
 
-		/**
-		 * @return the degree of this node
-		 */
-		public int degree() {
-			return edges.size();
-		}
+        private List<Edge> inEdges;
 
-		public int inDegree() {
-			return inEdges.size();
-		}
+        private List<Edge> outEdges;
 
-		public int outDegree() {
-			return outEdges.size();
-		}
+        private int index = -1;
 
-		/**
-		 * @return an iterator for all incident edges (in order of creation)
-		 */
-		public Iterator<Edge> edges() {
-			return edges.iterator();
-		}
+        /**
+         * this nodes' label
+         */
+        private String label = "";
 
-		/**
-		 * @return an iterator for all incoming edges (in order of creation)
-		 */
-		public Iterator<Edge> inEdges() {
-			return inEdges.iterator();
-		}
+        private double x;
 
-		/**
-		 * @return an iterator for all incident edges (in order of creation)
-		 */
-		public Iterator<Edge> outEdges() {
-			return outEdges.iterator();
-		}
+        private double y;
 
-		/**
-		 * returns the edge connecting this node with a given node
-		 * 
-		 * @param node
-		 * @return the (first) edge connecting this node with the given node, or
-		 *         null if no such edge exists
-		 */
-		public Edge getEdge(Node node) {
-			for (Iterator<Edge> it = edges(); it.hasNext();) {
-				Edge edge = it.next();
-				if (edge.source() == node || edge.target() == node)
-					return edge;
-			}
-			return null;
-		}
+        /**
+         * constructor creating a node with empty incidence-list. Will only be
+         * called by {@link AbstractGraph}.
+         * 
+         * @param label this nodes' label
+         */
+        private Node(int index, String label) {
+            this.index = index;
+            this.label = label;
+            edges = new ArrayList<Edge>();
+            inEdges = new ArrayList<Edge>();
+            outEdges = new ArrayList<Edge>();
+        }
 
-		/**
-		 * adds the given edge to this nodes' incidence-lists.
-		 * 
-		 * @param edge
-		 * @return the added edge
-		 */
-		private Edge addEdge(Edge edge) {
-			boolean ok = true;
-			ok = ok && edges.add(edge);
-			if (this == edge.source())
-				ok = ok && outEdges.add(edge);
-			else if (this == edge.target())
-				ok = ok && inEdges.add(edge);
-			return ok ? edge : null;
-		}
+        private Node(int index, String label, double x, double y) {
+            this(index, label);
+            this.x = x;
+            this.y = y;
+        }
 
-		/**
-		 * removes the given edge from this nodes' incidence lists.
-		 * 
-		 * @param edge
-		 * @return the removed edge
-		 */
-		private Edge removeEdge(Edge edge) {
-			boolean ok = true;
-			ok = ok && edges.remove(edge);
-			if (this == edge.source())
-				ok = ok && outEdges.remove(edge);
-			else if (this == edge.target())
-				ok = ok && inEdges.remove(edge);
-			return ok ? edge : null;
-		}
+        public int index() {
+            return index;
+        }
 
-		@Override
-		public String toString() {
-			return label;
-		}
-	}
+        /**
+         * @return the degree of this node
+         */
+        public int degree() {
+            return edges.size();
+        }
 
-	/**
-	 * implements a simple edge data structure for directed edges
-	 * 
-	 * @author Martin Mader, University Konstanz
-	 * 
-	 */
-	public class Edge {
+        public int inDegree() {
+            return inEdges.size();
+        }
 
-		/**
-		 * this edges' source node
-		 */
-		private Node source;
-		/**
-		 * this edges' target node
-		 */
-		private Node target;
-		/**
-		 * this edges' bend points
-		 */
-		private ArrayList<Point2D> bends = new ArrayList<Point2D>();
+        public int outDegree() {
+            return outEdges.size();
+        }
 
-		/**
-		 * creates an edge (source, target). Will only be called by
-		 * {@link AbstractGraph}.
-		 * 
-		 * @param source
-		 * @param target
-		 */
-		private Edge(Node source, Node target) {
-			this.source = source;
-			this.target = target;
-		}
+        /**
+         * @return an iterator for all incident edges (in order of creation)
+         */
+        public Iterator<Edge> edges() {
+            return edges.iterator();
+        }
 
-		/**
-		 * @return this edges' source node
-		 */
-		public Node source() {
-			return source;
-		}
+        /**
+         * @return an iterator for all incoming edges (in order of creation)
+         */
+        public Iterator<Edge> inEdges() {
+            return inEdges.iterator();
+        }
 
-		/**
-		 * @return this edges' target node
-		 */
-		public Node target() {
-			return target;
-		}
+        /**
+         * @return an iterator for all incident edges (in order of creation)
+         */
+        public Iterator<Edge> outEdges() {
+            return outEdges.iterator();
+        }
 
-		/**
-		 * returns the opposite node w.r.t. the given node of this edge
-		 * 
-		 * @param node
-		 * @return the opposite of the given node, or null if the given node is
-		 *         not part of this edge
-		 */
-		public Node opposite(Node node) {
-			// if the given node is this edges' source, return target node and
-			// vice versa
-			if (this.source == node)
-				return this.target;
-			else if (this.target == node)
-				return this.source;
-			// given node is not part of this edge
-			else
-				return null;
-		}
+        /**
+         * returns the edge connecting this node with a given node
+         * 
+         * @param node
+         * @return the (first) edge connecting this node with the given node, or
+         *         null if no such edge exists
+         */
+        public Edge getEdge(Node node) {
+            for (Iterator<Edge> it = edges(); it.hasNext();) {
+                Edge edge = it.next();
+                if (edge.source() == node || edge.target() == node)
+                    return edge;
+            }
+            return null;
+        }
 
-		@Override
-		public String toString() {
-			return "(" + source + "," + target + ")";
-		}
-	}
+        /**
+         * adds the given edge to this nodes' incidence-lists.
+         * 
+         * @param edge
+         * @return the added edge
+         */
+        private Edge addEdge(Edge edge) {
+            boolean ok = true;
+            ok = ok && edges.add(edge);
+            if (this == edge.source())
+                ok = ok && outEdges.add(edge);
+            else if (this == edge.target())
+                ok = ok && inEdges.add(edge);
+            return ok ? edge : null;
+        }
+
+        /**
+         * removes the given edge from this nodes' incidence lists.
+         * 
+         * @param edge
+         * @return the removed edge
+         */
+        private Edge removeEdge(Edge edge) {
+            boolean ok = true;
+            ok = ok && edges.remove(edge);
+            if (this == edge.source())
+                ok = ok && outEdges.remove(edge);
+            else if (this == edge.target())
+                ok = ok && inEdges.remove(edge);
+            return ok ? edge : null;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    /**
+     * implements a simple edge data structure for directed edges
+     * 
+     * @author Martin Mader, University Konstanz
+     * 
+     */
+    public class Edge {
+
+        /**
+         * this edges' source node
+         */
+        private Node source;
+
+        /**
+         * this edges' target node
+         */
+        private Node target;
+
+        /**
+         * this edges' bend points
+         */
+        private ArrayList<Point2D> bends = new ArrayList<Point2D>();
+
+        /**
+         * creates an edge (source, target). Will only be called by
+         * {@link AbstractGraph}.
+         * 
+         * @param source
+         * @param target
+         */
+        private Edge(Node source, Node target) {
+            this.source = source;
+            this.target = target;
+        }
+
+        /**
+         * @return this edges' source node
+         */
+        public Node source() {
+            return source;
+        }
+
+        /**
+         * @return this edges' target node
+         */
+        public Node target() {
+            return target;
+        }
+
+        /**
+         * returns the opposite node w.r.t. the given node of this edge
+         * 
+         * @param node
+         * @return the opposite of the given node, or null if the given node is
+         *         not part of this edge
+         */
+        public Node opposite(Node node) {
+            // if the given node is this edges' source, return target node and
+            // vice versa
+            if (this.source == node)
+                return this.target;
+            else if (this.target == node)
+                return this.source;
+            // given node is not part of this edge
+            else
+                return null;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + source + "," + target + ")";
+        }
+    }
 }

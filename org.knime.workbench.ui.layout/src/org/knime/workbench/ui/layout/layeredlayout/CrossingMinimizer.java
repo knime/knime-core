@@ -60,7 +60,8 @@ import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
  * reduces crossings of a given layering according to the average median
- * heuristic (see, e.g., Eades and Wormald, 1994; Mäkinen 1990)
+ * heuristic followed by a greedy switch (see, e.g., Eades and Wormald, 1994;
+ * Mäkinen 1990)
  * 
  * @author Martin Mader, University of Konstanz
  */
@@ -102,8 +103,6 @@ public class CrossingMinimizer {
         } while (crossings < oldCrossings);
     }
 
-    
-
     /**
      * order the current layer by means of the average median of neighbors of
      * each node in the previous layer.
@@ -123,8 +122,8 @@ public class CrossingMinimizer {
             int m2 = m1 + 1; // needed for even degree
             if (size > 0) {
                 // median heuristic
-                //m_g.setY(v, m_g.getY(neighbors.get(m1)));
-                
+                // m_g.setY(v, m_g.getY(neighbors.get(m1)));
+
                 // average median heuristic
                 if (size % 2 == 1) {
                     // odd degree
@@ -146,49 +145,73 @@ public class CrossingMinimizer {
             y++;
         }
     }
-    
+
     private void greedySwitch() {
         for (int i = 1; i < m_layers.size(); i++) {
             ArrayList<Node> curLayer = m_layers.get(i);
-            ArrayList<Node> prevLayer = m_layers.get(i - 1);
             int oldCross = Integer.MAX_VALUE;
-            int cross = numberCrossingTwoLayer(curLayer, prevLayer);
+            int cross = numberOfCrossingsPrevNextLayer(i);
             int crossTemp = cross;
             do {
                 for (int j = 0; j < curLayer.size() - 1; j++) {
                     Node u = curLayer.get(j);
                     Node v = curLayer.get(j + 1);
-                    switchNodes(u, v);
+                    switchNodes(u, v, curLayer, j);
                     // if switch produces less crossings keep it
                     // i.e., if switch produces equal or more crossings, switch
                     // back
-                    if (numberCrossingTwoLayer(curLayer, prevLayer) >= crossTemp)
-                        switchNodes(u, v);
+                    int c = numberOfCrossingsPrevNextLayer(i);
+                    if (c >= crossTemp)
+                        switchNodes(v, u, curLayer, j);
                     else
-                        // is crossing number is reduced store new crossing
+                        // crossing number is reduced -> store new crossing
                         // number
-                        crossTemp = numberCrossingTwoLayer(curLayer, prevLayer);
+                        crossTemp = c;
                 }
                 oldCross = cross;
-                cross = numberCrossingTwoLayer(curLayer, prevLayer);
+                cross = numberOfCrossingsPrevNextLayer(i);
             } while (cross < oldCross);
         }
     }
 
+    private int numberOfCrossingsPrevNextLayer(final int i) {
+        ArrayList<Node> curLayer = m_layers.get(i);
+        ArrayList<Node> prevLayer;
+        ArrayList<Node> nextLayer;
+        int cross = 0;
+        if (i > 0) {
+            prevLayer = m_layers.get(i - 1);
+            cross += numberCrossingTwoLayer(curLayer, prevLayer);
+        }
+        if (i < m_layers.size() - 1) {
+            nextLayer = m_layers.get(i + 1);
+            cross += numberCrossingTwoLayer(nextLayer, curLayer);
+        }
+        return cross;
+    }
+
     /**
-     * switch y-coordinates of nodes u and v
+     * switch y-coordinates of nodes u and v, and their places in the respective
+     * layer. Node u must be at index i, node v is at index i+1.
      * 
      * @param u
      * @param v
+     * @param layer
+     * @param i
      */
-    private void switchNodes(Node u, Node v) {
+    private void switchNodes(Node u, Node v, ArrayList<Node> layer, int i) {
+        // coordinates
         double temp = m_g.getY(u);
         m_g.setY(u, m_g.getY(v));
         m_g.setY(v, temp);
+        // order in layer
+        layer.set(i, v);
+        layer.set(i + 1, u);
     }
 
     /**
      * counts the number of crossings in the whole layering.
+     * 
      * @return
      */
     private int numberOfCrossings() {

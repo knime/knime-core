@@ -60,28 +60,20 @@ import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
+ * computes a layered layout for a directed acyclic graph. Following the
+ * Sugijama framework, the algorithm processes 3 stages: layer assingment,
+ * crossing minimization, and coordinate assignment.
  * 
- * @author mader, University of Konstanz
+ * Techniques involved are covered in
+ * "Bastert, Matuszewski: Layered Drawings of Digraphs, LNCS 2025, pp87-120, 2001"
+ * ; except for coordinate assignment that is covered in "Brandes, Köpf: Fast
+ * and simple horizontal coordinate assignment, 2001".
+ * 
+ * @author Martin Mader, University of Konstanz
  */
 public class SimpleLayeredLayouter {
 
     public void doLayout(final Graph g) throws RuntimeException {
-
-        // add virtual "super"-source and sink
-        // Node virtualSource = g.createNode("source");
-        // Node virtualSink = g.createNode("sink");
-        // ArrayList<Node> sources = new ArrayList<Graph.Node>();
-        // ArrayList<Node> sinks = new ArrayList<Graph.Node>();
-        // for (Node n:g.nodes()){
-        // if (n.inDegree() == 0)
-        // sources.add(n);
-        // if (n.outDegree() == 0)
-        // sinks.add(n);
-        // }
-        // for (Node n:sources)
-        // g.createEdge(virtualSource, n);
-        // for (Node n:sinks)
-        // g.createEdge(n, virtualSink);
 
         // get layering of the graph
         Map<Node, Integer> nodeLayer = g.createIntNodeMap();
@@ -141,8 +133,16 @@ public class SimpleLayeredLayouter {
         // set initial coordinates by layer
         int layer = 0;
         for (ArrayList<Node> currentLayer : layers) {
+            // here the ordering is shuffled, could also be done several times
+            // in the crossing minimization phase.
+            // I.e., every execution of the algorithm potentially yields another
+            // result!
             Collections.shuffle(currentLayer);
+            // ordering could also be initialized by the current ordering from
+            // y-coordinates.
             // Collections.sort(currentLayer, new Util.NodeByYComparator(g));
+
+            // set coordinates from 0,1,...,size of layer
             int verticalCoord = 0;
             for (Node n : currentLayer) {
                 g.setCoordinates(n, layer, verticalCoord);
@@ -151,7 +151,7 @@ public class SimpleLayeredLayouter {
             layer++;
         }
 
-        /* DO CROSSING MINIMIZATION */
+        /* Do crossing minimization */
         CrossingMinimizer cm = new CrossingMinimizer(g, layers);
         cm.run();
 
@@ -173,12 +173,8 @@ public class SimpleLayeredLayouter {
             }
         }
 
+        // clean up unnecessary bend-points
         g.cleanBends();
-
-        // remove virtual source and sink
-        // g.removeNode(virtualSource);
-        // g.removeNode(virtualSink);
-
     }
 
 }
