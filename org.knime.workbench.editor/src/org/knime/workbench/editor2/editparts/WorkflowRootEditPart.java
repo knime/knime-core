@@ -468,14 +468,14 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 // append this element to the current selection
                 getViewer().appendSelection(part);
                 m_futureSelection.remove(id);
+                // reveal the editpart after it has been created completely
+                Display.getCurrent().asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        getViewer().reveal(part);
+                    }
+                });
             }
-            // reveal the editpart after it has been created completely
-            Display.getCurrent().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    getViewer().reveal(part);
-                }
-            });
         }
         if (model instanceof WorkflowAnnotation) {
             getViewer().deselect(this);

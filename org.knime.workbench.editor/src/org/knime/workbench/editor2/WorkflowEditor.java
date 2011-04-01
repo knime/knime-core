@@ -1266,8 +1266,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             preID = preNode.getNodeContainer().getID();
         }
         Command newNodeCmd =
-                new CreateNewConnectedMetaNode(m_manager, sourceManager, id,
-                        nodeLoc, preID);
+                new CreateNewConnectedMetaNode(getViewer(), m_manager,
+                        sourceManager, id, nodeLoc, preID);
         getCommandStack().execute(newNodeCmd);
         // after adding a node the editor should get the focus
         setFocus();
@@ -1298,8 +1298,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else {
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
-                new CreateNewConnectedNode(m_manager, nodeFactory, nodeLoc,
-                        preNode.getNodeContainer().getID());
+                    new CreateNewConnectedNode(getViewer(), m_manager,
+                            nodeFactory, nodeLoc, preNode.getNodeContainer()
+                                    .getID());
         }
 
         getCommandStack().execute(newNodeCmd);

@@ -21,6 +21,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -35,6 +36,7 @@ import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Creates a new node - and may auto connect it to another one.
@@ -44,6 +46,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 public class CreateNewConnectedNode extends Command {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateNewConnectedNode.class);
+
+    private final EditPartViewer m_viewer;
 
     private final WorkflowManager m_manager;
 
@@ -58,18 +62,22 @@ public class CreateNewConnectedNode extends Command {
     /**
      * Creates a new node and connects it to the passed node - if it fits.
      *
+     * @param viewer the workflow viewer
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
      * @param location Initial visual location of the new node ABSOLTE COORDS!
      * @param connectTo node to which the new node should be connected to
      */
-    public CreateNewConnectedNode(final WorkflowManager manager,
+    public CreateNewConnectedNode(final EditPartViewer viewer,
+            final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory,
             final Point location, final NodeID connectTo) {
+        m_viewer = viewer;
         m_manager = manager;
         m_factory = factory;
         m_location = location;
         m_connectTo = connectTo;
+
     }
 
     /**
@@ -89,7 +97,10 @@ public class CreateNewConnectedNode extends Command {
         if (m_newNode != null && m_connectTo != null) {
             autoConnectNewNode();
         }
-
+        // make sure the new node is selected and visible
+        m_viewer.deselectAll();
+        ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents())
+                .setFutureSelection(new NodeID[]{m_newNode});
     }
 
     protected NodeID createNewNode() {
@@ -142,8 +153,8 @@ public class CreateNewConnectedNode extends Command {
                 + matchingPorts[1] + " with existing node " + sourceNode
                 + " port " + matchingPorts[0]);
         try {
-            m_manager.addConnection(m_connectTo, matchingPorts[0],
-                    m_newNode, matchingPorts[1]).getID();
+            m_manager.addConnection(m_connectTo, matchingPorts[0], m_newNode,
+                    matchingPorts[1]).getID();
         } catch (Exception e) {
             String from = sourceNode.getNameWithID();
             String to = nc.getNameWithID();
@@ -153,7 +164,6 @@ public class CreateNewConnectedNode extends Command {
                             + matchingPorts[1] + ": " + e.getMessage();
             LOGGER.error(msg);
         }
-
 
     }
 

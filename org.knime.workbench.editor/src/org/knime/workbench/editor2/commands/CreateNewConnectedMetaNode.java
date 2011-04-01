@@ -21,6 +21,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditPartViewer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -42,15 +43,16 @@ public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
     private final Point m_location;
 
     /**
+     * @param viewer
      * @param manager
      * @param factory
      * @param location absolute coordinates of the new node
      * @param connectTo
      */
-    public CreateNewConnectedMetaNode(final WorkflowManager destination,
-            final WorkflowManager source, final NodeID sourceID,
-            final Point location, final NodeID connectTo) {
-        super(destination, null, location, connectTo);
+    public CreateNewConnectedMetaNode(final EditPartViewer viewer,
+            final WorkflowManager destination, final WorkflowManager source,
+            final NodeID sourceID, final Point location, final NodeID connectTo) {
+        super(viewer, destination, null, location, connectTo);
         m_destination = destination;
         m_source = source;
         m_sourceID = sourceID;
