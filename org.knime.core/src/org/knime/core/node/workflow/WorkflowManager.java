@@ -68,7 +68,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -2245,7 +2244,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         queueIfQueuable(headNode);
     }
     
-    public void parallelizeLoop(final NodeID startID)
+    /* Parallelize this "loop": create appropriate number of parallel
+     * branches executing the matching chunks.
+     */
+    private void parallelizeLoop(final NodeID startID)
     throws IllegalLoopException {
     	synchronized (m_workflowMutex) {
     		final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
@@ -2266,6 +2268,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		for (int i = 0; i < loopBody.size(); i++) {
     			loopNodes[i] = loopBody.get(i).getID();
     		}
+    		// make sure head knows its tail
+    		startNode.setTailNode(endNode);
+    		// and now create branches for all chunks and execute them.
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedChunkContent copiedNodes = 
     			    duplicateLoopBodyAndAttach(
@@ -2282,7 +2287,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     	assert Thread.holdsLock(m_workflowMutex);
     	final int[] moveUIDist = new int[]{(chunkIndex + 1) * 10, 
     			(chunkIndex + 1) * 80, 0, 0};
-    	Arrays.sort(oldIDs); // pasted content is also sorted
+//    	Arrays.sort(oldIDs); // pasted content is also sorted
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
@@ -4114,7 +4119,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     "argument list contains duplicates");
         }
         Map<Integer, NodeContainerPersistor> loaderMap =
-            new TreeMap<Integer, NodeContainerPersistor>();
+            new LinkedHashMap<Integer, NodeContainerPersistor>();
         Set<ConnectionContainerTemplate> connTemplates =
             new HashSet<ConnectionContainerTemplate>();
         synchronized (m_workflowMutex) {
@@ -4731,7 +4736,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final Set<ConnectionContainerTemplate> connections,
             final LoadResult loadResult) {
         // id suffix are made unique by using the entries in this map
-        Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
+        Map<Integer, NodeID> translationMap = 
+            new LinkedHashMap<Integer, NodeID>();
 
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
                 : loaderMap.entrySet()) {
