@@ -78,8 +78,8 @@ public class Layerer {
      * @return the list of layers, each layer containing an array list of nodes
      */
     static ArrayList<ArrayList<Node>> assignLayers(final Graph g,
-            final Map<Node, Integer> nodeLayer, ArrayList<Node> fixedSources,
-            ArrayList<Node> fixedSinks) {
+            final Map<Node, Integer> nodeLayer,
+            final ArrayList<Node> fixedSources, final ArrayList<Node> fixedSinks) {
 
         // initialize residual degrees, and find first sources
         ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
@@ -87,8 +87,9 @@ public class Layerer {
         ArrayList<Node> sources = new ArrayList<Node>();
         for (Node n : g.nodes()) {
             residualDegree.put(n, n.inDegree());
-            if (n.inDegree() == 0)
+            if (n.inDegree() == 0) {
                 sources.add(n);
+            }
         }
 
         // process each layer:
@@ -124,7 +125,7 @@ public class Layerer {
             // check if there are non-fixed sinks on the current last layer
             boolean lastLayerValid = true;
             int lastlayer = layers.size() - 1;
-            
+
             for (Node n : layers.get(lastlayer)) {
                 if (!fixedSinks.contains(n)) {
                     lastLayerValid = false;

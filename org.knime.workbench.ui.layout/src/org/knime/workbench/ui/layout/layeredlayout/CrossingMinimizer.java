@@ -108,26 +108,51 @@ public class CrossingMinimizer {
         if (m_fixedSinks != null) {
             sinkOffset = 1;
         }
+        ArrayList<ArrayList<Node>> lastLayering;
+        // do layer by layer sweep; if we either have fixed sources or fixed
+        // sinks, perform only once, since every other run will yield the same
+        // result
         do {
+            // store last layering
+            lastLayering = copyLayering();
             // rightward sweep
             for (int i = 1; i < m_layers.size() - sinkOffset; i++) {
-                ArrayList<Node> curLayer = m_layers.get(i);
-                ArrayList<Node> prevLayer = m_layers.get(i - 1);
-                // set node to median position
-                orderByMedian(curLayer, prevLayer);
+                orderByMedian(m_layers.get(i), m_layers.get(i - 1));
             }
             // leftward sweep
             for (int i = m_layers.size() - 2; i >= sourceOffset; i--) {
-                ArrayList<Node> curLayer = m_layers.get(i);
-                ArrayList<Node> prevLayer = m_layers.get(i + 1);
-                // set node to median position
-                orderByMedian(curLayer, prevLayer);
+                orderByMedian(m_layers.get(i), m_layers.get(i + 1));
             }
             // greedy switch
             greedySwitch(sourceOffset, sinkOffset);
             oldCrossings = crossings;
             crossings = numberOfCrossings();
-        } while (crossings < oldCrossings);
+        } while (crossings < oldCrossings && m_fixedSources != null
+                && m_fixedSinks != null);
+        // if crossing number got worse use the next-to-last layering
+        if (crossings > oldCrossings) {
+            m_layers = lastLayering;
+        }
+        for (ArrayList<Node> curLayer : m_layers) {
+            updateY(curLayer);
+        }
+    }
+
+    /**
+     * copies the current layering.
+     * 
+     * @return
+     */
+    private ArrayList<ArrayList<Node>> copyLayering() {
+        ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
+        for (ArrayList<Node> layer : m_layers) {
+            ArrayList<Node> layerCopy = new ArrayList<Graph.Node>();
+            layers.add(layerCopy);
+            for (Node n : layer) {
+                layerCopy.add(n);
+            }
+        }
+        return layers;
     }
 
     /**
@@ -166,6 +191,10 @@ public class CrossingMinimizer {
         // sort current layer by medians
         Collections.sort(curLayer, new LayerSortComparator(prevLayer));
         // set corresponding y-coordinates
+        updateY(curLayer);
+    }
+
+    private void updateY(final ArrayList<Node> curLayer) {
         double y = 0;
         for (Node n : curLayer) {
             m_g.setY(n, y);
@@ -185,7 +214,7 @@ public class CrossingMinimizer {
         for (int i = sourceOffset; i < m_layers.size() - sinkOffset; i++) {
             ArrayList<Node> curLayer = m_layers.get(i);
             int oldCross = Integer.MAX_VALUE;
-            int cross = numberOfCrossingsPrevNextLayer(i);
+            int cross = numberOfCrossingsPrevLayer(i);
             int crossTemp = cross;
             do {
                 for (int j = 0; j < curLayer.size() - 1; j++) {
@@ -195,7 +224,7 @@ public class CrossingMinimizer {
                     // if switch produces less crossings keep it
                     // i.e., if switch produces equal or more crossings, switch
                     // back
-                    int c = numberOfCrossingsPrevNextLayer(i);
+                    int c = numberOfCrossingsPrevLayer(i);
                     if (c >= crossTemp) {
                         switchNodes(v, u, curLayer, j);
                     } else {
@@ -205,8 +234,9 @@ public class CrossingMinimizer {
                     }
                 }
                 oldCross = cross;
-                cross = numberOfCrossingsPrevNextLayer(i);
+                cross = numberOfCrossingsPrevLayer(i);
             } while (cross < oldCross);
+            Collections.sort(curLayer, new Util.NodeByYComparator(m_g));
         }
     }
 
@@ -246,25 +276,25 @@ public class CrossingMinimizer {
     }
 
     /**
-     * counts the number of crossing within layer (i-1) and i and layer i and
-     * (i+1).
+     * counts the number of crossing within layer (i-1) and i (previously also between layer i and
+     * (i+1)).
      * 
      * @param i
      * @return
      */
-    private int numberOfCrossingsPrevNextLayer(final int i) {
+    private int numberOfCrossingsPrevLayer(final int i) {
         ArrayList<Node> curLayer = m_layers.get(i);
         ArrayList<Node> prevLayer;
-        ArrayList<Node> nextLayer;
+        // ArrayList<Node> nextLayer;
         int cross = 0;
         if (i > 0) {
             prevLayer = m_layers.get(i - 1);
             cross += numberCrossingTwoLayer(curLayer, prevLayer);
         }
-        if (i < m_layers.size() - 1) {
-            nextLayer = m_layers.get(i + 1);
-            cross += numberCrossingTwoLayer(nextLayer, curLayer);
-        }
+        // if (i < m_layers.size() - 1) {
+        // nextLayer = m_layers.get(i + 1);
+        // cross += numberCrossingTwoLayer(nextLayer, curLayer);
+        // }
         return cross;
     }
 
