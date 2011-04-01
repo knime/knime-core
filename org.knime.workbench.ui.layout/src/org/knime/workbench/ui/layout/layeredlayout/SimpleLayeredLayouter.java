@@ -79,13 +79,15 @@ public class SimpleLayeredLayouter {
      * ordered by their original y-coordinate. Precondition: g must be a
      * directed acyclic graph!
      * 
-     * @param g
-     * @param fixedNodes
+     * @param g the graph to perform layout on
+     * @param fixedNodes node map containing true if the respective node should
+     *            be fixed (only sources and sinks allowed)
      * @throws RuntimeException
      */
-    public void doLayout(final Graph g, Map<Node, Boolean> fixedNodes)
+    public void doLayout(final Graph g, final Map<Node, Boolean> fixedNodes)
             throws RuntimeException {
 
+        // create lists for fixed sources and sinks if necessary
         ArrayList<Node> fixedSources = null;
         ArrayList<Node> fixedSinks = null;
         if (fixedNodes != null) {
@@ -99,6 +101,12 @@ public class SimpleLayeredLayouter {
                         fixedSinks.add(n);
                     }
                 }
+            }
+            if (fixedSources.isEmpty()) {
+                fixedSources = null;
+            }
+            if (fixedSinks.isEmpty()) {
+                fixedSinks = null;
             }
         }
 
@@ -187,7 +195,8 @@ public class SimpleLayeredLayouter {
         }
 
         /* Do crossing minimization */
-        CrossingMinimizer cm = new CrossingMinimizer(g, layers);
+        CrossingMinimizer cm =
+                new CrossingMinimizer(g, layers, fixedSources, fixedSinks);
         cm.run();
 
         /* Do vertical placement */

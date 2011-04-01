@@ -99,13 +99,8 @@ public class Layerer {
             for (Node n : fixedSources) {
                 sources.remove(n);
                 nodeLayer.put(n, layer);
-                for (Edge e : g.outEdges(n)) {
-                    Node t = e.target();
-                    int newDegree = residualDegree.get(t).intValue() - 1;
-                    residualDegree.put(t, newDegree);
-                    if (newDegree == 0)
-                        sources.add(t);
-                }
+                // check if any of the outgoing neighbors becomes a source
+                updateSources(g, n, sources, residualDegree);
             }
             layer++;
         }
@@ -117,16 +112,7 @@ public class Layerer {
             layers.add(sources);
             for (Node n : sources) {
                 nodeLayer.put(n, layer);
-                // reduce residual degree of neighbours
-                for (Edge e : g.outEdges(n)) {
-                    Node t = e.target();
-                    int deg = residualDegree.get(t).intValue() - 1;
-                    residualDegree.put(t, deg);
-                    // neighbours can become new sources. if they do, add them
-                    // to the sources that will be placed on the next layer.
-                    if (deg == 0)
-                        nextSources.add(t);
-                }
+                updateSources(g, n, nextSources, residualDegree);
             }
             // advance to the next layer
             sources = nextSources;
@@ -137,16 +123,16 @@ public class Layerer {
         if (fixedSinks != null) {
             // check if there are non-fixed sinks on the current last layer
             boolean lastLayerValid = true;
-            for (Node n : layers.get(layer - 1)) {
+            int lastlayer = layers.size() - 1;
+            
+            for (Node n : layers.get(lastlayer)) {
                 if (!fixedSinks.contains(n)) {
                     lastLayerValid = false;
                 }
             }
 
-            
             // if last layer does only contain fixed sinks, then move all fixed
             // sinks to this layer, otherwise introduce new last layer
-            int lastlayer = layer - 1;
             if (!lastLayerValid) {
                 lastlayer++;
                 layers.add(new ArrayList<Graph.Node>());
@@ -158,5 +144,25 @@ public class Layerer {
             }
         }
         return layers;
+    }
+
+    /**
+     * check the outgoing edges of a given node n for becoming a new source
+     * after n is processed.
+     * 
+     * @param g
+     * @param n
+     * @param sources
+     * @param residualDegree
+     */
+    private static void updateSources(final Graph g, Node n,
+            ArrayList<Node> sources, Map<Node, Integer> residualDegree) {
+        for (Edge e : g.outEdges(n)) {
+            Node t = e.target();
+            int newDegree = residualDegree.get(t).intValue() - 1;
+            residualDegree.put(t, newDegree);
+            if (newDegree == 0)
+                sources.add(t);
+        }
     }
 }

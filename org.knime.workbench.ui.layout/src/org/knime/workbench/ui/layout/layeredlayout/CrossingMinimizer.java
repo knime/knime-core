@@ -61,7 +61,7 @@ import org.knime.workbench.ui.layout.Graph.Node;
 /**
  * reduces crossings of a given layering according to the average median
  * heuristic followed by a greedy switch (see, e.g., Eades and Wormald, 1994;
- * Mäkinen 1990)
+ * Mäkinen 1990).
  * 
  * @author Martin Mader, University of Konstanz
  */
@@ -70,34 +70,61 @@ public class CrossingMinimizer {
 
     private ArrayList<ArrayList<Node>> m_layers;
 
+    private ArrayList<Node> m_fixedSources;
+
+    private ArrayList<Node> m_fixedSinks;
+
+    /**
+     * initializes the needed information for crossing minimization.
+     * 
+     * @param g the graph to work on
+     * @param layers layering information
+     * @param fixedSources list of fixed sources
+     * @param fixedSinks list of fixed sinks
+     */
     public CrossingMinimizer(final Graph g,
-            final ArrayList<ArrayList<Node>> layers) {
+            final ArrayList<ArrayList<Node>> layers,
+            final ArrayList<Node> fixedSources, final ArrayList<Node> fixedSinks) {
         m_g = g;
         m_layers = layers;
+        m_fixedSources = fixedSources;
+        m_fixedSinks = fixedSinks;
     }
 
+    /**
+     * runs crossing minimization.
+     */
     public void run() {
-        if (m_layers.size() < 2) // nothing to do
+        if (m_layers.size() < 2) { // nothing to do
             return;
+        }
         int oldCrossings = Integer.MAX_VALUE;
         int crossings = numberOfCrossings();
+        int sourceOffset = 0;
+        int sinkOffset = 0;
+        if (m_fixedSources != null) {
+            sourceOffset = 1;
+        }
+        if (m_fixedSinks != null) {
+            sinkOffset = 1;
+        }
         do {
             // rightward sweep
-            for (int i = 1; i < m_layers.size(); i++) {
+            for (int i = 1; i < m_layers.size() - sinkOffset; i++) {
                 ArrayList<Node> curLayer = m_layers.get(i);
                 ArrayList<Node> prevLayer = m_layers.get(i - 1);
                 // set node to median position
                 orderByMedian(curLayer, prevLayer);
             }
             // leftward sweep
-            for (int i = m_layers.size() - 2; i >= 0; i--) {
+            for (int i = m_layers.size() - 2; i >= sourceOffset; i--) {
                 ArrayList<Node> curLayer = m_layers.get(i);
                 ArrayList<Node> prevLayer = m_layers.get(i + 1);
                 // set node to median position
                 orderByMedian(curLayer, prevLayer);
             }
             // greedy switch
-            greedySwitch();
+            greedySwitch(sourceOffset, sinkOffset);
             oldCrossings = crossings;
             crossings = numberOfCrossings();
         } while (crossings < oldCrossings);
@@ -146,8 +173,16 @@ public class CrossingMinimizer {
         }
     }
 
-    private void greedySwitch() {
-        for (int i = 1; i < m_layers.size(); i++) {
+    /**
+     * perform a greedy switch going from first to last layer. In each layer,
+     * switch consecutive nodes if crossing number is reduced. Fixed layers are
+     * excluded by given offsets.
+     * 
+     * @param sourceOffset
+     * @param sinkOffset
+     */
+    private void greedySwitch(final int sourceOffset, final int sinkOffset) {
+        for (int i = sourceOffset; i < m_layers.size() - sinkOffset; i++) {
             ArrayList<Node> curLayer = m_layers.get(i);
             int oldCross = Integer.MAX_VALUE;
             int cross = numberOfCrossingsPrevNextLayer(i);
@@ -161,33 +196,18 @@ public class CrossingMinimizer {
                     // i.e., if switch produces equal or more crossings, switch
                     // back
                     int c = numberOfCrossingsPrevNextLayer(i);
-                    if (c >= crossTemp)
+                    if (c >= crossTemp) {
                         switchNodes(v, u, curLayer, j);
-                    else
+                    } else {
                         // crossing number is reduced -> store new crossing
                         // number
                         crossTemp = c;
+                    }
                 }
                 oldCross = cross;
                 cross = numberOfCrossingsPrevNextLayer(i);
             } while (cross < oldCross);
         }
-    }
-
-    private int numberOfCrossingsPrevNextLayer(final int i) {
-        ArrayList<Node> curLayer = m_layers.get(i);
-        ArrayList<Node> prevLayer;
-        ArrayList<Node> nextLayer;
-        int cross = 0;
-        if (i > 0) {
-            prevLayer = m_layers.get(i - 1);
-            cross += numberCrossingTwoLayer(curLayer, prevLayer);
-        }
-        if (i < m_layers.size() - 1) {
-            nextLayer = m_layers.get(i + 1);
-            cross += numberCrossingTwoLayer(nextLayer, curLayer);
-        }
-        return cross;
     }
 
     /**
@@ -199,7 +219,8 @@ public class CrossingMinimizer {
      * @param layer
      * @param i
      */
-    private void switchNodes(Node u, Node v, ArrayList<Node> layer, int i) {
+    private void switchNodes(final Node u, final Node v,
+            final ArrayList<Node> layer, final int i) {
         // coordinates
         double temp = m_g.getY(u);
         m_g.setY(u, m_g.getY(v));
@@ -225,6 +246,29 @@ public class CrossingMinimizer {
     }
 
     /**
+     * counts the number of crossing within layer (i-1) and i and layer i and
+     * (i+1).
+     * 
+     * @param i
+     * @return
+     */
+    private int numberOfCrossingsPrevNextLayer(final int i) {
+        ArrayList<Node> curLayer = m_layers.get(i);
+        ArrayList<Node> prevLayer;
+        ArrayList<Node> nextLayer;
+        int cross = 0;
+        if (i > 0) {
+            prevLayer = m_layers.get(i - 1);
+            cross += numberCrossingTwoLayer(curLayer, prevLayer);
+        }
+        if (i < m_layers.size() - 1) {
+            nextLayer = m_layers.get(i + 1);
+            cross += numberCrossingTwoLayer(nextLayer, curLayer);
+        }
+        return cross;
+    }
+
+    /**
      * counts the number of crossings between the two given layers. THIS IS
      * REALLY BRUTE FORCE AND CAN BE MADE MORE EFFICIENT! (e.g., modifying
      * mergesort to count inversions)
@@ -233,8 +277,8 @@ public class CrossingMinimizer {
      * @param prevLayer
      * @return
      */
-    private int numberCrossingTwoLayer(ArrayList<Node> curLayer,
-            ArrayList<Node> prevLayer) {
+    private int numberCrossingTwoLayer(final ArrayList<Node> curLayer,
+            final ArrayList<Node> prevLayer) {
         int cross = 0;
         for (Node u1 : prevLayer) {
             for (Node v1 : getNeighbors(u1, curLayer)) {
@@ -258,7 +302,27 @@ public class CrossingMinimizer {
     }
 
     /**
-     * return the neighbors of a node n on the given layer
+     * check whether to edges (u1,v1) and (u2,v2) create a crossing.
+     * 
+     * @param u1 node of first edge on first layer
+     * @param v1 node of first edge on second layer
+     * @param u2 node of second edge on first layer
+     * @param v2 node of second edge on second layer
+     * @return 1 if edges cross, 0 otherwise
+     */
+    private int checkCrossing(final Node u1, final Node v1, final Node u2,
+            final Node v2) {
+        if (m_g.getY(u1) < m_g.getY(u2) && m_g.getY(v1) > m_g.getY(v2)) {
+            return 1;
+        } else if (m_g.getY(u1) > m_g.getY(u2) && m_g.getY(v1) < m_g.getY(v2)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * return the neighbors of a node n on the given layer.
      * 
      * @param n
      * @param layer
@@ -269,29 +333,11 @@ public class CrossingMinimizer {
         ArrayList<Node> neighbors = new ArrayList<Graph.Node>();
         for (Edge e : m_g.edges(n)) {
             Node m = e.opposite(n);
-            if (layer.contains(m))
+            if (layer.contains(m)) {
                 neighbors.add(m);
+            }
         }
         return neighbors;
-    }
-
-    /**
-     * check whether to edges (u1,v1) and (u2,v2) create a crossing
-     * 
-     * @param u1 node of first edge on first layer
-     * @param v1 node of first edge on second layer
-     * @param u2 node of second edge on first layer
-     * @param v2 node of second edge on second layer
-     * @return 1 if edges cross, 0 otherwise
-     */
-    private int checkCrossing(final Node u1, final Node v1, final Node u2,
-            final Node v2) {
-        if (m_g.getY(u1) < m_g.getY(u2) && m_g.getY(v1) > m_g.getY(v2))
-            return 1;
-        else if (m_g.getY(u1) > m_g.getY(u2) && m_g.getY(v1) < m_g.getY(v2))
-            return 1;
-        else
-            return 0;
     }
 
     /**
@@ -304,27 +350,34 @@ public class CrossingMinimizer {
     public class LayerSortComparator implements
             Comparator<org.knime.workbench.ui.layout.Graph.Node> {
 
-        ArrayList<Node> m_otherLayer;
+        private ArrayList<Node> m_otherLayer;
 
+        /**
+         * constructor.
+         * 
+         * @param otherLayer if medians are equal decision is made by degree of
+         *            a node with respect to this layer
+         */
         public LayerSortComparator(final ArrayList<Node> otherLayer) {
             m_otherLayer = otherLayer;
         }
 
         @Override
         public int compare(final Node o1, final Node o2) {
-            if (m_g.getY(o1) < m_g.getY(o2))
+            if (m_g.getY(o1) < m_g.getY(o2)) {
                 return -1;
-            else if (m_g.getY(o1) > m_g.getY(o2))
+            } else if (m_g.getY(o1) > m_g.getY(o2)) {
                 return 1;
-            else {
+            } else {
                 // both have same median
                 // if o1 has odd degree choose this one
-                if (getNeighbors(o1, m_otherLayer).size() % 2 != 0)
+                if (getNeighbors(o1, m_otherLayer).size() % 2 != 0) {
                     return -1;
-                else if (getNeighbors(o2, m_otherLayer).size() % 2 != 0)
+                } else if (getNeighbors(o2, m_otherLayer).size() % 2 != 0) {
                     return 1;
-                else
+                } else {
                     return 0;
+                }
             }
         }
     }
