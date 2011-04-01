@@ -174,6 +174,21 @@ public final class ParallelizedChunkContent {
     }
     
     /**
+     * @return true if chunk is still being executed (or waiting to be...)
+     */
+    public boolean executionInProgress() {
+        return m_manager.getNodeContainer(
+                m_virtualOutputID).getState().executionInProgress();
+    }
+
+    /**
+     * Cancel execution.
+     */
+    public void cancelExecution() {
+        m_manager.cancelExecution(m_manager.getNodeContainer(m_virtualInputID));
+    }
+
+    /**
      * @return array with PortObjects at the end node of this chunk.
      */
     public PortObject[] getOutportContent() {

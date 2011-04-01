@@ -65,5 +65,10 @@ extends LoopEndNode, NodeStateChangeListener {
      * @param pbc The chunk content (set of nodes)
      */
     void addParallelChunk(final ParallelizedChunkContent pbc);
+    
+    /** Make sure all branches/chunks from previous runs are cleaned up
+     * and removed.
+     */
+    public void cleanupChunks();
 
 }

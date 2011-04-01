@@ -148,7 +148,7 @@ NodeStateChangeListener {
 	        try {
 	            exec.checkCanceled();
 	        } catch (CanceledExecutionException cee) {
-	            // TODO: cancel all chunks
+	            cleanupChunks();
 	            throw cee;
 	        }
 	        // check if any of the chunks are finished
@@ -176,10 +176,16 @@ NodeStateChangeListener {
 	                exec.setProgress((double)m_chunks.size()
 	                                 /(double)pbc.getChunkCount());
 	            }
-	            // TODO: also do something with failures and nodes
-	            // that do not execute anymore.
 	        }
-	        if (m_chunks.size() == 0) {
+	        // check if there is any executing chunk left (don't count
+	        // failures...)
+	        int nrExecutingChunks = 0;
+            for (ParallelizedChunkContent pbc : m_chunks.values()) {
+                if (pbc.executionInProgress()) {
+                    nrExecutingChunks++;
+                }
+            }
+	        if (nrExecutingChunks <= 0) {
 	            done = true;
 	        }
 	    }
@@ -195,9 +201,28 @@ NodeStateChangeListener {
      */
     @Override
     protected void reset() {
-        // TODO: cancel and delete all chunks
-        m_chunks = null;
+        // note that we do NOT delete the chunk-branches here - they should
+        // be kept until the START node is reset explicitly so that for
+        // debugging purposes they are available even if this node has
+        // failed.
         m_results = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void cleanupChunks() {
+        for (Iterator<ParallelizedChunkContent> pbc_it
+                = m_chunks.values().iterator(); pbc_it.hasNext();) {
+            ParallelizedChunkContent pbc = pbc_it.next();
+            if (pbc.executionInProgress()) {
+                pbc.cancelExecution();
+            }
+            // and finally remove branch and all its nodes
+            pbc_it.remove();
+            pbc.removeAllNodesFromWorkflow();
+        }
     }
 
     /**

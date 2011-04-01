@@ -58,7 +58,21 @@ import org.knime.core.node.workflow.virtual.VirtualNodeInput;
  */
 public interface LoopStartParallelizeNode extends LoopStartNode {
 	
+    /**
+     * @param chunkIndex index
+     * @return virtual input node for the given chunk
+     */
 	public VirtualNodeInput getVirtualNodeInput(final int chunkIndex);
 
+	/**
+	 * @return overall number of chunks (including the main one!)
+	 */
     public int getNrChunks();
+
+    /** Set matching tail node so the start node has access to clean up
+     * when reset.
+     * 
+     * @param lepn matching @see{LoopEndParallelizeNode}
+     */
+    public void setTailNode(final LoopEndParallelizeNode lepn);
 }
