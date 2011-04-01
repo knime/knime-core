@@ -186,6 +186,11 @@ public final class ParallelizedChunkContent {
      */
     public void cancelExecution() {
         m_manager.cancelExecution(m_manager.getNodeContainer(m_virtualInputID));
+        for (NodeID id : m_copiedLoopContent) {
+            m_manager.cancelExecution(m_manager.getNodeContainer(id));
+        }
+        m_manager.cancelExecution(
+                m_manager.getNodeContainer(m_virtualOutputID));
     }
 
     /**

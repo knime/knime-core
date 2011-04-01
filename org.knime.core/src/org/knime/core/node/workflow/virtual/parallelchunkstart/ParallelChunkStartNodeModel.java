@@ -101,6 +101,10 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 		BufferedDataTable in = inData[0];
         BufferedDataTable[] splitInTables; 
 
+        // clean tail in case have not done so before
+        if (m_tailNode != null) {
+            m_tailNode.cleanupChunks();
+        }
         if (in.getRowCount() <= 1) {
             // empty or one-row input table...
             splitInTables = new BufferedDataTable[] {};

@@ -87,6 +87,8 @@ NodeStateChangeListener {
     private LinkedHashMap<NodeID, ParallelizedChunkContent> m_chunks;
     /* hold intermediate BufferedDataTables from parallelize chunks */
     private BufferedDataTable[] m_results;
+    /* remember cancellation for chunk cleanup */
+    private boolean m_canceled = false;
     
     private boolean m_addChunkID = true;
 
@@ -115,6 +117,7 @@ NodeStateChangeListener {
 	protected PortObject[] execute(final PortObject[] inObjects,
 	        final ExecutionContext exec)
 			throws Exception {
+	    m_canceled = false;
 	    // if chunks have not been set, something's wrong.
 	    if (m_chunks == null) {
 	        throw new IllegalStateException("Parallel Chunk End node"
@@ -148,6 +151,7 @@ NodeStateChangeListener {
 	        try {
 	            exec.checkCanceled();
 	        } catch (CanceledExecutionException cee) {
+	            m_canceled = true;
 	            cleanupChunks();
 	            throw cee;
 	        }
@@ -160,6 +164,10 @@ NodeStateChangeListener {
 	                bdc = exec.createDataContainer(lastChunk.getDataTableSpec());
 	                BufferedDataTable bdt
 	                        = (BufferedDataTable)pbc.getOutportContent()[0];
+	                if (bdt == null) {
+	                    throw new Exception("Chunk " + pbc.getChunkIndex()
+	                            + " has no content!");
+	                }
 	                for (DataRow row : bdt) {
 	                    if (m_addChunkID) {
 	                        row = new DefaultRow(row.getKey()
@@ -172,7 +180,12 @@ NodeStateChangeListener {
 	                m_results[pbc.getChunkIndex()] = bdc.getTable();
 	                // and finally remove branch and all its nodes
                     pbc_it.remove();
-	                pbc.removeAllNodesFromWorkflow();
+                    try {
+                        pbc.removeAllNodesFromWorkflow();
+                    } catch (Exception e) {
+                        throw new Exception("Deletion of finished"
+                        		+ " parallel branch failed. " + e);
+                    }
 	                exec.setProgress((double)m_chunks.size()
 	                                 /(double)pbc.getChunkCount());
 	            }
@@ -187,6 +200,12 @@ NodeStateChangeListener {
             }
 	        if (nrExecutingChunks <= 0) {
 	            done = true;
+	        }
+	    }
+	    for (BufferedDataTable bdt : m_results) {
+	        if (bdt==null) {
+	            throw new Exception("Not all chunks finished - check"
+	                    + " individual chunk branches for details.");
 	        }
 	    }
 	    BufferedDataTable result = exec.createConcatenateTable(exec, m_results);
@@ -213,15 +232,19 @@ NodeStateChangeListener {
      */
     @Override
     public void cleanupChunks() {
-        for (Iterator<ParallelizedChunkContent> pbc_it
-                = m_chunks.values().iterator(); pbc_it.hasNext();) {
-            ParallelizedChunkContent pbc = pbc_it.next();
-            if (pbc.executionInProgress()) {
-                pbc.cancelExecution();
+        synchronized (m_chunks) {
+            for (Iterator<ParallelizedChunkContent> pbc_it
+                    = m_chunks.values().iterator(); pbc_it.hasNext();) {
+                ParallelizedChunkContent pbc = pbc_it.next();
+                if (pbc.executionInProgress()) {
+                    pbc.cancelExecution();
+                    // branches will be removed when the last node
+                    // changes state to IDLE...
+                } else {
+                    pbc.removeAllNodesFromWorkflow();
+                    pbc_it.remove();
+                }
             }
-            // and finally remove branch and all its nodes
-            pbc_it.remove();
-            pbc.removeAllNodesFromWorkflow();
         }
     }
 
@@ -234,11 +257,14 @@ NodeStateChangeListener {
         if (m_chunks == null) {
             m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
         }
-	    if (m_chunks.containsKey(pbc.getVirtualOutputID())) {
-	        throw new IllegalArgumentException("Can't insert chunk with duplicate key!");
-	    }
-	    m_chunks.put(pbc.getVirtualOutputID(), pbc);
-	    pbc.registerLoopEndStateChangeListener(this);
+        synchronized (m_chunks) {
+    	    if (m_chunks.containsKey(pbc.getVirtualOutputID())) {
+    	        throw new IllegalArgumentException("Can't insert chunk"
+    	        		+ " with duplicate key!");
+    	    }
+    	    m_chunks.put(pbc.getVirtualOutputID(), pbc);
+    	    pbc.registerLoopEndStateChangeListener(this);
+        }
 	}
 	
 
@@ -299,24 +325,23 @@ NodeStateChangeListener {
 	public void stateChanged(final NodeStateEvent state) {
         NodeID endNode = state.getSource();
         if (m_chunks.containsKey(endNode)) {
-//            ParallelizedChunkContent pcc = m_chunks.get(endNode);
-//            if (pcc.isExecuted()) {
-//                // copy results from chunk
-//                BufferedDataTable bdt
-//                   = (BufferedDataTable)pcc.getOutportContent()[0];
-//                BufferedDataContainer bdc
-//                   = exec.createDataContainer(bdt.getDataTableSpec());
-//                for (DataRow row : bdt) {
-//                    bdc.addRowToTable(row);
-//                }
-//                // and put it into the correct slot
-//                bdc.close();
-//                m_results[pcc.getChunkIndex()] = bdc.getTable();
-//                // and finally remove branch and all its nodes
-//                m_chunks.remove(endNode);
-//                pcc.removeAllNodesFromWorkflow();
-////            this.notify();
-//            }
+            ParallelizedChunkContent pcc = m_chunks.get(endNode);
+            if (!pcc.executionInProgress()) {
+                if (m_canceled) {
+                    // if canceled and IDLE remove branch and all its nodes
+                    m_chunks.remove(endNode);
+                    try {
+                        pcc.removeAllNodesFromWorkflow();
+                    } catch (Exception e) {
+                        System.err.println("Could not remove branch.");
+                    }
+                } else {
+                    // Bummer: can't do copy of results here since we don't
+                    // have access to the nodes execution context...
+                    // We will start this once the main end node is
+                    // being executed.
+                }
+            }
         }
     }
 
