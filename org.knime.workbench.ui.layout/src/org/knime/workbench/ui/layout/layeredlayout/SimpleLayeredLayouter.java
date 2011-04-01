@@ -74,7 +74,15 @@ import org.knime.workbench.ui.layout.Graph.Node;
  */
 public class SimpleLayeredLayouter {
 
-    private Random m_rnd = new Random();
+    private Random m_rnd;
+
+    /**
+     * constructor initializing an arbitrary random instance for shuffling
+     * layers.
+     */
+    public SimpleLayeredLayouter() {
+        m_rnd = new Random();
+    }
 
     /**
      * initializes the seed used for initially shuffling layers.
