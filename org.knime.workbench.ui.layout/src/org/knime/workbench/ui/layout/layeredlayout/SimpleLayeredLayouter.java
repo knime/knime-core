@@ -86,9 +86,26 @@ public class SimpleLayeredLayouter {
     public void doLayout(final Graph g, Map<Node, Boolean> fixedNodes)
             throws RuntimeException {
 
+        ArrayList<Node> fixedSources = null;
+        ArrayList<Node> fixedSinks = null;
+        if (fixedNodes != null) {
+            fixedSources = new ArrayList<Graph.Node>();
+            fixedSinks = new ArrayList<Graph.Node>();
+            for (Node n : g.nodes()) {
+                if (fixedNodes.get(n)) {
+                    if (n.inDegree() == 0) {
+                        fixedSources.add(n);
+                    } else if (n.outDegree() == 0) {
+                        fixedSinks.add(n);
+                    }
+                }
+            }
+        }
+
         // get layering of the graph
         Map<Node, Integer> nodeLayer = g.createIntNodeMap();
-        ArrayList<ArrayList<Node>> layers = Layerer.assignLayers(g, nodeLayer);
+        ArrayList<ArrayList<Node>> layers =
+                Layerer.assignLayers(g, nodeLayer, fixedSources, fixedSinks);
 
         // add dummy vertices for edges spanning several layers
         ArrayList<Edge> hiddenEdges = new ArrayList<Graph.Edge>();
@@ -144,15 +161,22 @@ public class SimpleLayeredLayouter {
         // set initial coordinates by layer
         int layer = 0;
         for (ArrayList<Node> currentLayer : layers) {
-            // here the ordering is shuffled, could also be done several times
-            // in the crossing minimization phase.
-            // I.e., every execution of the algorithm potentially yields another
-            // result!
-            Collections.shuffle(currentLayer);
-            // ordering could also be initialized by the current ordering from
-            // y-coordinates.
-            // Collections.sort(currentLayer, new Util.NodeByYComparator(g));
-
+            // sort first and last layer by y-coordinate if fixed
+            if (layer == 0 && fixedSources != null) {
+                Collections.sort(currentLayer, new Util.NodeByYComparator(g));
+            } else if (layer == layers.size() - 1 && fixedSinks != null) {
+                Collections.sort(currentLayer, new Util.NodeByYComparator(g));
+            } else {
+                // here the ordering is shuffled, could also be done several
+                // times in the crossing minimization phase.
+                // I.e., every execution of the algorithm potentially yields
+                // another result!
+                Collections.shuffle(currentLayer);
+                // ordering could also be initialized by the current ordering
+                // from y-coordinates.
+                // Collections.sort(currentLayer, new
+                // Util.NodeByYComparator(g));
+            }
             // set coordinates from 0,1,...,size of layer
             int verticalCoord = 0;
             for (Node n : currentLayer) {

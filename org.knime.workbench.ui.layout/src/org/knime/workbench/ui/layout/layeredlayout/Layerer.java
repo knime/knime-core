@@ -59,55 +59,104 @@ import org.knime.workbench.ui.layout.Graph.Node;
 
 /**
  * assigns layers to the nodes of a graph by topological sorting.
- *
+ * 
  * @author mader, University of Konstanz
  */
 public class Layerer {
 
     /**
-     * Perform a topological sort to assign layers to nodes.
-     *
-     * @param g
-     *            the graph to be layered
-     * @param nodeLayer
-     *            a map storing the layer of each node
+     * Perform a topological sort to assign layers to nodes. If there are fixed
+     * nodes they will be placed on the first or last layer, depending on
+     * whether they are sources or sinks.
+     * 
+     * @param g the graph to be layered
+     * @param nodeLayer a map storing the layer of each node
+     * @param fixedSources a list of sources to fix on the first layer, or null
+     *            if none exist
+     * @param fixedSinks a list of sinks to fix on the last layer, or null if
+     *            none exist
      * @return the list of layers, each layer containing an array list of nodes
      */
-    static ArrayList<ArrayList<Node>> assignLayers(final Graph g, final Map<Node, Integer> nodeLayer) {
+    static ArrayList<ArrayList<Node>> assignLayers(final Graph g,
+            final Map<Node, Integer> nodeLayer, ArrayList<Node> fixedSources,
+            ArrayList<Node> fixedSinks) {
 
-		// initialize residual degrees, and find first sources
-		ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
-		Map<Node, Integer> residualDegree = g.createIntNodeMap();
-		ArrayList<Node> sources = new ArrayList<Node>();
-		for (Node n : g.nodes()) {
-			residualDegree.put(n, n.inDegree());
-			if (n.inDegree() == 0)
-				sources.add(n);
-		}
+        // initialize residual degrees, and find first sources
+        ArrayList<ArrayList<Node>> layers = new ArrayList<ArrayList<Node>>();
+        Map<Node, Integer> residualDegree = g.createIntNodeMap();
+        ArrayList<Node> sources = new ArrayList<Node>();
+        for (Node n : g.nodes()) {
+            residualDegree.put(n, n.inDegree());
+            if (n.inDegree() == 0)
+                sources.add(n);
+        }
 
-		// process each layer:
-		int layer = 0;
-		while (!sources.isEmpty()) {
-			ArrayList<Node> nextSources = new ArrayList<Node>();
-			// put all of the current sources on the current layer
-			layers.add(sources);
-			for (Node n : sources) {
-				nodeLayer.put(n, layer);
-				// reduce residual degree of neighbours
-				for (Edge e : g.outEdges(n)) {
-					Node t = e.target();
-					int deg = residualDegree.get(t).intValue() - 1;
-					residualDegree.put(t, deg);
-					// neighbours can become new sources. if they do, add them
-					// to the sources that will be placed on the next layer.
-					if (deg == 0)
-						nextSources.add(t);
-				}
-			}
-			// advance to the next layer
-			sources = nextSources;
-			layer++;
-		}
-		return layers;
-	}
+        // process each layer:
+        int layer = 0;
+        // handle fixed sources, if any
+        if (fixedSources != null) {
+            layers.add(fixedSources);
+            for (Node n : fixedSources) {
+                sources.remove(n);
+                nodeLayer.put(n, layer);
+                for (Edge e : g.outEdges(n)) {
+                    Node t = e.target();
+                    int newDegree = residualDegree.get(t).intValue() - 1;
+                    residualDegree.put(t, newDegree);
+                    if (newDegree == 0)
+                        sources.add(t);
+                }
+            }
+            layer++;
+        }
+
+        // handle regular nodes
+        while (!sources.isEmpty()) {
+            ArrayList<Node> nextSources = new ArrayList<Node>();
+            // put all of the current sources on the current layer
+            layers.add(sources);
+            for (Node n : sources) {
+                nodeLayer.put(n, layer);
+                // reduce residual degree of neighbours
+                for (Edge e : g.outEdges(n)) {
+                    Node t = e.target();
+                    int deg = residualDegree.get(t).intValue() - 1;
+                    residualDegree.put(t, deg);
+                    // neighbours can become new sources. if they do, add them
+                    // to the sources that will be placed on the next layer.
+                    if (deg == 0)
+                        nextSources.add(t);
+                }
+            }
+            // advance to the next layer
+            sources = nextSources;
+            layer++;
+        }
+
+        // handle fixed sinks by putting them on the last layer
+        if (fixedSinks != null) {
+            // check if there are non-fixed sinks on the current last layer
+            boolean lastLayerValid = true;
+            for (Node n : layers.get(layer - 1)) {
+                if (!fixedSinks.contains(n)) {
+                    lastLayerValid = false;
+                }
+            }
+
+            
+            // if last layer does only contain fixed sinks, then move all fixed
+            // sinks to this layer, otherwise introduce new last layer
+            int lastlayer = layer - 1;
+            if (!lastLayerValid) {
+                lastlayer++;
+                layers.add(new ArrayList<Graph.Node>());
+            }
+            for (Node n : fixedSinks) {
+                layers.get(nodeLayer.get(n)).remove(n);
+                nodeLayer.put(n, lastlayer);
+                layers.get(lastlayer).add(n);
+            }
+        }
+        return layers;
+    }
 }
