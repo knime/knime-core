@@ -152,6 +152,7 @@ import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
+import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
@@ -443,7 +444,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         CutAction cut = new CutAction(this);
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
-
+        CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        
         // register the actions
         m_actionRegistry.registerAction(undo);
         m_actionRegistry.registerAction(redo);
@@ -469,6 +471,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(paste);
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
+        m_actionRegistry.registerAction(collapse);
 
         m_actionRegistry.registerAction(annotation);
 
@@ -488,11 +491,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(setNameAndDescription.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());
+        m_editorActions.add(collapse.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(annotation.getId());
+        
 
     }
 
