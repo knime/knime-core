@@ -2288,7 +2288,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     	assert Thread.holdsLock(m_workflowMutex);
     	final int[] moveUIDist = new int[]{(chunkIndex + 1) * 10, 
     			(chunkIndex + 1) * 80, 0, 0};
-//    	Arrays.sort(oldIDs); // pasted content is also sorted
     	WorkflowCopyContent copyContent = new WorkflowCopyContent();
     	copyContent.setNodeIDs(oldIDs);
     	NodeContainer startNode = getNodeContainer(startID);
@@ -2446,14 +2445,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         int y = 0;
         int count = 0;
         if (orgIDs.length >=1 ) {
-            NodeContainer nc = getNodeContainer(orgIDs[0]);
-            UIInformation uii = nc.getUIInformation();
-            if (uii instanceof NodeUIInformation) {
-                int[] bounds = ((NodeUIInformation)uii).getBounds();
-                if (bounds.length >= 2) {
-                    x += bounds[0];
-                    y += bounds[1];
-                    count++;
+            for (int i = 0; i < orgIDs.length; i++) {
+                NodeContainer nc = getNodeContainer(orgIDs[i]);
+                UIInformation uii = nc.getUIInformation();
+                if (uii instanceof NodeUIInformation) {
+                    int[] bounds = ((NodeUIInformation)uii).getBounds();
+                    if (bounds.length >= 2) {
+                        x += bounds[0];
+                        y += bounds[1];
+                        count++;
+                    }
                 }
             }
         }
@@ -2472,6 +2473,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (int i = 0; i < orgIDs.length; i++) {
             oldIDsHash.put(orgIDs[i], newIDs[i]);
         }
+        // move subworkflows into upper left corner but keep
+        // original layout
+        int xmin = Integer.MAX_VALUE;
+        int ymin = Integer.MAX_VALUE;
+        if (newIDs.length >=1 ) {
+            for (int i = 0; i < newIDs.length; i++) {
+                NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                UIInformation uii = nc.getUIInformation();
+                if (uii instanceof NodeUIInformation) {
+                    int[] bounds = ((NodeUIInformation)uii).getBounds();
+                    if (bounds.length >= 2) {
+                        xmin = Math.min(bounds[0], xmin);
+                        ymin = Math.min(bounds[0], ymin);
+                    }
+                }
+            }
+            int xshift = 150 - Math.max(xmin, 70);
+            int yshift = 120 - Math.max(ymin, 20);
+            for (int i = 0; i < newIDs.length; i++) {
+                NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                UIInformation uii = nc.getUIInformation();
+                if (uii instanceof NodeUIInformation) {
+                    NodeUIInformation newUii 
+                       = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                               new int[]{xshift, yshift});
+                    nc.setUIInformation(newUii);
+                }
+            }
+        }
         // create connections INSIDE the new workflow
         for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
             int index = exposedInports.get(npi);
@@ -2485,7 +2515,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         // create OUTSIDE connections to and from the new workflow
         for (NodeID id : orgIDs) {
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
+            // convert to a seperate array so we can delete connections!
+            ConnectionContainer[] cca = new ConnectionContainer[0];
+            cca = m_workflow.getConnectionsByDest(id).toArray(cca);
+            for (ConnectionContainer cc : cca) {
                 if (!orgIDsHash.contains(cc.getSource())) {
                     Pair<NodeID, Integer> npi
                             = new Pair<NodeID, Integer>(cc.getDest(),
@@ -2498,7 +2531,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         for (NodeID id : orgIDs) {
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            // convert to a seperate array so we can delete connections!
+            ConnectionContainer[] cca = new ConnectionContainer[0];
+            cca = m_workflow.getConnectionsBySource(id).toArray(cca);
+            for (ConnectionContainer cc : cca) {
                 if (!orgIDsHash.contains(cc.getDest())) {
                     Pair<NodeID, Integer> npi
                             = new Pair<NodeID, Integer>(cc.getSource(),
