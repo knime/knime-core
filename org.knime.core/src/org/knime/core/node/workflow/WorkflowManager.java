@@ -103,6 +103,7 @@ import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -2269,26 +2270,85 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		for (int i = 0; i < loopBody.size(); i++) {
     			loopNodes[i] = loopBody.get(i).getID();
     		}
+    		// creating matching sub workflow
+    		Set<Pair<NodeID, Integer>> exposedInports =
+    		    findNodesWithExternalSources(startID, loopNodes);
+    		HashMap<Pair<NodeID, Integer>, Integer> extInConnections
+    		    = new HashMap<Pair<NodeID, Integer>, Integer>();
+            PortType[] exposedInportTypes = new PortType[exposedInports.size() + 1];
+            // the first port is the variable port
+            exposedInportTypes[0] = FlowVariablePortObject.TYPE;
+            // the remaining ones will cover the exposed inports of the loop body
+            int index = 1;
+            for (Pair<NodeID, Integer> npi : exposedInports) {
+                exposedInportTypes[index]
+                        = m_workflow.getNode(
+                                npi.getFirst()).getInputTypes()[npi.getSecond()-1];
+                extInConnections.put(npi, index);
+                index++;
+            }
+            WorkflowManager subwfm = createAndAddSubWorkflow(
+                    exposedInportTypes, new PortType[0], "Parallel Chunks");
+            UIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
+            if (startUIPlain instanceof NodeUIInformation) {
+                NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
+                createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
+                subwfm.setUIInformation(startUI);
+            }
     		// make sure head knows its tail
     		startNode.setTailNode(endNode);
     		// and now create branches for all chunks and execute them.
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedChunkContent copiedNodes = 
     			    duplicateLoopBodyInSubWFMandAttach(
-    			            this, null,
+    			            subwfm, extInConnections,
     			    		startID, endID, loopNodes, i, startNode.getNrChunks());
-                executeUpToHere(copiedNodes.getVirtualOutputID());
+                copiedNodes.executeChunk();
     			endNode.addParallelChunk(copiedNodes);
     		}
 		}
+    }
+
+    /*
+     * Identify all nodes that have incoming connections which are not part
+     * of a given set of nodes.
+     * 
+     * @param startID id of first node (don't include)
+     * @param ids NodeIDs of set of nodes
+     * @return set of NodeIDs and inport indices that have outside conn.
+     */
+    private Set<Pair<NodeID, Integer>> findNodesWithExternalSources(
+            final NodeID startID,
+            final NodeID[] ids) {
+        // for quick search:
+        HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(ids));
+        // result
+        HashSet<Pair<NodeID, Integer>> exposedInports =
+            new HashSet<Pair<NodeID, Integer>>();
+        for (NodeID id : ids) {
+            if (m_workflow.getConnectionsByDest(id) != null)
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
+                if (   (!orgIDsHash.contains(cc.getSource()))
+                    && (!cc.getSource().equals(startID))) {
+                    Pair<NodeID, Integer> npi
+                            = new Pair<NodeID, Integer>(cc.getDest(),
+                                                        cc.getDestPort());
+                    if (!exposedInports.contains(npi)) {
+                        exposedInports.add(npi);
+                    }
+                }
+            }
+        }
+        return exposedInports;
     }
     
     /* 
      * ...
      * @param subWFM already prepared subworkflow with appropriate
-     *   inports.
+     *   inports. If subWFM==this then the subworkflows are simply
+     *   added to the same workflow.
      * @param extInConnections map of incoming connections
-     *   (NodeID + PortIndex) => WFM-Inport.
+     *   (NodeID + PortIndex) => WFM-Inport. Can be null if subWFM==this.
      * ...
      */
     private ParallelizedChunkContent duplicateLoopBodyInSubWFMandAttach(
@@ -2316,7 +2376,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (startUIPlain instanceof NodeUIInformation) {
             NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
             createNewWithOffsetPosition(moveUIDist);
-            getNodeContainer(virtualStartID).setUIInformation(startUI);
+            subWFM.getNodeContainer(virtualStartID).setUIInformation(startUI);
         }
         // create virtual end node
         NodeContainer endNode = getNodeContainer(endID);
@@ -2327,7 +2387,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (endUIPlain instanceof NodeUIInformation) {
             NodeUIInformation endUI = ((NodeUIInformation)endUIPlain).
             createNewWithOffsetPosition(moveUIDist);
-            getNodeContainer(virtualEndID).setUIInformation(endUI);
+            subWFM.getNodeContainer(virtualEndID).setUIInformation(endUI);
         }
         // copy nodes in loop body
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
@@ -2338,7 +2398,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
         for (int i = 0; i < oldIDs.length; i++) {
             oldIDsHash.put(oldIDs[i], newIDs[i]);
-            NodeContainer nc = getNodeContainer(newIDs[i]);
+            NodeContainer nc = subWFM.getNodeContainer(newIDs[i]);
             UIInformation uiInfo = nc.getUIInformation();
             if (uiInfo instanceof NodeUIInformation) {
                 NodeUIInformation ui = (NodeUIInformation) uiInfo;
@@ -2406,7 +2466,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             addConnection(startID, 0, virtualStartID, 0);
         } else {
             // add variable connection to port 0 of WFM!
-            this.addConnection(startID, 0, subWFM.getID(), 0);
+            if (this.canAddConnection(startID, 0, subWFM.getID(), 0)) {
+                // only add this one the first time...
+                this.addConnection(startID, 0, subWFM.getID(), 0);
+            }
             subWFM.addConnection(subWFM.getID(), 0, virtualStartID, 0);
         }
         // set chunk of table to be processed in new virtual start node

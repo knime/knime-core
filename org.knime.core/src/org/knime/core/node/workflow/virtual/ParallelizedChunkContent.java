@@ -97,17 +97,19 @@ public final class ParallelizedChunkContent {
 	}
 
 	/**
-	 * @return the virtualInputID
+	 * Trigger execution of branch for this chunk.
 	 */
-	public NodeID getVirtualInputID() {
-		return m_virtualInputID;
+	public void executeChunk() {
+	    m_manager.executeUpToHere(m_virtualOutputID);
 	}
+
 	/**
 	 * @return the virtualOutputID
 	 */
 	public NodeID getVirtualOutputID() {
 		return m_virtualOutputID;
 	}
+
 	/**
 	 * @return the copiedLoopContent
 	 */
