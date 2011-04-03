@@ -2270,7 +2270,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		for (int i = 0; i < loopBody.size(); i++) {
     			loopNodes[i] = loopBody.get(i).getID();
     		}
-    		// creating matching sub workflow
+    		// creating matching sub workflow node holding all chunks
     		Set<Pair<NodeID, Integer>> exposedInports =
     		    findNodesWithExternalSources(startID, loopNodes);
     		HashMap<Pair<NodeID, Integer>, Integer> extInConnections
@@ -2294,6 +2294,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
                 createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
                 subwfm.setUIInformation(startUI);
+            }
+            // connect outside(!) nodes to new sub metanote
+            for (Pair<NodeID, Integer>npi : extInConnections.keySet()) {
+                int metanodeindex = extInConnections.get(npi);
+                if (metanodeindex >= 0) {  // ignore variable port!
+                    // we need to find the source again (since our list
+                    // only holds the destination...)
+                    ConnectionContainer cc = this.getIncomingConnectionFor(
+                            npi.getFirst(), npi.getSecond());
+                    this.addConnection(cc.getSource(), cc.getSourcePort(),
+                            subwfm.getID(), metanodeindex);
+                }
             }
     		// make sure head knows its tail
     		startNode.setTailNode(endNode);
@@ -2426,19 +2438,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     } else {
                         // find new replacement port
                         int subWFMportIndex = extInConnections.get(
-                                new Pair<NodeID, Integer>(c.getSource(),
-                                                          c.getSourcePort()));
-                        subWFM.addConnection(this.getID(), subWFMportIndex, 
+                                new Pair<NodeID, Integer>(c.getDest(),
+                                                          c.getDestPort()));
+                        subWFM.addConnection(subWFM.getID(), subWFMportIndex, 
                                 newIDs[i], c.getDestPort());
                     }
                 }
             }
         }
+        // attach incoming connections of new Virtual End Node
         for (int p = 0; p < endNode.getNrInPorts(); p++) {
             ConnectionContainer c = getIncomingConnectionFor(endID, p);
             if (c == null) {
                 // ignore: no incoming connection
             } else if (oldIDsHash.containsKey(c.getSource())) {
+                // connects to node in loop - connect to copy
                 NodeID source = oldIDsHash.get(c.getSource());
                 subWFM.addConnection(source, c.getSourcePort(), 
                         virtualEndID, c.getDestPort());
