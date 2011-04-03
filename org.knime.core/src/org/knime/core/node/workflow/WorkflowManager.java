@@ -2274,7 +2274,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		// and now create branches for all chunks and execute them.
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedChunkContent copiedNodes = 
-    			    duplicateLoopBodyAndAttach(
+    			    duplicateLoopBodyInSubWFMandAttach(
+    			            this, null,
     			    		startID, endID, loopNodes, i, startNode.getNrChunks());
                 executeUpToHere(copiedNodes.getVirtualOutputID());
     			endNode.addParallelChunk(copiedNodes);
@@ -2282,97 +2283,143 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 		}
     }
     
-    private ParallelizedChunkContent duplicateLoopBodyAndAttach(
-    		final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
-    		final int chunkIndex, final int chunkCount) {
-    	assert Thread.holdsLock(m_workflowMutex);
-    	final int[] moveUIDist = new int[]{(chunkIndex + 1) * 10, 
-    			(chunkIndex + 1) * 80, 0, 0};
-    	WorkflowCopyContent copyContent = new WorkflowCopyContent();
-    	copyContent.setNodeIDs(oldIDs);
-    	NodeContainer startNode = getNodeContainer(startID);
-    	PortType[] outTypes = startNode.getOutputTypes();
-    	NodeID virtualStartID = createAndAddNode(
-    			new VirtualPortObjectInNodeFactory(outTypes));
-    	UIInformation startUIPlain = startNode.getUIInformation();
-    	if (startUIPlain instanceof NodeUIInformation) {
-			NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
-			createNewWithOffsetPosition(moveUIDist);
-			getNodeContainer(virtualStartID).setUIInformation(startUI);
-		}
-    	
-    	NodeContainer endNode = getNodeContainer(endID);
-    	PortType[] inTypes = endNode.getInputTypes();
-    	NodeID virtualEndID = createAndAddNode(
-    			new VirtualPortObjectOutNodeFactory(inTypes));
-    	UIInformation endUIPlain = endNode.getUIInformation();
-    	if (endUIPlain instanceof NodeUIInformation) {
-			NodeUIInformation endUI = ((NodeUIInformation)endUIPlain).
-			createNewWithOffsetPosition(moveUIDist);
-			getNodeContainer(virtualEndID).setUIInformation(endUI);
-		}
-    	
-    	WorkflowCopyContent newBody = copyFromAndPasteHere(this, copyContent);
-    	NodeID[] newIDs = newBody.getNodeIDs();
-    	Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
-    	for (int i = 0; i < oldIDs.length; i++) {
-    		oldIDsHash.put(oldIDs[i], newIDs[i]);
-    		NodeContainer nc = getNodeContainer(newIDs[i]);
-    		UIInformation uiInfo = nc.getUIInformation();
-    		if (uiInfo instanceof NodeUIInformation) {
-				NodeUIInformation ui = (NodeUIInformation) uiInfo;
-				nc.setUIInformation(ui.createNewWithOffsetPosition(moveUIDist));
-			}
-    	}
-    	// restore connections to nodes outside the loop body (only incoming)
-    	for (int i = 0; i < newIDs.length; i++) {
-			NodeContainer oldNode = getNodeContainer(oldIDs[i]);
-			for (int p = 0; p < oldNode.getNrInPorts(); p++) {
-				ConnectionContainer c = getIncomingConnectionFor(oldIDs[i], p);
-				if (c == null) {
-					// ignore: no incoming connection
-				} else if (oldIDsHash.containsKey(c.getSource())) {
-					// ignore: connection already retained by paste persistor
-				} else if (c.getSource().equals(startID)) {
-					// used to connect to start node, connect to virtual in now
-					addConnection(virtualStartID, c.getSourcePort(), 
-							newIDs[i], c.getDestPort());
-				} else { 
-					// source node not part of loop
-					addConnection(c.getSource(), c.getSourcePort(), 
-							newIDs[i], c.getDestPort());
-				}
-			}
-    	}
-		for (int p = 0; p < endNode.getNrInPorts(); p++) {
-			ConnectionContainer c = getIncomingConnectionFor(endID, p);
-			if (c == null) {
-				// ignore: no incoming connection
-			} else if (oldIDsHash.containsKey(c.getSource())) {
-				NodeID source = oldIDsHash.get(c.getSource());
-				addConnection(source, c.getSourcePort(), 
-						virtualEndID, c.getDestPort());
-			} else if (c.getSource().equals(startID)) {
-				// used to connect to start node, connect to virtual in now
-				addConnection(virtualStartID, c.getSourcePort(), 
-						virtualEndID, c.getDestPort());
-			} else { 
-				// source node not part of loop
-				addConnection(c.getSource(), c.getSourcePort(), 
-						virtualEndID, c.getDestPort());
-			}
-		}
-		addConnection(startID, 0, virtualStartID, 0);
-		LoopStartParallelizeNode startModel = 
-			castNodeModel(startID, LoopStartParallelizeNode.class);
-		VirtualNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
-		VirtualPortObjectInNodeModel virtualInModel =
-			castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
-		virtualInModel.setVirtualNodeInput(data);
-		return new ParallelizedChunkContent(this, virtualStartID, 
-				virtualEndID, newIDs, chunkIndex, chunkCount);
+    /* 
+     * ...
+     * @param subWFM already prepared subworkflow with appropriate
+     *   inports.
+     * @param extInConnections map of incoming connections
+     *   (NodeID + PortIndex) => WFM-Inport.
+     * ...
+     */
+    private ParallelizedChunkContent duplicateLoopBodyInSubWFMandAttach(
+            final WorkflowManager subWFM,
+            final HashMap<Pair<NodeID, Integer>, Integer> extInConnections,
+            final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
+            final int chunkIndex, final int chunkCount) {
+        assert Thread.holdsLock(m_workflowMutex);
+        // compute offset for new nodes (shifted in case of same
+        // workflow, otherwise just underneath each other)
+        final int[] moveUIDist;
+        if (subWFM == this) {
+            moveUIDist = new int[]{(chunkIndex + 1) * 10, 
+                    (chunkIndex + 1) * 80, 0, 0};
+        } else {
+            moveUIDist = new int[]{(chunkIndex + 1) * 0, 
+                    (chunkIndex + 1) * 150, 0, 0};
+        }
+        // create virtual start node
+        NodeContainer startNode = getNodeContainer(startID);
+        PortType[] outTypes = startNode.getOutputTypes();
+        NodeID virtualStartID = subWFM.createAndAddNode(
+                new VirtualPortObjectInNodeFactory(outTypes));
+        UIInformation startUIPlain = startNode.getUIInformation();
+        if (startUIPlain instanceof NodeUIInformation) {
+            NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
+            createNewWithOffsetPosition(moveUIDist);
+            getNodeContainer(virtualStartID).setUIInformation(startUI);
+        }
+        // create virtual end node
+        NodeContainer endNode = getNodeContainer(endID);
+        PortType[] inTypes = endNode.getInputTypes();
+        NodeID virtualEndID = subWFM.createAndAddNode(
+                new VirtualPortObjectOutNodeFactory(inTypes));
+        UIInformation endUIPlain = endNode.getUIInformation();
+        if (endUIPlain instanceof NodeUIInformation) {
+            NodeUIInformation endUI = ((NodeUIInformation)endUIPlain).
+            createNewWithOffsetPosition(moveUIDist);
+            getNodeContainer(virtualEndID).setUIInformation(endUI);
+        }
+        // copy nodes in loop body
+        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        copyContent.setNodeIDs(oldIDs);
+        WorkflowCopyContent newBody
+            = subWFM.copyFromAndPasteHere(this, copyContent);
+        NodeID[] newIDs = newBody.getNodeIDs();
+        Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
+        for (int i = 0; i < oldIDs.length; i++) {
+            oldIDsHash.put(oldIDs[i], newIDs[i]);
+            NodeContainer nc = getNodeContainer(newIDs[i]);
+            UIInformation uiInfo = nc.getUIInformation();
+            if (uiInfo instanceof NodeUIInformation) {
+                NodeUIInformation ui = (NodeUIInformation) uiInfo;
+                nc.setUIInformation(ui.createNewWithOffsetPosition(moveUIDist));
+            }
+        }
+        // restore connections to nodes outside the loop body (only incoming)
+        for (int i = 0; i < newIDs.length; i++) {
+            NodeContainer oldNode = getNodeContainer(oldIDs[i]);
+            for (int p = 0; p < oldNode.getNrInPorts(); p++) {
+                ConnectionContainer c = getIncomingConnectionFor(oldIDs[i], p);
+                if (c == null) {
+                    // ignore: no incoming connection
+                } else if (oldIDsHash.containsKey(c.getSource())) {
+                    // ignore: connection already retained by paste persistor
+                } else if (c.getSource().equals(startID)) {
+                    // used to connect to start node, connect to virtual in now
+                    subWFM.addConnection(virtualStartID, c.getSourcePort(), 
+                            newIDs[i], c.getDestPort());
+                } else { 
+                    // source node not part of loop:
+                    if (subWFM == this) {
+                        addConnection(c.getSource(), c.getSourcePort(), 
+                                newIDs[i], c.getDestPort());
+                    } else {
+                        // find new replacement port
+                        int subWFMportIndex = extInConnections.get(
+                                new Pair<NodeID, Integer>(c.getSource(),
+                                                          c.getSourcePort()));
+                        subWFM.addConnection(this.getID(), subWFMportIndex, 
+                                newIDs[i], c.getDestPort());
+                    }
+                }
+            }
+        }
+        for (int p = 0; p < endNode.getNrInPorts(); p++) {
+            ConnectionContainer c = getIncomingConnectionFor(endID, p);
+            if (c == null) {
+                // ignore: no incoming connection
+            } else if (oldIDsHash.containsKey(c.getSource())) {
+                NodeID source = oldIDsHash.get(c.getSource());
+                subWFM.addConnection(source, c.getSourcePort(), 
+                        virtualEndID, c.getDestPort());
+            } else if (c.getSource().equals(startID)) {
+                // used to connect to start node, connect to virtual in now
+                subWFM.addConnection(virtualStartID, c.getSourcePort(), 
+                        virtualEndID, c.getDestPort());
+            } else { 
+                // source node not part of loop
+                if (subWFM == this) {
+                    addConnection(c.getSource(), c.getSourcePort(), 
+                            virtualEndID, c.getDestPort());
+                } else {
+                    // find new replacement port
+                    int subWFMportIndex = extInConnections.get(
+                            new Pair<NodeID, Integer>(c.getSource(),
+                                                      c.getSourcePort()));
+                    subWFM.addConnection(this.getID(), subWFMportIndex, 
+                            virtualEndID, c.getDestPort());
+                }
+            }
+        }
+        if (subWFM == this) {
+            // connect start node var port with virtual start node
+            addConnection(startID, 0, virtualStartID, 0);
+        } else {
+            // add variable connection to port 0 of WFM!
+            this.addConnection(startID, 0, subWFM.getID(), 0);
+            subWFM.addConnection(subWFM.getID(), 0, virtualStartID, 0);
+        }
+        // set chunk of table to be processed in new virtual start node
+        LoopStartParallelizeNode startModel = 
+            castNodeModel(startID, LoopStartParallelizeNode.class);
+        VirtualNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
+        VirtualPortObjectInNodeModel virtualInModel =
+            subWFM.castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
+        virtualInModel.setVirtualNodeInput(data);
+        return new ParallelizedChunkContent(subWFM, virtualStartID, 
+                virtualEndID, newIDs, chunkIndex, chunkCount);
     }
-    
+
     /** Collapse selected set of nodes into a metanode. Make sure connections
      * from and two nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
