@@ -141,6 +141,12 @@ public class StepLoopAction extends AbstractNodeAction {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if (snc.getLoopRole().equals(LoopRole.END)
                 && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
+                // either the node is paused...
+                return true;
+            }
+            WorkflowManager wm = getEditor().getWorkflowManager();
+            if (wm.canExecuteNode(nc.getID())) {
+                // ...or we can execute it (than this will be the first step)
                 return true;
             }
         }
@@ -164,6 +170,9 @@ public class StepLoopAction extends AbstractNodeAction {
                 if (snc.getLoopRole().equals(LoopRole.END)
                     && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(snc, /*oneStep=*/true);
+                } else if (manager.canExecuteNode(nc.getID())) {
+                    manager.executeUpToHere(nc.getID());
+                    manager.pauseLoopExecution(nc);
                 }
             }
         }

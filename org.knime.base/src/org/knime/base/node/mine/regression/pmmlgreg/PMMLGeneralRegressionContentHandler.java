@@ -52,6 +52,8 @@ package org.knime.base.node.mine.regression.pmmlgreg;
 
 import java.util.Stack;
 
+import javax.xml.transform.sax.TransformerHandler;
+
 import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -65,7 +67,7 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
-final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
+public final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLRegressionContentHandler.class);
 
@@ -81,15 +83,29 @@ final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
      *
      * @param spec the spec for the regression model
      */
-    PMMLGeneralRegressionContentHandler(final PMMLPortObjectSpec spec) {
+    public PMMLGeneralRegressionContentHandler(final PMMLPortObjectSpec spec) {
         if (spec == null) {
             throw new NullPointerException("Given argument "
                     + "(PMMLPortObjectSpec) must not be null");
         }
-        m_spec = spec;
+        setSpec(spec);
         m_content = new PMMLGeneralRegressionContent();
     }
 
+    /**
+     * Creates a new PMML content handler for general regression models.
+     *
+     * @param spec the spec for the regression model
+     */
+    public PMMLGeneralRegressionContentHandler(final PMMLPortObjectSpec spec,
+    		final PMMLGeneralRegressionContent content) {
+        if (spec == null) {
+            throw new NullPointerException("Given argument "
+                    + "(PMMLPortObjectSpec) must not be null");
+        }
+        setSpec(spec);
+        m_content = content;
+    }
     /**
      * {@inheritDoc}
      */
@@ -235,7 +251,7 @@ final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
      * @return target field name.
      */
     private String getTargetField() {
-        for (String s : m_spec.getTargetFields()) {
+        for (String s : getSpec().getTargetFields()) {
             return s;
         }
         return "Response";
@@ -244,7 +260,7 @@ final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
     /**
      * @return the content
      */
-    PMMLGeneralRegressionContent getContent() {
+    public PMMLGeneralRegressionContent getContent() {
         return m_content;
     }
 
@@ -260,4 +276,36 @@ final class PMMLGeneralRegressionContentHandler extends PMMLContentHandler {
         }
         // TODO: Add more validation checks.
     }
-}
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec)
+            throws SAXException {
+      // TODO Null pointer checks
+    	
+        PMMLGeneralRegressionWriter writer =
+            new PMMLGeneralRegressionWriter(spec, this);
+        writer.writePMMLGeneralRegressionModel(handler);
+    }
+    
+    /**
+     * @return the targetVariableName
+     */
+    public String getTargetVariableName() {
+        for (String s : getSpec().getTargetFields()) {
+            return s;
+        }
+        return "Response";
+    }
+
+	public void setSpec(final PMMLPortObjectSpec spec) {
+		this.m_spec = spec;
+	}
+
+	public PMMLPortObjectSpec getSpec() {
+		return m_spec;
+	}
+  }

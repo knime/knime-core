@@ -66,7 +66,7 @@ import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
-import org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject;
+import org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -88,6 +88,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
@@ -203,7 +204,7 @@ public class RPropNodeModel extends NodeModel {
     /*
      * The architecture of the Neural Network.
      */
-    private Architecture m_architecture;
+    private final Architecture m_architecture;
 
     /*
      * Maps the values from the classes to the output neurons.
@@ -232,7 +233,7 @@ public class RPropNodeModel extends NodeModel {
      */
     public RPropNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{PMMLNeuralNetworkPortObject.TYPE});
+                new PortType[]{PMMLPortObject.TYPE});
         m_architecture = new Architecture();
         m_mlp = new MultiLayerPerceptron();
     }
@@ -514,9 +515,9 @@ public class RPropNodeModel extends NodeModel {
             exec.checkCanceled();
         }
 
-        PMMLNeuralNetworkPortObject nnpmml = new PMMLNeuralNetworkPortObject(
+        PMMLPortObject nnpmml = new PMMLPortObject(
                 createPMMLPortObjectSpec(posSpec, learningCols, targetCols),
-                m_mlp);
+                new PMMLNeuralNetworkHandler(m_mlp));
         return new PortObject[]{nnpmml};
     }
 

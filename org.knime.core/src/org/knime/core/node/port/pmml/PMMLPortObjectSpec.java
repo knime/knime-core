@@ -98,7 +98,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     protected static final String MINING_FIELD = "MiningField";
 
     /** Constant for the MiningSchema tag. */
-    protected static final String MINING_SCHEMA = "MiningSchema";
+    public static final String MINING_SCHEMA = "MiningSchema";
 
     private final DataTableSpec m_dataTableSpec;
 
@@ -323,20 +323,13 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      * @param portSpec based upon this port object spec the mining schema is
      *            written
      * @param handler transformation handler to write to
-     * @param pmmlVersion The PMML version to write, e.g.
      * {@link PMMLPortObject#PMML_V3_1}. This method fails if the version is
      * unsupported.
      * @throws SAXException if something goes wrong
      */
     public static void writeMiningSchema(final PMMLPortObjectSpec portSpec,
-            final TransformerHandler handler, final String pmmlVersion)
+            final TransformerHandler handler)
             throws SAXException {
-        if (!SUPPORTED_PMML_VERSIONS.contains(pmmlVersion)) {
-            throw new SAXException("PMML model seems to be of an "
-                    + "unsupported version. Only PMML versions "
-                    + SUPPORTED_PMML_VERSIONS
-                    + " are supported. Found " + pmmlVersion);
-        }
         // start MiningSchema
         handler.startElement(null, null, MINING_SCHEMA, null);
         // active columns = learning fields

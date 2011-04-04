@@ -59,7 +59,6 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -75,6 +74,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * NodeModel to the logistic regression learner node. It delegates the
@@ -91,7 +91,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     /** Inits a new node model, it will have 1 data input and 1 model output. */
     public LogRegLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{PMMLGeneralRegressionPortObject.TYPE,
+                new PortType[]{PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE});
         m_settings = new LogRegLearnerSettings();
     }

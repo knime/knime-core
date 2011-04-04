@@ -82,13 +82,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.w3c.dom.Node;
 
 /**
  * The Neural Net Predictor takes as input a
@@ -98,6 +102,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class MLPPredictorNodeModel extends NodeModel {
+    /** The node logger for this class. */
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(MLPPredictorNodeModel.class);
     /*
      * The trained neural network to use for prediction.
      */
@@ -119,7 +126,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      *
      */
     public MLPPredictorNodeModel() {
-        super(new PortType[]{PMMLNeuralNetworkPortObject.TYPE,
+        super(new PortType[]{PMMLPortObject.TYPE,
               BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -181,17 +188,28 @@ public class MLPPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable testdata = (BufferedDataTable)inData[1];
-        PMMLNeuralNetworkPortObject pmmlMLP =
-                (PMMLNeuralNetworkPortObject)inData[0];
+        PMMLPortObject pmmlPort = (PMMLPortObject)inData[0];
+
+        List<Node> models = pmmlPort.getPMMLValue().getModels(
+                PMMLModelType.NeuralNetwork);
+        if (models.isEmpty()) {
+            String msg = "Neural network evaluation failed: "
+                   + "No neural network model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+        PMMLNeuralNetworkHandler handler = new PMMLNeuralNetworkHandler();
+        handler.parse(models.get(0));
+        m_mlp = handler.getMLP();
+
         m_columns =
-                getLearningColumnIndices(testdata.getDataTableSpec(), pmmlMLP
-                        .getSpec());
+                getLearningColumnIndices(testdata.getDataTableSpec(),
+                        pmmlPort.getSpec());
         DataColumnSpec targetCol =
-                pmmlMLP.getSpec().getTargetCols().iterator().next();
-        m_mlp = pmmlMLP.getMLP();
+                pmmlPort.getSpec().getTargetCols().iterator().next();
         MLPClassificationFactory mymlp;
         /*
          * Regression
@@ -262,14 +280,14 @@ public class MLPPredictorNodeModel extends NodeModel {
         /*
          * Flag whether regression is done or not.
          */
-        private boolean m_regression;
+        private final boolean m_regression;
 
         /*
          * The columns to work on.
          */
-        private int[] m_faccolumns;
+        private final int[] m_faccolumns;
 
-        private DataColumnSpec m_classcolspec;
+        private final DataColumnSpec m_classcolspec;
 
         /**
          * A new AppendedColumnFactory that uses a MultiLayerPerceptron to
@@ -289,6 +307,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];
             for (int i = 0; i < m_faccolumns.length; i++) {
@@ -320,6 +339,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             String name = "PredClass";
             DataType type;
@@ -383,6 +403,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Prediction");

@@ -160,7 +160,7 @@ public abstract class AbstractPortFigure extends Shape {
     /**
      * @return the index of the port
      */
-    protected int getPortIndex() {
+    public int getPortIndex() {
         return m_portIdx;
     }
 

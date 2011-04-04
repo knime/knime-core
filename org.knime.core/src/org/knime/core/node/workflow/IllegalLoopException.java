@@ -62,4 +62,14 @@ class IllegalLoopException extends Exception {
         super(message);
     }
 
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public IllegalLoopException(String message, Throwable cause) {
+		super(message, cause);
+	}
+    
+    
+
 }

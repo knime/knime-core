@@ -1223,33 +1223,6 @@
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
       </node>  
    </extension>
-      <extension
-         point="org.knime.base.pmmlports">
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.cluster.PMMLClusterPortObject"
-            modeltype="ClusteringModel">
-      </PMMLModel>
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.svm.PMMLSVMPortObject"
-            modeltype="SupportVectorMachineModel">
-      </PMMLModel>
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.regression.PMMLRegressionPortObject"
-            modeltype="RegressionModel">
-      </PMMLModel>
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject"
-            modeltype="GeneralRegressionModel">
-      </PMMLModel>      
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject"
-            modeltype="NeuralNetwork">
-      </PMMLModel>
-      <PMMLModel
-            PMMLPortObject="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject"
-            modeltype="TreeModel">
-      </PMMLModel>
-   </extension>
    
       
    <extension point="org.knime.workbench.repository.metanode">

@@ -60,7 +60,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
+import org.knime.base.node.mine.cluster.PMMLClusterHandler;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -80,8 +80,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.base.node.mine.cluster.PMMLClusterHandler.ComparisonMeasure;
 
 /**
  * Generate a fuzzy c-means clustering using a fixed number of cluster centers.
@@ -271,7 +273,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     public FuzzyClusterNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-                BufferedDataTable.TYPE, PMMLClusterPortObject.TYPE});
+                BufferedDataTable.TYPE, PMMLPortObject.TYPE});
 
         m_nrClusters = INITIAL_NR_CLUSTERS;
         m_maxNrIterations = INITIAL_MAX_ITERATIONS;
@@ -344,8 +346,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 ignoreCols.add(colname);
             }
         }
-        PMMLPortObjectSpec pmmlspec =
-                createPMMLPortObjectSpec(m_spec, learningCols);
+//        PMMLPortObjectSpec pmmlspec =
+//                createPMMLPortObjectSpec(m_spec, learningCols);
 
         ColumnRearranger colre = new ColumnRearranger(m_spec);
         colre.keepOnly(columns);
@@ -417,11 +419,32 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
             clustercentres = cleaned;
         }
-        PMMLClusterPortObject pmmlcluster =
-                new PMMLClusterPortObject(clustercentres, m_nrClusters,
-                        pmmlspec);
-        return new PortObject[]{result, pmmlcluster};
+        exec.setMessage("Creating PMML cluster model...");
+        PMMLPortObjectSpec pmmlOutSpec 
+        			= createPMMLPortObjectSpec(m_spec, learningCols);
+        PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
+                new PMMLClusterHandler(ComparisonMeasure.squaredEuclidean, 
+                		m_nrClusters, 
+                		clustercentres, 
+                		null, 
+                		new HashSet<String>(pmmlOutSpec.getLearningFields())));
+        return new PortObject[]{result, pmmlPort};
     } // end execute()
+    
+    
+    private static List<DataColumnSpec> getColumnSpecsFor(final List<String> colNames,
+            final DataTableSpec tableSpec) {
+        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
+        for (String colName : colNames) {
+            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
+            if (colName == null) {
+                throw new IllegalArgumentException(
+                        "Column " + colName + " not found in data table spec!");
+            }
+            colSpecs.add(colSpec);
+        }
+        return colSpecs;
+    }
 
     /**
      * {@inheritDoc}

@@ -127,15 +127,15 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
 
     private double m_currentMax = Double.NaN;
 
-    private List<String> m_currentValues;
+    private final List<String> m_currentValues;
 
-    private List<DataColumnSpec> m_colSpecs;
+    private final List<DataColumnSpec> m_colSpecs;
 
     private DataTableSpec m_spec;
 
     private boolean m_read;
 
-    private Stack<String> m_elemStack;
+    private final Stack<String> m_elemStack;
 
     /**
      *

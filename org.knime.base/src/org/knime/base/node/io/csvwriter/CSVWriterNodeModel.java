@@ -51,11 +51,15 @@
  */
 package org.knime.base.node.io.csvwriter;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Date;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
 import org.knime.core.data.DataTable;
@@ -176,7 +180,14 @@ public class CSVWriterNodeModel extends NodeModel {
                                 + " comment end pattern.");
             }
         }
-
+        
+        boolean isGzip = fws.isGzipOutput();
+        boolean isAppend = FileOverwritePolicy.Append.equals(
+            fws.getFileOverwritePolicy());
+        if (isGzip && isAppend) {
+            throw new InvalidSettingsException("Can't append to existing " 
+                    + "file if output is gzip compressed");
+        }
     }
 
     /**
@@ -250,8 +261,11 @@ public class CSVWriterNodeModel extends NodeModel {
         } else {
             appendToFile = false;
         }
-        CSVWriter tableWriter =
-                new CSVWriter(new FileWriter(file, appendToFile),
+        OutputStream tempO = new FileOutputStream(file, appendToFile);
+        if (m_settings.isGzipOutput()) {
+            tempO = new BufferedOutputStream(new GZIPOutputStream(tempO));
+        }
+        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempO),
                         writerSettings);
 
         // write the comment header, if we are supposed to

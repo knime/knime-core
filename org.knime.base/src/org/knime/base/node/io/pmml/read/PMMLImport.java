@@ -59,14 +59,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -74,17 +69,12 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
-import org.knime.core.node.port.pmml.MiningSchemaContentHandler;
 import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
 import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.knime.core.node.port.pmml.XFilter;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -184,7 +174,6 @@ public class PMMLImport {
         // extract model type, version, and if namespace is available
         preCollectInformation();
         initializePortObjectClass();
-        validate();
         if (!m_hasNamespace) {
             // add namespace in order to have the parser set the default values
             try {
@@ -193,7 +182,7 @@ public class PMMLImport {
                 throw new SAXException(e);
             }
         }
-        m_portObjectSpec = parseSpec();
+        m_portObjectSpec = PMMLPortObject.parseSpec(m_file);
         m_portObject = parseModel(m_portObjectSpec);
         if (!m_hasNamespace) {
             // if the file had no namespace a new file with namespace added was
@@ -270,8 +259,7 @@ public class PMMLImport {
         Class<? extends PMMLPortObject> portClass =
                 REGISTRY.get(m_modelType.name());
         if (portClass == null) {
-            throw new IllegalArgumentException("Model type: " + m_modelType
-                    + " not supported yet.");
+            m_portObject = new PMMLPortObject();
         } else {
             try {
                 m_portObject = portClass.newInstance();
@@ -282,72 +270,6 @@ public class PMMLImport {
                 throw new IllegalArgumentException("PortObject for model "
                         + m_modelType + " could not be initialized!", e);
             }
-        }
-    }
-
-    private void validate() throws SAXException {
-        try {
-            LOGGER.debug("Validating PMML file " + m_file.getName()
-                    + ". Version = " + m_version);
-            SchemaFactory schemaFac =
-                    SchemaFactory
-                            .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            SAXParserFactory fac = SAXParserFactory.newInstance();
-            fac.setNamespaceAware(true);
-
-            Schema schema = null;
-            if (m_version == null) {
-                throw new SAXException("Input file is not a valid PMML file. "
-                        + "Attribute \"version\" is missing");
-            }
-            String schemaLocation =
-                    PMMLPortObject.getLocalSchemaLocation(m_version);
-            if (schemaLocation == null) {
-                throw new SAXException("Version " + m_version
-                        + " is not supported!");
-            }
-            schema =
-                    schemaFac.newSchema(new SAXSource(new InputSource(
-                            getSchemaInputStream(schemaLocation))));
-            FileInputStream fis = new FileInputStream(m_file);
-            XFilter filter = new XFilter(m_version);
-            filter.setParent(fac.newSAXParser().getXMLReader());
-            // use validator here
-            Validator validator = schema.newValidator();
-            // register error handler
-            validator.setErrorHandler(m_errorHandler);
-            validator.validate(new SAXSource(filter, new InputSource(fis)));
-        } catch (IOException io) {
-            throw new SAXException(io);
-        } catch (ParserConfigurationException pce) {
-            throw new SAXException(pce);
-        }
-    }
-
-    private PMMLPortObjectSpec parseSpec() throws SAXException {
-        try {
-            SAXParserFactory fac = SAXParserFactory.newInstance();
-            SAXParser parser = fac.newSAXParser();
-            PMMLMasterContentHandler masterHandler =
-                    new PMMLMasterContentHandler();
-            DataDictionaryContentHandler ddHandler =
-                    new DataDictionaryContentHandler();
-            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                    ddHandler);
-            MiningSchemaContentHandler miningSchemaHdl =
-                    new MiningSchemaContentHandler();
-            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
-                    miningSchemaHdl);
-            parser.parse(m_file, masterHandler);
-            PMMLPortObjectSpecCreator creator =
-                    new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
-            creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
-            creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
-            return creator.createSpec();
-        } catch (IOException e) {
-            throw new SAXException(e);
-        } catch (ParserConfigurationException pce) {
-            throw new SAXException(pce);
         }
     }
 
@@ -385,8 +307,7 @@ public class PMMLImport {
     private PMMLPortObject parseModel(final PMMLPortObjectSpec portObjectSpec)
             throws SAXException {
         try {
-            m_portObject.loadFrom(portObjectSpec, new FileInputStream(m_file),
-                    m_version);
+            m_portObject.loadFrom(portObjectSpec, new FileInputStream(m_file));
         } catch (FileNotFoundException e) {
             throw new SAXException(e);
         } catch (ParserConfigurationException e) {

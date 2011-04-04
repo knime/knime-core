@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Workflow Layout
+Bundle-SymbolicName: org.knime.workbench.ui.layout;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.knime.workbench.ui.layout.Activator
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.knime.workbench.editor,
+ org.knime.core,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.eclipse.ui.forms,
+ org.eclipse.gef, 
+ org.eclipse.ui.editors
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Export-Package: org.knime.workbench.ui.layout,
+ org.knime.workbench.ui.layout.actions,
+ org.knime.workbench.ui.layout.commands
+Bundle-ClassPath: knime-layout.jar

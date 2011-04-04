@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./parallelChunkStart.png" type="LoopStart">
+    <name>Parallel Chunk Start</name>
+    <shortDescription>Represents the start of a parallel chunked flow.</shortDescription>
+    <fullDescription>
+    <intro>
+    Represents the start of a parallel chunked flow. Upon execution, it splits
+    the input data into equally sized chunks and executes the body (terminated
+    by the Parallel Chunk End) in parallel, each processing one chunk. The
+    chunk count can be customized in the configuration dialog.
+    </intro>
+    <option name="Use automatic chunk count">
+      Use a chunk count derived from the system's processor count.
+    </option>
+    <option name="Use custom chunk count">
+      Specify the chunk count in the spinner.
+    </option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Input Data">
+            The input data, split into chunks by the node.
+        </inPort>
+        <outPort index="0" name="Chunked Data">
+            A representation of the data chunk that is processed by the
+            parallel branch workflow body.
+        </outPort>
+    </ports>
+</knimeNode>

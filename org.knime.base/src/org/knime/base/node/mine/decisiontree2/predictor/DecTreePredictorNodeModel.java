@@ -58,11 +58,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeHandler;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -92,8 +93,11 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.util.Pair;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -133,7 +137,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * and one additional data input, and the scored data as output.
      */
     public DecTreePredictorNodeModel() {
-        super(new PortType[]{PMMLDecisionTreePortObject.TYPE,
+        super(new PortType[]{PMMLPortObject.TYPE,
               BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
         m_decTree = null;
     }
@@ -187,12 +191,24 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inPorts,
+    public PortObject[] execute(final PortObject[] inPorts,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setMessage("Decision Tree Predictor: Loading predictor...");
-        m_decTree = ((PMMLDecisionTreePortObject)
-                inPorts[INMODELPORT]).getTree();
+        PMMLPortObject port = (PMMLPortObject)inPorts[INMODELPORT];
+
+        List<Node> models = port.getPMMLValue().getModels(
+                PMMLModelType.TreeModel);
+        if (models.isEmpty()) {
+            String msg = "Decision Tree evaluation failed: "
+                   + "No tree model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+        PMMLDecisionTreeHandler handler = new PMMLDecisionTreeHandler();
+        handler.parse(models.get(0));
+        m_decTree = handler.getDecisionTree();
+
         m_decTree.resetColorInformation();
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         assert m_decTree != null;

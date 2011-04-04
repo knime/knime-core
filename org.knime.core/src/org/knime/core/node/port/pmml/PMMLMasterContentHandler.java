@@ -70,7 +70,7 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
     /** The PMML version.*/
     private String m_version = "";
 
-    private Map<String, PMMLContentHandler>m_registeredHandlers
+    private final Map<String, PMMLContentHandler>m_registeredHandlers
         = new HashMap<String, PMMLContentHandler>();
 
     /**

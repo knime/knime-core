@@ -74,6 +74,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
+import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
@@ -236,6 +237,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
+        // collapse meta nodes
+        action = m_actionRegistry.getAction(CollapseMetaNodeAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        
         // depending on the current selection: add the actions for the port
         // views and the node views
         // also check whether this node part is a meta-node

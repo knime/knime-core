@@ -92,7 +92,10 @@ class FileWriterNodeSettings extends FileWriterSettings {
      * {@link FileOverwritePolicy} since v2.1.
      */
     private static final String CFGKEY_APPEND = "isAppendToFile";
-    
+
+    /** @since v2.4 */
+    private static final String CFGKEY_GZIP = "gzip";
+
     private static final String CFGKEY_OVERWRITE_POLICY = "fileOverwritePolicy";
 
     private String m_fileName;
@@ -116,6 +119,8 @@ class FileWriterNodeSettings extends FileWriterSettings {
     private String m_customCommentLine;
     
     private FileOverwritePolicy m_fileOverwritePolicy;
+    
+    private boolean m_isGzipOutput;
 
     /**
      *
@@ -130,6 +135,7 @@ class FileWriterNodeSettings extends FileWriterSettings {
         m_addCreationUser = false;
         m_addTableName = false;
         m_customCommentLine = "";
+        m_isGzipOutput = false;
     }
 
     /**
@@ -181,6 +187,7 @@ class FileWriterNodeSettings extends FileWriterSettings {
         m_addCreationUser = settings.getBoolean(CFGKEY_ADD_USER, false);
         m_addTableName = settings.getBoolean(CFGKEY_ADD_TABLENAME, false);
         m_customCommentLine = settings.getString(CFGKEY_USERCOMMENT, "");
+        m_isGzipOutput = settings.getBoolean(CFGKEY_GZIP, false);
     }
 
     /**
@@ -200,7 +207,7 @@ class FileWriterNodeSettings extends FileWriterSettings {
         settings.addBoolean(CFGKEY_ADD_USER, m_addCreationUser);
         settings.addBoolean(CFGKEY_ADD_TABLENAME, m_addTableName);
         settings.addString(CFGKEY_USERCOMMENT, m_customCommentLine);
-
+        settings.addBoolean(CFGKEY_GZIP, m_isGzipOutput);
     }
 
     /*
@@ -338,5 +345,19 @@ class FileWriterNodeSettings extends FileWriterSettings {
     void setSkipColHeaderIfFileExists(final boolean skipColHeaderIfFileExists) {
         m_skipColHeaderIfFileExists = skipColHeaderIfFileExists;
     }
+    
+    /**
+	 * @param isGzipOutput the isGzipOutput to set.
+	 */
+	void setGzipOutput(final boolean isGzipOutput) {
+		m_isGzipOutput = isGzipOutput;
+	}
+	
+	/**
+	 * @return the isGzipOutput
+	 */
+	boolean isGzipOutput() {
+		return m_isGzipOutput;
+	}
 
 }

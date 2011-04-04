@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?><fileset-config file-format-version="1.1.0" simple-config="false">
-<fileset name="Java Files" enabled="true" check-config-name="UniKN KNIME" type="project" location="../org.knime.core/KNIMECheckstyle5.0.xml" description="Checkstyle configuration for KNIME Java source code files."><file-match-pattern match-pattern=".*\.java$" include-pattern="true"/>
-<file-match-pattern match-pattern=".*Test\.java$" include-pattern="false"/>
-</fileset>
-<fileset name="Unit Test Files" enabled="true" check-config-name="UniKN KNIME Unittest" type="project" location="../org.knime.core/KNIMEUnitTestCheckstyle3.1.xml" description="Checkstyle configuration for KNIME Unittest files.."><file-match-pattern match-pattern=".*Test\.java$" include-pattern="true"/>
-</fileset>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fileset-config file-format-version="1.2.0" simple-config="false" sync-formatter="false">
+  <fileset name="Java Files" enabled="true" check-config-name="UniKN KNIME" local="false">
+    <file-match-pattern match-pattern=".*\.java$" include-pattern="true"/>
+    <file-match-pattern match-pattern=".*Test\.java$" include-pattern="false"/>
+  </fileset>
+  <fileset name="Unit Test Files" enabled="true" check-config-name="UniKN KNIME Unittest" local="false">
+    <file-match-pattern match-pattern=".*Test\.java$" include-pattern="true"/>
+  </fileset>
 </fileset-config>

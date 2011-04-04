@@ -66,17 +66,22 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.draw2d.FigureCanvas;
+import org.eclipse.draw2d.Viewport;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionPoint;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditDomain;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.KeyHandler;
 import org.eclipse.gef.RootEditPart;
 import org.eclipse.gef.SnapToGeometry;
 import org.eclipse.gef.SnapToGrid;
+import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.commands.CommandStack;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
@@ -113,6 +118,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.EditorHistory;
@@ -124,11 +130,15 @@ import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -136,10 +146,13 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pointer;
+import org.knime.workbench.core.nodeprovider.NodeProvider;
+import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
+import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
@@ -156,6 +169,9 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
+import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNode;
+import org.knime.workbench.editor2.commands.CreateNewConnectedNode;
+import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
@@ -175,13 +191,13 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
         IResourceChangeListener, NodeStateChangeListener, ISaveablePart2,
-        NodeUIInformationListener {
+        NodeUIInformationListener, EventListener {
 
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(WorkflowEditor.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(WorkflowEditor.class);
 
     /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
@@ -259,7 +275,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         return getGraphicalViewer();
     }
 
-
     /**
      * Returns the clipboard content for this editor.
      *
@@ -322,10 +337,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                     if (editor != null) {
                         editors.add(editor);
                         if (editor instanceof WorkflowEditor) {
-                            /* Recursively get all subeditors. This is necessary
-                             *  for meta nodes in meta nodes. */
-                            editors.addAll(
-                                    ((WorkflowEditor)editor).getSubEditors());
+                            /*
+                             * Recursively get all subeditors. This is necessary
+                             * for meta nodes in meta nodes.
+                             */
+                            editors.addAll(((WorkflowEditor)editor)
+                                    .getSubEditors());
                         }
                     }
                 }
@@ -353,6 +370,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
         }
+        NodeProvider.INSTANCE.removeListener(this);
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
@@ -369,7 +387,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (workbench instanceof Workbench) {
                 EditorHistory hist = ((Workbench)workbench).getEditorHistory();
                 WorkflowManagerInput wfmInput =
-                    new WorkflowManagerInput(m_manager, m_parentEditor);
+                        new WorkflowManagerInput(m_manager, m_parentEditor);
                 hist.remove(wfmInput);
             }
         }
@@ -426,7 +444,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         CutAction cut = new CutAction(this);
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
-
+        CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        
         // register the actions
         m_actionRegistry.registerAction(undo);
         m_actionRegistry.registerAction(redo);
@@ -452,6 +471,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(paste);
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
+        m_actionRegistry.registerAction(collapse);
 
         m_actionRegistry.registerAction(annotation);
 
@@ -471,11 +491,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(setNameAndDescription.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());
+        m_editorActions.add(collapse.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(annotation.getId());
+        
 
     }
 
@@ -501,6 +523,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Returns a list of selected NodeContainerEditPart objects.
+     *
      * @return list of node containers
      */
     private NodeContainerEditPart[] getNodeParts() {
@@ -514,8 +537,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         ArrayList<NodeContainerEditPart> objects =
-            new ArrayList<NodeContainerEditPart>(
-                    ((IStructuredSelection)sel).toList());
+                new ArrayList<NodeContainerEditPart>(
+                        ((IStructuredSelection)sel).toList());
         // remove all objects that are not instance of NodeContainerEditPart
         for (Iterator iter = objects.iterator(); iter.hasNext();) {
             Object element = iter.next();
@@ -524,8 +547,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 continue;
             }
         }
-        final NodeContainerEditPart[] parts = objects
-                .toArray(new NodeContainerEditPart[objects.size()]);
+        final NodeContainerEditPart[] parts =
+                objects.toArray(new NodeContainerEditPart[objects.size()]);
 
         return parts;
     }
@@ -556,11 +579,14 @@ public class WorkflowEditor extends GraphicalEditor implements
         IEditorSite editorSite = getEditorSite();
         GraphicalViewer viewer = null;
         viewer =
-                new WorkflowGraphicalViewerCreator(editorSite, this
-                        .getActionRegistry()).createViewer(parent);
+                new WorkflowGraphicalViewerCreator(editorSite,
+                        this.getActionRegistry()).createViewer(parent);
 
         viewer.addDropTargetListener(new MetaNodeTemplateDropTargetListener(
                 this, viewer));
+        // Add a listener to the static node provider
+        NodeProvider.INSTANCE.addListener(this);
+
         // Configure the key handler
         GraphicalViewerKeyHandler keyHandler =
                 new GraphicalViewerKeyHandler(viewer);
@@ -625,7 +651,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         return m_graphicalViewer;
     }
 
-
     /**
      * Sets the editor input, that is, the file that contains the serialized
      * workflow manager.
@@ -641,102 +666,110 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else {
-        // register listener to check whether the underlying knime file (input)
-        // has been deleted or renamed
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
-                IResourceChangeEvent.POST_CHANGE);
+            // register listener to check whether the underlying knime file
+            // (input)
+            // has been deleted or renamed
+            ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+                    IResourceChangeEvent.POST_CHANGE);
 
-        setDefaultInput(input);
-        // we only support file inputs
+            setDefaultInput(input);
+            // we only support file inputs
 
+            m_fileResource = ((IFileEditorInput)input).getFile();
 
-        m_fileResource = ((IFileEditorInput)input).getFile();
+            // TODO try to load a WFM-config from the file, create an empty one
+            // if
+            // this fails
+            // LOGGER.debug("Created new WFM object as input");
 
-        // TODO try to load a WFM-config from the file, create an empty one if
-        // this fails
-        // LOGGER.debug("Created new WFM object as input");
+            LOGGER.debug("Resource File's project: "
+                    + m_fileResource.getProject());
 
-        LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
-
-        final File file = m_fileResource.getLocation().toFile();
-        try {
-            // FIXME:
-            // setInput is called before the entire repository is loaded,
-            // need to figure out how to do it the other way around
-            // the static block needs to be executed, access
-            // RepositoryManager.INSTANCE
-            if (RepositoryManager.INSTANCE == null) {
-                LOGGER.fatal("Repository Manager Instance must not be null!");
-            }
-            assert m_manager == null;
-
-            IPath localPath = m_fileResource.getParent().getFullPath();
-            m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
-                    localPath);
-            if (m_manager != null) {
-                // in case the workflow manager was edited somewhere else ...
-                if (m_manager.isDirty()) {
-                    // ... make sure to inform the user about it
-                    markDirty();
+            final File file = m_fileResource.getLocation().toFile();
+            try {
+                // FIXME:
+                // setInput is called before the entire repository is loaded,
+                // need to figure out how to do it the other way around
+                // the static block needs to be executed, access
+                // RepositoryManager.INSTANCE
+                if (RepositoryManager.INSTANCE == null) {
+                    LOGGER.fatal("Repository Manager Instance must not be null!");
                 }
-            } else {
-                IWorkbench wb = PlatformUI.getWorkbench();
-                IProgressService ps = wb.getProgressService();
-                // this one sets the workflow manager in the editor
-                LoadWorkflowRunnable loadWorflowRunnable =
-                        new LoadWorkflowRunnable(this, file);
-                ps.busyCursorWhile(loadWorflowRunnable);
-                // check if the editor should be disposed
-                if (m_manager == null) {
-                    if (m_loadingCanceled) {
-                        Display.getDefault().asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                getEditorSite().getPage().closeEditor(
-                                        WorkflowEditor.this, false);
-                                if (m_loadingCanceledMessage != null) {
-                                    MessageBox mb = new MessageBox(Display.
-                                            getDefault().getActiveShell(),
-                                            SWT.ICON_INFORMATION | SWT.OK);
-                                    mb.setText("Editor could not be opened");
-                                    mb.setMessage(m_loadingCanceledMessage);
-                                    mb.open();
-                                }
-                            }
+                assert m_manager == null;
 
-                        });
-                        if (m_loadingCanceledMessage != null) {
-                            throw new OperationCanceledException(
-                                    m_loadingCanceledMessage);
-                        } else {
-                            throw new OperationCanceledException();
-                        }
-                    } else if (loadWorflowRunnable.getThrowable() != null) {
-                        throw new RuntimeException(
-                                loadWorflowRunnable.getThrowable());
+                IPath localPath = m_fileResource.getParent().getFullPath();
+                m_manager =
+                        (WorkflowManager)ProjectWorkflowMap
+                                .getWorkflow(localPath);
+                if (m_manager != null) {
+                    // in case the workflow manager was edited somewhere else
+                    // ...
+                    if (m_manager.isDirty()) {
+                        // ... make sure to inform the user about it
+                        markDirty();
                     }
+                } else {
+                    IWorkbench wb = PlatformUI.getWorkbench();
+                    IProgressService ps = wb.getProgressService();
+                    // this one sets the workflow manager in the editor
+                    LoadWorkflowRunnable loadWorflowRunnable =
+                            new LoadWorkflowRunnable(this, file);
+                    ps.busyCursorWhile(loadWorflowRunnable);
+                    // check if the editor should be disposed
+                    if (m_manager == null) {
+                        if (m_loadingCanceled) {
+                            Display.getDefault().asyncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getEditorSite().getPage().closeEditor(
+                                            WorkflowEditor.this, false);
+                                    if (m_loadingCanceledMessage != null) {
+                                        MessageBox mb =
+                                                new MessageBox(Display
+                                                        .getDefault()
+                                                        .getActiveShell(),
+                                                        SWT.ICON_INFORMATION
+                                                                | SWT.OK);
+                                        mb.setText("Editor could not be opened");
+                                        mb.setMessage(m_loadingCanceledMessage);
+                                        mb.open();
+                                    }
+                                }
+
+                            });
+                            if (m_loadingCanceledMessage != null) {
+                                throw new OperationCanceledException(
+                                        m_loadingCanceledMessage);
+                            } else {
+                                throw new OperationCanceledException();
+                            }
+                        } else if (loadWorflowRunnable.getThrowable() != null) {
+                            throw new RuntimeException(
+                                    loadWorflowRunnable.getThrowable());
+                        }
+                    }
+                    ProjectWorkflowMap.putWorkflow(localPath, m_manager);
                 }
-                ProjectWorkflowMap.putWorkflow(localPath, m_manager);
+                // in any case register as client (also if the workflow was
+                // already
+                // loaded by another client
+                ProjectWorkflowMap.registerClientTo(localPath, this);
+                m_manager.addListener(this);
+                m_manager.addNodeStateChangeListener(this);
+            } catch (InterruptedException ie) {
+                LOGGER.fatal("Workflow loading thread interrupted", ie);
+            } catch (InvocationTargetException e) {
+                LOGGER.fatal("Workflow could not be loaded.", e);
             }
-            // in any case register as client (also if the workflow was already
-            // loaded by another client
-            ProjectWorkflowMap.registerClientTo(localPath, this);
-            m_manager.addListener(this);
-            m_manager.addNodeStateChangeListener(this);
-        } catch (InterruptedException ie) {
-            LOGGER.fatal("Workflow loading thread interrupted", ie);
-        } catch (InvocationTargetException e) {
-            LOGGER.fatal("Workflow could not be loaded.", e);
-        }
 
-        updatePartName();
+            updatePartName();
 
-        if (getGraphicalViewer() != null) {
-            loadProperties();
-        }
+            if (getGraphicalViewer() != null) {
+                loadProperties();
+            }
 
-        // update Actions, as now there's everything available
-        updateActions();
+            // update Actions, as now there's everything available
+            updateActions();
         }
     }
 
@@ -755,7 +788,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         super.setTitleToolTip(toolTip);
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -770,13 +802,14 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         // if this is a project
         if (m_parentEditor == null) {
-            return m_manager.getID().getIDWithoutRoot()
-                + ": " + m_fileResource.getParent().getName();
+            return m_manager.getID().getIDWithoutRoot() + ": "
+                    + m_fileResource.getParent().getName();
         } else {
             // we are a meta node editor
             // return id and node name (custom name)
-            String name = m_manager.getID().getIDWithoutRoot()
-                + ": " + m_manager.getName();
+            String name =
+                    m_manager.getID().getIDWithoutRoot() + ": "
+                            + m_manager.getName();
             if (m_manager.getCustomName() != null) {
                 name += " (" + m_manager.getCustomName() + ")";
             }
@@ -786,8 +819,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private void setWorkflowManagerInput(final WorkflowManagerInput input) {
         m_parentEditor = input.getParentEditor();
-        WorkflowManager wfm =
-                (input).getWorkflowManager();
+        WorkflowManager wfm = (input).getWorkflowManager();
         setWorkflowManager(wfm);
         setPartName(input.getName());
         wfm.addListener(this);
@@ -918,38 +950,42 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new Boolean(false));
     }
 
-    /** Whether the dialog has passed the {@link #promptToSaveOnClose()} method.
+    /**
+     * Whether the dialog has passed the {@link #promptToSaveOnClose()} method.
      * This helps us to distinguish whether we have to offer an exit dialog when
-     * executing nodes are not saveable.
-     * This flag is only true if the user closes the editor.
+     * executing nodes are not saveable. This flag is only true if the user
+     * closes the editor.
      */
     private boolean m_isClosing;
 
-    /** Brings up the Save-Dialog and sets the m_isClosing flag.
-     * {@inheritDoc} */
+    /**
+     * Brings up the Save-Dialog and sets the m_isClosing flag. {@inheritDoc}
+     */
     @Override
     public int promptToSaveOnClose() {
-        /* Ideally we would just set the m_isClosing flag and
-         *   return ISaveablePart2.DEFAULT
-         * which will bring up a separate dialog. This does not work as we
-         * have to set the m_isClosing only if the user presses YES (no means
-         * to figure out what button was pressed when eclipse opens the dialog).
+        /*
+         * Ideally we would just set the m_isClosing flag and return
+         * ISaveablePart2.DEFAULT which will bring up a separate dialog. This
+         * does not work as we have to set the m_isClosing only if the user
+         * presses YES (no means to figure out what button was pressed when
+         * eclipse opens the dialog).
          */
         if (m_parentEditor != null) {
             // ignore closing meta node editors.
             return ISaveablePart2.NO;
         }
-        String message = NLS.bind(WorkbenchMessages.
-                EditorManager_saveChangesQuestion, getTitle());
+        String message =
+                NLS.bind(WorkbenchMessages.EditorManager_saveChangesQuestion,
+                        getTitle());
         // Show a dialog.
         Shell sh = Display.getDefault().getActiveShell();
-        String[] buttons = new String[] {
-                IDialogConstants.YES_LABEL,
-                IDialogConstants.NO_LABEL,
-                IDialogConstants.CANCEL_LABEL };
-            MessageDialog d = new MessageDialog(
-                sh, WorkbenchMessages.Save_Resource,
-                null, message, MessageDialog.QUESTION, buttons, 0);
+        String[] buttons =
+                new String[]{IDialogConstants.YES_LABEL,
+                        IDialogConstants.NO_LABEL,
+                        IDialogConstants.CANCEL_LABEL};
+        MessageDialog d =
+                new MessageDialog(sh, WorkbenchMessages.Save_Resource, null,
+                        message, MessageDialog.QUESTION, buttons, 0);
         switch (d.open()) { // returns index in buttons[] array
         case 0: // YES
             m_isClosing = true;
@@ -999,8 +1035,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                             monitor);
 
             State state = m_manager.getState();
-            wasInProgress = state.executionInProgress()
-                && !state.equals(State.EXECUTINGREMOTELY);
+            wasInProgress =
+                    state.executionInProgress()
+                            && !state.equals(State.EXECUTINGREMOTELY);
 
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
@@ -1029,18 +1066,16 @@ public class WorkflowEditor extends GraphicalEditor implements
                     String projectName = m_fileResource.getProject().getName();
                     monitor.setTaskName("Refreshing " + projectName + "...");
                     m_fileResource.getProject().refreshLocal(
-                        IResource.DEPTH_INFINITE,
-                        monitor);
+                            IResource.DEPTH_INFINITE, monitor);
                 } catch (CoreException ce) {
-                    OperationCanceledException oce
-                        = new OperationCanceledException(
-                                "Workflow was not saved: " + ce.toString());
+                    OperationCanceledException oce =
+                            new OperationCanceledException(
+                                    "Workflow was not saved: " + ce.toString());
                     oce.initCause(ce);
                     throw oce;
                 }
             }
         });
-
 
         // mark all sub editors as saved
         for (IEditorPart subEditor : getSubEditors()) {
@@ -1072,19 +1107,25 @@ public class WorkflowEditor extends GraphicalEditor implements
                     String title = "Workflow in execution";
                     String message = "Executing nodes are not saved!";
                     if (m_isClosing) {
-                        abort = !MessageDialog.openQuestion(sh, title,
-                                message + " Exit anyway?");
+                        abort =
+                                !MessageDialog.openQuestion(sh, title, message
+                                        + " Exit anyway?");
                         m_isClosing = !abort; // user canceled close
                     } else {
                         IPreferenceStore prefStore =
-                            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                                KNIMEUIPlugin.getDefault().getPreferenceStore();
                         String toogleMessage = "Don't warn me again";
-                        if (prefStore.getBoolean(PreferenceConstants.
-                                P_CONFIRM_EXEC_NODES_NOT_SAVED)) {
-                            MessageDialogWithToggle.openInformation(sh, title,
-                                    message, toogleMessage, false,
-                                    prefStore, PreferenceConstants.
-                                    P_CONFIRM_EXEC_NODES_NOT_SAVED);
+                        if (prefStore
+                                .getBoolean(PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED)) {
+                            MessageDialogWithToggle
+                                    .openInformation(
+                                            sh,
+                                            title,
+                                            message,
+                                            toogleMessage,
+                                            false,
+                                            prefStore,
+                                            PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED);
                         }
                     }
                     abortPointer.set(Boolean.valueOf(abort));
@@ -1092,7 +1133,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             });
             if (abortPointer.get()) {
                 throw new OperationCanceledException(
-                "Closing workflow canceled on user request.");
+                        "Closing workflow canceled on user request.");
             }
         }
     }
@@ -1174,8 +1215,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Called when the command stack has changed, that is, a GEF command was
      * executed (Add,Remove,....). This keeps track of the dirty state of the
-     * editor.
-     * {@inheritDoc}
+     * editor. {@inheritDoc}
      */
     @Override
     public void commandStackChanged(final EventObject event) {
@@ -1192,6 +1232,219 @@ public class WorkflowEditor extends GraphicalEditor implements
             firePropertyChange(IEditorPart.PROP_DIRTY);
         }
     }
+
+    /*
+     * --------- methods for adding a auto-placed and auto-connected node -----
+     */
+
+    /**
+     * {@inheritDoc}
+     * Listener interface method of the {@link NodeProvider}.
+     * Called when other instances want to add a meta node to the workflow in
+     * the editor. <br>
+     * The implementation only adds it if the editor is active. If one other
+     * node is selected in the editor, to which the new node will then be
+     * connected to.
+     *
+     * @param sourceManager wfm to copy the meta node from
+     * @param id the id of the meta node in the source manager
+     * @return if the meta node was actually added
+     */
+    @Override
+    public boolean addMetaNode(final WorkflowManager sourceManager,
+            final NodeID id) {
+        if (id == null || sourceManager == null) {
+            return false;
+        }
+        if (!isEditorActive()) {
+            return false;
+        }
+
+        NodeContainerEditPart preNode = getTheOneSelectedNode();
+        NodeID preID = null;
+        Point nodeLoc = null;
+        if (preNode == null) {
+            nodeLoc = getViewportCenterLocation();
+            nodeLoc = toAbsolute(nodeLoc);
+        } else {
+            nodeLoc = getLocationRightOf(preNode);
+            preID = preNode.getNodeContainer().getID();
+        }
+        Command newNodeCmd =
+                new CreateNewConnectedMetaNode(getViewer(), m_manager,
+                        sourceManager, id, nodeLoc, preID);
+        getCommandStack().execute(newNodeCmd);
+        // after adding a node the editor should get the focus
+        setFocus();
+        return true;
+    }
+
+    /**
+     * Listener interface method of the {@link NodeProvider}. Called when other
+     * instances want to add a node to the workflow in the editor. <br>
+     * The implementation only adds it if the editor is active and one node is
+     * selected in the editor, to which the new node will then be connected to.
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean addNode(final NodeFactory<? extends NodeModel> nodeFactory) {
+
+        if (!isEditorActive()) {
+            return false;
+        }
+
+        NodeContainerEditPart preNode = getTheOneSelectedNode();
+        Point nodeLoc = null;
+        Command newNodeCmd = null;
+        if (preNode == null) {
+            nodeLoc = getViewportCenterLocation();
+            // this command accepts/requires relative coordinates
+            newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc);
+        } else {
+            nodeLoc = getLocationRightOf(preNode);
+            newNodeCmd =
+                    new CreateNewConnectedNode(getViewer(), m_manager,
+                            nodeFactory, nodeLoc, preNode.getNodeContainer()
+                                    .getID());
+        }
+
+        getCommandStack().execute(newNodeCmd);
+        // after adding a node the editor should get the focus
+        setFocus();
+        return true;
+    }
+
+    private boolean isEditorActive() {
+        // find out if we are the active editor (any easier way than that???)
+        IWorkbenchWindow window =
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window == null) {
+            return false;
+        }
+        IWorkbenchPage page = window.getActivePage();
+        if (page == null) {
+            return false;
+        }
+        IEditorPart editor = page.getActiveEditor();
+        return editor == this;
+    }
+
+    /**
+     * @return a node if and only if exactly one node in the editor is selected
+     */
+    private NodeContainerEditPart getTheOneSelectedNode() {
+        IStructuredSelection edSel =
+                (IStructuredSelection)getSite().getSelectionProvider()
+                        .getSelection();
+        if (edSel.size() == 1) {
+            Object o = edSel.getFirstElement();
+            if (o instanceof NodeContainerEditPart) {
+                // the one and only node that is selected
+                return (NodeContainerEditPart)o;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return a location in the middle of the visible part of the editor. These
+     *         are relative coordinates (to the current scrolling position)
+     */
+    private Point getViewportCenterLocation() {
+        FigureCanvas ctrl = ((FigureCanvas)getViewer().getControl());
+        Viewport viewPort = ctrl.getViewport();
+        Dimension viewSize = viewPort.getSize();
+        int relX = viewSize.width / 2;
+        int relY = viewSize.height / 2;
+        Point nodeLoc = new Point(relX, relY);
+        // make sure we have a free spot
+        while (isNodeAtRel(nodeLoc)) {
+            // move it a bit
+            nodeLoc.x += 10;
+            nodeLoc.y += 10;
+        }
+        return nodeLoc;
+
+
+    }
+
+    private Point getLocationRightOf(final NodeContainerEditPart refNode) {
+        NodeUIInformation ui =
+                (NodeUIInformation)refNode.getNodeContainer()
+                        .getUIInformation();
+        int xOffset = 100;
+        int yOffset = 120;
+        // first try: right of reference node
+        Point loc = new Point(ui.getBounds()[0] + (ui.getBounds()[2] / 2) + xOffset,
+                ui.getBounds()[1]);
+
+        // make sure we have a free spot
+        while (isNodeAtAbs(loc)) {
+            // move it down a bit
+            loc.y += yOffset;
+        }
+        return loc;
+    }
+
+    private boolean isNodeAtAbs(final Point absoluteLoc) {
+        return isNodeAtRel(toRelative(absoluteLoc));
+
+    }
+
+    private Point toRelative(final Point absLoc) {
+        ScalableFreeformRootEditPart rootEditPart
+            = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
+        Viewport viewport = (Viewport) rootEditPart.getFigure();
+        Rectangle area = viewport.getClientArea();
+        Point loc = absLoc.getCopy();
+        double z = getZoomfactor();
+        loc.x = (int)Math.round((loc.x - area.x) * z);
+        loc.y = (int)Math.round((loc.y - area.y) * z);
+        return loc;
+    }
+
+    private Point toAbsolute(final Point relLoc) {
+        ScalableFreeformRootEditPart rootEditPart
+        = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
+        Viewport viewport = (Viewport) rootEditPart.getFigure();
+        Rectangle area = viewport.getClientArea();
+
+        Point loc = relLoc.getCopy();
+        loc.x += area.x;
+        loc.y += area.y;
+        return loc;
+    }
+
+
+    private double getZoomfactor() {
+        ZoomManager zoomManager =
+                (ZoomManager)(getViewer().getProperty(ZoomManager.class
+                        .toString()));
+        return zoomManager.getZoom();
+    }
+
+    private boolean isNodeAtRel(final Point relativeLoc) {
+        EditPart ep = getViewer().findObjectAt(relativeLoc);
+        if (ep == null) {
+            return false;
+        }
+        while (!(ep instanceof RootEditPart)) {
+            if (ep instanceof NodeContainerEditPart) {
+                return true;
+            }
+            EditPart parent = ep.getParent();
+            // avoid endless loops
+            if (parent == null || ep == parent) {
+                return false;
+            }
+            ep = parent;
+        }
+        return false;
+    }
+
+    /*
+     * ---------- end of auto-placing and auto-connecting --------------
+     */
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
@@ -1266,25 +1519,26 @@ public class WorkflowEditor extends GraphicalEditor implements
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     // remove workflow.knime from moved to path
                     IPath newDirPath =
-                        delta.getMovedToPath().removeLastSegments(1);
+                            delta.getMovedToPath().removeLastSegments(1);
                     // directory name (without workflow groups)
                     final String newName = newDirPath.lastSegment();
                     IPath oldPath = m_fileResource.getParent().getFullPath();
-                    WorkflowEditor.this.m_manager.renameWorkflowDirectory(
-                            newName);
+                    WorkflowEditor.this.m_manager
+                            .renameWorkflowDirectory(newName);
                     ProjectWorkflowMap.replace(newDirPath,
                             WorkflowEditor.this.m_manager, oldPath);
                     Display.getDefault().syncExec(new Runnable() {
                         @Override
                         public void run() {
-                            String newTitle = m_manager.getID()
-                                .getIDWithoutRoot() + ": " + newName;
+                            String newTitle =
+                                    m_manager.getID().getIDWithoutRoot() + ": "
+                                            + newName;
                             setTitleToolTip(newTitle);
                             setPartName(newTitle);
-                            m_fileResource = ResourcesPlugin.getWorkspace().
-                                getRoot().getFile(delta.getMovedToPath());
-                            setDefaultInput(
-                                    new FileEditorInput(m_fileResource));
+                            m_fileResource =
+                                    ResourcesPlugin.getWorkspace().getRoot()
+                                            .getFile(delta.getMovedToPath());
+                            setDefaultInput(new FileEditorInput(m_fileResource));
                         }
                     });
                     return false;
@@ -1445,15 +1699,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         markDirty();
     }
 
-    /** UI information listener only relevant if this editor is for a meta node
-     * (update part name).
-     * {@inheritDoc}
+    /**
+     * UI information listener only relevant if this editor is for a meta node
+     * (update part name). {@inheritDoc}
      */
     @Override
-    public void nodeUIInformationChanged(
-            final NodeUIInformationEvent evt) {
+    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         updatePartName();
     }
-
 
 }

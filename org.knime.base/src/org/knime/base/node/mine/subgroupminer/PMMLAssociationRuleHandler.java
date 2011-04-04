@@ -47,17 +47,24 @@
  */
 package org.knime.base.node.mine.subgroupminer;
 
+import static org.knime.core.node.port.pmml.PMMLPortObject.CDATA;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * This class is not sufficently tested yet and the API of this class might be
@@ -81,14 +88,51 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
     private int m_nrOfItemsets;
     private int m_nrOfRules;
 
-    private final Set<FrequentItemSet>m_itemsets
-        = new LinkedHashSet<FrequentItemSet>();
-    private final Set<AssociationRule>m_rules
-        = new LinkedHashSet<AssociationRule>();
-
-    private Map<String, String>m_items = new LinkedHashMap<String, String>();
+    private final Set<FrequentItemSet> m_itemsets;
+    private final Set<AssociationRule> m_rules;
+    private final Map<String, String> m_items;
 
     private FrequentItemSet m_currentItemSet;
+
+    /**
+     * Creates a new empty association rule handler. The initialization has to
+     * be performed by registering the handler to a parser.
+     */
+    public PMMLAssociationRuleHandler() {
+        super();
+        m_items = new LinkedHashMap<String, String>();
+        m_itemsets = new LinkedHashSet<FrequentItemSet>();
+        m_rules = new LinkedHashSet<AssociationRule>();
+    }
+
+
+    /**
+     * Creates an initialized association rule handler that can be used to
+     * output the association rule model by invoking
+     * {@link #addPMMLModel(org.w3c.dom.DocumentFragment, PMMLPortObjectSpec)}.
+     * @param nrOfTransactions the number of transactions
+     * @param minSupport the minimum support
+     * @param minConfidence the minimum confidence
+     * @param items the items
+     * @param itemsets the itemsets
+     * @param rules the association rules
+     */
+    public PMMLAssociationRuleHandler(final int nrOfTransactions,
+            final double minSupport, final double minConfidence,
+            final Map<String, String> items,
+            final Set<FrequentItemSet> itemsets,
+            final Set<AssociationRule> rules) {
+        super();
+        m_nrOfTransactions = nrOfTransactions;
+        m_minSupport = minSupport;
+        m_minConfidence = minConfidence;
+        m_items = items;
+        m_itemsets = itemsets;
+        m_rules = rules;
+    }
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -274,5 +318,86 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
      */
     public Set<AssociationRule> getRules() {
         return m_rules;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec) throws SAXException {
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "functionName", CDATA,
+                "associationRules");
+        atts.addAttribute(null, null, "numberOfTransactions", CDATA,
+                "" + m_nrOfTransactions);
+        atts.addAttribute(null, null, "minimumSupport", CDATA,
+                "" + m_minSupport);
+        atts.addAttribute(null, null, "minimumConfidence", CDATA,
+                "" + m_minConfidence);
+        atts.addAttribute(null, null, "numberOfItems", CDATA, ""
+                + m_items.size());
+        atts.addAttribute(null, null, "numberOfItemsets", CDATA,
+                "" + m_itemsets.size());
+        atts.addAttribute(null, null, "numberOfRules", CDATA,
+                "" + m_rules.size());
+        handler.startElement(null, null, "AssociationModel", atts);
+        PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+        writeItems(handler);
+        writeItemsets(handler);
+        writeRules(handler);
+        handler.endElement(null, null, "AssociationModel");
+    }
+
+    private void writeItems(final TransformerHandler handler)
+        throws SAXException {
+        for (Entry<String, String> itemEntry : m_items.entrySet()) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, itemEntry.getKey());
+            atts.addAttribute(null, null, "value", CDATA, itemEntry.getValue());
+            handler.startElement(null, null, "Item", atts);
+            handler.endElement(null, null, "Item");
+        }
+
+    }
+
+    private void writeItemsets(final TransformerHandler handler)
+        throws SAXException {
+        for (FrequentItemSet set : m_itemsets) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "id", CDATA, set.getId());
+            atts.addAttribute(null, null, "support", CDATA,
+                    "" + set.getSupport());
+            atts.addAttribute(null, null, "numberOfItems", CDATA,
+                    "" + set.getItems().size());
+            handler.startElement(null, null, "Itemset", atts);
+            // add here the ItemRefs to the items (use index of item as id)
+            for (Integer item : set) {
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "itemRef", CDATA, "" + item);
+                handler.startElement(null, null, "ItemRef", atts);
+                handler.endElement(null, null, "ItemRef");
+            }
+            handler.endElement(null, null, "Itemset");
+        }
+    }
+
+    private void writeRules(final TransformerHandler handler)
+        throws SAXException {
+        for (AssociationRule rule : m_rules) {
+            AttributesImpl atts = new AttributesImpl();
+            atts.addAttribute(null, null, "support", CDATA,
+                    "" + rule.getSupport());
+            atts.addAttribute(null, null, "confidence", CDATA,
+                    "" + rule.getConfidence());
+            atts.addAttribute(null, null, "lift", CDATA,
+                    "" + rule.getLift());
+            atts.addAttribute(null, null, "antecedent", CDATA,
+                    rule.getAntecedent().getId());
+            atts.addAttribute(null, null, "consequent", CDATA,
+                    rule.getConsequent().getId());
+            handler.startElement(null, null, "AssociationRule", atts);
+            handler.endElement(null, null, "AssociationRule");
+        }
     }
 }

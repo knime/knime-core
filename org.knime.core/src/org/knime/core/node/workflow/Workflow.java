@@ -54,12 +54,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.util.Pair;
 
 /** Container class wrapping wrapping the network of nodes forming
  * a workflow together with some of the basic functionality, especially
@@ -814,6 +818,129 @@ class Workflow {
         public void setDepth(final int d) { m_depth = d; }
         public int getDepth() { return m_depth; }
     }
+    
+    /** Return matching LoopEnd node for the given LoopStart
+     * 
+     * @param id The requested start node (instanceof LoopStart) 
+     * @throws IllegalLoopException if loop setup is wrong
+     * @throws IllegalArgumentException if argument is not a LoopStart node
+     * @return id of end node or null if no such node was found.
+     */
+    NodeID getMatchingLoopEnd(final NodeID id) 
+    throws IllegalLoopException, IllegalArgumentException {
+        NodeContainer nc = getNode(id);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException("Not a Loop Start Node " + id);
+        }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!LoopRole.BEGIN.equals(snc.getLoopRole())) {
+            throw new IllegalArgumentException("Not a Loop Start Node " + id);
+        }
+        NodeID foundEnd = null;
+        // create stack for Breitensuche: also store the level of loop nesting
+        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
+        st.push(new Pair<NodeID, Integer>(id, 0));
+        while (!st.isEmpty()) {
+            Pair<NodeID, Integer> p = st.pop();
+            NodeID currentID = p.getFirst();
+            int currentDepth = p.getSecond();
+            for (ConnectionContainer cc
+                    : m_connectionsBySource.get(currentID)) {
+                assert currentID.equals(cc.getSource());
+                NodeID destID = cc.getDest();
+                if (this.getID().equals(destID)) {
+                    throw new IllegalLoopException("Loops can not leave"
+                    		+ " workflow!");
+                }
+                NodeContainer destNC = getNode(destID);
+                if (destNC instanceof SingleNodeContainer) {
+                    SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
+                    if (LoopRole.END.equals(destSNC.getLoopRole())) {
+                        if (currentDepth == 0) {
+                            if ((foundEnd != null)
+                                    && (!foundEnd.equals(destID))) {
+                                // we can reach it twice but we should never
+                                // reach another end node!
+                                throw new IllegalLoopException("Loops can not"
+                                	+ " connect to more than one End Node!");
+                            }
+                            foundEnd = destID;
+                            continue;
+                        } else {
+                            currentDepth--;
+                        }
+                    }
+                    if (LoopRole.BEGIN.equals(destSNC.getLoopRole())) {
+                        currentDepth++;
+                    }
+                }
+                st.push(new Pair<NodeID, Integer>(destID, currentDepth));
+            }
+        }
+        return foundEnd;
+    }
+
+    /** Return matching LoopStart node for the given LoopEnd
+     * 
+     * @param id The requested end node (instanceof LoopEnd) 
+     * @throws IllegalLoopException if loop setup is wrong
+     * @throws IllegalArgumentException if argument is not a LoopEnd node
+     * @return id of start node or null if no such node was found.
+     */
+    NodeID getMatchingLoopStart(final NodeID id) 
+    throws IllegalLoopException, IllegalArgumentException {
+        NodeContainer nc = getNode(id);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException("Not a Loop End Node " + id);
+        }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (!LoopRole.END.equals(snc.getLoopRole())) {
+            throw new IllegalArgumentException("Not a Loop End Node " + id);
+        }
+        NodeID foundStart = null;
+        // create stack for Breitensuche: also store the level of loop nesting
+        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
+        st.push(new Pair<NodeID, Integer>(id, 0));
+        while (!st.isEmpty()) {
+            Pair<NodeID, Integer> p = st.pop();
+            NodeID currentID = p.getFirst();
+            int currentDepth = p.getSecond();
+            for (ConnectionContainer cc
+                    : m_connectionsByDest.get(currentID)) {
+                assert currentID.equals(cc.getDest());
+                NodeID srcID = cc.getSource();
+                if (this.getID().equals(srcID)) {
+                    throw new IllegalLoopException("Loops can not start"
+                            + " from outside of a workflow!");
+                }
+                NodeContainer srcNC = getNode(srcID);
+                if (srcNC instanceof SingleNodeContainer) {
+                    SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
+                    if (LoopRole.BEGIN.equals(srcSNC.getLoopRole())) {
+                        if (currentDepth == 0) {
+                            if ((foundStart != null)
+                                && (!foundStart.equals(srcID))) {
+                                    // we can reach it twice but we should never
+                                    // reach another end node!
+                                throw new IllegalLoopException("Loops can not"
+                                    + " have more than one Start Node!");
+                            }
+                            foundStart = srcID;
+                            continue;
+                        } else {
+                            currentDepth--;
+                        }
+                    }
+                    if (LoopRole.END.equals(srcSNC.getLoopRole())) {
+                        currentDepth++;
+                    }
+                }
+                st.push(new Pair<NodeID, Integer>(srcID, currentDepth));
+            }
+        }
+        return foundStart;
+    }
+
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
      * do not connect back to the end-node. Used to re-execute all nodes
@@ -828,6 +955,8 @@ class Workflow {
      * @param endNode if of tail of loop
      * @return list of nodes within loop body & any dangling branches. The list
      *   also contains the used input ports of each node.
+     * @throws IllegalLoopException 
+     *    If there is a ill-posed loop (dangling branches)
      *
      * @FIXME: this is an almost complete replication of the function
      *   findAllConnectedNodes - they should both call a more general
@@ -835,7 +964,7 @@ class Workflow {
      */
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
-            final NodeID endNode) {
+            final NodeID endNode) throws IllegalLoopException {
         ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
@@ -880,7 +1009,7 @@ class Workflow {
                     NodeID destID = cc.getDest();
                     if (destID.equals(this.getID())) {
                         // if any branch leaves this WFM, complain!
-                        throw new IllegalFlowObjectStackException(
+                        throw new IllegalLoopException(
                             "Loops are not permitted to leave workflows!");
                     }
                     if ((!destID.equals(endNode))) {
@@ -929,6 +1058,16 @@ class Workflow {
         // remove start node
         NodeAndInports nai = tempOutput.remove(0);
         assert (nai.getID().equals(startNode));
+        // make sure we have no branches from within the loop body reconnecting
+        // to the flow after the loop end node
+        HashMap<NodeID, Set<Integer>> nodesAfterEndNode =
+            createBreadthFirstSortedList(Collections.singleton(endNode), true);
+        for (NodeAndInports nai2 : tempOutput) {
+            if (nodesAfterEndNode.containsKey(nai2.getID())) {
+                throw new IllegalLoopException(
+                        "Branches are not permitted to leave loops!");
+            }
+        }
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
             @Override

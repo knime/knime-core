@@ -78,6 +78,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -148,7 +149,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
-    private ArrayList<FlowLoopContext> m_listOfWaitingLoops
+    private final ArrayList<FlowLoopContext> m_listOfWaitingLoops
                                         = new ArrayList<FlowLoopContext>();
 
     private String m_customName;
@@ -976,6 +977,28 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     /* ------------- ports --------------- */
+    
+    /** @return types of input ports in a new array, excluding the mandatory
+     * flow variable port.
+     */
+    public final PortType[] getInputTypes() {
+    	PortType[] result = new PortType[getNrInPorts() - 1];
+    	for (int i = 0; i < result.length; i++) {
+    		result[i] = getInPort(i + 1).getPortType();
+    	}
+    	return result;
+    }
+    
+    /** @return types of output ports in a new array, excluding the mandatory
+     * flow variable port.
+     */
+    public final PortType[] getOutputTypes() {
+    	PortType[] result = new PortType[getNrOutPorts() - 1];
+    	for (int i = 0; i < result.length; i++) {
+    		result[i] = getOutPort(i + 1).getPortType();
+    	}
+    	return result;
+    }
 
     public abstract int getNrInPorts();
 

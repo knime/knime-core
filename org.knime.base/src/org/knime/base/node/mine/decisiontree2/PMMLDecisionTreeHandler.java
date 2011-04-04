@@ -50,36 +50,48 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
+import static org.knime.core.node.port.pmml.PMMLPortObject.CDATA;
+
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
+import javax.xml.transform.sax.TransformerHandler;
+
+import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitContinuous;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominal;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominalBinary;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLDecisionTreeHandler extends PMMLContentHandler {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            PMMLDecisionTreeHandler.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(PMMLDecisionTreeHandler.class);
 
     private static final Set<String> UNSUPPORTED = new LinkedHashSet<String>();
 
@@ -120,21 +132,51 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         SUPPORTED_DATA_TYPES.add("double");
     }
 
-    private Stack<PMMLCompoundPredicate> m_predStack =
+    private final Stack<PMMLCompoundPredicate> m_predStack =
             new Stack<PMMLCompoundPredicate>();
-    private Stack<TempTreeNodeContainer> m_nodeStack
-            = new Stack<TempTreeNodeContainer>();
-    private Stack<String> m_elementStack = new Stack<String>();
+
+    private final Stack<TempTreeNodeContainer> m_nodeStack =
+            new Stack<TempTreeNodeContainer>();
+
+    private final Stack<String> m_elementStack = new Stack<String>();
+
     private int m_level = 0;
+
     private StringBuffer m_buffer;
 
     private String m_classColumn;
+
     private PMMLMissingValueStrategy m_mvStrategy;
+
     private PMMLNoTrueChildStrategy m_ntcStrategy;
 
     private DecisionTree m_tree;
-    private Stack<DecisionTreeNode> m_childStack =
+
+    private final Stack<DecisionTreeNode> m_childStack =
             new Stack<DecisionTreeNode>();
+
+
+
+    /**
+     * Creates a new empty decision tree handler. The initialization has to
+     * be performed by registering the handler to a parser.
+     */
+    public PMMLDecisionTreeHandler() {
+        super();
+    }
+
+    /**
+     * Creates an initialized decision tree handler that can be used to
+     * output the decision tree model by invoking
+     * {@link #addPMMLModel(org.w3c.dom.DocumentFragment, PMMLPortObjectSpec)}.
+     * @param tree the decision tree
+     */
+    public PMMLDecisionTreeHandler(final DecisionTree tree) {
+        m_tree = tree;
+    }
+
+
+
 
     /**
      * {@inheritDoc}
@@ -174,19 +216,21 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             PMMLPredicate pred = null;
             if (name.equals("SimplePredicate")) {
                 pred =
-                        new PMMLSimplePredicate(atts.getValue("field"), atts
-                                .getValue("operator"), atts.getValue("value"));
+                        new PMMLSimplePredicate(atts.getValue("field"),
+                                atts.getValue("operator"),
+                                atts.getValue("value"));
             } else if (name.equals("True")) {
                 pred = new PMMLTruePredicate();
             } else if (name.equals("False")) {
                 pred = new PMMLFalsePredicate();
             } else if (name.equals("CompoundPredicate")) {
-                pred = new PMMLCompoundPredicate(atts
-                                .getValue("booleanOperator"));
+                pred =
+                        new PMMLCompoundPredicate(
+                                atts.getValue("booleanOperator"));
             } else if (name.equals("SimpleSetPredicate")) {
                 pred =
-                        new PMMLSimpleSetPredicate(atts.getValue("field"), atts
-                                .getValue("booleanOperator"));
+                        new PMMLSimpleSetPredicate(atts.getValue("field"),
+                                atts.getValue("booleanOperator"));
             }
             // determine if it is a sub predicate of a compound predicate
             if (!m_elementStack.peek().equals("CompoundPredicate")) {
@@ -223,10 +267,12 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                 && m_elementStack.peek().equals("SimpleSetPredicate")) {
             getPreviousSimpleSetPredicate().setArrayType(atts.getValue("type"));
         } else if (name.equals("TreeModel")) {
-           m_mvStrategy = PMMLMissingValueStrategy.get(
-                   atts.getValue("missingValueStrategy"));
-           m_ntcStrategy = PMMLNoTrueChildStrategy.get(
-                   atts.getValue("noTrueChildStrategy"));
+            m_mvStrategy =
+                    PMMLMissingValueStrategy.get(atts
+                            .getValue("missingValueStrategy"));
+            m_ntcStrategy =
+                    PMMLNoTrueChildStrategy.get(atts
+                            .getValue("noTrueChildStrategy"));
         } else if (!KNOWN.contains(name)) {
             LOGGER.warn("Skipping unknown element " + name);
         }
@@ -243,14 +289,14 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         if (name.equals("Array")
                 && m_elementStack.peek().equals("SimpleSetPredicate")) {
             // remove optional quotes and split on whitespace
-            Tokenizer tokenizer = new Tokenizer(new StringReader(
-                    m_buffer.toString().trim()));
-            //create settings for the tokenizer
+            Tokenizer tokenizer =
+                    new Tokenizer(new StringReader(m_buffer.toString().trim()));
+            // create settings for the tokenizer
             TokenizerSettings settings = new TokenizerSettings();
             settings.addDelimiterPattern(" ",
-                    /* combine multiple= */true,
-                    /* return as token= */ false,
-                    /* include in token= */false);
+            /* combine multiple= */true,
+            /* return as token= */false,
+            /* include in token= */false);
             settings.addQuotePattern("\"", "\"", '\\');
             settings.addWhiteSpaceCharacter(' ');
             settings.addWhiteSpaceCharacter('\t');
@@ -284,8 +330,8 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                                 classCounts);
             } else { // split node
                 // collect all children of the current node from the child stack
-                ArrayList<TempTreeNodeContainer> containerChildren
-                        = new ArrayList<TempTreeNodeContainer>();
+                ArrayList<TempTreeNodeContainer> containerChildren =
+                        new ArrayList<TempTreeNodeContainer>();
                 ArrayList<DecisionTreeNode> childrenList =
                         new ArrayList<DecisionTreeNode>();
                 ArrayList<PMMLPredicate> predicateList =
@@ -329,7 +375,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -341,8 +386,9 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             throw new IllegalArgumentException("No predicted "
                     + "field in mining schema found.");
         }
-        m_tree = new DecisionTree(m_childStack.pop(), m_classColumn,
-                m_mvStrategy, m_ntcStrategy);
+        m_tree =
+                new DecisionTree(m_childStack.pop(), m_classColumn,
+                        m_mvStrategy, m_ntcStrategy);
         LOGGER.info("Decision tree with missing value strategy: '"
                 + m_mvStrategy + "' and no true child strategy: '"
                 + m_ntcStrategy + "' created.");
@@ -403,6 +449,213 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
         return versions;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addModelPMMLContent(final TransformerHandler handler,
+            final PMMLPortObjectSpec spec)
+            throws SAXException {
+        if (m_tree == null) {
+            String msg =
+                    "DecisionTreeHandler has not been initialized "
+                            + "correctly. No model content is added.";
+            LOGGER.warn(msg);
+            return;
+        }
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "modelName", CDATA, "DecisionTree");
+        atts.addAttribute(null, null, "functionName", CDATA, "classification");
+        String splitCharacteristic;
+        if (treeIsMultisplit(m_tree.getRootNode())) {
+            splitCharacteristic = "multiSplit";
+        } else {
+            splitCharacteristic = "binarySplit";
+        }
+        atts.addAttribute(null, null, "splitCharacteristic", CDATA,
+                splitCharacteristic);
+
+        PMMLMissingValueStrategy mvStrategy = m_tree.getMVStrategy();
+        if (mvStrategy != null
+                && mvStrategy != PMMLMissingValueStrategy.getDefault()) {
+            atts.addAttribute(null, null, "missingValueStrategy", CDATA,
+                    mvStrategy.toString());
+        }
+        PMMLNoTrueChildStrategy ntcStrategy = m_tree.getNTCStrategy();
+        if (ntcStrategy != null
+                && ntcStrategy != PMMLNoTrueChildStrategy.getDefault()) {
+            atts.addAttribute(null, null, "noTrueChildStrategy", CDATA,
+                    ntcStrategy.toString());
+        }
+
+        handler.startElement(null, null, "TreeModel", atts);
+        PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+        addTreeNode(handler, m_tree.getRootNode());
+        handler.endElement(null, null, "TreeModel");
+    }
+
+    /**
+     * @return true if the tree contains at least one non binary split
+     */
+    private static boolean treeIsMultisplit(final DecisionTreeNode node) {
+        if (node instanceof DecisionTreeNodeLeaf) {
+            return false;
+        }
+        if ((node instanceof DecisionTreeNodeSplitContinuous)
+                || (node instanceof DecisionTreeNodeSplitNominalBinary)) {
+            boolean leftSide = treeIsMultisplit(node.getChildAt(0));
+            boolean rightSide = treeIsMultisplit(node.getChildAt(1));
+            return (leftSide || rightSide);
+        }
+        if (node instanceof DecisionTreeNodeSplitNominal) {
+            return true;
+        }
+        if (node instanceof DecisionTreeNodeSplitPMML) {
+            int childCount = node.getChildCount();
+            if (childCount > 2) {
+                return true;
+            } else {
+                boolean first = treeIsMultisplit(node.getChildAt(0));
+                boolean second = treeIsMultisplit(node.getChildAt(1));
+                return (first || second);
+            }
+        }
+        // and we should never reach this point
+        assert false;
+        return false;
+    }
+
+    /**
+     * @param handler
+     * @param node
+     * @throws SAXException
+     */
+    private static void addTreeNode(final TransformerHandler handler,
+            final DecisionTreeNode node) throws SAXException {
+
+        AttributesImpl atts = new AttributesImpl();
+        atts.addAttribute(null, null, "id", CDATA,
+                ((Integer)node.getOwnIndex()).toString());
+        atts.addAttribute(null, null, "score", CDATA, node.getMajorityClass()
+                .toString());
+        atts.addAttribute(null, null, "recordCount", CDATA,
+                ((Double)node.getEntireClassCount()).toString());
+        if (node instanceof DecisionTreeNodeSplitPMML) {
+            int defaultChild =
+                    ((DecisionTreeNodeSplitPMML)node).getDefaultChildIndex();
+            if (defaultChild > -1) {
+                atts.addAttribute(null, null, "defaultChild", CDATA,
+                        String.valueOf(defaultChild));
+            }
+        }
+        handler.startElement(null, null, "Node", atts);
+
+        // adding score and stuff from parent
+        DecisionTreeNode parent = node.getParent();
+        if (parent == null) {
+            handler.startElement(null, null, "True", null);
+            handler.endElement(null, null, "True");
+        } else if (parent instanceof DecisionTreeNodeSplitContinuous) {
+            DecisionTreeNodeSplitContinuous splitNode =
+                    (DecisionTreeNodeSplitContinuous)parent;
+
+            if (splitNode.getIndex(node) == 0) {
+                AttributesImpl predAtts = new AttributesImpl();
+                predAtts.addAttribute(null, null, "field", CDATA,
+                        splitNode.getSplitAttr());
+                predAtts.addAttribute(null, null, "operator", CDATA,
+                        "lessOrEqual");
+                predAtts.addAttribute(null, null, "value", CDATA,
+                        ((Double)splitNode.getThreshold()).toString());
+                handler.startElement(null, null, "SimplePredicate", predAtts);
+                handler.endElement(null, null, "SimplePredicate");
+            } else if (splitNode.getIndex(node) == 1) {
+                handler.startElement(null, null, "True", null);
+                handler.endElement(null, null, "True");
+            }
+
+        } else if (parent instanceof DecisionTreeNodeSplitNominalBinary) {
+            DecisionTreeNodeSplitNominalBinary splitNode =
+                    (DecisionTreeNodeSplitNominalBinary)parent;
+            AttributesImpl setPredAtts = new AttributesImpl();
+            setPredAtts.addAttribute(null, null, "field", CDATA,
+                    splitNode.getSplitAttr());
+            setPredAtts.addAttribute(null, null, "booleanOperator", CDATA,
+                    "isIn");
+            handler.startElement(null, null, "SimpleSetPredicate", setPredAtts);
+            AttributesImpl arrayAtts = new AttributesImpl();
+            arrayAtts.addAttribute(null, null, "type", CDATA, "string");
+            handler.startElement(null, null, "Array", arrayAtts);
+            DataCell[] splitValues = splitNode.getSplitValues();
+            List<Integer> indices = null;
+            if (splitNode.getIndex(node) == SplitNominalBinary.LEFT_PARTITION) {
+                indices = splitNode.getLeftChildIndices();
+            } else if (splitNode.getIndex(node) == SplitNominalBinary.RIGHT_PARTITION) {
+                indices = splitNode.getRightChildIndices();
+            }
+            StringBuilder classSet = new StringBuilder();
+            for (Integer i : indices) {
+                if (classSet.length() > 0) {
+                    classSet.append(" ");
+                }
+                classSet.append(splitValues[i].toString());
+            }
+            handler.characters(classSet.toString().toCharArray(), 0,
+                    classSet.length());
+            handler.endElement(null, null, "Array");
+            handler.endElement(null, null, "SimpleSetPredicate");
+
+        } else if (parent instanceof DecisionTreeNodeSplitNominal) {
+            DecisionTreeNodeSplitNominal splitNode =
+                    (DecisionTreeNodeSplitNominal)parent;
+            AttributesImpl predAtts = new AttributesImpl();
+            predAtts.addAttribute(null, null, "field", CDATA,
+                    splitNode.getSplitAttr());
+            predAtts.addAttribute(null, null, "operator", CDATA, "equal");
+            int nodeIndex = parent.getIndex(node);
+            predAtts.addAttribute(null, null, "value", CDATA,
+                    splitNode.getSplitValues()[nodeIndex].toString());
+            handler.startElement(null, null, "SimplePredicate", predAtts);
+            handler.endElement(null, null, "SimplePredicate");
+        } else if (parent instanceof DecisionTreeNodeSplitPMML) {
+            DecisionTreeNodeSplitPMML splitNode =
+                    (DecisionTreeNodeSplitPMML)parent;
+            int nodeIndex = parent.getIndex(node);
+            // get the PMML predicate of the current node from its parent
+            PMMLPredicate predicate = splitNode.getSplitPred()[nodeIndex];
+            // delegate the writing to the predicate
+            predicate.writePMML(handler);
+        } else {
+            LOGGER.error("Node Type " + parent.getClass()
+                    + " is not supported!");
+        }
+
+        // adding score distribution (class counts)
+        Set<Entry<DataCell, Double>> classCounts =
+                node.getClassCounts().entrySet();
+        Iterator<Entry<DataCell, Double>> iterator = classCounts.iterator();
+        while (iterator.hasNext()) {
+            Entry<DataCell, Double> entry = iterator.next();
+            DataCell cell = entry.getKey();
+            Double freq = entry.getValue();
+            AttributesImpl distrAtts = new AttributesImpl();
+            distrAtts.addAttribute(null, null, "value", CDATA, cell.toString());
+            distrAtts.addAttribute(null, null, "recordCount", CDATA,
+                    freq.toString());
+            handler.startElement(null, null, "ScoreDistribution", distrAtts);
+            handler.endElement(null, null, "ScoreDistribution");
+        }
+
+        // adding children
+        if (!(node instanceof DecisionTreeNodeLeaf)) {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                addTreeNode(handler, node.getChildAt(i));
+            }
+        }
+
+        handler.endElement(null, null, "Node");
     }
 
 }

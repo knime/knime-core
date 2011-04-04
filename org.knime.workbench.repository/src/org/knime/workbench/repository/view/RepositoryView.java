@@ -59,6 +59,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -74,9 +77,17 @@ import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.IPropertySourceProvider;
-
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.workbench.core.nodeprovider.NodeProvider;
+import org.knime.workbench.repository.NodeUsageRegistry;
+import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
+import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
 /**
@@ -87,19 +98,18 @@ import org.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public class RepositoryView extends ViewPart {
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RepositoryView.class);
+
     private TreeViewer m_viewer;
 
     private DrillDownAdapter m_drillDownAdapter;
 
-    // private Action m_action1;
-    //
-    // private Action m_action2;
-    //
-    // private Action m_doubleClickAction;
-
     private Root m_root;
 
-    private final IPropertySourceProvider m_propertyProvider = new PropertyProvider();
+    private final IPropertySourceProvider m_propertyProvider =
+            new PropertyProvider();
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
@@ -132,8 +142,8 @@ public class RepositoryView extends ViewPart {
         //
         // Create and configure the tree viewer
         //
-        m_viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL
-                | SWT.V_SCROLL);
+        m_viewer =
+                new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
         // m_drillDownAdapter = new DrillDownAdapter(m_viewer);
         m_viewer.setContentProvider(new RepositoryContentProvider());
         m_viewer.setLabelProvider(new RepositoryLabelProvider());
@@ -147,13 +157,12 @@ public class RepositoryView extends ViewPart {
         if (problemCategories.size() > 0) {
 
             StringBuffer message = new StringBuffer();
-            message
-                    .append("The following categories could not be inserted at a "
-                            + "proper position in the node repository due to wrong "
-                            + "positioning information.\n"
-                            + "See the corresponding plugin.xml file.\n "
-                            + "The categories were instead appended at the end "
-                            + "in each level.\n\n");
+            message.append("The following categories could not be inserted at a "
+                    + "proper position in the node repository due to wrong "
+                    + "positioning information.\n"
+                    + "See the corresponding plugin.xml file.\n "
+                    + "The categories were instead appended at the end "
+                    + "in each level.\n\n");
             for (Category category : problemCategories) {
                 message.append("ID: ").append(category.getID());
                 message.append(" Name: ").append(category.getName());
@@ -161,9 +170,12 @@ public class RepositoryView extends ViewPart {
                 message.append("\n");
             }
 
+            // send the message also to the log file.
+            LOGGER.warn(message.toString());
             try {
-                MessageBox mb = new MessageBox(Display.getDefault()
-                        .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
+                MessageBox mb =
+                        new MessageBox(Display.getDefault().getActiveShell(),
+                                SWT.ICON_INFORMATION | SWT.OK);
                 mb.setText("Problem categories...");
                 mb.setMessage(message.toString());
                 mb.open();
@@ -176,7 +188,8 @@ public class RepositoryView extends ViewPart {
         this.getSite().setSelectionProvider(m_viewer);
         // The viewer supports drag&drop
         // (well, actually only drag - objects are dropped into the editor ;-)
-        Transfer[] transfers = new Transfer[]{LocalSelectionTransfer.getTransfer()};
+        Transfer[] transfers =
+                new Transfer[]{LocalSelectionTransfer.getTransfer()};
         m_viewer.addDragSupport(DND.DROP_COPY, transfers,
                 new NodeTemplateDragListener(m_viewer));
 
@@ -185,7 +198,7 @@ public class RepositoryView extends ViewPart {
         //
         // this.makeActions();
         this.hookContextMenu();
-        // this.hookDoubleClickAction();
+        this.hookDoubleClickAction();
         this.contributeToActionBars();
 
         // add Help context
@@ -194,10 +207,44 @@ public class RepositoryView extends ViewPart {
 
     }
 
+    private void hookDoubleClickAction() {
+
+        m_viewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
+            public void doubleClick(final DoubleClickEvent event) {
+                Object o =
+                        ((IStructuredSelection)event.getSelection())
+                                .getFirstElement();
+                if (o instanceof NodeTemplate) {
+                    NodeTemplate tmplt = (NodeTemplate)o;
+                    NodeFactory<? extends NodeModel> nodeFact;
+                    try {
+                        nodeFact = tmplt.getFactory().newInstance();
+                    } catch (Exception e) {
+                        LOGGER.error("Unable to instantiate the selected node "
+                                + tmplt.getFactory().getName(), e);
+                        return;
+                    }
+                    boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
+                    if (added) {
+                        NodeUsageRegistry.addNode(tmplt);
+                    }
+                }
+                if (o instanceof MetaNodeTemplate) {
+                    MetaNodeTemplate mnt = (MetaNodeTemplate)o;
+                    NodeID metaNode = mnt.getManager().getID();
+                    NodeProvider.INSTANCE.addMetaNode(
+                            RepositoryFactory.META_NODE_ROOT, metaNode);
+                }
+            }
+        });
+    }
+
     private void hookContextMenu() {
         MenuManager menuMgr = new MenuManager("#PopupMenu");
         menuMgr.setRemoveAllWhenShown(true);
         menuMgr.addMenuListener(new IMenuListener() {
+            @Override
             public void menuAboutToShow(final IMenuManager manager) {
                 RepositoryView.this.fillContextMenu(manager);
             }
@@ -261,6 +308,7 @@ public class RepositoryView extends ViewPart {
      */
     @Override
     public Object getAdapter(final Class adapter) {
+
         if (adapter == IPropertySourceProvider.class) {
             return m_propertyProvider;
         }
@@ -279,6 +327,7 @@ public class RepositoryView extends ViewPart {
          * @see org.eclipse.ui.views.properties.IPropertySourceProvider#
          *      getPropertySource(java.lang.Object)
          */
+        @Override
         public IPropertySource getPropertySource(final Object object) {
 
             // Look if we can get an adapter to IPropertySource....
