@@ -21,6 +21,8 @@
 			True-Negatives, False-Negatives, Recall, Precision, Sensitivity, 
 			Specifity, F-measure, as well as the overall accuracy.
 		</intro>
+        <option name="First column">The first column represents the real classes of the data.</option>
+        <option name="Second column">The second column represents the predicted classes of the data.</option>
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input table">Table containing at least two columns to compare.</inPort>
