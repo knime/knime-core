@@ -29,7 +29,7 @@
 <!ELEMENT shortDescription (#PCDATA) >
 
 <!ELEMENT fullDescription (intro, (option*|tab*)) >
-<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | h3 | h4 | pre | sub | sup)* >
+<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | h3 | h4 | pre | sub | sup | table)* >
 <!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre | sub | sup)* >
 <!ATTLIST option name CDATA #REQUIRED>
 <!ELEMENT tab (option+)>
@@ -52,6 +52,18 @@
 <!ELEMENT sub (#PCDATA) >
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
+
+<!ELEMENT table (tr)+ >
+<!ELEMENT tr (th | td)+ >
+<!ELEMENT td (#PCDATA) >
+<!ELEMENT th (#PCDATA) >
+<!ATTLIST td align CDATA #IMPLIED>
+<!ATTLIST th align CDATA #IMPLIED>
+<!ATTLIST td colspan CDATA #IMPLIED>
+<!ATTLIST th colspan CDATA #IMPLIED>
+<!ATTLIST td rowspan CDATA #IMPLIED>
+<!ATTLIST th rowspan CDATA #IMPLIED>
+
 
 <!ELEMENT ports (inPort*, outPort*) >
 <!ELEMENT inPort (#PCDATA | br | b | i | u | tt | ul | ol)* >
