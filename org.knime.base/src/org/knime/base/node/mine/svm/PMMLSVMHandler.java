@@ -97,6 +97,8 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private String m_curSVMTargetCategory;
 
+    private String m_altSVMTargetCategory;
+
     private final List<String> m_curSVMVectors = new ArrayList<String>();
 
     private final List<Double> m_curSVMAlphas = new ArrayList<Double>();
@@ -108,6 +110,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     private final List<Svm> m_svms;
 
     private int[] m_curIndices;
+
 
 
     /**
@@ -179,7 +182,14 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void endDocument() throws SAXException {
         m_buffer = null;
-
+        if (m_svms.size() == 1) {
+            /* Binary classification case. Only one SVM is needed. */
+            Svm first = m_svms.get(0);
+            Svm second = new Svm(first.getSupportVectors().clone(),
+                    first.getAlphas(), m_altSVMTargetCategory,
+                    first.getThreshold() * -1, getKernel());
+            m_svms.add(second);
+        }
     }
 
     /**
@@ -292,6 +302,8 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             m_counter = 0;
         } else if (name.equals("SupportVectorMachine")) {
             m_curSVMTargetCategory = atts.getValue("targetCategory");
+            // optional and only set in case of binary classification
+            m_altSVMTargetCategory = atts.getValue("alternateTargetCategory");
         } else if (name.equals("SupportVector")) {
             m_curSVMVectors.add(atts.getValue("vectorId"));
         } else if (name.equals("Coefficients")) {
@@ -582,10 +594,16 @@ public class PMMLSVMHandler extends PMMLContentHandler {
                 handler.endElement(null, null, "SupportVectorMachine");
             }
         }
+
         for (Svm svm : svms) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "targetCategory", CDATA, svm
                     .getPositive());
+            final boolean binaryClassification = (svms.size() == 2);
+            if (binaryClassification) {
+                atts.addAttribute(null, null, "alternateTargetCategory", CDATA,
+                    svms.get(1).getPositive());
+            }
             handler.startElement(null, null, "SupportVectorMachine", atts);
 
             // add support vectors
@@ -624,6 +642,10 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
             handler.endElement(null, null, "Coefficients");
             handler.endElement(null, null, "SupportVectorMachine");
+            if (binaryClassification) {
+                /* Binary classification case. Only one SVM is needed. */
+                break;
+            }
         }
 
     }
