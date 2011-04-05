@@ -340,7 +340,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
         // create the SVM model
         // with the attributes...

@@ -423,7 +423,11 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     }
 
    
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
         
         // create the cluster model

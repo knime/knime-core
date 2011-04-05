@@ -455,7 +455,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec)
             throws SAXException {
         if (m_tree == null) {

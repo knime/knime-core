@@ -54,12 +54,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -89,7 +88,7 @@ import org.w3c.dom.Node;
  */
 public class GeneralRegressionPredictorNodeModel extends NodeModel {
     private final GeneralRegressionPredictorSettings m_settings;
-    
+
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(GeneralRegressionPredictorNodeModel.class);
@@ -144,11 +143,11 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
-        PMMLGeneralRegressionContentHandler handler  
+        PMMLGeneralRegressionContentHandler handler
 			 = new PMMLGeneralRegressionContentHandler(
 							(PMMLPortObjectSpec) inData[0].getSpec());
-        handler.parse(models.get(0));    
-        
+        handler.parse(models.get(0));
+
         BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
         ColumnRearranger c = createRearranger(handler, spec);
@@ -240,9 +239,9 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         }
 
         ColumnRearranger c = new ColumnRearranger(inSpec);
-        c.append(new LogRegPredictor(handler, inSpec, handler.getSpec(),
+        c.append(new LogRegPredictor(handler.getContent(), inSpec,
+                handler.getSpec(), handler.getTargetVariableName(),
                 m_settings.getIncludeProbabilities()));
-
         return c;
     }
 

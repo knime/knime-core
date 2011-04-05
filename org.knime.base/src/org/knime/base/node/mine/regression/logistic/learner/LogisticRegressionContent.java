@@ -62,14 +62,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCovCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -86,7 +86,6 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.xml.sax.SAXException;
 
 import Jama.Matrix;
 
@@ -97,20 +96,20 @@ import Jama.Matrix;
  * @author Heiko Hofer
  */
 public final class LogisticRegressionContent {
-    private PMMLPortObjectSpec m_outSpec;
+    private final PMMLPortObjectSpec m_outSpec;
 
-    private List<String> m_factorList;
-    private Map<String, List<DataCell>> m_factorDomainValues;
-    private List<String> m_covariateList;
+    private final List<String> m_factorList;
+    private final Map<String, List<DataCell>> m_factorDomainValues;
+    private final List<String> m_covariateList;
 
-    private List<DataCell> m_targetCategories;
+    private final List<DataCell> m_targetCategories;
 
-    private Matrix m_beta;
+    private final Matrix m_beta;
 
-    private double m_loglike;
-    private Matrix m_covMat;
+    private final double m_loglike;
+    private final Matrix m_covMat;
 
-    private int m_iter;
+    private final int m_iter;
 
 
     /**
@@ -434,11 +433,19 @@ public final class LogisticRegressionContent {
      * model.
      *
      * @return a port object
-     * @throws InvalidSettingsException if the settings are invalid
-     * @throws SAXException 
      */
-    public PMMLPortObject createPMMLPortObject()
-            throws InvalidSettingsException, SAXException {
+    public PMMLPortObject createPMMLPortObject() {
+        PMMLGeneralRegressionContent content = createGeneralRegressionContent();
+        return new PMMLPortObject(m_outSpec,
+                new PMMLGeneralRegressionContentHandler(m_outSpec, content));
+    }
+
+    /**
+     * Creates a new PMML General Regression Content from this logistic
+     * regression model.
+     * @return the PMMLGeneralRegressionContent
+     */
+    public PMMLGeneralRegressionContent createGeneralRegressionContent() {
         List<PMMLPredictor> factors = new ArrayList<PMMLPredictor>();
         for (String factor : m_factorList) {
             PMMLPredictor predictor = new PMMLPredictor(factor);
@@ -511,10 +518,7 @@ public final class LogisticRegressionContent {
                     ppMatrix.toArray(new PMMLPPCell[0]),
                     pCovMatrix.toArray(new PMMLPCovCell[0]),
                     paramMatrix.toArray(new PMMLPCell[0]));
-        
-
-        return new PMMLPortObject(m_outSpec,
-        		new PMMLGeneralRegressionContentHandler(m_outSpec, content));
+        return content;
     }
 
     private static final String CFG_TARGET = "target";

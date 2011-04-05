@@ -218,7 +218,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_algorithmName = algorithmName;
     }
 
-    protected  void addModelPMMLContent(final TransformerHandler handler,
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected  void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
           AttributesImpl a = new AttributesImpl();
         a.addAttribute("", "", "functionName", "CDATA", "regression");

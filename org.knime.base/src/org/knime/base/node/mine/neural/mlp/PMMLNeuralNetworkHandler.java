@@ -318,7 +318,7 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, "modelName", CDATA,

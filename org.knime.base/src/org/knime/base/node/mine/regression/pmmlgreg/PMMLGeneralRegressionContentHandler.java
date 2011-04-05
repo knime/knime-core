@@ -71,12 +71,12 @@ public final class PMMLGeneralRegressionContentHandler extends PMMLContentHandle
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLRegressionContentHandler.class);
 
-    private Stack<PMMLContentHandler> m_contentHandlerStack =
+    private final Stack<PMMLContentHandler> m_contentHandlerStack =
         new Stack<PMMLContentHandler>();
 
-    private PMMLPortObjectSpec m_spec;
+    private final PMMLPortObjectSpec m_spec;
 
-    private PMMLGeneralRegressionContent m_content;
+    private final PMMLGeneralRegressionContent m_content;
 
     /**
      * Creates a new PMML content handler for general regression models.
@@ -84,28 +84,21 @@ public final class PMMLGeneralRegressionContentHandler extends PMMLContentHandle
      * @param spec the spec for the regression model
      */
     public PMMLGeneralRegressionContentHandler(final PMMLPortObjectSpec spec) {
-        if (spec == null) {
-            throw new NullPointerException("Given argument "
-                    + "(PMMLPortObjectSpec) must not be null");
-        }
-        setSpec(spec);
-        m_content = new PMMLGeneralRegressionContent();
+       this(spec, new PMMLGeneralRegressionContent());
     }
 
     /**
      * Creates a new PMML content handler for general regression models.
      *
      * @param spec the spec for the regression model
+     * @param content the regression content for the model
      */
     public PMMLGeneralRegressionContentHandler(final PMMLPortObjectSpec spec,
-    		final PMMLGeneralRegressionContent content) {
-        if (spec == null) {
-            throw new NullPointerException("Given argument "
-                    + "(PMMLPortObjectSpec) must not be null");
-        }
-        setSpec(spec);
+            final PMMLGeneralRegressionContent content) {
+        m_spec = spec;
         m_content = content;
     }
+
     /**
      * {@inheritDoc}
      */
@@ -251,7 +244,7 @@ public final class PMMLGeneralRegressionContentHandler extends PMMLContentHandle
      * @return target field name.
      */
     private String getTargetField() {
-        for (String s : getSpec().getTargetFields()) {
+        for (String s : m_spec.getTargetFields()) {
             return s;
         }
         return "Response";
@@ -276,36 +269,35 @@ public final class PMMLGeneralRegressionContentHandler extends PMMLContentHandle
         }
         // TODO: Add more validation checks.
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec)
             throws SAXException {
       // TODO Null pointer checks
-    	
+
         PMMLGeneralRegressionWriter writer =
             new PMMLGeneralRegressionWriter(spec, this);
         writer.writePMMLGeneralRegressionModel(handler);
     }
-    
+
     /**
      * @return the targetVariableName
      */
     public String getTargetVariableName() {
-        for (String s : getSpec().getTargetFields()) {
+        for (String s : m_spec.getTargetFields()) {
             return s;
         }
         return "Response";
     }
 
-	public void setSpec(final PMMLPortObjectSpec spec) {
-		this.m_spec = spec;
-	}
-
-	public PMMLPortObjectSpec getSpec() {
-		return m_spec;
-	}
-  }
+    /**
+     * @return the spec
+     */
+    public PMMLPortObjectSpec getSpec() {
+        return m_spec;
+    }
+}

@@ -281,7 +281,7 @@ public abstract class PMMLContentHandler extends DefaultHandler
 
         /* Here the subclasses can insert the content by overriding the
          * addModelContent method.*/
-        addModelPMMLContent(handler, spec);
+        addPMMLModelContent(handler, spec);
 
         handler.endDocument();
 
@@ -306,7 +306,7 @@ public abstract class PMMLContentHandler extends DefaultHandler
      * @throws SAXException if the model cannot be added
      */
     @SuppressWarnings("unused")
-    protected void addModelPMMLContent(final TransformerHandler handler,
+    protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
         // empty in the base class
     }

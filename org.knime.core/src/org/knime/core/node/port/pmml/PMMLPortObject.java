@@ -103,6 +103,7 @@ import org.xml.sax.helpers.AttributesImpl;
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Dominik Morent, KNIME.com GmbH, Zurich, Switzerland
  */
 public class PMMLPortObject implements PortObject {
     private static final NodeLogger LOGGER =
@@ -126,17 +127,18 @@ public class PMMLPortObject implements PortObject {
     protected static final String LOCAL_TRANS = "LocalTransformations";
 
     private static final String PMML_3_0 = "/schemata/pmml-3-0.xsd";
-
     private static final String PMML_3_1 = "/schemata/pmml-3-1.xsd";
-
     private static final String PMML_3_2 = "/schemata/pmml-3-2.xsd";
+    private static final String PMML_4_0 = "/schemata/pmml-4-0.xsd";
 
-    /** Constant for version 3.0. Can be used as argument for the load method.*/
+    /** Constant for version 3.0.*/
     public static final String PMML_V3_0 = "3.0";
-    /** Constant for version 3.1. Can be used as argument for the load method.*/
+    /** Constant for version 3.1.*/
     public static final String PMML_V3_1 = "3.1";
-    /** Constant for version 3.2. Can be used as argument for the load method.*/
+    /** Constant for version 3.2.*/
     public static final String PMML_V3_2 = "3.2";
+    /** Constant for version 3.2.*/
+    public static final String PMML_V4_0 = "4.0";
 
     private static final Map<String, String> VERSION_SCHEMA_MAP
         = new HashMap<String, String>();
@@ -148,10 +150,9 @@ public class PMMLPortObject implements PortObject {
 
     private PMMLValue m_content;
 
-
     /**
      * Based on the version number the local schema location is returned.
-     * @param version version 3.0 - 3.2
+     * @param version version 3.0 - 4.0
      * @return the location of the local schema
      */
     public static String getLocalSchemaLocation(final String version) {
@@ -162,15 +163,15 @@ public class PMMLPortObject implements PortObject {
         VERSION_SCHEMA_MAP.put(PMML_V3_0, PMML_3_0);
         VERSION_SCHEMA_MAP.put(PMML_V3_1, PMML_3_1);
         VERSION_SCHEMA_MAP.put(PMML_V3_2, PMML_3_2);
+        VERSION_SCHEMA_MAP.put(PMML_V4_0, PMML_4_0);
         VERSION_NAMESPACE_MAP.put(PMML_V3_0, "http://www.dmg.org/PMML-3_0");
         VERSION_NAMESPACE_MAP.put(PMML_V3_1, "http://www.dmg.org/PMML-3_1");
         VERSION_NAMESPACE_MAP.put(PMML_V3_2, "http://www.dmg.org/PMML-3_2");
+        VERSION_NAMESPACE_MAP.put(PMML_V4_0, "http://www.dmg.org/PMML-4_0");
     }
 
 
     private PMMLPortObjectSpec m_spec;
-
-    private final PMMLMasterContentHandler m_masterHandler;
 
     private static PMMLPortObjectSerializer serializer;
 
@@ -194,7 +195,6 @@ public class PMMLPortObject implements PortObject {
      * internal calls.
      */
     public PMMLPortObject() {
-        m_masterHandler = new PMMLMasterContentHandler();
     }
 
     /**
@@ -204,34 +204,32 @@ public class PMMLPortObject implements PortObject {
      */
     public PMMLPortObject(final PMMLPortObjectSpec spec) {
         m_spec = spec;
-        m_masterHandler = new PMMLMasterContentHandler();
         initializePMMLDocument();
     }
 
     /**
-     * Creates a new PMML port object. Models can be added later by calling
-     * {@link #addPMMLModel(Node)}.
+     * Creates a new PMML port from the document.
      * @param spec the referring {@link PMMLPortObjectSpec}
-     * @param dom the pmml document
+     * @param dom a valid PMML document
      */
     public PMMLPortObject(final PMMLPortObjectSpec spec, final Document dom) {
         m_spec = spec;
-        m_masterHandler = new PMMLMasterContentHandler();
         m_content = (PMMLValue)PMMLCellFactory.create(dom);
     }
 
     /**
      * @param spec the port object spec
      * @param handler the pmml content handler that adds the model content
-     * @throws SAXException if the pmml model could not be added
      */
     public PMMLPortObject(final PMMLPortObjectSpec spec,
-            final PMMLContentHandler handler) throws SAXException {
+            final PMMLContentHandler handler) {
         this(spec);
-        DocumentFragment fragment
-                = m_content.getDocument().createDocumentFragment();
-        handler.addPMMLModel(fragment, spec);
-        addPMMLModel(fragment);
+        try {
+            addPMMLModelFromHandler(handler);
+        } catch (SAXException e) {
+            throw new RuntimeException("Could not add model to PMML port "
+                    + "object.", e);
+        }
     }
 
     /**
@@ -311,7 +309,7 @@ public class PMMLPortObject implements PortObject {
             PMMLPortObjectSpec.writeHeader(handler, version);
             PMMLPortObjectSpec.writeDataDictionary(
                     getSpec().getDataTableSpec(), handler, version);
-            /*
+            /**
              * No model is written yet. It has to be added by calling
              * addPMMLModel.
              */
@@ -446,7 +444,22 @@ public class PMMLPortObject implements PortObject {
         }
     }
 
-
+    /**
+     * Appends the pmml model of the content handler by invoking its
+     * {@link PMMLContentHandler#addPMMLModel(DocumentFragment,
+     * PMMLPortObjectSpec)} method.
+     * Only {@link PMMLModelType} elements can be added.
+     *
+     * @param model the model fragment to add
+     * @throws SAXException if the pmml model could not be added
+     */
+    private void addPMMLModelFromHandler(final PMMLContentHandler handler)
+            throws SAXException {
+        DocumentFragment fragment
+                = m_content.getDocument().createDocumentFragment();
+        handler.addPMMLModel(fragment, m_spec);
+        addPMMLModel(fragment);
+    }
 
 
     /**
