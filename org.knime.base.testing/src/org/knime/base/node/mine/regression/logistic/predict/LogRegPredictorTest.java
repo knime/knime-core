@@ -187,8 +187,8 @@ public class LogRegPredictorTest {
         }
         // Create predictor
         LogRegPredictor predictor = new LogRegPredictor(
-                content.createPMMLPortObject(), data.getDataTableSpec(),
-                true);
+                content.createPMMLPortObject().getSpec(),
+                data.getDataTableSpec(), true);
         for (DataRow row : data) {
             DataCell[] predicted = predictor.getCells(row);
             double[] trueProb = data.getProbability(row);
@@ -207,11 +207,11 @@ public class LogRegPredictorTest {
         private final DataCell[] m_targetValues;
         private final int m_groupCount;
         private final double[][] m_beta;
-        private Random m_random;
-        private int m_parameterCount;
+        private final Random m_random;
+        private final int m_parameterCount;
         private List<DataRow> m_data;
-        private List<DataColumnSpec> m_learningCols;
-        private DataColumnSpec m_targetCol;
+        private final List<DataColumnSpec> m_learningCols;
+        private final DataColumnSpec m_targetCol;
         private int m_count;
         private Map<DataRow, double[]> m_probabilty;
 
@@ -268,6 +268,7 @@ public class LogRegPredictorTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataTableSpec getDataTableSpec() {
             List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
             colSpecs.addAll(m_learningCols);
@@ -279,6 +280,7 @@ public class LogRegPredictorTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowIterator iterator() {
             return new TestDataIterator(m_data.iterator());
         }
@@ -357,7 +359,7 @@ public class LogRegPredictorTest {
 
         private static class TestDataIterator extends RowIterator {
 
-            private Iterator<DataRow> m_iter;
+            private final Iterator<DataRow> m_iter;
 
             public TestDataIterator(final Iterator<DataRow> iter) {
                 m_iter = iter;

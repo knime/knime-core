@@ -48,68 +48,35 @@
  * History
  *   27.04.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.pmmlgreg;
+package org.knime.core.node.port.pmml;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.xml.sax.SAXException;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 /**
  *
  * @author hofer, University of Konstanz
  */
-public class PMMLGeneralRegressionPortObjectTest {
+public class PMMLPortObjectTest {
 
     /**
-     * @throws java.lang.Exception
-     */
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    /**
-     * Test method for {@link org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject#loadFrom(org.knime.core.node.port.pmml.PMMLPortObjectSpec, java.io.InputStream, java.lang.String)}.
+     * Test method for {@link org.knime.core.node.port.pmml.PMMLPortObject
+     *      #loadFrom(PMMLPortObjectSpec, InputStream)}.
      * @throws IOException
      * @throws SAXException
      * @throws ParserConfigurationException
@@ -117,27 +84,29 @@ public class PMMLGeneralRegressionPortObjectTest {
     @Test
     public final void testLoadFrom() throws ParserConfigurationException,
         SAXException, IOException {
-        PMMLGeneralRegressionPortObject port = readPMMLModel();
+        PMMLPortObject port = readPMMLModel();
         // TODO Test if result is correct
-        port.getTargetVariableName();
+        port.getModelTypes();
     }
 
     /**
-     * Test method for {@link org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject#writePMMLModel(javax.xml.transform.sax.TransformerHandler)}.
+     * Test method for {@link org.knime.core.node.port.pmml.PMMLPortObject
+     *      #save(java.io.OutputStream)}
      * @throws IOException
      * @throws SAXException
      * @throws ParserConfigurationException
+     * @throws TransformerException
      * @throws TransformerConfigurationException
      */
     @Test
     public final void testWritePMMLModel() throws ParserConfigurationException,
-    SAXException, IOException, TransformerConfigurationException {
-        PMMLGeneralRegressionPortObject port = readPMMLModel();
-        ByteOutputStream os = new ByteOutputStream();
+            SAXException, IOException, TransformerException,
+            TransformerConfigurationException {
+        PMMLPortObject port = readPMMLModel();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
         port.save(os);
-        String saved = new String(os.getBytes(), "UTF-8");
-        PMMLGeneralRegressionPortObject portSaved =
-            new PMMLGeneralRegressionPortObject();
+        String saved = new String(os.toByteArray(), "UTF-8");
+        PMMLPortObject portSaved = new PMMLPortObject();
         PMMLPortObjectSpec spec;
         try {
             spec = getPMMLSpec();
@@ -146,18 +115,17 @@ public class PMMLGeneralRegressionPortObjectTest {
         }
         InputStream stream = new ByteArrayInputStream(
                 saved.getBytes("UTF-8"));
-        portSaved.loadFrom(spec, stream, PMMLPortObject.PMML_V3_1);
+        portSaved.loadFrom(spec, stream);
 
-        Assert.assertEquals(port.getContent().getModelType(),
-                portSaved.getContent().getModelType());
-        Assert.assertEquals(port.getContent().getFunctionName(),
-                portSaved.getContent().getFunctionName());
+        Assert.assertEquals(port.getModelTypes(),
+                portSaved.getModelTypes());
+        Assert.assertEquals(port.getPMMLValue(),portSaved.getPMMLValue());
     }
 
-    private PMMLGeneralRegressionPortObject readPMMLModel()
+    private PMMLPortObject readPMMLModel()
         throws ParserConfigurationException, SAXException, IOException {
-        PMMLGeneralRegressionPortObject port =
-            new PMMLGeneralRegressionPortObject();
+        PMMLPortObject port =
+            new PMMLPortObject();
         PMMLPortObjectSpec spec;
         try {
             spec = getPMMLSpec();
@@ -166,7 +134,7 @@ public class PMMLGeneralRegressionPortObjectTest {
         }
         InputStream stream = new ByteArrayInputStream(
                 getPMMLFile().getBytes("UTF-8"));
-        port.loadFrom(spec, stream, PMMLPortObject.PMML_V3_1);
+        port.loadFrom(spec, stream);
         return port;
     }
 
@@ -287,7 +255,6 @@ public class PMMLGeneralRegressionPortObjectTest {
         + "  </GeneralRegressionModel>"
         + ""
         + "</PMML>";
-
     }
 
 
