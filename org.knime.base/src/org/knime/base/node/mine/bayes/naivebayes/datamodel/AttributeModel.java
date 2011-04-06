@@ -139,6 +139,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         } else if (ClassAttributeModel.MODEL_TYPE.equals(modelType)) {
             model = new ClassAttributeModel(attrName, noOfMissingVals,
                     skipMissing, modelConfig);
+        } else if (BitVectorAttributeModel.MODEL_TYPE.equals(modelType)) {
+            model = new BitVectorAttributeModel(attrName, skipMissing,
+                    noOfMissingVals, modelConfig);
         } else {
             throw new InvalidSettingsException("Invalid model type: "
                     + modelType);
@@ -229,7 +232,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     }
 
     /**
-     * @param colNames all column names of the table to check for uniquness
+     * @param colNames all column names of the table to check for uniqueness
      * @return the missing value header or <code>null</code> if this model
      * contains no missing attribute values
      */
@@ -339,6 +342,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compareTo(final AttributeModel o) {
         return m_attributeName.compareTo(o.getAttributeName());
     }
