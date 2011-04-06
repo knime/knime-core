@@ -75,13 +75,13 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private StringBuffer m_buffer;
 
-    private Stack<String> m_elementStack = new Stack<String>();
+    private final Stack<String> m_elementStack = new Stack<String>();
 
     private String m_curVecID;
 
     private Kernel m_kernel;
 
-    private List<String> m_datafields = new ArrayList<String>();
+    private final List<String> m_datafields = new ArrayList<String>();
 
     private DoubleVector[] m_doubleVectors;
 
@@ -89,15 +89,17 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private String m_curSVMTargetCategory;
 
-    private List<String> m_curSVMVectors = new ArrayList<String>();
+    private String m_altSVMTargetCategory;
 
-    private List<Double> m_curSVMAlphas = new ArrayList<Double>();
+    private final List<String> m_curSVMVectors = new ArrayList<String>();
+
+    private final List<Double> m_curSVMAlphas = new ArrayList<Double>();
 
     private double m_curSVMThreshold;
 
-    private List<String> m_targetValues = new ArrayList<String>();
+    private final List<String> m_targetValues = new ArrayList<String>();
 
-    private List<Svm> m_svms = new ArrayList<Svm>();
+    private final List<Svm> m_svms = new ArrayList<Svm>();
 
     private int[] m_curIndices;
 
@@ -143,7 +145,14 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void endDocument() throws SAXException {
         m_buffer = null;
-
+        if (m_svms.size() == 1) {
+            /* Binary classification case. Only one SVM is needed. */
+            Svm first = m_svms.get(0);
+            Svm second = new Svm(first.getSupportVectors().clone(),
+                    first.getAlphas(), m_altSVMTargetCategory,
+                    first.getThreshold() * -1, getKernel());
+            m_svms.add(second);
+        }
     }
 
     /**
@@ -223,7 +232,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-        if ((name.equals("Indices") || name.equals("REAL-Entries") 
+        if ((name.equals("Indices") || name.equals("REAL-Entries")
                 || name.equals("Entries"))
                 && m_elementStack.peek().equals("REAL-SparseArray")) {
             m_buffer = new StringBuffer();
@@ -256,6 +265,8 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             m_counter = 0;
         } else if (name.equals("SupportVectorMachine")) {
             m_curSVMTargetCategory = atts.getValue("targetCategory");
+            // optional and only set in case of binary classification
+            m_altSVMTargetCategory = atts.getValue("alternateTargetCategory");
         } else if (name.equals("SupportVector")) {
             m_curSVMVectors.add(atts.getValue("vectorId"));
         } else if (name.equals("Coefficients")) {

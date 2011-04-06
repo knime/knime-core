@@ -424,6 +424,11 @@ public class PMMLSVMPortObject extends PMMLPortObject {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "targetCategory", CDATA, svms[s]
                     .getPositive());
+            final boolean binaryClassification = (svms.length == 2);
+            if (binaryClassification) {
+                atts.addAttribute(null, null, "alternateTargetCategory", CDATA,
+                    svms[1].getPositive());
+            }
             handler.startElement(null, null, "SupportVectorMachine", atts);
 
             // add support vectors
@@ -462,6 +467,10 @@ public class PMMLSVMPortObject extends PMMLPortObject {
 
             handler.endElement(null, null, "Coefficients");
             handler.endElement(null, null, "SupportVectorMachine");
+            if (binaryClassification) {
+                /* Binary classification case. Only one SVM is needed. */
+                break;
+            }
         }
 
     }
