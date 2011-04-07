@@ -2513,6 +2513,92 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 virtualEndID, newIDs, chunkIndex, chunkCount);
     }
 
+    /** Check if we can expand the selected metanode into a set of nodes in
+     * this WFM.
+     * This essentially checks if the nodes can be moved (=deleted from
+     * the original WFM) or if they are executed
+     * 
+     * @param orgID the id of the metanode to be expanded
+     * @throws IllegalArgumentException if expand can not be done
+     */
+    public void canExpandMetaNode(final NodeID wfmID)
+    throws IllegalArgumentException {
+        if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
+            // wrong type of node!
+            throw new IllegalArgumentException("Can not expand "
+                    + "selected node (not a metanode).");
+        }
+        if (!canRemoveNode(wfmID)) {
+            // we can not - bail!
+            throw new IllegalArgumentException("Can not move all "
+                    + "selected nodes (successor executing?).");
+        }
+    }
+
+    /** Expand the selected metanode into a set of nodes in
+     * this WFM and remove the old metanode.
+     * 
+     * @param orgID the id of the metanode to be expanded
+     * @throws IllegalArgumentException if expand can not be done
+     */
+    public void expandMetaNode(final NodeID wfmID)
+    throws IllegalArgumentException {
+        synchronized (m_workflowMutex) {
+            // check again, to be sure...
+            canExpandMetaNode(wfmID);
+            //
+            WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
+            // retrieve all nodes from metanode
+            Collection<NodeContainer> ncs = subWFM.getNodeContainers();
+            NodeID[] orgIDs = new NodeID[ncs.size()];
+            int i = 0;
+            for (NodeContainer nc : ncs) {
+                orgIDs[i] = nc.getID();
+                i++;
+            }
+            // copy the nodes from the sub workflow manager:
+            WorkflowCopyContent orgContent = new WorkflowCopyContent();
+            orgContent.setNodeIDs(orgIDs);
+            WorkflowCopyContent newContent
+                    = this.copyFromAndPasteHere(subWFM, orgContent);
+            NodeID[] newIDs = newContent.getNodeIDs();
+            Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
+            for (i = 0; i < orgIDs.length; i++) {
+                oldIDsHash.put(orgIDs[i], newIDs[i]);
+            }
+            // connect connections TO the sub workflow:
+            for (ConnectionContainer cc :
+                        m_workflow.getConnectionsByDest(subWFM.getID())) {
+                int destPortIndex = cc.getDestPort();
+                for (ConnectionContainer subCC :
+                        subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
+                    if (subCC.getSourcePort() == destPortIndex) {
+                        // reconnect
+                        NodeID newID = oldIDsHash.get(subCC.getDest());
+                        this.addConnection(cc.getSource(), cc.getSourcePort(),
+                                newID, subCC.getDestPort());
+                    }
+                }
+            }
+            // connect connection FROM the sub workflow
+            for (ConnectionContainer cc :
+                        getOutgoingConnectionsFor(subWFM.getID())) {
+                int sourcePortIndex = cc.getSourcePort();
+                ConnectionContainer subCC = subWFM.getIncomingConnectionFor(
+                        subWFM.getID(), sourcePortIndex);
+                if (subCC != null) {
+                    // delete existing connection from Metanode to Node
+                    // reconnect
+                    NodeID newID = oldIDsHash.get(subCC.getSource());
+                    this.addConnection(newID, subCC.getSourcePort(),
+                            cc.getDest(), cc.getDestPort());
+                }
+            }
+            // and finally remove old sub workflow
+            this.removeNode(wfmID);
+        }
+    }
+
     /** Check if we can collapse selected set of nodes into a metanode.
      * This essentially checks if the nodes can be moved (=deleted from
      * the original WFM), if they are executed, or if moving them would

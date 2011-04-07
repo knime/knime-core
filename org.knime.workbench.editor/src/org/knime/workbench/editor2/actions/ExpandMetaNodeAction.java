@@ -48,37 +48,34 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to collapse selected set of nodes into metanode.
+ * Action to expand selected metanode.
  *
  * @author M. Berthold, University of Konstanz
  */
-public class CollapseMetaNodeAction extends AbstractNodeAction {
+public class ExpandMetaNodeAction extends AbstractNodeAction {
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(CollapseMetaNodeAction.class);
+            NodeLogger.getLogger(ExpandMetaNodeAction.class);
 
     /**
      * unique ID for this action.
      */
-    public static final String ID = "knime.action.collapsemetanode";
+    public static final String ID = "knime.action.expandmetanode";
 
     /**
      * @param editor The workflow editor
      */
-    public CollapseMetaNodeAction(final WorkflowEditor editor) {
+    public ExpandMetaNodeAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -95,7 +92,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Collapse selected nodes into new metanode.";
+        return "Expand selected metanode.";
     }
 
     /**
@@ -120,11 +117,11 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Collapse nodes into new metanode.";
+        return "Expand selected metanode.";
     }
 
     /**
-     * @return <code>true</code>, if more than one node is selected.
+     * @return <code>true</code>, if exactly one metanode is selected.
      *
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
@@ -132,42 +129,34 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
-        if (parts.length <= 1) {
+        if (parts.length != 1) {
             return false;
         }
-        // enabled if at least two items are selected.
-        return true;
+        if (parts[0].getNodeContainer() instanceof WorkflowManager) {
+            return true;
+        }
+        // in all other cases: don't enable.
+        return false;
     }
 
     /**
-     * collapse nodes into metanode.
+     * Expand metanode!
      *
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Creating 'Collapse MetaNode' job for "
+        LOGGER.debug("Creating 'Expand MetaNode' job for "
                 + nodeParts.length + " node(s)...");
         WorkflowManager manager = getManager();
-        NodeID[] ids = new NodeID[nodeParts.length];
-        for (int i = 0; i < nodeParts.length; i++) {
-            ids[i] = nodeParts[i].getNodeContainer().getID();
-        }
         try {
-            manager.canCollapseNodesIntoMetaNode(ids);
-            // let the user enter a name
-            String name = "Metanode";
-            InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
-                    "Enter Name of Metanode", "Enter name of metanode:", name, null);
-            if (idia.open() == Dialog.OK) {
-                name = idia.getValue();
-            }
-            manager.collapseNodesIntoMetaNode(ids, name);
-        } catch (IllegalArgumentException e) {
+            WorkflowManager wfm = (WorkflowManager)nodeParts[0].getNodeContainer();
+            manager.expandMetaNode(wfm.getID());
+        } catch (Exception e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
                     SWT.ERROR);
-            mb.setMessage("Sorry, collapsing to Metanode failed: " + e.getMessage());
-            mb.setText("Collapse failed");
+            mb.setMessage("Expanding Metanode failed: " + e.getMessage());
+            mb.setText("Expand failed");
             mb.open();
         }
         try {
