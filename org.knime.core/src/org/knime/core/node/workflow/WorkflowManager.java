@@ -2685,33 +2685,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // move subworkflows into upper left corner but keep
             // original layout
-            int xmin = Integer.MAX_VALUE;
-            int ymin = Integer.MAX_VALUE;
-            if (newIDs.length >=1 ) {
-                for (int i = 0; i < newIDs.length; i++) {
-                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                    UIInformation uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
-                        int[] bounds = ((NodeUIInformation)uii).getBounds();
-                        if (bounds.length >= 2) {
-                            xmin = Math.min(bounds[0], xmin);
-                            ymin = Math.min(bounds[0], ymin);
-                        }
-                    }
-                }
-                int xshift = 150 - Math.max(xmin, 70);
-                int yshift = 120 - Math.max(ymin, 20);
-                for (int i = 0; i < newIDs.length; i++) {
-                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                    UIInformation uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
-                        NodeUIInformation newUii 
-                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
-                                   new int[]{xshift, yshift});
-                        nc.setUIInformation(newUii);
-                    }
-                }
-            }
+            // ACTUALLY: don't. Otherwise the undo (extract...) does not
+            // work properly. If we find a revertable way to move those nodes
+            // then we can do this again...
+//            int xmin = Integer.MAX_VALUE;
+//            int ymin = Integer.MAX_VALUE;
+//            if (newIDs.length >=1 ) {
+//                for (int i = 0; i < newIDs.length; i++) {
+//                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+//                    UIInformation uii = nc.getUIInformation();
+//                    if (uii instanceof NodeUIInformation) {
+//                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+//                        if (bounds.length >= 2) {
+//                            xmin = Math.min(bounds[0], xmin);
+//                            ymin = Math.min(bounds[0], ymin);
+//                        }
+//                    }
+//                }
+//                int xshift = 150 - Math.max(xmin, 70);
+//                int yshift = 120 - Math.max(ymin, 20);
+//                for (int i = 0; i < newIDs.length; i++) {
+//                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+//                    UIInformation uii = nc.getUIInformation();
+//                    if (uii instanceof NodeUIInformation) {
+//                        NodeUIInformation newUii 
+//                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+//                                   new int[]{xshift, yshift});
+//                        nc.setUIInformation(newUii);
+//                    }
+//                }
+//            }
             // create connections INSIDE the new workflow
             for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
                 int index = exposedInports.get(npi);
