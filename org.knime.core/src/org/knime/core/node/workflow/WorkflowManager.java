@@ -2282,9 +2282,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // the remaining ones will cover the exposed inports of the loop body
             int index = 1;
             for (Pair<NodeID, Integer> npi : exposedInports) {
-                exposedInportTypes[index]
-                        = m_workflow.getNode(
-                                npi.getFirst()).getInputTypes()[npi.getSecond()-1];
+                NodeContainer nc = getNodeContainer(npi.getFirst());
+                int portIndex = npi.getSecond();
+                exposedInportTypes[index] = nc.getInPort(portIndex).getPortType();
+//                exposedInportTypes[index]
+//                        = m_workflow.getNode(
+//                                npi.getFirst()).getInputTypes()[npi.getSecond()-1];
                 extInConnections.put(npi, index);
                 index++;
             }
@@ -2385,7 +2388,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         // create virtual start node
         NodeContainer startNode = getNodeContainer(startID);
-        PortType[] outTypes = startNode.getOutputTypes();
+        // find port types (ignore Variable Port "ear")
+        PortType[] outTypes = new PortType[startNode.getNrOutPorts() - 1];
+        for (int i = 0; i < outTypes.length; i++) {
+            outTypes[i] = startNode.getOutPort(i + 1).getPortType();
+        }
         NodeID virtualStartID = subWFM.createAndAddNode(
                 new VirtualPortObjectInNodeFactory(outTypes));
         UIInformation startUIPlain = startNode.getUIInformation();
@@ -2396,9 +2403,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         // create virtual end node
         NodeContainer endNode = getNodeContainer(endID);
-        PortType[] inTypes = endNode.getInputTypes();
+        assert endNode instanceof SingleNodeContainer;
+        // find port types (ignore Variable Port "ear")
+        PortType[] realInTypes = new PortType[startNode.getNrInPorts() - 1];
+        for (int i = 0; i < realInTypes.length; i++) {
+            realInTypes[i] = startNode.getInPort(i + 1).getPortType();
+        }
         NodeID virtualEndID = subWFM.createAndAddNode(
-                new VirtualPortObjectOutNodeFactory(inTypes));
+                new VirtualPortObjectOutNodeFactory(realInTypes));
         UIInformation endUIPlain = endNode.getUIInformation();
         if (endUIPlain instanceof NodeUIInformation) {
             NodeUIInformation endUI = ((NodeUIInformation)endUIPlain).
@@ -2625,10 +2637,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 int index = exposedInports.get(npi);
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
-//                if (nc instanceof SingleNodeContainer) {
-//                    portIndex = portIndex - 1;
-//                }
-//                exposedInportTypes[index] = nc.getInputTypes()[portIndex];
                 exposedInportTypes[index] = nc.getInPort(portIndex).getPortType();
             }
             PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
@@ -2636,11 +2644,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 int index = exposedOutports.get(npi);
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
-//                if (nc instanceof SingleNodeContainer) {
-//                    portIndex = portIndex - 1;
-//                }
-//                exposedOutportTypes[index]
-//                        = nc.getOutputTypes()[portIndex];
               exposedOutportTypes[index]
                                   = nc.getOutPort(portIndex).getPortType();
             }
