@@ -2594,6 +2594,43 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             cc.getDest(), cc.getDestPort());
                 }
             }
+            // move nodes so that their center lies on the position of
+            // the old metanode!
+            // ATTENTION: if you change this make sure it is (correctly)
+            // revertable by collapseToMetaNodes (undo-redo!)
+            int xmin = Integer.MAX_VALUE;
+            int ymin = Integer.MAX_VALUE;
+            int xmax = Integer.MIN_VALUE;
+            int ymax = Integer.MIN_VALUE;
+            for (i = 0; i < newIDs.length; i++) {
+                NodeContainer nc = getNodeContainer(newIDs[i]);
+                UIInformation uii = nc.getUIInformation();
+                if (uii instanceof NodeUIInformation) {
+                    int[] bounds = ((NodeUIInformation)uii).getBounds();
+                    if (bounds.length >= 2) {
+                        xmin = Math.min(bounds[0], xmin);
+                        ymin = Math.min(bounds[1], ymin);
+                        xmax = Math.max(bounds[0], xmax);
+                        ymax = Math.max(bounds[1], ymax);
+                    }
+                }
+            }
+            UIInformation uii = subWFM.getUIInformation();
+            if (uii instanceof NodeUIInformation) {
+                int[] metaBounds = ((NodeUIInformation)uii).getBounds();
+                int xShift = metaBounds[0] - (xmin + xmax) / 2;
+                int yShift = metaBounds[1] - (ymin + ymax) / 2;
+                for (i = 0; i < newIDs.length; i++) {
+                    NodeContainer nc = getNodeContainer(newIDs[i]);
+                    uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        NodeUIInformation newUii 
+                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                                   new int[]{xShift, yShift});
+                        nc.setUIInformation(newUii);
+                    }
+                }
+            }
             // and finally remove old sub workflow
             this.removeNode(wfmID);
         }
@@ -2770,37 +2807,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 oldIDsHash.put(orgIDs[i], newIDs[i]);
             }
             // move subworkflows into upper left corner but keep
-            // original layout
-            // ACTUALLY: don't. Otherwise the undo (extract...) does not
-            // work properly. If we find a revertable way to move those nodes
-            // then we can do this again...
-//            int xmin = Integer.MAX_VALUE;
-//            int ymin = Integer.MAX_VALUE;
-//            if (newIDs.length >=1 ) {
-//                for (int i = 0; i < newIDs.length; i++) {
-//                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-//                    UIInformation uii = nc.getUIInformation();
-//                    if (uii instanceof NodeUIInformation) {
-//                        int[] bounds = ((NodeUIInformation)uii).getBounds();
-//                        if (bounds.length >= 2) {
-//                            xmin = Math.min(bounds[0], xmin);
-//                            ymin = Math.min(bounds[0], ymin);
-//                        }
-//                    }
-//                }
-//                int xshift = 150 - Math.max(xmin, 70);
-//                int yshift = 120 - Math.max(ymin, 20);
-//                for (int i = 0; i < newIDs.length; i++) {
-//                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-//                    UIInformation uii = nc.getUIInformation();
-//                    if (uii instanceof NodeUIInformation) {
-//                        NodeUIInformation newUii 
-//                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
-//                                   new int[]{xshift, yshift});
-//                        nc.setUIInformation(newUii);
-//                    }
-//                }
-//            }
+            // original layout (important for undo!)
+            // ATTENTION: if you change this, make sure it is revertable
+            // by extractMetanode (and correctly so!).
+            int xmin = Integer.MAX_VALUE;
+            int ymin = Integer.MAX_VALUE;
+            if (newIDs.length >=1 ) {
+                for (int i = 0; i < newIDs.length; i++) {
+                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                    UIInformation uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+                        if (bounds.length >= 2) {
+                            xmin = Math.min(bounds[0], xmin);
+                            ymin = Math.min(bounds[1], ymin);
+                        }
+                    }
+                }
+                int xshift = 150 - Math.max(xmin, 70);
+                int yshift = 120 - Math.max(ymin, 20);
+                for (int i = 0; i < newIDs.length; i++) {
+                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                    UIInformation uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        NodeUIInformation newUii 
+                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                                   new int[]{xshift, yshift});
+                        nc.setUIInformation(newUii);
+                    }
+                }
+            }
             // create connections INSIDE the new workflow
             for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
                 int index = exposedInports.get(npi);
