@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.testingapplication"
       label="KNIME Testing Application"
-      version="2.3.3.qualifier"
+      version="2.3.4.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.testing">
 
