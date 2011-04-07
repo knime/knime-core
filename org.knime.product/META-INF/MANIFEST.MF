@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 2.3.3.qualifier
+Bundle-Version: 2.3.4.qualifier
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
