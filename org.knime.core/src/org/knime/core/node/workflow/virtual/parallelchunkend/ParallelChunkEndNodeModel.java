@@ -52,8 +52,6 @@ package org.knime.core.node.workflow.virtual.parallelchunkend;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.def.DefaultRow;
@@ -74,6 +72,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 
 /**
  * 
@@ -83,8 +82,8 @@ public class ParallelChunkEndNodeModel extends NodeModel
 implements LoopEndParallelizeNode,
 NodeStateChangeListener {
 
-    /* Store map of end node IDs and corresponding chunk objects */
-    private LinkedHashMap<NodeID, ParallelizedChunkContent> m_chunks;
+    /* Store chunks */
+    private ParallelizedChunkContentMaster m_chunkMaster;
     /* hold intermediate BufferedDataTables from parallelize chunks */
     private BufferedDataTable[] m_results;
     /* remember cancellation for chunk cleanup */
@@ -119,12 +118,12 @@ NodeStateChangeListener {
 			throws Exception {
 	    m_canceled = false;
 	    // if chunks have not been set, something's wrong.
-	    if (m_chunks == null) {
+	    if (m_chunkMaster == null) {
 	        throw new IllegalStateException("Parallel Chunk End node"
 	                + " without any registered branches.");
 	    }
 	    // reserve space for output chunks
-	    m_results = new BufferedDataTable[m_chunks.size() + 1];
+	    m_results = new BufferedDataTable[m_chunkMaster.nrChunks() + 1];
 	    // start by copying the results of this chunk to the last output...
 	    BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
 	    BufferedDataContainer bdc
@@ -156,45 +155,43 @@ NodeStateChangeListener {
 	            throw cee;
 	        }
 	        // check if any of the chunks are finished
-	        for (Iterator<ParallelizedChunkContent> pbc_it
-	                = m_chunks.values().iterator(); pbc_it.hasNext();) {
-	            ParallelizedChunkContent pbc = pbc_it.next();
-	            if (pbc.isExecuted()) {
+	        for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
+	            ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
+	            if ((!pcc.isCleaned()) && pcc.isExecuted()) {
 	                // copy results from chunk
 	                bdc = exec.createDataContainer(lastChunk.getDataTableSpec());
 	                BufferedDataTable bdt
-	                        = (BufferedDataTable)pbc.getOutportContent()[0];
+	                        = (BufferedDataTable)pcc.getOutportContent()[0];
 	                if (bdt == null) {
-	                    throw new Exception("Chunk " + pbc.getChunkIndex()
+	                    throw new Exception("Chunk " + pcc.getChunkIndex()
 	                            + " has no content!");
 	                }
 	                for (DataRow row : bdt) {
 	                    if (m_addChunkID) {
 	                        row = new DefaultRow(row.getKey()
-	                                + "_#" + pbc.getChunkIndex(), row);
+	                                + "_#" + pcc.getChunkIndex(), row);
 	                    }
 	                    bdc.addRowToTable(row);
 	                }
 	                // and put it into the correct slot
 	                bdc.close();
-	                m_results[pbc.getChunkIndex()] = bdc.getTable();
-	                // and finally remove branch and all its nodes
-                    pbc_it.remove();
+	                m_results[pcc.getChunkIndex()] = bdc.getTable();
                     try {
-                        pbc.removeAllNodesFromWorkflow();
+                        pcc.removeAllNodesFromWorkflow();
                     } catch (Exception e) {
                         throw new Exception("Deletion of finished"
                         		+ " parallel branch failed. " + e);
                     }
-	                exec.setProgress((double)m_chunks.size()
-	                                 /(double)pbc.getChunkCount());
+	                exec.setProgress((double)m_chunkMaster.nrChunks()
+	                                 /(double)pcc.getChunkCount());
 	            }
 	        }
 	        // check if there is any executing chunk left (don't count
 	        // failures...)
 	        int nrExecutingChunks = 0;
-            for (ParallelizedChunkContent pbc : m_chunks.values()) {
-                if (pbc.executionInProgress()) {
+            for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
+                ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
+                if ((!pcc.isCleaned()) && pcc.executionInProgress()) {
                     nrExecutingChunks++;
                 }
             }
@@ -212,6 +209,9 @@ NodeStateChangeListener {
         if (result == null) {
             throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
         }
+        // clean up any left overs
+        m_chunkMaster.cleanupChunks();
+        // return aggregated table
 		return new PortObject[] { result };
 	}
 	
@@ -232,17 +232,17 @@ NodeStateChangeListener {
      */
     @Override
     public void cleanupChunks() {
-        synchronized (m_chunks) {
-            for (Iterator<ParallelizedChunkContent> pbc_it
-                    = m_chunks.values().iterator(); pbc_it.hasNext();) {
-                ParallelizedChunkContent pbc = pbc_it.next();
-                if (pbc.executionInProgress()) {
-                    pbc.cancelExecution();
-                    // branches will be removed when the last node
-                    // changes state to IDLE...
-                } else {
-                    pbc.removeAllNodesFromWorkflow();
-                    pbc_it.remove();
+        synchronized (m_chunkMaster) {
+            for (int i =0; i < m_chunkMaster.nrChunks(); i++) {
+                ParallelizedChunkContent pbc = m_chunkMaster.getChunk(i);
+                if (!pbc.isCleaned()) {
+                    if (pbc.executionInProgress()) {
+                        pbc.cancelExecution();
+                        // branches will be removed when the last node
+                        // changes state to IDLE...
+                    } else {
+                        pbc.removeAllNodesFromWorkflow();
+                    }
                 }
             }
         }
@@ -252,21 +252,28 @@ NodeStateChangeListener {
      * {@inheritDoc}
      */
     @Override
-	public void addParallelChunk(final ParallelizedChunkContent pbc)
+	public void addParallelChunk(final ParallelizedChunkContent pc)
 	{
-        if (m_chunks == null) {
-            m_chunks = new LinkedHashMap<NodeID, ParallelizedChunkContent>();
+        if (m_chunkMaster == null) {
+            throw new NullPointerException("No ChunkMaster set in ChunkEndNode!");
         }
-        synchronized (m_chunks) {
-    	    if (m_chunks.containsKey(pbc.getVirtualOutputID())) {
-    	        throw new IllegalArgumentException("Can't insert chunk"
-    	        		+ " with duplicate key!");
-    	    }
-    	    m_chunks.put(pbc.getVirtualOutputID(), pbc);
-    	    pbc.registerLoopEndStateChangeListener(this);
+        synchronized (m_chunkMaster) {
+    	    m_chunkMaster.addParallelChunk(pc.getChunkIndex(), pc);
+    	    pc.registerLoopEndStateChangeListener(this);
         }
 	}
 	
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setParallelChunkMaster(final ParallelizedChunkContentMaster pcm)
+    {
+        if (m_chunkMaster != null) {
+            // TODO: cleanup!
+        }
+        m_chunkMaster = pcm;
+    }
 
 	/**
 	 * {@inheritDoc}
@@ -324,12 +331,19 @@ NodeStateChangeListener {
     @Override
 	public void stateChanged(final NodeStateEvent state) {
         NodeID endNode = state.getSource();
-        if (m_chunks.containsKey(endNode)) {
-            ParallelizedChunkContent pcc = m_chunks.get(endNode);
+        // find chunk
+        ParallelizedChunkContent pcc = null;
+        for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
+            ParallelizedChunkContent thisPcc = m_chunkMaster.getChunk(i);
+            if ((!thisPcc.isCleaned())
+                    && thisPcc.getVirtualOutputID().equals(endNode)) {
+                pcc = thisPcc;
+            }
+        }
+        if (pcc != null && !pcc.isCleaned()) {
             if (!pcc.executionInProgress()) {
                 if (m_canceled) {
                     // if canceled and IDLE remove branch and all its nodes
-                    m_chunks.remove(endNode);
                     try {
                         pcc.removeAllNodesFromWorkflow();
                     } catch (Exception e) {

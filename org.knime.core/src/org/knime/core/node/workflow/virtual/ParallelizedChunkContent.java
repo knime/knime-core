@@ -160,13 +160,23 @@ public final class ParallelizedChunkContent {
      * Remove all nodes (and connections) of this chunk.
      */
     public void removeAllNodesFromWorkflow() {
-        for (NodeID id : m_copiedLoopContent) {
-            m_manager.removeNode(id);
+        if (!m_isCleaned) {
+            for (NodeID id : m_copiedLoopContent) {
+                m_manager.removeNode(id);
+            }
+            m_manager.removeNode(m_virtualOutputID);
+            m_manager.removeNode(m_virtualInputID);
+            m_isCleaned = true;
         }
-        m_manager.removeNode(m_virtualOutputID);
-        m_manager.removeNode(m_virtualInputID);
     }
-    
+
+    /** hack to make compatible with previous version - needs to go */
+    boolean m_isCleaned = false;
+    public boolean isCleaned() {
+        return m_isCleaned;
+    }
+
+
     /**
      * @return true if chunk is completely executed.
      */

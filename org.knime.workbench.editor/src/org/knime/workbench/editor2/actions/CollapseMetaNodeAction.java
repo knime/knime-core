@@ -48,7 +48,12 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -148,7 +153,23 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
         for (int i = 0; i < nodeParts.length; i++) {
             ids[i] = nodeParts[i].getNodeContainer().getID();
         }
-        manager.collapseNodesIntoMetaNode(ids);
+        try {
+            manager.canCollapseNodesIntoMetaNode(ids);
+            // let the user enter a name
+            String name = "Metanode";
+            InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
+                    "Enter Name of Metanode", "Enter name of metanode:", name, null);
+            if (idia.open() == Dialog.OK) {
+                name = idia.getValue();
+            }
+            manager.collapseNodesIntoMetaNode(ids, name);
+        } catch (IllegalArgumentException e) {
+            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
+                    SWT.ERROR);
+            mb.setMessage("Sorry, collapsing to Metanode failed: " + e.getMessage());
+            mb.setText("Collapse failed");
+            mb.open();
+        }
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

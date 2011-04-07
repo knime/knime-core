@@ -982,22 +982,36 @@ public abstract class NodeContainer implements NodeProgressListener {
      * flow variable port.
      */
     public final PortType[] getInputTypes() {
-    	PortType[] result = new PortType[getNrInPorts() - 1];
-    	for (int i = 0; i < result.length; i++) {
-    		result[i] = getInPort(i + 1).getPortType();
-    	}
-    	return result;
+        if (this instanceof SingleNodeContainer) {
+        	PortType[] result = new PortType[getNrInPorts() - 1];
+        	for (int i = 0; i < result.length; i++) {
+        		result[i] = getInPort(i + 1).getPortType();
+        	}
+        	return result;
+        }
+        PortType[] result = new PortType[getNrInPorts()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = getInPort(i).getPortType();
+        }
+        return result;
     }
     
     /** @return types of output ports in a new array, excluding the mandatory
      * flow variable port.
      */
     public final PortType[] getOutputTypes() {
-    	PortType[] result = new PortType[getNrOutPorts() - 1];
-    	for (int i = 0; i < result.length; i++) {
-    		result[i] = getOutPort(i + 1).getPortType();
-    	}
-    	return result;
+        if (this instanceof SingleNodeContainer) {
+        	PortType[] result = new PortType[getNrOutPorts() - 1];
+        	for (int i = 0; i < result.length; i++) {
+        		result[i] = getOutPort(i + 1).getPortType();
+        	}
+        	return result;
+        }
+        PortType[] result = new PortType[getNrOutPorts()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = getOutPort(i).getPortType();
+        }
+        return result;
     }
 
     public abstract int getNrInPorts();

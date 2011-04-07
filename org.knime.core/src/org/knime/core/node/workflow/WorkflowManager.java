@@ -123,6 +123,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
@@ -2310,6 +2311,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		// make sure head knows its tail
     		startNode.setTailNode(endNode);
     		// and now create branches for all chunks and execute them.
+    		endNode.setParallelChunkMaster(
+    		        new ParallelizedChunkContentMaster(subwfm,
+    		                startNode.getNrChunks() - 1));
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedChunkContent copiedNodes = 
     			    duplicateLoopBodyInSubWFMandAttach(
@@ -2497,182 +2501,262 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 virtualEndID, newIDs, chunkIndex, chunkCount);
     }
 
+    /** Check if we can collapse selected set of nodes into a metanode.
+     * This essentially checks if the nodes can be moved (=deleted from
+     * the original WFM), if they are executed, or if moving them would
+     * result in cycles in the original WFM (outgoing connections fed
+     * back into inports of the new Metanode).
+     * 
+     * @param orgIDs the ids of the nodes to be moved to the new metanode.
+     * @throws IllegalArgumentException if collapse can not be done
+     */
+    public void canCollapseNodesIntoMetaNode(final NodeID[] orgIDs)
+    throws IllegalArgumentException {
+        synchronized (m_workflowMutex) {
+            // for quick search:
+            HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
+            // Check if we are allowed to move (=delete) all those nodes
+            for (NodeID id : orgIDs) {
+                if (!canRemoveNode(id)) {
+                    // we can not - bail!
+                    throw new IllegalArgumentException("Can not move all "
+                            + "selected nodes (successor executing?).");
+                }
+            }
+            // Check if any of those nodes are executed
+            for (NodeID id : orgIDs) {
+                NodeContainer nc = getNodeContainer(id);
+                if (State.EXECUTED.equals(nc.getState())) {
+                    // we can not - bail!
+                    throw new IllegalArgumentException("Can not move "
+                            + "executed nodes (reset first).");
+                }
+            }
+            // Check if move will create loops in WFM connected to new Metanode
+            // a) first find set of nodes connected to the selected ones and not
+            //    part of the list
+            HashSet<NodeID> ncNodes = new HashSet<NodeID>();
+            for (NodeID id : orgIDs) {
+                for (ConnectionContainer cc : getOutgoingConnectionsFor(id)) {
+                    NodeID destID = cc.getDest();
+                    if (!orgIDsHash.contains(destID)) {
+                        // successor which is not part of list - remember it!
+                        ncNodes.add(destID);
+                    }
+                }
+            }
+            // b) check if any successor of those nodes is IN our list!
+            while (!ncNodes.isEmpty()) {
+                NodeID thisID = ncNodes.iterator().next();
+                ncNodes.remove(thisID);
+                for (ConnectionContainer cc : getOutgoingConnectionsFor(thisID)) {
+                    NodeID destID = cc.getDest();
+                    if (orgIDsHash.contains(destID)) {
+                        // successor is in our original list - bail!
+                        throw new IllegalArgumentException("Can not move "
+                                + "nodes - selected set is not closed!");
+                    }
+                    ncNodes.add(destID);
+                }
+            }
+        }
+        return;
+    }
+    
     /** Collapse selected set of nodes into a metanode. Make sure connections
      * from and two nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
      * 
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
+     * @param name of the new metanode
+     * @throws IllegalArgumentException if collapse can not be done
      */
-    public void collapseNodesIntoMetaNode(final NodeID[] orgIDs) {
-        // for quick search:
-        HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
-        // find Nodes/Ports that have incoming connections from the outside.
-        // Map will hold DestNodeID/PortIndex + Index of new MetanodeInport.
-        HashMap<Pair<NodeID, Integer>, Integer> exposedInports =
-            new HashMap<Pair<NodeID, Integer>, Integer>();
-        int inMNindex = 0;
-        for (NodeID id : orgIDs) {
-            if (m_workflow.getConnectionsByDest(id) != null)
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
-                if (!orgIDsHash.contains(cc.getSource())) {
-                    Pair<NodeID, Integer> npi
-                            = new Pair<NodeID, Integer>(cc.getDest(),
-                                                        cc.getDestPort());
-                    if (!exposedInports.containsKey(npi)) {
-                        exposedInports.put(npi, inMNindex);
-                        inMNindex++;
+    public void collapseNodesIntoMetaNode(final NodeID[] orgIDs,
+            final String name)
+    throws IllegalArgumentException {
+        synchronized (m_workflowMutex) {
+            // make sure this is still true:
+            canCollapseNodesIntoMetaNode(orgIDs);
+            // for quick search:
+            HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
+            // find Nodes/Ports that have incoming connections from the outside.
+            // Map will hold DestNodeID/PortIndex + Index of new MetanodeInport.
+            HashMap<Pair<NodeID, Integer>, Integer> exposedInports =
+                new HashMap<Pair<NodeID, Integer>, Integer>();
+            int inMNindex = 0;
+            for (NodeID id : orgIDs) {
+                if (m_workflow.getConnectionsByDest(id) != null)
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
+                    if (!orgIDsHash.contains(cc.getSource())) {
+                        Pair<NodeID, Integer> npi
+                                = new Pair<NodeID, Integer>(cc.getDest(),
+                                                            cc.getDestPort());
+                        if (!exposedInports.containsKey(npi)) {
+                            exposedInports.put(npi, inMNindex);
+                            inMNindex++;
+                        }
                     }
                 }
             }
-        }
-        // find Nodes/Ports that have outgoing connections to the outside.
-        // Map will hold SourceNodeID/PortIndex + Index of new MetanodeOutport.
-        HashMap<Pair<NodeID, Integer>, Integer> exposedOutports =
-            new HashMap<Pair<NodeID, Integer>, Integer>();
-        int outMNindex = 0;
-        for (NodeID id : orgIDs) {
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-                if (!orgIDsHash.contains(cc.getDest())) {
-                    Pair<NodeID, Integer> npi
-                            = new Pair<NodeID, Integer>(cc.getSource(),
-                                                        cc.getSourcePort());
-                    if (!exposedOutports.containsKey(npi)) {
-                        exposedOutports.put(npi, outMNindex);
-                        outMNindex++;
+            // find Nodes/Ports that have outgoing connections to the outside.
+            // Map will hold SourceNodeID/PortIndex + Index of new MetanodeOutport.
+            HashMap<Pair<NodeID, Integer>, Integer> exposedOutports =
+                new HashMap<Pair<NodeID, Integer>, Integer>();
+            int outMNindex = 0;
+            for (NodeID id : orgIDs) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+                    if (!orgIDsHash.contains(cc.getDest())) {
+                        Pair<NodeID, Integer> npi
+                                = new Pair<NodeID, Integer>(cc.getSource(),
+                                                            cc.getSourcePort());
+                        if (!exposedOutports.containsKey(npi)) {
+                            exposedOutports.put(npi, outMNindex);
+                            outMNindex++;
+                        }
                     }
                 }
             }
-        }
-        // determine types of new Metanode in- and outports:
-        // (note that we reach directly into the Node to get the port type
-        //  so we need to correct the index for the - then missing - var
-        //  port.)
-        PortType[] exposedInportTypes = new PortType[exposedInports.size()];
-        for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
-            int index = exposedInports.get(npi);
-            exposedInportTypes[index]
-                    = m_workflow.getNode(
-                            npi.getFirst()).getInputTypes()[npi.getSecond()-1];
-        }
-        PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
-        for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
-            int index = exposedOutports.get(npi);
-            exposedOutportTypes[index]
-                    = m_workflow.getNode(
-                            npi.getFirst()).getOutputTypes()[npi.getSecond()-1];
-        }
-        // create the new Metanode
-        WorkflowManager newWFM = createAndAddSubWorkflow(exposedInportTypes,
-                exposedOutportTypes, "3M: My Magic Metanode");
-        // move into center of nodes this one replaces...
-        int x = 0;
-        int y = 0;
-        int count = 0;
-        if (orgIDs.length >=1 ) {
+            // determine types of new Metanode in- and outports:
+            // (note that we reach directly into the Node to get the port type
+            //  so we need to correct the index for the - then missing - var
+            //  port.)
+            PortType[] exposedInportTypes = new PortType[exposedInports.size()];
+            for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
+                int index = exposedInports.get(npi);
+                NodeContainer nc = getNodeContainer(npi.getFirst());
+                int portIndex = npi.getSecond();
+//                if (nc instanceof SingleNodeContainer) {
+//                    portIndex = portIndex - 1;
+//                }
+//                exposedInportTypes[index] = nc.getInputTypes()[portIndex];
+                exposedInportTypes[index] = nc.getInPort(portIndex).getPortType();
+            }
+            PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
+            for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
+                int index = exposedOutports.get(npi);
+                NodeContainer nc = getNodeContainer(npi.getFirst());
+                int portIndex = npi.getSecond();
+//                if (nc instanceof SingleNodeContainer) {
+//                    portIndex = portIndex - 1;
+//                }
+//                exposedOutportTypes[index]
+//                        = nc.getOutputTypes()[portIndex];
+              exposedOutportTypes[index]
+                                  = nc.getOutPort(portIndex).getPortType();
+            }
+            // create the new Metanode
+            WorkflowManager newWFM = createAndAddSubWorkflow(exposedInportTypes,
+                    exposedOutportTypes, name);
+            // move into center of nodes this one replaces...
+            int x = 0;
+            int y = 0;
+            int count = 0;
+            if (orgIDs.length >=1 ) {
+                for (int i = 0; i < orgIDs.length; i++) {
+                    NodeContainer nc = getNodeContainer(orgIDs[i]);
+                    UIInformation uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+                        if (bounds.length >= 2) {
+                            x += bounds[0];
+                            y += bounds[1];
+                            count++;
+                        }
+                    }
+                }
+            }
+            if (count >= 1) {
+                NodeUIInformation newUii = new NodeUIInformation(x/count, y/count,
+                        -1, -1, true);
+                newWFM.setUIInformation(newUii);
+            }
+            // copy the nodes into the newly create WFM:
+            WorkflowCopyContent orgContent = new WorkflowCopyContent();
+            orgContent.setNodeIDs(orgIDs);
+            WorkflowCopyContent newContent
+                    = newWFM.copyFromAndPasteHere(this, orgContent);
+            NodeID[] newIDs = newContent.getNodeIDs();
+            Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             for (int i = 0; i < orgIDs.length; i++) {
-                NodeContainer nc = getNodeContainer(orgIDs[i]);
-                UIInformation uii = nc.getUIInformation();
-                if (uii instanceof NodeUIInformation) {
-                    int[] bounds = ((NodeUIInformation)uii).getBounds();
-                    if (bounds.length >= 2) {
-                        x += bounds[0];
-                        y += bounds[1];
-                        count++;
+                oldIDsHash.put(orgIDs[i], newIDs[i]);
+            }
+            // move subworkflows into upper left corner but keep
+            // original layout
+            int xmin = Integer.MAX_VALUE;
+            int ymin = Integer.MAX_VALUE;
+            if (newIDs.length >=1 ) {
+                for (int i = 0; i < newIDs.length; i++) {
+                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                    UIInformation uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+                        if (bounds.length >= 2) {
+                            xmin = Math.min(bounds[0], xmin);
+                            ymin = Math.min(bounds[0], ymin);
+                        }
+                    }
+                }
+                int xshift = 150 - Math.max(xmin, 70);
+                int yshift = 120 - Math.max(ymin, 20);
+                for (int i = 0; i < newIDs.length; i++) {
+                    NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
+                    UIInformation uii = nc.getUIInformation();
+                    if (uii instanceof NodeUIInformation) {
+                        NodeUIInformation newUii 
+                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                                   new int[]{xshift, yshift});
+                        nc.setUIInformation(newUii);
                     }
                 }
             }
-        }
-        if (count >= 1) {
-            NodeUIInformation newUii = new NodeUIInformation(x/count, y/count,
-                    -1, -1, true);
-            newWFM.setUIInformation(newUii);
-        }
-        // copy the nodes into the newly create WFM:
-        WorkflowCopyContent orgContent = new WorkflowCopyContent();
-        orgContent.setNodeIDs(orgIDs);
-        WorkflowCopyContent newContent
-                = newWFM.copyFromAndPasteHere(this, orgContent);
-        NodeID[] newIDs = newContent.getNodeIDs();
-        Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
-        for (int i = 0; i < orgIDs.length; i++) {
-            oldIDsHash.put(orgIDs[i], newIDs[i]);
-        }
-        // move subworkflows into upper left corner but keep
-        // original layout
-        int xmin = Integer.MAX_VALUE;
-        int ymin = Integer.MAX_VALUE;
-        if (newIDs.length >=1 ) {
-            for (int i = 0; i < newIDs.length; i++) {
-                NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                UIInformation uii = nc.getUIInformation();
-                if (uii instanceof NodeUIInformation) {
-                    int[] bounds = ((NodeUIInformation)uii).getBounds();
-                    if (bounds.length >= 2) {
-                        xmin = Math.min(bounds[0], xmin);
-                        ymin = Math.min(bounds[0], ymin);
+            // create connections INSIDE the new workflow
+            for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
+                int index = exposedInports.get(npi);
+                NodeID newID = oldIDsHash.get(npi.getFirst());
+                newWFM.addConnection(newWFM.getID(), index, newID, npi.getSecond());
+            }
+            for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
+                int index = exposedOutports.get(npi);
+                NodeID newID = oldIDsHash.get(npi.getFirst());
+                newWFM.addConnection(newID, npi.getSecond(), newWFM.getID(), index);
+            }
+            // create OUTSIDE connections to and from the new workflow
+            for (NodeID id : orgIDs) {
+                // convert to a seperate array so we can delete connections!
+                ConnectionContainer[] cca = new ConnectionContainer[0];
+                cca = m_workflow.getConnectionsByDest(id).toArray(cca);
+                for (ConnectionContainer cc : cca) {
+                    if (!orgIDsHash.contains(cc.getSource())) {
+                        Pair<NodeID, Integer> npi
+                                = new Pair<NodeID, Integer>(cc.getDest(),
+                                                            cc.getDestPort());
+                        int newPort = exposedInports.get(npi);
+                        this.addConnection(cc.getSource(), cc.getSourcePort(),
+                                newWFM.getID(), newPort);
+                        this.removeConnection(cc);
                     }
                 }
             }
-            int xshift = 150 - Math.max(xmin, 70);
-            int yshift = 120 - Math.max(ymin, 20);
-            for (int i = 0; i < newIDs.length; i++) {
-                NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                UIInformation uii = nc.getUIInformation();
-                if (uii instanceof NodeUIInformation) {
-                    NodeUIInformation newUii 
-                       = ((NodeUIInformation)uii).createNewWithOffsetPosition(
-                               new int[]{xshift, yshift});
-                    nc.setUIInformation(newUii);
+            for (NodeID id : orgIDs) {
+                // convert to a seperate array so we can delete connections!
+                ConnectionContainer[] cca = new ConnectionContainer[0];
+                cca = m_workflow.getConnectionsBySource(id).toArray(cca);
+                for (ConnectionContainer cc : cca) {
+                    if (!orgIDsHash.contains(cc.getDest())) {
+                        Pair<NodeID, Integer> npi
+                                = new Pair<NodeID, Integer>(cc.getSource(),
+                                                            cc.getSourcePort());
+                        int newPort = exposedOutports.get(npi);
+                        this.removeConnection(cc);
+                        this.addConnection(newWFM.getID(), newPort,
+                                cc.getDest(), cc.getDestPort());
+                    }
                 }
             }
-        }
-        // create connections INSIDE the new workflow
-        for (Pair<NodeID, Integer> npi : exposedInports.keySet()) {
-            int index = exposedInports.get(npi);
-            NodeID newID = oldIDsHash.get(npi.getFirst());
-            newWFM.addConnection(newWFM.getID(), index, newID, npi.getSecond());
-        }
-        for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
-            int index = exposedOutports.get(npi);
-            NodeID newID = oldIDsHash.get(npi.getFirst());
-            newWFM.addConnection(newID, npi.getSecond(), newWFM.getID(), index);
-        }
-        // create OUTSIDE connections to and from the new workflow
-        for (NodeID id : orgIDs) {
-            // convert to a seperate array so we can delete connections!
-            ConnectionContainer[] cca = new ConnectionContainer[0];
-            cca = m_workflow.getConnectionsByDest(id).toArray(cca);
-            for (ConnectionContainer cc : cca) {
-                if (!orgIDsHash.contains(cc.getSource())) {
-                    Pair<NodeID, Integer> npi
-                            = new Pair<NodeID, Integer>(cc.getDest(),
-                                                        cc.getDestPort());
-                    int newPort = exposedInports.get(npi);
-                    this.addConnection(cc.getSource(), cc.getSourcePort(),
-                            newWFM.getID(), newPort);
-                    this.removeConnection(cc);
-                }
+            // and finally: delete the original nodes.
+            for (NodeID id : orgIDs) {
+                this.removeNode(id);
             }
-        }
-        for (NodeID id : orgIDs) {
-            // convert to a seperate array so we can delete connections!
-            ConnectionContainer[] cca = new ConnectionContainer[0];
-            cca = m_workflow.getConnectionsBySource(id).toArray(cca);
-            for (ConnectionContainer cc : cca) {
-                if (!orgIDsHash.contains(cc.getDest())) {
-                    Pair<NodeID, Integer> npi
-                            = new Pair<NodeID, Integer>(cc.getSource(),
-                                                        cc.getSourcePort());
-                    int newPort = exposedOutports.get(npi);
-                    this.removeConnection(cc);
-                    this.addConnection(newWFM.getID(), newPort,
-                            cc.getDest(), cc.getDestPort());
-                }
-            }
-        }
-        // and finally: delete the original nodes.
-        for (NodeID id : orgIDs) {
-            this.removeNode(id);
         }
     }
 
