@@ -57,6 +57,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,6 +75,7 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
@@ -102,6 +104,31 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         if (loadVersion == null) {
             throw new NullPointerException("Version arg must not be null.");
         }
+    }
+
+    /* Contains all fully qualified path names of previously existing
+     *  PMMLPortObjects that have been removed in version v2.4. This is 
+     *  necessary for being able to replace them with the general PMMLPortObject 
+     *  on loading. */
+    private static final Set<String> PMML_PORTOBJECT_CLASSES;
+    static {
+        PMML_PORTOBJECT_CLASSES = new HashSet<String>();
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.cluster.PMMLClusterPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.decisiontree2"
+                + ".PMMLDecisionTreePortObject");
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject");
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.regression.PMMLRegressionPortObject");
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.regression.pmmlgreg"
+                + ".PMMLGeneralRegressionPortObject");
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.subgroupminer"
+                + ".PMMLAssociationRulePortObject");
+        PMML_PORTOBJECT_CLASSES.add(
+            "org.knime.base.node.mine.svm.PMMLSVMPortObject");
     }
 
     /**
@@ -529,6 +556,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             InvalidSettingsException, CanceledExecutionException {
         String specClass = settings.getString("port_spec_class");
         String objectClass = settings.getString("port_object_class");
+
+        /* In versions < V230 different PMMLPortObject classes existed which
+         * got all replaced by a general PMMLPortObject. To stay backward
+         * compatible we have to load the new object for them. */
+        if (getLoadVersion().ordinal() <= LoadVersion.V230.ordinal()
+                && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
+            objectClass = PMMLPortObject.class.getName();
+        }
+
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
         PortObject object = null;
