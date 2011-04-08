@@ -2672,9 +2672,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //    part of the list
             HashSet<NodeID> ncNodes = new HashSet<NodeID>();
             for (NodeID id : orgIDs) {
-                for (ConnectionContainer cc : getOutgoingConnectionsFor(id)) {
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsBySource(id)) {
                     NodeID destID = cc.getDest();
-                    if (!orgIDsHash.contains(destID)) {
+                    if ((!this.getID().equals(destID))
+                            && (!orgIDsHash.contains(destID))) {
                         // successor which is not part of list - remember it!
                         ncNodes.add(destID);
                     }
@@ -2684,14 +2686,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             while (!ncNodes.isEmpty()) {
                 NodeID thisID = ncNodes.iterator().next();
                 ncNodes.remove(thisID);
-                for (ConnectionContainer cc : getOutgoingConnectionsFor(thisID)) {
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsBySource(thisID)) {
                     NodeID destID = cc.getDest();
-                    if (orgIDsHash.contains(destID)) {
-                        // successor is in our original list - bail!
-                        throw new IllegalArgumentException("Can not move "
-                                + "nodes - selected set is not closed!");
+                    if (!this.getID().equals(destID)) {
+                        if (orgIDsHash.contains(destID)) {
+                            // successor is in our original list - bail!
+                            throw new IllegalArgumentException("Can not move "
+                                    + "nodes - selected set is not closed!");
+                        }
+                        ncNodes.add(destID);
                     }
-                    ncNodes.add(destID);
                 }
             }
         }
