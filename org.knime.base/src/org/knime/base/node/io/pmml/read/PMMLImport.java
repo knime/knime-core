@@ -180,7 +180,7 @@ public class PMMLImport {
         }
         m_portObjectSpec = PMMLPortObject.parseSpec(m_file);
         m_portObject = parseModel(m_portObjectSpec);
-        m_portObject.validate();
+//        m_portObject.validate();
         if (!m_hasNamespace) {
             // if the file had no namespace a new file with namespace added was
             // created in temp dir -> now we can delete it;
