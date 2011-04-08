@@ -55,7 +55,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -132,8 +131,6 @@ public class PMMLImport {
 
     private File m_file;
 
-    private ErrorHandler m_errorHandler = new LoggingErrorHandler();
-
     private PMMLModelType m_modelType = PMMLModelType.None;
 
     private String m_version;
@@ -159,7 +156,7 @@ public class PMMLImport {
      * @throws SAXException if something goes wrong (wrong version, unsupported
      *             model type or invalid file)
      */
-    public PMMLImport(final File file, final ErrorHandler errorHandler)
+    public PMMLImport(final File file, @SuppressWarnings("unused") final ErrorHandler errorHandler)
             throws SAXException {
         if (file == null) {
             throw new IllegalArgumentException("File must not be null!");
@@ -169,7 +166,6 @@ public class PMMLImport {
                     + " does not exists.");
         }
         m_file = file;
-        m_errorHandler = errorHandler;
         // initial file parsing:
         // extract model type, version, and if namespace is available
         preCollectInformation();
@@ -184,6 +180,7 @@ public class PMMLImport {
         }
         m_portObjectSpec = PMMLPortObject.parseSpec(m_file);
         m_portObject = parseModel(m_portObjectSpec);
+        m_portObject.validate();
         if (!m_hasNamespace) {
             // if the file had no namespace a new file with namespace added was
             // created in temp dir -> now we can delete it;
@@ -317,12 +314,4 @@ public class PMMLImport {
         }
         return m_portObject;
     }
-
-    private InputStream getSchemaInputStream(final String path) {
-        ClassLoader loader = PMMLPortObject.class.getClassLoader();
-        String packagePath =
-                PMMLPortObject.class.getPackage().getName().replace('.', '/');
-        return loader.getResourceAsStream(packagePath + path);
-    }
-
 }
