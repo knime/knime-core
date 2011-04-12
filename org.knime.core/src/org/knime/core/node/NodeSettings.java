@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.node;
 
@@ -59,21 +59,21 @@ import org.knime.core.node.config.Config;
  * This class overwrites the general <code>Config</code> object and
  * specializes some method to access <code>NodeSettings</code> object. This
  * object is used within the node packages.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class NodeSettings extends Config 
+public final class NodeSettings extends Config
         implements NodeSettingsRO, NodeSettingsWO {
 
     /**
      * Creates a new instance of this object with the given key.
-     * 
+     *
      * @param key An identifier.
      */
     public NodeSettings(final String key) {
         super(key);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -91,13 +91,14 @@ public final class NodeSettings extends Config
     }
 
     /**
-     * Reads <code>NodeSettings</code> object from a given XML input stream and 
-     * writes them into the given <code>NodeSettings</code> object.
+     * Reads <code>NodeSettings</code> object from a given XML input stream and
+     * writes them into the given <code>NodeSettings</code> object. The stream
+     * will be closed by this call.
      *
      * @param in XML input stream to read settings from.
      * @return A new settings object.
      * @throws IOException If the stream could not be read.
-     * @throws NullPointerException If one of the arguments is 
+     * @throws NullPointerException If one of the arguments is
      *         <code>null</code>.
      */
     public static NodeSettingsRO loadFromXML(
@@ -110,6 +111,7 @@ public final class NodeSettings extends Config
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeSettingsWO addNodeSettings(final String key) {
         return (NodeSettings)super.addConfig(key);
     }
@@ -117,6 +119,7 @@ public final class NodeSettings extends Config
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addNodeSettings(final NodeSettings settings) {
         super.addConfig(settings);
     }
@@ -125,9 +128,10 @@ public final class NodeSettings extends Config
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeSettings getNodeSettings(final String key)
             throws InvalidSettingsException {
         return (NodeSettings)super.getConfig(key);
     }
-    
+
 }

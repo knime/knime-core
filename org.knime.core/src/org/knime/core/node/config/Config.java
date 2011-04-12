@@ -912,7 +912,8 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Reads Config from XML into a new Config object.
+     * Reads Config from XML into a new Config object. The stream will be closed
+     * by this call.
      *
      * @param config Depending on the readRoot, we write into this Config and
      *            return it.
