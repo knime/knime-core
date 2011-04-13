@@ -60,6 +60,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Paint;
 import java.awt.Rectangle;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -73,7 +74,6 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
 import org.knime.base.node.mine.decisiontree2.view.graph.ComponentNodeWidget;
 import org.knime.base.node.mine.decisiontree2.view.graph.HierarchicalGraphView;
-import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ColorAttr;
 
@@ -200,14 +200,11 @@ public final class DecTreeNodeWidget
             getUserObject().getClassCounts();
 
         double totalClassCount = node.getEntireClassCount();
-        String totalClassCountS = DoubleFormat.formatDouble(totalClassCount);
-
         double myClassCount = classCounts.get(majorityClass);
-        String myClassCountS = DoubleFormat.formatDouble(myClassCount);
 
         label.append(majorityClass.toString());
-        label.append(" (").append(myClassCountS);
-        label.append("/").append(totalClassCountS).append(")");
+        label.append(" (").append(convertCount(myClassCount));
+        label.append("/").append(convertCount(totalClassCount)).append(")");
 
         p.add(new JLabel(label.toString()));
         return p;
@@ -231,9 +228,9 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
         p.add(new JLabel("Category"), c);
         c.gridx++;
-        p.add(new JLabel("%"), c);
+        p.add(new JLabel("% ", JLabel.RIGHT), c);
         c.gridx++;
-        p.add(new JLabel("n"), c);
+        p.add(new JLabel("n ", JLabel.RIGHT), c);
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = GridBagConstraints.REMAINDER;
@@ -250,10 +247,10 @@ public final class DecTreeNodeWidget
             c.gridx++;
             double classFreq = classCounts.get(cell) / entireClassCounts;
             classFreqList.add(classFreq);
-            p.add(new JLabel(DoubleFormat.formatDouble(100.0 * classFreq)), c);
+            p.add(new JLabel(convertPercentage(classFreq), JLabel.RIGHT), c);
             c.gridx++;
-            p.add(new JLabel(
-                    DoubleFormat.formatDouble(classCounts.get(cell))), c);
+            Double classCountValue = classCounts.get(cell);
+            p.add(new JLabel(convertCount(classCountValue), JLabel.RIGHT), c);
             if (cell.equals(majorityClass)) {
                 c.gridx = 0;
                 JComponent comp = new JPanel();
@@ -278,17 +275,15 @@ public final class DecTreeNodeWidget
             ? getGraphView().getRootNode().getEntireClassCount()
             : getUserObject().getEntireClassCount();
         double covorage = entireClassCounts / nominator;
-        p.add(new JLabel(DoubleFormat.formatDouble(100.0 * covorage)), c);
+        p.add(new JLabel(convertPercentage(covorage), JLabel.RIGHT), c);
         c.gridx++;
-        p.add(new JLabel(
-                DoubleFormat.formatDouble(entireClassCounts)), c);
+        p.add(new JLabel(convertCount(entireClassCounts), JLabel.RIGHT), c);
         return p;
     }
 
     // the chart
     private JPanel createChartPanel(final HashMap<Color, Double> nodeColors,
             final HashMap<Color, Double> rootColors) {
-        double entireClassCounts = getUserObject().getEntireClassCount();
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         int gridwidth = 3;
@@ -304,6 +299,10 @@ public final class DecTreeNodeWidget
             p.add(new JLabel("Color column: " + m_colorColumn), c);
             c.gridy++;
         }
+        double entireClassCounts = 0;
+        for (Double d : nodeColors.values()) {
+            entireClassCounts += d;
+        }
         List<Double> classFreq = new ArrayList<Double>();
         List<Color> color = new ArrayList<Color>();
         for (Color co : rootColors.keySet()) {
@@ -317,6 +316,27 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
 
         return p;
+    }
+
+    private static final DecimalFormat DECIMAL_FORMAT_ONE = initFormat("0.0");
+    private static final DecimalFormat DECIMAL_FORMAT = initFormat("0");
+    private static DecimalFormat initFormat(final String pattern) {
+        DecimalFormat df = new DecimalFormat(pattern);
+        df.setGroupingUsed(true);
+        df.setGroupingSize(3);
+        return df;
+    }
+
+    private static String convertCount(final double value) {
+        // show integer as integer (without decimal places)
+        if (Double.compare(Math.ceil(value), value) == 0) {
+            return DECIMAL_FORMAT.format(value);
+        }
+        return DECIMAL_FORMAT_ONE.format(value);
+    }
+
+    private static String convertPercentage(final double value) {
+        return DECIMAL_FORMAT_ONE.format(100.0 * value);
     }
 
     /**
