@@ -58,6 +58,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -75,7 +76,7 @@ public class CreateNodeCommand extends Command {
 
     private final WorkflowManager m_manager;
 
-    private final NodeFactory<?> m_factory;
+    private final NodeFactory<? extends NodeModel> m_factory;
 
     private final Point m_location;
 
@@ -89,7 +90,7 @@ public class CreateNodeCommand extends Command {
      * @param location Initial visual location in the
      */
     public CreateNodeCommand(final WorkflowManager manager,
-            final NodeFactory<?> factory, final Point location) {
+            final NodeFactory<? extends NodeModel> factory, final Point location) {
         m_manager = manager;
         m_factory = factory;
         m_location = location;
@@ -131,7 +132,7 @@ public class CreateNodeCommand extends Command {
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_container != null 
+        return m_container != null
             && m_manager.canRemoveNode(m_container.getID());
     }
 
@@ -145,10 +146,10 @@ public class CreateNodeCommand extends Command {
             m_manager.removeNode(m_container.getID());
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
-                    "Operation no allowed", "The node " 
-                    + m_container.getNameWithID() 
+                    "Operation no allowed", "The node "
+                    + m_container.getNameWithID()
                     + " can currently not be removed");
         }
     }
-    
+
 }

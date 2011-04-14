@@ -149,8 +149,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             // check settings
             SettingsStatus status = getStatusOfSettings();
             if (status.getNumOfErrors() != 0) {
-                throw new InvalidSettingsException(status
-                        .getAllErrorMessages(0));
+                throw new InvalidSettingsException(
+                        status.getAllErrorMessages(0));
             }
         } else {
             setDefaultSettings();
@@ -297,8 +297,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                                 + " are specified twice in the conf object.");
             }
 
-            m_columnProperties.set(pos, new ColProperty(cfg
-                    .getNodeSettings(key)));
+            m_columnProperties.set(pos,
+                    new ColProperty(cfg.getNodeSettings(key)));
 
         }
 
@@ -309,8 +309,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      *
      * @param colProps the column properties to store
      */
-    public void setColumnProperties(
-            final Vector<? extends ColProperty> colProps) {
+    public void setColumnProperties(final Vector<? extends ColProperty> colProps) {
         if (colProps == null) {
             throw new NullPointerException("column properties can't be null.");
         }
@@ -354,8 +353,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * {@inheritDoc}
      */
     @Override
-    public void setMissingValueForColumn(final int colIdx,
-            final String pattern) {
+    public void setMissingValueForColumn(final int colIdx, final String pattern) {
         if ((m_columnProperties == null)
                 || (colIdx >= m_columnProperties.size())) {
             throw new IllegalArgumentException("Can't set missing value"
@@ -411,8 +409,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             }
         }
 
-        return new DataTableSpec(getTableName(), cSpec
-                .toArray(new DataColumnSpec[cSpec.size()]));
+        return new DataTableSpec(getTableName(),
+                cSpec.toArray(new DataColumnSpec[cSpec.size()]));
     }
 
     /**
@@ -548,14 +546,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 frSettings.addRowDelimiter(xmlReader.getRowDelimiter(), false);
             }
             if (xmlReader.getLineComment() != null) {
-                frSettings.addSingleLineCommentPattern(xmlReader
-                        .getLineComment(), false, false);
+                frSettings.addSingleLineCommentPattern(
+                        xmlReader.getLineComment(), false, false);
             }
             if ((xmlReader.getBlockCommentLeft() != null)
                     && (xmlReader.getBlockCommentRight() != null)) {
-                frSettings.addBlockCommentPattern(xmlReader
-                        .getBlockCommentLeft(), xmlReader
-                        .getBlockCommentRight(), false, false);
+                frSettings.addBlockCommentPattern(
+                        xmlReader.getBlockCommentLeft(),
+                        xmlReader.getBlockCommentRight(), false, false);
             }
             if ((xmlReader.getQuoteLeft() != null)
                     && (xmlReader.getQuoteRight() != null)) {
@@ -829,9 +827,17 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     protected void addStatusOfSettings(final SettingsStatus status,
             final boolean openDataFile, final DataTableSpec tableSpec) {
 
-        super.addStatusOfSettings(status, openDataFile, tableSpec);
-        addThisStatus(status);
-
+        if (getDataFileLocation() != null && m_numOfColumns < 1) {
+            /*
+             * Special case: the file location is set and no other settings are
+             * specified. This occurs when a file is dropped on the editor. No
+             * other error/status messages should be added then.
+             */
+            status.addError("Missing settings. Please configure the node.");
+        } else {
+            super.addStatusOfSettings(status, openDataFile, tableSpec);
+            addThisStatus(status);
+        }
     }
 
     private void addThisStatus(final SettingsStatus status) {
@@ -885,10 +891,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             if ((cName != null) && !cProp.getSkipThisColumn()) {
                 Integer prevCol = colNames.put(cName, c);
                 if (prevCol != null) {
-                    status
-                            .addError("Columns with index " + c + " and "
-                                    + prevCol + " have the same name ('"
-                                    + cName + "')");
+                    status.addError("Columns with index " + c + " and "
+                            + prevCol + " have the same name ('" + cName + "')");
                 }
             } // if (cName != null)
 

@@ -51,7 +51,7 @@ public class CreateNewConnectedNode extends Command {
 
     private final WorkflowManager m_manager;
 
-    private final NodeFactory<?> m_factory;
+    private final NodeFactory<? extends NodeModel> m_factory;
 
     private final Point m_location;
 

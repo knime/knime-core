@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.05.2005 (Florian Georg): created
  */
@@ -52,7 +52,6 @@ package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -61,19 +60,19 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * model objects ("the nodes") that are added into a workflow are created
  * through this factory. Note that every <code>NodeTemplate</code> has a
  * factory for its own.
- * 
+ *
  * Note: As we can't add extra info here (at most we could have a
  * <code>Node</code>), this must be done later by reverse lookup of the
  * template from the <code>RepositoryManager</code>
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
-    private Class<NodeFactory<? extends NodeModel>> m_factory;
+    private Class<? extends NodeFactory> m_factory;
 
     /**
      * New factory for the given template.
-     * 
+     *
      * @param template The template from the repository.
      */
     public NodeFromNodeTemplateCreationFactory(final NodeTemplate template) {
@@ -83,14 +82,13 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
 
     /**
      * Creates a new <code>NodeFactory</code> instance.
-     * 
+     *
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
-    public Object getNewObject() {
+    @Override
+    public NodeFactory<?> getNewObject() {
         try {
-            return (NodeFactory<? extends NodeModel>) 
-                m_factory.newInstance();
+            return m_factory.newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
                     + "from NodeTemplate", e);
@@ -100,6 +98,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getObjectType() {
         return NodeFactory.class;
     }

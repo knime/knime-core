@@ -122,8 +122,8 @@ public class NodeTemplateDropTargetListener2 implements
     }
 
     /**
-     * 
-     * @param event drop target event containing the position 
+     *
+     * @param event drop target event containing the position
      *  (relative to whole display)
      * @return point converted to the editor coordinates
      */
@@ -181,7 +181,7 @@ public class NodeTemplateDropTargetListener2 implements
                     .getRootEditPart().getContents();
                 m_viewer.getEditDomain().getCommandStack().execute(
                         new CreateNodeCommand(root.getWorkflowManager(),
-                                (NodeFactory<? extends NodeModel>)
+                                (NodeFactory<NodeModel>)
                                     factory.getNewObject(),
                                 getDropLocation(event)));
                 NodeUsageRegistry.addNode(template);
@@ -206,7 +206,7 @@ public class NodeTemplateDropTargetListener2 implements
             }
         }
         return template instanceof NodeTemplate;
-    } 
+    }
 
     /**
      * {@inheritDoc}

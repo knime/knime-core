@@ -69,6 +69,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -101,6 +102,17 @@ public class ReadTableNodeModel extends NodeModel {
      */
     public ReadTableNodeModel() {
         super(0, 1);
+    }
+
+    /**
+     * Called by the node factory if the node is instantiated due to a file
+     * drop.
+     *
+     * @param context
+     */
+    public ReadTableNodeModel(final NodeCreationContext context) {
+        this();
+        m_fileName.setStringValue(context.getUrl().toString());
     }
 
     /**

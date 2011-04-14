@@ -234,12 +234,17 @@ public final class Node implements NodeModelWarningListener {
      *             <code>null</code>.
      */
     public Node(final NodeFactory<NodeModel> nodeFactory) {
+        this(nodeFactory, null);
+    }
+    public Node(final NodeFactory<NodeModel> nodeFactory,
+            final NodeCreationContext context) {
+
         if (nodeFactory == null) {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
         m_factory = nodeFactory;
         m_name = m_factory.getNodeName().intern();
-        m_model = m_factory.callCreateNodeModel();
+        m_model = m_factory.callCreateNodeModel(context);
         m_model.addWarningListener(this);
         m_logger = NodeLogger.getLogger(m_name);
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();

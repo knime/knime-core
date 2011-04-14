@@ -89,6 +89,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.Node.LoopRole;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -362,6 +363,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     // FIXME: I don't like this type cast warning (and the ? for that matter!)
     public NodeID createAndAddNode(final NodeFactory<?> factory) {
+        return internalAddNewNode(factory, null);
+    }
+
+    /**
+     * @param factory
+     * @param context
+     * @return the node id of the created node.
+     */
+    public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
+            final NodeCreationContext context) {
+        return internalAddNewNode(factory, context);
+    }
+
+    private NodeID internalAddNewNode(final NodeFactory<?> factory,
+            final NodeCreationContext context) {
         NodeID newID;
         synchronized (m_workflowMutex) {
             // TODO synchronize to avoid messing with running workflows!
@@ -369,7 +385,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // insert node
             newID = createUniqueID();
             SingleNodeContainer container = new SingleNodeContainer(this,
-               new Node((NodeFactory<NodeModel>)factory), newID);
+               new Node((NodeFactory<NodeModel>)factory, context), newID);
             addNodeContainer(container, true);
         }
         configureNodeAndSuccessors(newID, true);
@@ -1953,7 +1969,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (success) {
                     Node node = snc.getNode();
                     // process start of bundle of parallel chunks
-                    if (node.getNodeModel() 
+                    if (node.getNodeModel()
                     		instanceof LoopStartParallelizeNode) {
                         try {
                             parallelizeLoop(nc.getID());
@@ -2246,7 +2262,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
     }
-    
+
     /* Parallelize this "loop": create appropriate number of parallel
      * branches executing the matching chunks.
      */
@@ -2263,8 +2279,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		} catch (IllegalArgumentException iae) {
     			throw new IllegalLoopException(iae.getMessage(), iae);
     		}
-    		
-    		final ArrayList<NodeAndInports> loopBody = 
+
+    		final ArrayList<NodeAndInports> loopBody =
     			m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
     		NodeID[] loopNodes = new NodeID[loopBody.size()];
     		loopNodes[0] = startID;
@@ -2318,7 +2334,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     		        new ParallelizedChunkContentMaster(subwfm,
     		                startNode.getNrChunks() - 1));
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
-    			ParallelizedChunkContent copiedNodes = 
+    			ParallelizedChunkContent copiedNodes =
     			    duplicateLoopBodyInSubWFMandAttach(
     			            subwfm, extInConnections,
     			    		startID, endID, loopNodes, i, startNode.getNrChunks());
@@ -2331,7 +2347,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /*
      * Identify all nodes that have incoming connections which are not part
      * of a given set of nodes.
-     * 
+     *
      * @param startID id of first node (don't include)
      * @param ids NodeIDs of set of nodes
      * @return set of NodeIDs and inport indices that have outside conn.
@@ -2360,8 +2376,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         return exposedInports;
     }
-    
-    /* 
+
+    /*
      * ...
      * @param subWFM already prepared subworkflow with appropriate
      *   inports. If subWFM==this then the subworkflows are simply
@@ -2380,10 +2396,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // workflow, otherwise just underneath each other)
         final int[] moveUIDist;
         if (subWFM == this) {
-            moveUIDist = new int[]{(chunkIndex + 1) * 10, 
+            moveUIDist = new int[]{(chunkIndex + 1) * 10,
                     (chunkIndex + 1) * 80, 0, 0};
         } else {
-            moveUIDist = new int[]{(chunkIndex + 1) * 0, 
+            moveUIDist = new int[]{(chunkIndex + 1) * 0,
                     (chunkIndex + 1) * 150, 0, 0};
         }
         // create virtual start node
@@ -2444,19 +2460,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // ignore: connection already retained by paste persistor
                 } else if (c.getSource().equals(startID)) {
                     // used to connect to start node, connect to virtual in now
-                    subWFM.addConnection(virtualStartID, c.getSourcePort(), 
+                    subWFM.addConnection(virtualStartID, c.getSourcePort(),
                             newIDs[i], c.getDestPort());
-                } else { 
+                } else {
                     // source node not part of loop:
                     if (subWFM == this) {
-                        addConnection(c.getSource(), c.getSourcePort(), 
+                        addConnection(c.getSource(), c.getSourcePort(),
                                 newIDs[i], c.getDestPort());
                     } else {
                         // find new replacement port
                         int subWFMportIndex = extInConnections.get(
                                 new Pair<NodeID, Integer>(c.getDest(),
                                                           c.getDestPort()));
-                        subWFM.addConnection(subWFM.getID(), subWFMportIndex, 
+                        subWFM.addConnection(subWFM.getID(), subWFMportIndex,
                                 newIDs[i], c.getDestPort());
                     }
                 }
@@ -2470,23 +2486,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (oldIDsHash.containsKey(c.getSource())) {
                 // connects to node in loop - connect to copy
                 NodeID source = oldIDsHash.get(c.getSource());
-                subWFM.addConnection(source, c.getSourcePort(), 
+                subWFM.addConnection(source, c.getSourcePort(),
                         virtualEndID, c.getDestPort());
             } else if (c.getSource().equals(startID)) {
                 // used to connect to start node, connect to virtual in now
-                subWFM.addConnection(virtualStartID, c.getSourcePort(), 
+                subWFM.addConnection(virtualStartID, c.getSourcePort(),
                         virtualEndID, c.getDestPort());
-            } else { 
+            } else {
                 // source node not part of loop
                 if (subWFM == this) {
-                    addConnection(c.getSource(), c.getSourcePort(), 
+                    addConnection(c.getSource(), c.getSourcePort(),
                             virtualEndID, c.getDestPort());
                 } else {
                     // find new replacement port
                     int subWFMportIndex = extInConnections.get(
                             new Pair<NodeID, Integer>(c.getSource(),
                                                       c.getSourcePort()));
-                    subWFM.addConnection(this.getID(), subWFMportIndex, 
+                    subWFM.addConnection(this.getID(), subWFMportIndex,
                             virtualEndID, c.getDestPort());
                 }
             }
@@ -2503,13 +2519,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             subWFM.addConnection(subWFM.getID(), 0, virtualStartID, 0);
         }
         // set chunk of table to be processed in new virtual start node
-        LoopStartParallelizeNode startModel = 
+        LoopStartParallelizeNode startModel =
             castNodeModel(startID, LoopStartParallelizeNode.class);
         VirtualNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
         VirtualPortObjectInNodeModel virtualInModel =
             subWFM.castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
         virtualInModel.setVirtualNodeInput(data);
-        return new ParallelizedChunkContent(subWFM, virtualStartID, 
+        return new ParallelizedChunkContent(subWFM, virtualStartID,
                 virtualEndID, newIDs, chunkIndex, chunkCount);
     }
 
@@ -2517,7 +2533,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * this WFM.
      * This essentially checks if the nodes can be moved (=deleted from
      * the original WFM) or if they are executed
-     * 
+     *
      * @param orgID the id of the metanode to be expanded
      * @throws IllegalArgumentException if expand can not be done
      */
@@ -2537,7 +2553,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Expand the selected metanode into a set of nodes in
      * this WFM and remove the old metanode.
-     * 
+     *
      * @param orgID the id of the metanode to be expanded
      * @throws IllegalArgumentException if expand can not be done
      */
@@ -2624,7 +2640,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = getNodeContainer(newIDs[i]);
                     uii = nc.getUIInformation();
                     if (uii instanceof NodeUIInformation) {
-                        NodeUIInformation newUii 
+                        NodeUIInformation newUii
                            = ((NodeUIInformation)uii).createNewWithOffsetPosition(
                                    new int[]{xShift, yShift});
                         nc.setUIInformation(newUii);
@@ -2641,7 +2657,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * the original WFM), if they are executed, or if moving them would
      * result in cycles in the original WFM (outgoing connections fed
      * back into inports of the new Metanode).
-     * 
+     *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
      * @throws IllegalArgumentException if collapse can not be done
      */
@@ -2702,11 +2718,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         return;
     }
-    
+
     /** Collapse selected set of nodes into a metanode. Make sure connections
      * from and two nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
-     * 
+     *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
      * @param name of the new metanode
      * @throws IllegalArgumentException if collapse can not be done
@@ -2835,7 +2851,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     UIInformation uii = nc.getUIInformation();
                     if (uii instanceof NodeUIInformation) {
-                        NodeUIInformation newUii 
+                        NodeUIInformation newUii
                            = ((NodeUIInformation)uii).createNewWithOffsetPosition(
                                    new int[]{xshift, yshift});
                         nc.setUIInformation(newUii);
@@ -5256,7 +5272,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final Set<ConnectionContainerTemplate> connections,
             final LoadResult loadResult) {
         // id suffix are made unique by using the entries in this map
-        Map<Integer, NodeID> translationMap = 
+        Map<Integer, NodeID> translationMap =
             new LinkedHashMap<Integer, NodeID>();
 
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
@@ -5913,25 +5929,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
 
     /**
-     * Retrieves the node with the given ID, fetches the underlying 
+     * Retrieves the node with the given ID, fetches the underlying
      * {@link NodeModel} and casts it to the argument class.
      * @param id The node of interest
      * @param cl The class object the underlying NodeModel needs to implement
      * @param <T> The type the class
      * @return The casted node model.
-     * @throws IllegalArgumentException If the node does not exist, is not 
+     * @throws IllegalArgumentException If the node does not exist, is not
      *         a {@link SingleNodeContainer} or the model does not implement the
      *         requested type.
      */
     public <T> T castNodeModel(final NodeID id, final Class<T> cl) {
 		NodeContainer nc = getNodeContainer(id);
 		if (!(nc instanceof SingleNodeContainer)) {
-			throw new IllegalArgumentException("Node \"" + nc 
+			throw new IllegalArgumentException("Node \"" + nc
 					+ "\" not a single node container");
 		}
 		NodeModel model = ((SingleNodeContainer)nc).getNodeModel();
 		if (!cl.isInstance(model)) {
-			throw new IllegalArgumentException("Node \"" + nc 
+			throw new IllegalArgumentException("Node \"" + nc
 					+ "\" not instance of " + cl.getSimpleName());
 		}
 		return cl.cast(model);

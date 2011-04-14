@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.05.2005 (Florian Georg): created
  */
@@ -58,10 +58,9 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -69,7 +68,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 /**
  * Container policy, handles the creation of new nodes that are inserted into
  * the workflow. The request contains the
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
@@ -113,8 +112,8 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // Case 1:
         // create a new node
         if (obj instanceof NodeFactory) {
-            NodeFactory<? extends NodeModel> factory 
-                = (NodeFactory<? extends NodeModel>)obj;
+            NodeFactory<NodeModel> factory
+                = (NodeFactory<NodeModel>)obj;
 
             CreateNodeCommand cmd = new CreateNodeCommand(manager, factory,
                     location);

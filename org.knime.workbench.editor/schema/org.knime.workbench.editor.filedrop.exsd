@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.workbench.editor.filedrop" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="org.knime.workbench.editor.filedrop" id="org.knime.workbench.editor.filedrop" name="File Drop for Workflow Editor"/>
+      </appinfo>
+      <documentation>
+         Associate file extensions with node factories to have the node being instantiated if the corresponding file is dropped into the workflow editor.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <choice minOccurs="1" maxOccurs="unbounded">
+               <element ref="NodeFactory"/>
+            </choice>
+         </sequence>
+      </complexType>
+   </element>
+
+   <element name="NodeFactory">
+      <complexType>
+         <attribute name="NodeFactory" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Specify a node factory that accepts a file with the associated extension.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.node.NodeFactory:"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="File Extension">
+      <complexType>
+         <attribute name="File Extension" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         KNIME V2.3.2
+      </documentation>
+   </annotation>
+
+
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         (C) 2011 - 2011, KNIME GmbH, Konstanz, Germany.
+         All rights reserved.
+      </documentation>
+   </annotation>
+
+</schema>

@@ -653,6 +653,18 @@ public abstract class NodeFactory<T extends NodeModel> {
     public abstract T createNodeModel();
 
     /**
+     * @param context
+     * @return
+     */
+    public T createNodeModel(final NodeCreationContext context) {
+        // normally correct implementations overwrite this
+        LOGGER.coding("If you register a node to be created in a certain"
+                + " context, you should override "
+                + "NodeFactory#createNodeModel(context)");
+        return createNodeModel();
+    }
+
+    /**
      * Access method for <code>createNodeModel()</code>. This method will
      * also do sanity checks for the correct labeling of the port description:
      * The port count (in, out) is only available in the
@@ -664,8 +676,13 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return The model as from createNodeModel()
      */
-    final T callCreateNodeModel() {
-        T result = createNodeModel();
+    final T callCreateNodeModel(final NodeCreationContext context) {
+        T result;
+        if (context == null) {
+            result = createNodeModel();
+        } else {
+            result = createNodeModel(context);
+        }
         checkConsistency(result);
         return result;
     }
@@ -852,4 +869,5 @@ public abstract class NodeFactory<T extends NodeModel> {
             final Class<? extends NodeFactory> factoryClass) {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
+
 }

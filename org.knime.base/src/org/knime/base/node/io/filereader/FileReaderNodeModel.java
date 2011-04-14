@@ -63,6 +63,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -71,15 +72,14 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.tokenizer.SettingsStatus;
 
-
 /**
  * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeModel extends NodeModel {
     /**
      * The id this objects uses to store its file history in the
-     * <code>StringHistory</code> object. Don't reuse this id unless you want
-     * to share the history list.
+     * <code>StringHistory</code> object. Don't reuse this id unless you want to
+     * share the history list.
      */
     public static final String FILEREADER_HISTORY_ID = "ASCIIfile";
 
@@ -96,8 +96,7 @@ public class FileReaderNodeModel extends NodeModel {
      * Creates a new model that creates and holds a Filetable.
      */
     public FileReaderNodeModel() {
-        super(0, 1); // tell the super we need no inputs and one output,
-        // please.
+        super(0, 1); // we need no inputs and one output, please.
         m_frSettings = null;
     }
 
@@ -119,8 +118,9 @@ public class FileReaderNodeModel extends NodeModel {
                             .equals(".xml"))) {
                 // Its a XML file - try reading it in.
                 try {
-                    m_frSettings = FileReaderNodeSettings
-                            .readSettingsFromXMLFile(filename);
+                    m_frSettings =
+                            FileReaderNodeSettings
+                                    .readSettingsFromXMLFile(filename);
                 } catch (IllegalStateException ise) {
                     LOGGER.error("FileReader: " + ise.getMessage());
                     LOGGER.error("FileReader: XML file not read.");
@@ -129,8 +129,8 @@ public class FileReaderNodeModel extends NodeModel {
                 // doesn't have the XML extension - consider it a data file
                 m_frSettings = new FileReaderNodeSettings();
                 try {
-                    m_frSettings.setDataFileLocationAndUpdateTableName(
-                                    FileReaderNodeDialog
+                    m_frSettings
+                            .setDataFileLocationAndUpdateTableName(FileReaderNodeDialog
                                     .textToURL(filename));
                 } catch (MalformedURLException mue) {
                     LOGGER.error("FileReader: " + mue.getMessage());
@@ -139,6 +139,13 @@ public class FileReaderNodeModel extends NodeModel {
                 }
             }
         }
+    }
+
+    public FileReaderNodeModel(final NodeCreationContext droppedFile) {
+        this();
+        m_frSettings = new FileReaderNodeSettings();
+        m_frSettings
+                .setDataFileLocationAndUpdateTableName(droppedFile.getUrl());
     }
 
     /**
@@ -170,8 +177,8 @@ public class FileReaderNodeModel extends NodeModel {
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
 
         FileTable fTable =
-                new FileTable(tSpec, m_frSettings, m_frSettings
-                        .getSkippedColumns(), exec);
+                new FileTable(tSpec, m_frSettings,
+                        m_frSettings.getSkippedColumns(), exec);
 
         // create a DataContainer and fill it with the rows read. It is faster
         // then reading the file every time (for each row iterator), and it
@@ -180,8 +187,10 @@ public class FileReaderNodeModel extends NodeModel {
         // belongs to) and not some time later when a node uses the row
         // iterator from the file table.
 
-        BufferedDataContainer c = exec.createDataContainer(
-                fTable.getDataTableSpec(), /*initDomain=*/true);
+        BufferedDataContainer c =
+                exec.createDataContainer(fTable.getDataTableSpec(), /*
+                                                                     * initDomain=
+                                                                     */true);
         int row = 0;
         FileRowIterator it = fTable.iterator();
         try {
@@ -194,8 +203,8 @@ public class FileReaderNodeModel extends NodeModel {
             while (it.hasNext()) {
                 row++;
                 DataRow next = it.next();
-                String message = "Caching row #" + row + " (\""
-                        + next.getKey() + "\")";
+                String message =
+                        "Caching row #" + row + " (\"" + next.getKey() + "\")";
                 exec.setMessage(message);
                 exec.checkCanceled();
                 c.addRowToTable(next);
@@ -272,8 +281,8 @@ public class FileReaderNodeModel extends NodeModel {
                             + " from null config object");
         }
         // will puke and die if config is not readable.
-        FileReaderNodeSettings newSettings = new FileReaderNodeSettings(
-                settings);
+        FileReaderNodeSettings newSettings =
+                new FileReaderNodeSettings(settings);
 
         // check consistency of settings.
         SettingsStatus status = newSettings.getStatusOfSettings();
@@ -368,8 +377,7 @@ public class FileReaderNodeModel extends NodeModel {
 
         URL location = m_frSettings.getDataFileLocation();
         try {
-            if ((location == null)
-                    || !location.toString().startsWith("file:")) {
+            if ((location == null) || !location.toString().startsWith("file:")) {
                 // We can only check files. Other protocols are ignored.
                 return;
             }

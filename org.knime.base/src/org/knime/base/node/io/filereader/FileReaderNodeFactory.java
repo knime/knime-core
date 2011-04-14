@@ -47,15 +47,15 @@
  */
 package org.knime.base.node.io.filereader;
 
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * @author Peter Ohl, University of Konstanz
  */
-public class FileReaderNodeFactory extends NodeFactory {
+public class FileReaderNodeFactory extends NodeFactory<FileReaderNodeModel> {
 
     private String m_defaultXMLFile;
 
@@ -79,12 +79,20 @@ public class FileReaderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FileReaderNodeModel createNodeModel() {
         if (m_defaultXMLFile == null) {
             return new FileReaderNodeModel();
         } else {
             return new FileReaderNodeModel(m_defaultXMLFile);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public FileReaderNodeModel createNodeModel(final NodeCreationContext context) {
+        return new FileReaderNodeModel(context);
     }
 
     /**
@@ -99,7 +107,8 @@ public class FileReaderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
+    public NodeView<FileReaderNodeModel> createNodeView(final int i,
+            final FileReaderNodeModel nodeModel) {
         throw new IllegalStateException();
     }
 
@@ -118,4 +127,5 @@ public class FileReaderNodeFactory extends NodeFactory {
     public NodeDialogPane createNodeDialogPane() {
         return new FileReaderNodeDialog();
     }
+
 }

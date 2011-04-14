@@ -44,30 +44,39 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   May 19, 2006 (wiswedel): created
  */
 package org.knime.base.node.io.table.read;
 
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory for table that reads the file as written from the
- * Write table node.
+ * Factory for table that reads the file as written from the Write table node.
+ *
  * @author wiswedel, University of Konstanz
  */
-public class ReadTableNodeFactory extends NodeFactory {
+public class ReadTableNodeFactory extends NodeFactory<ReadTableNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public ReadTableNodeModel createNodeModel() {
         return new ReadTableNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ReadTableNodeModel createNodeModel(
+            final NodeCreationContext context) {
+        return new ReadTableNodeModel(context);
     }
 
     /**
@@ -82,8 +91,8 @@ public class ReadTableNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public NodeView<ReadTableNodeModel> createNodeView(final int viewIndex,
+            final ReadTableNodeModel nodeModel) {
         throw new IndexOutOfBoundsException("No view.");
     }
 
