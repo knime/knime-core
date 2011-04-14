@@ -132,6 +132,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
         RowIterator it = inData[0].iterator();
         for (int i = 0; it.hasNext(); i++) {
             DataRow r = it.next();
+            cc.setProgress(i, rowCount, r.getKey(), exec);
             DataCell result = cc.calculate(r);
             boolean b;
             if (result.isMissing()) {
@@ -146,7 +147,6 @@ public class JavaRowSplitterNodeModel extends NodeModel
             } else if (falseMatch != null) {
                 falseMatch.addRowToTable(r);
             }
-            cc.setProgress(i, rowCount, r.getKey(), exec);
             exec.checkCanceled();
         }
         trueMatch.close();

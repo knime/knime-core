@@ -62,6 +62,7 @@ import java.text.DecimalFormat;
 public final class DoubleFormat {
 
     private DoubleFormat() {
+        // no op
     }
 
     /** for numbers less than 0.0001. */
@@ -72,13 +73,13 @@ public final class DoubleFormat {
     private static final DecimalFormat NORMAL_FORMAT = new DecimalFormat(
             "##0.####");
 
-    /** for numbers in (10, 10000). */
+    /** for numbers in (10, 100'000'000). */
     private static final DecimalFormat LARGE_FORMAT = new DecimalFormat(
-            "####0.#");
+            "###,###,##0.####");
 
-    /** for numbers larger than 10000. */
+    /** for numbers larger than 100'000'000. */
     private static final DecimalFormat VERY_LARGE_FORMAT = new DecimalFormat(
-            "0E0");
+            "0.00E0");
 
     /**
      * Formats the double to a string. It will use the following formats:
@@ -96,12 +97,12 @@ public final class DoubleFormat {
      * <td>##0.####</td>
      * </tr>
      * <tr>
-     * <td>d < |10000|</td>
+     * <td>d < |100'000'000|</td>
      * <td>####0.#</td>
      * </tr>
      * <tr>
      * <td>else</td>
-     * <td>0E0</td>
+     * <td>0.00E0</td>
      * </tr>
      * </table>
      *
@@ -118,7 +119,7 @@ public final class DoubleFormat {
             format = SMALL_FORMAT;
         } else if (abs <= 10) {
             format = NORMAL_FORMAT;
-        } else if (abs < 10000) {
+        } else if (abs < (100 * 1000 * 1000)) {
             format = LARGE_FORMAT;
         } else {
             format = VERY_LARGE_FORMAT;

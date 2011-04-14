@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.preproc.autobinner;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,9 +67,8 @@ import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretize;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizeBin;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObjectSpec;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval;
-import org.knime.base.node.preproc.autobinner.pmml.PMMLPreprocDiscretize;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval.Closure;
-import org.knime.base.node.util.DoubleFormat;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLPreprocDiscretize;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -273,11 +274,11 @@ public class AutoBinner {
                         binNames[i] = "Bin " + (i+1);
                     }
                 } else { // BinNaming.edges
-                    binNames[0] = "[" + DoubleFormat.formatDouble(edges[0])
-                        + "," + DoubleFormat.formatDouble(edges[1]) + "]";
+                    binNames[0] = "[" + BinnerNumberFormat.format(edges[0])
+                        + "," + BinnerNumberFormat.format(edges[1]) + "]";
                     for (int i = 1; i < binNames.length; i++) {
-                        binNames[i] = "(" + DoubleFormat.formatDouble(edges[i])
-                            + "," + DoubleFormat.formatDouble(edges[i + 1])
+                        binNames[i] = "(" + BinnerNumberFormat.format(edges[i])
+                            + "," + BinnerNumberFormat.format(edges[i + 1])
                             + "]";
                     }
                 }
@@ -425,6 +426,46 @@ public class AutoBinner {
         String[] target = settings.getTargetColumn();
         if (target == null || target.length == 0) {
             throw new InvalidSettingsException("No target set.");
+        }
+    }
+
+    /**
+     * This formatted should not be changed, since it may result in a different
+     * output of the binning labels.
+     */
+    private final static class BinnerNumberFormat {
+        private BinnerNumberFormat() {
+            // no op
+        }
+
+        /** for numbers less than 0.0001. */
+        private static final DecimalFormat SMALL_FORMAT = new DecimalFormat(
+                "0.00E0");
+        /** in all other cases, use the default Java formatter. */
+        private static final NumberFormat DEFAULT_FORMAT =
+            NumberFormat.getNumberInstance();
+
+        /**
+         * Formats the double to a string. It will use the following either
+         * the format <code>0.00E0</code> for numbers less than 0.0001 or
+         * the default NumberFormat.
+         * @param d the double to format
+         * @return the string representation of <code>d</code>
+         */
+        public static String format(final double d) {
+            if (d == 0.0 || Double.isInfinite(d) || Double.isNaN(d)) {
+                return Double.toString(d);
+            }
+            NumberFormat format;
+            double abs = Math.abs(d);
+            if (abs < 0.0001) {
+                format = SMALL_FORMAT;
+            } else {
+                format = DEFAULT_FORMAT;
+            }
+            synchronized (format) {
+                return format.format(d);
+            }
         }
     }
 

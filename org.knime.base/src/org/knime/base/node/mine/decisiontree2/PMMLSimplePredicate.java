@@ -52,6 +52,7 @@ package org.knime.base.node.mine.decisiontree2;
 
 import javax.xml.transform.sax.TransformerHandler;
 
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -68,23 +69,18 @@ import org.xml.sax.helpers.AttributesImpl;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLSimplePredicate extends PMMLPredicate {
+
     /** The string representation of the predicate's XML-element. */
     public static final String NAME = "SimplePredicate";
     /** The key to store the threshold in configurations. */
     protected static final String THRESHOLD_KEY = "threshold";
 
-
-
     /** The threshold to compare against. */
     private String m_threshold;
-    /* Used for storing numerical thresholds to avoid unnecessary casts. */
-    private Double m_thresholdNumerical;
 
-    /**
-     * Build a new simple predicate.
-     */
+    /** Build a new simple predicate. */
     public PMMLSimplePredicate() {
-		super();
+        super();
 		// for usage with loadFromPredParams(Config)
 	}
 
@@ -122,16 +118,9 @@ public class PMMLSimplePredicate extends PMMLPredicate {
      */
     public void setThreshold(final String threshold) {
         m_threshold = threshold;
-        try {
-            m_thresholdNumerical = Double.valueOf(threshold);
-        } catch (final NumberFormatException e) {
-            // no numerical threshold
-        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public Boolean evaluate(final DataRow row, final DataTableSpec spec) {
         cacheSpec(spec);
@@ -141,15 +130,11 @@ public class PMMLSimplePredicate extends PMMLPredicate {
             return null;
         }
         if (cell.getType().isCompatible(DoubleValue.class)) {
-            if (m_thresholdNumerical == null) {
-                m_thresholdNumerical = Double.valueOf(m_threshold);
-            }
-
-            Double value = ((DoubleValue)cell).getDoubleValue();
-            return getOperator().evaluate(value, m_thresholdNumerical);
+            double current = Double.parseDouble(m_threshold);
+            double value = ((DoubleValue) cell).getDoubleValue();
+            return getOperator().evaluate(value, current);
         } else {
-            String s = cell.toString();
-            return getOperator().evaluate(s, m_threshold);
+            return getOperator().evaluate(cell.toString(), m_threshold);
         }
     }
 
@@ -158,13 +143,15 @@ public class PMMLSimplePredicate extends PMMLPredicate {
      */
     @Override
     public String toString() {
-        if (m_thresholdNumerical != null) {
-            return getSplitAttribute() + " " + getOperator().getSymbol() + " "
-            + NUMBERFORMAT.format(m_thresholdNumerical);
-        } else {
-            return getSplitAttribute() + " " + getOperator().getSymbol() + " "
-            + m_threshold;
+        String value = m_threshold;
+        try {
+            double v = Double.parseDouble(m_threshold);
+            value = DoubleFormat.formatDouble(v);
+        } catch (NumberFormatException nfe) {
+            // not a double, use fallback
         }
+        return getSplitAttribute() + " "
+                + getOperator().getSymbol() + " " + value;
     }
 
     /**

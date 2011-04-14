@@ -346,6 +346,12 @@ final class DecTreeLearnerGraphView extends
         // Traverse the tree breadth first
         while (!toProcess.isEmpty()) {
             DecisionTreeNode curr = toProcess.remove(0);
+            // bug 2695: if not all pattern are selected for hilting, the
+            // view will automatically hilite all branches that does not
+            // cover any pattern            
+            if (curr.coveredPattern().isEmpty()) {
+                continue;
+            }
             if (hilited.containsAll(curr.coveredPattern())) {
                 // hilite subtree starting from curr
                 toHilite.addAll(getSubtree(curr));
