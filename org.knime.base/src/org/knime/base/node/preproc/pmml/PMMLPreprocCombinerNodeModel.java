@@ -53,7 +53,9 @@ package org.knime.base.node.preproc.pmml;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -177,9 +179,11 @@ public class PMMLPreprocCombinerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        // PMML preprocessing fragments have no config yet. Therefor returning
-        // nothing.
-        return new PortObjectSpec[] {PMMLPreprocPortObjectSpec.INSTANCE};
+        List<String> colNames = new ArrayList<String>();
+        for (PortObjectSpec spec : inSpecs) {
+            colNames.addAll(((PMMLPreprocPortObjectSpec)spec).getColumnNames());
+        }
+        return new PortObjectSpec[] {new PMMLPreprocPortObjectSpec(colNames)};
     }
 
 

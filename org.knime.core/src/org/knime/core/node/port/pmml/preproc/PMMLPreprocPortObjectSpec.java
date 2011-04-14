@@ -52,9 +52,16 @@
 package org.knime.core.node.port.pmml.preproc;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JComponent;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -67,12 +74,31 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLPreprocPortObjectSpec implements PortObjectSpec {
-    /**  */
-    public static final PMMLPreprocPortObjectSpec INSTANCE
-            = new PMMLPreprocPortObjectSpec();
+    private static final String COLUMN_NAMES_KEY = "columnNames";
+    private static final String COLUMNS_KEY = "columns";
+    private final List<String> m_columnNames;
 
-    public PMMLPreprocPortObjectSpec() {
+    /**
+     * @param columnNames the names of the preprocessed columns
+     */
+    public PMMLPreprocPortObjectSpec(final List<String> columnNames) {
         super();
+        m_columnNames = columnNames;
+    }
+
+    /**
+     * @param columnNames the names of the preprocessed columns
+     */
+    public PMMLPreprocPortObjectSpec(final String ... columnNames) {
+        super();
+        m_columnNames = new ArrayList<String>(Arrays.asList(columnNames));
+    }
+
+    /**
+     * @return the names of the preprocessed columns
+     */
+    public List<String> getColumnNames() {
+        return m_columnNames;
     }
 
     /**
@@ -90,7 +116,7 @@ public class PMMLPreprocPortObjectSpec implements PortObjectSpec {
                     final PMMLPreprocPortObjectSpec portObjectSpec,
                     final PortObjectSpecZipOutputStream out)
                     throws IOException {
-                // not needed
+                portObjectSpec.saveTo(out);
             }
 
             /**
@@ -99,14 +125,50 @@ public class PMMLPreprocPortObjectSpec implements PortObjectSpec {
             @Override
             public PMMLPreprocPortObjectSpec loadPortObjectSpec(
                     final PortObjectSpecZipInputStream in) throws IOException {
-                return INSTANCE;
+                try {
+                    return PMMLPreprocPortObjectSpec.loadFrom(in);
+                } catch (InvalidSettingsException e) {
+                    throw new IOException(e);
+                }
             }
         };
     }
 
     /**
+    *
+    * @param out zipped stream to write the entries to
+    * @throws IOException if something goes wrong
+    */
+   public void saveTo(final PortObjectSpecZipOutputStream out)
+           throws IOException {
+       NodeSettings settings = new NodeSettings(COLUMN_NAMES_KEY);
+       settings.addStringArray(COLUMNS_KEY,
+               m_columnNames.toArray(new String[m_columnNames.size()]));
+       settings.saveToXML(out);
+       out.close();
+   }
+
+   /**
+   *
+   * @param in stream reading the relevant files
+   * @return a completely loaded port object spec with {@link DataTableSpec},
+   *         and the sets of learning, ignored and target columns.
+   * @throws IOException if something goes wrong
+   * @throws InvalidSettingsException if something goes wrong
+   */
+  public static PMMLPreprocPortObjectSpec loadFrom(
+          final PortObjectSpecZipInputStream in) throws IOException,
+          InvalidSettingsException {
+      NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+      String[] columnNames = settings.getStringArray(COLUMNS_KEY);
+      return new PMMLPreprocPortObjectSpec(Arrays.asList(columnNames));
+  }
+
+
+    /**
      * {@inheritDoc}
      */
+    @Override
     public JComponent[] getViews() {
         return null;
     }

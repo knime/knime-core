@@ -174,6 +174,13 @@ public class NormalizerNodeModel extends NodeModel {
     }
 
     /**
+     * @return the columns used for normalization.
+     */
+    protected String[] getColumns() {
+        return m_columns;
+    }
+
+    /**
      * All {@link org.knime.core.data.def.IntCell} columns are converted to
      * {@link org.knime.core.data.def.DoubleCell} columns.
      *

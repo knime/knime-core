@@ -51,6 +51,7 @@
 package org.knime.base.node.preproc.autobinner.pmml;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -59,6 +60,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation;
+import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -70,7 +72,7 @@ import org.xml.sax.helpers.AttributesImpl;
 public final class PMMLPreprocDiscretize extends PMMLPreprocOperation {
     /** Name of the summary Extension element. */
     private static final String SUMMARY = "summary";
-    private DisretizeConfiguration m_configuration;
+    private final DisretizeConfiguration m_configuration;
 
     /** Used in load method. */
     public PMMLPreprocDiscretize() {
@@ -122,8 +124,8 @@ public final class PMMLPreprocDiscretize extends PMMLPreprocOperation {
      * {@inheritDoc}
      */
     @Override
-    public PMMLWriteElement getWriteElement() {
-        return PMMLWriteElement.LOCALTRANS;
+    public PMMLTransformElement getTransformElement() {
+        return PMMLTransformElement.LOCALTRANS;
     }
 
     /**
@@ -157,9 +159,9 @@ public final class PMMLPreprocDiscretize extends PMMLPreprocOperation {
     */
    final static class PMMLPreprocDiscretizeContentHandler
            extends PMMLContentHandler {
-       private DisretizeConfiguration m_configuration;
+       private final DisretizeConfiguration m_configuration;
        private List<PMMLDiscretize> m_list;
-       private Stack<PMMLContentHandler> m_contentHandlerStack =
+       private final Stack<PMMLContentHandler> m_contentHandlerStack =
            new Stack<PMMLContentHandler>();
        private String m_currName;
 
@@ -231,5 +233,22 @@ public final class PMMLPreprocDiscretize extends PMMLPreprocOperation {
        }
 
    }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public List<String> getColumnNames() {
+       return Collections.unmodifiableList(m_configuration.getNames());
+   }
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+public void parse(final Element transformElement) {
+    // TODO Auto-generated method stub
+
+}
 
 }

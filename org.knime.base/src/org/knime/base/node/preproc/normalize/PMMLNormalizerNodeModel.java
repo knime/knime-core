@@ -62,7 +62,7 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec;
 /**
  * Normalizer node that exports a PMML fragment containing its preprocessing
  * operations instead of a NormalizerModel.
- * 
+ *
  * @see NormalizerNodeModel
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
@@ -83,7 +83,7 @@ public class PMMLNormalizerNodeModel extends NormalizerNodeModel {
             throws InvalidSettingsException {
         PortObjectSpec[] config = super.configure(inSpecs);
         return new PortObjectSpec[]{config[0],
-                PMMLPreprocPortObjectSpec.INSTANCE};
+                new PMMLPreprocPortObjectSpec(getColumns())};
     }
 
     /**

@@ -213,7 +213,21 @@ public abstract class PMMLContentHandler extends DefaultHandler
         TreeSet<String> versions = new TreeSet<String>();
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
+        versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
+    }
+
+    /**
+     * Returns the PMML version that this content handler prefers to write.
+     * Override this method in a derived class to change the set preferred
+     * version. Valid versions are defined in
+     * {@link PMMLPortObject#getSupportedPMMLVersions()}.
+     *
+     * @return the preferred PMML version
+     */
+    protected String getPreferredWriteVersion() {
+        return PMMLPortObject.PMML_V4_0;
     }
 
     /**
@@ -230,10 +244,10 @@ public abstract class PMMLContentHandler extends DefaultHandler
         try {
             parser = fac.newSAXParser();
 
-            Transformer xformer = TransformerFactory
+            Transformer t = TransformerFactory
                 .newInstance().newTransformer();
             Source source = new DOMSource(node);
-            xformer.transform(source, new StreamResult(out));
+            t.transform(source, new StreamResult(out));
             in = new ByteArrayInputStream(out.toByteArray());
             parser.parse(new InputSource(in), this);
         } catch (ParserConfigurationException e) {
@@ -300,7 +314,11 @@ public abstract class PMMLContentHandler extends DefaultHandler
     /**
      * Derived classes should override this method to add the model content.
      * They can assume that the document is started and will be ended and should
-     * only provided the content.
+     * only provided the content starting with the mining scheme.
+     * If they want to support the addition of LocalTransformations they have to
+     * provide an empty <LocalTransformation></LocalTransformations> element
+     * that can be filled later with preprocessing operations.
+     *
      * @param handler the transformer handler
      * @param spec the port object spec
      * @throws SAXException if the model cannot be added

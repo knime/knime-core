@@ -53,11 +53,13 @@ package org.knime.core.node.port.pmml.preproc;
 
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
@@ -67,7 +69,6 @@ import org.xml.sax.SAXException;
 public abstract class PMMLPreprocOperation {
     protected static final String LOCAL_TRANS = "LocalTransformations";
     protected static final String DATA_DICT = "DataDictionary";
-    protected static final String NORM_CONT = "NormContinuous";
     protected static final String LINEAR_NORM = "LinearNorm";
     protected static final String DERIVED_FIELD = "DerivedField";
     protected static final String FIELD = "field";
@@ -101,16 +102,32 @@ public abstract class PMMLPreprocOperation {
     public abstract String getSummary();
 
     /**
+     * This method will probably be remove soon when the
+     * {@link PMMLPreprocPortObject} is gone.
      * @return The PMMLContentHandler for loading the operation
      */
+    @Deprecated
     public abstract PMMLContentHandler getHandlerForLoad();
+
+
+    /**
+     * Parses the passed PMMLTransformElement to retrieve the contained {@link
+     * PMMLPreprocOperation}s. Elements that can be interpreted are "consumed"
+     * (removed from the transformation element.
+     * @param transformElement an xml element containing a
+     *      {@link PMMLTransformElement} to be parsed.
+     */
+    public abstract void parse(final Element transformElement);
 
     /**
      * @return The PMML Element this operation should be written into.
      */
-    public abstract PMMLWriteElement getWriteElement();
+    public abstract PMMLTransformElement getTransformElement();
 
-
+    /**
+     * @return a list with the names of the columns to be preprocessed
+     */
+    public abstract List<String> getColumnNames();
 
     /**
      * Enumeration of the PMML elements the preprocessing operation can be
@@ -118,29 +135,29 @@ public abstract class PMMLPreprocOperation {
      *
      * @author Dominik Morent, KNIME.com, Zurich, Switzerland
      */
-    public enum PMMLWriteElement {
+    public enum PMMLTransformElement {
         /** The LocalTransformation element. */
         LOCALTRANS(LOCAL_TRANS),
         /** The DataDictionary element. */
         DATADICT(DATA_DICT);
 
         private final String m_represent;
-        private static final HashMap<String, PMMLWriteElement> LOOKUP =
-            new HashMap<String, PMMLWriteElement>();
+        private static final HashMap<String, PMMLTransformElement> LOOKUP =
+            new HashMap<String, PMMLTransformElement>();
 
         /**
-         * Create a new PMMLWriteElement.
+         * Create a new PMMLTransformElement.
          *
          * @param rep the string representation of the strategy
          * @param supported true if the strategy is supported, false otherwise
          */
-        private PMMLWriteElement(final String rep) {
+        private PMMLTransformElement(final String rep) {
             m_represent = rep;
         }
 
         static {
-            for (PMMLWriteElement elem
-                    : EnumSet.allOf(PMMLWriteElement.class)) {
+            for (PMMLTransformElement elem
+                    : EnumSet.allOf(PMMLTransformElement.class)) {
                 LOOKUP.put(elem.toString(), elem);
             }
         }
@@ -154,20 +171,21 @@ public abstract class PMMLPreprocOperation {
         }
 
         /**
-         * Returns the corresponding missing value strategy to the string
+         * Returns the corresponding PMML transformation element for the string
          * representation.
-         * @param represent the representation to retrieve the strategy for
-         * @return the missing value strategy
+         * @param represent the representation to retrieve the write element for
+         * @return the PMML write element
          */
-        public static PMMLWriteElement get(final String represent) {
+        public static PMMLTransformElement get(final String represent) {
             if (represent == null) {
                 return null;
             }
 
-            PMMLWriteElement elem = LOOKUP.get(represent);
+            PMMLTransformElement elem = LOOKUP.get(represent);
             if (elem == null) {
-                throw new IllegalArgumentException("Write element "
-                        + represent + " is unknown.");
+                throw new IllegalArgumentException(
+                        "PMML Transformation element " + represent
+                        + " is unknown.");
             }
             return elem;
         }

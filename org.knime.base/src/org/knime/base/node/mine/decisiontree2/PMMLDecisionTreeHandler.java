@@ -105,7 +105,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
     static {
         // TODO verify and extend list of unsupported and ignored elements
         // for PMML 4.0
-        UNSUPPORTED.add("LocalTransformations");
         UNSUPPORTED.add("Partition");
         UNSUPPORTED.add("EmbeddedModel");
 
@@ -448,6 +447,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
     }
 
@@ -492,6 +492,11 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
 
         handler.startElement(null, null, "TreeModel", atts);
         PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+
+        //adding empty local transformations that can be filled later
+        handler.startElement(null, null, "LocalTransformations", null);
+        handler.endElement(null, null, "LocalTransformations");
+
         addTreeNode(handler, m_tree.getRootNode());
         handler.endElement(null, null, "TreeModel");
     }

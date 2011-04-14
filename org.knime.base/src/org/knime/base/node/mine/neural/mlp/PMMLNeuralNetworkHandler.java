@@ -341,6 +341,11 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
         handler.startElement(null, null, "NeuralNetwork", atts);
         PMMLPortObjectSpec.writeMiningSchema(spec, handler);
         addTargets(handler, m_mlp, spec);
+
+        //adding an empty local transformations stub that can be filled later
+        handler.startElement(null, null, "LocalTransformations", null);
+        handler.endElement(null, null, "LocalTransformations");
+
         // input layer
         addInputLayer(handler, m_mlp);
         // hidden layers

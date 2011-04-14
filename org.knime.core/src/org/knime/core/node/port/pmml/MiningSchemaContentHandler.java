@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.port.pmml;
 
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -62,6 +63,22 @@ import org.xml.sax.SAXException;
  * @author Fabian Dill, University of Konstanz
  */
 public class MiningSchemaContentHandler extends PMMLContentHandler {
+
+    private static final Set<String>UNSUPPORTED
+            = new LinkedHashSet<String>();
+
+    private static final Set<String>IGNORED
+            = new LinkedHashSet<String>();
+
+
+    static {
+        UNSUPPORTED.add("order");
+        UNSUPPORTED.add("group");
+
+        IGNORED.add("supplementary");
+        IGNORED.add("frequencyWeight");
+        IGNORED.add("analysisWeight");
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MiningSchemaContentHandler.class);
@@ -184,10 +201,15 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
             }
             if ("active".equals(usageType)) {
                 m_learningFields.add(colName);
-            } else if ("supplementary".equals(usageType)) {
+            } else if (IGNORED.contains(usageType)) {
                 m_ignoredFields.add(colName);
-            } else if ("predicted".equals(usageType)) {
-                m_targetFields.add(colName);
+                LOGGER.info("Field \"" + colName + "\" with usage type \""
+                        + usageType + "\" has been ignored as it is not "
+                        + "needed for scoring.");
+            } else if (UNSUPPORTED.contains(usageType)) {
+                throw new IllegalArgumentException(
+                        "Fields with usage type \""
+                        + usageType + "\" are not supported.");
             }
         } else if ("Application".equals(name)) {
             /* This check is only necessary to stay backward compatible. Before
@@ -239,6 +261,7 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
     }
 

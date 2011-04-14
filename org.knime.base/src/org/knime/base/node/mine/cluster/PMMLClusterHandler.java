@@ -109,7 +109,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
 
     static {
         UNSUPPORTED.add("KohonenMap");
-        UNSUPPORTED.add("LocalTransformations");
+        UNSUPPORTED.add("CenterFields");
 
         IGNORED.add("Covariances");
         IGNORED.add("MissingValueWeights");
@@ -134,31 +134,31 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     private StringBuffer m_buffer;
     private int m_currentCluster = 0;
 
-    private Stack<String>m_elementStack = new Stack<String>();
+    private final Stack<String>m_elementStack = new Stack<String>();
 
     private String m_lastDerivedField;
 
     private Map<String, LinearNorm>m_linearNorms;
     private LinearNorm m_currentLinearNorm;
 
-    
 
-    public PMMLClusterHandler(ComparisonMeasure measure, int nrOfClusters, 
-    		double[][] prototypes,  int[] clusterCoverage, 
-    		Set<String> colSpecs) {
+
+    public PMMLClusterHandler(final ComparisonMeasure measure, final int nrOfClusters,
+    		final double[][] prototypes,  final int[] clusterCoverage,
+    		final Set<String> colSpecs) {
     	  m_measure = measure;
 
     	    m_nrOfClusters = nrOfClusters;
     	   m_prototypes = prototypes;
-    	 
+
     	   m_clusterCoverage = clusterCoverage;
 
-    	    
+
     	    m_usedColumns = new LinkedHashSet<String>();
     	    for(String dcs : colSpecs){
     	    	m_usedColumns.add(dcs);
     	    }
-            
+
             m_labels = new String[m_nrOfClusters];
             for (int i = 0; i < m_nrOfClusters; i++) {
                 m_labels[i] = "cluster_" + i;
@@ -419,28 +419,28 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
     }
 
-   
     /**
      * {@inheritDoc}
      */
     @Override
     protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
-        
+
         // create the cluster model
         // with the attributes...
         AttributesImpl atts = new AttributesImpl();
         // modelName
-        atts.addAttribute(null, null, "modelName", 
+        atts.addAttribute(null, null, "modelName",
         		PMMLPortObject.CDATA, "k-means");
         // functionName
-        atts.addAttribute(null, null, "functionName", 
+        atts.addAttribute(null, null, "functionName",
         		PMMLPortObject.CDATA, "clustering");
         // modelClass
-        atts.addAttribute(null, null, "modelClass", 
+        atts.addAttribute(null, null, "modelClass",
         		PMMLPortObject.CDATA, "centerBased");
         // numberOfClusters
         atts.addAttribute(null, null, "numberOfClusters", PMMLPortObject.CDATA,
@@ -448,15 +448,18 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         handler.startElement(null, null, "ClusteringModel", atts);
         if (m_usedColumns != null) {
             PMMLPortObjectSpec.writeMiningSchema(spec, handler);
-            // TODO write the local transformtions
-//            writeLocalTransformations(handler);
+
+            //adding empty local transformations that can be filled later
+            handler.startElement(null, null, "LocalTransformations", null);
+            handler.endElement(null, null, "LocalTransformations");
+
             addUsedDistanceMeasure(handler);
             addClusteringFields(handler);
             addClusters(handler);
         }
         handler.endElement(null, null, "ClusteringModel");
     }
-    
+
     /**
      * Writes the used distance measure - so far it is euclidean.
      * @param handler to write to
@@ -486,9 +489,9 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     				) throws SAXException {
         for (String colName : m_usedColumns) {
             AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, 
+            atts.addAttribute(null, null,
             		"field", PMMLPortObject.CDATA, colName);
-            atts.addAttribute(null, null, 
+            atts.addAttribute(null, null,
             		"compareFunction", PMMLPortObject.CDATA, "absDiff");
             handler.startElement(null, null, "ClusteringField", atts);
             handler.endElement(null, null, "ClusteringField");
@@ -506,7 +509,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         int i = 0;
         for (double[] prototype : m_prototypes) {
             AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, "name", 
+            atts.addAttribute(null, null, "name",
             		PMMLPortObject.CDATA, "cluster_" + i);
             if (m_clusterCoverage != null
                     && m_clusterCoverage.length == m_prototypes.length) {
@@ -518,7 +521,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                 atts = new AttributesImpl();
                 atts.addAttribute(null, null, "n", PMMLPortObject.CDATA,
                             "" + prototype.length);
-                atts.addAttribute(null, null, "type", 
+                atts.addAttribute(null, null, "type",
                 		PMMLPortObject.CDATA, "real");
                 handler.startElement(null, null, "Array", atts);
                 StringBuffer buff = new StringBuffer();

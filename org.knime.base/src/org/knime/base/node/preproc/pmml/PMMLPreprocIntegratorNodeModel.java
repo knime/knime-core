@@ -115,7 +115,7 @@ public class PMMLPreprocIntegratorNodeModel extends NodeModel {
         PMMLPreprocPortObject preprocPort
                 = (PMMLPreprocPortObject) inObjects[PMML_PREPROC_PORT];
 
-        pmmlPort.setOperations(preprocPort.getOperations());
+        pmmlPort.addOperations(preprocPort.getOperations());
         return new PortObject[] {pmmlPort};
     }
 

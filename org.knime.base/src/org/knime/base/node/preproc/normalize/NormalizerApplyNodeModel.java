@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 17, 2006 (wiswedel): created
  */
@@ -65,8 +65,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -74,7 +74,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class NormalizerApplyNodeModel extends NodeModel {
@@ -88,6 +88,14 @@ public class NormalizerApplyNodeModel extends NodeModel {
     }
 
     /**
+     * @param modelPortType
+     */
+    protected NormalizerApplyNodeModel(final PortType modelPortType) {
+        super(new PortType[]{modelPortType, BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -96,13 +104,13 @@ public class NormalizerApplyNodeModel extends NodeModel {
         DataTableSpec modelSpec = (DataTableSpec)inSpecs[0];
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         List<String> unknownCols = new ArrayList<String>();
-        List<String> knownCols = new ArrayList<String>(); 
+        List<String> knownCols = new ArrayList<String>();
         for (DataColumnSpec c : modelSpec) {
             DataColumnSpec inDataCol = dataSpec.getColumnSpec(c.getName());
             if (inDataCol == null) {
                 unknownCols.add(c.getName());
             } else if (!inDataCol.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Column \"" + c.getName() 
+                throw new InvalidSettingsException("Column \"" + c.getName()
                         + "\" is to be normalized, but is not numeric");
             } else {
                 knownCols.add(c.getName());
@@ -133,13 +141,13 @@ public class NormalizerApplyNodeModel extends NodeModel {
         }
         return new BufferedDataTable[]{bdt};
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void loadInternals(
-            final File nodeInternDir, final ExecutionMonitor exec) 
+            final File nodeInternDir, final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
     }
 

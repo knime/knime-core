@@ -105,7 +105,7 @@ public class PMMLPreprocPortObjectView extends JComponent {
                     PMMLPreprocPortObject.createTransformerHandlerForSave(out);
                 for (PMMLPreprocOperation op : m_portObject.getOperations()) {
                     String writeElement = op.getClass().getName();
-                    String locationElement = op.getWriteElement().toString();
+                    String locationElement = op.getTransformElement().toString();
                     handler.startElement(null, null, writeElement, null);
                     handler.startElement(null, null, locationElement, null);
                     op.save(handler, new ExecutionMonitor());

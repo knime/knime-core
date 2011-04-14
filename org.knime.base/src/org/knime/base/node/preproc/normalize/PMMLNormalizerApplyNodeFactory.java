@@ -43,109 +43,63 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *   Oct 17, 2006 (wiswedel): created
  */
-package org.knime.core.node.port.pmml;
+package org.knime.base.node.preproc.normalize;
 
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Fabian Dill, University of Konstanz
+ * @author wiswedel, University of Konstanz
  */
-public class ExtractModelTypeHandler extends PMMLContentHandler {
-    /** Public ID .*/
-    public static final String ID = "ExtractModel";
-
-    private PMMLModelType m_type = null;
-
-    private boolean m_hasNamespace = false;
+public class PMMLNormalizerApplyNodeFactory
+extends NodeFactory<NormalizerApplyNodeModel> {
 
     /**
-     *
-     * @return the type of valid PMML models
+     * {@inheritDoc}
      */
-    public PMMLModelType getModelType() {
-        return m_type;
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void characters(final char[] ch, final int start, final int length)
-            throws SAXException {
-        // ignore -> we are only searching for the model type
+    public PMMLNormalizerApplyNodeModel createNodeModel() {
+        return new PMMLNormalizerApplyNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void endDocument() throws SAXException {
-        if (m_type == null) {
-            m_type = PMMLModelType.None;
-        }
+    public NodeView<NormalizerApplyNodeModel> createNodeView(
+            final int viewIndex, final NormalizerApplyNodeModel nodeModel) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void endElement(final String uri, final String localName,
-            final String name) throws SAXException {
-        for (PMMLModelType t : PMMLModelType.values()) {
-            if (t.name().equals(name)) {
-                if (m_type != null) {
-                    throw new SAXException("Multiple PMML models in one PMML "
-                            + "file are not yet supported. Found "
-                            + m_type.name() + " and " + name + ".");
-                }
-                m_type = t;
-                break;
-            }
-        }
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, final String localName,
-            final String name, final Attributes atts) throws SAXException {
-        // leave empty -> we are only searching for the model type
-        if (name.equals("PMML")) {
-            if (atts.getValue("xmlns") != null
-                    && atts.getValue("xmlns").startsWith(
-                            "http://www.dmg.org/PMML-")) {
-                m_hasNamespace = true;
-            }
-        }
-    }
-
-    /**
-     *
-     * @return true if there is a PMML namespace declaration
-     */
-    public boolean hasNamespace() {
-        return m_hasNamespace;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Set<String> getSupportedVersions() {
-        Set<String> versions = new TreeSet<String>();
-        versions.add(PMMLPortObject.PMML_V3_0);
-        versions.add(PMMLPortObject.PMML_V3_1);
-        versions.add(PMMLPortObject.PMML_V3_2);
-        versions.add(PMMLPortObject.PMML_V4_0);
-        return versions;
+    protected boolean hasDialog() {
+        return false;
     }
 
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="" type="Manipulator">
-    <name>PMML Combiner</name>
+    <name>PMML Fragment Combiner</name>
     
     <shortDescription>
         Combines two PMML preprocessing port objects into one.

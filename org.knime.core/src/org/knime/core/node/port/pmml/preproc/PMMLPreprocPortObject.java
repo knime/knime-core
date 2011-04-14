@@ -53,6 +53,8 @@ package org.knime.core.node.port.pmml.preproc;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -92,8 +94,10 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
     /** Constant for CDATA. */
     protected static final String CDATA = "CDATA";
 
-    private List<PMMLPreprocOperation> m_operations
+    private final List<PMMLPreprocOperation> m_operations
             = new LinkedList<PMMLPreprocOperation>();
+
+    private PMMLPreprocPortObjectSpec m_spec;
 
     /**
      *
@@ -102,23 +106,27 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
         // necessary for loading
     }
 
-    public PMMLPreprocPortObject(final PMMLPreprocOperation operation) {
-        m_operations.add(operation);
-    }
-
     public PMMLPreprocPortObject(final PMMLPreprocOperation ... operations) {
+        List<String> columnNames = new ArrayList<String>();
         for (PMMLPreprocOperation op : operations) {
             m_operations.add(op);
+            columnNames.addAll(op.getColumnNames());
         }
+        m_spec = new PMMLPreprocPortObjectSpec(columnNames);
     }
 
     public PMMLPreprocPortObject(final PMMLPreprocPortObject ... port) {
+        List<String> columnNames = new ArrayList<String>();
         for (PMMLPreprocPortObject p : port) {
             for (PMMLPreprocOperation op : p.getOperations()) {
                 m_operations.add(op);
+                columnNames.addAll(op.getColumnNames());
             }
         }
+        m_spec = new PMMLPreprocPortObjectSpec(columnNames);
     }
+
+
     /**
      * {@inheritDoc}
      */
@@ -153,7 +161,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
             }
             in.closeEntry();
         }
-
+        m_spec = (PMMLPreprocPortObjectSpec)spec;
     }
 
     /**
@@ -177,7 +185,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
                     = new PortObjectZipOutputStreamAndString(out);
                 TransformerHandler handler =
                     createTransformerHandlerForSave(sout);
-                String writeElement = op.getWriteElement().toString();
+                String writeElement = op.getTransformElement().toString();
                 handler.startElement(null, null, writeElement, null);
                 op.save(handler,
                         exec.createSubProgress(subProgress));
@@ -237,7 +245,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
                 (SAXTransformerFactory)TransformerFactory.newInstance();
         TransformerHandler handler = fac.newTransformerHandler();
         Transformer t = handler.getTransformer();
-//        t.setOutputProperty(OutputKeys.METHOD, "xml");
+        t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         handler.setResult(new StreamResult(out));
         handler.startDocument();
@@ -249,22 +257,28 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
     /**
      * {@inheritDoc}
      */
+    @Override
     public PMMLPreprocPortObjectSpec getSpec() {
-        /* TODO: Create a useful spec by providing the involved columns. */
-        return PMMLPreprocPortObjectSpec.INSTANCE;
+        return m_spec;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getSummary() {
-        // TODO Auto-generated method stub
-        return null;
+        StringBuffer sb = new StringBuffer();
+        for (PMMLPreprocOperation op : m_operations) {
+            sb.append(op.getSummary());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public JComponent[] getViews() {
         return new JComponent[] {new PMMLPreprocPortObjectView(this)};
     }
@@ -278,8 +292,8 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
      * @author Dominik Morent, KNIME.com, Zurich, Switzerland
      */
     private class PortObjectZipOutputStreamAndString extends OutputStream {
-        private StringBuilder m_buffer;
-        private PortObjectZipOutputStream m_zipOut;
+        private final StringBuilder m_buffer;
+        private final PortObjectZipOutputStream m_zipOut;
 
         /**
          * @param zipOut
@@ -433,7 +447,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
      * @return the operations
      */
     public List<PMMLPreprocOperation> getOperations() {
-        return m_operations; // TODO: return read only copy
+        return Collections.unmodifiableList(m_operations);
     }
 
 

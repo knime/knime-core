@@ -51,6 +51,9 @@
  */
 package org.knime.base.data.normalize;
 
+import static org.knime.core.node.port.pmml.preproc.PMMLTransformation.NormContinuous;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,23 +62,32 @@ import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.node.preproc.normalize.NormalizerNodeModel;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * Loads and saves the PMML preprocessing elements that are required by the 
+ * Loads and saves the PMML preprocessing elements that are required by the
  * {@link NormalizerNodeModel}.
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLPreprocNormalization extends PMMLPreprocOperation {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            PMMLPreprocNormalization.class);
 
     /** Name of the summary Extension element. */
     private static final String SUMMARY = "summary";
     private AffineTransConfiguration m_configuration;
+    private static final int MAX_NUM_SEGMENTS = 2;
 
     /**
      *
@@ -102,6 +114,14 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
     public void save(final TransformerHandler handler,
             final ExecutionMonitor exec) throws SAXException {
         AttributesImpl atts;
+
+        atts = new AttributesImpl();
+        atts.addAttribute(null, null, NAME, CDATA, SUMMARY);
+        atts.addAttribute(null, null, VALUE, CDATA,
+                m_configuration.getSummary());
+        handler.startElement(null, null, EXTENSION, atts);
+        handler.endElement(null, null, EXTENSION);
+
         int n = m_configuration.getNames().length;
         double execPart = 1.0 / n;
         for (int i = 0; i < n; i++) {
@@ -111,6 +131,9 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
             String field = m_configuration.getNames()[i];
             double scale = m_configuration.getScales()[i];
             double trans = m_configuration.getTranslations()[i];
+         // TODO handle min, max extension for linear norm
+//            double min = m_configuration.getMin()[i];
+//            double max = m_configuration.getMax()[i];
 
             atts = new AttributesImpl();
             atts.addAttribute(null, null, OPTYPE, CDATA, OP_TYPE_CONTINOUS);
@@ -119,7 +142,7 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
 
             atts = new AttributesImpl();
             atts.addAttribute(null, null, FIELD, CDATA, field);
-            handler.startElement(null, null, NORM_CONT, atts);
+            handler.startElement(null, null, NormContinuous.toString() , atts);
 
             atts = new AttributesImpl();
             atts.addAttribute(null, null, ORIG, CDATA, "0.0");
@@ -134,15 +157,9 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
             handler.startElement(null, null, LINEAR_NORM, atts);
             handler.endElement(null, null, LINEAR_NORM);
 
-            handler.endElement(null, null, NORM_CONT);
+            handler.endElement(null, null, NormContinuous.toString());
             handler.endElement(null, null, DERIVED_FIELD);
         }
-        atts = new AttributesImpl();
-        atts.addAttribute(null, null, NAME, CDATA, SUMMARY);
-        atts.addAttribute(null, null, VALUE, CDATA,
-                m_configuration.getSummary());
-        handler.startElement(null, null, EXTENSION, atts);
-        handler.endElement(null, null, EXTENSION);
     }
 
     /**
@@ -169,23 +186,179 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
        return new PMMLPreprocessingContentHandler();
     }
 
+
+
+    /**
+     * @return the configuration
+     */
+    public AffineTransConfiguration getConfiguration() {
+        return m_configuration;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getColumnNames() {
+        return Arrays.asList(m_configuration.getNames());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void parse(final Element transformElement) {
+       PMMLNormalizationHandler handler
+               = new PMMLNormalizationHandler(transformElement);
+       m_configuration = handler.getAffineTransConfig();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PMMLTransformElement getTransformElement() {
+        return PMMLTransformElement.LOCALTRANS;
+    }
+
+
+    /**
+     * Parses normalization transformation elements.
+     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     *
+     */
+    class PMMLNormalizationHandler {
+        private final List<String> m_fields;
+        private final List<Double> m_scales;
+        private final List<Double> m_translations;
+        private String m_summary;
+        private AffineTransConfiguration m_affineTrans;
+
+        /**
+         * Builds a new PMMLNormalizationHandler based on the transformation
+         * element.
+         *
+         * @param transform an xml element containing a
+         *      {@link PMMLTransformElement} to be parsed.
+         */
+        public PMMLNormalizationHandler(final Element transform) {
+            m_fields = new ArrayList<String>();
+            m_scales = new ArrayList<Double>();
+            m_translations = new ArrayList<Double>();
+            init(transform);
+        }
+
+        /**
+         * @param transform
+         */
+        private void init(final Element transform) {
+            /*
+             * Try to read the summary which might be stored as first extension.
+             */
+            NodeList ext = transform.getElementsByTagName(EXTENSION);
+            if (ext.getLength() > 0) {
+                Attr summary =
+                        (Attr)ext.item(0).getAttributes().getNamedItem(SUMMARY);
+                if (summary != null) {
+                    m_summary = summary.getValue();
+                }
+            }
+
+           NodeList normalizations = transform.getElementsByTagName(
+                   NormContinuous.toString());
+           for (int i = 0; i < normalizations.getLength(); i++) {
+               Node normalization = null;
+               try {
+                   normalization = normalizations.item(i);
+                   String field = ((Attr)normalization.getAttributes()
+                           .getNamedItem(FIELD)).getValue();
+                   double[] orig = new double[MAX_NUM_SEGMENTS];
+                   double[] norm = new double[MAX_NUM_SEGMENTS];
+
+                   NodeList normChildren = normalization.getChildNodes();
+                   int numSegments = 0;
+                    for (int j = 0; j < normChildren.getLength(); j++) {
+                        if (numSegments > 2) {
+                            throw new IllegalArgumentException("Unexpected "
+                                    + LINEAR_NORM + " element encountered. "
+                                    + "Only two elements per "
+                                    + NormContinuous + " are allowed.");
+                        }
+                        Node child = normChildren.item(j);
+                        if (LINEAR_NORM.equalsIgnoreCase(child.getNodeName())) {
+                            NamedNodeMap attr = child.getAttributes();
+                            orig[j] =
+                                    Double.parseDouble(((Attr)attr
+                                            .getNamedItem(ORIG)).getValue());
+                            norm[j] =
+                                    Double.parseDouble(((Attr)attr
+                                            .getNamedItem(NORM)).getValue());
+                            // remove the operation from the document
+                            normalization.removeChild(child);
+                            numSegments++;
+                        } else if (EXTENSION.equalsIgnoreCase(
+                                child.getNodeName())) {
+                            // TODO handle min, max extension for linear norm
+                        }
+                    }
+
+                    double scale = (norm[1] - norm[0])/(orig[1] - orig[0]);
+                    m_scales.add(scale);
+                    m_translations.add(norm[0] - scale * orig[0]);
+                    m_fields.add(field);
+               } catch (Exception e) {
+                   LOGGER.warn("Invalid input. Could not parse element "
+                           + normalization.getNodeName() + ".", e);
+               }
+           }
+        }
+
+        /**
+         * Builds a configuration object for a {@link AffineTransTable}.
+         * @return the affine trans configuration
+         */
+        public AffineTransConfiguration getAffineTransConfig() {
+            if (m_affineTrans  == null) {
+                double[] nanArray = new double[m_fields.size()];
+                Arrays.fill(nanArray, Double.NaN);
+                double[] s = new double[m_scales.size()];
+                double[] t = new double[m_translations.size()];
+                for (int i = 0; i < t.length; i++) {
+                    s[i] = m_scales.get(i);
+                    t[i] = m_translations.get(i);
+                }
+                m_configuration = new AffineTransConfiguration(
+                        m_fields.toArray(new String[m_fields.size()]), s, t,
+                        nanArray, nanArray, m_summary);
+                m_affineTrans =  new AffineTransConfiguration(
+                        m_fields.toArray(new String[m_fields.size()]), s, t,
+                        nanArray, nanArray, m_summary);
+            }
+            return m_affineTrans;
+        }
+    }
+
+
     /**
      * Content handler for parsing linear normalization PMML fragments.
-     * TODO: Replace this one with a more general content handler in 
+     * TODO: Replace this one with a more general content handler in
      * org.knime.core that is also responsible for parsing imported PMML.
+     *
+     * This class is deprecated and will be replaced by a DOM parser.
      *
      * @author Dominik Morent, KNIME.com, Zurich, Switzerland
      */
+    @Deprecated
     class PMMLPreprocessingContentHandler extends PMMLContentHandler {
         // y = s * x + t
-        private List<String> m_fields = new LinkedList<String>();
-        private List<Double> m_scale = new LinkedList<Double>();
-        private List<Double> m_trans = new LinkedList<Double>();
+        private final List<String> m_fields = new LinkedList<String>();
+        private final List<Double> m_scale = new LinkedList<Double>();
+        private final List<Double> m_trans = new LinkedList<Double>();
         private String m_summary;
 
         private int m_linNormCnt = 0;
-        private double[] m_orig = new double[2];
-        private double[] m_norm = new double[2];
+        private final double[] m_orig = new double[2];
+        private final double[] m_norm = new double[2];
 
         /**
          * {@inheritDoc}
@@ -193,20 +366,20 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
         @Override
         public void startElement(final String uri, final String localName,
                 final String name, final Attributes atts) throws SAXException {
-            if (name.equals(NORM_CONT)) {
+            if (NormContinuous.toString().equalsIgnoreCase(name)) {
                 m_fields.add(atts.getValue(FIELD));
                 m_linNormCnt = 0;
-            } else if (name.equals(LINEAR_NORM)) {
+            } else if (name.equalsIgnoreCase(LINEAR_NORM)) {
+                if (m_linNormCnt > 1) {
+                    throw new SAXException("Unexpected " + LINEAR_NORM
+                            + " element encountered. Only two elements per "
+                            + NormContinuous + " are allowed.");
+                }
                 m_orig[m_linNormCnt] = Double.parseDouble(atts.getValue(ORIG));
                 m_norm[m_linNormCnt] = Double.parseDouble(atts.getValue(NORM));
                 m_linNormCnt++;
-                if (m_linNormCnt > 2) {
-                    throw new SAXException("Unexpected " + LINEAR_NORM
-                            + " element encountered. Only two elements per "
-                            + NORM_CONT + " are allowed.");
-                }
-            } else if (name.equals(EXTENSION) && atts.getValue(NAME) != null
-                    && atts.getValue(NAME).equals(SUMMARY)) {
+            } else if (name.equalsIgnoreCase(EXTENSION) && atts.getValue(NAME) != null
+                    && atts.getValue(NAME).equalsIgnoreCase(SUMMARY)) {
                 m_summary = atts.getValue(VALUE);
             }
 
@@ -218,9 +391,10 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
         @Override
         public void endElement(final String uri, final String localName,
                 final String name) throws SAXException {
-            if (name.equals(NORM_CONT)) {
-                m_scale.add(m_norm[0]);
-                m_trans.add(m_norm[1] - m_norm[0]);
+            if (NormContinuous.toString().equalsIgnoreCase(name)) {
+                double scale = (m_norm[1] - m_norm[0])/(m_orig[1] - m_orig[0]);
+                m_scale.add(scale);
+                m_trans.add(m_norm[0] - scale * m_orig[0]);
                 m_linNormCnt = 0;
             }
         }
@@ -250,14 +424,7 @@ public class PMMLPreprocNormalization extends PMMLPreprocOperation {
             m_configuration = new AffineTransConfiguration(
                     m_fields.toArray(new String[m_fields.size()]), s, t,
                     nanArray, nanArray, m_summary);
+            // TODO handle min, max extension for linear norm
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PMMLWriteElement getWriteElement() {
-        return PMMLWriteElement.LOCALTRANS;
     }
 }

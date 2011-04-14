@@ -100,6 +100,9 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     /** Constant for the MiningSchema tag. */
     public static final String MINING_SCHEMA = "MiningSchema";
 
+    /** Constant for the LocalTransformations tag. */
+    public static final String LOCAL_TRANS = "LocalTransformations";
+
     private final DataTableSpec m_dataTableSpec;
 
     private final List<String> m_learningFields;
@@ -118,6 +121,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             SUPPORTED_PMML_VERSIONS = new TreeSet<String>();
             SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V3_1);
             SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V3_2);
+            SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V4_0);
     };
 
     /**

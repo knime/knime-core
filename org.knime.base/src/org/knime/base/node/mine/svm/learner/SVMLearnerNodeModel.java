@@ -265,6 +265,10 @@ public class SVMLearnerNodeModel extends NodeModel {
                         .getStringValue()));
             }
         }
+        if (categories.isEmpty()) {
+            throw new Exception("No categories found to train SVM. "
+                    + "Possibly an empty input table was provided.");
+        }
         DoubleVector[] inputDataArr = new DoubleVector[inputData.size()];
         inputDataArr = inputData.toArray(inputDataArr);
         Kernel kernel = KernelFactory.getKernel(m_kernelType);

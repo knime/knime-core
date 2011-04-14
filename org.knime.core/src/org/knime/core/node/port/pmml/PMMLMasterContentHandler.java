@@ -220,6 +220,7 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         for (PMMLContentHandler handler : m_registeredHandlers.values()) {
             Set<String> v = handler.getSupportedVersions();
             versions.retainAll(v);

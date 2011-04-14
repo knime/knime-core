@@ -343,6 +343,11 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
                 "" + m_rules.size());
         handler.startElement(null, null, "AssociationModel", atts);
         PMMLPortObjectSpec.writeMiningSchema(spec, handler);
+
+        //adding an empty local transformations stub that can be filled later
+        handler.startElement(null, null, "LocalTransformations", null);
+        handler.endElement(null, null, "LocalTransformations");
+
         writeItems(handler);
         writeItemsets(handler);
         writeRules(handler);

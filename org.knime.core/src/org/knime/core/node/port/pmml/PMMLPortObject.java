@@ -91,13 +91,15 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation;
-import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation.PMMLWriteElement;
+import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation.PMMLTransformElement;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
@@ -120,6 +122,8 @@ public class PMMLPortObject implements PortObject {
     public static final String DATA_FIELD = "DataField";
     /** Constant for PMML Element. */
     public static final String PMML_ELEMENT = "PMML";
+    /** Constant for Extension element. */
+    public static final String EXTENSION_ELEMENT = "Extension";
 
     /** Constant for Value. */
     protected static final String VALUE = "Value";
@@ -202,7 +206,7 @@ public class PMMLPortObject implements PortObject {
      * {@link #addPMMLModel(Node)}.
      * @param spec the referring {@link PMMLPortObjectSpec}
      */
-    public PMMLPortObject(final PMMLPortObjectSpec spec) {
+    private PMMLPortObject(final PMMLPortObjectSpec spec) {
         m_spec = spec;
         initializePMMLDocument();
     }
@@ -242,13 +246,11 @@ public class PMMLPortObject implements PortObject {
     }
 
     /**
-     * The PMML version this port object will write. Sub-classes will overwrite
-     * this method and return their desired version. The default implementation
-     * returns {@link #PMML_V3_1}.
+     * The PMML version this port object will write.
      * @return the version string written by the save method.
      */
     protected String getWriteVersion() {
-        return PMML_V3_1;
+        return PMML_V4_0;
     }
 
     /**
@@ -266,11 +268,11 @@ public class PMMLPortObject implements PortObject {
     public final void save(final OutputStream out)
             throws TransformerFactoryConfigurationError, TransformerException,
             IOException {
-//        try {
-//            validate();
-//        } catch (SAXException e) {
-//            throw new IOException(e);
-//        }
+        try {
+            validate();
+        } catch (SAXException e) {
+            throw new IOException(e);
+        }
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -397,16 +399,15 @@ public class PMMLPortObject implements PortObject {
 
 
     /**
-     * Adds a local transformation element to the document fragment if some
-     * are defined.
+     * Adds a local transformation element to the document fragment.
      * @param localTrans the local transformation document fragment
+     * @param operations the operations to be added
      * @throws SAXException if something goes wrong during writing the PMML
      */
-    private void addLocalTransformations(final DocumentFragment localTrans)
+    private static void addLocalTransformations(
+            final DocumentFragment localTrans,
+            final List<PMMLPreprocOperation> operations)
             throws SAXException {
-        if (m_operations == null) {
-            return;
-        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SAXTransformerFactory fac =
                 (SAXTransformerFactory)TransformerFactory.newInstance();
@@ -423,8 +424,8 @@ public class PMMLPortObject implements PortObject {
         handler.startDocument();
 
         handler.startElement(null, null, LOCAL_TRANS, null);
-        for (PMMLPreprocOperation op : m_operations) {
-            if (op.getWriteElement() == PMMLWriteElement.LOCALTRANS) {
+        for (PMMLPreprocOperation op : operations) {
+            if (op.getTransformElement() == PMMLTransformElement.LOCALTRANS) {
                 op.save(handler, null);
             }
         }
@@ -458,6 +459,9 @@ public class PMMLPortObject implements PortObject {
         DocumentFragment fragment
                 = m_content.getDocument().createDocumentFragment();
         handler.addPMMLModel(fragment, m_spec);
+        Element pmmlNode = (Element)m_content.getDocument()
+            .getElementsByTagName(PMML_ELEMENT).item(0);
+        pmmlNode.setAttribute("version", handler.getPreferredWriteVersion());
         addPMMLModel(fragment);
     }
 
@@ -467,38 +471,30 @@ public class PMMLPortObject implements PortObject {
      * been retrieved by the {@link #getDocFragment()} method can be added.
      * Only {@link PMMLModelType} elements can be added.
      *
+     * So far only a single model per PMML document is allowed!
+     *
      * @param model the model fragment to add
      * @throws SAXException if the pmml model could not be added
      */
     private void addPMMLModel(final DocumentFragment model)
-            throws SAXException{
+            throws SAXException {
         String modelName = model.getFirstChild().getNodeName();
         if (!PMMLModelType.contains(modelName)) {
             throw new IllegalArgumentException(modelName + " cannot be added "
                     + "as pmml model. Only " + PMMLModelType.TYPESTRING
                     + " are supported.");
         }
-        Node pmmlNode = m_content.getDocument()
+
+        Element pmmlNode = (Element)m_content.getDocument()
                 .getElementsByTagName(PMML_ELEMENT).item(0);
-
-        // add the local transformations
-        DocumentFragment localTrans = m_content.getDocument()
-                .createDocumentFragment();
-        addLocalTransformations(localTrans);
-
-        /* Find the next sibling of the mining scheme and insert the local
-         * transformations in between. */
-        NodeList childNodes = model.getFirstChild().getChildNodes();
-        Node node = null;
-        for (int i = 0; i < childNodes.getLength(); i++) {
-            node = childNodes.item(i);
-            if (PMMLPortObjectSpec.MINING_SCHEMA.equalsIgnoreCase(
-                    node.getNodeName())) {
-                node = childNodes.item(i + 1);
-                break;
-            }
+        // test if there is already a pmml model
+        Node pmmlModel = pmmlNode.getLastChild();
+        String modelType = pmmlModel.getNodeName();
+        if (PMMLModelType.contains(modelType)) {
+            throw new IllegalStateException("Cannot add model content. Only "
+                    + "one model per PMML document is supported so far and "
+                    + "his document already contains one.");
         }
-        model.insertBefore(localTrans, node);
         pmmlNode.appendChild(model);
     }
 
@@ -521,19 +517,55 @@ public class PMMLPortObject implements PortObject {
 
 
     /**
-     * Note that this method can only be called once on each PMMLPortObject.
-     *
-     * @param operations the preprocessing operations to set
-     * @throws IllegalStateException if the operations have already been set
+     * @param operations the preprocessing operations to be added
+     * @throws SAXException if the preprocessing operations could not be added
      */
-    public void setOperations(final List<PMMLPreprocOperation> operations)
-            throws IllegalStateException {
-        if (m_operations != null) {
-            throw new IllegalStateException("Preprocessing operations are "
-                    + "already set. This can be done only once. Please combine "
-                    + "all operations before integrating them.");
+    public void addOperations(final List<PMMLPreprocOperation> operations)
+            throws SAXException {
+        // add the local transformations
+        Document doc = m_content.getDocument();
+        DocumentFragment localTrans = doc.createDocumentFragment();
+
+        if (m_operations == null) {
+            m_operations = new ArrayList<PMMLPreprocOperation>(operations);
+        } else {
+            m_operations.addAll(operations);
         }
-        m_operations = new ArrayList<PMMLPreprocOperation>(operations);
+        addLocalTransformations(localTrans, operations);
+
+        NodeList trans =  m_content.getDocument()
+                .getElementsByTagName(PMMLPortObjectSpec.LOCAL_TRANS);
+        Node transNode = null;
+        if (trans.getLength() == 1) {
+            /* Just append the operations if there is already a local
+             * transformation element. */
+            transNode = trans.item(0);
+
+            Node t = localTrans.getChildNodes().item(0);
+            NodeList transformations = t.getChildNodes();
+            /* Be aware that the appendChild method removes the appended child
+             * from the transformations list! */
+            while (transformations.getLength() > 0) {
+                Node item = transformations.item(0);
+                LOGGER.debug("Adding transformation " + item.getNodeName()
+                        + ".");
+                /* Insert everything extension elements at the beginning. */
+                if (item.getNodeName().equalsIgnoreCase(EXTENSION_ELEMENT)) {
+                    transNode.insertBefore(item, transNode.getFirstChild());
+                } else {
+                    transNode.appendChild(item);
+                }
+            }
+        } else if (trans.getLength() == 0) {
+            /* Create a new local transformations element. */
+            Node miningSchema = m_content.getDocument()
+                .getElementsByTagName(PMMLPortObjectSpec.MINING_SCHEMA).item(0);
+            miningSchema.getParentNode().insertBefore(
+                    localTrans, miningSchema.getNextSibling());
+        } else {
+            throw new SAXException("There must be at most on "
+                    + "LocalTransformations element.");
+        }
     }
 
     /**
@@ -545,7 +577,8 @@ public class PMMLPortObject implements PortObject {
         return m_content;
     }
 
-    private void validate() throws SAXException {
+    public void validate() throws SAXException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             String pmmlVersion = m_content.getPMMLVersion();
             LOGGER.debug("Validating PMML output. Version = " + pmmlVersion);
@@ -566,19 +599,61 @@ public class PMMLPortObject implements PortObject {
                 throw new SAXException("Version " + pmmlVersion
                         + " is not supported!");
             }
+
             InputStream stream = getSchemaInputStream(schemaLocation);
-            InputSource inputSource = new InputSource(
-                            stream);
-            SAXSource saxSource = new SAXSource(
-                    inputSource);
+            InputSource inputSource = new InputSource(stream);
+            SAXSource saxSource = new SAXSource(inputSource);
             schema = schemaFac.newSchema(saxSource);
             XFilter filter = new XFilter(pmmlVersion);
-            filter.setParent(fac.newSAXParser().getXMLReader());
+            SAXParser parser = fac.newSAXParser();
+            filter.setParent(parser.getXMLReader());
             // use validator here
             Validator validator = schema.newValidator();
             // register error handler
 //            validator.setErrorHandler(m_errorHandler);
-            validator.validate(new DOMSource(m_content.getDocument()));
+
+            SAXTransformerFactory tfac =
+                    (SAXTransformerFactory)TransformerFactory.newInstance();
+            tfac.setAttribute("indent-number", new Integer(2));
+            TransformerHandler handler;
+            try {
+                handler = tfac.newTransformerHandler();
+            } catch (TransformerConfigurationException e) {
+                throw new SAXException(e);
+            }
+            Transformer t = handler.getTransformer();
+            t.setOutputProperty(OutputKeys.METHOD, "xml");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            handler.setResult(new StreamResult(out));
+
+            DOMSource s = new DOMSource(m_content.getDocument());
+            try {
+                t.transform(s, new StreamResult(out));
+                out.close();
+            } catch (Exception e) {
+                throw new SAXException(e);
+            }
+
+            ByteArrayInputStream in = new ByteArrayInputStream(
+                    out.toByteArray());
+
+            try {
+                validator.validate(new SAXSource(filter, new InputSource(in)));
+            } catch (SAXParseException e) {
+                LOGGER.error("An error occurred while validating the PMML "
+                        + "document. Invalid content was found.", e);
+                LOGGER.debug("XML Document: \n"
+                        + new String(out.toByteArray()));
+                throw new SAXException(e);
+            }
+
+
+            LOGGER.info("Successfully validated the PMML document against "
+                    + "schema \"" + VERSION_NAMESPACE_MAP.get(pmmlVersion)
+                    + "\"");
+
+
+//            validator.validate(new DOMSource(m_content.getDocument()));
         } catch (IOException io) {
             throw new SAXException(io);
         } catch (ParserConfigurationException pce) {
@@ -647,4 +722,13 @@ public class PMMLPortObject implements PortObject {
             throw new SAXException(pce);
         }
     }
+
+
+    /**
+     * @return the set of supported PMML versions
+     */
+    public static Set<String> getSupportedPMMLVersions() {
+        return VERSION_SCHEMA_MAP.keySet();
+    }
+
 }

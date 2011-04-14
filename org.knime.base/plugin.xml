@@ -253,6 +253,12 @@
       </category>
       <category
             icon="icons/missing.gif"
+            level-id="pmml"
+            name="PMML"
+            path="/manipulation">
+      </category>
+      <category
+            icon="icons/missing.gif"
             level-id="pca"
             name="PCA"
             path="/mining">
@@ -458,6 +464,22 @@
             category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"
+            id="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"
+            id="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"
+            id="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"
+            id="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             category-path="/manipulation/row/row-filter"

@@ -372,6 +372,7 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
     }
 

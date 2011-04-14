@@ -60,7 +60,6 @@ import java.util.TreeSet;
 
 import javax.xml.transform.sax.TransformerHandler;
 
-
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
@@ -79,15 +78,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLRegressionContentHandler.class);
 
-    private Stack<PMMLContentHandler> m_contentHandlerStack =
+    private final Stack<PMMLContentHandler> m_contentHandlerStack =
         new Stack<PMMLContentHandler>();
     private RegressionTable m_regressionTable;
-    private PMMLPortObjectSpec m_spec;
+    private final PMMLPortObjectSpec m_spec;
     private String m_modelName;
     private String m_algorithmName;
     // TODO No longer needed?
     //private String m_writeVersion;
-
 
 
     /**
@@ -109,10 +107,10 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
      * @param po a PMML regression port object
      * @param writeVersion The PMML version to write
      */
-    public PMMLRegressionContentHandler(String modelName,
+    public PMMLRegressionContentHandler(final String modelName,
 //    		final String writeVersion,
-    		RegressionTable regressionTable,
-    		PMMLPortObjectSpec spec) {
+    		final RegressionTable regressionTable,
+    		final PMMLPortObjectSpec spec) {
         m_modelName = modelName;
 //        m_writeVersion = writeVersion;
         m_regressionTable = regressionTable;
@@ -232,8 +230,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         a.addAttribute("", "", "targetFieldName", "CDATA", getTargetField());
         handler.startElement("", "", "RegressionModel", a);
         PMMLPortObjectSpec.writeMiningSchema(m_spec, handler);
-        //TODO implement the local tranformations
-//        m_port.writeLocalTransformations(h);
+
+        //adding empty local transformations that can be filled later
+        handler.startElement(null, null, "LocalTransformations", null);
+        handler.endElement(null, null, "LocalTransformations");
+
         addRegressionTable(handler);
         handler.endElement("", "", "RegressionModel");
     }
@@ -335,9 +336,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 || "ModelVerification".equals(name)
                 || "Extension".equals(name)) {
             LOGGER.warn("Skipping unknown element " + name);
-        } else if ("LocalTransformations".equals(name)) {
-            throw new SAXException("LocalTransformation currently not "
-                    + "supported.");
         }
 
     }
@@ -391,6 +389,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             versions.add(PMMLPortObject.PMML_V3_1);
             versions.add(PMMLPortObject.PMML_V3_2);
             return versions;
+        }
+
+        @Override
+        protected String getPreferredWriteVersion() {
+            return PMMLPortObject.PMML_V3_2;
         }
     } // class PMMLMiningSchemaHandler
 
@@ -487,6 +490,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             versions.add(PMMLPortObject.PMML_V3_2);
             return versions;
         }
+
+        @Override
+        protected String getPreferredWriteVersion() {
+            return PMMLPortObject.PMML_V3_2;
+        }
     } // class PMMLRegressionTableContentHandler
 
     private static final class PMMLNumericPredictorContentHandler
@@ -574,6 +582,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             versions.add(PMMLPortObject.PMML_V3_2);
             return versions;
         }
+
+        @Override
+        protected String getPreferredWriteVersion() {
+            return PMMLPortObject.PMML_V3_2;
+        }
     } // class NumericPredictorContentHandler
 
 
@@ -602,7 +615,13 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_2);
         return versions;
     }
-    
+
+    @Override
+    protected String getPreferredWriteVersion() {
+        return PMMLPortObject.PMML_V3_2;
+    }
+
+
     /**
      * This class represents a single numeric predictor with its name (usually
      * the column name it is responsible for), the exponent and the coefficient.

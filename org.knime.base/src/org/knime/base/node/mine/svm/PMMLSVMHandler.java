@@ -333,6 +333,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
         versions.add(PMMLPortObject.PMML_V3_0);
         versions.add(PMMLPortObject.PMML_V3_1);
         versions.add(PMMLPortObject.PMML_V3_2);
+        versions.add(PMMLPortObject.PMML_V4_0);
         return versions;
     }
 
@@ -359,6 +360,11 @@ public class PMMLSVMHandler extends PMMLContentHandler {
         PMMLPortObjectSpec.writeMiningSchema(spec, handler);
         addTargets(handler, spec.getTargetFields().iterator().next(),
                 m_targetValues);
+
+        //adding empty local transformations that can be filled later
+        handler.startElement(null, null, "LocalTransformations", null);
+        handler.endElement(null, null, "LocalTransformations");
+
         addKernel(handler, m_kernel);
         addVectorDictionary(handler, m_svms, spec.getLearningFields());
         addSVMs(handler, m_svms);
