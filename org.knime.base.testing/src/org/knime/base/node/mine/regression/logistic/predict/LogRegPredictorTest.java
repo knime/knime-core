@@ -87,6 +87,7 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
@@ -156,7 +157,8 @@ public class LogRegPredictorTest {
                 new StringCell("3")});
         LogRegLearnerSettings settings = new LogRegLearnerSettings();
         settings.setIncludeAll(true);
-        settings.setTargetColumn(data.getTargetCol().getName());
+        String targetColumn = data.getTargetCol().getName();
+        settings.setTargetColumn(targetColumn);
         // Create Learner
         LogRegLearner learner = new LogRegLearner(data.getDataTableSpec(),
                 settings);
@@ -186,9 +188,13 @@ public class LogRegPredictorTest {
                     + "predictor.");
         }
         // Create predictor
+        DataTableSpec tableSpec = data.getDataTableSpec();
+        PMMLPortObjectSpecCreator specCreator
+            = new PMMLPortObjectSpecCreator(tableSpec);
+        specCreator.setTargetColName(targetColumn);
         LogRegPredictor predictor = new LogRegPredictor(
-                content.createPMMLPortObject().getSpec(),
-                data.getDataTableSpec(), true);
+                content.createGeneralRegressionContent(), tableSpec,
+                specCreator.createSpec(), targetColumn, true);
         for (DataRow row : data) {
             DataCell[] predicted = predictor.getCells(row);
             double[] trueProb = data.getProbability(row);
@@ -212,7 +218,7 @@ public class LogRegPredictorTest {
         private List<DataRow> m_data;
         private final List<DataColumnSpec> m_learningCols;
         private final DataColumnSpec m_targetCol;
-        private int m_count;
+     private int m_count;
         private Map<DataRow, double[]> m_probabilty;
 
         /**
