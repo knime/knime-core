@@ -4,7 +4,7 @@
 	<dependencies>
         <!-- needed so that the KNIME_Documentation_Builder application is available 
              for the knime.create.helpfiles action. -->
-        <dependency name="org.knime.workbench.helpview" componentType="osgi.bundle" />
+        <dependency name="org.knime.workbench.help" componentType="osgi.bundle" />
     </dependencies>
     <actions>
 		<!-- Dynamically build the files for the Eclipse help. -->
