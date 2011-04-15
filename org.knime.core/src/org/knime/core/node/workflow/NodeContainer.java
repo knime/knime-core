@@ -220,7 +220,9 @@ public abstract class NodeContainer implements NodeProgressListener {
         m_uiInformation = persistor.getUIInfo();
         m_isDeletable = persistor.isDeletable();
         setNodeMessage(persistor.getNodeMessage());
-        m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
+        if (!persistor.getLoadHelper().isTemplateFlow()) {
+            m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
+        }
     }
 
     /**
@@ -976,7 +978,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     /* ------------- ports --------------- */
-    
+
     public abstract int getNrInPorts();
 
     public abstract NodeInPort getInPort(final int index);

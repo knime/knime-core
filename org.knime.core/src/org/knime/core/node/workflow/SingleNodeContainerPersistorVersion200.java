@@ -64,6 +64,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
@@ -83,16 +84,23 @@ import org.knime.core.util.FileUtil;
 public class SingleNodeContainerPersistorVersion200 extends
         SingleNodeContainerPersistorVersion1xx {
 
+    private static final NodeLogger SAVE_LOGGER =
+        NodeLogger.getLogger(SingleNodeContainerPersistorVersion200.class);
+
     private static final String NODE_FILE = "node.xml";
 
-    /** Creates persistor for both load & save.
-     * @param workflowPersistor Parent persistor
-     * @param versionString The version string
+    /** Load persistor.
+     * @param workflowPersistor
+     * @param nodeSettingsFile
+     * @param versionString
      */
     public SingleNodeContainerPersistorVersion200(
-            final WorkflowPersistorVersion200 workflowPersistor,
+            final WorkflowPersistorVersion1xx workflowPersistor,
+            final ReferencedFile nodeSettingsFile,
+            final WorkflowLoadHelper loadHelper,
             final String versionString) {
-        super(workflowPersistor, versionString);
+        super(workflowPersistor, new NodeContainerMetaPersistorVersion200(
+                nodeSettingsFile, loadHelper), versionString);
         if (LoadVersion.get(versionString) == null) {
             throw new IllegalStateException("Unsupported version \""
                     + versionString + "\" in " + getClass().getName());
@@ -199,7 +207,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         return false;
     }
 
-    protected String save(final SingleNodeContainer snc,
+    protected static String save(final SingleNodeContainer snc,
             final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
             final boolean isSaveData) throws CanceledExecutionException,
             IOException {
@@ -227,7 +235,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         } else {
             debug = "Created node directory \"" + nodeDirRef + "\"";
         }
-        getLogger().debug(debug);
+        SAVE_LOGGER.debug(debug);
 
         // get drop directory in "home" (the designated working dir)
         ReferencedFile nodeDropDirInWDRef = sncWorkingDirRef == null ? null
@@ -238,8 +246,8 @@ public class SingleNodeContainerPersistorVersion200 extends
                 nodeDirRef, SingleNodeContainer.DROP_DIR_NAME);
 
         // if node container directory is set and we write into a new location
-        if (nodeDropDirInWDRef != null &&
-                !nodeDropDirRef.equals(nodeDropDirInWDRef)) {
+        if (nodeDropDirInWDRef != null
+                && !nodeDropDirRef.equals(nodeDropDirInWDRef)) {
 
             // this code is executed in either of the two cases:
             // - Node was copy&paste from node with drop folder
@@ -258,11 +266,9 @@ public class SingleNodeContainerPersistorVersion200 extends
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
-        NodeContainerMetaPersistorVersion200 metaPersistor =
-            createNodeContainerMetaPersistor(nodeDirRef);
-        metaPersistor.save(snc, settings);
-        NodePersistorVersion200 persistor = createNodePersistor();
-        persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData
+        NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
+        NodePersistorVersion200.save(snc.getNode(), nodeXMLFileRef, exec,
+                isSaveData
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
@@ -278,25 +284,25 @@ public class SingleNodeContainerPersistorVersion200 extends
         return SETTINGS_FILE_NAME;
     }
 
-    protected void saveNodeFactoryClassName(final NodeSettingsWO settings,
+    protected static void saveNodeFactoryClassName(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         String cl = nc.getNode().getFactory().getClass().getName();
         settings.addString(KEY_FACTORY_NAME, cl);
     }
 
-    protected ReferencedFile saveNodeFileName(final NodeSettingsWO settings,
+    protected static ReferencedFile saveNodeFileName(final NodeSettingsWO settings,
             final ReferencedFile nodeDirectoryRef) {
         String fileName = NODE_FILE;
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }
 
-    protected void saveSNCSettings(final NodeSettingsWO settings,
+    protected static void saveSNCSettings(final NodeSettingsWO settings,
             final SingleNodeContainer snc) {
         snc.saveSNCSettings(settings);
     }
 
-    protected void saveFlowObjectStack(final NodeSettingsWO settings,
+    protected static void saveFlowObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("flow_stack");
         FlowObjectStack stack = nc.getOutgoingFlowObjectStack();
@@ -323,18 +329,11 @@ public class SingleNodeContainerPersistorVersion200 extends
                     stackSet.addNodeSettings("Inactive_Loop_" + c);
                 sub.addString("type", "loopcontext_inactive");
             } else {
-                getLogger().error("Saving of flow objects of type \""
+                SAVE_LOGGER.error("Saving of flow objects of type \""
                         + s.getClass().getSimpleName() +  "\" not implemented");
             }
             c += 1;
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeContainerMetaPersistorVersion200
-            createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
-        return new NodeContainerMetaPersistorVersion200(baseDir);
     }
 
     /** Delete content of directory, skipping (direct) childs as given in
@@ -345,7 +344,7 @@ public class SingleNodeContainerPersistorVersion200 extends
      * @return false if directory does not exist, true if non-listed children
      *         are deleted
      */
-    private boolean deleteChildren(
+    private static boolean deleteChildren(
             final File directory, final String... exclude) {
         if (!directory.isDirectory()) {
             return false;

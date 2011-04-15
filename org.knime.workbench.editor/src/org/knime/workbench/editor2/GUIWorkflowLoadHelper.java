@@ -56,25 +56,30 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Credentials;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.node.workflow.WorkflowLoadHelper.DefaultWorkflowLoadHelper;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class GUIWorkflowLoadHelper implements WorkflowLoadHelper {
+final class GUIWorkflowLoadHelper extends DefaultWorkflowLoadHelper {
 
     private final Display m_display;
     private final String m_workflowName;
+    private final boolean m_isTemplateFlow;
 
     /**
      * @param display Display host.
      * @param workflowName Name of the workflow (dialog title)
+     * @param isTemplateFlow Whether flow is a
+     *        {@link #isTemplateFlow() template flow}.
      */
-    GUIWorkflowLoadHelper(final Display display, final String workflowName) {
+    GUIWorkflowLoadHelper(final Display display, final String workflowName,
+            final boolean isTemplateFlow) {
         m_display = display;
         m_workflowName = workflowName;
+        m_isTemplateFlow = isTemplateFlow;
     }
 
     /** {@inheritDoc} */
@@ -129,6 +134,12 @@ final class GUIWorkflowLoadHelper implements WorkflowLoadHelper {
             }
         });
         return result.get();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isTemplateFlow() {
+        return m_isTemplateFlow;
     }
 
 }

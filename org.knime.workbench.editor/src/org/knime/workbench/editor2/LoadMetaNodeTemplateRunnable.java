@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  *
  * History
- *   11.01.2007 (sieb): created
+ *   13.04.2011 (wiswedel): created
  */
 package org.knime.workbench.editor2;
 
@@ -60,7 +60,6 @@ import javax.swing.UIManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
@@ -87,12 +86,12 @@ import org.knime.workbench.KNIMEEditorPlugin;
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
-class LoadWorkflowRunnable extends PersistWorkflowRunnable {
+public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(LoadWorkflowRunnable.class);
+            .getLogger(LoadMetaNodeTemplateRunnable.class);
 
-    private WorkflowEditor m_editor;
+    private WorkflowManager m_parentWFM;
 
     private File m_workflowFile;
 
@@ -101,16 +100,17 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
     /** Message, which is non-null if the user canceled to the load. */
     private String m_loadingCanceledMessage;
 
+    private WorkflowLoadResult m_result;
+
     /**
      *
-     * @param editor the {@link WorkflowEditor} for which the workflow should
-     * be loaded
+     * @param wfm target workflow (where to insert)
      * @param workflowFile the workflow file from which the workflow should be
      * loaded (or created = empty workflow file)
      */
-    public LoadWorkflowRunnable(final WorkflowEditor editor,
+    public LoadMetaNodeTemplateRunnable(final WorkflowManager wfm,
             final File workflowFile) {
-        m_editor = editor;
+        m_parentWFM = wfm;
         m_workflowFile = workflowFile;
     }
 
@@ -130,19 +130,13 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
     @Override
     public void run(final IProgressMonitor pm) {
         CheckThread checkThread = null;
-        // indicates whether to create an empty workflow
-        // this is done if the file is empty
-        boolean createEmptyWorkflow = false;
-
-        // name of workflow will be null (uses directory name then)
-        String name = null;
 
         m_throwable = null;
 
         try {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
-                    "Loading workflow...");
+                    "Loading meta node template...");
             final DefaultNodeProgressMonitor progressMonitor
                 = new DefaultNodeProgressMonitor();
             progressMonitor.addProgressListener(progressHandler);
@@ -154,19 +148,14 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             File parentFile = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(
-                    d, parentFile.getName(), false);
-            final WorkflowLoadResult result =
-                WorkflowManager.loadProject(parentFile,
-                    new ExecutionMonitor(progressMonitor), loadHelper);
-            m_editor.setWorkflowManager(result.getWorkflowManager());
+                    d, parentFile.getName(), true);
+            m_result = m_parentWFM.load(parentFile,
+                    new ExecutionMonitor(progressMonitor), loadHelper, false);
             pm.subTask("Finished.");
             pm.done();
-            if (result.getWorkflowManager().isDirty()) {
-                m_editor.markDirty();
-            }
 
-            final IStatus status = createStatus(result,
-                    !result.getGUIMustReportDataLoadErrors());
+            final IStatus status = createStatus(m_result,
+                    !m_result.getGUIMustReportDataLoadErrors());
             final String message;
             switch (status.getSeverity()) {
             case IStatus.OK:
@@ -175,13 +164,13 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             case IStatus.WARNING:
                 message = "Warnings during load";
                 logPreseveLineBreaks("Warnings during load: "
-                        + result.getFilteredError(
+                        + m_result.getFilteredError(
                                 "", LoadResultEntryType.Warning), false);
                 break;
             default:
                 message = "Errors during load";
                 logPreseveLineBreaks("Errors during load: "
-                        + result.getFilteredError(
+                        + m_result.getFilteredError(
                                 "", LoadResultEntryType.Warning), true);
             }
             Display.getDefault().asyncExec(new Runnable() {
@@ -198,58 +187,29 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.fatal("File not found", fnfe);
         } catch (IOException ioe) {
             m_throwable = ioe;
-            if (m_workflowFile.length() == 0) {
-                LOGGER.info("New workflow created.");
-                // this is the only place to set this flag to true: we have an
-                // empty workflow file, i.e. a new project was created
-                // bugfix 1555: if an exception is thrown DO NOT create empty
-                // workflow
-                createEmptyWorkflow = true;
-            } else {
-                LOGGER.error("Could not load workflow from: "
+            LOGGER.error("Could not load meta node from: "
                         + m_workflowFile.getName(), ioe);
-            }
         } catch (InvalidSettingsException ise) {
-            LOGGER.error("Could not load workflow from: "
+            LOGGER.error("Could not load meta node from: "
                     + m_workflowFile.getName(), ise);
             m_throwable = ise;
         } catch (UnsupportedWorkflowVersionException uve) {
             m_loadingCanceledMessage =
-                "Canceled workflow load due to incompatible version";
+                "Canceled meta node load due to incompatible version";
             LOGGER.info(m_loadingCanceledMessage, uve);
-            m_editor.setWorkflowManager(null);
         } catch (CanceledExecutionException cee) {
             m_loadingCanceledMessage =
-                "Canceled loading workflow: " + m_workflowFile.getName();
+                "Canceled loading meta node: " + m_workflowFile.getName();
             LOGGER.info(m_loadingCanceledMessage, cee);
-            m_editor.setWorkflowManager(null);
         } catch (Throwable e) {
             m_throwable = e;
-            LOGGER.error("Workflow could not be loaded. " + e.getMessage(), e);
-            m_editor.setWorkflowManager(null);
+            LOGGER.error("Meta node could not be loaded. " + e.getMessage(), e);
         } finally {
             // terminate the check thread
             checkThread.finished();
-            // create empty WFM if a new workflow is created
-            // (empty workflow file)
-            if (createEmptyWorkflow) {
-                m_editor.setWorkflowManager(WorkflowManager.ROOT
-                        .createAndAddProject(name));
-                // save empty project immediately
-                // bugfix 1341 -> see WorkflowEditor line 1294
-                // (resource delta visitor movedTo)
-                Display.getDefault().syncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_editor.doSave(new NullProgressMonitor());
-                    }
-                });
-                m_editor.setIsDirty(false);
-
-            }
             // IMPORTANT: Remove the reference to the file and the
             // editor!!! Otherwise the memory can not be freed later
-            m_editor = null;
+            m_parentWFM = null;
             m_workflowFile = null;
         }
     }
@@ -263,6 +223,18 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
      * {@link #hasLoadingBeenCanceled()}. */
     public String getLoadingCanceledMessage() {
         return m_loadingCanceledMessage;
+    }
+
+    /** @return the result */
+    public WorkflowLoadResult getWorkflowLoadResult() {
+        return m_result;
+    }
+
+    /** Set fields to null so that they can get GC'ed. */
+    public void discard() {
+        m_result = null;
+        m_workflowFile = null;
+        m_parentWFM = null;
     }
 
     /** Logs the argument error to LOGGER, preserving line breaks.

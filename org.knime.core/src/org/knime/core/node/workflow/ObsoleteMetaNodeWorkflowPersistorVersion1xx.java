@@ -106,24 +106,26 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
     public ObsoleteMetaNodeWorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> globalRep,
+            final ReferencedFile workflowKNIMEFile,
+            final WorkflowLoadHelper loadHelper,
             final String versionString) {
-        super(globalRep, versionString);
+        super(globalRep, workflowKNIMEFile, loadHelper, versionString);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult result,
-            final WorkflowLoadHelper loadHelper)
+    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
+            final LoadResult result)
     throws IOException, InvalidSettingsException {
-        File setFile = nodeFileRef.getFile();
+        ReferencedFile workflowKNIMEFile = super.getWorkflowKNIMEFile();
+        File setFile = workflowKNIMEFile.getFile();
         if (!setFile.getName().equals("settings.xml")) {
             String warn = "Settings file of obsolete meta node is not "
                     + "named settings.xml: " + setFile.getName();
             getLogger().warn(warn);
             result.addError(warn);
         }
-        ReferencedFile parent = nodeFileRef.getParent();
+        ReferencedFile parent = workflowKNIMEFile.getParent();
         if (parent == null) {
             throw new IOException("Parent directory not represented by class "
                     + ReferencedFile.class);
@@ -150,8 +152,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         NodeSettingsRO modelSet = settings.getNodeSettings("model");
         m_dataInNodeIDs = modelSet.getIntArray("dataInContainerIDs");
         m_dataOutNodeIDs = modelSet.getIntArray("dataOutContainerIDs");
-        super.preLoadNodeContainer(
-                workflowKnimeRef, parentSettings, result, loadHelper);
+        super.preLoadNodeContainer(parentSettings, result);
         String name = "Looper";
         switch (m_metaNodeType) {
         case CROSSVALIDATION:
@@ -163,6 +164,15 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             setNeedsResetAfterLoad();
         default:
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected ReferencedFile getWorkflowKNIMEFile() {
+        // config file as passed from parent wfm is "settings.xml"
+        ReferencedFile settingsXML = super.getWorkflowKNIMEFile();
+        return new ReferencedFile(settingsXML.getParent(),
+                WorkflowPersistor.WORKFLOW_FILE);
     }
 
     /** {@inheritDoc} */
@@ -184,9 +194,9 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     /** {@inheritDoc} */
     @Override
     protected SingleNodeContainerPersistorVersion1xx
-            createSingleNodeContainerPersistor() {
+        createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                this, getVersionString());
+                this, nodeFile, getLoadHelper(), getVersionString());
     }
 
     /** {@inheritDoc} */
@@ -210,7 +220,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     /** {@inheritDoc} */
     @Override
     protected NodeSettingsRO readParentSettings() throws IOException {
-        File f = getWorkflowDir().getFile();
+        File f = getWorkflowKNIMEFile().getParent().getFile();
         File oldSettingsFile = new File(f, "settings.xml");
         if (!oldSettingsFile.isFile()) {
             throw new IOException("No such settings file: "
@@ -400,8 +410,11 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
          */
         public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
                 final WorkflowPersistorVersion1xx workflowPersistor,
+                final ReferencedFile nodeSettingsFile,
+                final WorkflowLoadHelper loadHelper,
                 final String versionString) {
-            super(workflowPersistor, versionString);
+            super(workflowPersistor, nodeSettingsFile,
+                    loadHelper, versionString);
         }
 
         /** {@inheritDoc} */

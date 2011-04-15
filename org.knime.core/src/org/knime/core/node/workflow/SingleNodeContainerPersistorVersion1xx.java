@@ -70,10 +70,10 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -92,25 +92,47 @@ public class SingleNodeContainerPersistorVersion1xx
 
     private Node m_node;
 
-    private NodeContainerMetaPersistorVersion1xx m_metaPersistor;
+    /** Meta persistor, only set when used to load a workflow. */
+    private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
+    /** WFM persistor, only set when used to load a workflow. */
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
 
     private NodeSettingsRO m_nodeSettings;
     private SingleNodeContainerSettings m_sncSettings;
-    private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
     private List<FlowObject> m_flowObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
 
+    /** Load persistor. */
     SingleNodeContainerPersistorVersion1xx(
             final WorkflowPersistorVersion1xx workflowPersistor,
+            final ReferencedFile nodeSettingsFile,
+            final WorkflowLoadHelper loadHelper,
             final String versionString) {
-        if (workflowPersistor == null || versionString == null) {
+        this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(
+                nodeSettingsFile, loadHelper), versionString);
+        if (workflowPersistor == null) {
             throw new NullPointerException();
         }
-        m_wfmPersistor = workflowPersistor;
+    }
+
+    /** Constructor used internally, not used outside this class or its
+     * derivates.
+     * @param versionString
+     * @param metaPersistor
+     * @param wfmPersistor
+     */
+    SingleNodeContainerPersistorVersion1xx(
+            final WorkflowPersistorVersion1xx wfmPersistor,
+            final NodeContainerMetaPersistorVersion1xx metaPersistor,
+            final String versionString) {
+        if (versionString == null) {
+            throw new NullPointerException();
+        }
         m_versionString = versionString;
+        m_metaPersistor = metaPersistor;
+        m_wfmPersistor = wfmPersistor;
     }
 
     protected final String getVersionString() {
@@ -149,11 +171,13 @@ public class SingleNodeContainerPersistorVersion1xx
         m_isDirtyAfterLoad = true;
     }
 
-    public NodeContainerMetaPersistor getMetaPersistor() {
+    @Override
+    public NodeContainerMetaPersistorVersion1xx getMetaPersistor() {
         return m_metaPersistor;
     }
 
     /** {@inheritDoc} */
+    @Override
     public Node getNode() {
         return m_node;
     }
@@ -165,11 +189,13 @@ public class SingleNodeContainerPersistorVersion1xx
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<FlowObject> getFlowObjects() {
         return m_flowObjects;
     }
 
     /** {@inheritDoc} */
+    @Override
     public SingleNodeContainer getNodeContainer(
             final WorkflowManager wm, final NodeID id) {
         return new SingleNodeContainer(wm, id, this);
@@ -181,10 +207,11 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final ReferencedFile settingsFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult result,
-            final WorkflowLoadHelper loadHelper)
+    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
+            final LoadResult result)
     throws InvalidSettingsException, IOException {
+        NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
+        final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
         File settingsFile = settingsFileRef.getFile();
         String error;
         if (!settingsFile.isFile()) {
@@ -225,17 +252,13 @@ public class SingleNodeContainerPersistorVersion1xx
             throw new InvalidSettingsException(error, e);
         }
         m_node = new Node(nodeFactory);
-        m_metaPersistor = createNodeContainerMetaPersistor(
-                settingsFileRef.getParent());
-        boolean resetRequired = m_metaPersistor.load(
-                settings, parentSettings, result);
+        boolean resetRequired = meta.load(settings, parentSettings, result);
         m_nodeSettings = settings;
-        m_nodeDir = settingsFileRef.getParent();
         if (resetRequired) {
             setNeedsResetAfterLoad();
             setDirtyAfterLoad();
         }
-        if (m_metaPersistor.isDirtyAfterLoad()) {
+        if (meta.isDirtyAfterLoad()) {
             setDirtyAfterLoad();
         }
     }
@@ -258,7 +281,8 @@ public class SingleNodeContainerPersistorVersion1xx
             setDirtyAfterLoad();
             return;
         }
-        ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
+        ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
+        ReferencedFile nodeFile = new ReferencedFile(nodeDir, nodeFileName);
         m_settingsFailPolicy =
             translateToFailPolicy(m_metaPersistor.getState());
         NodePersistorVersion1xx nodePersistor = createNodePersistor();
@@ -301,11 +325,6 @@ public class SingleNodeContainerPersistorVersion1xx
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
-    }
-
-    protected NodeContainerMetaPersistorVersion1xx
-        createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
-        return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
 
     /** Load factory name.

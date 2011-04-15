@@ -84,6 +84,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.WorkflowLoadHelper.DefaultWorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.EncryptionKeySupplier;
@@ -134,8 +135,8 @@ public final class BatchExecutor {
      *
      * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
      */
-    private static final class BatchExecWorkflowLoadHelper implements
-            WorkflowLoadHelper {
+    private static final class BatchExecWorkflowLoadHelper extends
+            DefaultWorkflowLoadHelper {
         /**  */
         private final Map<String, Credentials> m_credentialMap;
 
@@ -187,11 +188,6 @@ public final class BatchExecutor {
             return newCredentials;
         }
 
-        @Override
-        public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                final String workflowVersionString) {
-            return UnknownKNIMEVersionLoadPolicy.Abort;
-        }
     }
 
     private BatchExecutor() { /**/
@@ -664,7 +660,7 @@ public final class BatchExecutor {
 
             @Override
             @SuppressWarnings("rawtypes")
-            public Map getMapping(String scope) {
+            public Map getMapping(final String scope) {
                 return null; // this filter is applicable for all nodes
             }
         };

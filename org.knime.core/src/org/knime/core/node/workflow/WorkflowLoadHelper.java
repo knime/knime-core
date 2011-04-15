@@ -89,6 +89,13 @@ public interface WorkflowLoadHelper {
     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
             final String workflowVersionString);
 
+    /** Returns true if the workflow is a template flow, i.e. it will be
+     * disconnected from the location where it is loaded from and data will
+     * not be imported.
+     * @return If flow is a template flow.
+     */
+    public boolean isTemplateFlow();
+
     /** Default implementation of a load helper.
      * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
      */
@@ -106,6 +113,12 @@ public interface WorkflowLoadHelper {
         public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                 final String workflowVersionString) {
             return UnknownKNIMEVersionLoadPolicy.Abort;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean isTemplateFlow() {
+            return false;
         }
 
     }

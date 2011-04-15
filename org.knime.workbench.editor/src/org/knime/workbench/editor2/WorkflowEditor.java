@@ -236,10 +236,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private final WorkflowSelectionTool m_selectionTool;
 
-    private boolean m_loadingCanceled;
-
-    private String m_loadingCanceledMessage;
-
     /** Indicates if this editor has been closed. */
     private boolean m_closed;
 
@@ -266,7 +262,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
 
-        m_loadingCanceled = false;
     }
 
     /**
@@ -447,7 +442,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
-        
+
         // register the actions
         m_actionRegistry.registerAction(undo);
         m_actionRegistry.registerAction(redo);
@@ -501,7 +496,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(annotation.getId());
-        
+
 
     }
 
@@ -586,8 +581,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new WorkflowGraphicalViewerCreator(editorSite,
                         this.getActionRegistry()).createViewer(parent);
 
-        viewer.addDropTargetListener(new MetaNodeTemplateDropTargetListener(
-                this, viewer));
         // Add a listener to the static node provider
         NodeProvider.INSTANCE.addListener(this);
 
@@ -721,32 +714,27 @@ public class WorkflowEditor extends GraphicalEditor implements
                     ps.busyCursorWhile(loadWorflowRunnable);
                     // check if the editor should be disposed
                     if (m_manager == null) {
-                        if (m_loadingCanceled) {
+                        if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
+                            final String cancelError =
+                                loadWorflowRunnable.getLoadingCanceledMessage();
                             Display.getDefault().asyncExec(new Runnable() {
                                 @Override
                                 public void run() {
                                     getEditorSite().getPage().closeEditor(
                                             WorkflowEditor.this, false);
-                                    if (m_loadingCanceledMessage != null) {
-                                        MessageBox mb =
-                                                new MessageBox(Display
-                                                        .getDefault()
-                                                        .getActiveShell(),
-                                                        SWT.ICON_INFORMATION
-                                                                | SWT.OK);
-                                        mb.setText("Editor could not be opened");
-                                        mb.setMessage(m_loadingCanceledMessage);
-                                        mb.open();
-                                    }
+                                    MessageBox mb =
+                                        new MessageBox(Display
+                                                .getDefault()
+                                                .getActiveShell(),
+                                                SWT.ICON_INFORMATION
+                                                | SWT.OK);
+                                    mb.setText("Editor could not be opened");
+                                    mb.setMessage(cancelError);
+                                    mb.open();
                                 }
 
                             });
-                            if (m_loadingCanceledMessage != null) {
-                                throw new OperationCanceledException(
-                                        m_loadingCanceledMessage);
-                            } else {
-                                throw new OperationCanceledException();
-                            }
+                            throw new OperationCanceledException(cancelError);
                         } else if (loadWorflowRunnable.getThrowable() != null) {
                             throw new RuntimeException(
                                     loadWorflowRunnable.getThrowable());
@@ -1654,29 +1642,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         // adapt the location accordint to the zoom level
         pointToAdapt.preciseX = (pointToAdapt.x * (1.0 / zoomLevel));
         pointToAdapt.preciseY = (pointToAdapt.y * (1.0 / zoomLevel));
-    }
-
-    /**
-     * Set if the workflow loading process was canceled. Should only be invoked
-     * during workflow loading.
-     *
-     * @param canceled canceled or not
-     * @see LoadWorkflowRunnable
-     */
-    void setLoadingCanceled(final boolean canceled) {
-        m_loadingCanceled = canceled;
-    }
-
-    /**
-     * Set if the workflow loading process was canceled and a message. Should
-     * only be invoked during workflow loading.
-     *
-     * @param message the reason for the cancelation
-     * @see LoadWorkflowRunnable
-     */
-    void setLoadingCanceledMessage(final String message) {
-        m_loadingCanceled = true;
-        m_loadingCanceledMessage = message;
     }
 
     /**

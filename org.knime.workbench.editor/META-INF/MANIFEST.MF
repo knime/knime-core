@@ -21,6 +21,7 @@ Export-Package: org.knime.workbench,
  org.knime.workbench.editor2.model
 Require-Bundle: org.eclipse.core.resources,
  org.eclipse.core.runtime,
+ org.eclipse.core.filesystem,
  org.eclipse.draw2d,
  org.eclipse.gef,
  org.eclipse.jface,

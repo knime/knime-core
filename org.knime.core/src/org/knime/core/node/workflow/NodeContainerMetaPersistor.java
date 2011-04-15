@@ -63,12 +63,15 @@ interface NodeContainerMetaPersistor {
     /** Key for this node's user name. */
     static final String KEY_CUSTOM_NAME = "customName";
 
+    /** @return the load helper as set during load (not part of the workflow
+     * being loaded but a setting during load). */
+    WorkflowLoadHelper getLoadHelper();
 
     /** File reference to the node container directory. Something like
      * &lt;workflow_space>/File Reader (#xy). This value is non-null when
      * (i) loading from disk or (ii) if pasted into a workflow as part of
      * an undo of a delete command. It's null if node is copied&pasted. If
-     * the value is non-null the referenced file will remove from the list
+     * the value is non-null the referenced file will be removed from the list
      * of obsolete node directories (must not clear directories as they may
      * contain a "drop" folder).
      * @return The node container dir or null

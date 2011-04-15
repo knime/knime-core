@@ -55,7 +55,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
@@ -181,9 +180,8 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult,
-            final WorkflowLoadHelper loadHelper) {
+    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
+            final LoadResult loadResult) {
     }
 
 }

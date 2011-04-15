@@ -84,7 +84,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  *
  * @author wiswedel, University of Konstanz
  */
-class WorkflowPersistorVersion1xx implements WorkflowPersistor {
+public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** The node logger for this class. */
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
@@ -100,9 +100,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_nodeContainerLoaderMap;
 
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
-
-    private NodeContainerMetaPersistor m_metaPersistor;
-
+    private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
     private WorkflowPortTemplate[] m_inPortTemplates;
@@ -120,7 +118,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private boolean m_mustWarnOnDataLoadError;
 
     private NodeSettingsRO m_workflowSett;
-    private ReferencedFile m_workflowDir;
     private List<ReferencedFile> m_obsoleteNodeDirectories;
 
     static boolean canReadVersion(final String versionString) {
@@ -130,10 +127,30 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return result;
     }
 
-    WorkflowPersistorVersion1xx(final HashMap<Integer, ContainerTable> tableRep,
+    /** Create persistor for load.
+     * @param tableRep Table map
+     * @param workflowKNIMEFile Associated workflow.knime file
+     * @param loadHelper The load helper as required by meta persistor.
+     * @param versionString Version string of loading workflow.
+     */
+    WorkflowPersistorVersion1xx(
+            final HashMap<Integer, ContainerTable> tableRep,
+            final ReferencedFile workflowKNIMEFile,
+            final WorkflowLoadHelper loadHelper,
+            final String versionString) {
+        this(tableRep, new NodeContainerMetaPersistorVersion1xx(
+                workflowKNIMEFile, loadHelper), versionString);
+    }
+
+    /** Internal constructor, not to be called outside this class or its
+     * derivates. */
+    WorkflowPersistorVersion1xx(
+            final HashMap<Integer, ContainerTable> tableRep,
+            final NodeContainerMetaPersistorVersion1xx metaPersistor,
             final String versionString) {
         m_globalTableRepository = tableRep;
         m_versionString = versionString;
+        m_metaPersistor = metaPersistor;
         m_nodeContainerLoaderMap =
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
@@ -159,11 +176,23 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         // returns non-null version (asserted in constructor)
         return LoadVersion.get(getVersionString());
     }
+
+    /** @return The load helper as set on the meta persistor. Will be passed on
+     * to loaders of contained nodes. */
+    WorkflowLoadHelper getLoadHelper() {
+        return getMetaPersistor().getLoadHelper();
+    }
+
     /**
      * @return the workflowDir
      */
-    protected ReferencedFile getWorkflowDir() {
-        return m_workflowDir;
+    protected ReferencedFile getWorkflowKNIMEFile() {
+        NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
+        if (meta == null) {
+            throw new RuntimeException("Persistor not created for loading "
+                    + "workflow, meta persistor is null");
+        }
+        return meta.getNodeSettingsFile();
     }
 
     /** {@inheritDoc} */
@@ -186,7 +215,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public NodeContainerMetaPersistor getMetaPersistor() {
+    public NodeContainerMetaPersistorVersion1xx getMetaPersistor() {
         return m_metaPersistor;
     }
 
@@ -289,26 +318,25 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult,
-            final WorkflowLoadHelper loadHelper)
+    public void preLoadNodeContainer(
+            final NodeSettingsRO parentSettings, final LoadResult loadResult)
     throws InvalidSettingsException, IOException {
-        if (nodeFileRef == null || !nodeFileRef.getFile().isFile()) {
+        final ReferencedFile knimeFile = getWorkflowKNIMEFile();
+        if (knimeFile == null || !knimeFile.getFile().isFile()) {
             setDirtyAfterLoad();
-            String error = "Can't read workflow file \"" + nodeFileRef + "\"";
+            String error = "Can't read workflow file \"" + knimeFile + "\"";
             throw new IOException(error);
         }
-        File nodeFile = nodeFileRef.getFile();
-        ReferencedFile parentRef = nodeFileRef.getParent();
+        File nodeFile = knimeFile.getFile();
+        ReferencedFile parentRef = knimeFile.getParent();
         if (parentRef == null) {
             setDirtyAfterLoad();
-            throw new IOException("Parent directory of file \"" + nodeFileRef
+            throw new IOException("Parent directory of file \"" + knimeFile
                     + "\" is not represented by "
                     + ReferencedFile.class.getSimpleName() + " object");
         }
         m_mustWarnOnDataLoadError =
             loadIfMustWarnOnDataLoadError(parentRef.getFile());
-        m_metaPersistor = createNodeContainerMetaPersistor(parentRef);
         NodeSettingsRO subWFSettings;
         try {
             InputStream in = new BufferedInputStream(
@@ -319,7 +347,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             throw ioe;
         }
         m_workflowSett = subWFSettings;
-        m_workflowDir = parentRef;
 
         try {
             m_name = loadWorkflowName(m_workflowSett);
@@ -346,7 +373,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             m_credentials = loadCredentials(m_workflowSett);
             // request to initialize credentials - if available
             if (m_credentials != null && !m_credentials.isEmpty()) {
-                m_credentials = loadHelper.loadCredentials(m_credentials);
+                m_credentials = getLoadHelper().loadCredentials(m_credentials);
             }
         } catch (InvalidSettingsException e) {
             String error =
@@ -501,7 +528,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult loadResult)
             throws CanceledExecutionException, IOException {
-        if (m_workflowDir == null || m_workflowSett == null) {
+        ReferencedFile workflowKNIMEFile = getWorkflowKNIMEFile();
+        if (workflowKNIMEFile == null || m_workflowSett == null) {
             setDirtyAfterLoad();
             throw new IllegalStateException("The method preLoadNodeContainer "
                     + "has either not been called or failed");
@@ -521,6 +549,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             return;
         }
         exec.setMessage("node information");
+        final ReferencedFile workflowDirRef = workflowKNIMEFile.getParent();
         /* Load nodes */
         for (String nodeKey : nodes.keySet()) {
             NodeSettingsRO nodeSetting;
@@ -561,12 +590,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 loadResult.addError(error);
                 isMeta = false;
             }
-            NodeContainerPersistor persistor;
-            if (isMeta) {
-                persistor = createWorkflowPersistor();
-            } else {
-                persistor = createSingleNodeContainerPersistor();
-            }
             UIInformation uiInfo = null;
             String uiInfoClassName;
             try {
@@ -599,7 +622,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
             ReferencedFile nodeFile;
             try {
-                nodeFile = loadNodeFile(nodeSetting, m_workflowDir);
+                nodeFile = loadNodeFile(nodeSetting, workflowDirRef);
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load settings for node "
                     + "with ID suffix " + nodeIDSuffix + ": " + e.getMessage();
@@ -608,11 +631,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 loadResult.addError(error);
                 continue;
             }
+            NodeContainerPersistor persistor;
+            if (isMeta) {
+                persistor = createWorkflowPersistorLoad(nodeFile);
+            } else {
+                persistor = createSingleNodeContainerPersistorLoad(nodeFile);
+            }
             try {
                 LoadResult childResult = new LoadResult((isMeta ? "meta " : "")
                         + "node with ID suffix " + nodeIDSuffix);
-                persistor.preLoadNodeContainer(
-                        nodeFile, nodeSetting, childResult, null);
+                persistor.preLoadNodeContainer(nodeSetting, childResult);
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error = "Unable to load node with ID suffix "
@@ -1159,20 +1187,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return true;
     }
 
-    protected NodeContainerMetaPersistorVersion1xx
-            createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
-        return new NodeContainerMetaPersistorVersion1xx(baseDir);
-    }
-
     protected SingleNodeContainerPersistorVersion1xx
-            createSingleNodeContainerPersistor() {
+    createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new SingleNodeContainerPersistorVersion1xx(
-                this, getVersionString());
+                this, nodeFile, getLoadHelper(), getVersionString());
     }
 
-    protected WorkflowPersistorVersion1xx createWorkflowPersistor() {
+    protected WorkflowPersistorVersion1xx createWorkflowPersistorLoad(
+            final ReferencedFile wfmFile) {
         return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(
-                getGlobalTableRepository(), getVersionString());
+                getGlobalTableRepository(), wfmFile, getLoadHelper(),
+                getVersionString());
     }
 
     private int getRandomNodeID() {

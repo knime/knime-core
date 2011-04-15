@@ -66,6 +66,8 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
+    private final WorkflowLoadHelper m_loadHelper;
+
     private String m_customDescription;
 
     private String m_customName;
@@ -86,13 +88,15 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private boolean m_isDirtyAfterLoad;
 
-    private final ReferencedFile m_nodeContainerDirectory;
+    private final ReferencedFile m_nodeSettingsFile;
 
-    /** @param baseDir The node container directory
+    /** @param settingsFile The settings file associated with this node.
+     * @param loadHelper The load helper to query for additonal information.
      */
-    NodeContainerMetaPersistorVersion1xx(final ReferencedFile baseDir) {
-        assert baseDir != null : "Directory must not be null";
-        m_nodeContainerDirectory = baseDir;
+    NodeContainerMetaPersistorVersion1xx(final ReferencedFile settingsFile,
+            final WorkflowLoadHelper loadHelper) {
+        m_nodeSettingsFile = settingsFile;
+        m_loadHelper = loadHelper;
     }
 
     protected NodeLogger getLogger() {
@@ -100,31 +104,43 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
     /** {@inheritDoc} */
+    @Override
+    public WorkflowLoadHelper getLoadHelper() {
+        return m_loadHelper;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getCustomDescription() {
         return m_customDescription;
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getCustomName() {
         return m_customName;
     }
 
     /** {@inheritDoc} */
+    @Override
     public UIInformation getUIInfo() {
         return m_uiInfo;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setUIInfo(final UIInformation uiInfo) {
         m_uiInfo = uiInfo;
     }
 
     /** {@inheritDoc} */
+    @Override
     public int getNodeIDSuffix() {
         return m_nodeIDSuffix;
     }
 
     /** {@inheritDoc} */
+    @Override
     public void setNodeIDSuffix(final int nodeIDSuffix) {
         m_nodeIDSuffix = nodeIDSuffix;
     }
@@ -142,6 +158,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
     /** {@inheritDoc} */
+    @Override
     public State getState() {
         return m_state;
     }
@@ -172,7 +189,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     /** {@inheritDoc} */
     @Override
     public ReferencedFile getNodeContainerDirectory() {
-        return m_nodeContainerDirectory;
+        return m_nodeSettingsFile.getParent();
+    }
+
+    ReferencedFile getNodeSettingsFile() {
+        return m_nodeSettingsFile;
     }
 
    /** {@inheritDoc} */
@@ -229,7 +250,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             if (!hasJobManagerLoadFailed) {
                 ReferencedFile jobManagerInternalsDirectory =
                     loadJobManagerInternalsDirectory(
-                            m_nodeContainerDirectory, settings);
+                            getNodeContainerDirectory(), settings);
                 if (jobManagerInternalsDirectory != null) {
                     m_jobManager.loadInternals(jobManagerInternalsDirectory);
                 }

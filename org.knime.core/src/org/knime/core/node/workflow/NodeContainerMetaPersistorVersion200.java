@@ -55,6 +55,7 @@ import java.io.IOException;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -75,10 +76,16 @@ class NodeContainerMetaPersistorVersion200 extends
     private static final String CFG_JOB_MANAGER_DIR = "job.manager.dir";
     private static final String CFG_JOB_CONFIG = "execution.job";
 
-    /** @param baseDir The node container directory (only important while load)
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(NodeContainerMetaPersistorVersion200.class);
+
+    /** Create load persistor.
+     * @param settingsFile The node file (only important while load)
+     * @param loadHelper As required by super constructor.
      */
-    NodeContainerMetaPersistorVersion200(final ReferencedFile baseDir) {
-        super(baseDir);
+    NodeContainerMetaPersistorVersion200(final ReferencedFile settingsFile,
+            final WorkflowLoadHelper loadHelper) {
+        super(settingsFile, loadHelper);
     }
 
     /** {@inheritDoc} */
@@ -187,7 +194,8 @@ class NodeContainerMetaPersistorVersion200 extends
         return null;
     }
 
-    public void save(final NodeContainer nc, final NodeSettingsWO settings)
+    public static void save(final NodeSettingsWO settings,
+            final NodeContainer nc, final ReferencedFile targetDir)
         throws IOException {
         synchronized (nc.m_nodeMutex) {
             saveCustomName(settings, nc);
@@ -197,14 +205,14 @@ class NodeContainerMetaPersistorVersion200 extends
             if (mustAlsoSaveExecutorSettings) {
                 saveNodeExecutionJob(settings, nc);
             }
-            saveJobManagerInternalsDirectory(settings, nc);
+            saveJobManagerInternalsDirectory(settings, nc, targetDir);
             saveNodeMessage(settings, nc);
             saveIsDeletable(settings, nc);
         }
     }
 
-    protected void saveNodeExecutionJobManager(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static void saveNodeExecutionJobManager(
+            final NodeSettingsWO settings, final NodeContainer nc) {
         NodeExecutionJobManager jobManager = nc.getJobManager();
         if (jobManager != null) {
             NodeSettingsWO s = settings.addNodeSettings(CFG_JOB_MANAGER_CONFIG);
@@ -212,7 +220,7 @@ class NodeContainerMetaPersistorVersion200 extends
         }
     }
 
-    protected void saveNodeExecutionJob(
+    protected static void saveNodeExecutionJob(
             final NodeSettingsWO settings, final NodeContainer nc) {
         assert nc.findJobManager().canDisconnect(nc.getExecutionJob())
         : "Execution job can be saved/disconnected";
@@ -220,49 +228,41 @@ class NodeContainerMetaPersistorVersion200 extends
                 settings.addNodeSettings(CFG_JOB_CONFIG));
     }
 
-    protected void saveJobManagerInternalsDirectory(
-            final NodeSettingsWO settings, final NodeContainer nc) {
+    protected static void saveJobManagerInternalsDirectory(
+            final NodeSettingsWO settings, final NodeContainer nc,
+            final ReferencedFile targetDir) {
         NodeExecutionJobManager jobManager = nc.getJobManager();
         if (jobManager != null && jobManager.canSaveInternals()) {
             String dirName = "job_manager_internals";
-            ReferencedFile parentRefFile = getNodeContainerDirectory();
-            if (parentRefFile == null) {
-                // added this later, make it bullet proof
-                // this if-statement can be deleted if there are no reports
-                // until, let's say, end of 2009
-                getLogger().coding("Node directory must not be null "
-                        + "at this time");
-                return;
-            }
-            File dir = new File(getNodeContainerDirectory().getFile(), dirName);
+            File dir = new File(targetDir.getFile(), dirName);
             if (dir.exists()) {
-                getLogger().warn("Directory \"" + dir.getAbsolutePath() + "\""
+                LOGGER.warn("Directory \"" + dir.getAbsolutePath() + "\""
                         + " already exists; deleting it");
                 FileUtil.deleteRecursively(dir);
             }
             if (!dir.mkdirs()) {
-                getLogger().error("Unable to create directory \""
+                LOGGER.error("Unable to create directory \""
                         + dir.getAbsolutePath() + "\"");
                 return;
             }
             try {
                 jobManager.saveInternals(
-                        new ReferencedFile(parentRefFile, dirName));
+                        new ReferencedFile(targetDir, dirName));
                 settings.addString(CFG_JOB_MANAGER_DIR, dirName);
             } catch (Throwable e) {
                 if (!(e instanceof IOException)) {
-                    getLogger().coding("Saving internals of job manager should "
+                    LOGGER.coding("Saving internals of job manager should "
                             + "only throw IOException, caught "
                             + e.getClass().getSimpleName());
                 }
                 String error = "Saving job manager internals failed: "
                     + e.getMessage();
-                getLogger().error(error, e);
+                LOGGER.error(error, e);
             }
         }
     }
 
-    protected boolean saveState(final NodeSettingsWO settings,
+    protected static boolean saveState(final NodeSettingsWO settings,
             final NodeContainer nc) {
         String state;
         boolean mustAlsoSaveExecutorSettings = false;
@@ -288,24 +288,24 @@ class NodeContainerMetaPersistorVersion200 extends
         return mustAlsoSaveExecutorSettings;
     }
 
-    protected void saveCustomName(final NodeSettingsWO settings,
+    protected static void saveCustomName(final NodeSettingsWO settings,
             final NodeContainer nc) {
         settings.addString(KEY_CUSTOM_NAME, nc.getCustomName());
     }
 
-    protected void saveCustomDescription(final NodeSettingsWO settings,
+    protected static void saveCustomDescription(final NodeSettingsWO settings,
             final NodeContainer nc) {
         settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
     }
 
-    protected void saveIsDeletable(final NodeSettingsWO settings,
+    protected static void saveIsDeletable(final NodeSettingsWO settings,
             final NodeContainer nc) {
         if (!nc.isDeletable()) {
             settings.addBoolean(CFG_IS_DELETABLE, false);
         }
     }
 
-    protected void saveNodeMessage(final NodeSettingsWO settings,
+    protected static void saveNodeMessage(final NodeSettingsWO settings,
             final NodeContainer nc) {
         NodeMessage message = nc.getNodeMessage();
         if (message != null && !message.getMessageType().equals(Type.RESET)) {

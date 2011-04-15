@@ -242,9 +242,8 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult,
-            final WorkflowLoadHelper loadHelper)
+    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
+            final LoadResult loadResult)
             throws InvalidSettingsException, IOException {
         throwUnsupportedOperationException();
     }

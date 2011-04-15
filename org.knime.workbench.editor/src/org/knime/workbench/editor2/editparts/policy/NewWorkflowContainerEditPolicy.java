@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.editparts.policy;
 
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
@@ -62,6 +63,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -83,8 +85,8 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
         Object obj = request.getNewObject();
 
-        // Today, we only support nodes to be created here
-        if (!(obj instanceof NodeFactory)) {
+        if (!(obj instanceof NodeFactory)
+                && !(obj instanceof IFileStore)) {
             LOGGER.error("Illegal drop object: " + obj);
             return null;
         }
@@ -105,19 +107,19 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // the position of the viewport)
         WorkflowEditor.adaptZoom(zoomManager, location, true);
 
-        WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this
-                .getHost();
+        WorkflowRootEditPart workflowPart =
+            (WorkflowRootEditPart)this.getHost();
         WorkflowManager manager = workflowPart.getWorkflowManager();
 
         // Case 1:
         // create a new node
         if (obj instanceof NodeFactory) {
-            NodeFactory<NodeModel> factory
-                = (NodeFactory<NodeModel>)obj;
-
-            CreateNodeCommand cmd = new CreateNodeCommand(manager, factory,
-                    location);
-            return cmd;
+            NodeFactory<? extends NodeModel> factory
+                = (NodeFactory<? extends NodeModel>)obj;
+            return new CreateNodeCommand(manager, factory, location);
+        } else if (obj instanceof IFileStore) {
+            IFileStore fs = (IFileStore)obj;
+            return new CreateMetaNodeTemplateCommand(manager, fs, location);
         }
 
         // // Case 2:

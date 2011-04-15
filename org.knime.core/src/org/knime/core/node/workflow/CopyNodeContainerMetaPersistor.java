@@ -125,6 +125,12 @@ implements NodeContainerMetaPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public WorkflowLoadHelper getLoadHelper() {
+        return WorkflowLoadHelper.INSTANCE;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getCustomDescription() {
         return m_customDescription;
     }
