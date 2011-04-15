@@ -4819,6 +4819,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + "\" file in directory \"" + directory.getAbsolutePath()
                     + "\"");
         }
+        WorkflowLoadHelper lh = loadHelper != null
+        ? loadHelper : WorkflowLoadHelper.INSTANCE;
         NodeSettingsRO settings =
             NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(workflowknime)));
@@ -4848,7 +4850,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             new HashMap<Integer, ContainerTable>();
         if (WorkflowPersistorVersion200.canReadVersion(version)) {
             persistor = new WorkflowPersistorVersion200(
-                    tableRep, workflowknimeRef, loadHelper, version);
+                    tableRep, workflowknimeRef, lh, version);
         } else if (WorkflowPersistorVersion1xx.canReadVersion(version)) {
             LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION
                     + ") is different from the one that created the"
@@ -4858,7 +4860,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + " or some nodes can't be configured."
                     + " Please re-configure and/or re-execute these nodes.");
             persistor = new WorkflowPersistorVersion1xx(
-                    tableRep, workflowknimeRef, loadHelper, version);
+                    tableRep, workflowknimeRef, lh, version);
         } else {
             StringBuilder versionDetails = new StringBuilder(versionString);
             String createdBy = settings.getString(CFG_CREATED_BY, null);
@@ -4867,11 +4869,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 versionDetails.append(createdBy).append(")");
             }
             String v = versionDetails.toString();
-            WorkflowLoadHelper lH = loadHelper;
-            if (lH == null) {
-                lH = WorkflowLoadHelper.DefaultWorkflowLoadHelper.INSTANCE;
-            }
-            switch (lH.getUnknownKNIMEVersionLoadPolicy(v)) {
+            switch (lh.getUnknownKNIMEVersionLoadPolicy(v)) {
             case Abort:
                 throw new UnsupportedWorkflowVersionException(
                         "Unable to load workflow, version string \"" + v
@@ -4879,7 +4877,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             default:
                 version = WorkflowPersistorVersion200.VERSION_LATEST;
                 persistor = new WorkflowPersistorVersion200(
-                        tableRep, workflowknimeRef, loadHelper, version);
+                        tableRep, workflowknimeRef, lh, version);
             }
         }
         return persistor;
