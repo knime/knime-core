@@ -313,5 +313,13 @@
              metaNodePortTypeClass="org.knime.workbench.editor2.meta.MetaNodePortType$FlowVarMetaNodePortType">
        </porttype>
     </extension>
-    
+     <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.knime.workbench.ui.category"
+            class="org.knime.workbench.helpview.HelpView"
+            icon="icons/node_description.png"
+            id="org.knime.workbench.helpview"
+            name="Node Description"/>
+   </extension>    
 </plugin>
