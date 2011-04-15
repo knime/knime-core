@@ -43,72 +43,47 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
+ * ---------------------------------------------------------------------
+ * 
  * History
- *   28.08.2005 (Florian Georg): created
+ *   11.12.2007 (Fabian Dill): created
  */
-package org.knime.workbench.help.intro;
+package org.knime.workbench.helpview.wizard;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.intro.IIntroManager;
-import org.eclipse.ui.intro.IIntroPart;
-import org.eclipse.ui.intro.IIntroSite;
-import org.eclipse.ui.intro.config.IIntroAction;
-import org.knime.workbench.ui.wizards.project.NewProjectWizard;
+import org.eclipse.jface.wizard.Wizard;
 
 /**
- * This action is called when the user clicks "Open KNIME Workbench" in the
- * intro page. It creates a new project with the standard name "KNIME_project".
- * Since the workspace must be empty (otherwise the intro page won't show up)
- * this name can be securely used.
- *
- * @see NewProjectWizard
- *
+ * 
  * @author Fabian Dill, University of Konstanz
  */
-public class NewProjectWizardIntroAction implements IIntroAction {
+public class KNIMEHelpFilesWizard extends Wizard {
+    
+    private PluginSelectionPage m_selectionPage;
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void addPages() {
+        setWindowTitle("Selection");
+        m_selectionPage = new PluginSelectionPage();
+        addPage(m_selectionPage);
+    }
+    
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void run(final IIntroSite site, final Properties params) {
-
-        try {
-            // close the intro page
-            IIntroManager introManager =
-                    PlatformUI.getWorkbench().getIntroManager();
-            IIntroPart introPart = introManager.getIntro();
-            if (introPart != null) {
-                introManager.closeIntro(introPart);
-            }
-            PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
-                    new IRunnableWithProgress() {
-                        @Override
-                        public void run(final IProgressMonitor monitor)
-                                throws InvocationTargetException,
-                                InterruptedException {
-                            try {
-                                // call static method on NewProjectWizard
-                                NewProjectWizard.doFinish(
-                                        new Path("KNIME_project"),
-                                        monitor);
-                            } catch (CoreException ce) {
-                                throw new RuntimeException(ce);
-                            }
-                        }
-                    });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public boolean performFinish() {
+        String[] selection = m_selectionPage.getSelectedItems();
+        m_selectionPage.dispose();
+        dispose();
+        NodeDescriptionConverter.instance().buildDocumentationWithProgress(
+                selection);
+        return true;
     }
+
 
 }
