@@ -300,9 +300,9 @@ public class NaiveBayesModel {
                                 + "maximum number of allowed nominal "
                                 + "values in the node dialog");
                     }
-                    //delete the model if it contains to many unique values
+                    //delete the model if it contains too many unique values
                     m_modelByAttrName.remove(model.getAttributeName());
-                    model.setInvalidCause("To many values");
+                    model.setInvalidCause("Too many values");
                     m_skippedAttributes.add(model);
                 }
             }
