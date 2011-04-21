@@ -156,13 +156,13 @@ public class BWElimLoopStartNodeModel extends NodeModel implements
         BufferedDataTable[] outTables = new BufferedDataTable[inData.length];
         for (int i = 0; i < outTables.length; i++) {
             outTables[i] =
-                    exec.createColumnRearrangeTable(inData[0], crea, exec
+                    exec.createColumnRearrangeTable(inData[i], crea, exec
                             .createSubProgress(1.0 / outTables.length));
         }
 
         return outTables;
     }
-    
+
     /**
      * {@inheritDoc}
      */
