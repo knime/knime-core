@@ -68,8 +68,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.LoopStartParallelizeNode;
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 
 /**
@@ -82,7 +82,7 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	private ParallelChunkStartNodeConfiguration m_configuration =
 		new ParallelChunkStartNodeConfiguration();
 	private PortObject[] m_splitInTables;
-	private LoopEndParallelizeNode m_tailNode;
+	private ParallelizedChunkContentMaster m_chunkMaster;
 	
 	/**
 	 * 
@@ -102,8 +102,8 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
         BufferedDataTable[] splitInTables; 
 
         // clean tail in case have not done so before
-        if (m_tailNode != null) {
-            m_tailNode.cleanupChunks();
+        if (m_chunkMaster != null) {
+            m_chunkMaster.cleanupChunks();
         }
         if (in.getRowCount() <= 1) {
             // empty or one-row input table...
@@ -177,12 +177,12 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-	public void setTailNode(final LoopEndParallelizeNode lepn) {
-	    if (m_tailNode != null) {
+	public void setChunkMaster(final ParallelizedChunkContentMaster pccm) {
+	    if (m_chunkMaster != null) {
 	        // let's make sure we cleaned up the previous tail node
-	        m_tailNode.cleanupChunks();
+	        m_chunkMaster.cleanupChunks();
 	    }
-	    m_tailNode = lepn;
+	    m_chunkMaster = pccm;
 	}
 
 	/**
@@ -199,13 +199,13 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected void reset() {
 		m_splitInTables = null;
-        if (m_tailNode != null) {
+        if (m_chunkMaster != null) {
             // let's make sure we clean up any left over nonsense from the
             // previous run.
-            m_tailNode.cleanupChunks();
+            m_chunkMaster.cleanupChunks();
         }
         // no need to keep remembering this tail.
-        m_tailNode = null;
+        m_chunkMaster = null;
 	}
 
 	/**

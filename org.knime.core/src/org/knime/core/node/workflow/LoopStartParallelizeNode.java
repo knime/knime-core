@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 
 /**
@@ -69,10 +70,10 @@ public interface LoopStartParallelizeNode extends LoopStartNode {
 	 */
     public int getNrChunks();
 
-    /** Set matching tail node so the start node has access to clean up
+    /** Set parallel chunk master so the start node has access to clean up
      * when reset.
      * 
-     * @param lepn matching @see{LoopEndParallelizeNode}
+     * @param pccm matching @see{ParallelizedChunkContentMaster}
      */
-    public void setTailNode(final LoopEndParallelizeNode lepn);
+    public void setChunkMaster(final ParallelizedChunkContentMaster pccm);
 }

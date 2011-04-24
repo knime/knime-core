@@ -51,7 +51,6 @@
 package org.knime.core.node.workflow.virtual;
 
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -67,24 +66,19 @@ public final class ParallelizedChunkContent {
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
 	private final NodeID[] m_copiedLoopContent;
-	private final int m_chunkIndex;
-	private final int m_ChunkCount;
+	
 	/**
 	 * @param manager
 	 * @param virtualInputID
 	 * @param virtualOutputID
 	 * @param copiedLoopContent
-	 * @param chunkIndex An index to the copy (copies are enumerated)
-	 * @param chunkCount The overall count of parallel chunks
 	 * @throws IllegalArgumentException If the input/output nodes are not
 	 * of the expected type.
 	 */
 	public ParallelizedChunkContent(final WorkflowManager manager,
 			final NodeID virtualInputID, final NodeID virtualOutputID,
-			final NodeID[] copiedLoopContent,
-			final int chunkIndex, final int chunkCount) {
+			final NodeID[] copiedLoopContent) {
 		m_manager = manager;
-		m_chunkIndex = chunkIndex;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
 				virtualInputID, VirtualPortObjectInNodeModel.class);
@@ -93,14 +87,15 @@ public final class ParallelizedChunkContent {
 		m_virtualInputID = virtualInputID;
 		m_virtualOutputID = virtualOutputID;
 		m_copiedLoopContent = copiedLoopContent;
-		m_ChunkCount = chunkCount;
 	}
 
 	/**
 	 * Trigger execution of branch for this chunk.
 	 */
 	public void executeChunk() {
-	    m_manager.executeUpToHere(m_virtualOutputID);
+	    if (m_manager != null) {
+	        m_manager.executeUpToHere(m_virtualOutputID);
+	    }
 	}
 
 	/**
@@ -117,65 +112,36 @@ public final class ParallelizedChunkContent {
 		return m_copiedLoopContent;
 	}
 	
-	/**
-	 * @return the index
-	 */
-	public int getChunkIndex() {
-		return m_chunkIndex;
-	}
-	
-	/**
-	 * @return the chunkCount
-	 */
-	public int getChunkCount() {
-		return m_ChunkCount;
-	}
-	
-	/** Gets the underlying model of the virtual input node.
-	 * @return The NodeModel underlying the start node representation.
-	 */
-	public VirtualPortObjectInNodeModel getVirtualInputModel() {
-		return m_manager.castNodeModel(
-				m_virtualInputID, VirtualPortObjectInNodeModel.class);
-	}
-	
-	/** Get underlying node model of the end node (no null, no exception).
-	 * @return The model underlying the end node.
-	 */
-	public VirtualPortObjectOutNodeModel getVirtualOutputModel() {
-		return m_manager.castNodeModel(
-				m_virtualOutputID, VirtualPortObjectOutNodeModel.class);
-	}
-
     /**
      * @param nmodel
      */
     public void registerLoopEndStateChangeListener(
-            final LoopEndParallelizeNode nmodel) {
+            final ParallelizedChunkContentMaster pccm) {
         m_manager.getNodeContainer(m_virtualOutputID)
-                .addNodeStateChangeListener(nmodel);
+                .addNodeStateChangeListener(pccm);
     }
 	
+    /**
+     * @param nmodel
+     */
+    public void removeLoopEndStateChangeListener(
+            final ParallelizedChunkContentMaster pccm) {
+        m_manager.getNodeContainer(m_virtualOutputID)
+                .removeNodeStateChangeListener(pccm);
+    }
+
     /**
      * Remove all nodes (and connections) of this chunk.
      */
     public void removeAllNodesFromWorkflow() {
-        if (!m_isCleaned) {
+        if (m_manager != null) {
+            m_manager.removeNode(m_virtualOutputID);
             for (NodeID id : m_copiedLoopContent) {
                 m_manager.removeNode(id);
             }
-            m_manager.removeNode(m_virtualOutputID);
             m_manager.removeNode(m_virtualInputID);
-            m_isCleaned = true;
         }
     }
-
-    /** hack to make compatible with previous version - needs to go */
-    boolean m_isCleaned = false;
-    public boolean isCleaned() {
-        return m_isCleaned;
-    }
-
 
     /**
      * @return true if chunk is completely executed.
@@ -209,6 +175,8 @@ public final class ParallelizedChunkContent {
      * @return array with PortObjects at the end node of this chunk.
      */
     public PortObject[] getOutportContent() {
-        return getVirtualOutputModel().getOutObjects();
+        VirtualPortObjectOutNodeModel vpoonm = m_manager.castNodeModel(
+                m_virtualOutputID, VirtualPortObjectOutNodeModel.class);
+        return vpoonm.getOutObjects();
     }
 }

@@ -2327,20 +2327,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             subwfm.getID(), metanodeindex);
                 }
             }
-    		// make sure head knows its tail
-    		startNode.setTailNode(endNode);
-    		// and now create branches for all chunks and execute them.
-    		endNode.setParallelChunkMaster(
-    		        new ParallelizedChunkContentMaster(subwfm,
-    		                startNode.getNrChunks() - 1));
+    		ParallelizedChunkContentMaster pccm
+    		    = new ParallelizedChunkContentMaster(subwfm, endNode,
+    		                startNode.getNrChunks() - 1);
     		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
     			ParallelizedChunkContent copiedNodes =
     			    duplicateLoopBodyInSubWFMandAttach(
     			            subwfm, extInConnections,
     			    		startID, endID, loopNodes, i, startNode.getNrChunks());
                 copiedNodes.executeChunk();
-    			endNode.addParallelChunk(copiedNodes);
+    			pccm.addParallelChunk(i, copiedNodes);
     		}
+            // make sure head knows his chunk master (for potential cleanup)
+            startNode.setChunkMaster(pccm);
 		}
     }
 
@@ -2526,7 +2525,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             subWFM.castNodeModel(virtualStartID, VirtualPortObjectInNodeModel.class);
         virtualInModel.setVirtualNodeInput(data);
         return new ParallelizedChunkContent(subWFM, virtualStartID,
-                virtualEndID, newIDs, chunkIndex, chunkCount);
+                virtualEndID, newIDs);
     }
 
     /** Check if we can expand the selected metanode into a set of nodes in

@@ -50,7 +50,6 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 
 /**
@@ -58,7 +57,7 @@ import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
  * @author wiswedel, University of Konstanz
  */
 public interface LoopEndParallelizeNode
-extends LoopEndNode, NodeStateChangeListener {
+extends LoopEndNode {
 
     /** Set master object holding all parallel chunks.
      * 
@@ -66,16 +65,9 @@ extends LoopEndNode, NodeStateChangeListener {
      */
     void setParallelChunkMaster(ParallelizedChunkContentMaster pcm);
     
-    /** Add a new parallel chunk to this node - the node will take
-     * care of watching and handling of the result and also cleanup of this
-     * branch once execution is terminated.
-     * @param pbc The chunk content (set of nodes)
+    /** During execution: notify node that status of some chunks
+     * has changed.
      */
-    void addParallelChunk(final ParallelizedChunkContent pbc);
-    
-    /** Make sure all branches/chunks from previous runs are cleaned up
-     * and removed.
-     */
-    public void cleanupChunks();
+    public void updateStatus();
 
 }

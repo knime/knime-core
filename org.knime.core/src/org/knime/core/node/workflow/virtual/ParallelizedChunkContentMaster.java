@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow.virtual;
 
+import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -69,6 +70,9 @@ implements NodeStateChangeListener {
     /** metanode container for all chunks */
     WorkflowManager m_manager;
     
+    /** end node waiting for chunks */
+    LoopEndParallelizeNode m_endNode;
+    
     /** Create new chunk object master - also knows Workflowmanager
      * the chunks are located in.
      * 
@@ -76,8 +80,9 @@ implements NodeStateChangeListener {
      * @param chunkCount the number of chunks.
      */
     public ParallelizedChunkContentMaster(final WorkflowManager wfm,
-            final int chunkCount) {
+            final LoopEndParallelizeNode endNode, final int chunkCount) {
         m_manager = wfm;
+        m_endNode = endNode;
         m_chunks = new ParallelizedChunkContent[chunkCount];
     }
 
@@ -92,8 +97,9 @@ implements NodeStateChangeListener {
                     + index);
         }
         m_chunks[index] = pcc;
+        pcc.registerLoopEndStateChangeListener(this);
     }
-
+    
     /**
      * @return number of chunks
      */
@@ -173,7 +179,7 @@ implements NodeStateChangeListener {
             for (int i = 0; i < m_chunks.length; i++) {
                 ParallelizedChunkContent pbc = m_chunks[i];
                 if (pbc.executionInProgress()) {
-                        pbc.cancelExecution();
+                    pbc.cancelExecution();
                 }
             }
         }
@@ -186,7 +192,9 @@ implements NodeStateChangeListener {
         synchronized (m_chunks) {
             for (int i = 0; i < m_chunks.length; i++) {
                 ParallelizedChunkContent pbc = m_chunks[i];
+                pbc.removeLoopEndStateChangeListener(this);
                 pbc.removeAllNodesFromWorkflow();
+                m_chunks[i] = null;
             }
             m_manager.getParent().removeNode(m_manager.getID());
         }
@@ -210,7 +218,11 @@ implements NodeStateChangeListener {
                 }
             }
         }
-        // actually fireEvent...
+        // notify end node about new status
+        // TODO: risky! if endNode finishes last of all chunks, this
+        // may never be set...
+        m_endNode.setParallelChunkMaster(this);
+        m_endNode.updateStatus();
     }
     
 }
