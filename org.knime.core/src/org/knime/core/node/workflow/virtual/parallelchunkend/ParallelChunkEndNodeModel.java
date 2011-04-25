@@ -80,9 +80,11 @@ implements LoopEndParallelizeNode {
 
     /* Store chunks */
     private ParallelizedChunkContentMaster m_chunkMaster;
+    
     /* remember cancellation for chunk cleanup */
     private boolean m_canceled = false;
-    
+
+    /* should we uniqify the Row ID by adding the chunk id? */
     private boolean m_addChunkID = true;
 
 	/**
@@ -98,7 +100,7 @@ implements LoopEndParallelizeNode {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        // spec of the one chunk arriving here is representative for the
+        // spec of the chunk arriving here is representative for the
         // entire table.
         return inSpecs;
     }
@@ -125,13 +127,17 @@ implements LoopEndParallelizeNode {
 	        } catch (InterruptedException ie) {
 	            // nothing to do, just continue
 	        }
-	        // check if execution was canceled
+	        // check if execution was canceled (if it wasn't already canceled)
 	        try {
-	            exec.checkCanceled();
+	            if (!m_canceled) {
+	                exec.checkCanceled();
+	            }
 	        } catch (CanceledExecutionException cee) {
 	            m_canceled = true;
-	            cleanupChunks();
-	            throw cee;
+	            m_chunkMaster.cancelChunkExecution();
+	            // continue as if nothing has happened: wait for all
+	            // chunks to finish execution (which can also mean:
+	            // stop because canceled!)
 	        }
 	        if (m_chunkMaster.nrExecutingChunks() <= 0) {
 	            done = true;
@@ -141,60 +147,77 @@ implements LoopEndParallelizeNode {
 	            // report progress: 90% execution - 10% for data copying...
 	            double prog = (double)(nrChunks-nrExecuting)*0.9
 	                / ((double)nrChunks); 
-	            exec.setProgress(prog, "Total: " + nrChunks
+	            if (!m_canceled) {
+	                exec.setProgress(prog, "Total: " + nrChunks
 	                    + ", still executing: " + nrExecuting
 	                    + ", failed: " + m_chunkMaster.nrFailedChunks());
+	            } else {
+                    exec.setProgress(prog, "Total: " + nrChunks
+                            + ", still executing: " + nrExecuting
+                            + ", waiting for cancelation!");
+	            }
 	        }
 	    }
-        // copy the results of all chunks to result table...
-        BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
-        BufferedDataContainer bdc
-                = exec.createDataContainer(lastChunk.getDataTableSpec());
-        for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
-            int nrChunks = m_chunkMaster.nrChunks();
-            double prog = 0.9 + 0.1 * (double)(i) / ((double)nrChunks); 
-            exec.setProgress(prog, "Copying chunk " 
-                    + i + " of " + nrChunks + "...");
-            ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
-            if (pcc.isExecuted()) {
-                // copy results from chunk
-                BufferedDataTable bdt
-                        = (BufferedDataTable)pcc.getOutportContent()[0];
-                if (bdt == null) {
-                    throw new Exception("Chunk " + i
-                            + " has no content!");
-                }
-                for (DataRow row : bdt) {
-                    if (m_addChunkID) {
-                        row = new DefaultRow(row.getKey()
-                                + "_#" + i, row);
+	    if (!m_canceled) try {
+	        exec.checkCanceled();
+            // copy the results of all chunks to result table...
+            BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
+            BufferedDataContainer bdc
+                    = exec.createDataContainer(lastChunk.getDataTableSpec());
+            for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
+                int nrChunks = m_chunkMaster.nrChunks();
+                double prog = 0.9 + 0.1 * (double)(i) / ((double)nrChunks); 
+                exec.setProgress(prog, "Copying chunk " 
+                        + i + " of " + nrChunks + "...");
+                ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
+                if (pcc.isExecuted()) {
+                    // copy results from chunk
+                    BufferedDataTable bdt
+                            = (BufferedDataTable)pcc.getOutportContent()[0];
+                    if (bdt == null) {
+                        throw new Exception("Chunk " + i
+                                + " has no content!");
                     }
-                    bdc.addRowToTable(row);
+                    for (DataRow row : bdt) {
+                        if (m_addChunkID) {
+                            row = new DefaultRow(row.getKey()
+                                    + "_#" + i, row);
+                        }
+                        bdc.addRowToTable(row);
+                    }
+                } else {
+                    throw new Exception("Not all chunks finished - check"
+                            + " individual chunk branches for details.");
                 }
-            } else {
-                throw new Exception("Not all chunks finished - check"
-                        + " individual chunk branches for details.");
+                exec.checkCanceled();
             }
-        }
-        // copy last chunk from input port of this node...
-        exec.setProgress(0.99, "Copying last chunk of " 
-                + m_chunkMaster.nrChunks() + "...");
-        for (DataRow row : lastChunk) {
-            if (m_addChunkID) {
-                row = new DefaultRow(row.getKey()
-                        + "_#" + m_chunkMaster.nrChunks(), row);
+            // copy last chunk from input port of this node...
+            exec.setProgress(0.99, "Copying last chunk of " 
+                    + m_chunkMaster.nrChunks() + "...");
+            for (DataRow row : lastChunk) {
+                if (m_addChunkID) {
+                    row = new DefaultRow(row.getKey()
+                            + "_#" + m_chunkMaster.nrChunks(), row);
+                }
+                bdc.addRowToTable(row);
             }
-            bdc.addRowToTable(row);
-        }
-        bdc.close();
-	    BufferedDataTable result = bdc.getTable();
-        if (result == null) {
-            throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
-        }
-        // clean up any left overs
+            exec.checkCanceled();
+            bdc.close();
+    	    BufferedDataTable result = bdc.getTable();
+            if (result == null) {
+                throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
+            }
+            // clean up chunks
+            m_chunkMaster.cleanupChunks();
+            // return aggregated table
+    		return new PortObject[] { result };
+	    } catch (CanceledExecutionException cee) {
+	        // catch cancel in result generation and handle the same
+	        // as the others...
+	    }
+        // clean up chunks 
         m_chunkMaster.cleanupChunks();
-        // return aggregated table
-		return new PortObject[] { result };
+        throw new CanceledExecutionException();
 	}
 	
     /**
