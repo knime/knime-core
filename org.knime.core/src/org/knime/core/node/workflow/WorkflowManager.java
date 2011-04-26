@@ -2417,9 +2417,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer endNode = getNodeContainer(endID);
         assert endNode instanceof SingleNodeContainer;
         // find port types (ignore Variable Port "ear")
-        PortType[] realInTypes = new PortType[startNode.getNrInPorts() - 1];
+        PortType[] realInTypes = new PortType[endNode.getNrInPorts() - 1];
         for (int i = 0; i < realInTypes.length; i++) {
-            realInTypes[i] = startNode.getInPort(i + 1).getPortType();
+            realInTypes[i] = endNode.getInPort(i + 1).getPortType();
         }
         NodeID virtualEndID = subWFM.createAndAddNode(
                 new VirtualPortObjectOutNodeFactory(realInTypes));
