@@ -65,7 +65,26 @@ final class ParallelChunkStartNodeConfiguration {
 
 	private int m_chunkCount = -1;
 
+	/** control if main branch will process a chunk or simply forward
+	 * an @see InactiveBranchPortObject upon execution.
+	 */
+	private boolean m_inactiveMainBranch = false;
+
 	/**
+     * @return true of the main branch stays inactive during execution
+     */
+    public boolean hasInactiveMainBranch() {
+        return m_inactiveMainBranch;
+    }
+
+    /**
+     * @param imb true of the main branch is supposed to be inactive.
+     */
+    public void setInactiveMainBranch(final boolean imb) {
+        m_inactiveMainBranch = imb;
+    }
+
+    /**
 	 * @return the chunkCount
 	 */
 	public int getChunkCount() {
@@ -91,15 +110,18 @@ final class ParallelChunkStartNodeConfiguration {
 	
 	void saveConfiguration(final NodeSettingsWO settings) {
 		settings.addInt("chunkCount", m_chunkCount);
+		settings.addBoolean("inactiveMainBranch", m_inactiveMainBranch);
 	}
 	
 	void loadConfigurationDialog(final NodeSettingsRO settings) {
 		m_chunkCount = settings.getInt("chunkCount", -1);
+		m_inactiveMainBranch = settings.getBoolean("inactiveMainBranch", false);
 	}
 	
 	void loadConfigurationModel(final NodeSettingsRO settings) 
 		throws InvalidSettingsException {
 		m_chunkCount = settings.getInt("chunkCount");
+        m_inactiveMainBranch = settings.getBoolean("inactiveMainBranch", false);
 	}
 
 }

@@ -2301,9 +2301,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
                 exposedInportTypes[index] = nc.getInPort(portIndex).getPortType();
-//                exposedInportTypes[index]
-//                        = m_workflow.getNode(
-//                                npi.getFirst()).getInputTypes()[npi.getSecond()-1];
                 extInConnections.put(npi, index);
                 index++;
             }
@@ -2329,12 +2326,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
     		ParallelizedChunkContentMaster pccm
     		    = new ParallelizedChunkContentMaster(subwfm, endNode,
-    		                startNode.getNrChunks() - 1);
-    		for (int i = 0; i < startNode.getNrChunks() - 1; i++) {
+    		                startNode.getNrRemoteChunks());
+    		for (int i = 0; i < startNode.getNrRemoteChunks(); i++) {
     			ParallelizedChunkContent copiedNodes =
     			    duplicateLoopBodyInSubWFMandAttach(
     			            subwfm, extInConnections,
-    			    		startID, endID, loopNodes, i, startNode.getNrChunks());
+    			    		startID, endID, loopNodes, i);
                 copiedNodes.executeChunk();
     			pccm.addParallelChunk(i, copiedNodes);
     		}
@@ -2389,7 +2386,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final WorkflowManager subWFM,
             final HashMap<Pair<NodeID, Integer>, Integer> extInConnections,
             final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
-            final int chunkIndex, final int chunkCount) {
+            final int chunkIndex) {
         assert Thread.holdsLock(m_workflowMutex);
         // compute offset for new nodes (shifted in case of same
         // workflow, otherwise just underneath each other)

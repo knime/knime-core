@@ -57,6 +57,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
@@ -79,6 +80,7 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 	private final JSpinner m_chunkCountSpinner;
 	private final JRadioButton m_automaticChunkingButton;
 	private final JRadioButton m_customChunkingButton;
+	private final JCheckBox m_inactiveMainBranch;
 	
 	/**
 	 * 
@@ -97,6 +99,8 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 				+ " parallel threads)");
 		
 		m_customChunkingButton = new JRadioButton("Use custom chunk count");
+		
+		m_inactiveMainBranch = new JCheckBox("Disable Main Branch");
 		
 		ActionListener l = new ActionListener() {
 			
@@ -129,7 +133,12 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 		
 		gbc.gridx += 1;
 		p.add(m_chunkCountSpinner, gbc);
-		addTab("Chunk Count Settings", p);
+
+        gbc.gridy += 1;
+        gbc.gridwidth = 1;
+        p.add(m_inactiveMainBranch, gbc);
+
+        addTab("Chunk Count Settings", p);
 	}
 	
 	/**
@@ -145,6 +154,7 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 		} else {
 			c.setChunkCount((Integer)m_chunkCountSpinner.getValue());
 		}
+		c.setInactiveMainBranch(m_inactiveMainBranch.isSelected());
 		c.saveConfiguration(settings);
 	}
 	
@@ -163,6 +173,7 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 			m_customChunkingButton.doClick();
 			m_chunkCountSpinner.setValue(c.getChunkCount());
 		}
+		m_inactiveMainBranch.setSelected(c.hasInactiveMainBranch());
 	}
 
 }

@@ -16,6 +16,11 @@
     <option name="Use custom chunk count">
       Specify the chunk count in the spinner.
     </option>
+    <option name="Disable main branch">
+      Controls if the main branch is used for computations or not. If
+      selected, all chunks will be processed in copies of the body and
+      the body itself will be inactive.
+    </option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Input Data">

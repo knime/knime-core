@@ -67,6 +67,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopStartParallelizeNode;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
@@ -81,7 +82,11 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	
 	private ParallelChunkStartNodeConfiguration m_configuration =
 		new ParallelChunkStartNodeConfiguration();
+	
 	private PortObject[] m_splitInTables;
+	
+	/** The master holding all external branches executing chunks.
+	 */
 	private ParallelizedChunkContentMaster m_chunkMaster;
 	
 	/**
@@ -95,10 +100,10 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+	protected PortObject[] execute(final PortObject[] inObjs,
 			final ExecutionContext exec) throws Exception {
         int numOfChunks = m_configuration.getChunkCount();
-		BufferedDataTable in = inData[0];
+		BufferedDataTable in = (BufferedDataTable)inObjs[0];
         BufferedDataTable[] splitInTables; 
 
         // clean tail in case have not done so before
@@ -147,7 +152,11 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
         }
         assert i == numOfChunks;
         m_splitInTables = splitInTables;
-        pushFlowVariableInt("chunk_index", splitInTables.length - 1); 
+        if (m_configuration.hasInactiveMainBranch()) {
+            pushFlowVariableInt("chunk_index", -1); 
+            return new PortObject[]{ InactiveBranchPortObject.INSTANCE };
+        }
+        pushFlowVariableInt("chunk_index", m_splitInTables.length); 
         return new BufferedDataTable[]{splitInTables[splitInTables.length - 1]};
 	}
 
@@ -157,7 +166,10 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	@Override
 	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
 			throws InvalidSettingsException {
-		pushFlowVariableInt("chunk_index", 0); 
+	    // note that we can not push something useful here since we
+	    // don't really know the number of total chunks! (we only have
+	    // the settings...)
+        pushFlowVariableInt("chunk_index", -1); 
 		return inSpecs;
 	}
 	
@@ -189,8 +201,11 @@ public class ParallelChunkStartNodeModel extends NodeModel implements
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int getNrChunks() {
-	    return m_splitInTables.length;
+	public int getNrRemoteChunks() {
+	    if (m_configuration.hasInactiveMainBranch()) {
+	        return m_splitInTables.length;
+	    }
+	    return m_splitInTables.length - 1;
 	}
 	
 	/**

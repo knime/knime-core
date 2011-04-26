@@ -84,6 +84,7 @@ implements NodeStateChangeListener {
         m_manager = wfm;
         m_endNode = endNode;
         m_chunks = new ParallelizedChunkContent[chunkCount];
+        m_endNode.setParallelChunkMaster(this);
     }
 
     /** Add a new chunk to the list.
@@ -186,17 +187,21 @@ implements NodeStateChangeListener {
     }
     
     /**
-     * Clean up chunks (and containing WFM)
+     * Clean up chunks (and containing WFM).
      */
     public void cleanupChunks() {
         synchronized (m_chunks) {
             for (int i = 0; i < m_chunks.length; i++) {
                 ParallelizedChunkContent pbc = m_chunks[i];
-                pbc.removeLoopEndStateChangeListener(this);
-                pbc.removeAllNodesFromWorkflow();
-                m_chunks[i] = null;
+                if (pbc != null) {
+                    pbc.removeLoopEndStateChangeListener(this);
+                    pbc.removeAllNodesFromWorkflow();
+                    m_chunks[i] = null;
+                }
             }
-            m_manager.getParent().removeNode(m_manager.getID());
+            if (m_manager.getParent().containsNodeContainer(m_manager.getID())) {
+                m_manager.getParent().removeNode(m_manager.getID());
+            }
         }
     }
 
@@ -219,9 +224,6 @@ implements NodeStateChangeListener {
             }
         }
         // notify end node about new status
-        // TODO: risky! if endNode finishes last of all chunks, this
-        // may never be set...
-        m_endNode.setParallelChunkMaster(this);
         m_endNode.updateStatus();
     }
     

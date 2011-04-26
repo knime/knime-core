@@ -67,6 +67,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
@@ -76,7 +78,7 @@ import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
  * @author wiswedel, University of Konstanz
  */
 public class ParallelChunkEndNodeModel extends NodeModel
-implements LoopEndParallelizeNode {
+implements LoopEndParallelizeNode, InactiveBranchConsumer {
 
     /* Store chunks */
     private ParallelizedChunkContentMaster m_chunkMaster;
@@ -93,13 +95,21 @@ implements LoopEndParallelizeNode {
 		super(new PortType[]{ BufferedDataTable.TYPE},
 		        new PortType[]{ BufferedDataTable.TYPE});
 	}
-	
+
+	/** remember previous spec - see configure FIXME */
+	PortObjectSpec[] previousSpecs = new PortObjectSpec[1];
     /**
      * {@inheritDoc}
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        // FIXME: fix this hack to avoid errors when a IABO Spec is
+        // later (during execute) replaced by an actual table
+        if (inSpecs[0] instanceof InactiveBranchPortObjectSpec) {
+            return previousSpecs;
+        }
+        previousSpecs = inSpecs;
         // spec of the chunk arriving here is representative for the
         // entire table.
         return inSpecs;
@@ -113,6 +123,12 @@ implements LoopEndParallelizeNode {
 	        final ExecutionContext exec)
 			throws Exception {
 	    m_canceled = false;
+	    // first determine if we received actual data on our inport
+	    // (which should be the last chunk)
+	    BufferedDataTable localChunk = null;
+	    if (inObjects[0] instanceof BufferedDataTable) {
+	        localChunk = (BufferedDataTable)inObjects[0];
+	    }
 	    // if chunks have not been set, something's wrong.
 	    if (m_chunkMaster == null) {
 	        throw new IllegalStateException("Parallel Chunk End node"
@@ -143,6 +159,9 @@ implements LoopEndParallelizeNode {
 	            done = true;
 	        } else {
 	            int nrChunks = m_chunkMaster.nrChunks();
+	            if (localChunk != null) {
+	                nrChunks++;
+	            }
 	            int nrExecuting = m_chunkMaster.nrExecutingChunks();
 	            // report progress: 90% execution - 10% for data copying...
 	            double prog = (double)(nrChunks-nrExecuting)*0.9
@@ -161,14 +180,15 @@ implements LoopEndParallelizeNode {
 	    if (!m_canceled) try {
 	        exec.checkCanceled();
             // copy the results of all chunks to result table...
-            BufferedDataTable lastChunk = (BufferedDataTable)inObjects[0];
-            BufferedDataContainer bdc
-                    = exec.createDataContainer(lastChunk.getDataTableSpec());
+            BufferedDataContainer bdc = null;
             for (int i = 0; i < m_chunkMaster.nrChunks(); i++) {
                 int nrChunks = m_chunkMaster.nrChunks();
+                if (localChunk != null) {
+                    nrChunks++;
+                }
                 double prog = 0.9 + 0.1 * (double)(i) / ((double)nrChunks); 
                 exec.setProgress(prog, "Copying chunk " 
-                        + i + " of " + nrChunks + "...");
+                        + (i+1) + " of " + nrChunks + "...");
                 ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
                 if (pcc.isExecuted()) {
                     // copy results from chunk
@@ -177,6 +197,10 @@ implements LoopEndParallelizeNode {
                     if (bdt == null) {
                         throw new Exception("Chunk " + i
                                 + " has no content!");
+                    }
+                    if (i == 0) {
+                        // init table create with spec from first chunk
+                        bdc = exec.createDataContainer(bdt.getDataTableSpec());
                     }
                     for (DataRow row : bdt) {
                         if (m_addChunkID) {
@@ -191,26 +215,32 @@ implements LoopEndParallelizeNode {
                 }
                 exec.checkCanceled();
             }
-            // copy last chunk from input port of this node...
-            exec.setProgress(0.99, "Copying last chunk of " 
-                    + m_chunkMaster.nrChunks() + "...");
-            for (DataRow row : lastChunk) {
-                if (m_addChunkID) {
-                    row = new DefaultRow(row.getKey()
-                            + "_#" + m_chunkMaster.nrChunks(), row);
+            if (localChunk != null) {
+                if (bdc == null) {
+                    // init table create with spec from localChunk if no
+                    // remote chunks were copied!
+                    bdc = exec.createDataContainer(localChunk.getDataTableSpec());
                 }
-                bdc.addRowToTable(row);
+                exec.setProgress(0.99, "Copying last chunk " 
+                        + " of " + (m_chunkMaster.nrChunks()+1) + "!");
+                for (DataRow row : localChunk) {
+                    if (m_addChunkID) {
+                        row = new DefaultRow(row.getKey()
+                                + "_#" + (m_chunkMaster.nrChunks()+1), row);
+                    }
+                    bdc.addRowToTable(row);
+                }                
             }
-            exec.checkCanceled();
             bdc.close();
     	    BufferedDataTable result = bdc.getTable();
             if (result == null) {
-                throw new Exception("Something went terribly wrong. We are sorry for any inconvenience this may cause.");
+                throw new Exception("Something went terribly wrong. We are"
+                		+ " sorry for any inconvenience this may cause.");
             }
             // clean up chunks
             m_chunkMaster.cleanupChunks();
             // return aggregated table
-    		return new PortObject[] { result };
+    		return new BufferedDataTable[] { result };
 	    } catch (CanceledExecutionException cee) {
 	        // catch cancel in result generation and handle the same
 	        // as the others...

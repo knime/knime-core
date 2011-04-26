@@ -66,9 +66,10 @@ public interface LoopStartParallelizeNode extends LoopStartNode {
 	public VirtualNodeInput getVirtualNodeInput(final int chunkIndex);
 
 	/**
-	 * @return overall number of chunks (including the main one!)
+	 * @return overall number of remote chunks (excluding the one that is
+	 * processed by the node itself!)
 	 */
-    public int getNrChunks();
+    public int getNrRemoteChunks();
 
     /** Set parallel chunk master so the start node has access to clean up
      * when reset.
