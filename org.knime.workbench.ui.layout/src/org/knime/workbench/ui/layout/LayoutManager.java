@@ -134,7 +134,7 @@ public class LayoutManager {
 
         final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
         final int X_OFFSET = 0;
-        final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2;
+        final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2.3;
         final int Y_OFFSET = -0;
 
         // add all nodes that should be laid out to the graph
