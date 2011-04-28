@@ -47,15 +47,30 @@
  */
 package org.knime.workbench.helpview;
 
+import java.net.BindException;
+import java.net.InetAddress;
+
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.NodeLogger;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.osgi.framework.BundleContext;
 
 /**
  * The main plugin class to be used in the desktop.
  */
 public class HelpviewPlugin extends AbstractUIPlugin {
+    private static final NodeLogger logger = NodeLogger
+            .getLogger(HelpviewPlugin.class);
+
     // The shared instance.
     private static HelpviewPlugin plugin;
+
+    private Server m_server;
+
+    private static final int PORT = 51176; // if you change this value be sure
+                                           // to also change it in
+                                           // FullNodeDescription.xslt!
 
     /**
      * The constructor.
@@ -72,15 +87,23 @@ public class HelpviewPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        /*
-        if (RepositoryManager.INSTANCE.isRootAvailable()) {
-            RepositoryManager.INSTANCE.getRoot();
-            NodeDescriptionHelpFilesCreator.instance().buildDocumentation();
-            RepositoryManager.INSTANCE.releaseRoot();
-        }
-        */
-    }
 
+        // start an embedded webserver for serving bundle-local or node-local
+        // files in the node descriptions
+        m_server = new Server();
+        SelectChannelConnector connector = new SelectChannelConnector();
+        connector.setPort(PORT);
+        connector.setHost(InetAddress.getLocalHost().getHostAddress());
+        m_server.addConnector(connector);
+        m_server.addHandler(FileHandler.instance);
+        try {
+            m_server.start();
+        } catch (BindException ex) {
+            logger.error("Cannot start embedded webserver: " + ex.getMessage(),
+                    ex);
+            // ignore exception otherwise the plugin is not initialized
+        }
+    }
 
     /**
      * This method is called when the plug-in is stopped.
@@ -90,6 +113,7 @@ public class HelpviewPlugin extends AbstractUIPlugin {
     @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
+        m_server.stop();
         plugin = null;
     }
 
@@ -101,16 +125,4 @@ public class HelpviewPlugin extends AbstractUIPlugin {
     public static HelpviewPlugin getDefault() {
         return plugin;
     }
-
-//    /**
-//     * Returns an image descriptor for the image file at the given plug-in
-//     * relative path.
-//     *
-//     * @param path the path
-//     * @return the image descriptor
-//     */
-//    public static ImageDescriptor getImageDescriptor(final String path) {
-//        return AbstractUIPlugin.imageDescriptorFromPlugin(
-//                "org.knime.workbench.helpview", path);
-//    }
 }

@@ -43,8 +43,8 @@
                 <xsl:apply-templates select="views" />
 
                 <div id="origin-bundle">
-                    This node is contained in <em><xsl:value-of select="origin-bundle/@name" /></em>
-                    provided by <em><xsl:value-of select="origin-bundle/@vendor" /></em>.
+                    This node is contained in <em><xsl:value-of select="osgi-info/@bundle-name" /></em>
+                    provided by <em><xsl:value-of select="osgi-info/@bundle-vendor" /></em>.
                 </div>
             </body>
         </html>
@@ -134,6 +134,19 @@
             <xsl:apply-templates />
         </table>
     </xsl:template>
+
+    <xsl:template match="a[starts-with(@href, 'node:')]">
+        <a href="http://127.0.0.1:51176/node/?bundle={/knimeNode/osgi-info/@bundle-symbolic-name}&amp;package={/knimeNode/osgi-info/@factory-package}&amp;file={substring-after(@href, 'node:')}">
+        <xsl:apply-templates />
+        </a>
+    </xsl:template>
+
+    <xsl:template match="a[starts-with(@href, 'bundle:')]">
+        <a href="http://127.0.0.1:51176/bundle/?bundle={/knimeNode/osgi-info/@bundle-symbolic-name}&amp;file={substring-after(@href, 'bundle:')}">
+        <xsl:apply-templates />
+        </a>
+    </xsl:template>
+
 
     <xsl:template match="@*|node()" priority="-1" mode="copy">
         <xsl:copy>

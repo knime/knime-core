@@ -339,11 +339,13 @@ public abstract class NodeFactory<T extends NodeModel> {
             Dictionary<String, String> headers = bundle.getHeaders();
 
             Document doc = m_knimeNode.getOwnerDocument();
-            Element bundleElement = doc.createElement("origin-bundle");
+            Element bundleElement = doc.createElement("osgi-info");
             bundleElement.setAttribute(
-                    "symbolic-name", bundle.getSymbolicName());
-            bundleElement.setAttribute("name", headers.get("Bundle-Name"));
-            bundleElement.setAttribute("vendor", headers.get("Bundle-Vendor"));
+                    "bundle-symbolic-name", bundle.getSymbolicName());
+            bundleElement.setAttribute("bundle-name", headers.get("Bundle-Name"));
+            bundleElement.setAttribute("bundle-vendor", headers.get("Bundle-Vendor"));
+            bundleElement.setAttribute(
+                    "factory-package", this.getClass().getPackage().getName());
             m_knimeNode.appendChild(bundleElement);
         }
     }
