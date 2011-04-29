@@ -1243,6 +1243,13 @@
             expert-flag="false"
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.image.writepng.WritePNGNodeFactory"
+            id="org.knime.base.node.image.writepng.WritePNGNodeFactory">
       </node>  
    </extension>
    
