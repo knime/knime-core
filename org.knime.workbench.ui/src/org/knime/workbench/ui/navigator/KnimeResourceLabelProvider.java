@@ -118,10 +118,10 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     public static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
     /** Icon represneting a workflow group in the resource navigator. */
-    public static final Image WORKFLOW_GROUP 
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID, 
-                "icons/wf_set.png").createImage(); 
-        
+    public static final Image WORKFLOW_GROUP
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
+                "icons/wf_set.png").createImage();
+
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeResourceLableProvider.class);
 
@@ -136,7 +136,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /** Path representation of the node settings file. */
     public static final Path NODE_FILE = new Path(
             SingleNodeContainerPersistorVersion200.SETTINGS_FILE_NAME);
-    
+
     /**
      * Returns a workbench label provider that is hooked up to the decorator
      * mechanism.
@@ -191,20 +191,20 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             final Object element) {
         if (element instanceof IContainer) {
             NodeContainer cont = ProjectWorkflowMap.getWorkflow(
-                    ((IContainer)element).getFullPath());
+                    ((IContainer)element).getLocationURI());
             if (cont != null) {
                 URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);
-                    return new DecorationOverlayIcon(input.createImage(), 
+                    return new DecorationOverlayIcon(input.createImage(),
                             descr, IDecoration.TOP_RIGHT);
                 }
             }
         }
         return input;
     }
-    
+
 
     /**
      * Returns a label that is based on the given label, but decorated with
@@ -217,7 +217,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
      * @return the resulting text
      */
     protected String decorateText(final String input, final Object element) {
-        return input;    
+        return input;
     }
 
     /**
@@ -227,8 +227,8 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     public void dispose() {
         PlatformUI.getWorkbench().getEditorRegistry().removePropertyListener(
                 m_editorRegistryListener);
-        // had to remove the disposal of the images in order to make deriving 
-        // label provider work otherwise these images were already disposed 
+        // had to remove the disposal of the images in order to make deriving
+        // label provider work otherwise these images were already disposed
         super.dispose();
     }
 
@@ -261,7 +261,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         return (IWorkbenchAdapter2)((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter2.class);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -274,7 +274,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             if (container.exists(WORKFLOW_FILE)) {
                 // in any case a knime workflow or meta node (!)
                 projectNode = ProjectWorkflowMap.getWorkflow(
-                        container.getFullPath());
+                        container.getLocationURI());
                 if (projectNode == null && !isMetaNode(container)) {
                     return CLOSED_WORKFLOW;
                 }
@@ -288,12 +288,12 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             }
         } else if (element instanceof NodeContainer) {
                 projectNode = (NodeContainer)element;
-        } 
+        }
         if (projectNode != null) {
             if (projectNode instanceof WorkflowManager
                     // display state only for projects
                     // with this check only projects (
-                    // direct children of the ROOT 
+                    // direct children of the ROOT
                     // are displayed with state
                     && ((WorkflowManager)projectNode).getID()
                         .hasSamePrefix(WorkflowManager.ROOT.getID())) {
@@ -315,13 +315,13 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             } else {
                 return NODE;
             }
-            
+
         }
         return img;
     }
-    
+
     private boolean isMetaNode(final IContainer container) {
-        return (!(container instanceof IProject)) 
+        return (!(container instanceof IProject))
             && container.getParent().exists(WORKFLOW_FILE);
     }
 
@@ -334,8 +334,8 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (element instanceof NodeContainer) {
             String output =  ((NodeContainer)element).getName()
                 + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
-            // meta nodes are as object (workflow open) represented with ":" 
-            // then it can not be found  
+            // meta nodes are as object (workflow open) represented with ":"
+            // then it can not be found
             return output.replace(":", "_");
         }
         // query the element for its label
@@ -380,7 +380,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         Font font = JFaceResources.getFontRegistry().get(descriptor.getName());
         if (font == null) {
             font = new Font(Display.getCurrent(), descriptor);
-            JFaceResources.getFontRegistry().put(descriptor.getName(), 
+            JFaceResources.getFontRegistry().put(descriptor.getName(),
                     font.getFontData());
         }
         return font;

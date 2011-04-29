@@ -166,7 +166,8 @@ public final class KnimeResourceUtil {
      *         an editor
      */
     public static boolean isOpenedWorkflow(final IResource r) {
-        NodeContainer nc = ProjectWorkflowMap.getWorkflow(r.getFullPath());
+        NodeContainer nc = ProjectWorkflowMap.getWorkflow(
+                r.getLocationURI());
         if (nc != null) {
             return true;
         }
@@ -180,7 +181,7 @@ public final class KnimeResourceUtil {
      *         an editor and is dirty
      */
     public static boolean isDirtyWorkflow(final IResource r) {
-        NodeContainer nc = ProjectWorkflowMap.getWorkflow(r.getFullPath());
+        NodeContainer nc = ProjectWorkflowMap.getWorkflow(r.getLocationURI());
         if (nc != null) {
             return nc.isDirty();
         }
@@ -500,6 +501,32 @@ public final class KnimeResourceUtil {
             // don't refresh then
         }
         return true;
+    }
+
+    /**
+     * Returns the resource denoted by the specified URI - or null, if no such
+     * resource exists within the workspace.
+     *
+     * @param location if inside the workspace and existing the corresponding
+     *            resource is returned - otherwise null
+     *
+     * @return the resource denoted by the specified URI - or null, if no such
+     *         resource exists within the workspace.
+     *
+     */
+    public static IResource getResourceForURI(final URI location) {
+        if (location == null) {
+            return null;
+        }
+        URI rootURI = ResourcesPlugin.getWorkspace().getRoot().getLocationURI();
+        if (!location.toString().startsWith(rootURI.toString())) {
+            // not in workspace
+            return null;
+        }
+        Path locPath =
+                new Path(location.toString().substring(
+                        rootURI.toString().length()));
+        return ResourcesPlugin.getWorkspace().getRoot().findMember(locPath);
     }
 
 }

@@ -50,13 +50,14 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.internal.filesystem.local.LocalFile;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.GroupMarker;
@@ -75,12 +76,14 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
-import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.actions.RefreshAction;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
@@ -224,7 +227,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         LOGGER.debug("Job Manager changed for node  " + e.getSource());
         doRefresh(e.getSource());
     }
-    
+
     private final AtomicBoolean m_updateInProgressFlag = new AtomicBoolean();
 
     private void doRefresh(final NodeID nodeResource) {
@@ -233,24 +236,25 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 public void run() {
                     m_updateInProgressFlag.set(false);
                     try {
-                        IPath path =
+                        URI wf =
                                 ProjectWorkflowMap.findProjectFor(nodeResource);
-                        if (path != null) {
-                            // we have to find the resource again, hence we cannot
-                            // put the project's name with toLowercase into the map
+                        if (wf != null) {
                             IResource rsrc =
-                                    ResourcesPlugin.getWorkspace().getRoot()
-                                            .findMember(path);
+                                KnimeResourceUtil.getResourceForURI(wf);
+                            // we have to find the resource again, hence we
+                            // cannot put the project's name with
+                            // toLowercase into the map
                             if (rsrc != null) {
                                 getTreeViewer().update(rsrc, null);
                             }
                         } else {
                             /*
-                             * this is a meta node used in a project. Currently we
-                             * don't need to refresh the tree because meta node
-                             * states are not shown in the tree
+                             * this is a meta node used in a project. Currently
+                             * we don't need to refresh the tree because meta
+                             * node states are not shown in the tree
                              */
-                            // LOGGER.debug("didn't find project name - do refresh");
+                            // LOGGER.debug(
+                            // "didn't find project name - do refresh");
                             // getTreeViewer().refresh();
                         }
                     } catch (IllegalArgumentException iae) {
@@ -371,16 +375,20 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         if (selection instanceof IContainer) {
             IFile file = getWorkflowFile(selection);
             if (file != null && file.exists()) {
+                // don't open meta nodes
                 if (isWorkflow(selection)) {
-                    // don't open meta nodes
-                    StructuredSelection selection2 =
-                            new StructuredSelection(file);
-
-                    OpenFileAction action =
-                            new OpenFileAction(PlatformUI.getWorkbench()
-                                   .getActiveWorkbenchWindow().getActivePage());
-                    action.selectionChanged(selection2);
-                    action.run();
+                    // pass the workflow.knime file to the editor
+                    LocalFile lf = new LocalFile(file.getLocation().toFile());
+                    try {
+                        IDE.openEditorOnFileStore(PlatformUI.getWorkbench()
+                                .getActiveWorkbenchWindow().getActivePage(), lf);
+                    } catch (PartInitException e) {
+                        MessageBox box = new MessageBox(
+                                getViewSite().getShell(), SWT.ICON_ERROR);
+                        box.setText("Error");
+                        box.setMessage("Unable to open editor: " + e.getMessage());
+                        box.open();
+                    }
                 }
             } else {
                 EditMetaInfoAction action = new EditMetaInfoAction();

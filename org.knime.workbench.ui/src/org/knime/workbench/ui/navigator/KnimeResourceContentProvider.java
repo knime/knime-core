@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.07.2007 (sieb): created
  */
@@ -71,17 +71,17 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class KnimeResourceContentProvider implements ITreeContentProvider {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             KnimeResourceContentProvider.class);
-    
+
     private static final Object[] EMPTY_ARRAY = new Object[0];
-    
+
     /**
      * {@inheritDoc}
      */
@@ -93,16 +93,16 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
-                    project.getFullPath());
+                    project.getLocationURI());
             if (workflow != null) {
-                // if the workflow is open then it is regsitered and 
+                // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
                 return ((WorkflowManager)workflow).getNodeContainers()
                     .size() > 0;
             }
         } else if (element instanceof WorkflowManager) {
             return ((WorkflowManager)element).getNodeContainers().size() > 0;
-        } 
+        }
         // check if parent is a KNIME workflow
         // then it is a node and has no children
         if (element instanceof IContainer) {
@@ -113,17 +113,17 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         return getFolders(element).length > 0;
     }
-    
-    
+
+
     private boolean isKNIMEWorkflow(final Object element) {
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
             return container.exists(new Path(WorkflowPersistor.WORKFLOW_FILE));
-        } 
+        }
         return false;
     }
 
-    
+
     private Object[] getFolders(final Object element) {
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
@@ -137,15 +137,15 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
                 return children.toArray();
             } catch (CoreException e) {
                 LOGGER.debug("Error while retrieving information for element "
-                        + container.getName()); 
+                        + container.getName());
                 return EMPTY_ARRAY;
             }
         }
         return EMPTY_ARRAY;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -155,8 +155,8 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
-            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(project
-                    .getFullPath());
+            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+                    project.getLocationURI());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
@@ -179,11 +179,11 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
              * {@inheritDoc}
              */
             @Override
-            public int compare(final NodeContainer o1, 
+            public int compare(final NodeContainer o1,
                     final NodeContainer o2) {
                 return o1.getNameWithID().compareTo(o2.getNameWithID());
             }
-            
+
         });
         copy.addAll(nodes);
         return copy.toArray();
@@ -227,7 +227,7 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
      * {@inheritDoc}
      */
     @Override
-    public void inputChanged(final Viewer viewer, final Object oldInput, 
+    public void inputChanged(final Viewer viewer, final Object oldInput,
             final Object newInput) {
         // nothing to do
     }

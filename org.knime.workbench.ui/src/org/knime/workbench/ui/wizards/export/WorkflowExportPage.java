@@ -51,6 +51,7 @@
 package org.knime.workbench.ui.wizards.export;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -412,10 +413,7 @@ public class WorkflowExportPage extends WizardPage {
             resultContainer = ((IResource) obj).getParent();
         }
         if (obj instanceof NodeContainer) {
-            // find project
-            IPath workflowPath = ProjectWorkflowMap
-                    .findProjectFor(((NodeContainer) obj).getID());
-            resultContainer = getContainerForFullPath(workflowPath);
+            resultContainer = getContainerForWorkflow((NodeContainer)obj);
         }
         if (obj instanceof IContainer) {
             IContainer container = (IContainer) obj;
@@ -464,6 +462,20 @@ public class WorkflowExportPage extends WizardPage {
         return resultContainer;
     }
 
+    private IContainer getContainerForWorkflow(final NodeContainer wfm) {
+        URI wfURI = ProjectWorkflowMap.findProjectFor(wfm.getID());
+        if (wfURI == null) {
+            return null;
+        }
+        URI rootURI = ResourcesPlugin.getWorkspace().getRoot().getLocationURI();
+        if (!wfURI.toString().startsWith(rootURI.toString())) {
+            // wf not in workspace
+            return null;
+        }
+        return getContainerForFullPath(
+                new Path(wfURI.toString().substring(
+                        rootURI.toString().length())));
+    }
 
     private IContainer getContainerForFullPath(final IPath workflowPath) {
         IResource resource = ResourcesPlugin.getWorkspace().getRoot()

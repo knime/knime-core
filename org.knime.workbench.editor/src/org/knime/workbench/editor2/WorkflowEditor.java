@@ -50,12 +50,13 @@ package org.knime.workbench.editor2;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -66,6 +67,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.draw2d.Viewport;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -112,9 +114,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
@@ -145,6 +147,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
@@ -178,6 +181,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -225,7 +229,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private GraphicalViewer m_graphicalViewer;
 
-    private IFile m_fileResource;
+    // path to the workflow directory (that contains the workflow.knime file)
+    private URI m_fileResource;
 
     /** If subworkflow editor, store the parent for saving. */
     private WorkflowEditor m_parentEditor;
@@ -355,9 +360,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         if (m_fileResource != null && m_manager != null) {
-            IPath path = m_fileResource.getParent().getFullPath();
-            ProjectWorkflowMap.unregisterClientFrom(path, this);
-            ProjectWorkflowMap.remove(path);
+            ProjectWorkflowMap.unregisterClientFrom(m_fileResource, this);
+            ProjectWorkflowMap.remove(m_fileResource);
         }
         // remember that this editor has been closed
         m_closed = true;
@@ -373,8 +377,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager.removeNodeStateChangeListener(this);
         m_manager.removeUIInformationListener(this);
         // remove resource listener..
-        if (m_fileResource != null) {
-            m_fileResource.getWorkspace().removeResourceChangeListener(this);
+        if (m_fileResource != null
+                && KnimeResourceUtil.getResourceForURI(m_fileResource)
+                        != null) {
+            ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
         }
         if (m_parentEditor != null) {
             // bug fix 2051: Possible memory leak related to sub-flow editor.
@@ -658,31 +664,37 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
 
-        setDefaultInput(input);
+        super.setInput(input);
 
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else {
+
+            // input is the (full, absolute) path to the workflow.knime file
+            File wfFile = new File(((IURIEditorInput)input).getURI());
+            try {
+                // store the workflow directory
+                m_fileResource = wfFile.getParentFile().toURI();
+                String path = m_fileResource.getPath();
+                if (path.endsWith("/")) {
+                    // remove trailing slashes                }
+                    path = path.substring(0, path.length() - 1);
+                    m_fileResource =
+                        new URI(m_fileResource.getScheme(), null, path, null);
+                }
+            } catch (URISyntaxException e1) {
+                // then leave the slash...
+            }
+
+            LOGGER.debug("Resource File's project: " + m_fileResource);
+
             // register listener to check whether the underlying knime file
-            // (input)
-            // has been deleted or renamed
-            ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
-                    IResourceChangeEvent.POST_CHANGE);
+            // (input) has been deleted or renamed (in case it is a resource)
+            if (KnimeResourceUtil.getResourceForURI(m_fileResource) != null) {
+                ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+                        IResourceChangeEvent.POST_CHANGE);
+            }
 
-            setDefaultInput(input);
-            // we only support file inputs
-
-            m_fileResource = ((IFileEditorInput)input).getFile();
-
-            // TODO try to load a WFM-config from the file, create an empty one
-            // if
-            // this fails
-            // LOGGER.debug("Created new WFM object as input");
-
-            LOGGER.debug("Resource File's project: "
-                    + m_fileResource.getProject());
-
-            final File file = m_fileResource.getLocation().toFile();
             try {
                 // FIXME:
                 // setInput is called before the entire repository is loaded,
@@ -690,14 +702,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // the static block needs to be executed, access
                 // RepositoryManager.INSTANCE
                 if (RepositoryManager.INSTANCE == null) {
-                    LOGGER.fatal("Repository Manager Instance must not be null!");
+                    LOGGER.fatal(
+                            "Repository Manager Instance must not be null!");
                 }
                 assert m_manager == null;
 
-                IPath localPath = m_fileResource.getParent().getFullPath();
                 m_manager =
                         (WorkflowManager)ProjectWorkflowMap
-                                .getWorkflow(localPath);
+                                .getWorkflow(m_fileResource);
                 if (m_manager != null) {
                     // in case the workflow manager was edited somewhere else
                     // ...
@@ -710,7 +722,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IProgressService ps = wb.getProgressService();
                     // this one sets the workflow manager in the editor
                     LoadWorkflowRunnable loadWorflowRunnable =
-                            new LoadWorkflowRunnable(this, file);
+                            new LoadWorkflowRunnable(this, wfFile);
                     ps.busyCursorWhile(loadWorflowRunnable);
                     // check if the editor should be disposed
                     if (m_manager == null) {
@@ -740,12 +752,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                                     loadWorflowRunnable.getThrowable());
                         }
                     }
-                    ProjectWorkflowMap.putWorkflow(localPath, m_manager);
+                    ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
                 // in any case register as client (also if the workflow was
                 // already
                 // loaded by another client
-                ProjectWorkflowMap.registerClientTo(localPath, this);
+                ProjectWorkflowMap.registerClientTo(m_fileResource, this);
                 m_manager.addListener(this);
                 m_manager.addNodeStateChangeListener(this);
             } catch (InterruptedException ie) {
@@ -795,7 +807,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // if this is a project
         if (m_parentEditor == null) {
             return m_manager.getID().getIDWithoutRoot() + ": "
-                    + m_fileResource.getParent().getName();
+                    + new Path(m_fileResource.getPath()).lastSegment();
         } else {
             // we are a meta node editor
             // return id and node name (custom name)
@@ -824,16 +836,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         updatePartName();
         m_manager.addUIInformationListener(this);
         return;
-    }
-
-    /**
-     * Sets the input in the super class for defaults.
-     *
-     * @param input the editor input object
-     */
-    void setDefaultInput(final IEditorInput input) {
-
-        super.setInput(input);
     }
 
     /**
@@ -1014,9 +1016,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         // this flag is evaluated at the end of this method
         boolean wasInProgress = false;
         try {
-            // make sure the resource is "fresh" before saving...
-            // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
-            final File file = m_fileResource.getLocation().toFile();
+            final File file = new File(new File(m_fileResource),
+                    WorkflowPersistor.WORKFLOW_FILE);
 
             // If something fails an empty workflow is created
             // except when cancellation occurred
@@ -1055,10 +1056,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             @Override
             public void run() {
                 try {
-                    String projectName = m_fileResource.getProject().getName();
-                    monitor.setTaskName("Refreshing " + projectName + "...");
-                    m_fileResource.getProject().refreshLocal(
-                            IResource.DEPTH_INFINITE, monitor);
+                    IResource r =
+                            KnimeResourceUtil.getResourceForURI(m_fileResource);
+                    if (r != null) {
+                        String pName = r.getProject().getName();
+                        monitor.setTaskName("Refreshing " + pName + "...");
+                        r.getProject().refreshLocal(IResource.DEPTH_INFINITE,
+                                monitor);
+                    }
                 } catch (CoreException ce) {
                     OperationCanceledException oce =
                             new OperationCanceledException(
@@ -1107,8 +1112,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                         IPreferenceStore prefStore =
                                 KNIMEUIPlugin.getDefault().getPreferenceStore();
                         String toogleMessage = "Don't warn me again";
-                        if (prefStore
-                                .getBoolean(PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED)) {
+                        if (prefStore.getBoolean(
+                                PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED)) {
                             MessageDialogWithToggle
                                     .openInformation(
                                             sh,
@@ -1506,44 +1511,43 @@ public class WorkflowEditor extends GraphicalEditor implements
          */
         @Override
         public boolean visit(final IResourceDelta delta) throws CoreException {
-            // Parent project removed? close this editor
-            if (m_fileResource.equals(delta.getResource())) {
-                if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-                    // remove workflow.knime from moved to path
-                    IPath newDirPath =
-                            delta.getMovedToPath().removeLastSegments(1);
-                    // directory name (without workflow groups)
-                    final String newName = newDirPath.lastSegment();
-                    IPath oldPath = m_fileResource.getParent().getFullPath();
-                    WorkflowEditor.this.m_manager
-                            .renameWorkflowDirectory(newName);
-                    ProjectWorkflowMap.replace(newDirPath,
-                            WorkflowEditor.this.m_manager, oldPath);
-                    Display.getDefault().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            String newTitle =
-                                    m_manager.getID().getIDWithoutRoot() + ": "
-                                            + newName;
-                            setTitleToolTip(newTitle);
-                            setPartName(newTitle);
-                            m_fileResource =
-                                    ResourcesPlugin.getWorkspace().getRoot()
-                                            .getFile(delta.getMovedToPath());
-                            setDefaultInput(new FileEditorInput(m_fileResource));
-                        }
-                    });
-                    return false;
-                }
-            }
-
-            // we're only interested in deltas that are about "our" resource
-            if (!m_fileResource.equals(delta.getResource())) {
+            if (!m_fileResource.equals(delta.getResource().getLocationURI())) {
+                // doesn't concern us
                 return true;
             }
-
+            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+                // remove workflow.knime from moved to path
+                IPath newDirPath = delta.getMovedToPath();
+                // directory name (without workflow groups)
+                final String newName = newDirPath.lastSegment();
+                WorkflowEditor.this.m_manager.renameWorkflowDirectory(newName);
+                URI newDirURI =
+                        ResourcesPlugin.getWorkspace().getRoot()
+                                .findMember(newDirPath).getLocationURI();
+                ProjectWorkflowMap.replace(newDirURI,
+                        WorkflowEditor.this.m_manager, m_fileResource);
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        String newTitle =
+                                m_manager.getID().getIDWithoutRoot() + ": "
+                                        + newName;
+                        setTitleToolTip(newTitle);
+                        setPartName(newTitle);
+                        m_fileResource =
+                                ResourcesPlugin.getWorkspace().getRoot()
+                                        .getFile(delta.getMovedToPath())
+                                        .getLocationURI();
+                        WorkflowEditor.super.setInput(new FileEditorInput(
+                                ResourcesPlugin.getWorkspace().getRoot()
+                                        .getFile(delta.getMovedToPath())));
+                    }
+                });
+                /* false = don't visit children */
+                return false;
+            }
             if ((delta.getKind() == IResourceDelta.REMOVED)) {
-                LOGGER.info(m_fileResource.getName()
+                LOGGER.info(new Path(m_fileResource.getPath()).lastSegment()
                         + " resource has been removed.");
 
                 // close the editor
@@ -1554,6 +1558,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 WorkflowEditor.this, false);
                     }
                 });
+                /* false = don't visit children */
+                return false;
             }
 
             return true;

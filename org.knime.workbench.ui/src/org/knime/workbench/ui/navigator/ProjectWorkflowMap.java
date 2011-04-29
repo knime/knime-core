@@ -18,6 +18,8 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -26,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
@@ -41,12 +42,12 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * This class represents a link between projects (file system representation
- * of workflows by {@link IProject}s) and opened workflows (represented by a
- * {@link WorkflowManager}). The <code>WorkflowEditor</code> puts and removes
- * the name of the opened project together with the referring
- * {@link WorkflowManager} instance. The {@link KnimeResourceNavigator} uses
- * this information to display opened instances differently.
+ * This class represents a link between projects (file system representation of
+ * workflows) and opened workflows (represented by a {@link WorkflowManager}).
+ * The <code>WorkflowEditor</code> puts and removes the name of the opened
+ * project together with the referring {@link WorkflowManager} instance. The
+ * {@link KnimeResourceNavigator} uses this information to display opened
+ * instances differently.
  *
  * @see KnimeResourceNavigator
  * @see KnimeResourceContentProvider
@@ -66,28 +67,28 @@ public final class ProjectWorkflowMap {
 
     /**
      * A map which keeps track of the number of registered clients to the
-     * referring workflow. Registration is done by local path - since this is
+     * referring workflow. Registration is done by URI - since this is
      * the key used in the project workflow map and the workflow manager
      * instance might be replaced. Registered clients in this map prevent the
      * workflow from being removed from the {@link #PROJECTS} map with
-     * {@link #remove(IPath)}, only if there are no registered clients for this
-     * workflow, {@link #remove(IPath)} will actually remove the workflow from
+     * {@link #remove(URI)}, only if there are no registered clients for this
+     * workflow, {@link #remove(URI)} will actually remove the workflow from
      * {@link #PROJECTS}.
      *
      */
-    private static final Map<IPath, Set<Object>>WORKFLOW_CLIENTS
-        = new HashMap<IPath, Set<Object>>();
+    private static final Map<URI, Set<Object>>WORKFLOW_CLIENTS
+        = new HashMap<URI, Set<Object>>();
 
     /*
      * Map with name of workflow path and referring workflow manager
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
      * (This map contains only open workflows.)
      */
-    private static final Map<IPath, NodeContainer> PROJECTS
-        = new LinkedHashMap<IPath, NodeContainer>() {
+    private static final Map<URI, NodeContainer> PROJECTS
+        = new LinkedHashMap<URI, NodeContainer>() {
 
         @Override
-        public NodeContainer put(final IPath key, final NodeContainer value) {
+        public NodeContainer put(final URI key, final NodeContainer value) {
             NodeContainer old = super.put(key, value);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key
@@ -116,17 +117,18 @@ public final class ProjectWorkflowMap {
      * @param workflow the path to the workflow which is used by the client
      * @param client any object which uses the workflow
      *
-     * @see #unregisterClientFrom(IPath, Object)
+     * @see #unregisterClientFrom(URI, Object)
      */
-    public static final void registerClientTo(final IPath workflow,
+    public static final void registerClientTo(final URI workflow,
             final Object client) {
-        Set<Object> callers = WORKFLOW_CLIENTS.get(workflow);
+        URI wf = removeTrailingSlash(workflow);
+        Set<Object> callers = WORKFLOW_CLIENTS.get(wf);
         if (callers == null) {
             callers = new HashSet<Object>();
         }
         callers.add(client);
-        WORKFLOW_CLIENTS.put(workflow, callers);
-        LOGGER.debug("registering " + client + " to " + workflow
+        WORKFLOW_CLIENTS.put(wf, callers);
+        LOGGER.debug("registering " + client + " to " + wf
                 + ". " + callers.size() + " registered clients now.");
     }
 
@@ -136,25 +138,26 @@ public final class ProjectWorkflowMap {
      * client (has no effect if the client was not yet registered for this
      * workflow path)
      * @param client the client which has registered before with the
-     * {@link #registerClientTo(IPath, Object)} method
-     * @see #registerClientTo(IPath, Object)
+     * {@link #registerClientTo(URI, Object)} method
+     * @see #registerClientTo(URI, Object)
      */
-    public static final void unregisterClientFrom(final IPath workflow,
+    public static final void unregisterClientFrom(final URI workflow,
             final Object client) {
-        if (workflow == null) {
+        URI wf = removeTrailingSlash(workflow);
+        if (wf == null) {
             return;
         }
-        if (!WORKFLOW_CLIENTS.containsKey(workflow)) {
+        if (!WORKFLOW_CLIENTS.containsKey(wf)) {
             return;
         }
-        Set<Object> callers = WORKFLOW_CLIENTS.get(workflow);
+        Set<Object> callers = WORKFLOW_CLIENTS.get(wf);
         callers.remove(client);
         if (callers.isEmpty()) {
-            WORKFLOW_CLIENTS.remove(workflow);
+            WORKFLOW_CLIENTS.remove(wf);
         } else {
-            WORKFLOW_CLIENTS.put(workflow, callers);
+            WORKFLOW_CLIENTS.put(wf, callers);
         }
-        LOGGER.debug("unregistering " + client + " from " + workflow
+        LOGGER.debug("unregistering " + client + " from " + wf
                 + ". " + callers.size() + " left.");
     }
 
@@ -261,12 +264,12 @@ public final class ProjectWorkflowMap {
      * @param oldPath the old {@link IProject} path, under which the opened
      *  {@link WorkflowManager} is stored in the map
      */
-    public static void replace(final IPath newPath,
-            final WorkflowManager nc, final IPath oldPath) {
+    public static void replace(final URI newPath,
+            final WorkflowManager nc, final URI oldPath) {
         if (oldPath != null) {
-            PROJECTS.remove(oldPath);
+            PROJECTS.remove(removeTrailingSlash(oldPath));
         }
-        putWorkflow(newPath, nc);
+        putWorkflow(removeTrailingSlash(newPath), nc);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
                 WorkflowEvent.Type.NODE_ADDED, nc.getID(),
                 null, nc));
@@ -277,14 +280,15 @@ public final class ProjectWorkflowMap {
     /**
      * Removes the {@link WorkflowManager} from the map, typically when the
      *  referring editor is closed and the WorkflowEditor is disposed.
-     * @param path path of the {@link IProject} under which the
+     * @param path URI of the directory under which the
      * {@link WorkflowManager} is stored in the map.
      */
-    public static void remove(final IPath path) {
-        WorkflowManager manager = (WorkflowManager)PROJECTS.get(path);
+    public static void remove(final URI path) {
+        URI p = removeTrailingSlash(path);
+        WorkflowManager manager = (WorkflowManager)PROJECTS.get(p);
         // workflow is only in client map if there is at least one client
-        if (manager != null && !WORKFLOW_CLIENTS.containsKey(path)) {
-            PROJECTS.remove(path);
+        if (manager != null && !WORKFLOW_CLIENTS.containsKey(p)) {
+            PROJECTS.remove(p);
             WF_LISTENER.workflowChanged(new WorkflowEvent(
                     WorkflowEvent.Type.NODE_REMOVED, manager.getID(),
                     manager, null));
@@ -298,7 +302,7 @@ public final class ProjectWorkflowMap {
                 // at least we have tried it
                 LOGGER.error(
                         "Could not cancel workflow manager for workflow "
-                        + path, t);
+                        + p, t);
             } finally {
                 WorkflowManager.ROOT.removeProject(manager.getID());
             }
@@ -306,24 +310,25 @@ public final class ProjectWorkflowMap {
     }
 
     /**
-     * Adds a {@link WorkflowManager} of an opened workflow with the path of
-     * the referring {@link IProject} to the map. Used by the WorkflowEditor.
+     * Adds a {@link WorkflowManager} of an opened workflow with the URI of
+     * the workflow directory to the map. Used by the WorkflowEditor.
      *
-     * @param path path of the referring {@link IProject}
-     * @param manager open {@link WorkflowManager}
+     * @param path URI of the directory containing the workflow.knime file
+     * @param manager {@link WorkflowManager} in memory holding the workflow
      */
-    public static void putWorkflow(final IPath path,
+    public static void putWorkflow(final URI path,
             final WorkflowManager manager) {
+        URI p = removeTrailingSlash(path);
         // in case the manager is replaced
         // -> unregister listeners from the old one
-        NodeContainer oldOne = PROJECTS.get(path);
+        NodeContainer oldOne = PROJECTS.get(p);
         if (oldOne != null) {
             oldOne.removeNodeStateChangeListener(NSC_LISTENER);
             ((WorkflowManager)oldOne).removeListener(WF_LISTENER);
             oldOne.removeNodeMessageListener(MSG_LISTENER);
             oldOne.removeJobManagerChangedListener(JOB_MGR_LISTENER);
         }
-        PROJECTS.put(path, manager);
+        PROJECTS.put(p, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
         manager.addNodeMessageListener(MSG_LISTENER);
@@ -335,30 +340,32 @@ public final class ProjectWorkflowMap {
 
     /**
      * Returns the {@link WorkflowManager} instance which is registered under
-     * the project file resource. Might be <code>null</code> if the
-     * {@link WorkflowManager} was not registered under this path or
+     * the workflow URI. Might be <code>null</code> if the
+     * {@link WorkflowManager} was not registered with this URI or
      * is closed.
      *
      * @see KnimeResourceContentProvider
      * @see KnimeResourceLabelProvider
      *
-     * @param path project file resource (usually the directory)
-     * @return the referring {@link WorkflowManager} or <code>null</code> if the
-     * workflow manager is not registered under the passed name.
+     * @param path URI of the workflow directory containing the workflow.knime
+     * @return the corresponding {@link WorkflowManager} or <code>null</code>
+     * if the workflow manager is not registered with the passed URI
      */
-    public static NodeContainer getWorkflow(final IPath path) {
-        return PROJECTS.get(path);
+    public static NodeContainer getWorkflow(final URI path) {
+        return PROJECTS.get(removeTrailingSlash(path));
     }
 
     /**
-     * Finds the the project file resource based on the {@link NodeID}
-     * of the referring workflow manager.
-     * @param workflowID id of the {@link WorkflowManager} for which the name of
-     * the project should be found
-     * @return path of the {@link IProject}'s file resource
+     * Finds the location of the workflow with the specified ID. If no workflow
+     * is registered in the projects map with a matching ID, null is returned.
+     *
+     * @param workflowID id of the {@link WorkflowManager} for which the
+     *            location of the workflow directory should be found
+     * @return URI of the directory containing the corresponding workflow, or
+     *         null, if the workflow is not registered (not opened).
      */
-    public static final IPath findProjectFor(final NodeID workflowID) {
-        for (Map.Entry<IPath, NodeContainer> entry : PROJECTS.entrySet()) {
+    public static final URI findProjectFor(final NodeID workflowID) {
+        for (Map.Entry<URI, NodeContainer> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
                 return entry.getKey();
             }
@@ -434,4 +441,32 @@ public final class ProjectWorkflowMap {
         JOB_MGR_LISTENERS.remove(l);
     }
 
+    /**
+     * Returns the argument it its path doesn't end with a slash - otherwise a
+     * new URI object with the path without trailing slash.
+     *
+     * @param uri to remove the trailing slash from.
+     * @return the argument it its path doesn't end with a slash - otherwise a
+     *         new URI object with the path without trailing slash.
+     */
+    public static URI removeTrailingSlash(final URI uri) {
+        if (uri == null) {
+            return null;
+        }
+        String path = uri.getPath();
+        if (path == null) {
+            return uri;
+        }
+        if (path.endsWith("/")) {
+            // remove trailing slashes }
+            path = path.substring(0, path.length() - 1);
+            try {
+                return new URI(uri.getScheme(), uri.getHost(), path,
+                        uri.getFragment());
+            } catch (URISyntaxException e) {
+                // if that doesn't work - return the original
+            }
+        }
+        return uri;
+    }
 }

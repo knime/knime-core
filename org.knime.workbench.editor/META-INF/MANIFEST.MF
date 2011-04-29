@@ -19,23 +19,18 @@ Export-Package: org.knime.workbench,
  org.knime.workbench.editor2.figures,
  org.knime.workbench.editor2.meta,
  org.knime.workbench.editor2.model
-Require-Bundle: org.eclipse.core.resources,
- org.eclipse.core.runtime,
+Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.filesystem,
  org.eclipse.draw2d,
  org.eclipse.gef,
- org.eclipse.jface,
- org.eclipse.osgi,
- org.eclipse.swt,
- org.eclipse.ui,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
- org.eclipse.ui.workbench,
  org.knime.workbench.core,
  org.knime.workbench.repository,
  org.knime.workbench.ui,
  org.knime.base;bundle-version="2.4.0",
- org.knime.workbench.help;bundle-version="2.4.0"
+ org.knime.workbench.help;bundle-version="2.4.0",
+ org.eclipse.core.resources;bundle-version="3.6.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-ActivationPolicy: lazy

@@ -31,7 +31,7 @@ import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.workflow.NodeContainer;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class JobManagerDecorator implements
@@ -39,9 +39,9 @@ public class JobManagerDecorator implements
 
     private final CopyOnWriteArraySet<ILabelProviderListener>m_listeners =
             new CopyOnWriteArraySet<ILabelProviderListener>();
-    
 
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -79,13 +79,13 @@ public class JobManagerDecorator implements
     public Image decorateImage(final Image image, final Object element) {
         if (element instanceof IContainer) {
             NodeContainer cont = ProjectWorkflowMap.getWorkflow(
-                    ((IContainer)element).getFullPath());
+                    ((IContainer)element).getLocationURI());
             if (cont != null) {
                 URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);
-                    return new DecorationOverlayIcon(image, 
+                    return new DecorationOverlayIcon(image,
                             descr, IDecoration.TOP_RIGHT).createImage();
                 }
             }
