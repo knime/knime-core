@@ -87,7 +87,7 @@ public class SingleNodeContainerPersistorVersion200 extends
     private static final NodeLogger SAVE_LOGGER =
         NodeLogger.getLogger(SingleNodeContainerPersistorVersion200.class);
 
-    private static final String NODE_FILE = "node.xml";
+    public static final String NODE_FILE = "node.xml";
 
     /** Load persistor.
      * @param workflowPersistor
