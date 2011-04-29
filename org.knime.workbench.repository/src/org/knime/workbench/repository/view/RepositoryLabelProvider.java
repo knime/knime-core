@@ -53,7 +53,7 @@ package org.knime.workbench.repository.view;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.knime.workbench.repository.model.AbstractRepositoryObject;
-import org.knime.workbench.repository.model.AbstractSimpleObject;
+import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.Category;
 
 /**
@@ -79,8 +79,8 @@ public class RepositoryLabelProvider extends LabelProvider {
      */
     @Override
     public Image getImage(final Object element) {
-        if (element instanceof AbstractSimpleObject) {
-            return ((AbstractSimpleObject) element).getIcon();
+        if (element instanceof AbstractNodeTemplate) {
+            return ((AbstractNodeTemplate) element).getIcon();
         }
         if (element instanceof Category) {
             return ((Category) element).getIcon();

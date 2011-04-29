@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -58,23 +58,23 @@ import java.util.List;
 
 /**
  * Abstract base implementation of a container object.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class AbstractContainerObject extends AbstractRepositoryObject
         implements IContainerObject {
-    
+
     private boolean m_sortChildren = true;
-    
+
     public void setSortChildren(final boolean sort) {
         m_sortChildren = sort;
     }
-    
+
     protected boolean sortChildren() {
         return m_sortChildren;
     }
-    
+
     /**
      * The list of categories and nodes.
      */
@@ -87,20 +87,22 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     /**
      * Return true, if there are children contained in this cotainer.
-     * 
+     *
      * @see org.knime.workbench.repository.model.IContainerObject# hasChildren()
      */
+    @Override
     public final boolean hasChildren() {
         return this.getChildren().length > 0;
     }
 
     /**
      * Add a child to this container.
-     * 
+     *
      * @see org.knime.workbench.repository.model.IContainerObject#
      *      addChild(org.knime.workbench.repository.model.
      *      AbstractRepositoryObject)
      */
+    @Override
     public void addChild(final AbstractRepositoryObject child) {
         if (m_children.contains(child)) {
             throw new IllegalArgumentException(
@@ -118,22 +120,23 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         child.setParent(this);
 
     }
-    
+
     public void removeAllChildren() {
         m_children.clear();
     }
-    
-    public void addAllChildren(Collection<? extends AbstractRepositoryObject> children) {
+
+    public void addAllChildren(final Collection<? extends AbstractRepositoryObject> children) {
         m_children.addAll(children);
     }
 
     /**
      * Returns the children. The children are sorted according to the
      * after-relationship defined in the plugin-xml and lexicographically.
-     * 
+     *
      * @return The children (category and nodes of current level)
      * @see org.knime.workbench.repository.model.IContainerObject# getChildren()
      */
+    @Override
     public synchronized IRepositoryObject[] getChildren() {
 
         // Collections.sort(m_children, m_comparator);
@@ -148,9 +151,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * placed before nodes and are sorted according to the after-relationship
      * defined in the plugin.xml. Nodes are sorted lexicographically and are
      * appended at the end of the list.
-     * 
+     *
      * @param children the children (categories and nodes)
-     * 
+     *
      * @return the sorted list
      */
     private ArrayList<AbstractRepositoryObject> sortChildren(
@@ -158,18 +161,21 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         // create two seperate lists of categories and nodes, as categories
         // are ordered according to the after-relationship (see plugin.xml)
-        ArrayList<AbstractRepositoryObject> categoryChildren = new ArrayList<AbstractRepositoryObject>();
-        ArrayList<AbstractRepositoryObject> nodeChildren = new ArrayList<AbstractRepositoryObject>();
+        ArrayList<AbstractRepositoryObject> categoryChildren =
+            new ArrayList<AbstractRepositoryObject>();
+        ArrayList<AbstractRepositoryObject> nodeChildren =
+            new ArrayList<AbstractRepositoryObject>();
         for (AbstractRepositoryObject object : children) {
             if (object instanceof Category) {
-                categoryChildren.add((Category)object);
-            } else if (object instanceof AbstractSimpleObject) {
-                nodeChildren.add((AbstractSimpleObject)object);
+                categoryChildren.add(object);
+            } else if (object instanceof AbstractNodeTemplate) {
+                nodeChildren.add(object);
             }
         }
 
         // the ordered result list
-        ArrayList<AbstractRepositoryObject> result = new ArrayList<AbstractRepositoryObject>();
+        ArrayList<AbstractRepositoryObject> result =
+            new ArrayList<AbstractRepositoryObject>();
 
         // ---------- Category sorting -----------------------------------------
         // Create the root element of the after-relationship tree for the
@@ -213,7 +219,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     /**
      * Traverses a tree in depth first (apriori) order to create a sorted list.
-     * 
+     *
      * @param entry the current entry of the tree
      * @param result the list the visited nodes are entered
      * @see AbstractContainerObject#sortChildren(ArrayList)
@@ -229,7 +235,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Recursive method to add all categories to the given parent entry from the
      * given list of categories (children).
-     * 
+     *
      * @param parent the parent node to which the after-relationship related
      *            categories are added
      * @param children the list of all categories
@@ -262,7 +268,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * An entry of a tree holding a category and all its direct successors
      * according to the after-relationship defined in the plugin.xml.
-     * 
+     *
      * @author Christoph Sieb, University of Konstanz
      */
     private class TreeEntry implements Comparable<TreeEntry> {
@@ -274,7 +280,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         /**
          * Constructs a new GraphEntry.
-         * 
+         *
          * @param repositoryObject the category representing the parent
          */
         public TreeEntry(final AbstractRepositoryObject repositoryObject) {
@@ -297,7 +303,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         /**
          * Adds a category as child to this tree entry.
-         * 
+         *
          * @param category the category to add.
          */
         public void addChildCategory(final TreeEntry category) {
@@ -318,6 +324,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
             return m_treeChildren;
         }
 
+        @Override
         public int compareTo(final TreeEntry o) {
 
             return m_repositoryObject.compareTo(o.m_repositoryObject);
@@ -326,11 +333,12 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     /**
      * Removes a child.
-     * 
+     *
      * @param child The child to remove
      * @see org.knime.workbench.repository.model.IContainerObject#
      *      removeChild(AbstractRepositoryObject)
      */
+    @Override
     public void removeChild(final AbstractRepositoryObject child) {
         if (!m_children.contains(child)) {
             throw new IllegalArgumentException(
@@ -344,7 +352,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     /**
      * Moves this object to a different parent.
-     * 
+     *
      * @see org.knime.workbench.repository.model.IRepositoryObject#
      *      move(org.knime.workbench.repository.model.IContainerObject)
      * @param newParent The container to move this object to
@@ -359,13 +367,16 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * {@inheritDoc}
      */
-    public synchronized IRepositoryObject getChildByID(final String id, final boolean rec) {
+    @Override
+    public synchronized IRepositoryObject getChildByID(
+            final String id, final boolean rec) {
         // The slash and the empty string represent 'this'
         if ("/".equals(id) || "".equals(id.trim())) {
             return this;
         }
-        for (Iterator it = m_children.iterator(); it.hasNext();) {
-            IRepositoryObject o = (IRepositoryObject)it.next();
+        for (Iterator<AbstractRepositoryObject> it =
+            m_children.iterator(); it.hasNext();) {
+            IRepositoryObject o = it.next();
 
             if (o.getID().equals(id)) {
                 return o;
@@ -388,7 +399,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     /**
      * Looks up a <code>NodeTemplate</code> for a given factory.
-     * 
+     *
      * @param factory The factory name for which the template should be found
      * @return The template or <code>null</code>
      */
@@ -414,7 +425,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * Appends all categories to the passed list, that have wrong
      * after-relationship information.
-     * 
+     *
      * @param problemList the list to which the problem categories are appended
      */
     protected void appendProblemCategories(final List<Category> problemList) {

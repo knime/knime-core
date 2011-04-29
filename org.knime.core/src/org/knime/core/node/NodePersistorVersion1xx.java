@@ -70,6 +70,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -77,8 +78,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private SingleNodeContainerPersistorVersion1xx
-        m_sncPersistor;
+    private SingleNodeContainerPersistorVersion1xx m_sncPersistor;
 
     private boolean m_isExecuted;
 
@@ -202,10 +202,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
         // skip flow variables port (introduced in v2.2)
-        for (int i = 1; i < node.getNrOutPorts(); i++) {
+        final int nrOutPorts = node.getNrOutPorts();
+        for (int i = 1; i < nrOutPorts; i++) {
             int oldIndex = getOldPortIndex(i);
             ExecutionMonitor execPort = execMon
-                    .createSubProgress(1.0 / node.getNrOutPorts());
+                    .createSubProgress(1.0 / nrOutPorts);
             execMon.setMessage("Port " + oldIndex);
             PortType type = node.getOutputType(i);
             boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
@@ -395,9 +396,13 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /**
      * @return the singleNodeContainerPersistor
      */
-    public SingleNodeContainerPersistorVersion1xx
+    protected SingleNodeContainerPersistorVersion1xx
         getSingleNodeContainerPersistor() {
         return m_sncPersistor;
+    }
+
+    protected WorkflowLoadHelper getLoadHelper() {
+        return m_sncPersistor.getLoadHelper();
     }
 
     /** Is configured according to the settings object.
@@ -570,8 +575,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
         settingsExec.setProgress(1.0);
         exec.setMessage("ports");
+        WorkflowLoadHelper loadHelper = getLoadHelper();
         try {
-            loadPorts(node, loadExec, settings, loadTblRep, tblRep);
+            if (!loadHelper.isTemplateFlow()) {
+                loadPorts(node, loadExec, settings, loadTblRep, tblRep);
+            }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
@@ -590,8 +598,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
         loadExec.setProgress(1.0);
         try {
-            loadInternalHeldTables(
-                    node, loadIntTblsExec, settings, loadTblRep, tblRep);
+            if (!loadHelper.isTemplateFlow()) {
+                loadInternalHeldTables(
+                        node, loadIntTblsExec, settings, loadTblRep, tblRep);
+            }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
@@ -643,7 +653,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return null;
     }
 
-    public ReferencedFile getNodeDirectory() {
+    protected ReferencedFile getNodeDirectory() {
         return m_nodeDirectory;
     }
 

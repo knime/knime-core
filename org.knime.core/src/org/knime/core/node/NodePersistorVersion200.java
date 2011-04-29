@@ -508,20 +508,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
-        if (node.getNrOutPorts() == 1) {
+        final int nrOutPorts = node.getNrOutPorts();
+        if (nrOutPorts == 1) {
             // only the mandatory flow variable port
             return;
         }
-        final int portCount = node.getNrOutPorts();
         NodeSettingsRO portSettings = settings.getNodeSettings("ports");
         exec.setMessage("Reading outport data");
         for (String key : portSettings.keySet()) {
             NodeSettingsRO singlePortSetting =
                     portSettings.getNodeSettings(key);
             ExecutionMonitor subProgress =
-                    exec.createSubProgress(1 / (double)portCount);
+                exec.createSubProgress(1 / (double)nrOutPorts);
             int index = loadPortIndex(singlePortSetting);
-            if (index < 0 || index >= node.getNrOutPorts()) {
+            if (index < 0 || index >= nrOutPorts) {
                 throw new InvalidSettingsException(
                         "Invalid outport index in settings: " + index);
             }

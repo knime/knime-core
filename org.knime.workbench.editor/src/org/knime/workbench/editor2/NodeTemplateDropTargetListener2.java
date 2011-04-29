@@ -60,12 +60,18 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.editor2.commands.CreateMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.NodeUsageRegistry;
+import org.knime.workbench.repository.RepositoryFactory;
+import org.knime.workbench.repository.model.AbstractNodeTemplate;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -88,6 +94,7 @@ public class NodeTemplateDropTargetListener2 implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Transfer getTransfer() {
         return LocalSelectionTransfer.getTransfer();
     }
@@ -95,21 +102,22 @@ public class NodeTemplateDropTargetListener2 implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEnabled(final DropTargetEvent event) {
-        // TODO: calculate enabled
-        // if getSelection is instanceof NodeTemplate
-        // If we aren't a NodeTemplate, perhaps we can get an adapter ?
-        if (isNodeTemplate()) {
+        AbstractNodeTemplate snt = getSelectionNodeTemplate();
+        if (snt != null) {
             event.feedback = DND.FEEDBACK_SELECT;
             event.operations = DND.DROP_COPY;
             event.detail = DND.DROP_COPY;
+            return true;
         }
-        return isNodeTemplate();
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragEnter(final DropTargetEvent event) {
         // do nothing
     }
@@ -117,6 +125,7 @@ public class NodeTemplateDropTargetListener2 implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragLeave(final DropTargetEvent event) {
         // do nothing
     }
@@ -139,14 +148,15 @@ public class NodeTemplateDropTargetListener2 implements
         // at the cursor location
         // more or less because the nodes are still of different width depending
         // on their name
-        p.x -= 40;
-        p.y -= 40;
+        p.x -= 18;
+        p.y -= 18;
         return p;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragOperationChanged(final DropTargetEvent event) {
         // do nothing -> all is handled during "drop"
     }
@@ -154,6 +164,7 @@ public class NodeTemplateDropTargetListener2 implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragOver(final DropTargetEvent event) {
         // do nothing
     }
@@ -161,14 +172,16 @@ public class NodeTemplateDropTargetListener2 implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void drop(final DropTargetEvent event) {
         // TODO: get the Selection from the LocalSelectionTransfer
         // check instanceof NodeTemplate and fire a CreateRequest
         LOGGER.debug("drop: " + event);
-        if (isNodeTemplate()) {
-            NodeTemplate template = (NodeTemplate)((IStructuredSelection)
-                        LocalSelectionTransfer.getTransfer().getSelection())
-                        .getFirstElement();
+        AbstractNodeTemplate ant = getSelectionNodeTemplate();
+        WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart()
+                .getContents()).getWorkflowManager();
+        if (ant instanceof NodeTemplate) {
+            NodeTemplate template = (NodeTemplate)ant;
             CreateRequest request = new CreateRequest();
             // TODO for some reason sometimes the event contains no object - but
             // this doesn't seem to matter - dragging continues as expected
@@ -177,40 +190,46 @@ public class NodeTemplateDropTargetListener2 implements
                 NodeFromNodeTemplateCreationFactory factory
                     = new NodeFromNodeTemplateCreationFactory(template);
                 request.setFactory(factory);
-                WorkflowRootEditPart root = (WorkflowRootEditPart)m_viewer
-                    .getRootEditPart().getContents();
                 m_viewer.getEditDomain().getCommandStack().execute(
-                        new CreateNodeCommand(root.getWorkflowManager(),
-                                (NodeFactory<NodeModel>)
-                                    factory.getNewObject(),
+                        new CreateNodeCommand(wfm, factory.getNewObject(),
                                 getDropLocation(event)));
                 NodeUsageRegistry.addNode(template);
                 // bugfix: 1500
                 m_viewer.getControl().setFocus();
             }
+        } else if (ant instanceof MetaNodeTemplate) {
+            MetaNodeTemplate mnt = (MetaNodeTemplate)ant;
+            NodeID id = mnt.getManager().getID();
+            WorkflowManager sourceManager = RepositoryFactory.META_NODE_ROOT;
+            WorkflowCopyContent content = new WorkflowCopyContent();
+            content.setNodeIDs(id);
+            WorkflowPersistor copy = sourceManager.copy(content);
+            m_viewer.getEditDomain().getCommandStack().execute(
+                new CreateMetaNodeCommand(wfm, copy, getDropLocation(event)));
         }
     }
 
-
-    private boolean isNodeTemplate() {
+    private AbstractNodeTemplate getSelectionNodeTemplate() {
         if (LocalSelectionTransfer.getTransfer().getSelection() == null) {
-            return false;
+            return null;
         }
         Object template = ((IStructuredSelection)LocalSelectionTransfer
                 .getTransfer().getSelection()).getFirstElement();
-        if (!(template instanceof NodeTemplate)) {
-            // Last change: Ask adaptables for an adapter object
-            if (template instanceof IAdaptable) {
-                template = ((IAdaptable) template).getAdapter(
-                        NodeTemplate.class);
-            }
+        if (template instanceof AbstractNodeTemplate) {
+            return (AbstractNodeTemplate)template;
         }
-        return template instanceof NodeTemplate;
+        // Last change: Ask adaptables for an adapter object
+        if (template instanceof IAdaptable) {
+            return (AbstractNodeTemplate)((IAdaptable) template).getAdapter(
+                    AbstractNodeTemplate.class);
+        }
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dropAccept(final DropTargetEvent event) {
     }
 }

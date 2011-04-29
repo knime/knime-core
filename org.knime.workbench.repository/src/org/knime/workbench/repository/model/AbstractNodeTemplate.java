@@ -57,7 +57,7 @@ import org.eclipse.swt.graphics.Image;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractSimpleObject extends AbstractRepositoryObject
+public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
         implements ISimpleObject {
     
     private Image m_icon;

@@ -68,7 +68,7 @@ import org.knime.core.node.NodeModel;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class NodeTemplate extends AbstractSimpleObject {
+public class NodeTemplate extends AbstractNodeTemplate {
     /** Type for nodes that read data. */
     public static final String TYPE_DATA_READER = "data reader";
 

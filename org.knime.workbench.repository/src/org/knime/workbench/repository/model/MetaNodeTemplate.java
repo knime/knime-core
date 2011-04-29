@@ -24,7 +24,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class MetaNodeTemplate extends AbstractSimpleObject {
+public class MetaNodeTemplate extends AbstractNodeTemplate {
 
     private final WorkflowManager m_manager;
 
