@@ -78,6 +78,8 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
@@ -102,6 +104,8 @@ public class DialogComponentFileChooser extends DialogComponent {
     private final TitledBorder m_border;
 
     private final List<SimpleFileFilter> m_fileFilter;
+
+    private FlowVariableModelButton m_fvmButton;
 
     /**
      * Constructor that creates a file chooser with an
@@ -182,6 +186,33 @@ public class DialogComponentFileChooser extends DialogComponent {
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
             final boolean directoryOnly, final String... validExtensions) {
+        this(stringModel, historyID, dialogType, directoryOnly,
+                null, validExtensions);
+    }
+
+    /**
+     * Constructor that creates a file or directory chooser of the given type
+     * that filters the files according to the given extensions. Also
+     * non-existing paths are accepted.
+     *
+     * @param stringModel the model holding the value
+     * @param historyID to identify the file history
+     * @param dialogType {@link JFileChooser#OPEN_DIALOG},
+     *            {@link JFileChooser#SAVE_DIALOG} or
+     *            {@link JFileChooser#CUSTOM_DIALOG}
+     * @param directoryOnly <code>true</code> if only directories should be
+     *            selectable, otherwise only files can be selected
+     * @param fvm model exposed to choose from available flow variables
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
+     * Specify extension including the dot &quot;.&quot;.
+     */
+    public DialogComponentFileChooser(final SettingsModelString stringModel,
+            final String historyID, final int dialogType,
+            final boolean directoryOnly, final FlowVariableModel fvm,
+            final String... validExtensions) {
         super(stringModel);
 
         getComponentPanel().setLayout(new FlowLayout());
@@ -224,6 +255,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         }
 
         m_browseButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
                 final String selectedFile =
@@ -303,11 +335,27 @@ public class DialogComponentFileChooser extends DialogComponent {
             }
         });
 
+        // add variable editor button if so desired
+        if (fvm != null) {
+            fvm.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent evt) {
+                     getModel().setEnabled(!fvm.isVariableReplacementEnabled());
+                }
+            });
+            m_fvmButton = new FlowVariableModelButton(fvm);
+            p.add(m_fvmButton);
+        } else {
+            m_fvmButton = null;
+        }
+
         m_fileComboBox.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 filenameChanged();            }
         });
         m_fileComboBox.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 filenameChanged();
             }
@@ -333,14 +381,17 @@ public class DialogComponentFileChooser extends DialogComponent {
         if (editor instanceof JTextComponent) {
             final Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     filenameChanged();
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     filenameChanged();
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     filenameChanged();
                 }
@@ -349,6 +400,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
 
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -425,6 +477,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         // change the color back as soon as he changes something
         box.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 box.setForeground(DEFAULT_FG);
                 box.setBackground(DEFAULT_BG);
