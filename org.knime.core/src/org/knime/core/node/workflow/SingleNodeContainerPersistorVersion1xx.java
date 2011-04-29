@@ -176,6 +176,10 @@ public class SingleNodeContainerPersistorVersion1xx
         return m_metaPersistor;
     }
 
+    public WorkflowLoadHelper getLoadHelper() {
+        return m_metaPersistor.getLoadHelper();
+    }
+
     /** {@inheritDoc} */
     @Override
     public Node getNode() {

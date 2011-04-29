@@ -265,12 +265,16 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
         try {
             m_state = loadState(settings, parentSettings);
-//            if (State.EXECUTINGREMOTELY.equals(m_state)
-//                    && m_executionJobSettings == null) {
-//                throw new InvalidSettingsException("State loaded as "
-//                        + "EXECUTINGREMOTELY but no execution job "
-//                        + "settings available");
-//            }
+            switch (m_state) {
+            case EXECUTED:
+            case EXECUTINGREMOTELY:
+                if (getLoadHelper().isTemplateFlow()) {
+                    m_state = NodeContainer.State.CONFIGURED;
+                }
+                break;
+            default:
+                // leave it as it is
+            }
         } catch (InvalidSettingsException e) {
             String error = "Can't restore node's state, fallback to "
                 + State.IDLE + ": " + e.getMessage();
@@ -281,7 +285,9 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             m_state = State.IDLE;
         }
         try {
-            m_nodeMessage = loadNodeMessage(settings);
+            if (!getLoadHelper().isTemplateFlow()) {
+                m_nodeMessage = loadNodeMessage(settings);
+            }
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node message: " + ise.getMessage();
             loadResult.addError(e);
