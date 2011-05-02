@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow.virtual;
 
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -69,6 +70,7 @@ implements NodeStateChangeListener {
 
     /** metanode container for all chunks */
     WorkflowManager m_manager;
+    public static final String WFM_NAME = "Parallel Chunks";
     
     /** end node waiting for chunks */
     LoopEndParallelizeNode m_endNode;
@@ -200,7 +202,10 @@ implements NodeStateChangeListener {
                 }
             }
             if (m_manager.getParent().containsNodeContainer(m_manager.getID())) {
-                m_manager.getParent().removeNode(m_manager.getID());
+                NodeContainer nc = m_manager.getParent().getNodeContainer(m_manager.getID());
+                if (WFM_NAME.equals(nc.getName())) {
+                    m_manager.getParent().removeNode(m_manager.getID());
+                }
             }
         }
     }
