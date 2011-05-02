@@ -48,48 +48,71 @@
  * History
  *   Mar 31, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parallelchunkendmultiport;
+package org.knime.core.node.workflow.virtual.parallelchunkend;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-final class ParallelChunkEndNodeConfiguration {
-	
-	/** control if a chunk index is appended to row id. Can be used
-	 * to make row ids unique.
-	 */
-	private boolean m_addChunkIndexToID = false;
+final class ParallelChunkEndNodeDialogPane extends NodeDialogPane {
 
+	private final JCheckBox m_addChunkIndexToID;
+	
 	/**
-     * @return true if chunk ID is added to row id.
-     */
-    public boolean addChunkIndexToID() {
-        return m_addChunkIndexToID;
-    }
+	 * 
+	 */
+	ParallelChunkEndNodeDialogPane() {
+		m_addChunkIndexToID = new JCheckBox("Add Chunk Index to RowID:");
+		
+		JPanel p = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(5, 5, 5, 5);
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.gridwidth = 2;
+        p.add(m_addChunkIndexToID, gbc);
 
-    /**
-     * @param imb true of the main branch is supposed to be inactive.
-     */
-    public void setAddChunkIndexToID(final boolean adi) {
-        m_addChunkIndexToID = adi;
-    }
-	
-	void saveConfiguration(final NodeSettingsWO settings) {
-		settings.addBoolean("addChunkIndex", m_addChunkIndexToID);
+        addTab("Chunking Collection Settings", p);
 	}
 	
-	void loadConfigurationDialog(final NodeSettingsRO settings) {
-		m_addChunkIndexToID = settings.getBoolean("addChunkIndex", false);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void saveSettingsTo(final NodeSettingsWO settings)
+			throws InvalidSettingsException {
+		ParallelChunkEndNodeConfiguration c = 
+			new ParallelChunkEndNodeConfiguration();
+		c.setAddChunkIndexToID(m_addChunkIndexToID.isSelected());
+		c.saveConfiguration(settings);
 	}
 	
-	void loadConfigurationModel(final NodeSettingsRO settings) 
-		throws InvalidSettingsException {
-        m_addChunkIndexToID = settings.getBoolean("addChunkIndex", false);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void loadSettingsFrom(final NodeSettingsRO settings,
+			final PortObjectSpec[] specs) throws NotConfigurableException {
+		ParallelChunkEndNodeConfiguration c =
+			new ParallelChunkEndNodeConfiguration();
+		c.loadConfigurationDialog(settings);
+		m_addChunkIndexToID.setSelected(c.addChunkIndexToID());
 	}
 
 }

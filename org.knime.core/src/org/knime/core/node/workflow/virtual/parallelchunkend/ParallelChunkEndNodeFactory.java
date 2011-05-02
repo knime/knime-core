@@ -59,14 +59,14 @@ import org.knime.core.node.NodeView;
  * @author M. Berthold, University of Konstanz
  */
 public class ParallelChunkEndNodeFactory extends
-		NodeFactory<ParallelChunkEndNodeModel> {
+		NodeFactory<ParallelChunkEndMultiPortNodeModel> {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public ParallelChunkEndNodeModel createNodeModel() {
-		return new ParallelChunkEndNodeModel();
+	public ParallelChunkEndMultiPortNodeModel createNodeModel() {
+		return new ParallelChunkEndMultiPortNodeModel(1);
 	}
 
 	/**
@@ -81,8 +81,8 @@ public class ParallelChunkEndNodeFactory extends
 	 * {@inheritDoc}
 	 */
 	@Override
-	public NodeView<ParallelChunkEndNodeModel> createNodeView(
-			final int viewIndex, final ParallelChunkEndNodeModel nodeModel) {
+	public NodeView<ParallelChunkEndMultiPortNodeModel> createNodeView(
+			final int viewIndex, final ParallelChunkEndMultiPortNodeModel nodeModel) {
 		return null;
 	}
 
@@ -91,7 +91,7 @@ public class ParallelChunkEndNodeFactory extends
 	 */
 	@Override
 	protected boolean hasDialog() {
-		return false;
+		return true;
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class ParallelChunkEndNodeFactory extends
 	 */
 	@Override
 	protected NodeDialogPane createNodeDialogPane() {
-		return null;
+		return new ParallelChunkEndNodeDialogPane();
 	}
 
 }

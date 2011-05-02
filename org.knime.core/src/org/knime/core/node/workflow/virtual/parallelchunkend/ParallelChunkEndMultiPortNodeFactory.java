@@ -48,7 +48,7 @@
  * History
  *   Mar 30, 2011 (mb): created
  */
-package org.knime.core.node.workflow.virtual.parallelchunkendmultiport;
+package org.knime.core.node.workflow.virtual.parallelchunkend;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

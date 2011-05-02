@@ -48,7 +48,7 @@
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parallelchunkendmultiport;
+package org.knime.core.node.workflow.virtual.parallelchunkend;
 
 import java.io.File;
 import java.io.IOException;
