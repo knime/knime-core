@@ -9,20 +9,30 @@
       </NodeExecutionJobManagerFactory>
    </extension>
    <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="Nodes for parallel execution of branches"
+            level-id="parallelexec"
+            name="Parallel Execution"
+            path="/flowcontrol">
+      </category>
+   </extension>
+   <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/"
+            category-path="/flowcontrol/parallelexec"
             expert-flag="false"
             factory-class="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndNodeFactory"
             id="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndNodeFactory">
       </node>
       <node
-            category-path="/"
+            category-path="/flowcontrol/parallelexec"
             expert-flag="false"
             factory-class="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndMultiPortNodeFactory"
             id="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndMultiPortNodeFactory">
       </node>
       <node
+            category-path="/flowcontrol/parallelexec"
             expert-flag="false"
             factory-class="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory"
             id="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory">
