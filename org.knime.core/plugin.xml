@@ -17,6 +17,12 @@
             id="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndNodeFactory">
       </node>
       <node
+            category-path="/"
+            expert-flag="false"
+            factory-class="org.knime.core.node.workflow.virtual.parallelchunkendmultiport.ParallelChunkEndMultiPortNodeFactory"
+            id="org.knime.core.node.workflow.virtual.parallelchunkend.ParallelChunkEndMultiPortNodeFactory">
+      </node>
+      <node
             expert-flag="false"
             factory-class="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory"
             id="org.knime.core.node.workflow.virtual.parallelchunkstart.ParallelChunkStartNodeFactory">
