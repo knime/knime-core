@@ -2305,8 +2305,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 index++;
             }
             WorkflowManager subwfm = createAndAddSubWorkflow(
-                    exposedInportTypes, new PortType[0],
-                    ParallelizedChunkContentMaster.WFM_NAME);
+                    exposedInportTypes, new PortType[0], "Parallel Chunks");
             UIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
             if (startUIPlain instanceof NodeUIInformation) {
                 NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).

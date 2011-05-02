@@ -70,7 +70,6 @@ implements NodeStateChangeListener {
 
     /** metanode container for all chunks */
     WorkflowManager m_manager;
-    public static final String WFM_NAME = "Parallel Chunks";
     
     /** end node waiting for chunks */
     LoopEndParallelizeNode m_endNode;
@@ -79,6 +78,7 @@ implements NodeStateChangeListener {
      * the chunks are located in.
      * 
      * @param wfm the workflowmanager holding the chunks
+     * @param endNode corresponding end node of the loop
      * @param chunkCount the number of chunks.
      */
     public ParallelizedChunkContentMaster(final WorkflowManager wfm,
@@ -203,7 +203,11 @@ implements NodeStateChangeListener {
             }
             if (m_manager.getParent().containsNodeContainer(m_manager.getID())) {
                 NodeContainer nc = m_manager.getParent().getNodeContainer(m_manager.getID());
-                if (WFM_NAME.equals(nc.getName())) {
+                if (m_manager == nc) {
+                    // need to make sure that this is not just another node
+                    // with the same ID (in rare cases this can happen if
+                    // the metanode was cleared but the StartNode did not
+                    // get notified and calls this function again.)
                     m_manager.getParent().removeNode(m_manager.getID());
                 }
             }
