@@ -253,7 +253,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                     for (DataRow row : bdt) {
                         if (m_configuration.addChunkIndexToID()) {
                             row = new DefaultRow(row.getKey()
-                                    + "_#" + (m_chunkMaster.nrChunks()+1), row);
+                                    + "_#" + m_chunkMaster.nrChunks(), row);
                         }
                         bdc[p].addRowToTable(row);
                     }
