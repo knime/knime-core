@@ -79,7 +79,7 @@ public final class VirtualPortObjectOutNodeModel extends NodeModel {
 	 * 
 	 */
 	public VirtualPortObjectOutNodeModel(final PortType[] inTypes) {
-		super(inTypes, inTypes);
+		super(inTypes, new PortType[0]);
 	}
 	
 	/**
@@ -88,8 +88,7 @@ public final class VirtualPortObjectOutNodeModel extends NodeModel {
 	@Override
 	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
 			throws InvalidSettingsException {
-		m_outSpecs = inSpecs;
-		return inSpecs;
+		return new PortObjectSpec[0];
 	}
 	
 	/**
@@ -101,9 +100,13 @@ public final class VirtualPortObjectOutNodeModel extends NodeModel {
 		m_outObjects = inObjects;
 		m_outSpecs = new PortObjectSpec[inObjects.length];
 		for (int i = 0; i < inObjects.length; i++) {
-			m_outSpecs[i] = inObjects[i].getSpec();
+		    if (inObjects[i] != null) {
+		        m_outSpecs[i] = inObjects[i].getSpec();
+		    } else {
+		        m_outSpecs[i] = null;
+		    }
 		}
-		return inObjects;
+		return new PortObject[0];
 	}
 	
 	/**

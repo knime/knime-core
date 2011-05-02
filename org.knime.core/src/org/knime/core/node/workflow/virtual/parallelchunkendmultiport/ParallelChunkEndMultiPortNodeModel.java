@@ -69,6 +69,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.virtual.ParallelizedChunkContent;
@@ -81,14 +82,14 @@ import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
 public class ParallelChunkEndMultiPortNodeModel extends NodeModel
 implements LoopEndParallelizeNode, InactiveBranchConsumer {
 
+    private ParallelChunkEndNodeConfiguration m_configuration =
+        new ParallelChunkEndNodeConfiguration();
+
     /* Store chunks */
     private ParallelizedChunkContentMaster m_chunkMaster;
     
     /* remember cancellation for chunk cleanup */
     private boolean m_canceled = false;
-
-    /* should we uniqify the Row ID by adding the chunk id? */
-    private boolean m_addChunkID = true;
 
     /* number of ports */
     private final int m_nrPorts;
@@ -226,7 +227,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                             bdc[p] = exec.createDataContainer(bdt.getDataTableSpec());
                         }
                         for (DataRow row : bdt) {
-                            if (m_addChunkID) {
+                            if (m_configuration.addChunkIndexToID()) {
                                 row = new DefaultRow(row.getKey()
                                         + "_#" + i, row);
                             }
@@ -250,7 +251,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                     exec.setProgress(0.99, "Copying last chunk " 
                             + " of " + (m_chunkMaster.nrChunks()+1) + "!");
                     for (DataRow row : bdt) {
-                        if (m_addChunkID) {
+                        if (m_configuration.addChunkIndexToID()) {
                             row = new DefaultRow(row.getKey()
                                     + "_#" + (m_chunkMaster.nrChunks()+1), row);
                         }
@@ -258,13 +259,17 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                     }
                 }
             }
-            BufferedDataTable[] result = new BufferedDataTable[m_nrPorts];
-            for (int p = 0; p < m_nrPorts; p++) if (m_portIsConnected[p]) {
-                bdc[p].close();
-                result[p] = bdc[p].getTable();
-                if (result[p] == null) {
-                    throw new Exception("Something went terribly wrong. We are"
-                    		+ " sorry for any inconvenience this may cause.");
+            PortObject[] result = new PortObject[m_nrPorts];
+            for (int p = 0; p < m_nrPorts; p++) {
+                if (m_portIsConnected[p]) {
+                    bdc[p].close();
+                    result[p] = bdc[p].getTable();
+                    if (result[p] == null) {
+                        throw new Exception("Something went terribly wrong. We are"
+                        		+ " sorry for any inconvenience this may cause.");
+                    }
+                } else {
+                    result[p] = InactiveBranchPortObject.INSTANCE;
                 }
             }
             // clean up chunks
@@ -310,31 +315,38 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
     }
 
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        if (m_configuration != null) {
+            m_configuration.saveConfiguration(settings);
+        }
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        ParallelChunkEndNodeConfiguration c =
+            new ParallelChunkEndNodeConfiguration();
+        c.loadConfigurationModel(settings);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        ParallelChunkEndNodeConfiguration c =
+            new ParallelChunkEndNodeConfiguration();
+        c.loadConfigurationModel(settings);
+        m_configuration = c;
+    }
 
 	/**
 	 * {@inheritDoc}

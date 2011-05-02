@@ -46,60 +46,73 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 30, 2011 (mb): created
+ *   Mar 31, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual.parallelchunkendmultiport;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+
 
 /**
  * 
- * @author M. Berthold, University of Konstanz
+ * @author wiswedel, University of Konstanz
  */
-public class ParallelChunkEndMultiPortNodeFactory extends
-		NodeFactory<ParallelChunkEndMultiPortNodeModel> {
+final class ParallelChunkEndNodeDialogPane extends NodeDialogPane {
 
+	private final JCheckBox m_addChunkIndexToID;
+	
 	/**
-	 * {@inheritDoc}
+	 * 
 	 */
-	@Override
-	public ParallelChunkEndMultiPortNodeModel createNodeModel() {
-		return new ParallelChunkEndMultiPortNodeModel(3);
+	ParallelChunkEndNodeDialogPane() {
+		m_addChunkIndexToID = new JCheckBox("Add Chunk Index to RowID:");
+		
+		JPanel p = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(5, 5, 5, 5);
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.gridwidth = 2;
+        p.add(m_addChunkIndexToID, gbc);
+
+        addTab("Chunking Collection Settings", p);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected int getNrNodeViews() {
-		return 0;
+	protected void saveSettingsTo(final NodeSettingsWO settings)
+			throws InvalidSettingsException {
+		ParallelChunkEndNodeConfiguration c = 
+			new ParallelChunkEndNodeConfiguration();
+		c.setAddChunkIndexToID(m_addChunkIndexToID.isSelected());
+		c.saveConfiguration(settings);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public NodeView<ParallelChunkEndMultiPortNodeModel> createNodeView(
-			final int viewIndex, final ParallelChunkEndMultiPortNodeModel nodeModel) {
-		return null;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected boolean hasDialog() {
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected NodeDialogPane createNodeDialogPane() {
-		return new ParallelChunkEndNodeDialogPane();
+	protected void loadSettingsFrom(final NodeSettingsRO settings,
+			final PortObjectSpec[] specs) throws NotConfigurableException {
+		ParallelChunkEndNodeConfiguration c =
+			new ParallelChunkEndNodeConfiguration();
+		c.loadConfigurationDialog(settings);
+		m_addChunkIndexToID.setSelected(c.addChunkIndexToID());
 	}
 
 }

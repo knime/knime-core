@@ -46,60 +46,50 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 30, 2011 (mb): created
+ *   Mar 31, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual.parallelchunkendmultiport;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * 
- * @author M. Berthold, University of Konstanz
+ * @author wiswedel, University of Konstanz
  */
-public class ParallelChunkEndMultiPortNodeFactory extends
-		NodeFactory<ParallelChunkEndMultiPortNodeModel> {
+final class ParallelChunkEndNodeConfiguration {
+	
+	/** control if a chunk index is appended to row id. Can be used
+	 * to make row ids unique.
+	 */
+	private boolean m_addChunkIndexToID = false;
 
 	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public ParallelChunkEndMultiPortNodeModel createNodeModel() {
-		return new ParallelChunkEndMultiPortNodeModel(3);
+     * @return true if chunk ID is added to row id.
+     */
+    public boolean addChunkIndexToID() {
+        return m_addChunkIndexToID;
+    }
+
+    /**
+     * @param imb true of the main branch is supposed to be inactive.
+     */
+    public void setAddChunkIndexToID(final boolean adi) {
+        m_addChunkIndexToID = adi;
+    }
+	
+	void saveConfiguration(final NodeSettingsWO settings) {
+		settings.addBoolean("addChunkIndex", m_addChunkIndexToID);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected int getNrNodeViews() {
-		return 0;
+	
+	void loadConfigurationDialog(final NodeSettingsRO settings) {
+		m_addChunkIndexToID = settings.getBoolean("addChunkIndex", false);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public NodeView<ParallelChunkEndMultiPortNodeModel> createNodeView(
-			final int viewIndex, final ParallelChunkEndMultiPortNodeModel nodeModel) {
-		return null;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected boolean hasDialog() {
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected NodeDialogPane createNodeDialogPane() {
-		return new ParallelChunkEndNodeDialogPane();
+	
+	void loadConfigurationModel(final NodeSettingsRO settings) 
+		throws InvalidSettingsException {
+        m_addChunkIndexToID = settings.getBoolean("addChunkIndex", false);
 	}
 
 }
