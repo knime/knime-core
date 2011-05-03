@@ -50,20 +50,20 @@
  */
 package org.knime.workbench.editor2;
 
-import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.dnd.AbstractTransferDropTargetListener;
 import org.eclipse.gef.requests.CreateRequest;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.ui.part.ResourceTransfer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
+import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
+import org.knime.workbench.explorer.view.ContentObject;
 
 /**
  *
@@ -81,7 +81,7 @@ public class MetaNodeTemplateDropTargetListener
      *
      */
     public MetaNodeTemplateDropTargetListener(final EditPartViewer v) {
-        super(v, ResourceTransfer.getInstance());
+        super(v, LocalSelectionTransfer.getTransfer());
         m_factory = new MetaNodeTemplateFactory();
     }
 
@@ -102,24 +102,17 @@ public class MetaNodeTemplateDropTargetListener
     /** {@inheritDoc} */
     @Override
     protected void handleDrop() {
-        Object data = getCurrentEvent().data;
-        if (data instanceof IResource[]) {
-            IResource[] fileStores = (IResource[])data;
-            if (fileStores.length > 0) {
-                IResource iResource = fileStores[0];
-                IFileStore store;
-                try {
-                    store = EFS.getStore(iResource.getLocationURI());
-                    IFileStore workflowKNIMEFile = store.getChild(
-                            WorkflowPersistorVersion1xx.WORKFLOW_FILE);
-                    if (workflowKNIMEFile.fetchInfo().exists()) {
-                        m_factory.setSourceFileStore(workflowKNIMEFile);
-                        super.handleDrop();
-                    }
-                } catch (CoreException e) {
-                    LOGGER.error("Unable to drop meta node", e);
-                }
-            }
+        ContentObject obj = getDragResources(getCurrentEvent());
+        Object o = obj.getObject();
+        if (!(o instanceof ExplorerFileStore)) {
+            return;
+        }
+        ExplorerFileStore store = (ExplorerFileStore)o;
+        IFileStore workflowKNIMEFile = store.getChild(
+                WorkflowPersistorVersion1xx.WORKFLOW_FILE);
+        if (workflowKNIMEFile.fetchInfo().exists()) {
+            m_factory.setSourceFileStore(workflowKNIMEFile);
+            super.handleDrop();
         }
     }
 
@@ -128,7 +121,6 @@ public class MetaNodeTemplateDropTargetListener
      */
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
-        if (true) return super.isEnabled(event);
         boolean isMetaNodeTemplate = getDragResources(event) != null;
         if (isMetaNodeTemplate) {
             event.feedback = DND.FEEDBACK_SELECT;
@@ -187,15 +179,14 @@ public class MetaNodeTemplateDropTargetListener
 //    }
 
 
-    private IResource[] getDragResources(final DropTargetEvent event) {
-        Transfer transfer = getTransfer();
-        if (transfer.isSupportedType(event.currentDataType)) {
-            Object data = event.data;
-            if (data instanceof IResource[]) {
-                IResource[] resources = (IResource[])data;
-                if (resources.length > 0) {
-                    return resources;
-                }
+    private ContentObject getDragResources(final DropTargetEvent event) {
+        LocalSelectionTransfer transfer = (LocalSelectionTransfer)getTransfer();
+        ISelection selection = transfer.getSelection();
+        if (selection instanceof IStructuredSelection) {
+            IStructuredSelection ss = (IStructuredSelection)selection;
+            Object firstElement = ss.getFirstElement();
+            if (firstElement instanceof ContentObject) {
+                return (ContentObject)firstElement;
             }
         }
         return null;
