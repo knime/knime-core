@@ -22,21 +22,24 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.InvalidRegistryObjectException;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.util.TransferDropTargetListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.base.node.io.filereader.FileReaderNodeFactory;
-import org.knime.base.node.io.table.read.ReadTableNodeFactory;
+import org.eclipse.swt.dnd.TransferData;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -54,8 +57,8 @@ public class WorkflowEditorFileDropTargetListener implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorFileDropTargetListener.class);
 
-    private static HashMap<String, List<Class<? extends NodeFactory>>> DROP_RECEIVER =
-            null;
+    private static Map<String, Class<? extends NodeFactory<NodeModel>>>
+            EXTENSION_REGISTRY;
 
     private final EditPartViewer m_viewer;
 
@@ -63,20 +66,8 @@ public class WorkflowEditorFileDropTargetListener implements
      *
      */
     public WorkflowEditorFileDropTargetListener(final EditPartViewer viewer) {
-        if (DROP_RECEIVER == null) {
-            DROP_RECEIVER =
-                    new LinkedHashMap<String, List<Class<? extends NodeFactory>>>();
-
-            String ext = ".csv";
-            List<Class<? extends NodeFactory>> nodes =
-                    new LinkedList<Class<? extends NodeFactory>>();
-            nodes.add(FileReaderNodeFactory.class);
-            DROP_RECEIVER.put(ext, nodes);
-
-            ext = ".table";
-            nodes = new LinkedList<Class<? extends NodeFactory>>();
-            nodes.add(ReadTableNodeFactory.class);
-            DROP_RECEIVER.put(ext, nodes);
+        if (EXTENSION_REGISTRY == null) {
+            initRegistry();
         }
         m_viewer = viewer;
     }
@@ -84,6 +75,7 @@ public class WorkflowEditorFileDropTargetListener implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragOperationChanged(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
@@ -92,6 +84,7 @@ public class WorkflowEditorFileDropTargetListener implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragEnter(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
@@ -100,6 +93,7 @@ public class WorkflowEditorFileDropTargetListener implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragLeave(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
@@ -108,6 +102,7 @@ public class WorkflowEditorFileDropTargetListener implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dragOver(final DropTargetEvent event) {
         // TODO Auto-generated method stub
 
@@ -118,20 +113,54 @@ public class WorkflowEditorFileDropTargetListener implements
      */
     @Override
     public void drop(final DropTargetEvent event) {
-
-        if (!FileTransfer.getInstance().isSupportedType(event.currentDataType)) {
+        if (!isEnabled(event)) {
             return;
         }
-        if (!(event.data instanceof String[])) {
+
+        TransferData transferType = event.currentDataType;
+
+        final LocalSelectionTransfer transfer
+                = LocalSelectionTransfer.getTransfer();
+        if (transfer.isSupportedType(
+                transferType)) {
+            IStructuredSelection selection
+                    = (IStructuredSelection)transfer.getSelection();
+           // TODO implement
+            LOGGER.error("File drop is not yet implemented from KNIME Explorer."
+                    + selection.toString());
+
+        } else if (FileTransfer.getInstance().isSupportedType(
+                        transferType)) {
+            String[] filePaths = (String[])event.data;
+            if (filePaths.length > 1) {
+                LOGGER.warn("Can currently only drop one item at a time");
+            }
+            String file = filePaths[0];
+            Point dropLocation = getDropLocation(event);
+
+            dropNode(file, dropLocation);
+        }
+    }
+
+    private void dropNode(final String file, final Point dropLocation) {
+        String extension = file.substring(file.lastIndexOf(".") + 1);
+        Class<? extends NodeFactory<NodeModel>> clazz
+                = EXTENSION_REGISTRY.get(extension);
+        if (clazz == null) {
+            LOGGER.warn("No node factory is registered for handling files "
+                    + "of type \"" + extension + "\"");
             return;
         }
-        String[] filePaths = (String[])event.data;
-
-        if (filePaths.length > 1) {
-            LOGGER.warn("Can currently only drop one item at a time");
+        NodeFactory<NodeModel> nodeFact;
+        try {
+            nodeFact = clazz.newInstance();
+        } catch (InstantiationException e) {
+            LOGGER.error("Can't create node " + clazz.getName() + ".", e);
+            return;
+        } catch (IllegalAccessException e) {
+            LOGGER.error(e);
+            return;
         }
-        String file = filePaths[0];
-        NodeFactory<NodeModel> nodeFact = null;
 
         // Set the factory on the current request
         URL url;
@@ -147,12 +176,10 @@ public class WorkflowEditorFileDropTargetListener implements
             return;
         }
         NodeCreationContext ncc = new NodeCreationContext(url);
-        WorkflowRootEditPart root =
-                (WorkflowRootEditPart)m_viewer.getRootEditPart().getContents();
-        Point dropLocation = getDropLocation(event);
-        DropNodeCommand cmd =
-                new DropNodeCommand(root.getWorkflowManager(), nodeFact, ncc,
-                        dropLocation);
+        WorkflowRootEditPart root = (WorkflowRootEditPart)
+                m_viewer.getRootEditPart().getContents();
+        DropNodeCommand cmd = new DropNodeCommand(root.getWorkflowManager(),
+                nodeFact, ncc, dropLocation);
         m_viewer.getEditDomain().getCommandStack().execute(cmd);
         // NodeUsageRegistry.addNode(template);
         // bugfix: 1500
@@ -182,63 +209,6 @@ public class WorkflowEditorFileDropTargetListener implements
     }
 
     /**
-     * Returns true if all paths have known extensions
-     *
-     * @param paths
-     * @return
-     */
-    protected boolean hasKnownFileExtension(final String[] paths) {
-
-        return true;
-    }
-
-    /**
-     * Returns null, if no nodefactory is registered for that file extension.
-     *
-     * @param filename full file name
-     * @return
-     */
-    private Class<? extends NodeFactory> getNodeClassForExtension(
-            final String filename) {
-        for (Map.Entry<String, List<Class<? extends NodeFactory>>> e : DROP_RECEIVER
-                .entrySet()) {
-            String ext = e.getKey();
-            if (filename.endsWith(ext)) {
-                List<Class<? extends NodeFactory>> nodes = e.getValue();
-                return nodes.get(0); // just return the first node registered
-            }
-        }
-        return null;
-    }
-
-    private NodeFactory getNodeForExtension(final String filename) {
-
-        for (Map.Entry<String, List<Class<? extends NodeFactory>>> e : DROP_RECEIVER
-                .entrySet()) {
-            String ext = e.getKey();
-            if (filename.endsWith(ext)) {
-                List<Class<? extends NodeFactory>> nodes = e.getValue();
-                if (nodes.size() > 1) {
-                    LOGGER.warn("more than one registered receiver node. "
-                            + "Picking first one.");
-                }
-                for (Class<? extends NodeFactory> c : nodes) {
-                    try {
-                        return c.newInstance();
-                    } catch (Exception ex) {
-                        LOGGER.warn("Can't create node " + c.getName()
-                                + ". Trying next.", ex);
-                    }
-                }
-                LOGGER.error("None of the receiver nodes could be "
-                        + "instantiated. Can't process drop.");
-                return null;
-            }
-        }
-        return null;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -262,7 +232,53 @@ public class WorkflowEditorFileDropTargetListener implements
      */
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
+        TransferData transferType = event.currentDataType;
+        if (!LocalSelectionTransfer.getTransfer().isSupportedType(
+                transferType) && !FileTransfer.getInstance().isSupportedType(
+                        transferType)) {
+            LOGGER.info("Only LocalSelectionTransfer can be dropped. Got "
+                    + transferType + ".");
+            return false;
+        }
         return true;
     }
 
+    private static void initRegistry() {
+        EXTENSION_REGISTRY = new TreeMap<String,
+                Class<? extends NodeFactory<NodeModel>>>();
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        for (IConfigurationElement element : registry
+                .getConfigurationElementsFor(
+                        "org.knime.workbench.editor.editor_filedrop")) {
+            try {
+                /*
+                 * Use the configuration element method to load an object of the
+                 * given class name. This method ensures the correct classpath
+                 * is used providing access to all extension points.
+                 */
+                final Object o =
+                        element.createExecutableExtension("NodeFactory");
+                @SuppressWarnings("unchecked")
+                Class<? extends NodeFactory<NodeModel>> clazz =
+                        (Class<? extends NodeFactory<NodeModel>>)o.getClass();
+
+                for (IConfigurationElement child : element.getChildren()) {
+                    String extension = child.getAttribute("extension");
+                    if (EXTENSION_REGISTRY.get(extension) == null) {
+                        // add class
+                        EXTENSION_REGISTRY.put(extension, clazz);
+                    } // else already registered -> first come first serve
+                }
+            } catch (InvalidRegistryObjectException e) {
+                throw new IllegalArgumentException(e);
+            } catch (CoreException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+        for (String key : EXTENSION_REGISTRY.keySet()) {
+            LOGGER.debug("File extension: \"" + key + "\" registered for "
+                    + "Node Factory: "
+                    + EXTENSION_REGISTRY.get(key).getSimpleName() + ".");
+        }
+    }
 }

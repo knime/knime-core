@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
    <extension-point id="metanode_porttype" name="Port Type for Meta Node Wizard" schema="schema/metanode_portype.exsd"/>
+   <extension-point id="editor_filedrop" name="Node Factory for File Extension. " schema="schema/editor_filedrop.exsd"/>
      <extension
          point="org.eclipse.ui.commands">
       <category
@@ -267,7 +268,7 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Configure selected node"/>   
+               tooltip="Configure selected node"/>
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -381,5 +382,23 @@
             icon="icons/node_description.png"
             id="org.knime.workbench.helpview"
             name="Node Description"/>
-   </extension>    
+   </extension>
+     <extension
+           point="org.knime.workbench.editor.editor_filedrop">
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.csvreader.CSVReaderNodeFactory">
+           <FileExtension
+                 extension="csv">
+           </FileExtension>
+        </FileExtensionMapping>
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.filereader.FileReaderNodeFactory">
+           <FileExtension
+                 extension="txt">
+           </FileExtension>
+           <FileExtension
+                 extension="tsv">
+           </FileExtension>
+        </FileExtensionMapping>
+     </extension>    
 </plugin>
