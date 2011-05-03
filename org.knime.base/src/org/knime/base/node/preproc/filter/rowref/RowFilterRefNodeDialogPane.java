@@ -77,16 +77,17 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
      * include or exclude mode.
      */
     public RowFilterRefNodeDialogPane() {
+        @SuppressWarnings("unchecked")
         final DataValueColumnFilter colFilter =
             new DataValueColumnFilter(DataValue.class);
         final DialogComponent dataTableCol =
             new DialogComponentColumnNameSelection(
                     createDataTableColModel(), "Data table column: ", 0,
-                    true, colFilter);
+                    false, colFilter);
         final DialogComponent referenceTableCol =
             new DialogComponentColumnNameSelection(
                     createReferenceTableColModel(), "Reference table column: ",
-                    1, true, colFilter);
+                    1, false, colFilter);
         final DialogComponentButtonGroup group = new DialogComponentButtonGroup(
                 createInExcludeModel(), true, INCLUDE,
                 new String[]{INCLUDE, EXCLUDE});
