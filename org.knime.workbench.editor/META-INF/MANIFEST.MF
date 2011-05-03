@@ -30,7 +30,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.ui,
  org.knime.base;bundle-version="2.4.0",
  org.knime.workbench.help;bundle-version="2.4.0",
- org.eclipse.core.resources;bundle-version="3.6.0"
+ org.eclipse.core.resources;bundle-version="3.6.0",
+ org.knime.workbench.explorer.view
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-ActivationPolicy: lazy
