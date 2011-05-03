@@ -154,7 +154,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
 	    // determine which inports are actually connected:
 	    boolean[] m_portIsConnected = new boolean[m_nrPorts];
 	    for (int p = 0; p < m_nrPorts; p++) {
-	        m_portIsConnected[p] = inObjects[p] != null;
+	        m_portIsConnected[p] = (inObjects[p] != null);
 	    }
         // wait for all parallel branches to finish...
 	    boolean done = false;
@@ -214,24 +214,27 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                 ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
                 if (pcc.isExecuted()) {
                     // copy results from chunk
-                    for (int p = 0; p < m_nrPorts; p++) if (m_portIsConnected[p]) {
-                        BufferedDataTable bdt
+                    for (int p = 0; p < m_nrPorts; p++) {
+                        if (m_portIsConnected[p]) {
+                            BufferedDataTable bdt
                                 = (BufferedDataTable)pcc.getOutportContent()[p];
-                        if (bdt == null) {
-                            throw new Exception("Chunk " + i
-                                    + " (port " + p + ")"
-                                    + " has no content!");
-                        }
-                        if (i == 0) {
-                            // init table create with spec from first chunk
-                            bdc[p] = exec.createDataContainer(bdt.getDataTableSpec());
-                        }
-                        for (DataRow row : bdt) {
-                            if (m_configuration.addChunkIndexToID()) {
-                                row = new DefaultRow(row.getKey()
-                                        + "_#" + i, row);
+                            if (bdt == null) {
+                                throw new Exception("Chunk " + i
+                                        + " (port " + p + ")"
+                                        + " has no content!");
                             }
-                            bdc[p].addRowToTable(row);
+                            if (i == 0) {
+                                // init table create with spec from first chunk
+                                bdc[p] = exec.createDataContainer(
+                                                    bdt.getDataTableSpec());
+                            }
+                            for (DataRow row : bdt) {
+                                if (m_configuration.addChunkIndexToID()) {
+                                    row = new DefaultRow(row.getKey()
+                                            + "_#" + i, row);
+                                }
+                                bdc[p].addRowToTable(row);
+                            }
                         }
                     }
                 } else {
@@ -241,21 +244,24 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                 exec.checkCanceled();
             }
             if (hasLocalChunk) {
-                for (int p = 0; p < m_nrPorts; p++) if (m_portIsConnected[p]) {
-                    BufferedDataTable bdt = (BufferedDataTable)inObjects[p];
-                    if (bdc[p] == null) {
-                        // init table create with spec from localChunk if no
-                        // remote chunks were copied!
-                        bdc[p] = exec.createDataContainer(bdt.getDataTableSpec());
-                    }
-                    exec.setProgress(0.99, "Copying last chunk " 
-                            + " of " + (m_chunkMaster.nrChunks()+1) + "!");
-                    for (DataRow row : bdt) {
-                        if (m_configuration.addChunkIndexToID()) {
-                            row = new DefaultRow(row.getKey()
-                                    + "_#" + m_chunkMaster.nrChunks(), row);
+                for (int p = 0; p < m_nrPorts; p++) {
+                    if (m_portIsConnected[p]) {
+                        BufferedDataTable bdt = (BufferedDataTable)inObjects[p];
+                        if (bdc[p] == null) {
+                            // init table create with spec from localChunk if no
+                            // remote chunks were copied!
+                            bdc[p] = exec.createDataContainer(
+                                                    bdt.getDataTableSpec());
                         }
-                        bdc[p].addRowToTable(row);
+                        exec.setProgress(0.99, "Copying last chunk " 
+                                + " of " + (m_chunkMaster.nrChunks()+1) + "!");
+                        for (DataRow row : bdt) {
+                            if (m_configuration.addChunkIndexToID()) {
+                                row = new DefaultRow(row.getKey()
+                                        + "_#" + m_chunkMaster.nrChunks(), row);
+                            }
+                            bdc[p].addRowToTable(row);
+                        }
                     }
                 }
             }
@@ -265,8 +271,9 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                     bdc[p].close();
                     result[p] = bdc[p].getTable();
                     if (result[p] == null) {
-                        throw new Exception("Something went terribly wrong. We are"
-                        		+ " sorry for any inconvenience this may cause.");
+                        throw new Exception("Something went terribly wrong. We"
+                        		+ " are sorry for any inconvenience this may"
+                        		+ " cause.");
                     }
                 } else {
                     result[p] = InactiveBranchPortObject.INSTANCE;
