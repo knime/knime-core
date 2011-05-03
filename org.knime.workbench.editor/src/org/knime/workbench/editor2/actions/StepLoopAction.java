@@ -65,6 +65,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author M. Berthold, University of Konstanz
  */
 public class StepLoopAction extends AbstractNodeAction {
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(StepLoopAction.class);
 
@@ -109,8 +110,7 @@ public class StepLoopAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository
-                .getImageDescriptor("icons/step_disabled.png");
+        return ImageRepository.getImageDescriptor("icons/step_disabled.png");
     }
 
     /**

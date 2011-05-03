@@ -69,6 +69,21 @@
             description="Open wizard to add meta node"
             id="knime.commands.addMetaNode"
             name="Open Meta Node Wizard..."/>
+      <command
+            categoryId="knime.command.category"
+            description="Do one loop step"
+            id="knime.commands.steploop"
+            name="Do one loop step"/>
+      <command
+            categoryId="knime.command.category"
+            description="Pause loop execution"
+            id="knime.commands.pauseexecution"
+            name="Pause loop execution"/>  
+      <command
+            categoryId="knime.command.category"
+            description="Resume loop execution"
+            id="knime.commands.resumeloop"
+            name="Resume loop execution"/>       
    </extension>
    <extension
          point="org.eclipse.ui.editors">
@@ -93,6 +108,36 @@
                path="additions">
             <groupMarker name="group1"/>
          </menu>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.ResumeLoopEditorAction"
+               definitionId="knime.commands.resumeloop"
+               disabledIcon="icons/resume_disabled.png"
+               icon="icons/resume.png"
+               id="org.knime.workbench.editor.actions.resumeloop"
+               label="Resume Loop Execution"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               tooltip="Resume loop execution"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.PauseLoopExecutionEditorAction"
+               definitionId="knime.commands.pauseexecution"
+               disabledIcon="icons/pause_disabled.png"
+               icon="icons/pause.png"
+               id="org.knime.workbench.editor.actions.pauseexecution"
+               label="Pause Execution"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               tooltip="Pause execution"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.StepLoopEditorAction"
+               definitionId="knime.commands.steploop"
+               disabledIcon="icons/step_disabled.png"
+               icon="icons/step.png"
+               id="org.knime.workbench.editor.actions.stepLoop"
+               label="Step Loop Execution"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               tooltip="Do one loop step"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.HideNodeNamesEditorAction"
                definitionId="knime.commands.hideNodeNames"
@@ -222,7 +267,7 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Configure selected node"/>
+               tooltip="Configure selected node"/>   
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -286,6 +331,21 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="SHIFT+F6"/>
+      <key
+            commandId="knime.commands.steploop"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="ALT+CTRL+F6"/>
+      <key
+            commandId="knime.commands.pauseexecution"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="ALT+CTRL+F7"/>
+      <key
+            commandId="knime.commands.resumeloop"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="ALT+CTRL+F8"/>  
    </extension>
     <extension
          id="modelProvider"
