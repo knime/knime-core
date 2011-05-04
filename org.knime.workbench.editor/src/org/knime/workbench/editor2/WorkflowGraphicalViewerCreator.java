@@ -126,6 +126,8 @@ public class WorkflowGraphicalViewerCreator {
         viewer.addDropTargetListener(listener);
         viewer.addDropTargetListener(
                 new WorkflowEditorFileDropTargetListener(viewer));
+        viewer.addDropTargetListener(
+                new WorkflowEditorSelectionDropListener(viewer));
         MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);
