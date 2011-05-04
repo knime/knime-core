@@ -29,11 +29,14 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  *
@@ -53,7 +56,7 @@ public class DropNodeCommand extends Command {
 
     private final NodeCreationContext m_dropContext;
 
-    private NodeSettingsWO m_nodeSettings;
+    private final NodeSettingsWO m_nodeSettings;
 
     /**
      * Creates a new command.
@@ -90,14 +93,43 @@ public class DropNodeCommand extends Command {
             NodeID id =
                     m_manager.addNodeAndApplyContext(m_factory, m_dropContext);
             m_container = m_manager.getNodeContainer(id);
+            // create extra info and set it
+            NodeUIInformation info =
+                new NodeUIInformation(m_location.x, m_location.y, -1, -1, false);
+            m_container.setUIInformation(info);
+
             // Open the dialog. Some times.
             if (m_container != null
+                    && m_container instanceof SingleNodeContainer
                     && m_container.getState().equals(State.IDLE)
                     && m_container.hasDialog()
-                    && m_container.getNrInPorts() == 0) {
+                    // and has only a variable in port
+                    && m_container.getNrInPorts() == 1) {
                 // if not executable and has a dialog and is fully connected
+//                m_container.openDialogInJFrame();
 
-                // TODO: open dialog
+                // This is embedded in a special JFace wrapper dialog
+                //
+                try {
+                    WrappedNodeDialog dlg =
+                            new WrappedNodeDialog(
+                                    Display.getCurrent().getActiveShell(), m_container);
+                    dlg.open();
+                } catch (NotConfigurableException ex) {
+                    MessageBox mb =
+                            new MessageBox(Display.getDefault().getActiveShell(),
+                                    SWT.ICON_WARNING | SWT.OK);
+                    mb.setText("Dialog cannot be opened");
+                    mb.setMessage("The dialog cannot be opened for the following"
+                            + " reason:\n" + ex.getMessage());
+                    mb.open();
+                } catch (Throwable t) {
+                    LOGGER.error(
+                            "The dialog pane for node '" + m_container.getNameWithID()
+                                    + "' has thrown a '" + t.getClass().getSimpleName()
+                                    + "'. That is most likely an implementation error.",
+                            t);
+                }
 
             }
 
@@ -113,10 +145,6 @@ public class DropNodeCommand extends Command {
             mb.open();
             return;
         }
-        // create extra info and set it
-        NodeUIInformation info =
-                new NodeUIInformation(m_location.x, m_location.y, -1, -1, false);
-        m_container.setUIInformation(info);
 
     }
 
