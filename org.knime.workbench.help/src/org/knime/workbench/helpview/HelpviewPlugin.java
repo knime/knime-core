@@ -54,6 +54,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
+import org.mortbay.log.Log;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -87,6 +88,17 @@ public class HelpviewPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        // initialize jetty's logging system
+        if (System.getProperty("org.mortbay.log.class") == null) {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(JettyLogger.class.getClassLoader());
+                System.setProperty("org.mortbay.log.class",JettyLogger.class.getName());
+                Log.getLog();
+            } finally {
+                Thread.currentThread().setContextClassLoader(cl);
+            }
+        }
 
         // start an embedded webserver for serving bundle-local or node-local
         // files in the node descriptions
