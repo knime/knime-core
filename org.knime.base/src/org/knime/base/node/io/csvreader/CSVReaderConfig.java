@@ -74,6 +74,21 @@ final class CSVReaderConfig {
     private boolean m_hasColHeader;
     private String m_commentStart;
 
+
+    /**
+     * Creates a new CSVReaderConfig with default values for all settings
+     * except the url.
+     */
+    public CSVReaderConfig() {
+        super();
+        m_colDelimiter = ",";
+        m_rowDelimiter = "\n";
+        m_quoteString = "\"";
+        m_commentStart = "#";
+        m_hasRowHeader = true;
+        m_hasColHeader = true;
+    }
+
     /** Load settings, used in dialog (no errors).
      * @param settings To load from.
      */
@@ -86,12 +101,12 @@ final class CSVReaderConfig {
                 m_url = null;
             }
         }
-        m_colDelimiter = settings.getString("colDelimiter", ",");
-        m_rowDelimiter = settings.getString("rowDelimiter", "\n");
-        m_quoteString = settings.getString("quote", "\"");
-        m_commentStart = settings.getString("commentStart", "#");
-        m_hasRowHeader = settings.getBoolean("hasRowHeader", true);
-        m_hasColHeader = settings.getBoolean("hasColHeader", true);
+        m_colDelimiter = settings.getString("colDelimiter", m_colDelimiter);
+        m_rowDelimiter = settings.getString("rowDelimiter", m_rowDelimiter);
+        m_quoteString = settings.getString("quote", m_quoteString);
+        m_commentStart = settings.getString("commentStart", m_commentStart);
+        m_hasRowHeader = settings.getBoolean("hasRowHeader", m_hasRowHeader);
+        m_hasColHeader = settings.getBoolean("hasColHeader", m_hasColHeader);
     }
 
     /** Load in model, fail if settings are invalid.

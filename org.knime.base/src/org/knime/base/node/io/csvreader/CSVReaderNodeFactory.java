@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.io.csvreader;
 
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -78,6 +79,15 @@ public class CSVReaderNodeFactory
     public NodeView<CSVReaderNodeModel> createNodeView(
             final int viewIndex, final CSVReaderNodeModel nodeModel) {
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CSVReaderNodeModel createNodeModel(
+            final NodeCreationContext context) {
+        return new CSVReaderNodeModel(context);
     }
 
     /** {@inheritDoc} */

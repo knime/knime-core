@@ -63,6 +63,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -80,6 +81,17 @@ final class CSVReaderNodeModel extends NodeModel {
     CSVReaderNodeModel() {
         super(0, 1);
     }
+
+
+    /**
+     * @param context the node creation context
+     */
+    CSVReaderNodeModel(final NodeCreationContext context) {
+        this();
+        m_config = new CSVReaderConfig();
+        m_config.setUrl(context.getUrl());
+    }
+
 
     /** {@inheritDoc} */
     @Override
