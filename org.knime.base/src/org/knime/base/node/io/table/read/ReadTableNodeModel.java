@@ -108,7 +108,7 @@ public class ReadTableNodeModel extends NodeModel {
      * Called by the node factory if the node is instantiated due to a file
      * drop.
      *
-     * @param context
+     * @param context the node creation context
      */
     public ReadTableNodeModel(final NodeCreationContext context) {
         this();

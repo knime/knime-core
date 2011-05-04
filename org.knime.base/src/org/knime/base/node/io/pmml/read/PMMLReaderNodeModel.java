@@ -56,6 +56,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -72,7 +73,7 @@ import org.xml.sax.SAXException;
  */
 public class PMMLReaderNodeModel extends NodeModel {
 
-    private SettingsModelString m_file = PMMLReaderNodeDialog
+    private final SettingsModelString m_file = PMMLReaderNodeDialog
             .createFileChooserModel();
 
     private PMMLImport m_importer;
@@ -83,6 +84,17 @@ public class PMMLReaderNodeModel extends NodeModel {
     public PMMLReaderNodeModel() {
         super(new PortType[]{}, new PortType[]{new PortType(
                 PMMLPortObject.class)});
+    }
+
+    /**
+     * Called by the node factory if the node is instantiated due to a file
+     * drop.
+     *
+     * @param context the node creation context
+     */
+    public PMMLReaderNodeModel(final NodeCreationContext context) {
+        this();
+        m_file.setStringValue(context.getUrl().getFile());
     }
 
     /**

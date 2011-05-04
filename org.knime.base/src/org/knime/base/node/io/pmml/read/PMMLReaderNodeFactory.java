@@ -47,15 +47,16 @@
  */
 package org.knime.base.node.io.pmml.read;
 
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class PMMLReaderNodeFactory 
+public class PMMLReaderNodeFactory
     extends NodeFactory<PMMLReaderNodeModel> {
 
     /**
@@ -82,6 +83,15 @@ public class PMMLReaderNodeFactory
             final int viewIndex,
             final PMMLReaderNodeModel nodeModel) {
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PMMLReaderNodeModel createNodeModel(
+            final NodeCreationContext context) {
+        return new PMMLReaderNodeModel(context);
     }
 
     /**
