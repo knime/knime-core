@@ -66,6 +66,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
 
 /**
  * Container policy, handles the creation of new nodes that are inserted into
@@ -119,7 +120,12 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             return new CreateNodeCommand(manager, factory, location);
         } else if (obj instanceof IFileStore) {
             IFileStore fs = (IFileStore)obj;
-            return new CreateMetaNodeTemplateCommand(manager, fs, location);
+            // TODO avoid this hack to distinguish between workflows and files
+            // dragged from the KNIME Explorer
+            if (!(fs instanceof ExplorerFileStore)
+                    || fs.toString().endsWith("workflow.knime")) {
+                return new CreateMetaNodeTemplateCommand(manager, fs, location);
+            }
         }
 
         // // Case 2:

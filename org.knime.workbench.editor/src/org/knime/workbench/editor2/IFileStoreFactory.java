@@ -40,79 +40,42 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   04.02.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2;
 
 import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.gef.EditPartViewer;
-import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
-import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
-import org.knime.workbench.explorer.view.ContentObject;
+import org.eclipse.gef.requests.CreationFactory;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich Switzerland
- * @author Peter Ohl, KNIME.com, Zurich Switzerland
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class MetaNodeTemplateDropTargetListener extends
-        WorkflowEditorDropTargetListener {
+public class IFileStoreFactory implements CreationFactory {
 
-    /**
-     * @param v the edit part viewer this drop target listener is attached
-     *            to
-     */
-    public MetaNodeTemplateDropTargetListener(final EditPartViewer v) {
-        super(v);
-    }
-
+    private IFileStore m_fileStore;
 
     /** {@inheritDoc} */
     @Override
-    protected void handleDrop() {
-        ContentObject obj = getDragResources(getCurrentEvent());
-        ExplorerFileStore store =  obj.getObject();
-        IFileStore workflowKNIMEFile =
-                store.getChild(WorkflowPersistorVersion1xx.WORKFLOW_FILE);
-        if (workflowKNIMEFile.fetchInfo().exists()) {
-            getFactory().setSourceFileStore(workflowKNIMEFile);
-            super.handleDrop();
-        }
+    public Object getNewObject() {
+        return m_fileStore;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Class<?> getObjectType() {
+        return IFileStore.class;
     }
 
     /**
-     * {@inheritDoc}
+     * @param store the file store to be saved
      */
-    @Override
-    public boolean isEnabled(final DropTargetEvent event) {
-        if (!super.isEnabled(event)) {
-            return false;
-        }
-        ExplorerFileStore fileStore = getDragResources(event).getObject();
-        boolean isMetaNodeTemplate = ExplorerFileStore.isWorkflow(fileStore);
-        if (isMetaNodeTemplate) {
-            event.feedback = DND.FEEDBACK_SELECT;
-            event.operations = DND.DROP_COPY;
-            event.detail = DND.DROP_COPY;
-        }
-        return isMetaNodeTemplate;
+    void setSourceFileStore(final IFileStore store) {
+        m_fileStore = store;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Transfer getTransfer() {
-        return LocalSelectionTransfer.getTransfer();
-    }
 }

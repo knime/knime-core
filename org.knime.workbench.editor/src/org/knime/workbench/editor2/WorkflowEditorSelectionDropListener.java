@@ -23,12 +23,11 @@
 package org.knime.workbench.editor2;
 
 import java.net.MalformedURLException;
-import java.util.Iterator;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.knime.core.node.NodeLogger;
@@ -61,37 +60,38 @@ public class WorkflowEditorSelectionDropListener extends
         return LocalSelectionTransfer.getTransfer();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected void handleDrop() {
+        ContentObject obj = getDragResources(getCurrentEvent());
+        ExplorerFileStore store =  obj.getObject();
+        Point dropLocation = getDropLocation();
+        try {
+            getFactory().setSourceFileStore(store);
+            super.handleDrop();
+            dropNode(store.toURI().toURL(), dropLocation);
+        } catch (MalformedURLException e) {
+            LOGGER.error(e);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void drop(final DropTargetEvent event) {
-        IStructuredSelection selection = (IStructuredSelection)
-                LocalSelectionTransfer.getTransfer().getSelection();
-        @SuppressWarnings("rawtypes")
-        Iterator iterator = selection.iterator();
-        ExplorerFileStore file = null;
-        // get the one and only selected file
-        if (iterator.hasNext()) {
-            Object next = iterator.next();
-            if (!(next instanceof ContentObject)) {
-                return;
-            }
-            file = ((ContentObject)next).getObject();
-        } else {
-            return;
+    public boolean isEnabled(final DropTargetEvent event) {
+        if (!super.isEnabled(event)) {
+            return false;
         }
-        if (iterator.hasNext()) {
-            LOGGER.warn("Only a single file can be dropped. Multiple "
-                    + "selections are not allowed.");
-            return; // on multiple selections nothing is dropped.
+        ExplorerFileStore fileStore = getDragResources(event).getObject();
+        boolean enabled = !(ExplorerFileStore.isMetaNode(fileStore)
+                || ExplorerFileStore.isWorkflow(fileStore)
+                || ExplorerFileStore.isWorkflowGroup(fileStore));
+        if (enabled) {
+            event.feedback = DND.FEEDBACK_SELECT;
+            event.operations = DND.DROP_COPY;
+            event.detail = DND.DROP_COPY;
         }
-        Point dropLocation = getDropLocation(event);
-        try {
-            dropNode(file.toURI().toURL(), dropLocation);
-        } catch (MalformedURLException e) {
-            LOGGER.error(e);
-        }
-
+        return enabled;
     }
 }

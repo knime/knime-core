@@ -25,6 +25,7 @@ import java.net.URL;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
+import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -53,11 +54,7 @@ public class WorkflowEditorFileDropTargetListener
      */
     @Override
     public void drop(final DropTargetEvent event) {
-        String[] filePaths = (String[])event.data;
-        if (filePaths.length > 1) {
-            LOGGER.warn("Can currently only drop one item at a time");
-        }
-        String file = filePaths[0];
+        String file = getFile(event);
         // Set the factory on the current request
         URL url;
         try {
@@ -76,10 +73,35 @@ public class WorkflowEditorFileDropTargetListener
         dropNode(url, dropLocation);
     }
     /**
+     * @param event
+     * @return
+     */
+    private String getFile(final DropTargetEvent event) {
+        String[] filePaths = (String[])event.data;
+        if (filePaths.length > 1) {
+            LOGGER.warn("Can currently only drop one item at a time");
+        }
+        return filePaths[0];
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public Transfer getTransfer() {
         return FileTransfer.getInstance();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled(final DropTargetEvent event) {
+        event.feedback = DND.FEEDBACK_SELECT;
+        event.operations = DND.DROP_COPY;
+        event.detail = DND.DROP_COPY;
+        return true;
+    }
+
+
 }
