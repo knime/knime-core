@@ -399,6 +399,15 @@
            <FileExtension
                  extension="tsv">
            </FileExtension>
+           <FileExtension
+                 extension="all">
+           </FileExtension>
+        </FileExtensionMapping>
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.table.read.ReadTableNodeFactory">
+           <FileExtension
+                 extension="table">
+           </FileExtension>
         </FileExtensionMapping>
      </extension>    
 </plugin>
