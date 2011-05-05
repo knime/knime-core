@@ -67,136 +67,136 @@ import javax.xml.namespace.QName;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- *
+ * 
  * @author Heiko Hofer
  */
 public class LimitedXPathMatcher {
-    private Map<QName[], Integer> m_inAktivePaths;
-    private Set<QName[]> m_aktivePaths;
-    private int m_depth;
-    private boolean m_rootMatches;
-    private boolean m_nodeMatches;
+	private Map<QName[], Integer> m_inAktivePaths;
+	private Set<QName[]> m_aktivePaths;
+	private int m_depth;
+	private boolean m_rootMatches;
+	private boolean m_nodeMatches;
 
-    LimitedXPathMatcher() {
-        try {
-            init("/", null);
-        } catch (InvalidSettingsException e) {
-            // this should never happen, if it does it is an programming error
-            throw new IllegalStateException(e);
-        }
-    }
+	/**
+	 * Create a new instance. 
+	 * @param xpath The limited xpath which may contain absolute paths to nodes 
+	 * and the |-Operator
+	 * @param nsContext The namespace context used for the XPath
+	 * @throws InvalidSettingsException when the xpath has prefixes not defined
+	 * in the nsContext
+	 */
+	public LimitedXPathMatcher(final String xpath,
+			final NamespaceContext nsContext) throws InvalidSettingsException {
+		m_rootMatches = false;
+		init(xpath, nsContext);
+	}
 
+	private void init(final String xpath, final NamespaceContext nsContext)
+			throws InvalidSettingsException {
+		m_aktivePaths = new HashSet<QName[]>();
+		StringTokenizer tokenizer = new StringTokenizer(xpath.trim(), "| \t\n");
+		while (tokenizer.hasMoreTokens()) {
+			String token = tokenizer.nextToken();
+			if (token.trim().equals("/")) {
+				m_rootMatches = true;
+			} else {
+				StringTokenizer tok = new StringTokenizer(token.trim(),
+						"/ \t\n");
+				List<QName> xpathTokens = new ArrayList<QName>();
+				while (tok.hasMoreTokens()) {
+					String qname = tok.nextToken();
+					int colon = qname.indexOf(':');
+					String prefix = colon > -1 ? qname.substring(0, colon)
+							: XMLConstants.DEFAULT_NS_PREFIX;
+					String localName = colon > -1 ? qname.substring(colon + 1)
+							: qname;
+					String nsURI = prefix.isEmpty() ? XMLConstants.NULL_NS_URI
+							: nsContext.getNamespaceURI(prefix);
+					if (!prefix.isEmpty() && nsURI.isEmpty()) {
+						throw new InvalidSettingsException("Please specify a "
+								+ "namespace for the prefix: \"" + prefix
+								+ "\"");
+					}
 
-    public LimitedXPathMatcher(final String xpath, final NamespaceContext nsContext)
-                throws InvalidSettingsException {
-        m_rootMatches = false;
-        init(xpath, nsContext);
-    }
+					xpathTokens.add(new QName(nsURI, localName, prefix));
+					m_nodeMatches = true;
 
-    private void init(final String xpath, final NamespaceContext nsContext)
-        throws InvalidSettingsException {
-        m_aktivePaths = new HashSet<QName[]>();
-        StringTokenizer tokenizer = new StringTokenizer(xpath.trim(),
-                "| \t\n");
-        while(tokenizer.hasMoreTokens()) {
-            String token = tokenizer.nextToken();
-            if (token.trim().equals("/")) {
-                m_rootMatches = true;
-            } else {
-                StringTokenizer tok = new StringTokenizer(token.trim(),
-                "/ \t\n");
-                List<QName> xpathTokens = new ArrayList<QName>();
-                while(tok.hasMoreTokens()) {
-                    String qname = tok.nextToken();
-                    int colon = qname.indexOf(':');
-                    String prefix = colon > -1
-                        ? qname.substring(0, colon)
-                        : XMLConstants.DEFAULT_NS_PREFIX;
-                    String localName = colon > -1
-                        ? qname.substring(colon + 1)
-                        : qname;
-                    String nsURI = prefix.isEmpty()
-                        ? XMLConstants.NULL_NS_URI
-                        : nsContext.getNamespaceURI(prefix);
-                    if (null == nsURI) {
-                        throw new InvalidSettingsException("Please specify a "
-                                + "namespace for the prefix: \"" + prefix
-                                + "\"");
-                    }
+				}
+				m_aktivePaths.add(xpathTokens.toArray(new QName[xpathTokens
+						.size()]));
+			}
+		}
+		m_inAktivePaths = new HashMap<QName[], Integer>();
 
-                    xpathTokens.add(new QName(nsURI, localName, prefix));
-                    m_nodeMatches = true;
+		m_depth = 0;
+	}
 
-                }
-                m_aktivePaths.add(
-                        xpathTokens.toArray(new QName[xpathTokens.size()]));
-            }
-        }
-        m_inAktivePaths = new HashMap<QName[], Integer>();
+	/**
+	 * Called in the XMLStreamConstants.START_ELEMENT call back of the
+	 * XMLStreamReader. Returns this element matches the xpath expression given
+	 * in the constructor.
+	 * 
+	 * @param name name of the element
+	 * @return true when element matches the xpath
+	 */
+	boolean startElement(final QName name) {
+		if (m_aktivePaths.isEmpty()) {
+			m_depth++;
+			return false;
+		} else {
+			boolean match = false;
+			for (Iterator<QName[]> iter = m_aktivePaths.iterator(); iter
+					.hasNext();) {
+				QName[] xpath = iter.next();
+				if (m_depth < xpath.length
+						&& m_depth >= 0
+						&& xpath[m_depth].getLocalPart().equals(
+								name.getLocalPart())
+						&& xpath[m_depth].getNamespaceURI().equals(
+								name.getNamespaceURI())) {
+					if (xpath.length == m_depth + 1) {
+						match = true;
+					}
+				} else {
+					iter.remove();
+					m_inAktivePaths.put(xpath, m_depth);
+				}
+			}
+			m_depth++;
+			return match;
+		}
+	}
 
-        m_depth = 0;
-    }
+	/**
+	 * Called in the XMLStreamConstants.START_ELEMENT call back of the
+	 * XMLStreamReader.
+	 */
+	void endElement() {
+		m_depth--;
+		for (Iterator<Entry<QName[], Integer>> iter = m_inAktivePaths
+				.entrySet().iterator(); iter.hasNext();) {
+			Entry<QName[], Integer> entry = iter.next();
+			if (m_depth <= entry.getValue()) {
+				iter.remove();
+				m_aktivePaths.add(entry.getKey());
+			}
+		}
+	}
 
-    /**
-     * Called in the XMLStreamConstants.START_ELEMENT call back of the
-     * XMLStreamReader. Returns this element matches the xpath expression
-     * given in the constructor.
-     * @param name name of the element
-     * @return true when element matches the xpath
-     */
-    boolean startElement(final QName name) {
-        if (m_aktivePaths.isEmpty()) {
-            m_depth++;
-           return false;
-        } else {
-            boolean match = false;
-            for (Iterator<QName[]> iter = m_aktivePaths.iterator();
-                iter.hasNext();) {
-                QName[] xpath = iter.next();
-                if (m_depth < xpath.length && m_depth >= 0
-                        && xpath[m_depth].getLocalPart().equals(name.getLocalPart())
-                        && xpath[m_depth].getNamespaceURI().equals(name.getNamespaceURI())) {
-                    if (xpath.length == m_depth + 1) {
-                        match = true;
-                    }
-                } else {
-                    iter.remove();
-                    m_inAktivePaths.put(xpath, m_depth);
-                }
-            }
-            m_depth++;
-            return match;
-        }
-    }
+	/**
+	 * Returns true when the xpath matches the root node '/'.
+	 * @return true when the xpath matches the root node '/'
+	 */
+	public boolean rootMatches() {
+		return m_rootMatches;
+	}
 
-    /**
-     * Called in the XMLStreamConstants.START_ELEMENT call back of the
-     * XMLStreamReader.
-     */
-    void endElement() {
-        m_depth--;
-        for (Iterator<Entry<QName[], Integer>> iter =
-            m_inAktivePaths.entrySet().iterator(); iter.hasNext();) {
-            Entry<QName[], Integer> entry = iter.next();
-            if (m_depth <= entry.getValue()) {
-                iter.remove();
-                m_aktivePaths.add(entry.getKey());
-            }
-        }
-    }
-
-    /**
-     * @return
-     */
-    public boolean rootMatches() {
-        return m_rootMatches;
-    }
-
-    /**
-     * @return
-     */
-    public boolean nodeMatches() {
-        return m_nodeMatches;
-    }
+	/**
+	 * Returns true when the xpath matches any node except the root node.
+	 * @return true when the xpath matches any node except the root node.
+	 */
+	public boolean nodeMatches() {
+		return m_nodeMatches;
+	}
 
 }

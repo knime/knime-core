@@ -50,17 +50,28 @@
  */
 package org.knime.core.data.xml.io;
 
-import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
 
 import org.knime.core.data.xml.XMLValue;
 
 /**
- *
+ * An object to write xml cells (@link{XMLValue}).
+ * 
  * @author Heiko Hofer
  */
 public interface XMLCellWriter {
+	
+	/**
+	 * Write the given cell.
+	 * @param cell the cell to write
+	 * @throws IOException when an error occurs while writing
+	 */
+	void write(XMLValue cell) throws IOException;
 
-    void write(XMLValue cell) throws XMLStreamException;
-
-    void close() throws XMLStreamException;
+	/**
+	 * Close resources used for writing the xml cell.
+	 * 
+	 * @throws IOException when an error occurs
+	 */
+	void close() throws IOException;
 }

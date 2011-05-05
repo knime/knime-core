@@ -53,117 +53,150 @@ package org.knime.core.data.xml.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.xml.XMLCellFactory;
+import org.knime.core.data.xml.XMLValue;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- *
+ * A @link{XMLCellReader} to read a single cell from given 
+ * @link{InputStream}.
+ * 
  * @author Heiko Hofer
  */
 class XMLDOMCellReader implements XMLCellReader {
-    private InputStream m_in;
-    private DocumentBuilder m_builder;
-    private boolean m_first;
+	private final InputStream m_in;
+	private final DocumentBuilder m_builder;
+	private boolean m_first;
 
-    /**
-     * @param is
-     * @throws ParserConfigurationException
-     */
-    public XMLDOMCellReader(final InputStream is) throws ParserConfigurationException {
-        this.m_in = is;
+	/**
+	 * Create a new instance of a @link{XMLCellReader} to read a single cell 
+	 * from given @link{InputStream}.
+	 * @param is the resource to read from 
+	 * @throws ParserConfigurationException when the factory object for 
+	 * DOMs could not be created.
+	 */
+	public XMLDOMCellReader(final InputStream is)
+			throws ParserConfigurationException {
+		this.m_in = is;
 
+		DocumentBuilderFactory domFactory = DocumentBuilderFactory
+				.newInstance();
 
+		domFactory.setValidating(false);
+		domFactory.setNamespaceAware(true);
+		domFactory.setXIncludeAware(true);
+		m_builder = domFactory.newDocumentBuilder();
 
-        DocumentBuilderFactory domFactory =
-                DocumentBuilderFactory.newInstance();
-        domFactory.setNamespaceAware(true);
-        domFactory.setXIncludeAware(true);
-        m_builder = domFactory.newDocumentBuilder();
+		m_first = true;
+	}
 
-        m_first = true;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public XMLValue readXML() throws IOException {
+		if (m_first) {
+			m_first = false;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataCell readXML() throws XMLStreamException, IOException {
-        if (m_first) {
-            m_first = false;
+			InputSource source = null;
 
-            InputSource source = null;
+			source = new InputSource(m_in);
 
-            source = new InputSource(m_in);
+			Document doc;
+			try {
+				doc = m_builder.parse(source);
+			} catch (SAXException e) {
+				throw new IOException(e);
+			}
+			removeEmptyTextRecursive(doc, new LinkedList<Boolean>());
+			XMLValue cell = (XMLValue)XMLCellFactory.create(doc);
+			return cell;
+		} else {
+			return null;
+		}
+	}
 
-            Document doc;
-            try {
-                doc = m_builder.parse(source);
-            } catch (SAXException e) {
-                throw new XMLStreamException(e);
-            }
-            // TODO: strip white space and trim nodes?
-            removeEmptyTextRecursive(doc);
-            DataCell cell = XMLCellFactory.create(doc);
-            return cell;
-        } else {
-            return null;
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void close() throws IOException {
+		m_in.close();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void close() throws XMLStreamException, IOException {
-        m_in.close();
-    }
+	/**
+	 * Removes all descendent text nodes that contain only whitespace. These
+	 * come from the newlines and indentation between child elements. Take
+	 * xml:space declaration into account.
+	 */
+	private void removeEmptyTextRecursive(final Node node,
+			final List<Boolean> preserveSpaceStack) {
+		boolean hasXmlSpaceAttr = false;
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			NamedNodeMap attrs = node.getAttributes();
+			for (int i = 0; i < attrs.getLength(); i++) {
+				Node attr = attrs.item(i);
+				if (attr.getNodeName().equals("xml:space")
+						&& attr.getNamespaceURI().equals(
+								XMLConstants.XML_NS_URI)) {
+					if (attr.getNodeValue().equals("preserve")) {
+						hasXmlSpaceAttr = true;
+						preserveSpaceStack.add(0, true);
+					} else if (attr.getNodeValue().equals("default")) {
+						hasXmlSpaceAttr = true;
+						preserveSpaceStack.add(0, false);
+					} else {
+						// Wrong attribute value of xml:space, ignored.
+					}
+				}
+			}
 
-
-    /**
-     *  Removes all descendent text nodes that contain only whitespace. These
-     *  come from the newlines and indentation between child elements, and
-     *  could be removed by by the parser if you had a DTD that specified
-     *  element-only content.
-     */
-    private void removeEmptyTextRecursive(final Node node)
-    {
-        List<Node> toRemove = new ArrayList<Node>();
-        NodeList list = node.getChildNodes();
-        for (int i = 0; i < list.getLength(); i++) {
-            Node child = list.item(i);
-            switch (child.getNodeType())
-            {
-                case Node.ELEMENT_NODE :
-                    removeEmptyTextRecursive(child);
-                    break;
-                case Node.CDATA_SECTION_NODE :
-                case Node.TEXT_NODE :
-                    String str = child.getNodeValue();
-                    if (null == str || str.trim().isEmpty()) {
-                        toRemove.add(child);
-                    } else {
-                        ((CharacterData)child).setData(str.trim());
-                    }
-                    break;
-                default :
-                    // do nothing
-            }
-        }
-        for (Node child : toRemove) {
-            node.removeChild(child);
-        }
-    }
+		}
+		boolean preserveSpace = !preserveSpaceStack.isEmpty()
+				&& preserveSpaceStack.get(0);
+		List<Node> toRemove = new ArrayList<Node>();
+		NodeList list = node.getChildNodes();
+		for (int i = 0; i < list.getLength(); i++) {
+			Node child = list.item(i);
+			switch (child.getNodeType()) {
+			case Node.ELEMENT_NODE:
+				removeEmptyTextRecursive(child, preserveSpaceStack);
+				break;
+			case Node.CDATA_SECTION_NODE:
+			case Node.TEXT_NODE:
+				if (!preserveSpace) {
+					String str = child.getNodeValue();
+					if (null == str || str.trim().isEmpty()) {
+						toRemove.add(child);
+					} else {
+						((CharacterData) child).setData(str);
+					}
+				}
+				break;
+			default:
+				// do nothing
+			}
+		}
+		for (Node child : toRemove) {
+			node.removeChild(child);
+		}
+		if (hasXmlSpaceAttr) {
+			preserveSpaceStack.remove(0);
+		}
+	}
 
 }

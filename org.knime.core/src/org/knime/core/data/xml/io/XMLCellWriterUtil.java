@@ -50,6 +50,8 @@
  */
 package org.knime.core.data.xml.io;
 
+import java.util.List;
+
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -61,161 +63,211 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
- *
+ * Utility class to write xml.
+ * 
  * @author Heiko Hofer
  */
-public class XMLCellWriterUtil {
+class XMLCellWriterUtil {
 
-    /**
-     * Writes a {@link Node}
-     */
-    static boolean writeNode(final XMLStreamWriter writer, final Node node,
-            final int depth, final String identChar, final String linefeedChar)
-            throws XMLStreamException {
-        switch (node.getNodeType()) {
-        case Node.ELEMENT_NODE:
-            linefeedIdent(writer, linefeedChar, depth, identChar);
-            writeElement(writer, (Element)node, depth, identChar, linefeedChar);
-            return true;
-        case Node.TEXT_NODE:
-            writer.writeCharacters(node.getNodeValue());
-            return false;
-        case Node.CDATA_SECTION_NODE:
-            writer.writeCData(node.getNodeValue());
-            return false;
-        case Node.COMMENT_NODE:
-            linefeedIdent(writer, linefeedChar, depth, identChar);
-            writer.writeComment(node.getNodeValue());
-            return true;
-        case Node.ENTITY_REFERENCE_NODE:
-            writer.writeEntityRef(node.getNodeName());
-            return false;
-        case Node.PROCESSING_INSTRUCTION_NODE:
-            linefeedIdent(writer, linefeedChar, depth, identChar);
-            String target = node.getNodeName();
-            String data = node.getNodeValue();
-            if (data == null || data.length() == 0) {
-                writer.writeProcessingInstruction(target);
-            } else {
-                writer.writeProcessingInstruction(target, data);
-            }
-            return true;
-        case Node.DOCUMENT_TYPE_NODE:
-            linefeedIdent(writer, linefeedChar, depth, identChar);
-            DocumentType docType = (DocumentType) node;
-            String publicId = docType.getPublicId();
-            String systemId = docType.getSystemId();
-            String internalSubset = docType.getInternalSubset();
-            StringBuilder dtd = new StringBuilder();
-            dtd.append("<!DOCTYPE " + docType.getName());
-            if (publicId != null) {
-                dtd.append(" PUBLIC \"" + publicId + "\" ");
-            } else {
-                if (systemId != null) {
-                    dtd.append(" SYSTEM ");
-                }
-            }
-            if (systemId != null) {
-                dtd.append("\"" + systemId + "\"");
-            }
-            if (internalSubset != null) {
-                dtd.append(" [\n" + internalSubset + "]");
-            }
-            dtd.append(">\n");
-            writer.writeDTD(dtd.toString());
+	/**
+	 * Writes a {@link Node}
+	 */
+	static boolean writeNode(final XMLStreamWriter writer, final Node node,
+			final Node pre, 
+			final int depth, final String indentChar, final String linefeedChar,
+			final List<Boolean> preserveSpaceStack) throws XMLStreamException {		
+		switch (node.getNodeType()) {
+		case Node.ELEMENT_NODE:
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+					preserveSpaceStack);			
+			boolean hasXmlSpaceAttr = updatePreserveSpaceStack((Element) node,
+					preserveSpaceStack);
+			writeElement(writer, (Element) node, depth, indentChar,
+					linefeedChar, preserveSpaceStack);
+			if (hasXmlSpaceAttr) {
+				preserveSpaceStack.remove(0);
+			}
+			return true;
+		case Node.TEXT_NODE:
+			writer.writeCharacters(node.getNodeValue());
+			return false;
+		case Node.CDATA_SECTION_NODE:
+			writer.writeCData(node.getNodeValue());
+			return false;
+		case Node.COMMENT_NODE:
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+					preserveSpaceStack);
+			writer.writeComment(node.getNodeValue());
+			return true;
+		case Node.ENTITY_REFERENCE_NODE:
+			writer.writeEntityRef(node.getNodeName());
+			return false;
+		case Node.PROCESSING_INSTRUCTION_NODE:
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+					preserveSpaceStack);
+			String target = node.getNodeName();
+			String data = node.getNodeValue();
+			if (data == null || data.length() == 0) {
+				writer.writeProcessingInstruction(target);
+			} else {
+				writer.writeProcessingInstruction(target, data);
+			}
+			return true;
+		case Node.DOCUMENT_TYPE_NODE:
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+					preserveSpaceStack);
+			DocumentType docType = (DocumentType) node;
+			String publicId = docType.getPublicId();
+			String systemId = docType.getSystemId();
+			String internalSubset = docType.getInternalSubset();
+			StringBuilder dtd = new StringBuilder();
+			dtd.append("<!DOCTYPE " + docType.getName());
+			if (publicId != null) {
+				dtd.append(" PUBLIC \"" + publicId + "\" ");
+			} else {
+				if (systemId != null) {
+					dtd.append(" SYSTEM ");
+				}
+			}
+			if (systemId != null) {
+				dtd.append("\"" + systemId + "\"");
+			}
+			if (internalSubset != null) {
+				dtd.append(" [\n" + internalSubset + "]");
+			}
+			dtd.append(">\n");
+			writer.writeDTD(dtd.toString());
 
-            return true;
-        default:
-            throw new XMLStreamException(
-                    "Unrecognized or unexpected node class: "
-                            + node.getClass().getName());
-        }
-    }
+			return true;
+		default:
+			throw new XMLStreamException(
+					"Unrecognized or unexpected node class: "
+							+ node.getClass().getName());
+		}
+	}
 
+	private static boolean updatePreserveSpaceStack(final Element element,
+			final List<Boolean> preserveSpaceStack) {
+		boolean hasXmlSpaceAttr = false;
+		NamedNodeMap attrs = element.getAttributes();
+		for (int i = 0; i < attrs.getLength(); i++) {
+			Node attr = attrs.item(i);
+			if (attr.getNodeName().equals("xml:space")
+					&& attr.getNamespaceURI().equals(XMLConstants.XML_NS_URI)) {
+				if (attr.getNodeValue().equals("preserve")) {
+					hasXmlSpaceAttr = true;
+					preserveSpaceStack.add(0, true);
+				} else if (attr.getNodeValue().equals("default")) {
+					hasXmlSpaceAttr = true;
+					preserveSpaceStack.add(0, false);
+				} else {
+					// Wrong declaration ignored.
+				}
+			}
+		}
+		return hasXmlSpaceAttr;
+	}
 
-    /**
-     * Writes an element and its children
-     */
-    private static void writeElement(final XMLStreamWriter writer,
-            final Element element, final int depth, final String identChar,
-            final String linefeedChar)
-            throws XMLStreamException {
-        String elementPrefix = element.getPrefix();
-        if (elementPrefix == null) {
-            elementPrefix = XMLConstants.DEFAULT_NS_PREFIX;
-        }
-        String elementUri = element.getNamespaceURI();
-        if (elementUri == null) {
-            elementUri = XMLConstants.NULL_NS_URI;
-        }
-        String nsContextURI =
-            writer.getNamespaceContext().getNamespaceURI(elementPrefix);
+	/**
+	 * Writes an element and its children
+	 */
+	private static void writeElement(final XMLStreamWriter writer,
+			final Element element, 
+			final int depth, final String indentChar,
+			final String linefeedChar, final List<Boolean> preserveSpaceStack)
+			throws XMLStreamException {
 
-        writer.writeStartElement(elementPrefix, element.getLocalName(),
-                elementUri);
-        // Write attributes
-        NamedNodeMap attrs = element.getAttributes();
-        for (int i = 0, len = attrs.getLength(); i < len; ++i) {
-            Attr attr = (Attr)attrs.item(i);
-            String attrPrefix = attr.getPrefix();
-            String attrLocalName = attr.getLocalName();
-            String attrValue = attr.getValue();
+		NamedNodeMap attrs = element.getAttributes();
+		// write element
+		String elementPrefix = element.getPrefix();
+		if (elementPrefix == null) {
+			elementPrefix = XMLConstants.DEFAULT_NS_PREFIX;
+		}
+		String elementUri = element.getNamespaceURI();
+		if (elementUri == null) {
+			elementUri = XMLConstants.NULL_NS_URI;
+		}
+		String nsContextURI = writer.getNamespaceContext().getNamespaceURI(
+				elementPrefix);
 
-            if (null == attrPrefix || attrPrefix.isEmpty()) {
-                if ("xmlns".equals(attrLocalName)) {
-                    // default namespace definition
-                    if (!attrValue.equals(nsContextURI)) {
-                        writer.writeDefaultNamespace(attrValue);
-                    }
-                } else {
-                    // attribute without namespace prefix
-                    writer.writeAttribute(attrLocalName, attrValue);
-                }
-            } else {
-                if ("xmlns".equals(attrPrefix)) {
-                    // namespace definition
-                    if (!attrValue.equals(nsContextURI)) {
-                        writer.writeNamespace(attrLocalName, attrValue);
-                    }
-                } else {
-                    // attribute with namespace prefix
-                    writer.writeAttribute(attrPrefix, attr.getNamespaceURI(),
-                            attrLocalName, attrValue);
-                }
-            }
-        }
-        // write children
-        Node child = element.getFirstChild();
-        boolean ident = false;
-        while (child != null) {
-            boolean i = writeNode(writer, child, depth + 1, identChar,
-                    linefeedChar);
-            ident = i || ident;
-            child = child.getNextSibling();
-        }
+		writer.writeStartElement(elementPrefix, element.getLocalName(),
+				elementUri);
+		// Write attributes
+		for (int i = 0, len = attrs.getLength(); i < len; ++i) {
+			Attr attr = (Attr) attrs.item(i);
+			String attrPrefix = attr.getPrefix();
+			String attrLocalName = attr.getLocalName();
+			String attrValue = attr.getValue();
 
-        if (ident) {
-            writer.writeCharacters(linefeedChar);
-            ident(writer, depth, identChar);
-        }
-        writer.writeEndElement();
-    }
+			if (null == attrPrefix || attrPrefix.isEmpty()) {
+				if ("xmlns".equals(attrLocalName)) {
+					// default namespace definition
+					if (!attrValue.equals(nsContextURI)) {
+						writer.writeDefaultNamespace(attrValue);
+					}
+				} else {
+					// attribute without namespace prefix
+					writer.writeAttribute(attrLocalName, attrValue);
+				}
+			} else {
+				if ("xmlns".equals(attrPrefix)) {
+					// namespace definition
+					if (!attrValue.equals(nsContextURI)) {
+						writer.writeNamespace(attrLocalName, attrValue);
+					}
+				} else {
+					// attribute with namespace prefix
+					writer.writeAttribute(attrPrefix, attr.getNamespaceURI(),
+							attrLocalName, attrValue);
+				}
+			}
+		}
+		// write children
+		Node child = element.getFirstChild();
+		Node pre = null;
+		boolean ident = false;
+		while (child != null) {
+			boolean i = writeNode(writer, child, pre, depth + 1, indentChar,
+					linefeedChar, preserveSpaceStack);
+			ident = i || ident;
+			pre = child;
+			child = child.getNextSibling();		
+		}
+		spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+				preserveSpaceStack);
+		writer.writeEndElement();
+	}
+	
+	private static void spaceBefore(final XMLStreamWriter writer,
+			final Node pre,
+			final String linefeedChar, final int depth, final String identChar,
+			final List<Boolean> preserveSpaceStack) throws XMLStreamException {
+		short type = null != pre ? pre.getNodeType() : Node.ELEMENT_NODE;
+		boolean preserveSpace = !preserveSpaceStack.isEmpty() 
+			&& preserveSpaceStack.get(0);
 
+		if (!preserveSpace && (type == Node.ELEMENT_NODE 
+				|| type == Node.DOCUMENT_TYPE_NODE
+				|| type == Node.PROCESSING_INSTRUCTION_NODE
+				|| type == Node.COMMENT_NODE)) {			
+			linefeedIndent(writer, linefeedChar, depth, identChar);
+		}
+	}
 
-    private static void linefeedIdent(final XMLStreamWriter writer,
-            final String linefeedChar, final int depth,
-            final String identChar) throws XMLStreamException {
-        writer.writeCharacters(linefeedChar);
-        ident(writer, depth, identChar);
-    }
+	private static void linefeedIndent(final XMLStreamWriter writer,
+			final String linefeedChar, final int depth, final String indentChar)
+			throws XMLStreamException {
+		writer.writeCharacters(linefeedChar);
+		indent(writer, depth, indentChar);
+	}
 
-    private static void ident(final XMLStreamWriter writer, final int depth,
-            final String identChar) throws XMLStreamException {
-        if (identChar.isEmpty()) {
-            return;
-        }
-        for (int i = 0; i < depth; i++) {
-            writer.writeCharacters(identChar);
-        }
-    }
+	private static void indent(final XMLStreamWriter writer, final int depth,
+			final String indentChar) throws XMLStreamException {
+		if (indentChar.isEmpty()) {
+			return;
+		}
+		for (int i = 0; i < depth; i++) {
+			writer.writeCharacters(indentChar);
+		}
+	}
 }

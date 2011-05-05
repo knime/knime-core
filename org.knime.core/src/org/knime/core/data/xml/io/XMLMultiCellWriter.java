@@ -50,9 +50,13 @@
  */
 package org.knime.core.data.xml.io;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -63,111 +67,169 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- *
+ * An @link{XMLCellWriter} to write XMLCells that can optionally be enclosed 
+ * in a root element.
+ * 
  * @author Heiko Hofer
  */
 class XMLMultiCellWriter implements XMLCellWriter {
-    private static String IDENT_CHAR = "    ";
-    private static String LINEFEED_CHAR = "\n";
-    private XMLStreamWriter m_writer;
-    private boolean m_writeRoot;
+	private static String INDENT_CHAR = "    ";
+	private static String LINEFEED_CHAR = "\n";
+	private XMLStreamWriter m_writer;
+	private final boolean m_hasDedicatedRoot;
+	private final List<Boolean> m_preserveSpaceStack;
 
-    XMLMultiCellWriter(final OutputStream os)  throws XMLStreamException {
-        initWriter(os);
-        writeHeader();
-        m_writeRoot = false;
-    }
+	/**
+	 * Create writer to write xml cells. This writer can be configured to skip
+	 * writing the header.
+	 * 
+	 * @param os the xml cells are written to this resource.
+	 * @param writeHeader true when the xml header should be written
+	 * @throws IOException when header could not be written.
+	 */
+	XMLMultiCellWriter(final OutputStream os, boolean writeHeader) 
+	throws IOException {
+		try {
+			initWriter(os);
+			if (writeHeader) {
+				writeHeader();
+			}
+		} catch (XMLStreamException e) {
+		    throw new IOException(e);
+		}		
+		m_hasDedicatedRoot = false;
+		m_preserveSpaceStack = new LinkedList<Boolean>();
+	}
 
-    /**
-     * @param os
-     * @param rootElement
-     * @param rootAttributes
-     * @throws XMLStreamException
-     */
-    XMLMultiCellWriter(final OutputStream os, final QName rootElement,
-            final Map<QName, String> rootAttributes) throws XMLStreamException {
-        initWriter(os);
-        writeHeader();
-        m_writeRoot = true;
-        // write root element
-        String elementPrefix = rootElement.getPrefix();
-        if (elementPrefix == null) {
-            elementPrefix = "";
-        }
-        m_writer.writeCharacters(LINEFEED_CHAR);
-        m_writer.writeStartElement(elementPrefix, rootElement.getLocalPart(),
-                rootElement.getNamespaceURI());
-        // Write attributes of the root element
-        for (QName attr : rootAttributes.keySet()) {
-            String attrPrefix = attr.getPrefix();
-            String attrLocalName = attr.getLocalPart();
-            String attrValue = rootAttributes.get(attr);
+	/**
+	 * Create writer to write xml cells enclosed in the given root element.
+	 * 
+	 * @param os the xml cells are written to this resource.
+	 * @param rootElement the qualified name of the root element
+	 * @param rootAttributes the attributes of the root element
+	 * @throws IOException when writer could not be initialized and when
+	 * header could not be written
+	 */
+	XMLMultiCellWriter(final OutputStream os, final QName rootElement,
+			final Map<QName, String> rootAttributes) throws IOException {
+		try {
+			initWriter(os);
+			writeHeader();
 
-            if (null == attrPrefix || attrPrefix.isEmpty()) {
-                if ("xmlns".equals(attrLocalName)) {
-                    // default namespace definition
-                    m_writer.writeDefaultNamespace(attrValue);
-                } else {
-                    // attribute without namespace prefix
-                    m_writer.writeAttribute(attrLocalName, attrValue);
-                }
-            } else {
-                if ("xmlns".equals(attrPrefix)) {
-                    // namespace definition
-                    m_writer.writeNamespace(attrLocalName, attrValue);
-                } else {
-                    // attribute with namespace prefix
-                    m_writer.writeAttribute(attrPrefix, attr.getNamespaceURI(),
-                            attrLocalName, attrValue);
-                }
-            }
-        }
-    }
+			m_hasDedicatedRoot = true;
+			m_preserveSpaceStack = new LinkedList<Boolean>();
+			// Check if xml:space definition is in the rootAttributes
+			for (QName attr : rootAttributes.keySet()) {
+				String attrPrefix = attr.getPrefix();
+				String attrLocalName = attr.getLocalPart();
+				String attrNamespaceURI = attr.getNamespaceURI();
+	
+				if (null != attrPrefix && attrPrefix.equals("xml")
+						&& attrLocalName.equals("space")
+						&& attrNamespaceURI.equals(XMLConstants.XML_NS_URI)) {
+					String attrValue = rootAttributes.get(attr);
+					if (attrValue.equals("preserve")) {
+						m_preserveSpaceStack.add(0, true);
+					} else if (attrValue.equals("default")) {
+						m_preserveSpaceStack.add(0, false);
+					} else {
+						// Wrong declaration ignored.
+					}
+				}
+			}
+			// write root element
+			String elementPrefix = rootElement.getPrefix();
+			if (elementPrefix == null) {
+				elementPrefix = "";
+			}
+			m_writer.writeCharacters(LINEFEED_CHAR);
+			m_writer.writeStartElement(elementPrefix, 
+					rootElement.getLocalPart(),
+					rootElement.getNamespaceURI());
+			// Write attributes of the root element
+			for (QName attr : rootAttributes.keySet()) {
+				String attrPrefix = attr.getPrefix();
+				String attrLocalName = attr.getLocalPart();
+				String attrValue = rootAttributes.get(attr);
+	
+				if (null == attrPrefix || attrPrefix.isEmpty()) {
+					if ("xmlns".equals(attrLocalName)) {
+						// default namespace definition
+						m_writer.writeDefaultNamespace(attrValue);
+					} else {
+						// attribute without namespace prefix
+						m_writer.writeAttribute(attrLocalName, attrValue);
+					}
+				} else {
+					if ("xmlns".equals(attrPrefix)) {
+						// namespace definition
+						m_writer.writeNamespace(attrLocalName, attrValue);
+					} else {
+						// attribute with namespace prefix
+						m_writer.writeAttribute(attrPrefix, 
+								attr.getNamespaceURI(),
+								attrLocalName, attrValue);
+					}
+				}
+			}
+		} catch (XMLStreamException e) {
+		    throw new IOException(e);
+		}
+	}
 
-    /**
-     * @throws XMLStreamException
-     *
-     */
-    private void writeHeader() throws XMLStreamException {
-        // write header of the xml file
-        m_writer.writeStartDocument("UTF-8", "1.0");
-    }
+	/** Write the xml header.
+	 */
+	private void writeHeader() throws XMLStreamException {
+		// write header of the xml file
+		m_writer.writeStartDocument("UTF-8", "1.0");
+	}
 
-    /**
-     * @param os
-     * @throws XMLStreamException
-     */
-    private void initWriter(final OutputStream os) throws XMLStreamException {
-        XMLOutputFactory factory = XMLOutputFactory.newInstance();
-        m_writer = factory.createXMLStreamWriter(os, "UTF-8");
-    }
-
-    /**
-     * @throws XMLStreamException
-     */
-    public void write(final XMLValue cell) throws XMLStreamException {
-        Document doc = cell.getDocument();
-        Node child = doc.getFirstChild();
-        int depth = m_writeRoot ? 1 : 0;
-        while (child != null) {
-            XMLCellWriterUtil.writeNode(m_writer, child, depth, IDENT_CHAR,
-                    LINEFEED_CHAR);
-            child = child.getNextSibling();
-        }
-    }
-
-    /**
-     * @throws XMLStreamException
-     */
-    public void close() throws XMLStreamException {
-        if (m_writeRoot) {
-            m_writer.writeCharacters(LINEFEED_CHAR);
-            m_writer.writeEndElement();
-        }
-        m_writer.writeEndDocument();
-        m_writer.close();
-    }
+	/** Initialize the stream writer object.
+	 */
+	private void initWriter(final OutputStream os) throws XMLStreamException {
+		XMLOutputFactory factory = XMLOutputFactory.newInstance();
+		m_writer = factory.createXMLStreamWriter(os, "UTF-8");
+	}
 
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void write(final XMLValue cell) throws IOException {
+		Document doc = cell.getDocument();
+		Node child = doc.getFirstChild();
+		Node pre = null;
+		int depth = m_hasDedicatedRoot ? 1 : 0;
+		while (child != null) {
+			try {
+				XMLCellWriterUtil.writeNode(m_writer, child, pre, depth, 
+						INDENT_CHAR,
+						LINEFEED_CHAR, m_preserveSpaceStack);
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
+			pre = child;
+			child = child.getNextSibling();
+		}
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void close() throws IOException {
+		try {
+			if (m_hasDedicatedRoot) {
+				m_writer.writeCharacters(LINEFEED_CHAR);
+				m_writer.writeEndElement();
+			}
+			m_writer.writeEndDocument();
+			m_writer.close();
+		} catch (XMLStreamException e) {
+			throw new IOException(e);
+		}
+	}
 
 }

@@ -50,24 +50,58 @@
  */
 package org.knime.core.data.xml.io;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamException;
 
 /**
- *
+ * Factory class to create @link{XMLCellWriter}.
+ * 
  * @author Heiko Hofer
  */
 public class XMLCellWriterFactory {
-    public static XMLCellWriter createXMLCellWriter(final OutputStream os) throws XMLStreamException {
-        return new XMLMultiCellWriter(os);
-    }
+	/**
+	 * Create writer to write xml cells.
+	 * @param os the xml cells are written to this resource.
+	 * @return the @link{XMLWriter}
+	 * @throws IOException when writer could not be initialized and when
+	 * header could not be written
+	 */
+	public static XMLCellWriter createXMLCellWriter(final OutputStream os)
+			throws IOException {
+		return new XMLMultiCellWriter(os, true);
+	}
+	
+	/**
+	 * Create writer to write xml cells. This writer can be configured to skip
+	 * writing the header.
+	 * @param os the xml cells are written to this resource.
+	 * @param writeHeader true when the xml header should be written.
+	 * @return the @link{XMLWriter}
+	 * @throws IOException when writer could not be initialized and when
+	 * header could not be written
+	 */
+	public static XMLCellWriter createXMLCellWriter(final OutputStream os,
+			final boolean writeHeader)
+			throws IOException {
+		return new XMLMultiCellWriter(os, writeHeader);
+	}
 
-    public static XMLCellWriter createXMLMultiCellWriter(final OutputStream os,
-            final QName rootElement,
-            final Map<QName, String> rootAttributes) throws XMLStreamException {
-        return new XMLMultiCellWriter(os, rootElement, rootAttributes);
-    }
+	/**
+	 * Create writer to write xml cells enclosed in the given root element.
+	 * 
+	 * @param os the xml cells are written to this resource.
+	 * @param rootElement the qualified name of the root element
+	 * @param rootAttributes the attributes of the root element
+	 * @return the @link{XMLWriter}
+	 * @throws IOException when writer could not be initialized and when
+	 * header could not be written
+	 */
+	public static XMLCellWriter createXMLMultiCellWriter(final OutputStream os,
+			final QName rootElement, final Map<QName, String> rootAttributes)
+			throws IOException {
+		return new XMLMultiCellWriter(os, rootElement, rootAttributes);
+	}
 }

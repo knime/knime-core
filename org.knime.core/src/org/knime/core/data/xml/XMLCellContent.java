@@ -75,7 +75,7 @@ import org.xml.sax.SAXException;
 public class XMLCellContent implements XMLValue {
     private SoftReference<String> m_xmlString;
 
-    private Document m_content;
+    private final Document m_content;
 
     /**
      * Creates a {@link Document} by parsing the passed string. It must
@@ -106,14 +106,6 @@ public class XMLCellContent implements XMLValue {
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
-//        DocumentBuilderFactory domFactory =
-//            DocumentBuilderFactory.newInstance();
-//        domFactory.setNamespaceAware(true);
-//        DocumentBuilder builder = domFactory.newDocumentBuilder();
-//
-//        m_content = builder.parse(is);
-//        m_content.normalize();
-
         m_content = ((XMLValue)XMLCellReaderFactory.createXMLCellReader(is)
                 .readXML()).getDocument();
 
@@ -131,7 +123,7 @@ public class XMLCellContent implements XMLValue {
         m_content.getDomConfig().setParameter("cdata-sections", Boolean.FALSE);
         // Resolve entities
         m_content.getDomConfig().setParameter("entities", Boolean.FALSE);
-
+        // normalizeDocument adds e.g. missing xmls attributes
         m_content.normalizeDocument();
     }
 
@@ -139,6 +131,7 @@ public class XMLCellContent implements XMLValue {
      * Return the document. The returned document must not be changed!
      * @return The document.
      */
+    @Override
     public Document getDocument() {
         return m_content;
     }
@@ -158,7 +151,7 @@ public class XMLCellContent implements XMLValue {
             String xmlString = os.toString();
             m_xmlString = new SoftReference<String>(xmlString);
             return xmlString;
-        } catch (XMLStreamException e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -177,7 +170,6 @@ public class XMLCellContent implements XMLValue {
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof XMLCellContent) {
-            // FIXME: Equality check is broken, seems to be more complicated.
             XMLCellContent that = (XMLCellContent) obj;
             return this.getStringValue().equals(that.getStringValue());
         } else {

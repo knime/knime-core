@@ -56,18 +56,42 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 /**
- *
+ * Factory class for @link{XMLCellReader}.
+ *  
  * @author Heiko Hofer
  */
 public class XMLCellReaderFactory {
-    public static XMLCellReader createXMLCellReader(final InputStream is)
-               throws ParserConfigurationException, XMLStreamException{
-        return new XMLDOMCellReader(is);
-    }
+	/**
+	 * Creates a @link{XMLCellReader} to read a single cell from given 
+	 * @link{InputStream}
+	 * 
+	 * @param is the xml document
+	 * @return @link{XMLCellReader} to read a single cell from given 
+	 * @link{InputStream}
+	 * @throws ParserConfigurationException when the factory object for 
+	 * DOMs could not be created.
+	 */
+	public static XMLCellReader createXMLCellReader(final InputStream is)
+			throws ParserConfigurationException {
+		return new XMLDOMCellReader(is);
+	}
 
-    public static XMLCellReader createXPathXMLCellReader(final InputStream is,
-            final LimitedXPathMatcher xpathMatcher)
-                throws ParserConfigurationException, XMLStreamException{
-        return new XMLXpathCellReader(is, xpathMatcher);
-    }
+	/**
+	 * Creates a @link{XMLCellReader} to read nodes matching the given limited
+	 * XPath. Every node is read in a single DataCell whereas namespaces, 
+	 * xml:base, xml:space and xml:lang definitions are retained.
+	 * 
+	 * @param is the xml document
+	 * @param xpathMatcher Only nodes that match are read
+	 * @return @link{XMLCellReader} to read nodes matching the given limited
+	 * XPath. Every node is read in a single DataCell.
+	 * @throws ParserConfigurationException when the factory object for 
+	 * DOMs could not be created.
+	 * @throws XMLStreamException when parser could not be configured
+	 */	
+	public static XMLCellReader createXPathXMLCellReader(final InputStream is,
+			final LimitedXPathMatcher xpathMatcher)
+			throws ParserConfigurationException, XMLStreamException {
+		return new XMLXpathCellReader(is, xpathMatcher);
+	}
 }

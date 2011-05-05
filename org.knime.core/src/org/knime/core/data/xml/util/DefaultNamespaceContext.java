@@ -64,100 +64,111 @@ import javax.xml.namespace.NamespaceContext;
 /**
  * A default implementation of {@link NamespaceContext}. The JDK does not
  * provide a default implementation.
- *
+ * 
  * @author Heiko Hofer
  */
 public class DefaultNamespaceContext implements NamespaceContext {
-    private Map<String, String> m_namespaces;
-    private Map<String, List<String>> m_nsRevers;
+	private final Map<String, String> m_namespaces;
+	private final Map<String, List<String>> m_nsRevers;
 
-    /**
-     * The context with the mapping prefixes[i] matches namespaces[i]
-     * @param prefixes the namespace prefixes
-     * @param namespaces the namespaces
-     */
-    public DefaultNamespaceContext(final String[] prefixes,
-            final String[] namespaces) {
-        m_namespaces = new HashMap<String, String>();
-        for (int i = 0; i < prefixes.length; i++) {
-            if (m_namespaces.containsKey(prefixes[i])) {
-                throw new IllegalArgumentException("Duplicated "
-                        + "namespace prefix.");
-            }
-            m_namespaces.put(prefixes[i], namespaces[i]);
-        }
-        // Ensure if "xml" is bound to the correct namespace
-        if (m_namespaces.containsKey(XMLConstants.XML_NS_PREFIX)) {
-            if (!m_namespaces.get(XMLConstants.XML_NS_PREFIX).equals(
-                    XMLConstants.XML_NS_URI)) {
-                throw new IllegalArgumentException("The prefix "
-                        + XMLConstants.XML_NS_PREFIX + "can only be "
-                        + "bound to the namespace "
-                        + XMLConstants.XML_NS_URI);
-            }
-        } else {
-            m_namespaces.put(XMLConstants.XML_NS_PREFIX,
-                    XMLConstants.XML_NS_URI);
-        }
-        // Ensure if "xmlns" is bound to the correct namespace
-        if (m_namespaces.containsKey(XMLConstants.XMLNS_ATTRIBUTE)) {
-            if (!m_namespaces.get(XMLConstants.XMLNS_ATTRIBUTE).equals(
-                    XMLConstants.XMLNS_ATTRIBUTE_NS_URI)) {
-                throw new IllegalArgumentException("The prefix "
-                        + XMLConstants.XMLNS_ATTRIBUTE + "can only be "
-                        + "bound to the namespace "
-                        + XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
-            }
-        } else {
-            m_namespaces.put(XMLConstants.XMLNS_ATTRIBUTE,
-                    XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
-        }
-        // create reverse mapping
-        m_nsRevers = new HashMap<String, List<String>>();
-        for(Entry<String, String> entry : m_namespaces.entrySet()) {
-            String ns = entry.getValue();
-            String prefix = entry.getKey();
-            if (m_nsRevers.containsKey(ns)) {
-                List<String> list = m_nsRevers.get(ns);
-                list.add(prefix);
-            } else {
-                List<String> list = new ArrayList<String>();
-                list.add(prefix);
-                m_nsRevers.put(ns, list);
-            }
-        }
+	/**
+	 * The context with the mapping prefixes[i] matches namespaces[i]
+	 * 
+	 * @param prefixes the namespace prefixes
+	 * @param namespaces the namespaces
+	 */
+	public DefaultNamespaceContext(final String[] prefixes,
+			final String[] namespaces) {
+		m_namespaces = new HashMap<String, String>();
+		for (int i = 0; i < prefixes.length; i++) {
+			if (m_namespaces.containsKey(prefixes[i])) {
+				throw new IllegalArgumentException("Duplicated "
+						+ "namespace prefix.");
+			}
+			m_namespaces.put(prefixes[i], namespaces[i]);
+		}
+		// Ensure if "xml" is bound to the correct namespace
+		if (m_namespaces.containsKey(XMLConstants.XML_NS_PREFIX)) {
+			if (!m_namespaces.get(XMLConstants.XML_NS_PREFIX).equals(
+					XMLConstants.XML_NS_URI)) {
+				throw new IllegalArgumentException("The prefix "
+						+ XMLConstants.XML_NS_PREFIX + "can only be "
+						+ "bound to the namespace " + XMLConstants.XML_NS_URI);
+			}
+		} else {
+			m_namespaces.put(XMLConstants.XML_NS_PREFIX,
+					XMLConstants.XML_NS_URI);
+		}
+		// Ensure if "xmlns" is bound to the correct namespace
+		if (m_namespaces.containsKey(XMLConstants.XMLNS_ATTRIBUTE)) {
+			if (!m_namespaces.get(XMLConstants.XMLNS_ATTRIBUTE).equals(
+					XMLConstants.XMLNS_ATTRIBUTE_NS_URI)) {
+				throw new IllegalArgumentException("The prefix "
+						+ XMLConstants.XMLNS_ATTRIBUTE + "can only be "
+						+ "bound to the namespace "
+						+ XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
+			}
+		} else {
+			m_namespaces.put(XMLConstants.XMLNS_ATTRIBUTE,
+					XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
+		}
+		// create reverse mapping
+		m_nsRevers = new HashMap<String, List<String>>();
+		for (Entry<String, String> entry : m_namespaces.entrySet()) {
+			String ns = entry.getValue();
+			String prefix = entry.getKey();
+			if (m_nsRevers.containsKey(ns)) {
+				List<String> list = m_nsRevers.get(ns);
+				list.add(prefix);
+			} else {
+				List<String> list = new ArrayList<String>();
+				list.add(prefix);
+				m_nsRevers.put(ns, list);
+			}
+		}
 
-    }
+	}
 
-    @Override
-    public String getNamespaceURI(final String prefix) {
-        if (prefix == null) throw new IllegalArgumentException("Null prefix");
-        if (m_namespaces.containsKey(prefix)) {
-            return m_namespaces.get(prefix);
-        } else {
-            return XMLConstants.NULL_NS_URI;
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getNamespaceURI(final String prefix) {
+		if (prefix == null)
+			throw new IllegalArgumentException("Null prefix");
+		if (m_namespaces.containsKey(prefix)) {
+			return m_namespaces.get(prefix);
+		} else {
+			return XMLConstants.NULL_NS_URI;
+		}
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getPrefix(final String uri) {
+		if (uri == null)
+			throw new IllegalArgumentException("Null uri");
+		if (m_nsRevers.containsKey(uri)) {
+			return m_nsRevers.get(uri).get(0);
+		} else {
+			return null;
+		}
+	}
 
-    @Override
-    public String getPrefix(final String uri) {
-        if (uri == null) throw new IllegalArgumentException("Null uri");
-        if (m_nsRevers.containsKey(uri)) {
-            return m_nsRevers.get(uri).get(0);
-        } else {
-            return null;
-        }
-    }
-
-
-    @Override
-    public Iterator getPrefixes(final String uri) {
-        if (uri == null) throw new IllegalArgumentException("Null uri");
-        if (m_nsRevers.containsKey(uri)) {
-            return m_nsRevers.get(uri).iterator();
-        } else {
-            return Collections.EMPTY_LIST.iterator();
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Iterator getPrefixes(final String uri) {
+		if (uri == null)
+			throw new IllegalArgumentException("Null uri");
+		if (m_nsRevers.containsKey(uri)) {
+			return m_nsRevers.get(uri).iterator();
+		} else {
+			return Collections.EMPTY_LIST.iterator();
+		}
+	}
 }

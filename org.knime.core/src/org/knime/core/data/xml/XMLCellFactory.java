@@ -197,4 +197,31 @@ public class XMLCellFactory {
             return new XMLCell(content);
         }
     }
+    
+    /**
+     * Factory method to create {@link DataCell} representing
+     * {@link org.w3c.dom.Document}.
+     * The returned cell is either of type {@link XMLCell} (for small documents)
+     * or {@link XMLBlobCell} (otherwise, default threshold is
+     * {@value #DEF_MIN_BLOB_SIZE_IN_BYTES} bytes or larger).
+     *
+     * @param xml The cell represents this value.
+     * @return DataCell representing the XML document
+     * @throws NullPointerException if argument is null
+     */    
+    public static DataCell create(final XMLValue xml) {
+        if (xml == null) {
+            throw new NullPointerException("XMLValue must not be null");
+        }
+    	if(xml instanceof DataCell) {
+    		return (DataCell)xml;
+    	} else {
+    		XMLCellContent content = new XMLCellContent(xml.getDocument());
+            if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
+                return new XMLBlobCell(content);
+            } else {
+                return new XMLCell(content);
+            }    		
+    	}    
+    }
 }
