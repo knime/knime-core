@@ -46,52 +46,60 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-
-import org.knime.base.data.aggregation.AggregationOperator;
+package org.knime.base.data.aggregation;
 
 
 /**
- * Returns the first value (ignores missing values) per group.
+ * Utility class that contains general information such as the
+ * column delimiter and the total number of rows.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class FirstValueOperator extends FirstOperator {
+public class GlobalSettings {
 
-    /**Constructor for class FirstValueOperator.
+    /**The standard delimiter used in concatenation operators.*/
+    public static final String STANDARD_DELIMITER = ", ";
+
+    /**The maximum number of unique values. the threshold is used
+     * if the method uses a limit.*/
+    private final int m_maxUniqueValues;
+    /**The delimiter to use for value separation.*/
+    private final String m_valueDelimiter;
+
+    /**Constructor for class GlobalSettings that uses the standard
+     * value delimiter.
+     *
+     * @param maxUniqueValues the maximum number of unique values to consider
      */
-    public FirstValueOperator() {
-        super("First value");
+    public GlobalSettings(final int maxUniqueValues) {
+        this(maxUniqueValues, STANDARD_DELIMITER);
     }
 
-    /**
-     * {@inheritDoc}
+    /**Constructor for class GlobalSettings.
+     * @param maxUniqueValues the maximum number of unique values to consider
+     * @param valueDelimiter the delimiter to use for value separation
      */
-    @Override
-    public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new FirstValueOperator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
+    public GlobalSettings(final int maxUniqueValues,
+            final String valueDelimiter) {
+        if (maxUniqueValues < 0) {
+            throw new IllegalArgumentException(
+                    "Maximum unique values must be a positive integer");
         }
-        return super.computeInternal(cell);
+        m_maxUniqueValues = maxUniqueValues;
+        m_valueDelimiter = valueDelimiter;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the maximum number of unique values to consider
      */
-    @Override
-    public String getDescription() {
-        return "Takes the first value that is not a missing value per group.";
+    public int getMaxUniqueValues() {
+        return m_maxUniqueValues;
+    }
+
+    /**
+     * @return the standard delimiter to use for value separation
+     */
+    public String getValueDelimiter() {
+        return m_valueDelimiter;
     }
 }

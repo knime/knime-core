@@ -53,7 +53,7 @@ package org.knime.base.data.aggregation.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
 
-import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.AggregationMethod;
 
 import java.awt.Component;
 
@@ -97,9 +97,9 @@ public class AggregationMethodTableCellEditor extends DefaultCellEditor {
         final Object valueAt = m_model.getValueAt(row, 0);
         final Object methodVal = m_model.getValueAt(row, 1);
         if (valueAt instanceof DataColumnSpec) {
-            final AggregationMethods method;
-                if (methodVal instanceof AggregationMethods) {
-                    method = (AggregationMethods)methodVal;
+            final AggregationMethod method;
+                if (methodVal instanceof AggregationMethod) {
+                    method = (AggregationMethod)methodVal;
                 } else {
                     method = null;
                 }

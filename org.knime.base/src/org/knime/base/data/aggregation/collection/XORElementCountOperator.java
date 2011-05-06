@@ -49,11 +49,14 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -65,19 +68,24 @@ import org.knime.base.data.aggregation.AggregationOperator;
 public class XORElementCountOperator extends XORElementOperator {
 
     /**Constructor for class UnionOperator.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public XORElementCountOperator(final int maxUniqueValues) {
-        super("Exclusive-or count", "Exclusive-or count", maxUniqueValues);
+    public XORElementCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(new OperatorData("Exclusive-or count", true, false,
+                CollectionDataValue.class, true),
+                globalSettings, opColSettings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new XORElementCountOperator(maxUniqueValues);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new XORElementCountOperator(globalSettings, opColSettings);
     }
 
     /**

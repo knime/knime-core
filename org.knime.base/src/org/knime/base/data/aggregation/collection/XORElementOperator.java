@@ -49,13 +49,15 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -72,38 +74,41 @@ public class XORElementOperator extends AggregationOperator {
 
     private final Set<DataCell> m_vals;
 
-
     /**Constructor for class XORElementOperator.
-     *@param maxUniqueValues the maximum number of unique values
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public XORElementOperator(final int maxUniqueValues) {
-        this("Exclusive-or", "Exclusive-or", maxUniqueValues);
-    }
-
-    /**Constructor for class XORElementOperator.
-     * @param label of the derived class
-     * @param colName the column name
-     * @param maxUniqueValues the maximum number of unique values
-     */
-    protected XORElementOperator(final String label, final String colName,
-            final int maxUniqueValues) {
-        super(label, colName, true, false, maxUniqueValues,
-                CollectionDataValue.class);
+    protected XORElementOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<DataCell>(maxUniqueValues);
+            m_vals = new LinkedHashSet<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
         }
     }
 
+    /**Constructor for class XORElementOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public XORElementOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Exclusive-or", "Exclusive-or", true, false,
+                CollectionDataValue.class, true),
+                globalSettings, opColSettings);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new XORElementOperator(maxUniqueValues);
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new XORElementOperator(globalSettings, opColSettings);
     }
 
     /**

@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the number of missing values per group.
@@ -67,10 +69,39 @@ public class MissingValueCountOperator extends AggregationOperator {
 
     private int m_counter = 0;
 
-    /**Constructor for class ValueCountOperator.
+    /**Constructor for class MissingValueCountOperator.
+     * @param globalSettings
+     * @param opColSettings
      */
-    public MissingValueCountOperator() {
-        super("Missing value count", false, false, 1, DataValue.class);
+    public MissingValueCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Missing value count", false, false,
+                DataValue.class, false), globalSettings,
+                setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(true);
+        return opColSettings;
+    }
+
+    /**Constructor for class MissingValueCountOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected MissingValueCountOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
     }
 
     /**
@@ -86,8 +117,9 @@ public class MissingValueCountOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new MissingValueCountOperator();
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new MissingValueCountOperator(globalSettings, opColSettings);
     }
 
     /**

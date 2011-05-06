@@ -82,7 +82,6 @@ public class AggregationMethodTableCellRenderer
         assert (c == this);
         if (value instanceof AggregationMethod) {
             setText(((AggregationMethod)value).getLabel());
-//            setIcon(((DataColumnSpec)value).getType().getIcon());
         }
         return this;
     }

@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the count per group.
@@ -68,9 +70,25 @@ public class CountOperator extends AggregationOperator {
     private int m_counter = 0;
 
     /**Constructor for class CountOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public CountOperator() {
-        super("Count", false, false, 1, DataValue.class);
+    public CountOperator(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Count", false, false, DataValue.class, true),
+                globalSettings, opColSettings);
+    }
+
+    /**Constructor for class CountOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public CountOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
     }
 
     /**
@@ -86,8 +104,9 @@ public class CountOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new CountOperator();
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new CountOperator(globalSettings, opColSettings);
     }
 
     /**

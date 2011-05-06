@@ -49,7 +49,6 @@
 package org.knime.base.data.aggregation.date;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.date.DateAndTimeCell;
@@ -57,6 +56,9 @@ import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.LongCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -76,28 +78,46 @@ public class MillisRangeOperator extends AggregationOperator {
     private final DataValueComparator m_comparator =
         DateAndTimeCell.TYPE.getComparator();
 
-
     /**Constructor for class MillisRangeOperator.
-     *
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public MillisRangeOperator() {
-        this("Date range(ms)");
+    protected MillisRangeOperator(final OperatorData operatorData, final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
     }
 
     /**Constructor for class MillisRangeOperator.
-     * @param label the label to use
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    protected MillisRangeOperator(final String label) {
-        super(label, false, false, 1, DateAndTimeValue.class);
+    public MillisRangeOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Date range(ms)", false, false,
+                DateAndTimeValue.class, false), globalSettings,
+        setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new MillisRangeOperator();
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new MillisRangeOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -105,10 +125,6 @@ public class MillisRangeOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            //skip missing cells
-            return false;
-        }
         if (m_min == null || m_max == null) {
             //this is the first call
             m_min = cell;

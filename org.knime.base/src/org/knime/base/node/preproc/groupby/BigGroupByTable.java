@@ -61,6 +61,7 @@ import org.knime.core.node.NodeLogger;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -93,7 +94,7 @@ GroupByTable {
      * @param colAggregators the aggregation columns with the aggregation method
      * to use in the order the columns should be appear in the result table
      * numerical columns
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
      * @param sortInMemory <code>true</code> if the table should be sorted in
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
@@ -107,11 +108,12 @@ GroupByTable {
     public BigGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
             final List<String> groupByCols,
-            final ColumnAggregator[] colAggregators, final int maxUniqueValues,
-            final boolean sortInMemory, final boolean enableHilite,
-            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+            final ColumnAggregator[] colAggregators,
+            final GlobalSettings globalSettings, final boolean sortInMemory,
+            final boolean enableHilite, final ColumnNamePolicy colNamePolicy,
+            final boolean retainOrder)
     throws CanceledExecutionException {
-        super(exec, inDataTable, groupByCols, colAggregators, maxUniqueValues,
+        super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
                 sortInMemory, enableHilite, colNamePolicy, retainOrder);
     }
 
@@ -179,7 +181,7 @@ GroupByTable {
             for (final ColumnAggregator colAggr : getColAggregators()) {
                 final DataCell cell = row.getCell(origSpec.findColumnIndex(
                         colAggr.getColName()));
-                colAggr.getOperator(getMaxUniqueVals()).compute(cell);
+                colAggr.getOperator(getGlobalSettings()).compute(cell);
             }
             if (isEnableHilite()) {
                 rowKeys.add(row.getKey());
@@ -213,7 +215,7 @@ GroupByTable {
         //add the aggregation values
         for (final ColumnAggregator colAggr : colAggregators) {
             final AggregationOperator operator =
-                colAggr.getOperator(getMaxUniqueVals());
+                colAggr.getOperator(getGlobalSettings());
             rowVals[valIdx++] = operator.getResult();
             if (operator.isSkipped()) {
                 //add skipped groups and the column that causes the skipping

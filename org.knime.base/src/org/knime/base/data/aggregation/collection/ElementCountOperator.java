@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -66,18 +68,35 @@ public class ElementCountOperator extends AggregationOperator {
     private int m_counter = 0;
 
     /**Constructor for class ElementCountOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public ElementCountOperator() {
-        super("Element count", false, false, 10, CollectionDataValue.class);
+    protected ElementCountOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+    }
+
+    /**Constructor for class ElementCountOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public ElementCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Element count", false, false,
+                CollectionDataValue.class, true),
+                globalSettings, opColSettings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new ElementCountOperator();
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new ElementCountOperator(globalSettings, opColSettings);
     }
 
     /**

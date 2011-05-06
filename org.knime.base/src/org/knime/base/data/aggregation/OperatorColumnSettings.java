@@ -46,51 +46,58 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-
-import org.knime.base.data.aggregation.AggregationOperator;
 
 
 /**
- * Returns the last value (ignores missing values) per group.
+ * Contains the operator specific settings.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class LastValueOperator extends LastOperator {
-    /**Constructor for class LastValueOperator.
+public class OperatorColumnSettings {
+
+    /**If missing values should be considered during calculation.*/
+    private boolean m_inclMissingCells;
+
+    /**The original {@link DataColumnSpec} of the column to aggregate.*/
+    private final DataColumnSpec m_origColSpec;
+
+    /**Constructor for class OperatorSeetings.
+     *
+     * @param origColSpec the {@link DataColumnSpec} from the column to
+     * aggregate
+     * @param inclMissingCells <code>true</code> if missing values should
+     * be considered during aggregation <code>false</code> if missing values
+     * should be omitted
      */
-    public LastValueOperator() {
-        super("Last value");
+    public OperatorColumnSettings(final boolean inclMissingCells,
+            final DataColumnSpec origColSpec) {
+        m_origColSpec = origColSpec;
+        m_inclMissingCells = inclMissingCells;
     }
 
     /**
-     * {@inheritDoc}
+     * @param inclMissingCells <code>true</code> if missing cells should be
+     * considered during aggregation
      */
-    @Override
-    public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new LastValueOperator();
+    public void setInclMissing(final boolean inclMissingCells) {
+        m_inclMissingCells = inclMissingCells;
     }
 
     /**
-     * {@inheritDoc}
+     * @return <code>true</code> if missing cells are considered during
+     * aggregation
      */
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        return super.computeInternal(cell);
+    public boolean inclMissingCells() {
+        return m_inclMissingCells;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the original {@link DataColumnSpec} of the column to aggregate
      */
-    @Override
-    public String getDescription() {
-        return "Takes the last value that is not a missing value per group.";
+    public DataColumnSpec getOriginalColSpec() {
+        return m_origColSpec;
     }
 }

@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.date;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,26 +77,54 @@ public class MedianDateOperator extends AggregationOperator {
 
 
     /**Constructor for class MedianDateOperator.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public MedianDateOperator(final int maxUniqueValues) {
-        super("Median date", true, false, maxUniqueValues,
-                DateAndTimeValue.class);
+    protected MedianDateOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_cells = new ArrayList<DataCell>(maxUniqueValues);
+            m_cells = new ArrayList<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
             "Maximum unique values number to big");
         }
     }
 
+    /**Constructor for class MedianDateOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public MedianDateOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Median date", true, false,
+                DateAndTimeValue.class, false), globalSettings,
+                setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new MedianDateOperator(maxUniqueValues);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new MedianDateOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -102,9 +132,6 @@ public class MedianDateOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
         if (m_cells.size() >= getMaxUniqueValues()) {
             return true;
         }
@@ -125,7 +152,7 @@ public class MedianDateOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        int size = m_cells.size();
+        final int size = m_cells.size();
         if (size == 0) {
             return DataType.getMissingCell();
         }

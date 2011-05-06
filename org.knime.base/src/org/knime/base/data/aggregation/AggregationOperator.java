@@ -66,81 +66,53 @@ import org.knime.core.data.DataValue;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AggregationOperator implements AggregationMethod {
-
-    private final int m_maxUniqueValues;
-
+    /**If the aggregator should be skipped.*/
     private boolean m_skipped;
 
-    private final String m_label;
-    private final String m_colName;
-    private final boolean m_usesLimit;
-    private final boolean m_keepColSpec;
+    private final GlobalSettings m_globalSettings;
+    private final OperatorColumnSettings m_opColSettings;
+    private final OperatorData m_operatorData;
 
-    /**The standard delimiter used in concatenation operators.*/
-    public static final String STANDARD_DELIMITER = ", ";
-
-    private final Class<? extends DataValue> m_supportedType;
 
     /**Constructor for class AggregationOperator.
-     * @param label unique user readable label. The label need to be unique
-     * since it is used for registering and for the column name. It is also
-     * displayed to the user.
-     * @param usesLimit <code>true</code> if the method checks the number of
-     * unique values limit.
-     * @param keepColSpec <code>true</code> if the original column specification
-     * should be kept if possible
-     * @param maxUniqueValues the maximum number of unique values
-     * @param supportedClass the {@link DataValue} class supported by
-     * this method
+     * @param operatorData the operator specific data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public AggregationOperator(final String label, final boolean usesLimit,
-            final boolean keepColSpec, final int maxUniqueValues,
-            final Class<? extends DataValue> supportedClass) {
-        this(label, label, usesLimit, keepColSpec, maxUniqueValues,
-                supportedClass);
-    }
-
-    /**Constructor for class AggregationOperator.
-     * @param label unique user readable label. The label needs to be unique
-     * since it is used for registering. It is also displayed to the user
-     * @param colName the column name
-     * @param usesLimit <code>true</code> if the method checks the number of
-     * unique values limit.
-     * @param keepColSpec <code>true</code> if the original column specification
-     * should be kept if possible
-     * @param maxUniqueValues the maximum number of unique values
-     * @param supportedClass the {@link DataValue} class supported by
-     * this method
-     */
-    public AggregationOperator(final String label, final String colName,
-            final boolean usesLimit, final boolean keepColSpec,
-            final int maxUniqueValues,
-            final Class<? extends DataValue> supportedClass) {
-        m_label = label;
-        m_colName = colName;
-        m_usesLimit = usesLimit;
-        m_keepColSpec = keepColSpec;
-        m_maxUniqueValues = maxUniqueValues;
-        m_supportedType = supportedClass;
+    public AggregationOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        m_globalSettings = globalSettings;
+        m_opColSettings = opColSettings;
+        m_operatorData = operatorData;
     }
 
     /**
      * Creates a new instance of this operator. A new instance is created for
      * each column.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      *
-     * @param origColSpec the {@link DataColumnSpec} of the original column
-     * @param maxUniqueValues the maximum number of unique values
      * @return a new instance of this operator
+     *
      */
     public abstract AggregationOperator createInstance(
-            DataColumnSpec origColSpec, final int maxUniqueValues);
+            GlobalSettings globalSettings,
+            OperatorColumnSettings opColSettings);
+
+    /**
+     * @return the {@link OperatorData} of this operator
+     */
+    public OperatorData getOperatorData() {
+        return m_operatorData;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Class<? extends DataValue> getSupportedType() {
-        return m_supportedType;
+        return m_operatorData.getSupportedType();
     }
 
     /**
@@ -148,14 +120,45 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     @Override
     public String getSupportedTypeLabel() {
-        return AggregationMethods.getUserTypeLabel(m_supportedType);
+        return AggregationMethods.getUserTypeLabel(getSupportedType());
     }
 
     /**
      * @return the maxUniqueValues
      */
     public int getMaxUniqueValues() {
-        return m_maxUniqueValues;
+        return m_globalSettings.getMaxUniqueValues();
+    }
+
+    /**
+     * @return the standard delimiter to use for value separation
+     */
+    public String getValueDelimiter(){
+        return m_globalSettings.getValueDelimiter();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean supportsMissingValueOption() {
+        return m_operatorData.supportsMissingValueOption();
+    }
+
+    /**
+     * @param inclMissingCells <code>true</code> if missing cells should be
+     * considered during aggregation
+     */
+    void setInclMissing(final boolean inclMissingCells) {
+        m_opColSettings.setInclMissing(inclMissingCells);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean inclMissingCells() {
+        return m_opColSettings.inclMissingCells();
     }
 
     /**
@@ -175,13 +178,24 @@ public abstract class AggregationOperator implements AggregationMethod {
         if (cell == null) {
             throw new NullPointerException("cell must not be null");
         }
-        m_skipped = computeInternal(cell);
+        if (inclMissingCells() || !cell.isMissing()) {
+            m_skipped = computeInternal(cell);
+        }
+    }
+
+    /**
+     * @return <code>true</code> if the original {@link DataColumnSpec} should
+     * be kept.
+     */
+    public boolean keepColumnSpec() {
+        return m_operatorData.keepColumnSpec();
     }
 
     /**
      * @param cell the {@link DataCell} to consider during computing the cell
      * can't be <code>null</code> but can be a missing cell
-     * {@link DataCell#isMissing()}.
+     * {@link DataCell#isMissing()} if the option is
+     * {@link #inclMissingCells()} option is set to <code>true</code>.
      * @return <code>true</code> if this column should be skipped in further
      * calculations
      */
@@ -199,7 +213,7 @@ public abstract class AggregationOperator implements AggregationMethod {
         }
         final DataType newType = getDataType(origSpec.getType());
         final DataColumnSpecCreator specCreator;
-        if (m_keepColSpec && (newType == null
+        if (keepColumnSpec() && (newType == null
                 || origSpec.getType().equals(newType))) {
              specCreator = new DataColumnSpecCreator(origSpec);
         } else {
@@ -254,7 +268,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     @Override
     public String getLabel() {
-        return m_label;
+        return m_operatorData.getLabel();
     }
 
     /**
@@ -262,16 +276,23 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     @Override
     public String getColumnLabel() {
-        return m_colName;
+        if (supportsMissingValueOption() && inclMissingCells()) {
+            //add the star to indicate that missing values are included
+            //but only if the method supports the changing of this option
+            //by the user to be compatible to old methods
+            return m_operatorData.getColumnLabel() + "*";
+        }
+        return m_operatorData.getColumnLabel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createOperator(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return createInstance(origColSpec, maxUniqueValues);
+    public AggregationOperator createOperator(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return createInstance(globalSettings, opColSettings);
     }
 
     /**
@@ -293,7 +314,7 @@ public abstract class AggregationOperator implements AggregationMethod {
         if (type == null) {
             throw new NullPointerException("type must not be null");
         }
-        return type.isCompatible(m_supportedType);
+        return type.isCompatible(getSupportedType());
     }
 
     /**
@@ -301,7 +322,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      * values limit.
      */
     public boolean isUsesLimit() {
-        return m_usesLimit;
+        return m_operatorData.usesLimit();
     }
 
     /**
@@ -311,13 +332,14 @@ public abstract class AggregationOperator implements AggregationMethod {
     public int compareTo(final AggregationMethod o) {
         if (o instanceof AggregationOperator) {
             final AggregationOperator operator = (AggregationOperator)o;
-            final int typeComp = m_supportedType.getName().compareTo(
-                    operator.m_supportedType.getName());
+            final int typeComp = getSupportedType().getName().compareTo(
+                    operator.getSupportedType().getName());
             if (typeComp != 0) {
                 //add the operators that support general types last
-                if (m_supportedType.equals(DataValue.class)) {
+                if (getSupportedType().equals(DataValue.class)) {
                     return 1;
-                } else if (operator.m_supportedType.equals(DataValue.class)) {
+                } else if (
+                        operator.getSupportedType().equals(DataValue.class)) {
                     return -1;
                 }
                 //sort by type first
@@ -334,6 +356,25 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     @Override
     public String toString() {
-        return m_label + " Skipped: " + m_skipped;
+        return getLabel()
+            + " Skipped: " + m_skipped
+            + " Incl. missing: " + inclMissingCells();
     }
+//
+//    /**
+//     * @param label the new label to use. This method is necessary for
+//     * compatibility issues to support older methods.
+//     */
+//    void setLabel(final String label) {
+//        m_operatorData.setLabel(label);
+//    }
+//
+//    /**
+//     * @param colName the new column name to use.
+//     * This method is necessary for compatibility issues to support
+//     * older methods.
+//     */
+//    void setColName(final String colName) {
+//        m_operatorData.setColName(colName);
+//    }
 }

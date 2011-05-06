@@ -48,17 +48,20 @@
 
 package org.knime.base.data.aggregation.numerical;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
+
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 
 
 /**
@@ -73,16 +76,43 @@ public class MedianOperator extends AggregationOperator {
     private final Comparator<DataCell> m_comparator = TYPE.getComparator();
 
     /**Constructor for class MedianOperator.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public MedianOperator(final int maxUniqueValues) {
-        super("Median", true, false, maxUniqueValues, DoubleValue.class);
+    protected MedianOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_cells = new ArrayList<DataCell>(maxUniqueValues);
+            m_cells = new ArrayList<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
             "Maximum unique values number too big");
         }
+    }
+
+    /**Constructor for class MedianOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public MedianOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Median", true, false, DoubleValue.class,
+                false), globalSettings, setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
     }
 
     /**
@@ -112,9 +142,10 @@ public class MedianOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new MedianOperator(maxUniqueValues);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new MedianOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -142,7 +173,7 @@ public class MedianOperator extends AggregationOperator {
     }
 
     /** Converts argument to DoubleCell if it does not fully support the
-     * DataValue interfaces supported by DoubleCell.TYPE
+     * DataValue interfaces supported by DoubleCell.TYPE .
      * @param cell Cell to convert (or not)
      * @return The argument or a new DoubleCell.
      */

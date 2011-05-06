@@ -86,7 +86,7 @@ public class AggregationMethodComboBox extends JComboBox {
      * @param selectedMethod the current selected method
      */
     public void update(final DataColumnSpec spec,
-            final AggregationMethods selectedMethod) {
+            final AggregationMethod selectedMethod) {
         if (m_type == null || !m_type.equals(spec.getType())) {
             //recreate the combo box if the type has change
             removeAllItems();

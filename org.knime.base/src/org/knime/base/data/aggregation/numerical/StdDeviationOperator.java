@@ -49,11 +49,13 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -64,9 +66,13 @@ import org.knime.base.data.aggregation.AggregationOperator;
 public class StdDeviationOperator extends VarianceOperator {
 
     /**Constructor for class StdDeviationOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public StdDeviationOperator() {
-        super("Standard deviation");
+    public StdDeviationOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(new OperatorData("Standard deviation", false, false,
+                DoubleValue.class, false), globalSettings, opColSettings);
     }
 
     /**
@@ -74,8 +80,8 @@ public class StdDeviationOperator extends VarianceOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new StdDeviationOperator();
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        return new StdDeviationOperator(globalSettings, opColSettings);
     }
 
     /**

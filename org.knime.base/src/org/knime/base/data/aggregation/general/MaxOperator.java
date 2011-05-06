@@ -49,13 +49,15 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the maximum per group.
@@ -68,16 +70,32 @@ public class MaxOperator extends AggregationOperator {
 
     private final DataValueComparator m_comparator;
 
-    /**Constructor for class MinOperator.
-     * @param origColSpec the {@link DataColumnSpec} of the original column
+    /**Constructor for class MaxOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public MaxOperator(final DataColumnSpec origColSpec) {
-        super("Maximum", "Max", false, true, 1, DataValue.class);
-        if (origColSpec == null) {
+    public MaxOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Maximum", "Max", false, true,
+                DataValue.class, true), globalSettings, opColSettings);
+    }
+
+
+    /**Constructor for class MaxOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected MaxOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+        if (opColSettings.getOriginalColSpec() == null) {
             //this could only happen in the enumeration definition
             m_comparator = DoubleCell.TYPE.getComparator();
         } else {
-            m_comparator = origColSpec.getType().getComparator();
+            m_comparator =
+                opColSettings.getOriginalColSpec().getType().getComparator();
         }
     }
 
@@ -94,11 +112,8 @@ public class MaxOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        if (origColSpec == null) {
-            throw new NullPointerException("origColSpec must not be null");
-        }
-        return new MaxOperator(origColSpec);
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        return new MaxOperator(globalSettings, opColSettings);
     }
 
     /**

@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -71,13 +73,25 @@ public class UniqueConcatenateOperator extends AggregationOperator {
     private final Set<String> m_vals;
 
     /**Constructor for class Concatenate.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public UniqueConcatenateOperator(final int maxUniqueValues) {
-        super("Unique concatenate", true, false, maxUniqueValues,
-                DataValue.class);
+    public UniqueConcatenateOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Unique concatenate", true, false,
+                DataValue.class, true), globalSettings, opColSettings);
+    }
+
+    /**Constructor for class UniqueConcatenateOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected UniqueConcatenateOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<String>(maxUniqueValues);
+            m_vals = new LinkedHashSet<String>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -97,8 +111,10 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new UniqueConcatenateOperator(maxUniqueValues);
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new UniqueConcatenateOperator(globalSettings,
+                opColSettings);
     }
 
     /**
@@ -133,19 +149,11 @@ public class UniqueConcatenateOperator extends AggregationOperator {
             if (first) {
                 first = false;
             } else {
-                buf.append(getDelimiter());
+                buf.append(getValueDelimiter());
             }
             buf.append(val);
         }
         return new StringCell(buf.toString());
-    }
-
-    /**
-     * Override this method to change the standard delimiter.
-     * @return the delimiter to use.
-     */
-    protected String getDelimiter() {
-        return AggregationOperator.STANDARD_DELIMITER;
     }
 
     /**

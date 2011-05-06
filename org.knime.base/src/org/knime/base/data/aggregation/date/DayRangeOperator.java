@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.date;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -71,19 +73,37 @@ public class DayRangeOperator extends MillisRangeOperator {
     private static final double MS_PER_DAY = 24 * 60 * 60 * 1000;
 
     /**Constructor for class DayRangeOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      *
      */
-    public DayRangeOperator() {
-        super("Date range(day)");
+    public DayRangeOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(new OperatorData("Date range(day)", false, false,
+                DateAndTimeValue.class, false), globalSettings,
+                setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new DayRangeOperator();
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new DayRangeOperator(globalSettings, opColSettings);
     }
 
     /**

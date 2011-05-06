@@ -100,8 +100,10 @@ public class AggregationColumnTableModel extends DefaultTableModel {
             return;
         }
         for (final DataColumnSpec spec : specs) {
+            final AggregationMethod defaultMethod =
+                AggregationMethods.getDefaultMethod(spec);
             m_cols.add(new ColumnAggregator(spec,
-                    AggregationMethods.getDefaultMethod(spec)));
+                    defaultMethod, defaultMethod.inclMissingCells()));
         }
         fireTableDataChanged();
     }
@@ -169,15 +171,40 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     }
 
     /**
+     * Toggles the include missing cell option of all selected rows if they
+     * support it.
+     * @param selectedRows the index of the rows to change the aggregation
+     * method
+     */
+    public void toggleMissingCellOption(final int[] selectedRows) {
+        if (selectedRows == null) {
+            return;
+        }
+        for (final int i : selectedRows) {
+            if (i < 0) {
+                continue;
+            }
+            final ColumnAggregator aggregator = getColumnAggregator(i);
+            if (aggregator.supportsMissingValueOption()) {
+                aggregator.setinclMissingCells(
+                        !aggregator.inclMissingCells());
+            }
+        }
+        fireTableDataChanged();
+    }
+    /**
      * {@inheritDoc}
      */
     @Override
     public String getColumnName(final int columnIdx) {
-        if (columnIdx == 0) {
-            return "Column";
+        switch (columnIdx) {
+            case 0:
+                return "Column";
+            case 1:
+                return "Aggregation (click to change)";
+            default:
+                return "missing";
         }
-        return "Aggregation (click to change)";
-
     }
 
     /**
@@ -222,6 +249,22 @@ public class AggregationColumnTableModel extends DefaultTableModel {
             assert columnIdx == 1;
             updateMethod(row, newMethod);
         }
+        if (aValue instanceof Boolean) {
+            final Boolean inclMissing = (Boolean) aValue;
+            assert columnIdx == 2;
+            updateInclMissing(row, inclMissing.booleanValue());
+        }
+    }
+
+    /**
+     * @param row row index to change the method for
+     * @param inclMissingVals <code>true</code> if missing cells should be
+     * considered during aggregation
+     */
+    private void updateInclMissing(final int row,
+            final boolean inclMissingVals) {
+        final ColumnAggregator colAggr = getColumnAggregator(row);
+        colAggr.setinclMissingCells(inclMissingVals);
     }
 
     /**
@@ -231,7 +274,8 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     private void updateMethod(final int row, final AggregationMethod method) {
         final ColumnAggregator colAggr = getColumnAggregator(row);
         m_cols.set(row, new ColumnAggregator(
-                colAggr.getColSpec(), method));
+                colAggr.getColSpec(), method, method.inclMissingCells()));
+        fireTableCellUpdated(row, 2);
     }
 
     /**
@@ -259,8 +303,17 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      */
     @Override
     public boolean isCellEditable(final int row, final int columnIdx) {
-        return (columnIdx == 1);
+        switch (columnIdx) {
+            case 1:
+                return true;
+            case 2:
+                final ColumnAggregator aggregator = getColumnAggregator(row);
+                return aggregator.supportsMissingValueOption();
+            default:
+                return false;
+        }
     }
+
     /**
      * {@inheritDoc}
      */
@@ -276,26 +329,35 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      */
     @Override
     public int getColumnCount() {
-        return 2;
+        return 3;
     }
     /**
      * {@inheritDoc}
      */
     @Override
     public Class<?> getColumnClass(final int columnIndex) {
-        if (columnIndex == 1) {
+        switch (columnIndex) {
+        case 1:
             return AggregationMethod.class;
+        case 2:
+            return Boolean.class;
+        default:
+            return DataColumnSpec.class;
         }
-        return DataColumnSpec.class;
     }
     /**
      * {@inheritDoc}
      */
     @Override
     public Object getValueAt(final int row, final int columnIndex) {
-        if (columnIndex == 1) {
+        switch (columnIndex) {
+        case 1:
             return getColumnAggregator(row).getMethod();
+        case 2:
+            return Boolean.valueOf(
+                    getColumnAggregator(row).inclMissingCells());
+        default:
+            return getColumnAggregator(row).getColSpec();
         }
-        return getColumnAggregator(row).getColSpec();
     }
 }

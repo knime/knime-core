@@ -61,6 +61,7 @@ import org.knime.core.node.ExecutionMonitor;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,8 +69,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 
 /**
@@ -143,7 +144,7 @@ public class MemoryGroupByTable extends GroupByTable {
      * @param colAggregators the aggregation columns with the aggregation method
      * to use in the order the columns should be appear in the result table
      * numerical columns
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
      * @param sortInMemory <code>true</code> if the table should be sorted in
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
@@ -157,13 +158,14 @@ public class MemoryGroupByTable extends GroupByTable {
      */
     protected MemoryGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable, final List<String> groupByCols,
-            final ColumnAggregator[] colAggregators, final int maxUniqueValues,
-            final boolean sortInMemory, final boolean enableHilite,
-            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+            final ColumnAggregator[] colAggregators,
+            final GlobalSettings globalSettings, final boolean sortInMemory,
+            final boolean enableHilite, final ColumnNamePolicy colNamePolicy,
+            final boolean retainOrder)
             throws CanceledExecutionException {
         //retainOrder is always false since it is automatically maintained
         //in this class by the chosen Map implementation
-        super(exec, inDataTable, groupByCols, colAggregators, maxUniqueValues,
+        super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
                 sortInMemory, enableHilite, colNamePolicy, false);
     }
 
@@ -220,7 +222,7 @@ public class MemoryGroupByTable extends GroupByTable {
             //add the aggregation values
             for (final ColumnAggregator colAggr : colAggregators) {
                 final AggregationOperator operator =
-                    colAggr.getOperator(getMaxUniqueVals());
+                    colAggr.getOperator(getGlobalSettings());
                 rowVals[valIdx++] = operator.getResult();
                 if (operator.isSkipped()) {
                     //add skipped groups and the column that causes the skipping
@@ -258,7 +260,7 @@ public class MemoryGroupByTable extends GroupByTable {
             final int colIdx =
                 origSpec.findColumnIndex(aggregator.getColName());
             final DataCell cell = row.getCell(colIdx);
-            aggregator.getOperator(getMaxUniqueVals()).compute(cell);
+            aggregator.getOperator(getGlobalSettings()).compute(cell);
         }
     }
 

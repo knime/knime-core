@@ -49,17 +49,19 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Returns the most frequent entry per group.
@@ -70,15 +72,29 @@ public class ModeOperator extends AggregationOperator {
 
     private final Map<DataCell, MutableInteger> m_valCounter;
 
-    /**Constructor for class MinOperator.
-     * @param maxUniqueValues the maximum number of unique values
+    /**Constructor for class ModeOperator.
+     * @param globalSettings
+     * @param opColSettings
      */
-    public ModeOperator(final int maxUniqueValues) {
-        super("Mode", true, true, maxUniqueValues, DataValue.class);
+    public ModeOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Mode", true, true, DataValue.class, true),
+                globalSettings, opColSettings);
+    }
+
+    /**Constructor for class ModeOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected ModeOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
             m_valCounter =
                 new LinkedHashMap<DataCell, MutableInteger>(
-                        maxUniqueValues);
+                        getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -98,8 +114,9 @@ public class ModeOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new ModeOperator(maxUniqueValues);
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new ModeOperator(globalSettings, opColSettings);
     }
 
 

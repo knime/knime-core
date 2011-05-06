@@ -49,11 +49,14 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -64,20 +67,25 @@ import org.knime.base.data.aggregation.AggregationOperator;
  */
 public class AndElementCountOperator extends AndElementOperator {
 
-    /**Constructor for class UnionOperator.
-     * @param maxUniqueValues the maximum number of unique values
+    /**Constructor for class AndElementCountOperator.
+     * @param globalSettings
+     * @param opColSettings
      */
-    public AndElementCountOperator(final int maxUniqueValues) {
-        super("Intersection count", "Intersection count", maxUniqueValues);
+    public AndElementCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(new OperatorData("Intersection count", true, false,
+                CollectionDataValue.class, true), globalSettings,
+                opColSettings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new AndElementCountOperator(maxUniqueValues);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new AndElementCountOperator(globalSettings, opColSettings);
     }
 
     /**

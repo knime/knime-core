@@ -49,11 +49,13 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the last element per group.
@@ -64,17 +66,27 @@ public class LastOperator extends AggregationOperator {
 
     private DataCell m_lastCell = null;
 
-    /**Constructor for class MinOperator.
+    /**Constructor for class FirstOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public LastOperator() {
-        this("Last");
+    public LastOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Last", false, true, DataValue.class, true),
+                globalSettings, opColSettings);
     }
+
     /**Constructor for class LastOperator.
-     * @param label the label
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    protected LastOperator(final String label) {
-        super(label, false, true, 1, DataValue.class);
+    public LastOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
     }
+
     /**
      * {@inheritDoc}
      */
@@ -88,8 +100,8 @@ public class LastOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new LastOperator();
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        return new LastOperator(globalSettings, opColSettings);
     }
 
     /**

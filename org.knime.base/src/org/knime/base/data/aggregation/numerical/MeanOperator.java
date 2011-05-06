@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the mean per group.
@@ -68,9 +70,37 @@ public class MeanOperator extends AggregationOperator {
     private double m_mean = 0;
 
     /**Constructor for class MeanOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public MeanOperator() {
-        super("Mean", false, false, 1, DoubleValue.class);
+    protected MeanOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+    }
+
+    /**Constructor for class MeanOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public MeanOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Mean", false, false, DoubleValue.class, false),
+                globalSettings, setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
     }
 
     /**
@@ -86,8 +116,9 @@ public class MeanOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new MeanOperator();
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new MeanOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -95,9 +126,6 @@ public class MeanOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
         final double d = ((DoubleValue)cell).getDoubleValue();
         m_mean = m_mean * ((double)m_count / (m_count  + 1))
                     + d * (1.0 / (m_count + 1));

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2010
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,82 +46,91 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.IntCell;
+import org.knime.base.data.aggregation.AggregationMethod;
 
-import org.knime.base.data.aggregation.AggregationOperator;
+import java.awt.Component;
+
+import javax.swing.JCheckBox;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.UIResource;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
+
 
 /**
- * Returns the number of values without missing values per group.
- *
+ * Include missing cell table cell renderer that contains most
+ * of the code from the {JTable$BooleanRenderer} class.
  * @author Tobias Koetter, University of Konstanz
  */
-public class ValueCountOperator extends AggregationOperator {
+public class IncludeMissingCellRenderer extends JCheckBox
+implements TableCellRenderer, UIResource
+{
+    private static final long serialVersionUID = 4646190851811197484L;
+    private static final Border NO_FOCUS_BORDER =
+        new EmptyBorder(1, 1, 1, 1);
+    private final TableModel m_model;
 
-    private final DataType m_type = IntCell.TYPE;
-
-    private int m_counter = 0;
-
-    /**Constructor for class ValueCountOperator.
+    /**Constructor for class IncludeMissingCellRenderer.
+     * @param tableModel the table model with the values that should
+     * be rendered
      */
-    public ValueCountOperator() {
-        super("Value count", false, false, 1, DataValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataType getDataType(final DataType origType) {
-        return m_type;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new ValueCountOperator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (!cell.isMissing()) {
-            m_counter++;
+    public IncludeMissingCellRenderer(final TableModel tableModel) {
+        super();
+        setHorizontalAlignment(SwingConstants.CENTER);
+            setBorderPainted(true);
+        if (tableModel == null) {
+            throw new NullPointerException(
+                    "Table model must not be null");
         }
-        return false;
+        m_model = tableModel;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataCell getResultInternal() {
-        return new IntCell(m_counter);
+    public Component getTableCellRendererComponent(final JTable table,
+            final Object value, final boolean isSelected,
+            final boolean hasFocus, final int row, final int column) {
+        if (isSelected) {
+            setForeground(table.getSelectionForeground());
+            super.setBackground(table.getSelectionBackground());
+        } else {
+            setForeground(table.getForeground());
+            setBackground(table.getBackground());
+        }
+        setSelected((value != null && ((Boolean)value).booleanValue()));
+
+        if (hasFocus) {
+            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+        } else {
+            setBorder(NO_FOCUS_BORDER);
+        }
+
+        final Object methodVal = m_model.getValueAt(row, 1);
+        if (methodVal instanceof AggregationMethod) {
+            final AggregationMethod method =
+                (AggregationMethod)methodVal;
+            setEnabled(method.supportsMissingValueOption());
+        }
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void resetInternal() {
-        m_counter = 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Counts the number of values (excl. missing values) per group.";
+    public String getToolTipText() {
+        final String superText = super.getToolTipText();
+        if (superText != null) {
+            return superText;
+        }
+        return "Include/exclude missing cells";
     }
 }

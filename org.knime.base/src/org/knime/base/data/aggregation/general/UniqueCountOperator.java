@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -71,13 +73,26 @@ public class UniqueCountOperator extends AggregationOperator {
     private final Set<String> m_vals;
 
     /**Constructor for class Concatenate.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public UniqueCountOperator(final int maxUniqueValues) {
-        super("Unique count", true, false, maxUniqueValues,
-                DataValue.class);
+    public UniqueCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Unique count", true, false,
+                DataValue.class, true), globalSettings, opColSettings);
+    }
+
+    /**Constructor for class UniqueCountOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected UniqueCountOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new HashSet<String>(maxUniqueValues);
+            m_vals = new HashSet<String>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -89,8 +104,8 @@ public class UniqueCountOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new UniqueCountOperator(maxUniqueValues);
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        return new UniqueCountOperator(globalSettings, opColSettings);
     }
 
     /**

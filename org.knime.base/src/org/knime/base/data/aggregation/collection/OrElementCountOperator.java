@@ -49,11 +49,14 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.IntCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -64,20 +67,40 @@ import org.knime.base.data.aggregation.AggregationOperator;
  */
 public class OrElementCountOperator extends OrElementOperator {
 
-    /**Constructor for class UniqueElementCountOperator.
-     * @param maxUniqueValues the maximum number of unique values
+    /**Constructor for class FirstOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public OrElementCountOperator(final int maxUniqueValues) {
-        super("Union count", "Union count", maxUniqueValues);
+    public OrElementCountOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Union count", true, false,
+                CollectionDataValue.class, true), globalSettings,
+                opColSettings);
     }
+
+
+
+    /**Constructor for class OrElementCountOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public OrElementCountOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+    }
+
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new OrElementCountOperator(maxUniqueValues);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new OrElementCountOperator(globalSettings, opColSettings);
     }
 
     /**

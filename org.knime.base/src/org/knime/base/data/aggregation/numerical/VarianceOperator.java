@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the variance per group.
@@ -70,9 +72,37 @@ public class VarianceOperator extends AggregationOperator {
     private int m_validCount = 0;
 
     /**Constructor for class VarianceOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public VarianceOperator() {
-        this("Variance");
+    protected VarianceOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+    }
+
+    /**Constructor for class VarianceOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public VarianceOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Variance", false, false, DoubleValue.class,
+                false), globalSettings, setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
     }
 
     /**
@@ -83,21 +113,14 @@ public class VarianceOperator extends AggregationOperator {
         return m_type;
     }
 
-    /**Constructor for class NumericOperators.VarianceOperator.
-     * @param label user readable label which is also used for the
-     * column name
-     */
-    VarianceOperator(final String label) {
-        super(label, false, false, 1, DoubleValue.class);
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new VarianceOperator();
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new VarianceOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -105,9 +128,6 @@ public class VarianceOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
         final double d = ((DoubleValue)cell).getDoubleValue();
         m_validCount++;
         m_sum += d;

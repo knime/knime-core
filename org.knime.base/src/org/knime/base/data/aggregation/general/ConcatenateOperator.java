@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the all values concatenated per group.
@@ -70,10 +72,27 @@ public class ConcatenateOperator extends AggregationOperator {
     private boolean m_first = true;
 
     /**Constructor for class Concatenate.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     * */
+    public ConcatenateOperator(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Concatenate", false, false,
+                DataValue.class, true), globalSettings,
+                opColSettings);
+    }
+
+
+    /**Constructor for class ConcatenateOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public ConcatenateOperator() {
-        super("Concatenate", false, false, 1,
-                DataValue.class);
+    protected ConcatenateOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
     }
 
     /**
@@ -89,8 +108,9 @@ public class ConcatenateOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new ConcatenateOperator();
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new ConcatenateOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -104,18 +124,10 @@ public class ConcatenateOperator extends AggregationOperator {
         if (m_first) {
             m_first = false;
         } else {
-            m_buf.append(getDelimiter());
+            m_buf.append(getValueDelimiter());
         }
         m_buf.append(cell.toString());
         return false;
-    }
-
-    /**
-     * Override this method to change the standard delimiter.
-     * @return the delimiter to use.
-     */
-    protected String getDelimiter() {
-        return AggregationOperator.STANDARD_DELIMITER;
     }
 
     /**

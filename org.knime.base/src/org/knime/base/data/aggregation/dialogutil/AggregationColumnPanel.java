@@ -97,6 +97,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.TableColumnModel;
 
 
 /**
@@ -135,13 +136,6 @@ public class AggregationColumnPanel extends MouseAdapter {
      * @author Tobias Koetter, University of Konstanz
      */
     private class AggregationColumnTableListener extends MouseAdapter {
-
-        /**Constructor for class
-         * AggregationColumnPanel.AggregationColumnTableListener.
-         */
-        AggregationColumnTableListener() {
-            //nothing to do
-        }
 
         /**
          * {@inheritDoc}
@@ -188,6 +182,8 @@ public class AggregationColumnPanel extends MouseAdapter {
                 return menu;
             }
             createColumnSelectionMenu(menu);
+            menu.addSeparator();
+            createMissingValuesMenu(menu);
             menu.addSeparator();
             createAggregationSection(menu);
             return menu;
@@ -263,6 +259,31 @@ public class AggregationColumnPanel extends MouseAdapter {
                 }
             });
             menu.add(selectAll);
+        }
+
+        /**
+         * @param menu
+         */
+        private void createMissingValuesMenu(final JPopupMenu menu) {
+            if (!rowsSelected()) {
+                //show this option only if at least one row is selected
+                return;
+            }
+          //add the select all columns entry
+            final JMenuItem toggleMissing =
+                new JMenuItem("Toggle missing cell option");
+            toggleMissing.setToolTipText(
+                    "Changes the include missing cell option");
+            toggleMissing.addActionListener(new ActionListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    toggleMissingCellOption();
+                }
+            });
+            menu.add(toggleMissing);
         }
 
         /**
@@ -347,15 +368,21 @@ public class AggregationColumnPanel extends MouseAdapter {
         m_aggrColTable = new JTable(m_aggrColTableModel);
         m_aggrColTable.setFillsViewportHeight(true);
         m_aggrColTable.getTableHeader().setReorderingAllowed(false);
-        m_aggrColTable.getColumnModel().getColumn(0).setCellRenderer(
+        final TableColumnModel columnModel = m_aggrColTable.getColumnModel();
+        columnModel.getColumn(0).setCellRenderer(
                 new DataColumnSpecTableCellRenderer());
-        m_aggrColTable.getColumnModel().getColumn(1).setCellEditor(
+        columnModel.getColumn(1).setCellEditor(
                 new AggregationMethodTableCellEditor(m_aggrColTableModel));
-        m_aggrColTable.getColumnModel().getColumn(1).setCellRenderer(
+        columnModel.getColumn(1).setCellRenderer(
                 new AggregationMethodTableCellRenderer());
+        columnModel.getColumn(2).setCellRenderer(
+                new IncludeMissingCellRenderer(m_aggrColTableModel));
         m_aggrColTable.addMouseListener(new AggregationColumnTableListener());
-        m_aggrColTable.getColumnModel().getColumn(0).setPreferredWidth(100);
-        m_aggrColTable.getColumnModel().getColumn(1).setPreferredWidth(20);
+        columnModel.getColumn(0).setPreferredWidth(190);
+        columnModel.getColumn(1).setPreferredWidth(140);
+        columnModel.getColumn(2).setPreferredWidth(45);
+        columnModel.getColumn(2).setMinWidth(45);
+        columnModel.getColumn(2).setMaxWidth(45);
 
         m_panel.setMinimumSize(PANEL_DIMENSION);
         m_panel.setPreferredSize(PANEL_DIMENSION);
@@ -525,6 +552,14 @@ public class AggregationColumnPanel extends MouseAdapter {
             idxs.add(new Integer(i));
         }
         updateSelection(idxs);
+    }
+
+    /**
+     * Changes the include missing cell option for the selected rows.
+     */
+    protected void toggleMissingCellOption() {
+        final int[] selectedRows = m_aggrColTable.getSelectedRows();
+        m_aggrColTableModel.toggleMissingCellOption(selectedRows);
     }
 
     /**

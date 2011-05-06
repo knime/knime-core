@@ -56,7 +56,8 @@ import org.knime.core.data.DataValue;
 /**
  * Interface that implements the main methods of an aggregation method.
  * However the main work is done by the {@link AggregationOperator} that can
- * be created using the {@link #createOperator(DataColumnSpec, int)} method.
+ * be created using the {@link #createOperator(GlobalSettings, OperatorColumnSettings)}
+ * method.
  * A new {@link AggregationOperator} should be created per column.
  * AggregationMethods are sorted first by the supported data type and then
  * by the label.
@@ -81,7 +82,8 @@ public interface AggregationMethod extends Comparable<AggregationMethod> {
 
 
     /**
-     * @return the label which is used in the column name
+     * @return the label of the aggregation method which is
+     * used in the column name
      */
     String getColumnLabel();
 
@@ -96,13 +98,24 @@ public interface AggregationMethod extends Comparable<AggregationMethod> {
     /**
      * Creates a new instance of this operator and returns it.
      * A new instance must be created for each column.
-     *
-     * @param origColSpec the {@link DataColumnSpec} of the original column
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      * @return a new instance of this operator
      */
-    AggregationOperator createOperator(DataColumnSpec origColSpec,
-            int maxUniqueValues);
+    AggregationOperator createOperator(GlobalSettings globalSettings,
+            OperatorColumnSettings opColSettings);
+
+    /**
+     * @return <code>true</code> if the operator supports the alteration of
+     * the missing cell option
+     */
+    public boolean supportsMissingValueOption();
+
+    /**
+     * @return <code>true</code> if missing cells are considered during
+     * aggregation
+     */
+    public boolean inclMissingCells();
 
     /**
      * @return a description that explains the used aggregation method to

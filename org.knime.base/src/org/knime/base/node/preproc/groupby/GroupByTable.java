@@ -66,6 +66,7 @@ import org.knime.core.util.MutableInteger;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 
@@ -88,7 +89,7 @@ public abstract class GroupByTable {
         AggregationMethods.getRowOrderMethod();
     private static final String RETAIN_ORDER_COL_NAME = "orig_order_col";
     private final List<String> m_groupCols;
-    private final int m_maxUniqueVals;
+    private final GlobalSettings m_globalSettings;
     private final boolean m_enableHilite;
     private final ColumnNamePolicy m_colNamePolicy;
     private final Map<RowKey, Set<RowKey>> m_hiliteMapping;
@@ -106,7 +107,7 @@ public abstract class GroupByTable {
      * @param colAggregators the aggregation columns with the aggregation method
      * to use in the order the columns should be appear in the result table
      * numerical columns
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
      * @param sortInMemory <code>true</code> if the table should be sorted in
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
@@ -121,18 +122,15 @@ public abstract class GroupByTable {
     protected GroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
             final List<String> groupByCols,
-            final ColumnAggregator[] colAggregators, final int maxUniqueValues,
-            final boolean sortInMemory, final boolean enableHilite,
-            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+            final ColumnAggregator[] colAggregators,
+            final GlobalSettings globalSettings, final boolean sortInMemory,
+            final boolean enableHilite, final ColumnNamePolicy colNamePolicy,
+            final boolean retainOrder)
     throws CanceledExecutionException {
         if (inDataTable == null) {
             throw new NullPointerException("DataTable must not be null");
         }
         checkGroupCols(inDataTable.getDataTableSpec(), groupByCols);
-        if (maxUniqueValues < 0) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values must be a positive integer");
-        }
         if (exec == null) {
             throw new NullPointerException("Exec must not be null");
         }
@@ -144,7 +142,7 @@ public abstract class GroupByTable {
             m_hiliteMapping = null;
         }
         m_groupCols = groupByCols;
-        m_maxUniqueVals = maxUniqueValues;
+        m_globalSettings = globalSettings;
         m_colNamePolicy = colNamePolicy;
         m_retainOrder = retainOrder;
         final Set<String> workingCols =
@@ -166,7 +164,7 @@ public abstract class GroupByTable {
             System.arraycopy(colAggregators, 0, aggrs,
                     0, colAggregators.length);
             aggrs[colAggregators.length] = new ColumnAggregator(
-                    retainOrderColSpec, RETAIN_ORDER_COL_AGGR_METHOD);
+                    retainOrderColSpec, RETAIN_ORDER_COL_AGGR_METHOD, true);
             subExec = exec.createSubExecutionContext(0.5);
         } else {
             subExec = exec;
@@ -261,10 +259,10 @@ public abstract class GroupByTable {
     }
 
     /**
-     * @return the maximum number of unique values
+     * @return the global settings
      */
-    public int getMaxUniqueVals() {
-        return m_maxUniqueVals;
+    public GlobalSettings getGlobalSettings() {
+        return m_globalSettings;
     }
 
 

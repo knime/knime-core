@@ -75,6 +75,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -319,7 +320,8 @@ public class GroupByNodeModel extends NodeModel {
                     new HashSet<String>(aggregators.size());
                 for (final ColumnAggregator aggregator : aggregators) {
                     final String uniqueName = aggregator.getColName()
-                    + "@" + aggregator.getMethod().getLabel();
+                    + "@" + aggregator.getMethod().getLabel()
+                    + "@" + aggregator.inclMissingCells();
                     if (!uniqueAggregators.add(uniqueName)) {
                         throw new IllegalArgumentException(
                                 "Duplicate settings: Column "
@@ -530,17 +532,18 @@ public class GroupByNodeModel extends NodeModel {
         compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
+        final GlobalSettings globalSettings = new GlobalSettings(maxUniqueVals);
         final GroupByTable resultTable;
         if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
             resultTable = new MemoryGroupByTable(exec, table,
                     groupByCols, m_columnAggregators2Use.toArray(
-                            new ColumnAggregator[0]), maxUniqueVals,
+                            new ColumnAggregator[0]), globalSettings,
                             sortInMemory, enableHilite, colNamePolicy,
                             retainOrder);
         } else {
             resultTable = new BigGroupByTable(exec, table,
                 groupByCols, m_columnAggregators2Use.toArray(
-                        new ColumnAggregator[0]), maxUniqueVals, sortInMemory,
+                        new ColumnAggregator[0]), globalSettings, sortInMemory,
                         enableHilite, colNamePolicy, retainOrder);
         }
         if (m_enableHilite.getBooleanValue()) {
@@ -652,7 +655,8 @@ public class GroupByNodeModel extends NodeModel {
                 final AggregationMethod method =
                     AggregationMethods.getAggregationMethod(colSpec,
                             numericMethod, nominalMethod);
-                colAg.add(new ColumnAggregator(colSpec, method));
+                colAg.add(new ColumnAggregator(colSpec, method,
+                        method.inclMissingCells()));
             }
         }
         return colAg;

@@ -49,7 +49,6 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
@@ -60,6 +59,9 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -78,12 +80,16 @@ public class RangeOperator extends AggregationOperator {
     private final DataType m_type;
 
     /**Constructor for class RangeOperator.
-     * @param origColSpec the original column spec
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public RangeOperator(final DataColumnSpec origColSpec) {
-        super("Range", false, false, 1, DoubleValue.class);
-        if (origColSpec != null) {
-            m_type = origColSpec.getType();
+    protected RangeOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+        if (opColSettings.getOriginalColSpec() != null) {
+            m_type = opColSettings.getOriginalColSpec().getType();
             m_comparator = m_type.getComparator();
         } else {
             m_type = DoubleCell.TYPE;
@@ -91,13 +97,37 @@ public class RangeOperator extends AggregationOperator {
         }
     }
 
+    /**Constructor for class RangeOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public RangeOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Range", false, false, DoubleValue.class, false),
+                globalSettings, setInclMissingFlag(opColSettings));
+    }
+
+    /**
+     * Ensure that the flag is set correctly since this method does not
+     * support changing of the missing cell handling option.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @return the correct {@link OperatorColumnSettings}
+     */
+    private static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings) {
+        opColSettings.setInclMissing(false);
+        return opColSettings;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new RangeOperator(origColSpec);
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new RangeOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -105,10 +135,6 @@ public class RangeOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            //skip missing cells
-            return false;
-        }
         if (m_min == null || m_max == null) {
             //this is the first call
             m_min = cell;

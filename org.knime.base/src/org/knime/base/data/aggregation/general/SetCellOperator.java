@@ -49,13 +49,15 @@
 package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -70,22 +72,26 @@ public class SetCellOperator extends AggregationOperator {
     private final Set<DataCell> m_cells;
 
     /**Constructor for class SetCellOperator.
-     * @param maxUniqueValues the maximum number of unique values
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public SetCellOperator(final int maxUniqueValues) {
-        this("Set", "Set", maxUniqueValues);
+    public SetCellOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Set", "Set", true, false, DataValue.class, true),
+                globalSettings, opColSettings);
     }
 
     /**Constructor for class SetCellOperator.
-     * @param label of the derived class
-     * @param colName the column name
-     * @param maxUniqueValues the maximum number of unique values
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    protected SetCellOperator(final String label, final String colName,
-            final int maxUniqueValues) {
-        super(label, colName, true, false, maxUniqueValues, DataValue.class);
+    protected SetCellOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_cells = new LinkedHashSet<DataCell>(maxUniqueValues);
+            m_cells = new LinkedHashSet<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -105,8 +111,9 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new SetCellOperator(maxUniqueValues);
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new SetCellOperator(globalSettings, opColSettings);
     }
 
     /**

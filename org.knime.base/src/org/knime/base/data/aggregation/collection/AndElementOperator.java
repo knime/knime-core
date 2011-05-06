@@ -49,13 +49,15 @@
 package org.knime.base.data.aggregation.collection;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -73,36 +75,40 @@ public class AndElementOperator extends AggregationOperator {
     private final Set<DataCell> m_vals;
     private boolean m_first = true;
 
-    /**Constructor for class UnionOperator.
-     * @param maxUniqueValues the maximum number of unique values
-     */
-    public AndElementOperator(final int maxUniqueValues) {
-        this("Intersection", "Intersection", maxUniqueValues);
-    }
-
     /**Constructor for class AndElementOperator.
-     * @param label of the derived class
-     * @param colName the column name
-     * @param maxUniqueValues the maximum number of unique values
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    protected AndElementOperator(final String label, final String colName,
-            final int maxUniqueValues) {
-        super(label, colName, true, false, maxUniqueValues,
-                CollectionDataValue.class);
+    protected AndElementOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<DataCell>(maxUniqueValues);
+            m_vals = new LinkedHashSet<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
         }
     }
+    /**Constructor for class AndElementOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public AndElementOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Intersection", true, false,
+                CollectionDataValue.class, true), globalSettings,
+                opColSettings);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final DataColumnSpec origColSpec,
-            final int maxUniqueValues) {
-        return new AndElementOperator(maxUniqueValues);
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        return new AndElementOperator(globalSettings, opColSettings);
     }
 
     /**

@@ -49,12 +49,14 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the sum per group.
@@ -68,9 +70,24 @@ public class SumOperator extends AggregationOperator {
     private double m_sum = 0;
 
     /**Constructor for class SumOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
-    public SumOperator() {
-        super("Sum", false, false, 1, DoubleValue.class);
+    protected SumOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
+    }
+
+    /**Constructor for class SumOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public SumOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Sum", false, false, DoubleValue.class, false),
+                globalSettings, opColSettings);
     }
 
     /**
@@ -86,8 +103,8 @@ public class SumOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final DataColumnSpec origColSpec, final int maxUniqueValues) {
-        return new SumOperator();
+            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        return new SumOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -95,9 +112,6 @@ public class SumOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
         m_valid = true;
         final double d = ((DoubleValue)cell).getDoubleValue();
         m_sum += d;
