@@ -2531,20 +2531,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * the original WFM) or if they are executed
      *
      * @param orgID the id of the metanode to be expanded
+     * @return null of ok otherwise reason (String) why not
      * @throws IllegalArgumentException if expand can not be done
      */
-    public void canExpandMetaNode(final NodeID wfmID)
+    public String canExpandMetaNode(final NodeID wfmID)
     throws IllegalArgumentException {
         if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
             // wrong type of node!
-            throw new IllegalArgumentException("Can not expand "
-                    + "selected node (not a metanode).");
+            return "Can not expand "
+                    + "selected node (not a metanode).";
         }
         if (!canRemoveNode(wfmID)) {
             // we can not - bail!
-            throw new IllegalArgumentException("Can not move all "
-                    + "selected nodes (successor executing?).");
+            return "Can not move all "
+                    + "selected nodes (successor executing?).";
         }
+        return null;
     }
 
     /** Expand the selected metanode into a set of nodes in
@@ -2557,7 +2559,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // check again, to be sure...
-            canExpandMetaNode(wfmID);
+            String res = canExpandMetaNode(wfmID);
+            if (res != null) {
+                throw new IllegalArgumentException(res);
+            }
             //
             WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
             // retrieve all nodes from metanode
@@ -2721,9 +2726,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
      * @param name of the new metanode
+     * @return newly create metanode
      * @throws IllegalArgumentException if collapse can not be done
      */
-    public void collapseNodesIntoMetaNode(final NodeID[] orgIDs,
+    public WorkflowManager collapseNodesIntoMetaNode(final NodeID[] orgIDs,
             final String name)
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
@@ -2902,6 +2908,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : orgIDs) {
                 this.removeNode(id);
             }
+            return newWFM;
         }
     }
 

@@ -59,6 +59,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.CollapseMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -162,7 +163,11 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             if (idia.open() == Dialog.OK) {
                 name = idia.getValue();
             }
-            manager.collapseNodesIntoMetaNode(ids, name);
+            // create a command and push on stack to enable UNDO
+            CollapseMetaNodeCommand cmnc =
+                new CollapseMetaNodeCommand(manager,
+                        manager.collapseNodesIntoMetaNode(ids, name).getID());
+            getCommandStack().execute(cmnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
                     SWT.ERROR);
