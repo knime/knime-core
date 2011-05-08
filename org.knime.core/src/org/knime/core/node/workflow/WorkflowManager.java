@@ -2532,10 +2532,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param orgID the id of the metanode to be expanded
      * @return null of ok otherwise reason (String) why not
-     * @throws IllegalArgumentException if expand can not be done
      */
-    public String canExpandMetaNode(final NodeID wfmID)
-    throws IllegalArgumentException {
+    public String canExpandMetaNode(final NodeID wfmID) {
         if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
             // wrong type of node!
             return "Can not expand "
@@ -2660,10 +2658,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * back into inports of the new Metanode).
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
-     * @throws IllegalArgumentException if collapse can not be done
+     * @return null or reason why this can not be done as string.
      */
-    public void canCollapseNodesIntoMetaNode(final NodeID[] orgIDs)
-    throws IllegalArgumentException {
+    public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
         synchronized (m_workflowMutex) {
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
@@ -2671,8 +2668,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : orgIDs) {
                 if (!canRemoveNode(id)) {
                     // we can not - bail!
-                    throw new IllegalArgumentException("Can not move all "
-                            + "selected nodes (successor executing?).");
+                    return "Can not move all "
+                            + "selected nodes (successor executing?).";
                 }
             }
             // Check if any of those nodes are executed
@@ -2680,8 +2677,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(id);
                 if (State.EXECUTED.equals(nc.getState())) {
                     // we can not - bail!
-                    throw new IllegalArgumentException("Can not move "
-                            + "executed nodes (reset first).");
+                    return"Can not move executed nodes (reset first).";
                 }
             }
             // Check if move will create loops in WFM connected to new Metanode
@@ -2709,15 +2705,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (!this.getID().equals(destID)) {
                         if (orgIDsHash.contains(destID)) {
                             // successor is in our original list - bail!
-                            throw new IllegalArgumentException("Can not move "
-                                    + "nodes - selected set is not closed!");
+                            return "Can not move "
+                                    + "nodes - selected set is not closed!";
                         }
                         ncNodes.add(destID);
                     }
                 }
             }
         }
-        return;
+        return null;
     }
 
     /** Collapse selected set of nodes into a metanode. Make sure connections
@@ -2734,7 +2730,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // make sure this is still true:
-            canCollapseNodesIntoMetaNode(orgIDs);
+            String res = canCollapseNodesIntoMetaNode(orgIDs);
+            if (res != null) {
+                throw new IllegalArgumentException(res);
+            }
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
             // find Nodes/Ports that have incoming connections from the outside.

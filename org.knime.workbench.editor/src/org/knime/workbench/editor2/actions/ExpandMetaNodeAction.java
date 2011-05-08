@@ -56,6 +56,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.ExpandMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -151,7 +152,11 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
         WorkflowManager manager = getManager();
         try {
             WorkflowManager wfm = (WorkflowManager)nodeParts[0].getNodeContainer();
+            // create a command and push on stack to enable UNDO
+            ExpandMetaNodeCommand emnc =
+                new ExpandMetaNodeCommand(manager, wfm.getID());
             manager.expandMetaNode(wfm.getID());
+            getCommandStack().execute(emnc);
         } catch (Exception e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
                     SWT.ERROR);

@@ -50,8 +50,11 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Collection;
+
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -59,22 +62,32 @@ import org.knime.core.node.workflow.WorkflowManager;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class CollapseMetaNodeCommand extends Command {
+public class ExpandMetaNodeCommand extends Command {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            CollapseMetaNodeCommand.class);
+            ExpandMetaNodeCommand.class);
 
     private WorkflowManager m_manager;
-    private NodeID m_wrapper;
+    private String m_name;
+    private NodeID[] m_nodes;
 
     /**
      * @param wfm the workflow manager holding the new metanode
-     * @param wrapper the id of the resulting metanode
+     * @param id of node to be expanded.
      */
-    public CollapseMetaNodeCommand(final WorkflowManager wfm,
-            final NodeID wrapper) {
+    public ExpandMetaNodeCommand(final WorkflowManager wfm,
+            final NodeID id) {
         m_manager = wfm;
-        m_wrapper = wrapper;
+        NodeContainer nc = wfm.getNodeContainer(id);
+        m_name = nc.getName();
+        WorkflowManager wm = (WorkflowManager)nc;
+        Collection<NodeContainer> ncs = wm.getNodeContainers();
+        m_nodes = new NodeID[ncs.size()];
+        int i = 0;
+        for (NodeContainer n : ncs) {
+            m_nodes[i] = n.getID();
+            i++;
+        }
     }
     
     /**
@@ -90,8 +103,8 @@ public class CollapseMetaNodeCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        if (m_manager != null && m_wrapper != null) {
-            return null == m_manager.canExpandMetaNode(m_wrapper);
+        if (m_manager != null && m_nodes != null) {
+            return null == m_manager.canCollapseNodesIntoMetaNode(m_nodes);
         }
         return false;
     }
@@ -101,9 +114,10 @@ public class CollapseMetaNodeCommand extends Command {
      */
     @Override
     public void undo() {
-        m_manager.expandMetaNode(m_wrapper);
+        m_manager.collapseNodesIntoMetaNode(m_nodes, m_name);
         m_manager = null;
-        m_wrapper = null;
+        m_name = null;
+        m_nodes = null;
     }
 
 }

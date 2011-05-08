@@ -155,7 +155,10 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             ids[i] = nodeParts[i].getNodeContainer().getID();
         }
         try {
-            manager.canCollapseNodesIntoMetaNode(ids);
+            String res = manager.canCollapseNodesIntoMetaNode(ids);
+            if (res != null) {
+                throw new IllegalArgumentException(res);
+            }
             // let the user enter a name
             String name = "Metanode";
             InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
