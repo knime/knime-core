@@ -76,7 +76,7 @@ import org.knime.core.data.def.StringCell;
  * as follow:
  *
  * <pre>
- * RULE := BEXPR '=&gt;' STRING
+ * RULE := BEXPR '=&gt;' STRING | NUMBER | COL
  * BEXPR := '(' BEXPR ')' |
  *          'NOT' BEXPR |
  *          'MISSING' COL |
@@ -96,8 +96,7 @@ import org.knime.core.data.def.StringCell;
  * STRINGLIST := '(' STRING (',' STRING)* ')'
  * </pre>
  *
- * The operators should be self-describing, if not look them up in SQL ;-)
- * <br />
+ * The operators should be self-describing, if not look them up in SQL ;-) <br />
  * While parsing a rule, the parser also checks if the arithmetic operations are
  * in fact done with numerical columns and throws an exception if not. Therefore
  * the constructor needs the spec of the table on which the rule will lateron be
@@ -106,6 +105,25 @@ import org.knime.core.data.def.StringCell;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class Rule {
+    static class ColumnReference {
+        public final int index;
+        public final DataColumnSpec spec;
+
+        @SuppressWarnings("hiding")
+        ColumnReference(final DataColumnSpec spec, final int index) {
+            this.spec = spec;
+            this.index = index;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "$" + spec.getName() + "$";
+        }
+    }
+
     /**
      * Enumeration for all possible operators used in a rule.
      *
@@ -160,7 +178,7 @@ public class Rule {
         }
     }
 
-    private final String m_outcome;
+    private final Object m_outcome;
 
     private final String m_condition;
 
@@ -179,7 +197,7 @@ public class Rule {
      */
     public Rule(final String rule, final DataTableSpec spec)
             throws ParseException {
-        s = rule.toCharArray();
+        s = (rule + "\0").toCharArray();
 
         try {
             m_root = parseBooleanExpression(spec);
@@ -189,8 +207,14 @@ public class Rule {
             expect('>');
             skipWS();
 
-            m_outcome = parseString();
-            if (p < s.length) {
+            if (s[p] == '$') {
+                m_outcome = parseColumnReference(spec);
+            } else if (s[p] == '"') {
+                m_outcome = parseString();
+            } else {
+                m_outcome = parseNumber();
+            }
+            if (p < s.length - 1) {
                 throw new ParseException("Garbage at end of rule detected", p);
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
@@ -303,10 +327,11 @@ public class Rule {
                         return RuleNodeFactory.lt(leftColIndex, rightColIndex,
                                 comp);
                     case LIKE:
-                        return RuleNodeFactory.like(leftColIndex, rightColIndex);
+                        return RuleNodeFactory
+                                .like(leftColIndex, rightColIndex);
                     default:
-                        throw new ParseException("Unhandeled operator "
-                                + op, start);
+                        throw new ParseException("Unhandeled operator " + op,
+                                start);
                 }
             } else if (s[p] == '"') {
                 String t = parseString();
@@ -324,16 +349,15 @@ public class Rule {
                     case LIKE:
                         return RuleNodeFactory.like(leftColIndex, t);
                     default:
-                        throw new ParseException("Unhandeled operator "
-                                + op, start);
+                        throw new ParseException("Unhandeled operator " + op,
+                                start);
                 }
             } else {
                 Number n = parseNumber();
                 DataType leftType = spec.getColumnSpec(leftColIndex).getType();
                 if (!leftType.isCompatible(DoubleValue.class)) {
                     throw new ParseException(spec.getColumnSpec(leftColIndex)
-                            .getName()
-                            + " is not a numeric column", start);
+                            .getName() + " is not a numeric column", start);
                 }
 
                 if ((n instanceof Integer)
@@ -352,8 +376,8 @@ public class Rule {
                     case LT:
                         return RuleNodeFactory.lt(leftColIndex, n);
                     default:
-                        throw new ParseException("Unhandeled operator "
-                                + op, start);
+                        throw new ParseException("Unhandeled operator " + op,
+                                start);
                 }
             }
         } else if (s[p] == '"') {
@@ -385,8 +409,7 @@ public class Rule {
             DataType rightType = spec.getColumnSpec(rightColIndex).getType();
             if (!rightType.isCompatible(DoubleValue.class)) {
                 throw new ParseException(spec.getColumnSpec(rightColIndex)
-                        .getName()
-                        + " is not a numeric column", start);
+                        .getName() + " is not a numeric column", start);
             }
 
             if ((n instanceof Integer)
@@ -424,6 +447,7 @@ public class Rule {
         skipWS();
         int n = 0;
         int sign = 1;
+        int startP = p;
         if (s[p] == '-') {
             p++;
             sign = -1;
@@ -445,6 +469,8 @@ public class Rule {
                 digits *= 10;
             }
             return new Double(sign * (n + f / (double)digits));
+        } else if (startP == p) {
+            throw new ParseException("Expected a number but did not find one", p);
         } else {
             return new Integer(sign * n);
         }
@@ -514,6 +540,29 @@ public class Rule {
                     start);
         }
         return colIndex;
+    }
+
+    /**
+     * Parses a column reference (<tt>COL</tt>).
+     *
+     * @param spec the table spec
+     * @return a {@link ColumnReference} for the references column
+     * @throws ParseException if a syntax error has been found
+     */
+    private ColumnReference parseColumnReference(final DataTableSpec spec)
+            throws ParseException {
+        expect('$');
+        int start = p;
+        while (s[p] != '$') {
+            p++;
+        }
+        String colName = new String(s, start, p++ - start);
+        int colIndex = spec.findColumnIndex(colName);
+        if (colIndex == -1) {
+            throw new ParseException("Column '" + colName + "' does not exist",
+                    start);
+        }
+        return new ColumnReference(spec.getColumnSpec(colIndex), colIndex);
     }
 
     /**
@@ -604,7 +653,7 @@ public class Rule {
      *
      * @return a string
      */
-    public String getOutcome() {
+    public Object getOutcome() {
         return m_outcome;
     }
 
@@ -622,18 +671,26 @@ public class Rule {
      */
     @Override
     public String toString() {
-        return m_condition + " => \"" + m_outcome + "\"";
+        if (m_outcome instanceof String) {
+            return m_condition + " => \"" + m_outcome + "\"";
+        } else {
+            return m_condition + " => " + m_outcome;
+        }
     }
 
     /**
-     * Returns the parsed rule in string representation. This representation
-     * is not completely identical to the input rule string, but the logical
+     * Returns the parsed rule in string representation. This representation is
+     * not completely identical to the input rule string, but the logical
      * structure should match.
      *
      * @return a string representation of this rule
      */
     public String serialize() {
-        return m_root.toString() + " => \"" + m_outcome + "\"";
+        if (m_outcome instanceof String) {
+            return m_root.toString() + " => \"" + m_outcome + "\"";
+        } else {
+            return m_root.toString() + " => " + m_outcome;
+        }
     }
 
     /**

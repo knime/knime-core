@@ -81,6 +81,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode and(final RuleNode left, final RuleNode right) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return left.evaluate(row) && right.evaluate(row);
             }
@@ -105,6 +106,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode or(final RuleNode left, final RuleNode right) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return left.evaluate(row) || right.evaluate(row);
             }
@@ -129,6 +131,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode xor(final RuleNode left, final RuleNode right) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return left.evaluate(row) ^ right.evaluate(row);
             }
@@ -152,6 +155,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode not(final RuleNode node) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return !node.evaluate(row);
             }
@@ -179,6 +183,7 @@ final class RuleNodeFactory {
     public static RuleNode gt(final int leftCol, final int rightCol,
             final DataValueComparator comp) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return comp
                         .compare(row.getCell(leftCol), row.getCell(rightCol)) > 0;
@@ -208,6 +213,7 @@ final class RuleNodeFactory {
         if (value instanceof Integer) {
             final int v = value.intValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -227,6 +233,7 @@ final class RuleNodeFactory {
         } else {
             final double v = value.doubleValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -257,6 +264,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode gt(final int col, final String value) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -289,6 +297,7 @@ final class RuleNodeFactory {
     public static RuleNode ge(final int leftCol, final int rightCol,
             final DataValueComparator comp) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return comp
                         .compare(row.getCell(leftCol), row.getCell(rightCol)) >= 0;
@@ -318,6 +327,7 @@ final class RuleNodeFactory {
         if (value instanceof Integer) {
             final int v = value.intValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -337,6 +347,7 @@ final class RuleNodeFactory {
         } else {
             final double v = value.doubleValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -367,6 +378,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode ge(final int col, final String value) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -398,6 +410,7 @@ final class RuleNodeFactory {
     public static RuleNode lt(final int leftCol, final int rightCol,
             final DataValueComparator comp) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return comp
                         .compare(row.getCell(leftCol), row.getCell(rightCol)) < 0;
@@ -427,6 +440,7 @@ final class RuleNodeFactory {
         if (value instanceof Integer) {
             final int v = value.intValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -447,6 +461,7 @@ final class RuleNodeFactory {
         } else {
             final double v = value.doubleValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -477,6 +492,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode lt(final int col, final String value) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -509,6 +525,7 @@ final class RuleNodeFactory {
     public static RuleNode le(final int leftCol, final int rightCol,
             final DataValueComparator comp) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return comp
                         .compare(row.getCell(leftCol), row.getCell(rightCol)) <= 0;
@@ -538,6 +555,7 @@ final class RuleNodeFactory {
         if (value instanceof Integer) {
             final int v = value.intValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -557,6 +575,7 @@ final class RuleNodeFactory {
         } else {
             final double v = value.doubleValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -587,6 +606,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode le(final int col, final String value) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -615,6 +635,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode eq(final int leftCol, final int rightCol) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return row.getCell(leftCol).equals(row.getCell(rightCol));
             }
@@ -643,6 +664,7 @@ final class RuleNodeFactory {
         if (value instanceof Integer) {
             final int v = value.intValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -662,6 +684,7 @@ final class RuleNodeFactory {
         } else {
             final double v = value.doubleValue();
             return new RuleNode() {
+                @Override
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
                     if (c.isMissing()) {
@@ -692,6 +715,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode eq(final int col, final String value) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -725,6 +749,7 @@ final class RuleNodeFactory {
         final Pattern p = Pattern.compile(regex);
 
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -755,6 +780,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode like(final String value, final int col) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
                 if (c.isMissing()) {
@@ -786,6 +812,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode like(final int col1, final int col2) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 DataCell c1 = row.getCell(col1);
                 if (c1.isMissing()) {
@@ -823,7 +850,7 @@ final class RuleNodeFactory {
         final String[] temp = list.toArray(new String[list.size()]);
 
         return new RuleNode() {
-
+            @Override
             public boolean evaluate(final DataRow row) {
                 for (String s : temp) {
                     DataCell c = row.getCell(col);
@@ -859,6 +886,7 @@ final class RuleNodeFactory {
      */
     public static RuleNode missing(final int col) {
         return new RuleNode() {
+            @Override
             public boolean evaluate(final DataRow row) {
                 return row.getCell(col).isMissing();
             }

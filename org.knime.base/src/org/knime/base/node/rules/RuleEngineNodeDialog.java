@@ -52,6 +52,9 @@ package org.knime.base.node.rules;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -64,9 +67,11 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
@@ -76,16 +81,17 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.knime.base.node.rules.Rule.ColumnReference;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -95,8 +101,8 @@ import org.knime.core.node.workflow.FlowVariable;
  */
 public class RuleEngineNodeDialog extends NodeDialogPane {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(RuleEngineNodeDialog.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RuleEngineNodeDialog.class);
 
     /** Default default label. */
     static final String DEFAULT_LABEL = "default";
@@ -132,6 +138,12 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
 
     private DataTableSpec m_spec;
 
+    private JTextField m_lastUsedTextfield = m_ruleEditor;
+
+    private JCheckBox m_outcomeIsColumn;
+
+    private JCheckBox m_defaultLabelIsColumn;
+
     /**
      *
      */
@@ -158,9 +170,10 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_variableList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_variableList.setCellRenderer(new DataColumnSpecListCellRenderer());
         m_variableList.addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent arg0) {
                 if (!arg0.getValueIsAdjusting()) {
-                    String existingText = m_ruleEditor.getText();
+                    String existingText = m_lastUsedTextfield.getText();
                     if (existingText.equals(RULE_LABEL)) {
                         existingText = "";
                     }
@@ -168,9 +181,12 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         String newText =
                                 ((DataColumnSpec)m_variableList
                                         .getSelectedValue()).getName();
-                        m_ruleEditor.setText(existingText + " $" + newText
-                                + "$");
-                        m_ruleEditor.requestFocusInWindow();
+                        m_lastUsedTextfield.setText(existingText + " $"
+                                + newText + "$");
+                        m_lastUsedTextfield.requestFocusInWindow();
+                        if (m_lastUsedTextfield == m_ruleLabelEditor) {
+                            m_outcomeIsColumn.setSelected(true);
+                        }
                         m_variableList.clearSelection();
                     }
                 }
@@ -183,6 +199,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_operatorList = new JList(m_operatorModel);
         m_operatorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_operatorList.addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent arg0) {
                 if (!arg0.getValueIsAdjusting()
                         && !m_operatorList.isSelectionEmpty()) {
@@ -240,30 +257,47 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 if (m_defaultLabelEditor.getText().equals(DEFAULT_LABEL)) {
                     m_defaultLabelEditor.setText("");
                 }
+                m_lastUsedTextfield = m_defaultLabelEditor;
             }
         });
-        Box defaultLabelBox = Box.createHorizontalBox();
-        defaultLabelBox.add(Box.createHorizontalStrut(20));
-        defaultLabelBox.add(new JLabel("Default label (if no rule matches):"));
-        defaultLabelBox.add(m_defaultLabelEditor);
+        JPanel defaultLabelBox = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0.1;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 20, 0, 0);
+        defaultLabelBox.add(new JLabel("Default label (if no rule matches): "),
+                c);
+        c.insets = new Insets(0, 0, 0, 0);
+        c.gridx++;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        defaultLabelBox.add(m_defaultLabelEditor, c);
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0.1;
         // also add a variable Model + corresponding icon to make this
         // option controllable via a variable
-        FlowVariableModel fvm = createFlowVariableModel(
-                RuleEngineSettings.CFG_DEFAULT_LABEL,
-                FlowVariable.Type.STRING);
+        FlowVariableModel fvm =
+                createFlowVariableModel(RuleEngineSettings.CFG_DEFAULT_LABEL,
+                        FlowVariable.Type.STRING);
         fvm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                FlowVariableModel svm =
-                    (FlowVariableModel)(evt.getSource());
-                m_defaultLabelEditor.setEnabled(
-                        !svm.isVariableReplacementEnabled());
+                FlowVariableModel svm = (FlowVariableModel)(evt.getSource());
+                m_defaultLabelEditor.setEnabled(!svm
+                        .isVariableReplacementEnabled());
             }
         });
-        defaultLabelBox.add(new FlowVariableModelButton(fvm));
-        defaultLabelBox.add(Box.createHorizontalGlue());
-        defaultLabelBox.add(Box.createHorizontalStrut(10));
+        c.gridx++;
+        defaultLabelBox.add(new FlowVariableModelButton(fvm), c);
+        c.gridx++;
         defaultLabelBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        c.gridy++;
+        c.gridx = 1;
+        m_defaultLabelIsColumn = new JCheckBox("is a column reference");
+        defaultLabelBox.add(m_defaultLabelIsColumn, c);
 
         /*
          * New column name box
@@ -280,7 +314,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         });
         Box newColNameBox = Box.createHorizontalBox();
         newColNameBox.add(Box.createHorizontalStrut(20));
-        newColNameBox.add(new JLabel("Appended column name:"));
+        newColNameBox.add(new JLabel("Appended column name: "));
         newColNameBox.add(Box.createHorizontalGlue());
         newColNameBox.add(m_newColumnName);
         newColNameBox.add(Box.createHorizontalGlue());
@@ -290,8 +324,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         /*
          * Rule Box
          */
-        Box ruleBox = Box.createHorizontalBox();
-        m_ruleEditor = new JTextField(RULE_LABEL, 50);
+        JPanel ruleBox = new JPanel(new GridBagLayout());
+        m_ruleEditor = new JTextField(RULE_LABEL, 35);
         m_ruleEditor.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         m_ruleEditor.addFocusListener(new FocusAdapter() {
             @Override
@@ -299,6 +333,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 if (m_ruleEditor.getText().equals(RULE_LABEL)) {
                     m_ruleEditor.setText("");
                 }
+                m_lastUsedTextfield = m_ruleEditor;
             }
         });
         m_ruleLabelEditor = new JTextField(OUTCOME_LABEL, 10);
@@ -309,6 +344,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 if (m_ruleLabelEditor.getText().equals(OUTCOME_LABEL)) {
                     m_ruleLabelEditor.setText("");
                 }
+                m_lastUsedTextfield = m_ruleLabelEditor;
             }
         });
         /*
@@ -316,11 +352,12 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton add = new JButton("Add");
         add.addActionListener(new ActionListener() {
-
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 LOGGER.debug("adding: " + m_ruleEditor.getText() + "=>"
                         + m_ruleLabelEditor.getText());
                 addRule();
+                m_lastUsedTextfield = m_ruleEditor;
             }
         });
         /*
@@ -328,24 +365,38 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton clear = new JButton("Clear");
         clear.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 m_ruleEditor.setText("");
                 m_ruleLabelEditor.setText("");
             }
         });
+
+        m_outcomeIsColumn = new JCheckBox("is a column reference");
         /*
          * Putting the rule editor together (rule, outcome, add, clear)
          */
-        ruleBox.add(Box.createHorizontalStrut(20));
-        ruleBox.add(m_ruleEditor);
-        ruleBox.add(m_ruleLabelEditor);
-        ruleBox.add(Box.createHorizontalStrut(10));
-        ruleBox.add(add);
-        ruleBox.add(Box.createHorizontalStrut(10));
-        ruleBox.add(clear);
-        ruleBox.add(Box.createHorizontalStrut(10));
-        ruleBox.add(Box.createHorizontalGlue());
-        ruleBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(0, 20, 0, 0);
+        c.weightx = 0.8;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        ruleBox.add(m_ruleEditor, c);
+        c.insets = new Insets(0, 5, 0, 0);
+        c.gridx++;
+        c.weightx = 0.1;
+        ruleBox.add(m_ruleLabelEditor, c);
+        c.insets = new Insets(0, 10, 0, 0);
+        c.fill = GridBagConstraints.NONE;
+        c.gridx++;
+        ruleBox.add(add, c);
+        c.gridx++;
+        ruleBox.add(clear, c);
+
+        c.gridy++;
+        c.gridx = 1;
+        c.insets = new Insets(0, 5, 0, 0);
+        ruleBox.add(m_outcomeIsColumn, c);
 
         /*
          * Putting it all together
@@ -396,6 +447,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton up = new JButton("Up");
         up.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 int pos = m_rules.getSelectedIndex();
                 if (pos > 0) {
@@ -411,6 +463,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton down = new JButton("Down");
         down.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 int pos = m_rules.getSelectedIndex();
                 if (pos != -1 && pos < m_ruleModel.getSize() - 1) {
@@ -436,7 +489,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton edit = new JButton("Edit");
         edit.addActionListener(new ActionListener() {
-
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 if (m_ruleEditor.getText() != RULE_LABEL
                         && m_ruleEditor.getText().trim() != "") {
@@ -449,7 +502,20 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 int rPos = m_rules.getSelectedIndex();
                 Rule r = (Rule)m_ruleModel.get(rPos);
                 m_ruleEditor.setText(r.getCondition());
-                m_ruleLabelEditor.setText(r.getOutcome());
+                Object outcome = r.getOutcome();
+                if (outcome instanceof ColumnReference) {
+                    m_ruleLabelEditor.setText(r.getOutcome().toString());
+                    m_outcomeIsColumn.setSelected(true);
+                } else if (outcome instanceof Number) {
+                    m_ruleEditor.setText(outcome.toString());
+                    m_outcomeIsColumn.setSelected(false);
+                } else {
+                    String s = r.getOutcome().toString();
+                    s = s.replaceAll("\"", "");
+                    m_ruleLabelEditor.setText(s);
+                    m_outcomeIsColumn.setSelected(false);
+                }
+
                 m_ruleModel.removeElement(r);
             }
 
@@ -459,6 +525,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          */
         JButton remove = new JButton("Remove");
         remove.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 int pos = m_rules.getSelectedIndex();
                 if (pos >= 0
@@ -497,32 +564,43 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
      */
     private void addRule() {
         try {
-            String antecedent = m_ruleEditor.getText();
+            String antecedent = m_ruleEditor.getText().trim();
+            m_ruleEditor.setText(antecedent);
             String consequent = m_ruleLabelEditor.getText();
-            /*
-             * First checks if the outcome contains " character. If yes, sets
-             * error message and caret to referring position
-             */
-            if (consequent.contains("\"")) {
-                int offset = consequent.indexOf("\"");
+
+            if (!m_outcomeIsColumn.isSelected()) {
+                consequent = "\"" + consequent + "\"";
+            } else if (!consequent.startsWith("$") || !consequent.endsWith("$")) {
+                m_error.setText("Column references must be enclosed in $");
                 m_ruleLabelEditor.requestFocusInWindow();
-                m_ruleLabelEditor.setCaretPosition(offset);
-                m_error.setText("Character \" is not allowed in rule label!");
                 return;
+            } else {
+                consequent = consequent.trim();
             }
+            m_ruleLabelEditor.setText(consequent);
+
             /*
              * Tries to create rule. If fails: set error message and caret to
              * referring position
              */
-            m_ruleModel.addElement(new Rule(antecedent + "=>" + "\""
-                    + consequent + "\"", m_spec));
+            m_ruleModel.addElement(new Rule(antecedent + "=>" + consequent,
+                    m_spec));
             m_error.setText("");
+            m_ruleEditor.setText("");
+            m_ruleLabelEditor.setText("");
+            m_outcomeIsColumn.setSelected(false);
             getPanel().repaint();
         } catch (ParseException e) {
             m_error.setText(e.getMessage());
             int offset = e.getErrorOffset();
-            m_ruleEditor.requestFocusInWindow();
-            m_ruleEditor.setCaretPosition(offset);
+            if (offset <= m_ruleEditor.getText().length()) {
+                m_ruleEditor.requestFocusInWindow();
+                m_ruleEditor.setCaretPosition(offset);
+            } else {
+                m_ruleLabelEditor.requestFocusInWindow();
+                m_ruleLabelEditor.setCaretPosition(offset
+                        - m_ruleEditor.getText().length() - 2);
+            }
         }
     }
 
@@ -575,6 +653,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         ruleSettings.loadSettingsForDialog(settings);
         String defaultLabel = ruleSettings.getDefaultLabel();
         m_defaultLabelEditor.setText(defaultLabel);
+        m_defaultLabelIsColumn.setSelected(ruleSettings
+                .getDefaultLabelIsColumn());
         String newColName = ruleSettings.getNewColName();
         m_newColumnName.setText(newColName);
         m_ruleModel.clear();
@@ -597,6 +677,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.setDefaultLabel(m_defaultLabelEditor.getText());
+        ruleSettings.setDefaultLabelIsColumn(m_defaultLabelIsColumn
+                .isSelected());
         ruleSettings.setNewcolName(m_newColumnName.getText());
         for (int i = 0; i < m_ruleModel.getSize(); i++) {
             Rule r = (Rule)m_ruleModel.getElementAt(i);

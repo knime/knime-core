@@ -11,7 +11,7 @@
         row in the input table. If a rule matches, its outcome value is added into a new column.
         The rules follow a limited SQL-like syntax:
         <pre>
-RULE := BEXPR '=&gt;' STRING
+RULE := BEXPR '=&gt;' STRING | NUMBER | COL
 BEXPR := '(' BEXPR ')' |
          'NOT' BEXPR |
          'MISSING' COL |
@@ -34,14 +34,18 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
 	 	Rules consist of a condition part (antecedant), that must evaluate to <i>true</i>
         or <i>false</i>, and an outcome (consequent) that is put into the new column if the rule matches.
         The most simple rule is a comparison between a column and another column, a fixed number or string.
-        The LIKE operator treats the fixed string as a wildcard pattern (with * and ?) as wilcards,
+        The LIKE operator treats the fixed string as a wildcard pattern (with * and ?) as wildcards,
         the IN operator compares the column value to a list of strings and evaluates to <i>true</i> if at least
         one value in the list is equal to the column's value.
         </p>
+        <p>The outcome of a rule can either be a fixed string, a fixed number, or a reference to another column. The
+        type of the outcome column is the common super type of all possible outcomes including the default label. If the outcome
+        of a single rule or the default label is a reference to a column, please check the corresponding option below
+        the text field.        
+        </p>
         <p>
-        Columns are given by their name surrounded by $, strings must always be surrounded by
-        double quotes (thus it is currently not possible to enter strings that contain double quotes). Number
-        are given in the usual decimal representation.
+        Columns are given by their name surrounded by $, numbers are given in the usual decimal representation. Note that
+        strings must not contain double-quotes.
         </p>
         <p>Rules can (and should) be grouped with brackets because there is not pre-defined
         operator precedence for the boolean operators (comparison operators always take precedence
@@ -52,7 +56,8 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
         $Col0$ == "Active" AND $Col1" &lt;= 5 => "Outlier"
         $Col0$ LIKE "Market Street*" AND 
             ($Col1 IN ("married", "divorced") 
-                OR $Col2$ > 40) => "Strange"        
+                OR $Col2$ > 40) => "Strange"
+        $Col0$ > 5 => $Col1$
         </pre>
 		</intro>
 		
@@ -64,7 +69,7 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
 		  which contains the outcome of the rules.</option>
 		<option name="Enter rule...">The rule condition is created here. If a variable or 
 		an operator is selected it is inserted into the rule condition.</option>
-		<option name="Outcome...">The label which should be appended if the rule matches.</option>
+		<option name="Outcome...">The text that should be appended if the rule matches.</option>
 		<option name="Add">Click to save the rule.</option>
 		<option name="Clear">Click to clear both fields, the rule editor and the outcome field.</option>
 		<option name="Up">Click to move selected rule one up, as rules are 

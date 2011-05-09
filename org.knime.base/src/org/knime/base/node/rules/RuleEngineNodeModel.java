@@ -56,13 +56,17 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.knime.base.node.rules.Rule.ColumnReference;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -108,27 +112,119 @@ public class RuleEngineNodeModel extends NodeModel {
     }
 
     private ColumnRearranger createRearranger(final DataTableSpec inSpec,
-            final List<Rule> rules) {
+            final List<Rule> rules) throws InvalidSettingsException {
         ColumnRearranger crea = new ColumnRearranger(inSpec);
 
         String newColName =
-                DataTableSpec.getUniqueColumnName(inSpec, m_settings
-                        .getNewColName());
+                DataTableSpec.getUniqueColumnName(inSpec,
+                        m_settings.getNewColName());
         m_settings.setNewcolName(newColName);
+
+        final int defaultLabelColumnIndex;
+        if (m_settings.getDefaultLabelIsColumn()) {
+            if (m_settings.getDefaultLabel().length() < 3) {
+                throw new InvalidSettingsException(
+                        "Default label is not a column reference");
+            }
+
+            if (!m_settings.getDefaultLabel().startsWith("$")
+                    || !m_settings.getDefaultLabel().endsWith("$")) {
+                throw new InvalidSettingsException(
+                        "Column references in default label must be enclosed in $");
+            }
+            String colRef =
+                    m_settings.getDefaultLabel().substring(1,
+                            m_settings.getDefaultLabel().length() - 1);
+            defaultLabelColumnIndex = inSpec.findColumnIndex(colRef);
+            if (defaultLabelColumnIndex == -1) {
+                throw new InvalidSettingsException("Column '"
+                        + m_settings.getDefaultLabel()
+                        + "' for default label does not exist in input table");
+            }
+        } else {
+            defaultLabelColumnIndex = -1;
+        }
+
+        // determine output type
+        List<DataType> types = new ArrayList<DataType>();
+        // add outcome column types
+        for (Rule r : rules) {
+            if (r.getOutcome() instanceof ColumnReference) {
+                types.add(((ColumnReference)r.getOutcome()).spec.getType());
+            } else if (r.getOutcome() instanceof Double) {
+                types.add(DoubleCell.TYPE);
+            } else if (r.getOutcome() instanceof Integer) {
+                types.add(IntCell.TYPE);
+            } else if (r.getOutcome().toString().length() > 0) {
+                types.add(StringCell.TYPE);
+            }
+        }
+
+        if (defaultLabelColumnIndex >= 0) {
+            types.add(inSpec.getColumnSpec(defaultLabelColumnIndex).getType());
+        } else if (m_settings.getDefaultLabel().length() > 0) {
+            try {
+                Integer.parseInt(m_settings.getDefaultLabel());
+                types.add(IntCell.TYPE);
+            } catch (NumberFormatException ex) {
+                try {
+                    Double.parseDouble(m_settings.getDefaultLabel());
+                    types.add(DoubleCell.TYPE);
+                } catch (NumberFormatException ex1) {
+                    types.add(StringCell.TYPE);
+                }
+            }
+        }
+        DataType outType;
+        if (types.size() > 0) {
+            outType = types.get(0);
+            for (int i = 1; i < types.size(); i++) {
+                outType = DataType.getCommonSuperType(outType, types.get(i));
+            }
+        } else {
+            outType = StringCell.TYPE;
+        }
+
         DataColumnSpec cs =
-                new DataColumnSpecCreator(newColName, StringCell.TYPE)
-                        .createSpec();
+                new DataColumnSpecCreator(newColName, outType).createSpec();
 
         crea.append(new SingleCellFactory(cs) {
             @Override
             public DataCell getCell(final DataRow row) {
                 for (Rule r : rules) {
                     if (r.matches(row)) {
-                        return new StringCell(r.getOutcome());
+                        Object outcome = r.getOutcome();
+                        if (outcome instanceof ColumnReference) {
+                            return row
+                                    .getCell(((ColumnReference)outcome).index);
+                        } else if (outcome instanceof Integer) {
+                            return new IntCell((Integer)outcome);
+                        } else if (outcome instanceof Double) {
+                            return new DoubleCell((Double)outcome);
+                        } else {
+                            return new StringCell(outcome.toString());
+                        }
                     }
                 }
 
-                return new StringCell(m_settings.getDefaultLabel());
+                if (defaultLabelColumnIndex >= 0) {
+                    return row.getCell(defaultLabelColumnIndex);
+                } else if (m_settings.getDefaultLabel().length() > 0) {
+                    String l = m_settings.getDefaultLabel();
+                    try {
+                        int i = Integer.parseInt(l);
+                        return new IntCell(i);
+                    } catch (NumberFormatException ex) {
+                        try {
+                            double d = Double.parseDouble(l);
+                            return new DoubleCell(d);
+                        } catch (NumberFormatException ex1) {
+                            return new StringCell(l);
+                        }
+                    }
+                } else {
+                    return DataType.getMissingCell();
+                }
             }
         });
 
@@ -142,14 +238,12 @@ public class RuleEngineNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         try {
-            parseRules(inSpecs[0]);
+            ColumnRearranger crea =
+                    createRearranger(inSpecs[0], parseRules(inSpecs[0]));
+            return new DataTableSpec[]{crea.createSpec()};
         } catch (ParseException ex) {
             throw new InvalidSettingsException(ex);
         }
-
-        ColumnRearranger crea = createRearranger(inSpecs[0], null);
-
-        return new DataTableSpec[]{crea.createSpec()};
     }
 
     /**

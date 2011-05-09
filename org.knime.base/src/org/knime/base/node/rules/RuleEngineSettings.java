@@ -64,13 +64,13 @@ import org.knime.core.node.NodeSettingsWO;
 public class RuleEngineSettings {
     static final String CFG_DEFAULT_LABEL = "default-label";
 
-    private static final String CFG_NEW_COL_NAME = "new-column-name";
-
     private final ArrayList<String> m_rules = new ArrayList<String>();
 
     private String m_defaultLabel = RuleEngineNodeDialog.DEFAULT_LABEL;
 
     private String m_newColName = RuleEngineNodeDialog.NEW_COL_NAME;
+
+    private boolean m_defaultIsColumn = false;
 
     /**
      * Sets the name of the new column containing the matching rule's outcome.
@@ -90,6 +90,11 @@ public class RuleEngineSettings {
         m_defaultLabel = defaultLabel;
     }
 
+
+    public void setDefaultLabelIsColumn(final boolean b) {
+        m_defaultIsColumn = b;
+    }
+
     /**
      * Returns the name of the new column containing the matching rule's
      * outcome.
@@ -107,6 +112,10 @@ public class RuleEngineSettings {
      */
     public String getDefaultLabel() {
         return m_defaultLabel;
+    }
+
+    public boolean getDefaultLabelIsColumn() {
+        return m_defaultIsColumn;
     }
 
     /**
@@ -150,7 +159,8 @@ public class RuleEngineSettings {
         }
 
         m_defaultLabel = settings.getString(CFG_DEFAULT_LABEL);
-        m_newColName = settings.getString(CFG_NEW_COL_NAME);
+        m_defaultIsColumn = settings.getBoolean("defaultLabelIsColumn", false);
+        m_newColName = settings.getString("new-column-name");
     }
 
     /**
@@ -169,8 +179,9 @@ public class RuleEngineSettings {
         m_defaultLabel =
                 settings.getString(CFG_DEFAULT_LABEL,
                         RuleEngineNodeDialog.DEFAULT_LABEL);
+        m_defaultIsColumn = settings.getBoolean("defaultLabelIsColumn", false);
         m_newColName =
-                settings.getString(CFG_NEW_COL_NAME,
+                settings.getString("new-column-name",
                         RuleEngineNodeDialog.NEW_COL_NAME);
     }
 
@@ -183,6 +194,7 @@ public class RuleEngineSettings {
         settings.addStringArray("rules", m_rules.toArray(new String[m_rules
                 .size()]));
         settings.addString(CFG_DEFAULT_LABEL, m_defaultLabel);
-        settings.addString(CFG_NEW_COL_NAME, m_newColName);
+        settings.addBoolean("defaultLabelIsColumn", m_defaultIsColumn);
+        settings.addString("new-column-name", m_newColName);
     }
 }
