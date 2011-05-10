@@ -23,8 +23,6 @@
             error is taken as quality measure, for all other columns the error rate (i.e. the fraction of rows for which
             target and prediction column have different values).
         </intro>
-
-        <option name="Target column">The column that contains the real values</option>
     </fullDescription>
 
     <ports>

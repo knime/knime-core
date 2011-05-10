@@ -26,8 +26,6 @@
             This node differs from the 1-port node in that it has actually two ports on both sides.
             This makes it easier to feed training and test data into the flow.
         </intro>
-
-        <option name="Target column">The column that contains the real values</option>
     </fullDescription>
 
     <ports>
