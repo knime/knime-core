@@ -65,6 +65,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.KeyValuePanel;
 
 /**
  *
@@ -75,7 +76,7 @@ class CreateTempDirectoryNodeDialogPane extends NodeDialogPane {
     private final JTextField m_baseNameField;
     private final JTextField m_variableName;
     private final JCheckBox m_deleteOnResetChecker;
-    private final FlowPairPanel m_flowPairPanel;
+    private final KeyValuePanel m_flowPairPanel;
 
     /**
      *
@@ -85,7 +86,9 @@ class CreateTempDirectoryNodeDialogPane extends NodeDialogPane {
         m_baseNameField = new JTextField(fieldLength);
         m_variableName = new JTextField(fieldLength);
         m_deleteOnResetChecker = new JCheckBox("Delete directory on reset");
-        m_flowPairPanel = new FlowPairPanel();
+        m_flowPairPanel = new KeyValuePanel();
+        m_flowPairPanel.setKeyColumnLabel("Variable");
+        m_flowPairPanel.setValueColumnLabel("File");
         addTab("Configuration", initLayout());
     }
 
@@ -154,8 +157,8 @@ class CreateTempDirectoryNodeDialogPane extends NodeDialogPane {
         c.setBaseName(m_baseNameField.getText());
         c.setVariableName(m_variableName.getText());
         c.setDeleteOnReset(m_deleteOnResetChecker.isSelected());
-        String[] varNames = m_flowPairPanel.getVariableNames();
-        String[] fileNames = m_flowPairPanel.getFileNames();
+        String[] varNames = m_flowPairPanel.getKeys();
+        String[] fileNames = m_flowPairPanel.getValues();
         VarNameFileNamePair[] pairs = new VarNameFileNamePair[varNames.length];
         for (int i = 0; i < varNames.length; i++) {
             pairs[i] = new VarNameFileNamePair(varNames[i], fileNames[i]);
