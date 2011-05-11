@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
 <entry key="name" type="xstring" value="Partitioning"/>
-<config key="model"/>
+<config key="model">
+<entry key="method" type="xstring" value="Absolute"/>
+<entry key="samplingMethod" type="xstring" value="Random"/>
+<entry key="fraction" type="xdouble" value="0.1"/>
+<entry key="count" type="xint" value="30"/>
+<entry key="random_seed" type="xstring" value="1305126337357"/>
+<entry key="class_column" type="xstring" isnull="true" value=""/>
+</config>
 <entry key="hasContent" type="xboolean" value="false"/>
 <entry key="isInactive" type="xboolean" value="false"/>
 <config key="ports">
