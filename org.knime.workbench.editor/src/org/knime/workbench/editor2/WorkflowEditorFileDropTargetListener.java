@@ -23,7 +23,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
@@ -37,7 +36,7 @@ import org.knime.core.node.NodeLogger;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class WorkflowEditorFileDropTargetListener
-        extends WorkflowEditorDropTargetListener {
+        extends WorkflowEditorDropTargetListener<ReaderNodeCreationFactory> {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorFileDropTargetListener.class);
 
@@ -46,7 +45,7 @@ public class WorkflowEditorFileDropTargetListener
      *      to
      */
     public WorkflowEditorFileDropTargetListener(final EditPartViewer viewer) {
-        super(viewer);
+        super(viewer, new ReaderNodeCreationFactory());
     }
 
     /**
@@ -68,9 +67,9 @@ public class WorkflowEditorFileDropTargetListener
                     + ")");
             return;
         }
-        Point dropLocation = getDropLocation(event);
-
-        dropNode(url, dropLocation);
+        getFactory().setReaderNodeSettings(
+                new ReaderNodeSettings(getNodeFactory(url), url));
+        super.handleDrop();
     }
     /**
      * @param event
@@ -98,8 +97,8 @@ public class WorkflowEditorFileDropTargetListener
     @Override
     public boolean isEnabled(final DropTargetEvent event) {
         event.feedback = DND.FEEDBACK_SELECT;
-        event.operations = DND.DROP_COPY;
-        event.detail = DND.DROP_COPY;
+        event.operations = DND.DROP_DEFAULT;
+        event.detail = DND.DROP_DEFAULT;
         return true;
     }
 

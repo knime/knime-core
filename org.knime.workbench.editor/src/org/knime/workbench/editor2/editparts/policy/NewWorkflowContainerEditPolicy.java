@@ -58,15 +58,18 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.ReaderNodeSettings;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
+import org.knime.workbench.editor2.commands.DropNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
+import org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore;
 
 /**
  * Container policy, handles the creation of new nodes that are inserted into
@@ -83,14 +86,6 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      */
     @Override
     protected Command getCreateCommand(final CreateRequest request) {
-
-        Object obj = request.getNewObject();
-
-        if (!(obj instanceof NodeFactory)
-                && !(obj instanceof IFileStore)) {
-            LOGGER.error("Illegal drop object: " + obj);
-            return null;
-        }
         // point where the command occured
         // The node/description should be initially located here
         Point location = request.getLocation();
@@ -112,33 +107,23 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             (WorkflowRootEditPart)this.getHost();
         WorkflowManager manager = workflowPart.getWorkflowManager();
 
-        // Case 1:
+        Object obj = request.getNewObject();
         // create a new node
         if (obj instanceof NodeFactory) {
             NodeFactory<? extends NodeModel> factory
                 = (NodeFactory<? extends NodeModel>)obj;
             return new CreateNodeCommand(manager, factory, location);
         } else if (obj instanceof IFileStore) {
-            IFileStore fs = (IFileStore)obj;
-            // TODO avoid this hack to distinguish between workflows and files
-            // dragged from the KNIME Explorer
-            if (!(fs instanceof ExplorerFileStore)
-                    || fs.toString().endsWith("workflow.knime")) {
-                return new CreateMetaNodeTemplateCommand(manager, fs, location);
-            }
+            LocalWorkspaceFileStore fs = (LocalWorkspaceFileStore)obj;
+            return new CreateMetaNodeTemplateCommand(manager, fs, location);
+        } else if (obj instanceof ReaderNodeSettings) {
+            ReaderNodeSettings settings = (ReaderNodeSettings)obj;
+            return new DropNodeCommand(manager, settings.getFactory(),
+                    new NodeCreationContext(settings.getUrl()), location);
+        } else {
+            LOGGER.error("Illegal drop object: " + obj);
+            return null;
         }
-
-        // // Case 2:
-        // // create a new description
-        // if (obj instanceof FlowDescription) {
-        // // FlowDescription desc = (FlowDescription) newObject;
-        //
-        // DescriptionAddCommand descAddCommand = new DescriptionAddCommand(
-        // project, location);
-        // return descAddCommand;
-        // }
-
-        return null;
     }
 
     /**

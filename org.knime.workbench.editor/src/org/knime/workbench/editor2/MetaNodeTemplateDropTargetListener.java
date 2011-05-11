@@ -66,14 +66,14 @@ import org.knime.workbench.explorer.view.ContentObject;
  * @author Peter Ohl, KNIME.com, Zurich Switzerland
  */
 public class MetaNodeTemplateDropTargetListener extends
-        WorkflowEditorDropTargetListener {
+        WorkflowEditorDropTargetListener<IFileStoreFactory> {
 
     /**
      * @param v the edit part viewer this drop target listener is attached
      *            to
      */
     public MetaNodeTemplateDropTargetListener(final EditPartViewer v) {
-        super(v);
+        super(v, new IFileStoreFactory());
     }
 
 

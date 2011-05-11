@@ -31,21 +31,18 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.dnd.AbstractTransferDropTargetListener;
 import org.eclipse.gef.requests.CreateRequest;
+import org.eclipse.gef.requests.CreationFactory;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.workbench.editor2.commands.DropNodeCommand;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.explorer.view.ContentObject;
 
 /**
@@ -54,22 +51,26 @@ import org.knime.workbench.explorer.view.ContentObject;
  *
  */
 public abstract class WorkflowEditorDropTargetListener
-        extends AbstractTransferDropTargetListener {
+        <T extends CreationFactory> extends AbstractTransferDropTargetListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorFileDropTargetListener.class);
 
     private static Map<String, Class<? extends NodeFactory<NodeModel>>>
             extensionRegistry;
-    private final IFileStoreFactory m_factory;
+    private final T m_factory;
 
     /**
      * @param viewer the edit part viewer this drop target listener is attached
      *            to
      */
-    protected WorkflowEditorDropTargetListener(final EditPartViewer viewer) {
+    protected WorkflowEditorDropTargetListener(final EditPartViewer viewer,
+            final T factory) {
         super(viewer);
-        m_factory = new IFileStoreFactory();
+        m_factory = factory;
     }
+
+
+
 
 
    private static void initRegistry() {
@@ -124,12 +125,13 @@ public abstract class WorkflowEditorDropTargetListener
         return extensionRegistry.get(extension);
     }
 
+
     /**
-     * Drops a node for a URL to the drop location.
-     * @param url the URL of the resource to drop a node for
-     * @param dropLocation the location to drop the node
+     * @param url the URL of the file
+     * @return a node factory creating a node that is registered for handling
+     *      this type of file
      */
-    protected final void dropNode(final URL url, final Point dropLocation) {
+    protected NodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
         String extension = path.substring(path.lastIndexOf(".") + 1);
         Class<? extends NodeFactory<NodeModel>> clazz
@@ -137,46 +139,16 @@ public abstract class WorkflowEditorDropTargetListener
         if (clazz == null) {
             LOGGER.warn("No node factory is registered for handling files "
                     + "of type \"" + extension + "\"");
-            return;
+            return null;
         }
-        NodeFactory<NodeModel> nodeFact;
         try {
-            nodeFact = clazz.newInstance();
+            return clazz.newInstance();
         } catch (InstantiationException e) {
             LOGGER.error("Can't create node " + clazz.getName() + ".", e);
-            return;
         } catch (IllegalAccessException e) {
             LOGGER.error(e);
-            return;
         }
-
-        NodeCreationContext ncc = new NodeCreationContext(url);
-        WorkflowRootEditPart root = (WorkflowRootEditPart)
-                getViewer().getRootEditPart().getContents();
-        DropNodeCommand cmd = new DropNodeCommand(root.getWorkflowManager(),
-                nodeFact, ncc, dropLocation);
-        getViewer().getEditDomain().getCommandStack().execute(cmd);
-        // NodeUsageRegistry.addNode(template);
-        // bugfix: 1500
-        getViewer().getControl().setFocus();
-    }
-
-    /**
-     *
-     * @param event drop target event containing the position (relative to whole
-     *            display)
-     * @return point converted to the editor coordinates
-     */
-    protected Point getDropLocation(final DropTargetEvent event) {
-        Point p = super.getDropLocation();
-        LOGGER.debug("to control: " + p);
-        // subtract this amount in order to have the node more or less centered
-        // at the cursor location
-        // more or less because the nodes are still of different width depending
-        // on their name
-        p.x -= 40;
-        p.y -= 40;
-        return p;
+        return null;
     }
 
     /**
@@ -212,9 +184,9 @@ public abstract class WorkflowEditorDropTargetListener
     }
 
     /**
-     * @return the file store factory
+     * @return the creation factory
      */
-    protected IFileStoreFactory getFactory() {
+    protected T getFactory() {
         return m_factory;
     }
 

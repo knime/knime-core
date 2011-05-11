@@ -23,8 +23,8 @@
 package org.knime.workbench.editor2;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 
-import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.swt.dnd.DND;
@@ -40,7 +40,7 @@ import org.knime.workbench.explorer.view.ContentObject;
  *
  */
 public class WorkflowEditorSelectionDropListener extends
-        WorkflowEditorDropTargetListener {
+        WorkflowEditorDropTargetListener<ReaderNodeCreationFactory> {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorSelectionDropListener.class);
 
@@ -49,7 +49,7 @@ public class WorkflowEditorSelectionDropListener extends
      *      to
      */
     protected WorkflowEditorSelectionDropListener(final EditPartViewer viewer) {
-        super(viewer);
+        super(viewer, new ReaderNodeCreationFactory());
     }
 
     /**
@@ -64,12 +64,11 @@ public class WorkflowEditorSelectionDropListener extends
     @Override
     protected void handleDrop() {
         ContentObject obj = getDragResources(getCurrentEvent());
-        ExplorerFileStore store =  obj.getObject();
-        Point dropLocation = getDropLocation();
         try {
-            getFactory().setSourceFileStore(store);
+            URL url =  obj.getObject().toURI().toURL();
+            getFactory().setReaderNodeSettings(
+                    new ReaderNodeSettings(getNodeFactory(url), url));
             super.handleDrop();
-            dropNode(store.toURI().toURL(), dropLocation);
         } catch (MalformedURLException e) {
             LOGGER.error(e);
         }
@@ -89,8 +88,8 @@ public class WorkflowEditorSelectionDropListener extends
                 || ExplorerFileStore.isWorkflowGroup(fileStore));
         if (enabled) {
             event.feedback = DND.FEEDBACK_SELECT;
-            event.operations = DND.DROP_COPY;
-            event.detail = DND.DROP_COPY;
+            event.operations = DND.DROP_DEFAULT;
+            event.detail = DND.DROP_DEFAULT;
         }
         return enabled;
     }
