@@ -127,7 +127,6 @@ public class KeyValuePanel extends JPanel {
 
         m_table.getColumnModel().getColumn(0).setPreferredWidth(50);
         m_table.getColumnModel().getColumn(1).setPreferredWidth(200);
-        m_table.setPreferredScrollableViewportSize(null);
         JScrollPane scroll = new JScrollPane(m_table);
         add(scroll, c);
 
@@ -142,9 +141,9 @@ public class KeyValuePanel extends JPanel {
         m_table.getInputMap().put(ctrlC, "TableCopy");
         m_table.getActionMap().put("TableCopy",
                 new CopyAction(this));
-        
+
         m_table.addMouseListener(new TableMouseAdapter(this));
-        
+
         c.gridx++;
         c.weightx = 0;
         c.insets = new Insets(0, 0, 0, 0);
@@ -193,7 +192,7 @@ public class KeyValuePanel extends JPanel {
         p.add(new JPanel(), c);
         return p;
     }
-    
+
     /**
      * Access to underlying table.
      */
@@ -450,7 +449,7 @@ public class KeyValuePanel extends JPanel {
          * @param panel the 'model' for this action
          */
         CopyAction(final KeyValuePanel panel) {
-            super("Copy");           
+            super("Copy");
             m_panel = panel;
             panel.m_table.getSelectionModel().addListSelectionListener(
                     new ListSelectionListener() {
@@ -488,7 +487,7 @@ public class KeyValuePanel extends JPanel {
         }
 
     }
-    
+
     /**
      * The swing action to insert cells from the system clipboard.
      *
@@ -670,6 +669,6 @@ public class KeyValuePanel extends JPanel {
             }
         }
 
-    }    
+    }
 
 }
