@@ -52,6 +52,8 @@ package org.knime.base.node.meta.feature.backwardelim;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -68,6 +70,52 @@ public class BWElimFilterSettings {
     private int m_nrOfFeatures;
 
     private boolean m_includeTargetColumn;
+
+    private double m_errorThreshold;
+
+    private boolean m_thresholdMode;
+
+    /**
+     * Sets the error threshold for automatic feature selection.
+     *
+     * @param d the threshold, usually between 0 and 1
+     */
+    public void errorThreshold(final double d) {
+        m_errorThreshold = d;
+    }
+
+    /**
+     * Returns the error threshold for automatic feature selection.
+     *
+     * @return the threshold, usually between 0 and 1
+     */
+    public double errorThreshold() {
+        return m_errorThreshold;
+    }
+
+    /**
+     * Sets if the features are selected manually or dynamically by an error
+     * threshold.
+     *
+     * @param b <code>true</code> if an error threshold should be used,
+     *            <code>false</code> if the features are selected manually by
+     *            level
+     */
+    public void thresholdMode(final boolean b) {
+        m_thresholdMode = b;
+    }
+
+    /**
+     * Returns if the features are selected manually or dynamically by an error
+     * threshold.
+     *
+     * @return <code>true</code> if an error threshold should be used,
+     *            <code>false</code> if the features are selected manually by
+     *            level
+     */
+    public boolean thresholdMode() {
+        return m_thresholdMode;
+    }
 
     /**
      * Returns if the target column should be included in the output table.
@@ -101,11 +149,19 @@ public class BWElimFilterSettings {
      */
     public List<String> includedColumns(final BWElimModel model) {
         List<String> l = new ArrayList<String>();
-        for (Pair<Double, Collection<String>> p : model.featureLevels()) {
-            Collection<String> incFeatures = p.getSecond();
-            if (incFeatures.size() == m_nrOfFeatures) {
-                l.addAll(incFeatures);
-                break;
+        if (m_thresholdMode) {
+            Pair<Double, Collection<String>> p =
+                    findMinimalSet(model, m_errorThreshold);
+            if (p != null) {
+                l.addAll(p.getSecond());
+            }
+        } else {
+            for (Pair<Double, Collection<String>> p : model.featureLevels()) {
+                Collection<String> incFeatures = p.getSecond();
+                if (incFeatures.size() == m_nrOfFeatures) {
+                    l.addAll(incFeatures);
+                    break;
+                }
             }
         }
 
@@ -119,9 +175,9 @@ public class BWElimFilterSettings {
     /**
      * Returns the number of included feature for the selected level. This is
      * not necessarily the same as the size of
-     * {@link #includedColumns(BWElimModel)} as the latter only contains
-     * columns that are present in the input table while the number of features
-     * is the "level" that comes out from the elimination loop.
+     * {@link #includedColumns(BWElimModel)} as the latter only contains columns
+     * that are present in the input table while the number of features is the
+     * "level" that comes out from the elimination loop.
      *
      * @return the number of included features
      */
@@ -150,6 +206,8 @@ public class BWElimFilterSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addInt("nrOfFeatures", m_nrOfFeatures);
         settings.addBoolean("includeTargetColumn", m_includeTargetColumn);
+        settings.addBoolean("thresholdMode", m_thresholdMode);
+        settings.addDouble("errorThreshold", m_errorThreshold);
     }
 
     /**
@@ -162,6 +220,10 @@ public class BWElimFilterSettings {
             throws InvalidSettingsException {
         m_nrOfFeatures = settings.getInt("nrOfFeatures");
         m_includeTargetColumn = settings.getBoolean("includeTargetColumn");
+
+        /** @since 2.4 */
+        m_thresholdMode = settings.getBoolean("thresholdMode", false);
+        m_errorThreshold = settings.getDouble("errorThreshold", 0.5);
     }
 
     /**
@@ -174,5 +236,35 @@ public class BWElimFilterSettings {
         m_nrOfFeatures = settings.getInt("nrOfFeatures", -1);
         m_includeTargetColumn =
                 settings.getBoolean("includeTargetColumn", false);
+        m_thresholdMode = settings.getBoolean("thresholdMode", false);
+        m_errorThreshold = settings.getDouble("errorThreshold", 0.5);
+    }
+
+    static Pair<Double, Collection<String>> findMinimalSet(
+            final BWElimModel model, final double threshold) {
+        List<Pair<Double, Collection<String>>> col =
+                new ArrayList<Pair<Double, Collection<String>>>(
+                        model.featureLevels());
+        Collections.sort(col,
+                new Comparator<Pair<Double, Collection<String>>>() {
+                    @Override
+                    public int compare(
+                            final Pair<Double, Collection<String>> o1,
+                            final Pair<Double, Collection<String>> o2) {
+                        return o1.getFirst().compareTo(o2.getFirst());
+                    }
+                });
+
+        Pair<Double, Collection<String>> selectedLevel = null;
+        for (Pair<Double, Collection<String>> p : col) {
+            if (p.getFirst() <= threshold) {
+                if ((selectedLevel == null)
+                        || (selectedLevel.getSecond().size() > p.getSecond()
+                                .size())) {
+                    selectedLevel = p;
+                }
+            }
+        }
+        return selectedLevel;
     }
 }

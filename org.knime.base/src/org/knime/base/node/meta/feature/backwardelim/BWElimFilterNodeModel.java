@@ -99,7 +99,7 @@ public class BWElimFilterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No model available");
         }
 
-        if (m_settings.nrOfFeatures() < 1) {
+        if (!m_settings.thresholdMode() && (m_settings.nrOfFeatures() < 1)) {
             throw new InvalidSettingsException("No features selected yet");
         }
 
@@ -120,10 +120,15 @@ public class BWElimFilterNodeModel extends NodeModel {
                     + "any of the columns used in the feature elimination ");
         }
 
-
         missing = 0;
         String missingColumns = ", ";
         Collection<String> incFeatures = m_settings.includedColumns(model);
+        if (m_settings.thresholdMode()
+                && ((incFeatures.size() == 0) || ((incFeatures.size() == 1) && m_settings
+                        .includeTargetColumn()))) {
+            setWarningMessage("No features included because error threshold is set too low");
+        }
+
         for (String s : incFeatures) {
             if (!tSpec.containsName(s)) {
                 missing++;
@@ -140,7 +145,6 @@ public class BWElimFilterNodeModel extends NodeModel {
 
         return new DataTableSpec[]{crea.createSpec()};
     }
-
 
     private ColumnRearranger createRearranger(final DataTableSpec inSpec,
             final Collection<String> includedColumns) {

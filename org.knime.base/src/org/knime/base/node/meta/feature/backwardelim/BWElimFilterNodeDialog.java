@@ -64,14 +64,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -111,6 +117,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
             m_featureLevels.addAll(bwModel.featureLevels());
             Collections.sort(m_featureLevels,
                     new Comparator<Pair<Double, Collection<String>>>() {
+                        @Override
                         public int compare(
                                 final Pair<Double, Collection<String>> o1,
                                 final Pair<Double, Collection<String>> o2) {
@@ -131,6 +138,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void addTableModelListener(final TableModelListener l) {
             m_listeners.add(l);
         }
@@ -138,6 +146,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Class<?> getColumnClass(final int columnIndex) {
             switch (columnIndex) {
                 case 0:
@@ -152,6 +161,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getColumnCount() {
             return 2;
         }
@@ -159,6 +169,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public String getColumnName(final int columnIndex) {
             switch (columnIndex) {
                 case 0:
@@ -173,6 +184,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getRowCount() {
             return m_featureLevels.size();
         }
@@ -180,6 +192,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Object getValueAt(final int rowIndex, final int columnIndex) {
             switch (columnIndex) {
                 case 0:
@@ -218,6 +231,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean isCellEditable(final int rowIndex, final int columnIndex) {
             return false;
         }
@@ -225,6 +239,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void removeTableModelListener(final TableModelListener l) {
             m_listeners.remove(l);
         }
@@ -232,6 +247,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setValueAt(final Object value, final int rowIndex,
                 final int columnIndex) {
             // not editable
@@ -247,12 +263,23 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
 
     private final JLabel m_warningMessage = new JLabel(" ");
 
-    private final JCheckBox m_includeTargetColumn =
-            new JCheckBox("Include target column");
+    private final JCheckBox m_includeTargetColumn = new JCheckBox(
+            "Include target column");
+
+    private final JRadioButton m_manualMode = new JRadioButton(
+            "Select features manually");
+
+    private final JRadioButton m_thresholdMode = new JRadioButton(
+            "Select features automatically by error threshold");
+
+    private final JSpinner m_errorThreshold = new JSpinner(
+            new SpinnerNumberModel(0.5, 0, 1, 0.01));
 
     private String m_targetColumn;
 
     private final BWElimFilterSettings m_settings = new BWElimFilterSettings();
+
+    private BWElimModel m_bwElimModel;
 
     /**
      * Creates a new dialog.
@@ -264,6 +291,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         c.gridx = 0;
         c.gridy = 0;
 
+        c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
         m_warningMessage.setForeground(Color.ORANGE);
         m_warningMessage.setMinimumSize(new Dimension(100, 20));
@@ -272,6 +300,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         c.gridy++;
         c.anchor = GridBagConstraints.WEST;
         m_includeTargetColumn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 Collection<String> l = m_includedColumns.getSelectedColumns();
                 if (m_includeTargetColumn.isSelected()) {
@@ -284,9 +313,49 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         });
         p.add(m_includeTargetColumn, c);
 
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_manualMode);
+        bg.add(m_thresholdMode);
+        ActionListener al = new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_featureLevels.setEnabled(m_manualMode.isSelected());
+                m_featureLevels.getSelectionModel().removeSelectionInterval(0,
+                        999);
+
+                m_errorThreshold.setEnabled(!m_manualMode.isSelected());
+                errorThresholdChanged();
+            }
+        };
+        m_manualMode.addActionListener(al);
+        m_thresholdMode.addActionListener(al);
+
+        c.gridy++;
+        p.add(m_manualMode, c);
+        c.gridy++;
+        p.add(m_thresholdMode, c);
+
+        c.gridy++;
+        c.gridwidth = 1;
+        p.add(new JLabel("      Prediction error threshold   "), c);
+        c.gridx = 1;
+        m_errorThreshold.setPreferredSize(new Dimension(60, 20));
+        m_errorThreshold.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                errorThresholdChanged();
+            }
+        });
+
+        p.add(m_errorThreshold, c);
+
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.gridy++;
         m_featureLevels.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_featureLevels.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
+                    @Override
                     public void valueChanged(final ListSelectionEvent e) {
                         listSelectionChanged(e);
                     }
@@ -325,6 +394,30 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         }
     }
 
+    private void errorThresholdChanged() {
+        m_warningMessage.setText(" ");
+        Pair<Double, Collection<String>> selectedLevel =
+                BWElimFilterSettings.findMinimalSet(m_bwElimModel,
+                        ((Number)m_errorThreshold.getValue()).doubleValue());
+
+        if (selectedLevel != null) {
+            Collection<String> features =
+                    new ArrayList<String>(selectedLevel.getSecond());
+            if (m_includeTargetColumn.isSelected()) {
+                features.add(m_targetColumn);
+            }
+            m_includedColumns.setSelectedColumns(features);
+            if (m_includedColumns.getSelectedIndices().length < features.size()) {
+                m_warningMessage.setText("Warning: Some features are missing "
+                        + "in the input table");
+            }
+        } else {
+            m_includedColumns.clearSelection();
+            m_warningMessage.setText("No feature combination with prediction "
+                    + "error below the threshold does exist");
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -338,6 +431,9 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
             m_settings.nrOfFeatures(-1);
         }
         m_settings.includeTargetColumn(m_includeTargetColumn.isSelected());
+        m_settings.thresholdMode(m_thresholdMode.isSelected());
+        m_settings.errorThreshold(((Number)m_errorThreshold.getValue())
+                .doubleValue());
         m_settings.saveSettings(settings);
     }
 
@@ -349,19 +445,20 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        final BWElimModel model = (BWElimModel)specs[0];
-        if (model == null) {
+        m_bwElimModel = (BWElimModel)specs[0];
+        if (m_bwElimModel == null) {
             throw new NotConfigurableException(
                     "No feature elimination model available.");
         }
-        m_targetColumn = model.targetColumn();
+        m_targetColumn = m_bwElimModel.targetColumn();
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
-                m_tableModel.featuresChanged((BWElimModel)specs[0]);
+                m_tableModel.featuresChanged(m_bwElimModel);
                 if (specs[1] != null) {
                     m_includedColumns.update((DataTableSpec)specs[1]);
                 } else {
-                    ((DefaultListModel) m_includedColumns.getModel()).clear();
+                    ((DefaultListModel)m_includedColumns.getModel()).clear();
                 }
                 for (int i = 0; i < m_tableModel.getRowCount(); i++) {
                     if (m_tableModel.getNrOfFeatures(i) == m_settings
@@ -374,7 +471,10 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                 m_includeTargetColumn.setSelected(m_settings
                         .includeTargetColumn());
                 m_includedColumns.setSelectedColumns(m_settings
-                        .includedColumns(model));
+                        .includedColumns(m_bwElimModel));
+                m_thresholdMode.setSelected(m_settings.thresholdMode());
+                m_manualMode.setSelected(!m_settings.thresholdMode());
+                m_errorThreshold.setValue(m_settings.errorThreshold());
             }
         });
     }

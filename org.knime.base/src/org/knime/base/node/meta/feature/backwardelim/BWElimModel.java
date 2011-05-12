@@ -142,6 +142,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
     /**
      * {@inheritDoc}
      */
+    @Override
     public PortObjectSpec getSpec() {
         return this;
     }
@@ -167,7 +168,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
      *
      * @return a port object serializer
      */
-    public static PortObjectSpecSerializer<BWElimModel> 
+    public static PortObjectSpecSerializer<BWElimModel>
             getPortObjectSpecSerializer() {
         return SpecSerializer.INSTANCE;
     }
@@ -179,10 +180,10 @@ public class BWElimModel implements PortObject, PortObjectSpec {
         /** {@inheritDoc} */
         @Override
         public BWElimModel loadPortObjectSpec(
-                final PortObjectSpecZipInputStream inStream) 
+                final PortObjectSpecZipInputStream inStream)
         throws IOException {
             inStream.getNextEntry();
-            BufferedReader in = 
+            BufferedReader in =
                 new BufferedReader(new InputStreamReader(inStream));
             String line;
             BWElimModel model = new BWElimModel(in.readLine());
@@ -204,7 +205,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
         /** {@inheritDoc} */
         @Override
         public void savePortObjectSpec(final BWElimModel pos,
-                final PortObjectSpecZipOutputStream outStream) 
+                final PortObjectSpecZipOutputStream outStream)
         throws IOException {
             outStream.putNextEntry(new ZipEntry("spec.file"));
             PrintWriter out = new PrintWriter(
@@ -241,7 +242,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
          */
         @Override
         public void savePortObject(final BWElimModel portObject,
-                final PortObjectZipOutputStream out, 
+                final PortObjectZipOutputStream out,
                 final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
         }
@@ -254,6 +255,6 @@ public class BWElimModel implements PortObject, PortObjectSpec {
     public JComponent[] getViews() {
         return null;
     }
-    
-    
+
+
 }
