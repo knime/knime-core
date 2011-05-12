@@ -97,17 +97,23 @@ class CreateTempDirectoryNodeDialogPane extends NodeDialogPane {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
-
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        
         gbc.gridx = 0;
         gbc.gridy = 0;
         p.add(new JLabel("Directory base name"), gbc);
         gbc.gridx += 1;
+        gbc.weightx = 1;
         p.add(m_baseNameField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
+        gbc.weightx = 0;
         p.add(new JLabel("Export path as (variable name)"), gbc);
         gbc.gridx += 1;
+        gbc.weightx = 1;
         p.add(m_variableName, gbc);
 
         gbc.gridy += 1;
@@ -116,14 +122,15 @@ class CreateTempDirectoryNodeDialogPane extends NodeDialogPane {
         p.add(m_deleteOnResetChecker, gbc);
 
         gbc.gridy += 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
         p.add(new JSeparator(), gbc);
 
         gbc.gridy += 1;
+        
         p.add(new JLabel("Additional path variables"), gbc);
 
         gbc.gridy += 1;
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1;
+        m_flowPairPanel.getTable().setPreferredScrollableViewportSize(null);
         p.add(m_flowPairPanel, gbc);
         return p;
     }
