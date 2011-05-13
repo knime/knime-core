@@ -98,8 +98,8 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
 
     private static final DataTableSpec NUMERIC_STATISTICS_SPEC =
             new DataTableSpec(new DataColumnSpecCreator(
-                    "Total mean squarred error", DoubleCell.TYPE).createSpec(),
-                    new DataColumnSpecCreator("Mean squarred error per row",
+                    "Total squared error", DoubleCell.TYPE).createSpec(),
+                    new DataColumnSpecCreator("Mean squared error",
                             DoubleCell.TYPE).createSpec(),
                     new DataColumnSpecCreator("Size of Test Set", IntCell.TYPE)
                             .createSpec());
@@ -300,8 +300,6 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                         + r + "/" + rowCount + " (\"" + key + "\")");
                 subExec.checkCanceled();
             }
-
-            errorSum = Math.sqrt(errorSum);
 
             DataRow stats =
                     new DefaultRow(
