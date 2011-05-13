@@ -57,7 +57,6 @@ import java.util.zip.ZipFile;
 import org.eclipse.ui.internal.wizards.datatransfer.ILeveledImportStructureProvider;
 import org.eclipse.ui.internal.wizards.datatransfer.TarFile;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
 /**
  * Implementation of a workflow import element from an archive file
@@ -107,7 +106,7 @@ public class WorkflowImportElementFromArchive
             }
             for (Object o : children) {
                 String elementLabel = provider.getLabel(o);
-                if (elementLabel.equals(MetaInfoFile.METAINFO_FILE)) {
+                if (elementLabel.equals(WorkflowPersistor.METAINFO_FILE)) {
                     return true;
                 }
             }

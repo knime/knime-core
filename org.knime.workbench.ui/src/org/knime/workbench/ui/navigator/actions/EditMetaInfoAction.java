@@ -119,13 +119,14 @@ public class EditMetaInfoAction extends Action {
         }
         // if no meta file is available
         File metaFileTest = new File(m_parent.getLocation().toFile(),
-                MetaInfoFile.METAINFO_FILE);
+                WorkflowPersistor.METAINFO_FILE);
         if (!metaFileTest.exists()) {
             // create one
             MetaInfoFile.createMetaInfoFile(
                     new File(m_parent.getLocationURI()), isWorkflow);
         }
-        IFile metaFile = m_parent.getFile(new Path(MetaInfoFile.METAINFO_FILE));
+        IFile metaFile = m_parent.getFile(new Path(
+                WorkflowPersistor.METAINFO_FILE));
         // open file action -> run with meta file..
         OpenFileAction openFile = new OpenFileAction(
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow()

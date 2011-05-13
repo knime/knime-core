@@ -59,7 +59,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
 /**
  * Represents a workflow import element from a directory or file.
@@ -202,7 +201,7 @@ public class WorkflowImportElementFromFile
         if (!dir.isDirectory()) {
             return false;
         }
-        File workflowGroupFile = new File(dir, MetaInfoFile.METAINFO_FILE);
+        File workflowGroupFile = new File(dir, WorkflowPersistor.METAINFO_FILE);
         // if itself contains a .knime file -> return this
         if (workflowGroupFile.exists()) {
             return true;

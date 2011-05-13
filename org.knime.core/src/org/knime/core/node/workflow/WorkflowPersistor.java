@@ -85,6 +85,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * exported with the "exclude data" flag being set. */
     public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
 
+    /** Constant for the meta info file name. */
+    public static final String METAINFO_FILE = "workflowset.meta";
+
     String getLoadVersionString();
 
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();

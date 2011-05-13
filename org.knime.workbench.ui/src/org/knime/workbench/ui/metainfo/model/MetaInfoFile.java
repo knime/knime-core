@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
@@ -72,9 +73,6 @@ public final class MetaInfoFile {
         // utility class
     }
 
-    /** Constant for the meta info file name. */
-    public static final String METAINFO_FILE = "workflowset.meta";
-
     /**
      * Creates a meta info file with default content.
      * @param parent parent file
@@ -93,7 +91,7 @@ public final class MetaInfoFile {
 
     private static void writeFileFromPreferences(final File parent,
             final File f) {
-        File dest = new File(parent, METAINFO_FILE);
+        File dest = new File(parent, WorkflowPersistor.METAINFO_FILE);
         try {
             FileUtil.copy(f, dest);
         } catch (IOException io) {
@@ -120,7 +118,7 @@ public final class MetaInfoFile {
 
     private static void createDefaultFileFallback(final File parent) {
         try {
-            File meta = new File(parent, METAINFO_FILE);
+            File meta = new File(parent, WorkflowPersistor.METAINFO_FILE);
             SAXTransformerFactory fac
                 = (SAXTransformerFactory)TransformerFactory.newInstance();
             TransformerHandler handler = fac.newTransformerHandler();

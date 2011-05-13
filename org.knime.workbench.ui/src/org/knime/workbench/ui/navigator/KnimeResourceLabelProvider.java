@@ -84,7 +84,6 @@ import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
 /**
  * Implements the label provider for the knime navigator. Mainly projects get
@@ -131,7 +130,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
 
     /** Path representation of the meta info file. */
     public static final Path METAINFO_FILE = new Path(
-            MetaInfoFile.METAINFO_FILE);
+            WorkflowPersistor.METAINFO_FILE);
 
     /** Path representation of the node settings file. */
     public static final Path NODE_FILE = new Path(
@@ -157,6 +156,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
      */
     private final IPropertyListener m_editorRegistryListener =
             new IPropertyListener() {
+                @Override
                 public void propertyChanged(final Object source,
                         final int propId) {
                     if (propId == IEditorRegistry.PROP_CONTENTS) {
@@ -352,6 +352,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Color getForeground(final Object element) {
         return getColor(element, true);
     }
@@ -359,6 +360,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Color getBackground(final Object element) {
         return getColor(element, false);
     }
@@ -366,6 +368,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Font getFont(final Object element) {
         IWorkbenchAdapter2 adapter = getAdapter2(element);
         if (adapter == null) {

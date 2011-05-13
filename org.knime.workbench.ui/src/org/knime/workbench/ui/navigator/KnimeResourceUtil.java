@@ -98,7 +98,7 @@ public final class KnimeResourceUtil {
      * .
      */
     public static final IPath META_INFO_FILE =
-            new Path(MetaInfoFile.METAINFO_FILE);
+            new Path(WorkflowPersistor.METAINFO_FILE);
 
     /**
      * Path to the workflow file to be used in {@link IContainer#exists(IPath)}.
@@ -394,6 +394,7 @@ public final class KnimeResourceUtil {
             final ImportOperation iOper =
                     new ImportOperation(destination, root,
                             importStructureProvider, new IOverwriteQuery() {
+                                @Override
                                 public String queryOverwrite(
                                         final String pathString) {
                                     return IOverwriteQuery.YES;
@@ -402,6 +403,7 @@ public final class KnimeResourceUtil {
             PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
                     new IRunnableWithProgress() {
 
+                        @Override
                         public void run(final IProgressMonitor monitor)
                                 throws InvocationTargetException,
                                 InterruptedException {
@@ -417,17 +419,15 @@ public final class KnimeResourceUtil {
         try {
             PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
                     new IRunnableWithProgress() {
+                        @Override
                         public void run(final IProgressMonitor monitor)
                                 throws InvocationTargetException,
                                 InterruptedException {
                             try {
                                 IContainer parent = res.getParent();
-                                res
-                                        .delete(
-                                                IResource.FORCE
-                                                        | IResource.ALWAYS_DELETE_PROJECT_CONTENT
-                                                        | IResource.DEPTH_INFINITE,
-                                                monitor);
+                                res.delete(IResource.FORCE
+                                       | IResource.ALWAYS_DELETE_PROJECT_CONTENT
+                                       | IResource.DEPTH_INFINITE, monitor);
                                 parent.refreshLocal(IResource.DEPTH_ONE,
                                         monitor);
                             } catch (CoreException ce) {
@@ -465,6 +465,7 @@ public final class KnimeResourceUtil {
         try {
             PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
                     new IRunnableWithProgress() {
+                        @Override
                         public void run(final IProgressMonitor monitor)
                                 throws InvocationTargetException,
                                 InterruptedException {
