@@ -6,7 +6,7 @@
 <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
-<entry key="classifyColumn" type="xstring" isnull="true" value=""/>
+<entry key="classifyColumn" type="xstring" value="Col9"/>
 <config key="skipMissingVals_Internals">
 <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
