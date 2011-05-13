@@ -64,6 +64,32 @@ public class AggregateSettings {
 
     private String m_predictionColumn;
 
+    private boolean m_addFoldId;
+
+    /**
+     * Sets if the output table should contain an additional column for each row
+     * with the id of the fold in which the result was produced.
+     *
+     * @param b <code>true</code> if the additional column should be added,
+     *            <code>false</code> otherwise
+     * @since 2.4
+     */
+    public void addFoldId(final boolean b) {
+        m_addFoldId = b;
+    }
+
+    /**
+     * Returns if the output table should contain an additional column for each row
+     * with the id of the fold in which the result was produced.
+     *
+     * @return <code>true</code> if the additional column should be added,
+     *            <code>false</code> otherwise
+     * @since 2.4
+     */
+    public boolean addFoldId() {
+        return m_addFoldId;
+    }
+
     /**
      * Returns the target column containing the real class values.
      *
@@ -81,7 +107,6 @@ public class AggregateSettings {
     public void targetColumn(final String targetCol) {
         m_targetColumn = targetCol;
     }
-
 
     /**
      * Returns the prediction column containing the predicted class values.
@@ -101,7 +126,6 @@ public class AggregateSettings {
         m_predictionColumn = predictionCol;
     }
 
-
     /**
      * Saves this object's settings to the given node settings.
      *
@@ -110,6 +134,7 @@ public class AggregateSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addString("predictionColumn", m_predictionColumn);
         settings.addString("targetColumn", m_targetColumn);
+        settings.addBoolean("addFoldId", m_addFoldId);
     }
 
     /**
@@ -122,6 +147,8 @@ public class AggregateSettings {
             throws InvalidSettingsException {
         m_predictionColumn = settings.getString("predictionColumn");
         m_targetColumn = settings.getString("targetColumn");
+        /** @since 2.4 */
+        m_addFoldId = settings.getBoolean("addFoldId", false);
     }
 
     /**
@@ -132,5 +159,6 @@ public class AggregateSettings {
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
         m_predictionColumn = settings.getString("predictionColumn", null);
         m_targetColumn = settings.getString("targetColumn", null);
+        m_addFoldId = settings.getBoolean("addFoldId", false);
     }
 }

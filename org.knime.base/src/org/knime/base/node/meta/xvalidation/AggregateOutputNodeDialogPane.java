@@ -54,6 +54,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
@@ -86,6 +87,8 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
             new ColumnSelectionComboxBox((Border)null, NominalValue.class,
                     DoubleValue.class);
 
+    private final JCheckBox m_addFoldId = new JCheckBox("Add column with fold id");
+
     private final AggregateSettings m_settings = new AggregateSettings();
 
     /**
@@ -109,6 +112,11 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
         c.gridx = 1;
         p.add(m_predictionColumn, c);
 
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        p.add(m_addFoldId, c);
+
         addTab("Standard settings", p);
     }
 
@@ -124,6 +132,7 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
         m_settings.predictionColumn(m_settings.predictionColumn());
         m_targetColumn.update(specs[0], m_settings.targetColumn());
         m_predictionColumn.update(specs[0], m_settings.predictionColumn());
+        m_addFoldId.setSelected(m_settings.addFoldId());
     }
 
     /**
@@ -134,6 +143,7 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
             throws InvalidSettingsException {
         m_settings.targetColumn(m_targetColumn.getSelectedColumn());
         m_settings.predictionColumn(m_predictionColumn.getSelectedColumn());
+        m_settings.addFoldId(m_addFoldId.isSelected());
         m_settings.saveSettings(settings);
     }
 }

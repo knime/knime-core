@@ -56,6 +56,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -109,6 +111,8 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
 
     private BufferedDataContainer m_predictionTable;
 
+    private DataTableSpec m_firstIterationSpec;
+
     /**
      * Create a new model for the aggregation node.
      */
@@ -149,12 +153,19 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             }
         }
 
+        if (m_settings.targetColumn() == null) {
+            throw new InvalidSettingsException("No target column selected");
+        }
+
         int targetColIndex = inSpec.findColumnIndex(m_settings.targetColumn());
         if (targetColIndex < 0) {
             throw new InvalidSettingsException("No such column: "
                     + m_settings.targetColumn());
         }
 
+        if (m_settings.predictionColumn() == null) {
+            throw new InvalidSettingsException("No prediction column selected");
+        }
         int predictColIndex =
                 inSpec.findColumnIndex(m_settings.predictionColumn());
         if (predictColIndex < 0) {
@@ -172,11 +183,25 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                     + "are not of compatible type");
         }
 
-        if (inSpec.getColumnSpec(targetColIndex).getType().isCompatible(
-                DoubleValue.class)) {
-            return new DataTableSpec[]{inSpec, NUMERIC_STATISTICS_SPEC};
+        if (inSpec.getColumnSpec(targetColIndex).getType()
+                .isCompatible(DoubleValue.class)) {
+            return new DataTableSpec[]{createPredictionSpec(inSpec),
+                    NUMERIC_STATISTICS_SPEC};
         } else {
-            return new DataTableSpec[]{inSpec, NOMINAL_STATISTICS_SPEC};
+            return new DataTableSpec[]{createPredictionSpec(inSpec),
+                    NOMINAL_STATISTICS_SPEC};
+        }
+    }
+
+    private DataTableSpec createPredictionSpec(final DataTableSpec inSpec) {
+        if (m_settings.addFoldId()) {
+            DataColumnSpec foldColSpec =
+                    new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
+                            inSpec, "fold #"), IntCell.TYPE).createSpec();
+
+            return AppendedColumnTable.getTableSpec(inSpec, foldColSpec);
+        } else {
+            return inSpec;
         }
     }
 
@@ -203,36 +228,41 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
         final BufferedDataTable in = inData[0];
         final DataTableSpec inSpec = in.getDataTableSpec();
         if (count == 0) {
-            m_predictionTable = exec.createDataContainer(in.getDataTableSpec());
+            m_firstIterationSpec = in.getDataTableSpec();
+            m_predictionTable =
+                    exec.createDataContainer(createPredictionSpec(in
+                            .getDataTableSpec()));
         } else if (m_predictionTable == null) {
             throw new Exception(
                     "Loop Head claims this is NOT the first iteration"
-                    + " but the tail believes it is?!");
+                            + " but the tail believes it is?!");
         } else {
-            if (!inSpec.equalStructure(m_predictionTable.getTableSpec())) {
-                DataTableSpec predSpec = m_predictionTable.getTableSpec();
-                StringBuilder error = new StringBuilder(
-                        "Input table's structure differs from reference " 
-                        + "(first iteration) table: ");
-                if (inSpec.getNumColumns() != predSpec.getNumColumns()) {
+            if (!inSpec.equalStructure(m_firstIterationSpec)) {
+                StringBuilder error =
+                        new StringBuilder(
+                                "Input table's structure differs from reference "
+                                        + "(first iteration) table: ");
+                if (inSpec.getNumColumns() != m_firstIterationSpec
+                        .getNumColumns()) {
                     error.append("different column counts ");
                     error.append(inSpec.getNumColumns());
-                    error.append(" vs. ").append(predSpec.getNumColumns());
+                    error.append(" vs. ").append(
+                            m_firstIterationSpec.getNumColumns());
                 } else {
                     for (int i = 0; i < inSpec.getNumColumns(); i++) {
                         DataColumnSpec inCol = inSpec.getColumnSpec(i);
-                        DataColumnSpec predCol = predSpec.getColumnSpec(i);
+                        DataColumnSpec predCol =
+                                m_firstIterationSpec.getColumnSpec(i);
                         if (!inCol.equalStructure(predCol)) {
-                          error.append("Column ").append(i).append(" [");
-                          error.append(inCol).append("] vs. [");
-                          error.append(predCol).append("]");
+                            error.append("Column ").append(i).append(" [");
+                            error.append(inCol).append("] vs. [");
+                            error.append(predCol).append("]");
                         }
                     }
                 }
                 throw new IllegalArgumentException(error.toString());
             }
         }
-
 
         final int rowCount = in.getRowCount();
         final int targetColIndex =
@@ -248,6 +278,7 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
 
         ExecutionMonitor subExec =
                 exec.createSubProgress(count == maxCount - 1 ? 0.9 : 1);
+        final DataCell foldNumber = new IntCell(m_foldStatistics.size());
         if (numericMode) {
             double errorSum = 0;
             int r = 0;
@@ -259,7 +290,12 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                 errorSum += d * d;
                 r++;
 
-                m_predictionTable.addRowToTable(row);
+                if (m_settings.addFoldId()) {
+                    m_predictionTable.addRowToTable(new AppendedColumnRow(row
+                            .getKey(), row, foldNumber));
+                } else {
+                    m_predictionTable.addRowToTable(row);
+                }
                 subExec.setProgress(r / (double)rowCount, "Calculating output "
                         + r + "/" + rowCount + " (\"" + key + "\")");
                 subExec.checkCanceled();
@@ -288,7 +324,12 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                 }
                 r++;
 
-                m_predictionTable.addRowToTable(row);
+                if (m_settings.addFoldId()) {
+                    m_predictionTable.addRowToTable(new AppendedColumnRow(row
+                            .getKey(), row, foldNumber));
+                } else {
+                    m_predictionTable.addRowToTable(row);
+                }
                 subExec.setProgress(r / (double)rowCount, "Calculating output "
                         + r + "/" + rowCount + " (\"" + key + "\")");
                 subExec.checkCanceled();
@@ -307,9 +348,8 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             return new BufferedDataTable[2];
         } else {
             BufferedDataContainer cont =
-                    exec
-                            .createDataContainer(numericMode ? NUMERIC_STATISTICS_SPEC
-                                    : NOMINAL_STATISTICS_SPEC);
+                    exec.createDataContainer(numericMode ? NUMERIC_STATISTICS_SPEC
+                            : NOMINAL_STATISTICS_SPEC);
             for (DataRow row : m_foldStatistics) {
                 cont.addRowToTable(row);
             }

@@ -13,6 +13,10 @@
         </intro>
         <option name="Target column">Column containing the true class label</option>
         <option name="Prediction column">Column containing the prediction label</option>
+        <option name="Add column with fold id">
+            If selected an additional column is added to the first output table that
+            contains the fold's id in which the row was produced.
+        </option>
     </fullDescription>
 
     <ports>
