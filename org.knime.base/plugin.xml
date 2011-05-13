@@ -677,8 +677,8 @@
             id="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"/>
       <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.pivot.PivotNodeFactory"
-            id="org.knime.base.node.preproc.pivot.PivotNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
+            id="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
             category-path="/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"

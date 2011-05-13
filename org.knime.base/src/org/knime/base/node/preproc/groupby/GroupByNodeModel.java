@@ -45,37 +45,8 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    28.06.2007 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.groupby;
-
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -91,10 +62,36 @@ import java.util.Set;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses
- * the {@link GroupByTable} class implementations to create the resulting table.
+ * the {@link GroupByTable} or {@link MemoryGroupByTable} class implementations
+ * to create the resulting table.
  *
  * @author Tobias Koetter, University of Konstanz
  */
@@ -122,8 +119,6 @@ public class GroupByNodeModel extends NodeModel {
     /**This variable holds the label of the numerical method which was used
      * prior Knime 2.0.*/
     private String m_oldNumerical = null;
-
-
 
     private static final String INTERNALS_FILE_NAME = "hilite_mapping.xml.gz";
 
@@ -178,17 +173,20 @@ public class GroupByNodeModel extends NodeModel {
 
     private List<ColumnAggregator> m_columnAggregators2Use;
 
-    /**
-     * Node returns a new hilite handler instance.
-     */
+    /** Node returns a new hilite handler instance. */
     private final HiLiteTranslator m_hilite = new HiLiteTranslator();
 
-    /**
-     * Creates a new group by model with one in- and outport.
-     */
+    /** Creates a new group by model with one in- and out-port. */
     public GroupByNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+        this(1, 1);
+    }
+
+    /** Creates a new group by model with one in- and out-port.
+     * @param ins number of data inputs
+     * @param outs number of data outputs
+     */
+    public GroupByNodeModel(final int ins, final int outs) {
+        super(ins, outs);
         //add the  process in memory change listener
         m_inMemory.addChangeListener(new ChangeListener() {
             @Override
@@ -218,7 +216,7 @@ public class GroupByNodeModel extends NodeModel {
                     new FileInputStream(new File(nodeInternDir,
                             INTERNALS_FILE_NAME)));
             try {
-                m_hilite.setMapper(DefaultHiLiteMapper.load(config));
+                setHiliteMapping(DefaultHiLiteMapper.load(config));
                 m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
             } catch (final InvalidSettingsException ex) {
                 throw new IOException(ex.getMessage());
@@ -437,6 +435,39 @@ public class GroupByNodeModel extends NodeModel {
         }
         //be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
+
+        //we have to explicitly set all not group columns in the
+        //exclude list of the SettingsModelFilterString.
+        //The DialogComponentColumnFilter component always uses the exclude
+        //list to update the component if we don't set the exclude list
+        //all columns are added as group by columns.
+        final Collection<String> exclList =
+            getExcludeList(origSpec, groupByCols);
+        m_groupByCols.setExcludeList(exclList);
+        //check for invalid group columns
+        try {
+            GroupByTable.checkGroupCols(origSpec, groupByCols);
+        } catch (final IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage());
+        }
+        if (origSpec.getNumColumns() > 1
+                && groupByCols.size() == origSpec.getNumColumns()) {
+            setWarningMessage("All columns selected as group by column");
+        }
+        final DataTableSpec spec = createGroupBySpec(origSpec, groupByCols);
+        return new DataTableSpec[] {spec};
+    }
+
+    /**
+     * Create the group-by spec as generated by this node call.
+     * @param origSpec the input spec
+     * @param groupByCols the column selected for grouping
+     * @return the new data table spec from the group-by call
+     * @throws InvalidSettingsException if settings can't be applied to the
+     *         given input table spec
+     */
+    protected DataTableSpec createGroupBySpec(final DataTableSpec origSpec,
+            final List<String> groupByCols) throws InvalidSettingsException {
         //remove all invalid column aggregator
         m_columnAggregators2Use =
             new ArrayList<ColumnAggregator>(m_columnAggregators.size());
@@ -459,27 +490,6 @@ public class GroupByNodeModel extends NodeModel {
             setWarningMessage("No aggregation column defined");
         }
 
-        //we have to explicitly set all not group columns in the
-        //exclude list of the SettingsModelFilterString.
-        //The DialogComponentColumnFilter component always uses the exclude
-        //list to update the component if we don't set the exclude list
-        //all columns are added as group by columns.
-        final Collection<String> exclList =
-            getExcludeList(origSpec, groupByCols);
-        m_groupByCols.setExcludeList(exclList);
-        //check for invalid group columns
-        try {
-            GroupByTable.checkGroupCols(origSpec, groupByCols);
-        } catch (final IllegalArgumentException e) {
-            throw new InvalidSettingsException(e.getMessage());
-        }
-        if (origSpec.getNumColumns() > 1
-                && groupByCols.size() == origSpec.getNumColumns()) {
-            setWarningMessage("All columns selected as group by column");
-        }
-        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
-                m_columnNamePolicy.getStringValue());
-
         //Check if no column at all has been selected as in the validate
         //settings method. This check has to be after the explicit setting
         //of the group columns above!!!
@@ -487,10 +497,11 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                 "Please select at least one group or aggregation column");
         }
-        final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
+        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
+                m_columnNamePolicy.getStringValue());
+        return GroupByTable.createGroupByTableSpec(
                 origSpec, groupByCols, m_columnAggregators2Use.toArray(
                         new ColumnAggregator[0]), colNamePolicy);
-        return new DataTableSpec[] {spec};
     }
 
     private static Collection<String> getExcludeList(
@@ -524,12 +535,33 @@ public class GroupByNodeModel extends NodeModel {
         }
 
         final List<String> groupByCols = m_groupByCols.getIncludeList();
+        //be compatible to versions prior KNIME 2.0
+        compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
+
+        final GroupByTable resultTable = createGroupByTable(exec, table,
+                groupByCols);
+
+        setHiliteMapping(new DefaultHiLiteMapper(
+                resultTable.getHiliteMapping()));
+
+        return new BufferedDataTable[]{resultTable.getBufferedTable()};
+    }
+
+    /**
+     * Called from execute to generate the GroupByTable.
+     * @param exec underlying execution context
+     * @param table input table
+     * @param groupByCols column selected for grouping
+     * @return a new GroupByTable
+     * @throws CanceledExecutionException if the execution was interrupted
+     */
+    protected GroupByTable createGroupByTable(final ExecutionContext exec,
+            final BufferedDataTable table, final List<String> groupByCols)
+            throws CanceledExecutionException {
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         final boolean retainOrder = m_retainOrder.getBooleanValue();
-        //be compatible to versions prior KNIME 2.0
-        compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
         final GlobalSettings globalSettings = new GlobalSettings(maxUniqueVals);
@@ -546,18 +578,28 @@ public class GroupByNodeModel extends NodeModel {
                         new ColumnAggregator[0]), globalSettings, sortInMemory,
                         enableHilite, colNamePolicy, retainOrder);
         }
-        if (m_enableHilite.getBooleanValue()) {
-            m_hilite.setMapper(new DefaultHiLiteMapper(
-                    resultTable.getHiliteMapping()));
-        }
         //check for skipped columns
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
         if (warningMsg != null) {
             setWarningMessage(warningMsg);
         }
-        return new BufferedDataTable[]{resultTable.getBufferedTable()};
+        return resultTable;
     }
 
+    /** @return list of include columns selected for grouping */
+    protected final List<String> getGroupByColumns() {
+        return m_groupByCols.getIncludeList();
+    }
+
+    /**
+     * Set a new hilite mapping into this model.
+     * @param mapper the new hilite mapping
+     */
+    protected final void setHiliteMapping(final DefaultHiLiteMapper mapper) {
+        if (m_enableHilite.getBooleanValue()) {
+            m_hilite.setMapper(mapper);
+        }
+    }
 
 //**************************************************************************
 //  COMPATIBILITY METHODS

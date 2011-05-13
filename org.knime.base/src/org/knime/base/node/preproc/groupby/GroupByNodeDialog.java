@@ -45,12 +45,26 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    27.08.2008 (Tobias Koetter): created
  */
-
 package org.knime.base.node.preproc.groupby;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -68,23 +82,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 
 /**
  * The node dialog of the group by node.
@@ -97,9 +94,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
     public static final int DEFAULT_WIDTH = 680;
 
     /**The height of the default component.*/
-    public static final int DEFAULT_HEIGHT = 550;
+    public static final int DEFAULT_HEIGHT = 350;
 
-    private final JPanel m_panel;
+    private final JTabbedPane m_tabs;
 
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
@@ -130,14 +127,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final AggregationColumnPanel m_aggrColPanel =
         new AggregationColumnPanel();
 
-    /**Constructor for class NewGroupByNodeDialogPane.
-     *
-     */
+    /**Constructor for class GroupByNodeDialog. */
     public GroupByNodeDialog() {
-        //create the root tab
-        m_panel = new JPanel();
-        m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
-        addTab("Options", m_panel);
+//create the root tab
+        m_tabs = new JTabbedPane();
+        m_tabs.setBorder(BorderFactory.createTitledBorder(""));
+        m_tabs.setOpaque(true);
 
 //The group column box
         m_groupCol =
@@ -148,21 +143,27 @@ public class GroupByNodeDialog extends NodeDialogPane {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 //remove all group columns from the aggregation column list
-                groupByColsChanged();
+                columnsChanged();
             }
         });
         final JPanel groupColPanel = m_groupCol.getComponentPanel();
         groupColPanel.setLayout(new GridLayout(1, 1));
         groupColPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), " Group settings "));
-        m_panel.add(groupColPanel);
+        m_tabs.addTab("Groups", groupColPanel);
+
+//The last tab: aggregations and advance settings
+        final JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        addTab("Options", panel);
 
 //The aggregation column box
-        m_panel.add(m_aggrColPanel.getComponentPanel());
+        panel.add(m_aggrColPanel.getComponentPanel());
 
 //The advanced settings box
         final JComponent advancedBox = createAdvancedOptionsBox();
-        m_panel.add(advancedBox);
+        panel.add(advancedBox);
+        m_tabs.addTab("Options", panel);
 
 //calculate the component size
         int width = (int)Math.max(m_groupCol.getComponentPanel().
@@ -172,8 +173,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
         width = Math.max(width, DEFAULT_WIDTH);
         final Dimension dimension =
             new Dimension(width, DEFAULT_HEIGHT);
-        m_panel.setMinimumSize(dimension);
-        m_panel.setPreferredSize(dimension);
+        m_tabs.setMinimumSize(dimension);
+        m_tabs.setPreferredSize(dimension);
+        super.addTab("Settings", m_tabs);
 
         //add the  process in memory change listener
         m_inMemory.addChangeListener(new ChangeListener() {
@@ -183,17 +185,27 @@ public class GroupByNodeDialog extends NodeDialogPane {
             }
         });
         inMemoryChanged();
+
+//add description tab
         final Component descriptionTab =
             AggregationMethods.createDescriptionPane();
         descriptionTab.setMinimumSize(dimension);
         descriptionTab.setMaximumSize(dimension);
         descriptionTab.setPreferredSize(dimension);
-        addTab("Description", descriptionTab);
+        super.addTab("Description", descriptionTab);
     }
 
     /**
-     * Call this method if the process in memory flag has changed.
+     * Add additional panel (i.e. for pivoting) to this dialog.
+     * @param p the panel to add to tabs
+     * @param title the title for the new tab
      */
+    protected final void addPanel(final JPanel p, final String title) {
+        int tabSize = m_tabs.getComponentCount();
+        m_tabs.insertTab(title, null, p, null, tabSize - 1);
+    }
+
+    /** Call this method if the process in memory flag has changed. */
     protected void inMemoryChanged() {
         m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
         m_sortInMemory.setEnabled(!m_inMemory.getBooleanValue());
@@ -255,13 +267,21 @@ public class GroupByNodeDialog extends NodeDialogPane {
      * Synchronizes the available aggregation column list and the
      * selected group columns.
      */
-    void groupByColsChanged() {
-        m_aggrColPanel.excludeColsChange(m_groupByCols.getIncludeList());
+    protected final void columnsChanged() {
+        excludeColumns(m_groupByCols.getIncludeList());
     }
 
     /**
-     * {@inheritDoc}
+     * Synchronizes the available aggregation column list and the
+     * selected columns.
+     * @param columns the column that are changed and need to be excluded
+     *        from the aggregation list
      */
+    protected void excludeColumns(final List<String> columns) {
+        m_aggrColPanel.excludeColsChange(columns);
+    }
+
+    /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
@@ -298,7 +318,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
             m_inMemory.setBooleanValue(false);
         }
         m_groupCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
-        groupByColsChanged();
+        columnsChanged();
     }
 
     /**
