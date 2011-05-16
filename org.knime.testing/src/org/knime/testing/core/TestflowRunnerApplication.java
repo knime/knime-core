@@ -307,10 +307,8 @@ public class TestflowRunnerApplication implements IApplication {
     private void printUsage() {
         System.err.println("Valid arguments:");
 
-        System.err.println("    -pattern <reg_exp>: optional, "
+        System.err.println("    -pattern <reg_exp>: "
                 + "only test matching <reg_exp> will be run.");
-        System.err.println("                        If not specified a dialog "
-                + "opens, waiting for user input.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
         System.err.println("    -analyze <dir_name>: optional, "
@@ -319,7 +317,7 @@ public class TestflowRunnerApplication implements IApplication {
                 + "be placed in a directory in the " + "specified dir.");
         System.err.println("                         If "
                 + "<dir_name> is omitted the Java temp dir is used.");
-        System.err.println("    -xmlFile <file_name>: specifies the XML "
+        System.err.println("    -xmlResult <file_name>: specifies the XML "
                 + " file where the test results are written to.");
     }
 
