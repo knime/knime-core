@@ -49,6 +49,7 @@ package org.knime.workbench.helpview;
 
 import java.net.BindException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
@@ -105,7 +106,17 @@ public class HelpviewPlugin extends AbstractUIPlugin {
         m_server = new Server();
         SelectChannelConnector connector = new SelectChannelConnector();
         connector.setPort(PORT);
-        connector.setHost(InetAddress.getLocalHost().getHostAddress());
+        try {
+            connector.setHost(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+            // sometimes the above returns this exception; yeah, strange
+            try {
+                connector.setHost(InetAddress.getByName("localhost").getHostAddress());
+            } catch (UnknownHostException ex1) {
+                logger.error("Cannot start embedded webserver: " + ex.getMessage(),
+                        ex);
+            }
+        }
         m_server.addConnector(connector);
         m_server.addHandler(FileHandler.instance);
         try {
