@@ -142,7 +142,7 @@ public final class JavaCodeCompiler {
             throw new CompilationFailedException("No sources set");
         }
         ArrayList<String> compileArgs = new ArrayList<String>();
-        if (m_classpaths != null || m_classpaths.length > 0) {
+        if (m_classpaths != null && m_classpaths.length > 0) {
             compileArgs.add("-classpath");
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < m_classpaths.length; i++) {
