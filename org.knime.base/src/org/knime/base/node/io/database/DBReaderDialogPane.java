@@ -57,6 +57,7 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -91,6 +92,12 @@ class DBReaderDialogPane extends NodeDialogPane {
     private final DefaultListModel m_listModelVars;
     private final JList m_listVars;
 
+    /** Config key for the option to run the SQL query during configure. */
+    static final String EXECUTE_WITHOUT_CONFIGURE = "execute_without_configure";
+
+    private final JCheckBox m_configureBox = new JCheckBox(
+            "Run SQL query without configure");
+
     /**
      * Creates new dialog.
      * @param hasLoginPane true, if a login pane is visible, otherwise false
@@ -106,6 +113,14 @@ class DBReaderDialogPane extends NodeDialogPane {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory
                 .createTitledBorder(" SQL Statement "));
+
+        JPanel configurePanel = new JPanel(new BorderLayout());
+        configurePanel.add(scrollPane, BorderLayout.CENTER);
+        if (runWithoutConfigure()) {
+            m_configureBox.setToolTipText(
+                    "Returns an empty spec during configure.");
+            configurePanel.add(m_configureBox, BorderLayout.SOUTH);
+        }
         JPanel allPanel = new JPanel(new BorderLayout());
 
         m_hasLoginPane = hasLoginPane;
@@ -120,7 +135,7 @@ class DBReaderDialogPane extends NodeDialogPane {
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
             jsp.setResizeWeight(0.25);
-            jsp.setRightComponent(scrollPane);
+            jsp.setRightComponent(configurePanel);
 
             m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
@@ -148,9 +163,17 @@ class DBReaderDialogPane extends NodeDialogPane {
             jsp.setLeftComponent(scrollVars);
             allPanel.add(jsp, BorderLayout.CENTER);
         } else {
-            allPanel.add(scrollPane, BorderLayout.CENTER);
+            allPanel.add(configurePanel, BorderLayout.CENTER);
         }
         super.addTab("Settings", allPanel);
+    }
+
+    /**
+     * @return false (default), or true if the option to run the SQL query
+     *         without configure should be visible.
+     */
+    protected boolean runWithoutConfigure() {
+        return false;
     }
 
     /**
@@ -176,6 +199,11 @@ class DBReaderDialogPane extends NodeDialogPane {
                 : getAvailableFlowVariables().entrySet()) {
             m_listModelVars.addElement(e.getValue());
         }
+        // read execute without configure checkbox
+        if (runWithoutConfigure()) {
+            m_configureBox.setSelected(
+                settings.getBoolean(EXECUTE_WITHOUT_CONFIGURE, false));
+        }
     }
 
     /**
@@ -189,5 +217,9 @@ class DBReaderDialogPane extends NodeDialogPane {
         }
         settings.addString(DatabaseConnectionSettings.CFG_STATEMENT,
                 m_statmnt.getText().trim());
+        if (runWithoutConfigure()) {
+            settings.addBoolean(EXECUTE_WITHOUT_CONFIGURE,
+                m_configureBox.isSelected());
+        }
     }
 }

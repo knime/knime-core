@@ -145,6 +145,35 @@ public final class DatabaseReaderConnection {
     }
 
     /**
+     * Inits the statement and - if necessary - the database connection.
+     * @throws SQLException if the connection to the database or the statement
+     *         could not be created
+     */
+    private void initStatement() throws SQLException {
+        if (m_stmt == null) {
+            final Connection conn;
+            try {
+                conn = m_conn.createConnection();
+            } catch (SQLException sql) {
+                if (m_stmt != null) {
+                    try {
+                        m_stmt.close();
+                    } catch (SQLException e) {
+                        LOGGER.debug(e);
+                    }
+                    m_stmt = null;
+                }
+                throw sql;
+            } catch (Throwable t) {
+                throw new SQLException(t);
+            }
+            synchronized (m_conn.syncConnection(conn)) {
+                m_stmt = conn.createStatement();
+            }
+        }
+    }
+
+    /**
      * Returns a data table spec that reflects the meta data form the database
      * result set.
      * @return data table spec
@@ -213,7 +242,7 @@ public final class DatabaseReaderConnection {
      */
     public BufferedDataTable createTable(final ExecutionContext exec)
             throws CanceledExecutionException, SQLException {
-        final DataTableSpec spec = getDataTableSpec();
+        initStatement();
         Object sync = m_conn.syncConnection(m_stmt.getConnection());
         synchronized (sync) {
             try {
@@ -228,24 +257,21 @@ public final class DatabaseReaderConnection {
                     if (m_stmt.getClass().getCanonicalName().equals(
                             "com.mysql.jdbc.Statement")) {
                         m_stmt.setFetchSize(Integer.MIN_VALUE);
-                        LOGGER.info("Database fetchsize for mySQL database set to "
-                                + "\"" + Integer.MIN_VALUE + "\".");
+                        LOGGER.info("Database fetchsize for mySQL database set "
+                                + "to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
                 final String query = m_conn.getQuery();
                 LOGGER.debug("Executing SQL statement \"" + query + "\"");
                 final ResultSet result = m_stmt.executeQuery(query);
+                m_spec = createTableSpec(result.getMetaData());
                 return exec.createBufferedDataTable(new DataTable() {
-                    /**
-                     * {@inheritDoc}
-                     */
+                    /** {@inheritDoc} */
                     @Override
                     public DataTableSpec getDataTableSpec() {
-                        return spec;
+                        return m_spec;
                     }
-                    /**
-                     * {@inheritDoc}
-                     */
+                    /** {@inheritDoc} */
                     @Override
                     public RowIterator iterator() {
                         return new DBRowIterator(result);
@@ -267,7 +293,7 @@ public final class DatabaseReaderConnection {
      * @throws SQLException if the connection could not be opened
      */
     DataTable createTable(final int cachedNoRows) throws SQLException {
-        final DataTableSpec spec = getDataTableSpec();
+        initStatement();
         synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
             try {
                 final String query;
@@ -297,8 +323,9 @@ public final class DatabaseReaderConnection {
                 LOGGER.debug("Executing SQL statement \"" + query + "\"");
                 m_stmt.execute(query);
                 final ResultSet result = m_stmt.getResultSet();
+                m_spec = createTableSpec(result.getMetaData());
                 DBRowIterator it = new DBRowIterator(result);
-                DataContainer buf = new DataContainer(spec);
+                DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
                     buf.addRowToTable(it.next());
                 }

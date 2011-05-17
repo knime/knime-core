@@ -42,6 +42,11 @@
 	<option name="SQL Statement">
         Enter SQL statement being execute here, for example SELECT * FROM table
 	</option>
+	<option name="Run SQL query without configure">
+        The SQL query is execute as it is without accessing the meta info
+        from the database during configure which result in an empty spec 
+        after configure.
+    </option>
 	<option name="Flow Variable List">
         The list contains the flow variables that are currently available at
         the node input. Double clicking any of the entries will insert the
