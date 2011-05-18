@@ -106,7 +106,7 @@ public class XMLCellContent implements XMLValue {
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
-        m_content = ((XMLValue)XMLCellReaderFactory.createXMLCellReader(is)
+        m_content = (XMLCellReaderFactory.createXMLCellReader(is)
                 .readXML()).getDocument();
 
 

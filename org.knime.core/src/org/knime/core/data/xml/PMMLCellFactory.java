@@ -115,7 +115,7 @@ public class PMMLCellFactory {
 
     /** Don't instantiate this class. */
     private PMMLCellFactory() {
-
+    	// private constructor prevents that an instance is created
     }
 
     /**
@@ -125,7 +125,7 @@ public class PMMLCellFactory {
      * or {@link PMMLBlobCell} (otherwise, default threshold is
      * {@value #DEF_MIN_BLOB_SIZE_IN_BYTES} bytes or larger).
      *
-     * @param xml String representing the PMML document
+     * @param pmml String representing the PMML document
      * @return DataCell representing the PMML document
      * @throws IOException if an io error occurs while reading the PMML string
      * @throws SAXException if an error occurs while parsing

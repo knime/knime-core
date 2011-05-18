@@ -76,6 +76,7 @@ import org.xml.sax.SAXException;
  * @author Heiko Hofer
  * @author Dominik Morent
  */
+@SuppressWarnings("serial")
 public class PMMLBlobCell extends BlobDataCell
         implements PMMLValue, StringValue {
     private final static PMMLSerializer SERIALIZER = new PMMLSerializer();

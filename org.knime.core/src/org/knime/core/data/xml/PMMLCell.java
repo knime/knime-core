@@ -45,6 +45,7 @@ import org.xml.sax.SAXException;
  * @author morent
  *
  */
+@SuppressWarnings("serial")
 public class PMMLCell extends DataCell implements PMMLValue, StringValue {
     /**
      * Type for this cell implementation.

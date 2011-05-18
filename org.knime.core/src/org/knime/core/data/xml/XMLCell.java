@@ -70,6 +70,7 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
+@SuppressWarnings("serial")
 public class XMLCell extends DataCell implements XMLValue, StringValue {
     /**
      * Type for this cell implementation.
@@ -133,7 +134,7 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
     }
 
 
-    private XMLCellContent m_content;
+    private final XMLCellContent m_content;
 
     /**
      * Create a new instance.

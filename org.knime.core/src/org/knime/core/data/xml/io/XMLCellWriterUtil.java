@@ -64,22 +64,30 @@ import org.w3c.dom.Node;
 
 /**
  * Utility class to write xml.
- * 
+ *
  * @author Heiko Hofer
  */
 class XMLCellWriterUtil {
 
 	/**
 	 * Writes a {@link Node}
+	 * @param writer the writer to use
+	 * @param node the node to write
+	 * @param pre the predecessor of this node
+	 * @param depth the depth of this node in the XML tree
+	 * @param indentChar the char that should be used for indentation
+	 * @param linefeedChar the linefeed character used for pretty printing
+	 * @param preserveSpaceStack if spaces should be preserved
+	 * @throws XMLStreamException when exception occurs
 	 */
-	static boolean writeNode(final XMLStreamWriter writer, final Node node,
-			final Node pre, 
+	static void writeNode(final XMLStreamWriter writer, final Node node,
+			final Node pre,
 			final int depth, final String indentChar, final String linefeedChar,
-			final List<Boolean> preserveSpaceStack) throws XMLStreamException {		
+			final List<Boolean> preserveSpaceStack) throws XMLStreamException {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:
-			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
-					preserveSpaceStack);			
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar,
+					preserveSpaceStack);
 			boolean hasXmlSpaceAttr = updatePreserveSpaceStack((Element) node,
 					preserveSpaceStack);
 			writeElement(writer, (Element) node, depth, indentChar,
@@ -87,23 +95,23 @@ class XMLCellWriterUtil {
 			if (hasXmlSpaceAttr) {
 				preserveSpaceStack.remove(0);
 			}
-			return true;
+			break;
 		case Node.TEXT_NODE:
 			writer.writeCharacters(node.getNodeValue());
-			return false;
+			break;
 		case Node.CDATA_SECTION_NODE:
 			writer.writeCData(node.getNodeValue());
-			return false;
+			break;
 		case Node.COMMENT_NODE:
-			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar,
 					preserveSpaceStack);
 			writer.writeComment(node.getNodeValue());
-			return true;
+			break;
 		case Node.ENTITY_REFERENCE_NODE:
 			writer.writeEntityRef(node.getNodeName());
-			return false;
+			break;
 		case Node.PROCESSING_INSTRUCTION_NODE:
-			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar,
 					preserveSpaceStack);
 			String target = node.getNodeName();
 			String data = node.getNodeValue();
@@ -112,9 +120,9 @@ class XMLCellWriterUtil {
 			} else {
 				writer.writeProcessingInstruction(target, data);
 			}
-			return true;
+			break;
 		case Node.DOCUMENT_TYPE_NODE:
-			spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+			spaceBefore(writer, pre, linefeedChar, depth, indentChar,
 					preserveSpaceStack);
 			DocumentType docType = (DocumentType) node;
 			String publicId = docType.getPublicId();
@@ -138,7 +146,7 @@ class XMLCellWriterUtil {
 			dtd.append(">\n");
 			writer.writeDTD(dtd.toString());
 
-			return true;
+			break;
 		default:
 			throw new XMLStreamException(
 					"Unrecognized or unexpected node class: "
@@ -172,7 +180,7 @@ class XMLCellWriterUtil {
 	 * Writes an element and its children
 	 */
 	private static void writeElement(final XMLStreamWriter writer,
-			final Element element, 
+			final Element element,
 			final int depth, final String indentChar,
 			final String linefeedChar, final List<Boolean> preserveSpaceStack)
 			throws XMLStreamException {
@@ -225,31 +233,29 @@ class XMLCellWriterUtil {
 		// write children
 		Node child = element.getFirstChild();
 		Node pre = null;
-		boolean ident = false;
 		while (child != null) {
-			boolean i = writeNode(writer, child, pre, depth + 1, indentChar,
+			writeNode(writer, child, pre, depth + 1, indentChar,
 					linefeedChar, preserveSpaceStack);
-			ident = i || ident;
 			pre = child;
-			child = child.getNextSibling();		
+			child = child.getNextSibling();
 		}
-		spaceBefore(writer, pre, linefeedChar, depth, indentChar, 
+		spaceBefore(writer, pre, linefeedChar, depth, indentChar,
 				preserveSpaceStack);
 		writer.writeEndElement();
 	}
-	
+
 	private static void spaceBefore(final XMLStreamWriter writer,
 			final Node pre,
 			final String linefeedChar, final int depth, final String identChar,
 			final List<Boolean> preserveSpaceStack) throws XMLStreamException {
 		short type = null != pre ? pre.getNodeType() : Node.ELEMENT_NODE;
-		boolean preserveSpace = !preserveSpaceStack.isEmpty() 
+		boolean preserveSpace = !preserveSpaceStack.isEmpty()
 			&& preserveSpaceStack.get(0);
 
-		if (!preserveSpace && (type == Node.ELEMENT_NODE 
+		if (!preserveSpace && (type == Node.ELEMENT_NODE
 				|| type == Node.DOCUMENT_TYPE_NODE
 				|| type == Node.PROCESSING_INSTRUCTION_NODE
-				|| type == Node.COMMENT_NODE)) {			
+				|| type == Node.COMMENT_NODE)) {
 			linefeedIndent(writer, linefeedChar, depth, identChar);
 		}
 	}

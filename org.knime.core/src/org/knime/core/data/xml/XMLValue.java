@@ -88,6 +88,7 @@ public interface XMLValue extends DataValue {
 
         /** Only subclasses are allowed to instantiate this class. */
         protected XMLUtilityFactory() {
+        	// private constructor prevents that an instance is created
         }
 
         /**

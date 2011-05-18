@@ -71,6 +71,7 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
+@SuppressWarnings("serial")
 public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
     private final static XMLSerializer SERIALIZER = new XMLSerializer();
     private static class XMLSerializer implements DataCellSerializer<XMLBlobCell> {
@@ -128,7 +129,7 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
         return XMLValue.class;
     }
 
-    private XMLCellContent m_content;
+    private final XMLCellContent m_content;
 
     /**
      * Create a new instance.

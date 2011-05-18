@@ -115,7 +115,7 @@ public class XMLCellFactory {
 
     /** Don't instantiate this class. */
     private XMLCellFactory() {
-
+    	// private constructor prevents that an instance is created
     }
 
     /**
@@ -197,7 +197,7 @@ public class XMLCellFactory {
             return new XMLCell(content);
         }
     }
-    
+
     /**
      * Factory method to create {@link DataCell} representing
      * {@link org.w3c.dom.Document}.
@@ -208,7 +208,7 @@ public class XMLCellFactory {
      * @param xml The cell represents this value.
      * @return DataCell representing the XML document
      * @throws NullPointerException if argument is null
-     */    
+     */
     public static DataCell create(final XMLValue xml) {
         if (xml == null) {
             throw new NullPointerException("XMLValue must not be null");
@@ -221,7 +221,7 @@ public class XMLCellFactory {
                 return new XMLBlobCell(content);
             } else {
                 return new XMLCell(content);
-            }    		
-    	}    
+            }
+    	}
     }
 }

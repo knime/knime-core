@@ -67,9 +67,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * An @link{XMLCellWriter} to write XMLCells that can optionally be enclosed 
+ * An @link{XMLCellWriter} to write XMLCells that can optionally be enclosed
  * in a root element.
- * 
+ *
  * @author Heiko Hofer
  */
 class XMLMultiCellWriter implements XMLCellWriter {
@@ -78,16 +78,17 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	private XMLStreamWriter m_writer;
 	private final boolean m_hasDedicatedRoot;
 	private final List<Boolean> m_preserveSpaceStack;
+	private final OutputStream m_os;
 
 	/**
 	 * Create writer to write xml cells. This writer can be configured to skip
 	 * writing the header.
-	 * 
+	 *
 	 * @param os the xml cells are written to this resource.
 	 * @param writeHeader true when the xml header should be written
 	 * @throws IOException when header could not be written.
 	 */
-	XMLMultiCellWriter(final OutputStream os, boolean writeHeader) 
+	XMLMultiCellWriter(final OutputStream os, boolean writeHeader)
 	throws IOException {
 		try {
 			initWriter(os);
@@ -96,14 +97,15 @@ class XMLMultiCellWriter implements XMLCellWriter {
 			}
 		} catch (XMLStreamException e) {
 		    throw new IOException(e);
-		}		
+		}
 		m_hasDedicatedRoot = false;
 		m_preserveSpaceStack = new LinkedList<Boolean>();
+		m_os = os;
 	}
 
 	/**
 	 * Create writer to write xml cells enclosed in the given root element.
-	 * 
+	 *
 	 * @param os the xml cells are written to this resource.
 	 * @param rootElement the qualified name of the root element
 	 * @param rootAttributes the attributes of the root element
@@ -112,6 +114,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	 */
 	XMLMultiCellWriter(final OutputStream os, final QName rootElement,
 			final Map<QName, String> rootAttributes) throws IOException {
+		m_os = os;
 		try {
 			initWriter(os);
 			writeHeader();
@@ -123,7 +126,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 				String attrPrefix = attr.getPrefix();
 				String attrLocalName = attr.getLocalPart();
 				String attrNamespaceURI = attr.getNamespaceURI();
-	
+
 				if (null != attrPrefix && attrPrefix.equals("xml")
 						&& attrLocalName.equals("space")
 						&& attrNamespaceURI.equals(XMLConstants.XML_NS_URI)) {
@@ -143,7 +146,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 				elementPrefix = "";
 			}
 			m_writer.writeCharacters(LINEFEED_CHAR);
-			m_writer.writeStartElement(elementPrefix, 
+			m_writer.writeStartElement(elementPrefix,
 					rootElement.getLocalPart(),
 					rootElement.getNamespaceURI());
 			// Write attributes of the root element
@@ -151,7 +154,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 				String attrPrefix = attr.getPrefix();
 				String attrLocalName = attr.getLocalPart();
 				String attrValue = rootAttributes.get(attr);
-	
+
 				if (null == attrPrefix || attrPrefix.isEmpty()) {
 					if ("xmlns".equals(attrLocalName)) {
 						// default namespace definition
@@ -166,7 +169,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 						m_writer.writeNamespace(attrLocalName, attrValue);
 					} else {
 						// attribute with namespace prefix
-						m_writer.writeAttribute(attrPrefix, 
+						m_writer.writeAttribute(attrPrefix,
 								attr.getNamespaceURI(),
 								attrLocalName, attrValue);
 					}
@@ -196,14 +199,15 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void write(final XMLValue cell) throws IOException {
+	public void write(final XMLValue cell)
+	throws IOException {
 		Document doc = cell.getDocument();
 		Node child = doc.getFirstChild();
 		Node pre = null;
 		int depth = m_hasDedicatedRoot ? 1 : 0;
 		while (child != null) {
 			try {
-				XMLCellWriterUtil.writeNode(m_writer, child, pre, depth, 
+				XMLCellWriterUtil.writeNode(m_writer, child, pre, depth,
 						INDENT_CHAR,
 						LINEFEED_CHAR, m_preserveSpaceStack);
 			} catch (XMLStreamException e) {
@@ -230,6 +234,8 @@ class XMLMultiCellWriter implements XMLCellWriter {
 		} catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
+	    // close stream since m_writer.close() does no necessarily do it
+		m_os.close();
 	}
 
 }
