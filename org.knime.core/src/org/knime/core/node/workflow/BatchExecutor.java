@@ -91,6 +91,7 @@ import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.LockFailedException;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
@@ -465,6 +466,9 @@ public final class BatchExecutor {
         } catch (UnsupportedWorkflowVersionException e) {
             System.err.println("Unknown workflow version: " + e.getMessage());
             return 1;
+        } catch (LockFailedException lfe) {
+            System.err.println("Failed to lock workflow: " + lfe.getMessage());
+            return 1;
         }
         if (failOnLoadError && loadResult.hasErrors()) {
             System.err.println("Error(s) during workflow loading. "
@@ -526,32 +530,61 @@ public final class BatchExecutor {
             if (!noSave) { // save workflow
                 // save // in place when no output (file or dir) given
                 if (output == null) {
-                    wfm.save(workflowDir, new ExecutionMonitor(), true);
-                    LOGGER.debug("Workflow saved: "
-                            + workflowDir.getAbsolutePath());
-                    if (input.isFile()) {
-                        // if input is a Zip file, overwrite input flow (Zip)
-                        // workflow dir contains temp workflow directory
-                        FileUtil.zipDir(input, workflowDir, 9);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + input.getAbsolutePath());
+                    try {
+                        wfm.save(workflowDir, new ExecutionMonitor(), true);
+                        LOGGER.debug("Workflow saved: "
+                                + workflowDir.getAbsolutePath());
+                        if (input.isFile()) {
+                            // if input is a Zip file, overwrite input flow
+                            // (Zip) workflow dir contains temp workflow dir
+                            FileUtil.zipDir(input, workflowDir, 9);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + input.getAbsolutePath());
+                        }
+                    } catch (LockFailedException lfe) {
+                        String msg = "Workflow not saved after execution: "
+                            + "Unable to lock workflow destination \""
+                            + workflowDir + "\". ";
+                        LOGGER.error(msg, lfe);
+                        System.err.println(msg);
+                        successful = false;
                     }
                 } else {
                     if (outputZip) { // save as Zip
                         File outputTempDir =
                             FileUtil.createTempDir("BatchExecutorOutput");
-                        wfm.save(outputTempDir, new ExecutionMonitor(), true);
-                        LOGGER.debug("Workflow saved: "
-                                + outputTempDir.getAbsolutePath());
-                        // to be saved into new output zip file
-                        FileUtil.zipDir(output, outputTempDir, 9);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + output.getAbsolutePath());
+                        try {
+                            wfm.save(outputTempDir, new ExecutionMonitor(),
+                                    true);
+                            LOGGER.debug("Workflow saved: "
+                                    + outputTempDir.getAbsolutePath());
+                            // to be saved into new output zip file
+                            FileUtil.zipDir(output, outputTempDir, 9);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + output.getAbsolutePath());
+                        } catch (LockFailedException lfe) {
+                            String msg = "Workflow not saved after execution: "
+                                + "Unable to lock workflow destination \""
+                                + outputTempDir + "\". ";
+                            LOGGER.error(msg, lfe);
+                            System.err.println(msg);
+                            successful = false;
+                        }
                     } else { // save into dir
-                        // copy current workflow dir
-                        wfm.save(output, new ExecutionMonitor(), true);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + output.getAbsolutePath());
+                        try {
+                            // copy current workflow dir
+                            wfm.save(output, new ExecutionMonitor(), true);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + output.getAbsolutePath());
+                        } catch (LockFailedException lfe) {
+                            String msg = "Workflow not saved after execution: "
+                                + "Unable to lock workflow destination \""
+                                + output + "\". ";
+                            LOGGER.error(msg, lfe);
+                            System.err.println(msg);
+                            successful = false;
+                        }
+
                     }
                 }
             }

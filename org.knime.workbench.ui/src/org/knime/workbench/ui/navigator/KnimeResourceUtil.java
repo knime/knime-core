@@ -53,6 +53,8 @@ package org.knime.workbench.ui.navigator;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -245,6 +247,35 @@ public final class KnimeResourceUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns a list (never null) with all workflow directories contained in
+     * the specified list or in any sub dir (workflow group) contained in the
+     * list.
+     *
+     * @param resources the resources so search for workflows
+     * @return a list (never null) with all workflow directories contained in
+     *         the specified list or in any sub dir (workflow group) contained
+     *         in the list. If a workflow is contained in the parameter list, it
+     *         is added to the result.
+     */
+    public static List<IContainer> getContainedWorkflows(
+            final List<? extends IResource> resources) {
+        List<IContainer> result = new LinkedList<IContainer>();
+        for (IResource c : resources) {
+            if (KnimeResourceUtil.isWorkflow(c)) {
+                result.add((IContainer)c);
+            } else if (KnimeResourceUtil.isWorkflowGroup(c)) {
+                try {
+                    result.addAll(getContainedWorkflows(Arrays
+                            .asList(((IContainer)c).members())));
+                } catch (CoreException e) {
+                    // ignore - no workflows contained.
+                }
+            } // else ignore
+        }
+        return result;
     }
 
     /**

@@ -73,6 +73,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -81,12 +82,15 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
+import org.eclipse.ui.actions.DeleteResourceAction;
+import org.eclipse.ui.actions.MoveResourceAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.actions.RefreshAction;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
+import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -105,12 +109,15 @@ import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.actions.CancelWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ConfigureWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.CreateWorkflowGroupAction;
+import org.knime.workbench.ui.navigator.actions.DeleteAction;
 import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
 import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.OpenCredentialVariablesDialogAction;
 import org.knime.workbench.ui.navigator.actions.OpenWorkflowVariablesDialogAction;
+import org.knime.workbench.ui.navigator.actions.RenameAction;
 import org.knime.workbench.ui.navigator.actions.ResetWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
 
@@ -125,8 +132,8 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
 public class KnimeResourceNavigator extends ResourceNavigator implements
         NodeStateChangeListener, NodeMessageListener, JobManagerChangedListener {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(KnimeResourceNavigator.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(KnimeResourceNavigator.class);
 
     /** ID as defined in plugin.xml. */
     public static final String ID =
@@ -240,7 +247,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                                 ProjectWorkflowMap.findProjectFor(nodeResource);
                         if (wf != null) {
                             IResource rsrc =
-                                KnimeResourceUtil.getResourceForURI(wf);
+                                    KnimeResourceUtil.getResourceForURI(wf);
                             // we have to find the resource again, hence we
                             // cannot put the project's name with
                             // toLowercase into the map
@@ -281,12 +288,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                                 ((StructuredSelection)getSelection())
                                         .getFirstElement();
                         if (isWorkflow(sel)) {
-                            KnimeResourceNavigator.this.handleOpen(
-                                    new OpenEvent(this, getSelection()));
+                            KnimeResourceNavigator.this
+                                    .handleOpen(new OpenEvent(this,
+                                            getSelection()));
                         } else {
                             // expand the double-clicked element one level down
-                            KnimeResourceNavigator.super.handleDoubleClick(
-                                    new DoubleClickEvent(this, getSelection()));
+                            KnimeResourceNavigator.super
+                                    .handleDoubleClick(new DoubleClickEvent(
+                                            this, getSelection()));
                         }
                     }
                 };
@@ -317,10 +326,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     @Override
     protected void initDragAndDrop() {
         TreeViewer viewer = getViewer();
-        viewer.addDragSupport(DND.DROP_MOVE, new Transfer[]{ResourceTransfer
-                .getInstance()}, new WorkflowMoveDragListener(viewer));
-        viewer.addDropSupport(DND.DROP_MOVE, new Transfer[]{
-                ResourceTransfer.getInstance(), RemoteFileTransfer.getInstance()},
+        viewer.addDragSupport(DND.DROP_MOVE,
+                new Transfer[]{ResourceTransfer.getInstance()},
+                new WorkflowMoveDragListener(viewer));
+        viewer.addDropSupport(DND.DROP_MOVE,
+                new Transfer[]{ResourceTransfer.getInstance(),
+                        RemoteFileTransfer.getInstance()},
                 new WorkflowMoveDropListener(viewer));
     }
 
@@ -360,6 +371,31 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new KnimeResourceLabelProvider(), new JobManagerDecorator()));
     }
 
+    @Override
+    protected void handleKeyPressed(final KeyEvent event) {
+        if (event.keyCode == SWT.F2 && event.stateMask == 0) {
+            handleRename();
+            event.doit = false;
+        } else if (event.keyCode == SWT.DEL && event.stateMask == 0) {
+            handleDelete();
+            event.doit = false;
+        } else {
+            super.handleKeyPressed(event);
+        }
+    }
+
+    /**
+     * handles the rename through a key press.
+     */
+    protected void handleRename() {
+        new RenameAction(getTreeViewer()).run();
+    }
+
+    protected void handleDelete() {
+        new DeleteAction(getTreeViewer().getControl().getShell(),
+                getTreeViewer()).run();
+    }
+
     /**
      * Handles an open event from the viewer. Opens an editor on the selected
      * knime project.
@@ -383,10 +419,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                         IDE.openEditorOnFileStore(PlatformUI.getWorkbench()
                                 .getActiveWorkbenchWindow().getActivePage(), lf);
                     } catch (PartInitException e) {
-                        MessageBox box = new MessageBox(
-                                getViewSite().getShell(), SWT.ICON_ERROR);
+                        MessageBox box =
+                                new MessageBox(getViewSite().getShell(),
+                                        SWT.ICON_ERROR);
                         box.setText("Error");
-                        box.setMessage("Unable to open editor: " + e.getMessage());
+                        box.setMessage("Unable to open editor: "
+                                + e.getMessage());
                         box.open();
                     }
                 }
@@ -402,6 +440,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Returns the workflow file - of a flow or a meta node - or null.
+     *
      * @param o
      * @return
      */
@@ -410,8 +449,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             IContainer container = (IContainer)o;
             Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
             if (container.exists(wfPath)) {
-                    return (IFile)container.findMember(
-                            WorkflowPersistor.WORKFLOW_FILE);
+                return (IFile)container
+                        .findMember(WorkflowPersistor.WORKFLOW_FILE);
             }
         }
         return null;
@@ -469,9 +508,27 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
-
             }
         }
+
+        // rename must be our own action (due to workflow locks)
+        menu.insertBefore(ResourceNavigatorRenameAction.ID, new RenameAction(
+                getTreeViewer()));
+        menu.remove(ResourceNavigatorRenameAction.ID);
+
+        // delete must be our own action (due to workflow locks)
+        menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
+                getTreeViewer().getControl().getShell(), getTreeViewer()));
+        menu.remove(DeleteResourceAction.ID);
+
+        // move must be our own action (due to workflow locks)
+        menu.insertBefore(MoveResourceAction.ID, new MoveWorkflowAction(
+                getTreeViewer()));
+        menu.remove(MoveResourceAction.ID);
+
+        // copy and paste doesn't work as expected - dismissed
+        menu.remove("org.eclipse.ui.CopyAction");
+        menu.remove("org.eclipse.ui.PasteAction");
 
         // remove the default import export actions to store the own one
         // that invokes the knime export wizard directly
@@ -484,19 +541,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new ExportKnimeWorkflowAction(PlatformUI.getWorkbench()
                         .getActiveWorkbenchWindow()));
 
-        // TODO: this is hardcoded the copy item. should be retrieved more
-        // dynamically
-        String id = menu.getItems()[2].getId();
-
+        String id = ImportKnimeWorkflowAction.ID;
         // add an open action which is not listed as the project is normally
         // not openable.
         menu.insertBefore(id, new Separator());
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
 
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        menu
-                .insertAfter(ExportKnimeWorkflowAction.ID,
-                        new EditMetaInfoAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, new EditMetaInfoAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
         if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
@@ -518,6 +570,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             menu.insertAfter(ExportKnimeWorkflowAction.ID,
                     new OpenWorkflowVariablesDialogAction());
         }
+
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
         menu.insertBefore(RefreshAction.ID, new GroupMarker(KNIME_ADDITIONS));

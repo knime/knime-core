@@ -52,6 +52,7 @@ package org.knime.workbench.repository;
 
 import java.io.File;
 import java.net.URL;
+import java.util.List;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -65,6 +66,8 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.Credentials;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
@@ -239,10 +242,35 @@ public final class RepositoryFactory {
 
         if (url != null) {
             try {
+                WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
+                    /**
+                     * {@inheritDoc}
+                     */
+                    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                            final String workflowVersionString) {
+                        LOGGER.error("Installed meta nodes are of unkown version?!?");
+                        return UnknownKNIMEVersionLoadPolicy.Try;
+                    }
+
+                    /**
+                     * {@inheritDoc}
+                     */
+                    public List<Credentials> loadCredentials(
+                            final List<Credentials> credentials) {
+                        return credentials;
+                    }
+
+                    /** {@inheritDoc} */
+                    @Override
+                    public boolean isTemplateFlow() {
+                        return true;
+                    }
+                };
+
                 File f = new File(FileLocator.toFileURL(url).getFile());
                 LOGGER.debug("meta node template name: " + f.getName());
                 WorkflowManager metaNode = META_NODE_ROOT.load(f,
-                        new ExecutionMonitor(), null, false).getWorkflowManager();
+                        new ExecutionMonitor(), loadHelper, false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
                 LOGGER.error("Unexpected canceled execution exception",

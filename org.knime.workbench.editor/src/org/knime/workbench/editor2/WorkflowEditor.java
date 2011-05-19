@@ -183,6 +183,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
+import org.knime.workbench.ui.navigator.WorkflowEditorAdapter;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
@@ -325,6 +326,10 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private List<IEditorPart> getSubEditors() {
         List<IEditorPart> editors = new ArrayList<IEditorPart>();
+        if (m_manager == null) {
+            // no workflow, no sub editors
+            return editors;
+        }
         for (NodeContainer child : m_manager.getNodeContainers()) {
             if (child instanceof SingleNodeContainer) {
                 continue;
@@ -359,30 +364,30 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void dispose() {
+        NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
         if (m_fileResource != null && m_manager != null) {
+            // disposed is also called when workflow load fails or is canceled
             ProjectWorkflowMap.unregisterClientFrom(m_fileResource, this);
             ProjectWorkflowMap.remove(m_fileResource);
+            m_manager.removeListener(this);
+            m_manager.removeNodeStateChangeListener(this);
+            m_manager.removeUIInformationListener(this);
         }
         // remember that this editor has been closed
         m_closed = true;
-        // remove appender listener from "our" NodeLogger
-        NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
         }
         NodeProvider.INSTANCE.removeListener(this);
-        m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
-        m_manager.removeNodeStateChangeListener(this);
-        m_manager.removeUIInformationListener(this);
         // remove resource listener..
         if (m_fileResource != null
                 && KnimeResourceUtil.getResourceForURI(m_fileResource)
                         != null) {
             ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
         }
-        if (m_parentEditor != null) {
+        if (m_parentEditor != null && m_manager != null) {
             // bug fix 2051: Possible memory leak related to sub-flow editor.
             // meta node editors were still referenced by the EditorHistory
             IWorkbench workbench = PlatformUI.getWorkbench();
@@ -919,6 +924,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else if (adapter == ZoomManager.class) {
             return getGraphicalViewer().getProperty(
                     ZoomManager.class.toString());
+        }
+
+        if (adapter == WorkflowEditorAdapter.class) {
+            // hackaround to deliver the wfm to the navigator
+            return new WorkflowEditorAdapter(m_manager);
         }
 
         // the super implementation handles the rest

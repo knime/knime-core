@@ -20,21 +20,22 @@ package org.knime.workbench.ui.navigator.actions;
 
 import java.io.File;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.actions.OpenFileAction;
+import org.eclipse.ui.ide.IDE;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
-import org.knime.workbench.ui.navigator.KnimeResourceLabelProvider;
 
 /**
  *
@@ -47,7 +48,7 @@ public class EditMetaInfoAction extends Action {
 
     private static ImageDescriptor icon;
 
-    private IContainer m_parent;
+    private IFileStore m_parent;
 
     /**
      *
@@ -86,6 +87,7 @@ public class EditMetaInfoAction extends Action {
      */
     @Override
     public boolean isEnabled() {
+        m_parent = null;
         // first get selection
         Object element = getSelection();
         if (element instanceof IWorkspaceRoot) {
@@ -94,16 +96,26 @@ public class EditMetaInfoAction extends Action {
         }
         // if we are here only IProjects and IFolders left as IContainer's
         if (element instanceof IContainer) {
-            m_parent = (IContainer)element;
-            // check whether it contains a meta.info file
-            if (m_parent.exists(KnimeResourceLabelProvider.METAINFO_FILE)
-                    || m_parent.exists(
-                            KnimeResourceLabelProvider.WORKFLOW_FILE)) {
-                return true;
+            m_parent =
+                    EFS.getLocalFileSystem().getStore(
+                            ((IContainer)element).getLocation());
+        } else if (element instanceof IFileStore) {
+            m_parent = ((IFileStore)element);
+            if (m_parent == null) {
+                NodeLogger.getLogger(EditMetaInfoAction.class).debug(
+                        "Only local meta info files can be opened");
             }
+        }
+        if (m_parent == null) {
             return false;
         }
-        // as long as a IContainer is selected (not root)
+        // check whether it contains a meta.info file
+        if (m_parent.getChild(
+                WorkflowPersistor.METAINFO_FILE).fetchInfo().exists()
+                || m_parent.getChild(
+                        WorkflowPersistor.WORKFLOW_FILE).fetchInfo().exists()) {
+            return true;
+        }
         return false;
     }
 
@@ -114,25 +126,40 @@ public class EditMetaInfoAction extends Action {
     @Override
     public void run() {
         boolean isWorkflow = false;
-        if (m_parent.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
+        if (m_parent.getChild(WorkflowPersistor.WORKFLOW_FILE).fetchInfo()
+                .exists()) {
             isWorkflow = true;
         }
         // if no meta file is available
-        File metaFileTest = new File(m_parent.getLocation().toFile(),
-                WorkflowPersistor.METAINFO_FILE);
-        if (!metaFileTest.exists()) {
+        IFileStore metaFileTest = m_parent.getChild(WorkflowPersistor.METAINFO_FILE);
+        if (!metaFileTest.fetchInfo().exists()) {
             // create one
-            MetaInfoFile.createMetaInfoFile(
-                    new File(m_parent.getLocationURI()), isWorkflow);
+            File parentFile;
+            try {
+                parentFile = m_parent.toLocalFile(EFS.NONE, null);
+            } catch (CoreException e) {
+                throw new RuntimeException("Meta Info files can only be created"
+                        + " for local workflows or groups. "
+                        + m_parent.getName() + "doesn't provide a local file.");
+            }
+            if (parentFile == null) {
+                throw new RuntimeException("Meta Info files can only be created"
+                        + " for local workflows or groups. "
+                        + m_parent.getName() + "doesn't provide a local file.");
+            }
+            MetaInfoFile.createMetaInfoFile(parentFile, isWorkflow);
         }
-        IFile metaFile = m_parent.getFile(new Path(
-                WorkflowPersistor.METAINFO_FILE));
-        // open file action -> run with meta file..
-        OpenFileAction openFile = new OpenFileAction(
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                .getActivePage());
-        openFile.selectionChanged(new StructuredSelection(metaFile));
-        openFile.run();
+        IFileStore metaFile =
+            m_parent.getChild(WorkflowPersistor.METAINFO_FILE);
+        try {
+            IDE.openEditorOnFileStore(PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getActivePage(), metaFile);
+        } catch (PartInitException e) {
+            String m = e.getMessage() == null ? "<no details>" : e.getMessage();
+            throw new RuntimeException(
+                    "Unable to initialize editor for Meta Info file of "
+                            + m_parent.getName() + ": " + m, e);
+        }
     }
 
     private Object getSelection() {

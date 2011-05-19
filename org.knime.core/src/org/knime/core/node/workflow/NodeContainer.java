@@ -1194,7 +1194,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     /**
      * @param directory the nodeContainerDirectory to set
      */
-    protected final void setNodeContainerDirectory(
+    protected void setNodeContainerDirectory(
             final ReferencedFile directory) {
         if (directory == null || !directory.getFile().isDirectory()) {
             throw new IllegalArgumentException("Not a directory: " + directory);

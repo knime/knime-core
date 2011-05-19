@@ -41,10 +41,13 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.LockFailedException;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 /**
  * Loads all meta node template repository items from plugins store
@@ -265,6 +268,10 @@ public final class MetaNodeTemplateRepositoryManager {
         } catch (IOException e) {
             LOGGER.error("Couldn't save meta node templates. "
                     + "Templates will be lost", e);
+        } catch (LockFailedException lfe) {
+            LOGGER.error("Couldn't lock destination to save meta node "
+                    + "templates. Templates will be lost", lfe);
+
         } catch (CanceledExecutionException e) {
             LOGGER.error("Couldn't save meta node templates. "
                     + "Templates will be lost", e);
@@ -274,9 +281,34 @@ public final class MetaNodeTemplateRepositoryManager {
 
     private WorkflowManager loadWorkflowManager() {
         try {
+            WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
+                /**
+                 * {@inheritDoc}
+                 */
+                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                        final String workflowVersionString) {
+                    LOGGER.error("Installed meta nodes are of unkown version?!?");
+                    return UnknownKNIMEVersionLoadPolicy.Try;
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                public List<Credentials> loadCredentials(
+                        final List<Credentials> credentials) {
+                    return credentials;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public boolean isTemplateFlow() {
+                    return true;
+                }
+            };
+
             WorkflowManager wfm = WorkflowManager.loadProject(
                     new File(METANODE_TEMPLATE_REPOSITORY),
-                    new ExecutionMonitor(), null).getWorkflowManager();
+                    new ExecutionMonitor(), loadHelper).getWorkflowManager();
             return wfm;
         } catch (UnsupportedWorkflowVersionException e) {
             LOGGER.error("Couldn't load WorkflowManager. "
@@ -290,6 +322,9 @@ public final class MetaNodeTemplateRepositoryManager {
         } catch (CanceledExecutionException e) {
             LOGGER.error("Couldn't load WorkflowManager. "
                     + "Old templates will be lost!", e);
+        } catch (LockFailedException lfe) {
+            LOGGER.error("Couldn't load WorkflowManager. "
+                    + "Old templates will be lost!", lfe);
         }
         return null;
     }

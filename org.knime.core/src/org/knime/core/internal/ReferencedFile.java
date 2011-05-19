@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 25, 2008 (wiswedel): created
  */
@@ -53,6 +53,8 @@ package org.knime.core.internal;
 import java.io.File;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.knime.core.util.VMFileLocker;
+
 /**
  * A {@link File} wrapper with modifiable parent location. This class is used
  * in cases in which nested elements keep a file reference and the file location
@@ -60,21 +62,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ReferencedFile {
-    
+
     private final ReferencedFileDelegate m_delegate;
-    
+
     private ReferencedFile(final ReferencedFileDelegate delegate) {
         m_delegate = delegate;
     }
-    
-    /** Creates new root element. 
+
+    /** Creates new root element.
      * @param rootDir The parent directory of the referenced file location.
      * @throws NullPointerException If the argument is null
      */
     public ReferencedFile(final File rootDir) {
         this(new RootFileDelegate(rootDir));
     }
-    
+
     /** Creates new sub-element.
      * @param parent The parent location
      * @param base The name of this file
@@ -83,38 +85,50 @@ public final class ReferencedFile {
     public ReferencedFile(final ReferencedFile parent, final String base) {
         this(new HierarchyElementFileDelegate(parent, base));
     }
-    
+
     /** Locks this file location. Asynchronous invocations of
      * {@link #rename(String)} will block until {@link #unlock()} is called.
-     * It will also disable the renaming of any element further up the 
+     * It will also disable the renaming of any element further up the
      * hierarchy. Parallel <i>reading</i> of the resource is still possibly. */
     public void lock() {
         m_delegate.readLock();
     }
-    
+
     /** Unlocks this file hierarchy. (Counterpart to {@link #lock()}).
-     * @throws IllegalMonitorStateException 
+     * @throws IllegalMonitorStateException
      *          If monitor is not held by current thread. */
     public void unlock() {
         m_delegate.readUnlock();
     }
-    
+
+    public boolean fileLockRootForVM() {
+        return m_delegate.fileLockRootForVM();
+    }
+
+    public void fileUnlockRootForVM() {
+        m_delegate.fileUnlockRootForVM();
+    }
+
+    public boolean isRootFileLockedForVM() {
+        return m_delegate.isRootFileLockedForVM();
+    }
+
     /** Renames this (base) element as an atomic operation. &quot;This&quot;
      * element refers the current element in the hierarchy. The operation will
      * block until all read/write operations have finished. If the associated
-     * file location exists (i.e. the file returned by {@link #getFile()} 
-     * {@link File#exists() exists}, it will also be renamed. 
+     * file location exists (i.e. the file returned by {@link #getFile()}
+     * {@link File#exists() exists}, it will also be renamed.
      * @param newBaseName The new name
-     * @return whether the rename was successful: it returns true in two cases: 
-     * (i) the file exists and was successfully renamed or (ii) 
+     * @return whether the rename was successful: it returns true in two cases:
+     * (i) the file exists and was successfully renamed or (ii)
      * if it does not exist (being positive that it has not been created just
-     * yet) 
+     * yet)
      * @throws NullPointerException If argument is null
      */
     public boolean rename(final String newBaseName) {
         return m_delegate.rename(newBaseName);
     }
-    
+
     /** Get the {@link File} representing the full path of this referenced
      * file element. Please note that the returned file may be renamed after
      * this method returns. In order to circumvent this, you typically write
@@ -131,38 +145,38 @@ public final class ReferencedFile {
      * </pre>
      * @return The file representing the full path of this referenced file */
     public File getFile() {
-        return m_delegate.getFile(); 
+        return m_delegate.getFile();
     }
-    
+
     /** Get the parent of this element or null if the file's parent is not
      * represented as a <code>ReferencedFile</code> object.
      * @return The parent or <code>null</code>. */
     public ReferencedFile getParent() {
         return m_delegate.getParent();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
         return m_delegate.equals(obj);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_delegate.hashCode();
     }
-    
+
     /** Get absolute path of the represented file.
      * {@inheritDoc} */
     @Override
     public String toString() {
         return m_delegate.toString();
     }
-    
+
     /** Implementing class of {@link ReferencedFile}. */
     private abstract static class ReferencedFileDelegate {
-        
+
         /** Acquire read lock. */
         abstract void readLock();
         /** Release read lock. */
@@ -179,7 +193,13 @@ public final class ReferencedFile {
         abstract File getFile();
         /** @return parent referenced file or null if not available. */
         abstract ReferencedFile getParent();
-        
+        /** @return true if referenced dir was locked (excl. with other VMs)*/
+        abstract boolean fileLockRootForVM();
+        /** Release the lock for the root of the referenced directory. */
+        abstract void fileUnlockRootForVM();
+        /** @return true, if the referenced root is locked */
+        abstract boolean isRootFileLockedForVM();
+
         /** {@inheritDoc} */
         @Override
         public boolean equals(final Object obj) {
@@ -193,19 +213,19 @@ public final class ReferencedFile {
             }
             return getFile().equals(file);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
             return getFile().hashCode();
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return getFile().getAbsolutePath();
         }
-        
+
         /** Final implementation of the rename function.
          * @param file The file representing the full path
          * @param newName The new name of the base element (child name)
@@ -230,14 +250,14 @@ public final class ReferencedFile {
                 writeUnlock();
             }
         }
-        
+
     }
-    
+
     /** Represents the parent of all hierarchical files. */
     private static final class RootFileDelegate extends ReferencedFileDelegate {
         private File m_rootFile;
         private final ReentrantReadWriteLock m_lock;
-        
+
         /** @param root root directory of the hierarchy */
         public RootFileDelegate(final File root) {
             if (root == null) {
@@ -252,13 +272,13 @@ public final class ReferencedFile {
         File getFile() {
             return m_rootFile;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         ReferencedFile getParent() {
             return null;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         boolean rename(final String name) {
@@ -280,23 +300,44 @@ public final class ReferencedFile {
         void readUnlock() {
             m_lock.readLock().unlock();
         }
-        
+
         /** {@inheritDoc} */
         @Override
         void writeLock() {
             m_lock.writeLock().lock();
         }
-        
+
         /** {@inheritDoc} */
         @Override
         void writeUnlock() {
             m_lock.writeLock().unlock();
         }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        boolean fileLockRootForVM() {
+            return VMFileLocker.lockForVM(m_rootFile);
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void fileUnlockRootForVM() {
+            VMFileLocker.unlockForVM(m_rootFile);
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        boolean isRootFileLockedForVM() {
+            return VMFileLocker.isLockedForVM(m_rootFile);
+        }
     }
-    
+
     /** The parent file element if this object represents not the origin
      * but an element in the hierarchy. */
-    private static final class HierarchyElementFileDelegate 
+    private static final class HierarchyElementFileDelegate
             extends ReferencedFileDelegate {
         private final ReferencedFile m_referencedFileParent;
         private String m_baseName;
@@ -317,13 +358,13 @@ public final class ReferencedFile {
         File getFile() {
             return new File(m_referencedFileParent.getFile(), m_baseName);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         ReferencedFile getParent() {
             return m_referencedFileParent;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         boolean rename(final String newName) {
@@ -361,6 +402,28 @@ public final class ReferencedFile {
         @Override
         void writeUnlock() {
             m_referencedFileParent.m_delegate.writeUnlock();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        boolean fileLockRootForVM() {
+            return m_referencedFileParent.fileLockRootForVM();
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void fileUnlockRootForVM() {
+            m_referencedFileParent.fileUnlockRootForVM();
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        boolean isRootFileLockedForVM() {
+            return m_referencedFileParent.isRootFileLockedForVM();
         }
     }
 

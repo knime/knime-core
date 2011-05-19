@@ -51,6 +51,7 @@
 package org.knime.core.node;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.util.Locale;
 
 import javax.swing.ImageIcon;
@@ -337,6 +338,19 @@ public final class KNIMEConstants {
         }
         System.setProperty("java.io.tmpdir", dir.getAbsolutePath());
         knimeTempDir = dir;
+    }
+
+    /**
+     * Returns the hostname or null, if it couldn't be determined.
+     * @return the hostname or null, if it couldn't be determined.
+     */
+    public static final String getHostname() {
+        try {
+            InetAddress localMachine = InetAddress.getLocalHost();
+            return localMachine.getHostName();
+        } catch (Exception uhe) {
+            return null;
+        }
     }
 
     /**

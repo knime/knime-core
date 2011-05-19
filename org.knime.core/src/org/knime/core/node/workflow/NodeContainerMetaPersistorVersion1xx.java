@@ -96,6 +96,9 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile settingsFile,
             final WorkflowLoadHelper loadHelper) {
         m_nodeSettingsFile = settingsFile;
+        assert settingsFile.isRootFileLockedForVM()
+            : "Workflow must be locked before persistor is created "
+            + "(and unlocked after load)";
         m_loadHelper = loadHelper;
     }
 

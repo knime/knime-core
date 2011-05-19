@@ -21,6 +21,7 @@ package org.knime.workbench.ui.metainfo.editor;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +34,6 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPathEditorInput;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
@@ -54,24 +54,24 @@ import org.knime.workbench.ui.metainfo.model.MetaGUIElement;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class WorkflowSetMetaInfoEditor extends EditorPart {
-    
-    
+
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            WorkflowSetMetaInfoEditor.class); 
-    
+            WorkflowSetMetaInfoEditor.class);
+
     private FormToolkit m_toolkit;
     private ScrolledForm m_form;
-    
+
     private List<MetaGUIElement>m_elements = new ArrayList<MetaGUIElement>();
-    
+
     private boolean m_isDirty = false;
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -80,32 +80,32 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
         m_form = m_toolkit.createScrolledForm(parent);
         m_form.setText(getPartName());
         GridLayout layout = new GridLayout();
-        layout.numColumns = 2; 
+        layout.numColumns = 2;
         layout.makeColumnsEqualWidth = true;
         m_form.getBody().setLayout(layout);
 
         // content composite
         Composite content = m_toolkit.createComposite(m_form.getBody());
         layout = new GridLayout();
-        layout.numColumns = 2; 
+        layout.numColumns = 2;
         layout.horizontalSpacing = 20;
         layout.makeColumnsEqualWidth = false;
         content.setLayout(layout);
         // placeholder composite
         m_toolkit.createComposite(m_form.getBody());
-        
+
         GridData layoutData = new GridData();
         layoutData.minimumWidth = 100;
         layoutData.widthHint = 100;
         layoutData.verticalAlignment = SWT.TOP;
         for (MetaGUIElement element : m_elements) {
             LOGGER.debug("element " + element.getLabel());
-            Label  label = m_toolkit.createLabel(content, 
+            Label  label = m_toolkit.createLabel(content,
                     element.getLabel() + ": ");
             label.setLayoutData(layoutData);
             element.createGUIElement(m_toolkit, content);
             element.addListener(new ModifyListener() {
-                
+
                 @Override
                 public void modifyText(final ModifyEvent e) {
                     setDirty(true);
@@ -116,16 +116,16 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void doSave(final IProgressMonitor monitor) {
         try {
-            IPath path = ((IPathEditorInput)getEditorInput()).getPath();
-            File inputFile = path.toFile();
+            URI path = ((IURIEditorInput)getEditorInput()).getURI();
+            File inputFile =  new File(path);
 
-            SAXTransformerFactory fac 
+            SAXTransformerFactory fac
                 = (SAXTransformerFactory)TransformerFactory.newInstance();
             TransformerHandler handler = fac.newTransformerHandler();
 
@@ -161,7 +161,7 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
     }
 
     /**
-     * 
+     *
      * @param isDirty true if the editor should be set to dirty
      */
     public void setDirty(final boolean isDirty) {
@@ -171,7 +171,7 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
 
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -179,7 +179,7 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -187,20 +187,30 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
             throws PartInitException {
         super.setSite(site);
         super.setInput(input);
-        if (!(input instanceof IPathEditorInput)) {
-            throw new PartInitException("Unexpected input for " 
+        if (!(input instanceof IURIEditorInput)) {
+            throw new PartInitException("Unexpected input for "
                     + getClass().getName() + ": "
                     + input.getName());
         }
-        IPath path = ((IPathEditorInput)input).getPath();
-        File inputFile = path.toFile();
-        setPartName(new File(inputFile.getParent()).getName() 
+        URI path = ((IURIEditorInput)input).getURI();
+        File inputFile = null;
+        try {
+            inputFile = new File(path);
+        } catch (IllegalArgumentException iae) {
+            if (!path.getScheme().equalsIgnoreCase("file")) {
+                throw new PartInitException("Only local meta info can be edited");
+            }
+            throw new PartInitException("Unexpected input for "
+                    + getClass().getName() + ": "
+                    + path);
+        }
+        setPartName(new File(inputFile.getParent()).getName()
                 + " : Meta Information");
         m_elements = parseInput(inputFile);
         LOGGER.debug("input = " + input.toString());
     }
-    
-    private List<MetaGUIElement>parseInput(final File inputFile) 
+
+    private List<MetaGUIElement>parseInput(final File inputFile)
         throws PartInitException {
         MetaInfoInputHandler hdl = new MetaInfoInputHandler();
         try {
@@ -208,26 +218,26 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
             SAXParser parser = saxFac.newSAXParser();
             parser.parse(inputFile, hdl);
         } catch (Exception e) {
-            String msg = "Error while parsing input file " 
+            String msg = "Error while parsing input file "
                 + inputFile.getName();
             LOGGER.error(msg, e);
             throw new PartInitException(msg, e);
         }
-        return hdl.getElements(); 
+        return hdl.getElements();
     }
-        
+
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean isDirty() {
         return m_isDirty;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -236,16 +246,16 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void setFocus() {
         m_form.setFocus();
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

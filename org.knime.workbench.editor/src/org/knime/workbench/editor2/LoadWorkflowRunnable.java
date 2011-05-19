@@ -74,6 +74,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.LockFailedException;
 import org.knime.workbench.KNIMEEditorPlugin;
 
 
@@ -220,8 +221,16 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             m_editor.setWorkflowManager(null);
         } catch (CanceledExecutionException cee) {
             m_loadingCanceledMessage =
-                "Canceled loading workflow: " + m_workflowFile.getName();
+                "Canceled loading workflow: "
+                + m_workflowFile.getParentFile().getName();
             LOGGER.info(m_loadingCanceledMessage, cee);
+            m_editor.setWorkflowManager(null);
+        } catch (LockFailedException lfe) {
+            m_loadingCanceledMessage =
+                "Unable to load workflow: "
+                + m_workflowFile.getParentFile().getName()
+                + "Is is in use by another user/instance.";
+            LOGGER.info(m_loadingCanceledMessage, lfe);
             m_editor.setWorkflowManager(null);
         } catch (Throwable e) {
             m_throwable = e;

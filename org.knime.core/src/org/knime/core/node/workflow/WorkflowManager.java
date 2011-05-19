@@ -130,6 +130,7 @@ import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 
 /**
@@ -281,6 +282,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
+        ReferencedFile ncDir = super.getNodeContainerDirectory();
+        if (ncDir != null) {
+            if (!ncDir.fileLockRootForVM()) {
+                throw new IllegalStateException("Root directory to workflow \""
+                        + ncDir + "\" can't be locked although it should have "
+                        + "been locked by the load routines");
+            }
+        }
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
         m_loadVersion = persistor.getLoadVersionString();
@@ -4721,7 +4730,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public static WorkflowLoadResult loadProject(final File directory,
             final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper)
             throws IOException, InvalidSettingsException,
-            CanceledExecutionException, UnsupportedWorkflowVersionException {
+            CanceledExecutionException, UnsupportedWorkflowVersionException,
+            LockFailedException {
         return ROOT.load(directory, exec, loadHelper, false);
     }
 
@@ -4821,6 +4831,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + "\" file in directory \"" + directory.getAbsolutePath()
                     + "\"");
         }
+        if (!directory.canWrite()) {
+            throw new IOException("Can't load workflow from a directory "
+                    + "without write permissions. (Required to lock workflow.) "
+                    + "Location: " + directory.getAbsolutePath());
+        }
+
         WorkflowLoadHelper lh = loadHelper != null
         ? loadHelper : WorkflowLoadHelper.INSTANCE;
         NodeSettingsRO settings =
@@ -4888,8 +4904,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * Loads the workflow contained in the directory as node into this workflow
      * instance. Loading a whole new project is usually done using
-     * {@link WorkflowManager#loadProject(File,
-     *  ExecutionMonitor, WorkflowLoadHelper)}.
+     * {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     * .
      *
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
@@ -4906,15 +4922,33 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws CanceledExecutionException If canceled.
      * @throws UnsupportedWorkflowVersionException If the version of the
      *             workflow is unknown (future version)
+     * @throws LockFailedException if the flow can't be locked for opening
      */
     public WorkflowLoadResult load(final File directory,
             final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
             final boolean keepNodeMessages) throws IOException,
             InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException {
-        WorkflowPersistorVersion1xx persistor =
-            createLoadPersistor(directory, loadHelper);
-        return load(persistor, exec, keepNodeMessages);
+            UnsupportedWorkflowVersionException, LockFailedException {
+        ReferencedFile rootFile = new ReferencedFile(directory);
+        boolean isTemplate =
+                    (loadHelper != null && loadHelper.isTemplateFlow());
+        if (!isTemplate) {
+            // don't lock read-only templates (as we don't have r/o locks yet)
+            if (!rootFile.fileLockRootForVM()) {
+                throw new LockFailedException("Unable to lock workflow from \""
+                        + rootFile
+                        + "\". It is in use by another user/instance.");
+            }
+        }
+        try {
+            WorkflowPersistorVersion1xx persistor =
+                createLoadPersistor(directory, loadHelper);
+            return load(persistor, exec, keepNodeMessages);
+        } finally {
+            if (!isTemplate) {
+                rootFile.fileUnlockRootForVM();
+            }
+        }
     }
 
     /**
@@ -4939,12 +4973,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws UnsupportedWorkflowVersionException If the version of the
      *             workflow is unknown (future version)
      */
+
     public WorkflowLoadResult load(final WorkflowPersistorVersion1xx persistor,
             final ExecutionMonitor exec, final boolean keepNodeMessages)
     throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException {
         final ReferencedFile refDirectory =
-            persistor.getMetaPersistor().getNodeContainerDirectory();
+                persistor.getMetaPersistor().getNodeContainerDirectory();
         File directory = refDirectory.getFile();
         final String dirName = directory.getName();
         exec.setMessage("Loading workflow structure from \""
@@ -5397,7 +5432,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     public void save(final File directory, final ExecutionMonitor exec,
             final boolean isSaveData)
-        throws IOException, CanceledExecutionException {
+        throws IOException, CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
@@ -5775,10 +5810,31 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void cleanup() {
         synchronized (m_workflowMutex) {
             super.cleanup();
+            ReferencedFile ncDir = getNodeContainerDirectory();
+            if (ncDir != null) {
+                ncDir.fileUnlockRootForVM();
+            }
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.cleanup();
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setNodeContainerDirectory(final ReferencedFile directory) {
+        ReferencedFile ncDir = getNodeContainerDirectory();
+        if (ncDir != null) {
+            ncDir.fileUnlockRootForVM();
+        }
+        if (!directory.fileLockRootForVM()) {
+            throw new IllegalStateException("Workflow root directory \""
+                    + directory + "\" can't be locked although it should have "
+                    + "been locked by the save routines");
+        }
+        super.setNodeContainerDirectory(directory);
     }
 
     ///////////////////////////

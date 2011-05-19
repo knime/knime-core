@@ -20,23 +20,33 @@ package org.knime.workbench.ui.navigator.actions;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ISelectionValidator;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
 import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
+import org.knime.workbench.ui.navigator.actions.selection.ResourceSelectDialog;
 
 /**
  *
@@ -44,12 +54,17 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  */
 public class MoveWorkflowAction extends Action implements IRunnableWithProgress {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(MoveWorkflowAction.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(MoveWorkflowAction.class);
 
-    private final IPath m_source;
+    /** ID of this action. */
+    public static final String ID = "org.knime.workbench.ui.MoveAction";
 
-    private final IPath m_target;
+    private IPath m_source;
+
+    private IPath m_target;
+
+    private final TreeViewer m_viewer;
 
     /**
      *
@@ -59,6 +74,21 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
     public MoveWorkflowAction(final IPath source, final IPath target) {
         m_source = source;
         m_target = target;
+        m_viewer = null;
+    }
+
+    /**
+     * Used when instantiated for a menu (w/o target).
+     *
+     * @param parentShell
+     * @param source
+     */
+    public MoveWorkflowAction(final TreeViewer viewer) {
+        super("Move...");
+        setId(ID);
+        m_viewer = viewer;
+        m_source = null;
+        m_target = null;
     }
 
     /**
@@ -83,6 +113,13 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
      */
     @Override
     public void run() {
+
+        if (getTarget() == null) {
+            if (!setSourceAndselectTarget()) {
+                LOGGER.debug("Move canceled by user.");
+                return;
+            }
+        }
         try {
             PlatformUI.getWorkbench().getProgressService()
                     .busyCursorWhile(this);
@@ -94,7 +131,82 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
 
     }
 
-    private void copyFiles(final File source, final File target) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled() {
+        if (m_viewer != null) {
+            IStructuredSelection sel =
+                    (IStructuredSelection)m_viewer.getSelection();
+            if (sel.size() != 1) {
+                return false;
+            }
+            Object s = sel.getFirstElement();
+            if (!(s instanceof IResource)) {
+                return false;
+            }
+            IResource r = (IResource)s;
+            if (KnimeResourceUtil.isWorkflow(r)
+                    || KnimeResourceUtil.isWorkflowGroup(r)) {
+                return true;
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean setSourceAndselectTarget() {
+        // set the source from the tree selection
+        IStructuredSelection sel =
+                (IStructuredSelection)m_viewer.getSelection();
+        if (sel.size() != 1) {
+            LOGGER.debug("MoveAction selection size != 1");
+            return false;
+        }
+        m_source = ((IResource)sel.getFirstElement()).getFullPath();
+
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        String srcName = m_source.toString();
+        if (srcName.length() > 60 && m_source.segmentCount() > 3) {
+            srcName =
+                    m_source.segment(0) + "/.../"
+                            + m_source.segment(m_source.segmentCount() - 2)
+                            + "/" + m_source.lastSegment();
+        }
+        ResourceSelectDialog rsd =
+                new ResourceSelectDialog(m_viewer.getControl().getShell(),
+                        root, sel, "Select target destination for\n"
+                                + srcName);
+        rsd.setBlockOnOpen(true);
+        rsd.setTitle("Move Destination Selection");
+        rsd.setValidator(new ISelectionValidator() {
+            @Override
+            public String isValid(final Object selection) {
+                if (selection instanceof IWorkspaceRoot) {
+                    // root is valid
+                    return null;
+                }
+                if (selection instanceof IResource) {
+                    IResource r = (IResource)selection;
+                    if (KnimeResourceUtil.isWorkflowGroup(r)) {
+                        return null;
+                    }
+                }
+                return "Please select a destination workflow group";
+            }
+        });
+        int ret = rsd.open();
+        if (ret != org.eclipse.jface.window.Window.OK) {
+            return false;
+        }
+
+        m_target = rsd.getSelection().getFullPath();
+        return true;
+    }
+
+    protected void moveFiles(final File source, final File target) {
         for (File f : source.listFiles()) {
             f.renameTo(new File(target, f.getName()));
         }
@@ -131,13 +243,25 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             showIsParent(source.getName(), targetRes.getName());
             return;
         }
-        // check if the source is an opened workflow
-        if (KnimeResourceUtil.isOpenedWorkflow(source)) {
-            showWorkflowIsOpenMessage();
-            return;
-        }
 
         if (source != null && !source.isLinked()) {
+            // check if the source is an opened workflow
+            if (containsOpenWorkflows(source)) {
+                showWorkflowIsOpenMessage();
+                return;
+            }
+            // lock to-be-moved workflows
+            List<IContainer> wfs =
+                    KnimeResourceUtil.getContainedWorkflows(Collections
+                            .singletonList(source));
+            List<IContainer> lockedWFs = new LinkedList<IContainer>();
+            if (!lockWorkflows(wfs, lockedWFs)) {
+                unlockWorkflows(lockedWFs);
+                showWorkflowInUseMessage(KnimeResourceUtil
+                        .isWorkflowGroup(source));
+                return;
+            }
+
             final File sourceFile = new File(source.getLocationURI());
             if (!sourceFile.exists()) {
                 showUnsupportedLinkedProject(sourceFile.getName());
@@ -156,7 +280,10 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                 }
                 return;
             }
-            copyFiles(sourceFile, targetDir);
+            // unlock and move
+            unlockWorkflows(lockedWFs);
+            moveFiles(sourceFile, targetDir);
+
             try {
                 if (targetRes instanceof IWorkspaceRoot) {
                     IProject newProject =
@@ -176,8 +303,8 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                         natureId = KNIMEProjectNature.ID;
                     }
                     newProject =
-                            MetaInfoFile.createKnimeProject(newProject
-                                    .getName(), natureId);
+                            MetaInfoFile.createKnimeProject(
+                                    newProject.getName(), natureId);
                 }
                 // exception handling
                 source.delete(true, monitor);
@@ -186,6 +313,59 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                 LOGGER.error("Error while moving resource " + source, e);
                 throw new InvocationTargetException(e);
             }
+        }
+    }
+
+    /**
+     * Returns true if src is or contains open workflows.
+     *
+     * @param src the flow or group to test
+     * @return true if src is or contains open workflows
+     */
+    private boolean containsOpenWorkflows(final IResource src) {
+        if (KnimeResourceUtil.isWorkflow(src)) {
+            return KnimeResourceUtil.isOpenedWorkflow(src);
+        }
+        if (!KnimeResourceUtil.isWorkflowGroup(src)) {
+            return false;
+        }
+        if (!(src instanceof IContainer)) {
+            return false;
+        }
+        IResource[] kids;
+        try {
+            kids = ((IContainer)src).members();
+        } catch (CoreException e) {
+            return false;
+        }
+        for (IResource r : kids) {
+            if (containsOpenWorkflows(r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean lockWorkflows(final List<IContainer> toBeLockedWFs,
+            final List<IContainer> lockedWF) {
+        boolean result = true;
+        assert lockedWF.size() == 0;
+        // open workflows can be locked multiple times.
+        for (IContainer wf : toBeLockedWFs) {
+            assert KnimeResourceUtil.isWorkflow(wf);
+            if (VMFileLocker.lockForVM(new File(wf.getLocationURI()))) {
+                lockedWF.add(wf);
+            } else {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    private void unlockWorkflows(final List<IContainer> workflows) {
+        for (IContainer wf : workflows) {
+            assert KnimeResourceUtil.isWorkflow(wf);
+            VMFileLocker.unlockForVM(new File(wf.getLocationURI()));
         }
     }
 
@@ -211,6 +391,26 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                         + "Linked resources are only linked to the workspace "
                         + "but located elsewhere. They are not supported by "
                         + "this operation.");
+            }
+        });
+    }
+
+    private void showWorkflowInUseMessage(final boolean isGroup) {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (isGroup) {
+                    MessageDialog.openInformation(Display.getDefault()
+                            .getActiveShell(), "Locked Workflow",
+                            "The selected workflow group contains a workflow "
+                                    + "that is locked by another "
+                                    + "user/instance and can't be moved.");
+                } else {
+                    MessageDialog.openInformation(Display.getDefault()
+                            .getActiveShell(), "Locked Workflow",
+                            "The selected workflow is locked by another "
+                                    + "user/instance and can't be renamed.");
+                }
             }
         });
     }

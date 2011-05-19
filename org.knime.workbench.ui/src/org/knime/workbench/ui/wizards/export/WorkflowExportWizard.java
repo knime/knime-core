@@ -82,6 +82,7 @@ import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
@@ -278,6 +279,9 @@ public class WorkflowExportWizard extends ExportWizard
                 break;
             case IResource.FILE:
                 if (name.startsWith(WorkflowPersistor.SAVED_WITH_DATA_FILE)) {
+                    return true;
+                }
+                if (name.startsWith(VMFileLocker.LOCK_FILE)) {
                     return true;
                 }
                 break;
