@@ -79,7 +79,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
     public UniqueConcatenateOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         this(new OperatorData("Unique concatenate", true, false,
-                DataValue.class, true), globalSettings, opColSettings);
+                DataValue.class, false), globalSettings, opColSettings);
     }
 
     /**Constructor for class UniqueConcatenateOperator.
@@ -88,7 +88,8 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      * @param opColSettings the operator column specific settings
      */
     protected UniqueConcatenateOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
             m_vals = new LinkedHashSet<String>(getMaxUniqueValues());

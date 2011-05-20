@@ -135,7 +135,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         final Collection<ColumnAggregator> colAggr2Remove =
             new LinkedList<ColumnAggregator>();
         for (final ColumnAggregator colAggr : m_cols) {
-            if (colNameSet.contains(colAggr.getColName())) {
+            if (colNameSet.contains(colAggr.getOriginalColName())) {
                 colAggr2Remove.add(colAggr);
             }
         }
@@ -274,7 +274,8 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     private void updateMethod(final int row, final AggregationMethod method) {
         final ColumnAggregator colAggr = getColumnAggregator(row);
         m_cols.set(row, new ColumnAggregator(
-                colAggr.getColSpec(), method, method.inclMissingCells()));
+                colAggr.getOriginalColSpec(), method,
+                method.inclMissingCells()));
         fireTableCellUpdated(row, 2);
     }
 
@@ -352,12 +353,12 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     public Object getValueAt(final int row, final int columnIndex) {
         switch (columnIndex) {
         case 1:
-            return getColumnAggregator(row).getMethod();
+            return getColumnAggregator(row).getMethodTemplate();
         case 2:
             return Boolean.valueOf(
                     getColumnAggregator(row).inclMissingCells());
         default:
-            return getColumnAggregator(row).getColSpec();
+            return getColumnAggregator(row).getOriginalColSpec();
         }
     }
 }

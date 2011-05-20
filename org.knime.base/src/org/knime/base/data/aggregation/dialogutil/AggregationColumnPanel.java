@@ -378,8 +378,8 @@ public class AggregationColumnPanel extends MouseAdapter {
         columnModel.getColumn(2).setCellRenderer(
                 new IncludeMissingCellRenderer(m_aggrColTableModel));
         m_aggrColTable.addMouseListener(new AggregationColumnTableListener());
-        columnModel.getColumn(0).setPreferredWidth(190);
-        columnModel.getColumn(1).setPreferredWidth(140);
+        columnModel.getColumn(0).setPreferredWidth(170);
+        columnModel.getColumn(1).setPreferredWidth(150);
         columnModel.getColumn(2).setPreferredWidth(45);
         columnModel.getColumn(2).setMinWidth(45);
         columnModel.getColumn(2).setMaxWidth(45);
@@ -694,9 +694,10 @@ public class AggregationColumnPanel extends MouseAdapter {
             new ArrayList<ColumnAggregator>(colAggrs.size());
         for (final ColumnAggregator colAggr : colAggrs) {
             final DataColumnSpec colSpec =
-                spec.getColumnSpec(colAggr.getColName());
+                spec.getColumnSpec(colAggr.getOriginalColName());
             if (colSpec != null
-                    && colSpec.getType().equals(colAggr.getDataType())) {
+                    && colSpec.getType().equals(
+                            colAggr.getOriginalDataType())) {
                 colAggrs2Use.add(colAggr);
             }
         }
@@ -716,7 +717,7 @@ public class AggregationColumnPanel extends MouseAdapter {
         for (final int row : selectedColumns) {
             final ColumnAggregator aggregator =
                 m_aggrColTableModel.getColumnAggregator(row);
-            types.add(aggregator.getDataType());
+            types.add(aggregator.getOriginalDataType());
         }
         final DataType superType = CollectionCellFactory.getElementType(
                 types.toArray(new DataType[0]));

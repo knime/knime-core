@@ -69,8 +69,7 @@ import javax.swing.table.TableModel;
  * @author Tobias Koetter, University of Konstanz
  */
 public class IncludeMissingCellRenderer extends JCheckBox
-implements TableCellRenderer, UIResource
-{
+implements TableCellRenderer, UIResource {
     private static final long serialVersionUID = 4646190851811197484L;
     private static final Border NO_FOCUS_BORDER =
         new EmptyBorder(1, 1, 1, 1);
@@ -131,6 +130,6 @@ implements TableCellRenderer, UIResource
         if (superText != null) {
             return superText;
         }
-        return "Include/exclude missing cells";
+        return "Tick to include missing cells";
     }
 }

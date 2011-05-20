@@ -85,7 +85,7 @@ public class UniqueConcatenateWithCountOperator
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         this(new OperatorData("Unique concatenate with count", true, false,
-                DataValue.class, true), globalSettings, opColSettings);
+                DataValue.class, false), globalSettings, opColSettings);
     }
 
     /**Constructor for class UniqueConcatenateWithCountOperator.
@@ -93,7 +93,8 @@ public class UniqueConcatenateWithCountOperator
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected UniqueConcatenateWithCountOperator(final OperatorData operatorData,
+    protected UniqueConcatenateWithCountOperator(
+            final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
