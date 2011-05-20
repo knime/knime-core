@@ -114,21 +114,21 @@ public class ColumnAggregator {
     /**
      * @return the colName of the original column
      */
-    public String getColName() {
+    public String getOriginalColName() {
         return m_origColSpec.getName();
     }
 
     /**
      * @return the {@link DataColumnSpec} of the original column
      */
-    public DataColumnSpec getColSpec() {
+    public DataColumnSpec getOriginalColSpec() {
         return m_origColSpec;
     }
 
     /**
      * @return the {@link DataType} of the original column
      */
-    public DataType getDataType() {
+    public DataType getOriginalDataType() {
         return m_origColSpec.getType();
     }
 
@@ -137,13 +137,13 @@ public class ColumnAggregator {
      * @return <code>true</code> if the column is compatible to the given type
      */
     public boolean isCompatible(final Class<? extends DataValue> type) {
-        return getDataType().isCompatible(type);
+        return getOriginalDataType().isCompatible(type);
     }
 
     /**
      * @return the {@link AggregationMethods} to use
      */
-    public AggregationMethod getMethod() {
+    public AggregationMethod getMethodTemplate() {
         return m_operatorTemplate;
     }
 
@@ -184,9 +184,23 @@ public class ColumnAggregator {
             final OperatorColumnSettings opColSettings =
                 new OperatorColumnSettings(m_inclMissingVals, m_origColSpec);
             m_operator = m_operatorTemplate.createOperator(
-                                globalSettings, opColSettings);
+                    globalSettings, opColSettings);
         }
         return m_operator;
+    }
+
+    /**
+     * @return the column name that should be used for the operator
+     */
+    public String getOperatorColName() {
+        final String operatorLabel = getMethodTemplate().getColumnLabel();
+        if (supportsMissingValueOption() && !inclMissingCells()) {
+            //add the star to indicate that missing values are excluded
+            //but only if the method supports the changing of this option
+            //by the user to be compatible to old methods
+            return operatorLabel + "*";
+        }
+        return operatorLabel;
     }
 
     /**
@@ -194,7 +208,8 @@ public class ColumnAggregator {
      */
     @Override
     public String toString() {
-        return getColName() + "->" + getMethod();
+        return getOriginalColName() + "->" + getMethodTemplate().getLabel()
+            + "->incl. missing:" + m_inclMissingVals;
     }
 
     /**
@@ -259,9 +274,9 @@ public class ColumnAggregator {
         final DataType[] types = new DataType[cols.size()];
         for (int i = 0, length = cols.size(); i < length; i++) {
             final ColumnAggregator aggrCol = cols.get(i);
-            colNames[i] = aggrCol.getColName();
-            aggrMethods[i] = aggrCol.getMethod().getLabel();
-            types[i] = aggrCol.getDataType();
+            colNames[i] = aggrCol.getOriginalColName();
+            aggrMethods[i] = aggrCol.getMethodTemplate().getLabel();
+            types[i] = aggrCol.getOriginalDataType();
             inclMissingVals[i] = aggrCol.inclMissingCells();
         }
         final Config cnfg = settings.addConfig(CNFG_AGGR_COL_SECTION);

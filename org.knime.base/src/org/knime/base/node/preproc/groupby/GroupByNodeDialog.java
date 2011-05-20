@@ -48,6 +48,29 @@
  */
 package org.knime.base.node.preproc.groupby;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -61,26 +84,6 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
@@ -108,6 +111,10 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
+
+    private final SettingsModelString m_valueDelimiter =
+        new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
+            GlobalSettings.STANDARD_DELIMITER);
 
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
@@ -201,7 +208,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
      * @param title the title for the new tab
      */
     protected final void addPanel(final JPanel p, final String title) {
-        int tabSize = m_tabs.getComponentCount();
+        final int tabSize = m_tabs.getComponentCount();
         m_tabs.insertTab(title, null, p, null, tabSize - 1);
     }
 
@@ -222,8 +229,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
         generalBox.add(maxNoneNumericVals.getComponentPanel());
 
         final DialogComponentStringSelection colNamePolicy =
-            new DialogComponentStringSelection(m_columnNamePolicy, null,
-                    ColumnNamePolicy.getPolicyLabels());
+            new DialogComponentStringSelection(m_columnNamePolicy,
+                    "Column naming:", ColumnNamePolicy.getPolicyLabels());
         generalBox.add(colNamePolicy.getComponentPanel());
 
 //memory option box
@@ -231,7 +238,11 @@ public class GroupByNodeDialog extends NodeDialogPane {
         final DialogComponent enableHilite = new DialogComponentBoolean(
                 m_enableHilite, "Enable hiliting");
         memoryBox.add(enableHilite.getComponentPanel());
-        memoryBox.add(Box.createHorizontalStrut(35));
+
+
+        final DialogComponentString valueDelimiter = new DialogComponentString(
+                m_valueDelimiter, "Value delimiter", false, 2);
+        memoryBox.add(valueDelimiter.getComponentPanel());
 
         final DialogComponent inMemory = new DialogComponentBoolean(
                 m_inMemory, "Process in memory");
@@ -317,6 +328,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (final InvalidSettingsException e) {
             m_inMemory.setBooleanValue(false);
         }
+     // this option was introduced in Knime 2.4+
+        try {
+            m_valueDelimiter.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            m_valueDelimiter.setStringValue(GlobalSettings.STANDARD_DELIMITER);
+        }
         m_groupCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         columnsChanged();
     }
@@ -330,6 +347,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_groupCol.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
+        m_valueDelimiter.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);

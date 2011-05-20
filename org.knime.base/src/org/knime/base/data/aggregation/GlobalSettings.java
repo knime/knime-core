@@ -63,6 +63,7 @@ public class GlobalSettings {
     /**The maximum number of unique values. the threshold is used
      * if the method uses a limit.*/
     private final int m_maxUniqueValues;
+
     /**The delimiter to use for value separation.*/
     private final String m_valueDelimiter;
 
@@ -84,6 +85,10 @@ public class GlobalSettings {
         if (maxUniqueValues < 0) {
             throw new IllegalArgumentException(
                     "Maximum unique values must be a positive integer");
+        }
+        if (valueDelimiter == null) {
+            throw new NullPointerException(
+                    "Value delimiter should not be null");
         }
         m_maxUniqueValues = maxUniqueValues;
         m_valueDelimiter = valueDelimiter;

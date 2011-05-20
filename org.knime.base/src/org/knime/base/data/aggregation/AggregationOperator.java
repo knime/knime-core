@@ -133,7 +133,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     /**
      * @return the standard delimiter to use for value separation
      */
-    public String getValueDelimiter(){
+    public String getValueDelimiter() {
         return m_globalSettings.getValueDelimiter();
     }
 
@@ -209,13 +209,13 @@ public abstract class AggregationOperator implements AggregationMethod {
             final DataColumnSpec origSpec) {
         if (origSpec == null) {
             throw new NullPointerException(
-                    "Original column spec must not be null");
+            "Original column spec must not be null");
         }
         final DataType newType = getDataType(origSpec.getType());
         final DataColumnSpecCreator specCreator;
         if (keepColumnSpec() && (newType == null
                 || origSpec.getType().equals(newType))) {
-             specCreator = new DataColumnSpecCreator(origSpec);
+            specCreator = new DataColumnSpecCreator(origSpec);
         } else {
             final DataType type;
             if (newType == null) {
@@ -276,12 +276,6 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     @Override
     public String getColumnLabel() {
-        if (supportsMissingValueOption() && inclMissingCells()) {
-            //add the star to indicate that missing values are included
-            //but only if the method supports the changing of this option
-            //by the user to be compatible to old methods
-            return m_operatorData.getColumnLabel() + "*";
-        }
         return m_operatorData.getColumnLabel();
     }
 
@@ -357,24 +351,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     @Override
     public String toString() {
         return getLabel()
-            + " Skipped: " + m_skipped
-            + " Incl. missing: " + inclMissingCells();
+        + " Skipped: " + m_skipped
+        + " Incl. missing: " + inclMissingCells();
     }
-//
-//    /**
-//     * @param label the new label to use. This method is necessary for
-//     * compatibility issues to support older methods.
-//     */
-//    void setLabel(final String label) {
-//        m_operatorData.setLabel(label);
-//    }
-//
-//    /**
-//     * @param colName the new column name to use.
-//     * This method is necessary for compatibility issues to support
-//     * older methods.
-//     */
-//    void setColName(final String colName) {
-//        m_operatorData.setColName(colName);
-//    }
 }

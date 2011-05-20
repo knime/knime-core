@@ -227,7 +227,7 @@ public class MemoryGroupByTable extends GroupByTable {
                 if (operator.isSkipped()) {
                     //add skipped groups and the column that causes the skipping
                     //into the skipped groups map
-                    addSkippedGroup(colAggr.getColName(),
+                    addSkippedGroup(colAggr.getOriginalColName(),
                             groupVals.getGroupVals());
                 }
                 //reset the operator for the next group
@@ -258,7 +258,7 @@ public class MemoryGroupByTable extends GroupByTable {
         }
         for (final ColumnAggregator aggregator : aggregators) {
             final int colIdx =
-                origSpec.findColumnIndex(aggregator.getColName());
+                origSpec.findColumnIndex(aggregator.getOriginalColName());
             final DataCell cell = row.getCell(colIdx);
             aggregator.getOperator(getGlobalSettings()).compute(cell);
         }

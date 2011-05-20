@@ -52,7 +52,7 @@ import org.knime.core.data.DataColumnSpec;
 
 
 /**
- * Contains the operator specific settings.
+ * Contains the operator specific settings for a specific column.
  *
  * @author Tobias Koetter, University of Konstanz
  */

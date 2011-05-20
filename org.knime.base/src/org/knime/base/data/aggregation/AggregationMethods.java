@@ -208,17 +208,17 @@ public final class AggregationMethods {
                 new FirstOperator(globalSettings, inclMissing);
             addOperator(firstOperator);
             m_defNotNumericalMeth = getMethod(firstOperator.getLabel());
-            m_rowOrderMethod = new FirstOperator(globalSettings, exclMissing);
+            m_rowOrderMethod = new FirstOperator(globalSettings, inclMissing);
             /**Takes the last cell per group.*/
             addOperator(new LastOperator(globalSettings, inclMissing));
               /**Minimum.*/
-            addOperator(new MinOperator(globalSettings, exclMissing));
+            addOperator(new MinOperator(globalSettings, inclMissing));
               /**Maximum.*/
-            addOperator(new MaxOperator(globalSettings, exclMissing));
+            addOperator(new MaxOperator(globalSettings, inclMissing));
               /**Takes the value which occurs most.*/
-            addOperator(new ModeOperator(globalSettings, exclMissing));
+            addOperator(new ModeOperator(globalSettings, inclMissing));
               /**Concatenates all cell values.*/
-            addOperator(new ConcatenateOperator(globalSettings, exclMissing));
+            addOperator(new ConcatenateOperator(globalSettings, inclMissing));
               /**Concatenates all distinct cell values.*/
             addOperator(
                     new UniqueConcatenateOperator(globalSettings, exclMissing));
@@ -226,19 +226,19 @@ public final class AggregationMethods {
             addOperator(new UniqueConcatenateWithCountOperator(
                     globalSettings, exclMissing));
               /**Counts the number of unique group members.*/
-            addOperator(new UniqueCountOperator(globalSettings, exclMissing));
+            addOperator(new UniqueCountOperator(globalSettings, inclMissing));
               /**Counts the number of group members.*/
             addOperator(new CountOperator(globalSettings, inclMissing));
             /**Counts the number of missing values per group.*/
             addOperator(new MissingValueCountOperator(globalSettings,
                     inclMissing));
               /** List collection.*/
-            addOperator(new ListCellOperator(globalSettings, exclMissing));
+            addOperator(new ListCellOperator(globalSettings, inclMissing));
             /** Sorted list collection.*/
             addOperator(
-                    new SortedListCellOperator(globalSettings, exclMissing));
+                    new SortedListCellOperator(globalSettings, inclMissing));
               /** Set collection.*/
-            addOperator(new SetCellOperator(globalSettings, exclMissing));
+            addOperator(new SetCellOperator(globalSettings, inclMissing));
         } catch (final DuplicateOperatorException e) {
             throw new IllegalStateException(
                     "Exception while initializing class: "

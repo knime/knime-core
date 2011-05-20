@@ -201,10 +201,12 @@ public abstract class GroupByTable {
                     dataTable, resultSpec, groupColIdx);
             final BufferedDataTable resultTable;
             if (m_retainOrder) {
-                final String origName =
-                    m_colAggregators[m_colAggregators.length - 1].getColName();
+                final DataColumnSpec origColSpec =
+                    m_colAggregators[m_colAggregators.length - 1]
+                                     .getOriginalColSpec();
                 final String orderColName = m_colNamePolicy.createColumName(
-                        origName, RETAIN_ORDER_COL_AGGR_METHOD);
+                        new ColumnAggregator(origColSpec,
+                                RETAIN_ORDER_COL_AGGR_METHOD, true));
                 //sort the table by the order column
                 exec.setMessage("Rebuild original row order...");
                 final BufferedDataTable tempTable =
@@ -233,7 +235,7 @@ public abstract class GroupByTable {
             final ColumnAggregator[] colAggregators) {
         final Set<String> colNames = new HashSet<String>(groupByCols);
         for (final ColumnAggregator aggr : colAggregators) {
-            colNames.add(aggr.getColName());
+            colNames.add(aggr.getOriginalColName());
         }
         return colNames;
     }
@@ -440,15 +442,14 @@ public abstract class GroupByTable {
         //add the aggregation columns
         for (final ColumnAggregator aggrCol : columnAggregators) {
             final DataColumnSpec origSpec =
-                spec.getColumnSpec(aggrCol.getColName());
+                spec.getColumnSpec(aggrCol.getOriginalColName());
             if (origSpec == null) {
                 throw new IllegalArgumentException(
                         "No column spec found for name: "
-                        + aggrCol.getColName());
+                        + aggrCol.getOriginalColName());
             }
             final String colName =
-                colNamePolicy.createColumName(origSpec.getName(),
-                        aggrCol.getMethod());
+                colNamePolicy.createColumName(aggrCol);
             //since a column could be used several times create a unique name
             final String uniqueName;
             if (colNameCount.containsKey(colName)) {
@@ -460,7 +461,8 @@ public abstract class GroupByTable {
                 uniqueName = colName;
             }
             final DataColumnSpec newSpec =
-                aggrCol.getMethod().createColumnSpec(uniqueName, origSpec);
+                aggrCol.getMethodTemplate().createColumnSpec(uniqueName,
+                        origSpec);
             colSpecs[colIdx++] = newSpec;
         }
 

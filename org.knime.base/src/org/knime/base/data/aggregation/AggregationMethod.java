@@ -56,8 +56,8 @@ import org.knime.core.data.DataValue;
 /**
  * Interface that implements the main methods of an aggregation method.
  * However the main work is done by the {@link AggregationOperator} that can
- * be created using the {@link #createOperator(GlobalSettings, OperatorColumnSettings)}
- * method.
+ * be created using the
+ * {@link #createOperator(GlobalSettings, OperatorColumnSettings)} method.
  * A new {@link AggregationOperator} should be created per column.
  * AggregationMethods are sorted first by the supported data type and then
  * by the label.

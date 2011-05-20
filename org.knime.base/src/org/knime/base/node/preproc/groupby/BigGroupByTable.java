@@ -180,7 +180,7 @@ GroupByTable {
             //compute the current row values
             for (final ColumnAggregator colAggr : getColAggregators()) {
                 final DataCell cell = row.getCell(origSpec.findColumnIndex(
-                        colAggr.getColName()));
+                        colAggr.getOriginalColName()));
                 colAggr.getOperator(getGlobalSettings()).compute(cell);
             }
             if (isEnableHilite()) {
@@ -220,7 +220,7 @@ GroupByTable {
             if (operator.isSkipped()) {
                 //add skipped groups and the column that causes the skipping
                 //into the skipped groups map
-                addSkippedGroup(colAggr.getColName(), groupVals);
+                addSkippedGroup(colAggr.getOriginalColName(), groupVals);
             }
             //reset the operator for the next group
             operator.reset();
