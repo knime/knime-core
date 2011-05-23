@@ -93,6 +93,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void hiLite(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -116,6 +117,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void unHiLite(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -140,6 +142,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void unHiLiteAll(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -158,6 +161,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void hiLite(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -184,6 +188,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void unHiLite(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -206,6 +211,7 @@ public final class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void unHiLiteAll(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
@@ -257,7 +263,6 @@ public final class HiLiteTranslator {
     /**
      * Sets a new hilite mapper which can be <code>null</code> in case no
      * hilite translation is available.
-     *
      * @param mapper the new hilite mapper
      */
     public void setMapper(final HiLiteMapper mapper) {

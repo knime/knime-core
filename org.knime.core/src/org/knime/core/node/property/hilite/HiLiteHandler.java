@@ -293,6 +293,7 @@ public class HiLiteHandler {
             final KeyEvent fireEvent =
                 new KeyEvent(event.getSource(), changedIDs);
             final Runnable r = new Runnable() {
+                @Override
                 public void run() {
                     for (final HiLiteListener l : m_listenerList) {
                         try {
@@ -358,6 +359,7 @@ public class HiLiteHandler {
             final KeyEvent fireEvent = new KeyEvent(
                     event.getSource(), changedIDs);
             final Runnable r = new Runnable() {
+                @Override
                 public void run() {
                     for (final HiLiteListener l : m_listenerList) {
                         try {
@@ -399,6 +401,7 @@ public class HiLiteHandler {
         if (m_hiLitKeys.size() > 0) {
             m_hiLitKeys.clear();
             final Runnable r = new Runnable() {
+                @Override
                 public void run() {
                     for (final HiLiteListener l : m_listenerList) {
                         try {

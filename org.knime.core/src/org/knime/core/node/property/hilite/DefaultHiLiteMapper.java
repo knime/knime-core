@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,10 +44,10 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.03.2005 (gabriel): created
- * 2006-06-08 (tm): reviewed   
+ * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.property.hilite;
 
@@ -66,19 +66,19 @@ import org.knime.core.node.config.ConfigWO;
 
 
 /**
- * A default mapper for hilite translation which holds a map from 
+ * A default mapper for hilite translation which holds a map from
  * {@link RowKey} to a set of {@link RowKey}s as value.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultHiLiteMapper implements HiLiteMapper {
-    
+
     /** Keep the mapping. */
     private final Map<RowKey, Set<RowKey>> m_map;
 
     /**
      * Creates a new default hilite mapper.
-     * 
+     *
      * @param map keeps the <code>RowKey</code> to set of
      *      <code>RowKey</code>s mapping
      */
@@ -89,10 +89,11 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
             m_map = map;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<RowKey> getKeys(final RowKey key) {
         return m_map.get(key);
     }
@@ -100,11 +101,12 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<RowKey> keySet() {
         return Collections.unmodifiableSet(m_map.keySet());
     }
-    
-    
+
+
     private static final String CFG_MAPPED_KEYS = "CFG_MAPPED_KEYS";
 
     /**
@@ -118,21 +120,21 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
             Set<RowKey> mappedKeys = getKeys(key);
             ConfigWO keySettings = config.addConfig(key.toString());
             keySettings.addString(key.getString(), key.getString());
-            keySettings.addRowKeyArray(CFG_MAPPED_KEYS, 
+            keySettings.addRowKeyArray(CFG_MAPPED_KEYS,
                     mappedKeys.toArray(new RowKey[mappedKeys.size()]));
         }
     }
-    
+
     /** Restores the mapper from the config object that has been written using
      * the save method.
      * @param config To read from
      * @return A new mapper based on the settings.
      * @throws InvalidSettingsException If that fails.
      */
-    public static DefaultHiLiteMapper load(final ConfigRO config) 
+    public static DefaultHiLiteMapper load(final ConfigRO config)
         throws InvalidSettingsException {
         // load hilite mapping
-        LinkedHashMap<RowKey, Set<RowKey>> mapping 
+        LinkedHashMap<RowKey, Set<RowKey>> mapping
             = new LinkedHashMap<RowKey, Set<RowKey>>();
         for (String key : config.keySet()) {
             ConfigRO keySettings = config.getConfig(key);
