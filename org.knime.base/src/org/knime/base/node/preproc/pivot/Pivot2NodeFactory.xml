@@ -59,6 +59,9 @@
             times. In order to change the aggregation method of more than one 
             column select all columns to change, open the context menu with a 
             right mouse click and select the aggregation method to use.
+            Tick the missing box to include missing values. This option might
+            be disabled if the aggregation method does not support missing
+            values.
           </option>
         </tab>
         <tab name="Advanced settings">
@@ -68,14 +71,36 @@
 	        values are skipped during the calculation and a missing value is set 
             in the corresponding column, and a warning is displayed.
           </option>
+          <option name="Value delimiter">
+            The value delimiter used by aggregation methods such as concatenate. 
+          </option>
+          <option name="Column naming">
+            The name of the resulting aggregation column(s) depends on the 
+            selected naming schema.
+            <ul>
+                <li>Keep original name(s):
+                Keeps the original column names.
+                Note that you can use all aggregation columns only once with 
+                this column naming option to prevent duplicate column names.
+                </li>
+                <li>Aggregation method (column name): 
+                Uses the aggregation method first and appends the column name
+                in brackets
+                </li>
+                <li>Column name (aggregation method):
+                Uses the column name first and appends the aggregation method
+                in brackets
+                </li>
+            </ul>
+            All aggregation methods get a * appended if the missing value option 
+            is not ticked in the aggregation settings in order to distinguish
+            between columns that considered missing values in the aggregation
+            process and columns that does not.
+          </option>
           <option name="Enable hiliting">
 			If enabled, the hiliting of a group row will hilite all rows of this
 			group in other views. Depending on the number of rows, enabling this 
 			feature might consume a lot of memory.
-          </option>
-          <option name="Column naming">
-            The name of the resulting aggregation column(s) depends on the 
-            selected naming schema. 
           </option>
           <option name="Process in memory">
             Process the table in the memory. Requires more memory but is faster
@@ -90,7 +115,16 @@
           </option>
           <option name="Retain row order">
             Retains the original row order of the input table. 
-            Could result in longer execution time. 
+            Could result in longer execution time.
+            The row order is automatically retained if the process in memory
+            option is selected.
+          </option>
+          <option name="Missing">
+            Missing values are considered during aggregation if the missing 
+            option is ticked for the corresponding row in the column 
+            aggregation table.
+            Some aggregation methods do not support the changing of the missing
+            option such as means.
           </option>
         </tab>
     </fullDescription>
