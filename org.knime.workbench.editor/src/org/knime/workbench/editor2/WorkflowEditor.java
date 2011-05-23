@@ -96,7 +96,6 @@ import org.eclipse.gef.ui.actions.StackAction;
 import org.eclipse.gef.ui.actions.UndoAction;
 import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
-import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -596,11 +595,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeProvider.INSTANCE.addListener(this);
 
         // Configure the key handler
-        GraphicalViewerKeyHandler keyHandler =
-                new GraphicalViewerKeyHandler(viewer);
+        ModifierKeyHandler keyHandler =
+                new ModifierKeyHandler(viewer);
 
         KeyHandler parentKeyHandler =
                 keyHandler.setParent(getCommonKeyHandler());
+
         viewer.setKeyHandler(parentKeyHandler);
 
         // hook the viewer into the EditDomain

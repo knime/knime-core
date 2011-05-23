@@ -55,7 +55,6 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.ui.actions.ActionRegistry;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
-import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorSite;
 
@@ -110,7 +109,7 @@ public class WorkflowGraphicalViewerCreator {
 
         // StatusLineValidationMessageHandler validationMessageHandler = new
         // StatusLineValidationMessageHandler(editorSite);
-        ScrollingGraphicalViewer viewer = new ScrollingGraphicalViewer();
+        WorkflowEditorViewer viewer = new WorkflowEditorViewer();
         viewer.createControl(parent);
 
         // configure the m_viewer
@@ -128,6 +127,8 @@ public class WorkflowGraphicalViewerCreator {
                 new WorkflowEditorFileDropTargetListener(viewer));
         viewer.addDropTargetListener(
                 new WorkflowEditorSelectionDropListener(viewer));
+        viewer.addDragSourceListener(
+                new WorkflowEditorTemplateDragSourceListener(viewer));
         MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);
@@ -138,7 +139,6 @@ public class WorkflowGraphicalViewerCreator {
         // set the factory that is able to create the edit parts to be
         // used in the viewer
         viewer.setEditPartFactory(new WorkflowEditPartFactory());
-
         return viewer;
     }
 
