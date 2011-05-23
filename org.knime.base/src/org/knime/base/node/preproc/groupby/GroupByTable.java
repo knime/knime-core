@@ -48,6 +48,21 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -62,22 +77,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -170,7 +169,10 @@ public abstract class GroupByTable {
             subExec = exec;
             final ColumnRearranger columnRearranger =
                 new ColumnRearranger(inDataTable.getDataTableSpec());
-            columnRearranger.keepOnly(workingCols.toArray(new String[0]));
+            final String[] workingColsArray =
+                workingCols.toArray(new String[0]);
+            columnRearranger.keepOnly(workingColsArray);
+            columnRearranger.permute(workingColsArray);
             dataTable = exec.createColumnRearrangeTable(inDataTable,
                     columnRearranger, exec.createSubExecutionContext(0.01));
             aggrs = colAggregators;
@@ -233,7 +235,7 @@ public abstract class GroupByTable {
      */
     private Set<String> getWorkingCols(final List<String> groupByCols,
             final ColumnAggregator[] colAggregators) {
-        final Set<String> colNames = new HashSet<String>(groupByCols);
+        final Set<String> colNames = new LinkedHashSet<String>(groupByCols);
         for (final ColumnAggregator aggr : colAggregators) {
             colNames.add(aggr.getOriginalColName());
         }
@@ -312,6 +314,10 @@ public abstract class GroupByTable {
     throws CanceledExecutionException {
         final ColumnRearranger rearranger =
             new ColumnRearranger(dataTable.getSpec());
+        final String[] workingColsArray =
+            workingCols.toArray(new String[0]);
+        rearranger.keepOnly(workingColsArray);
+        rearranger.permute(workingColsArray);
         rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(
                 retainOrderCol, IntCell.TYPE).createSpec()) {
             private int m_id = 0;
@@ -320,7 +326,6 @@ public abstract class GroupByTable {
                 return new IntCell(m_id++);
             }
         });
-        rearranger.keepOnly(workingCols.toArray(new String[0]));
         return exec.createColumnRearrangeTable(dataTable, rearranger, exec);
     }
 
