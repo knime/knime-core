@@ -49,6 +49,7 @@
 package org.knime.core.util;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,10 +58,17 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 
-/**
+/** Helper class to create a set of unique names. Unique names are created
+ * by appending a suffix <i>(#&lt;index>)</i> to duplicate names. The name set
+ * is initially created either based on a {@link DataTableSpec} (names derived
+ * from column headers) or based on a {@link Set} of strings.
+ *
+ * <p>This class is probably mostly used to append a set of new columns to
+ * an existing {@link DataTableSpec}.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class DataTableSpecColumnNamer {
+public final class UniqueNameGenerator {
 
     private final HashSet<String> m_nameHash;
     /** Pattern with group matching, for instance for a string
@@ -68,15 +76,35 @@ public final class DataTableSpecColumnNamer {
     private static final Pattern PATTERN =
         Pattern.compile("(^.*) \\(#(\\d+)\\)");
 
-    /**  */
-    public DataTableSpecColumnNamer(final DataTableSpec spec) {
+    /** Create name generator, with names reserved from column names.
+     * @param spec The spec whose name are the initially set of names. */
+    public UniqueNameGenerator(final DataTableSpec spec) {
         m_nameHash = new HashSet<String>();
         for (DataColumnSpec col : spec) {
             m_nameHash.add(col.getName());
         }
     }
 
+    /** Create new name generator with reserved names from argument set.
+     * @param names Reserved names, must not be null. */
+    public UniqueNameGenerator(final Set<String> names) {
+        if (names == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_nameHash = new HashSet<String>(names);
+    }
+
+    /** Create new unique name. The returned name is guaranteed to be unique,
+     * subsequent calls to this method with the same argument will return
+     * a different unique name.
+     * @param suggested The name as suggested
+     * @return Either the argument if it's already unique or a derivation of the
+     * argument, which is unique.
+     * @throws NullPointerException If the argument is null. */
     public String newName(final String suggested) {
+        if (suggested == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
         if (m_nameHash.add(suggested)) {
             return suggested;
         }
@@ -98,12 +126,23 @@ public final class DataTableSpecColumnNamer {
         return newName;
     }
 
+    /** Convenience method to create a new column spec creator with a unique
+     * name, see {@link #newName(String)} for a description on how names are
+     * made unique.
+     * @param suggested The base name
+     * @param type The target column type.
+     * @return A column spec creator with the name 'uniquified'. */
     public DataColumnSpecCreator newCreator(
             final String suggested, final DataType type) {
         String name = newName(suggested);
         return new DataColumnSpecCreator(name, type);
     }
 
+    /** Call {@link #newCreator(String, DataType)} and returns the spec created
+     * from it.
+     * @param suggested The base name
+     * @param type The column type.
+     * @return A column with a unique name. */
     public DataColumnSpec newColumn(final String suggested,
             final DataType type) {
         return newCreator(suggested, type).createSpec();
