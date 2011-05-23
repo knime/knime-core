@@ -51,7 +51,7 @@ public class ModifierKeyHandler extends GraphicalViewerKeyHandler {
     @Override
     public boolean keyPressed(final KeyEvent event) {
         if (event.keyCode == SWT.SHIFT) {
-            LOGGER.debug("Command key pressed");
+            LOGGER.debug("Shift key pressed");
             ((WorkflowEditorViewer)getViewer()).setShiftPressed(true);
         }
         return super.keyPressed(event);
@@ -63,7 +63,7 @@ public class ModifierKeyHandler extends GraphicalViewerKeyHandler {
     @Override
     public boolean keyReleased(final KeyEvent event) {
         if (event.keyCode == SWT.SHIFT) {
-            LOGGER.debug("Command key released");
+            LOGGER.debug("Shift key released");
             ((WorkflowEditorViewer)getViewer()).setShiftPressed(false);
         }
         return super.keyReleased(event);
