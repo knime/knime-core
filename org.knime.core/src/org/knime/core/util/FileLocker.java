@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   25.07.2007 (sieb): created
  */
@@ -59,7 +59,7 @@ import java.nio.channels.FileLock;
  * This class can be used to get a lock on the specified file. The lock can be
  * aquired and released. If it is not explicitly released, it will be released
  * as soon as the JVM is terminated.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class FileLocker {
@@ -73,7 +73,7 @@ public class FileLocker {
      * Creates a {@link FileLocker} on the given file. Creating the locker does
      * not mean, that the file is also locked. For this, use the methods lock
      * and release.
-     * 
+     *
      * @param lockFile the file for which to aquire and release locks
      */
     public FileLocker(final File lockFile) {
@@ -82,9 +82,9 @@ public class FileLocker {
 
     /**
      * Tries to auquire the lock on the given {@link File}.
-     * 
+     *
      * @return true, if the lock could be aquired, false otherwise
-     * 
+     *
      * @throws IOException in case there is something wrong with the io actions
      */
     public synchronized boolean lock() throws IOException {
@@ -127,6 +127,9 @@ public class FileLocker {
                 // don't complain, this is a best effort to clean up
             }
             m_raFile = null;
+        }
+        if (m_lockFile != null) {
+            m_lockFile.delete();
         }
     }
 }
