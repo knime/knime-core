@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>File Difference Checker</name>
+	
+	<shortDescription>
+		Compares the two files.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			Used in regression tests to test if two files are equal. The node will 
+			compare two files and 
+			fails with an exception if the files are not equal. In that case 
+			the node stays not executed and the test will fail.</p>
+		</intro>
+		<option name="Test File">The file to compare with the reference file. 
+		   It can be a local file on disk or an URL. 
+		</option>		
+		<option name="Reference File">The reference file. It can be a local file on 
+		   disk or an URL. 
+		</option>
+	</fullDescription>
+	
+	<ports>
+	</ports>	
+</knimeNode>

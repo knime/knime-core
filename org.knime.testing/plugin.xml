@@ -49,6 +49,10 @@
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
             id="org.knime.testing.node.executioncount.ExecutionCountNodeFactory">
       </node>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.file.DifferFileNodeFactory"
+            id="org.knime.testing.file.DifferFileNodeFactory"/>     
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
