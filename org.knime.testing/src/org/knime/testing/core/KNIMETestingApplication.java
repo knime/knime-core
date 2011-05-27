@@ -32,6 +32,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.SwingUtilities;
 
 import junit.framework.Test;
 import junit.framework.TestFailure;
@@ -73,6 +76,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object start(final IApplicationContext context) throws Exception {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
@@ -108,8 +112,14 @@ public class KNIMETestingApplication implements IApplication {
 
         if ((m_testNamePattern == null) || (m_rootDir == null)) {
             // if no (or not enough) command line arguments were specified:
-            boolean okay = getParametersFromUser();
-            if (!okay) {
+            final AtomicBoolean okayBoolean = new AtomicBoolean(false);
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    okayBoolean.set(getParametersFromUser());
+                };
+            });
+            if (!okayBoolean.get()) {
                 // it's not really okay -
                 // but what is an error code everybody understands?
                 return EXIT_OK;
@@ -144,6 +154,7 @@ public class KNIMETestingApplication implements IApplication {
         TestingDialog dlg =
                 new TestingDialog(null, m_testNamePattern, findTestCases(),
                         m_analyzeLogFile, outPath);
+        dlg.pack();
         dlg.setVisible(true);
         dlg.dispose();
         if (!dlg.closedViaOK()) {
@@ -192,6 +203,7 @@ public class KNIMETestingApplication implements IApplication {
             // go one level up and try finding a dir with suffix _testflows
             loc = loc.getParentFile();
             File[] dirs = loc.listFiles(new FileFilter() {
+                @Override
                 public boolean accept(final File pathname) {
                     if (pathname.isDirectory()) {
                         return true;
@@ -234,6 +246,7 @@ public class KNIMETestingApplication implements IApplication {
             /**
              * @return <code>KNIME</code> always {@inheritDoc}
              */
+            @Override
             public String getEncryptionKey() {
                 return "KNIME";
             }
@@ -511,6 +524,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void stop() {
         if (m_results != null) {
             m_results.stop();
