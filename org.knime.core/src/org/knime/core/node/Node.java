@@ -1618,7 +1618,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Get reference to the node dialog instance. Used to get the user settings
-     * from the dialog without overwriting them as in in
+     * from the dialog without overwriting them as in
      * {@link #getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO)}
      *
      * @return Reference to dialog pane.
@@ -1631,7 +1631,7 @@ public final class Node implements NodeModelWarningListener {
                 if (m_factory.hasDialog()) {
                     m_dialogPane = m_factory.createNodeDialogPane();
                 } else {
-                    m_dialogPane = new EmptyNodeDialogPane();
+                    m_dialogPane = new MetaNodeDialogPane();
                 }
                 if (getNrOutPorts() > 0) {
                     m_dialogPane.addMiscTab();

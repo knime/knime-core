@@ -83,10 +83,10 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.EmptyNodeDialogPane;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.MetaNodeDialogPane;
 import org.knime.core.node.Node;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeCreationContext;
@@ -129,6 +129,7 @@ import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
+import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
@@ -3759,7 +3760,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     NodeDialogPane getDialogPane() {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
-                m_nodeDialogPane = new EmptyNodeDialogPane();
+                // find all quickform input nodes
+                Map<NodeID, QuickFormInputNode> nodes =
+                    findNodes(QuickFormInputNode.class, true);
+                // create meta node dialog with quickforms
+                m_nodeDialogPane = new MetaNodeDialogPane(nodes);
                 // workflow manager jobs can't be split
                 m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
             } else {
