@@ -1423,14 +1423,9 @@ public final class Node implements NodeModelWarningListener {
                 new PortObjectSpec[getNrOutPorts() - 1];
             Map<String, FlowVariable> newVariables = Collections.emptyMap();
             try {
-                if (m_variablesSettings != null) {
-                    newVariables = applySettingsUsingFlowObjectStack();
-                }
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
-                    if (BufferedDataTable.class.isAssignableFrom(
-                            m_inputs[i + 1].getType().getPortObjectClass())
-                            && (inSpecs[i] == null)) {
+                    if (inSpecs[i] == null) {
                         if (m_inputs[i + 1].getType().isOptional()) {
                             // ignore, unconnected optional input
                         } else {
@@ -1460,6 +1455,9 @@ public final class Node implements NodeModelWarningListener {
                             return true;
                         }
                     }
+                }
+                if (m_variablesSettings != null) {
+                    newVariables = applySettingsUsingFlowObjectStack();
                 }
 
                 // call configure model to create output table specs
