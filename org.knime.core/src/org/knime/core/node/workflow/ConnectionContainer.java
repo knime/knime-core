@@ -66,7 +66,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     private final NodeID m_dest;
     private final int m_destPort;
     private boolean m_isDeletable = true;
-    private UIInformation m_uiInfo;
+    private ConnectionUIInformation m_uiInfo;
     private final CopyOnWriteArraySet<ConnectionUIInformationListener>
         m_uiListeners =
             new CopyOnWriteArraySet<ConnectionUIInformationListener>();
@@ -120,7 +120,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the uiInfo
      */
-    public UIInformation getUIInfo() {
+    public ConnectionUIInformation getUIInfo() {
         return m_uiInfo;
     }
 
@@ -185,7 +185,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @param uiInfo the uiInfo to set
      */
-    public void setUIInfo(final UIInformation uiInfo) {
+    public void setUIInfo(final ConnectionUIInformation uiInfo) {
         m_uiInfo = uiInfo;
         notifyUIListeners(new ConnectionUIInformationEvent(this, m_uiInfo));
     }

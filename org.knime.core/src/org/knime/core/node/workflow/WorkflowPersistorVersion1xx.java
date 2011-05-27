@@ -55,6 +55,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,6 +110,9 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_outPortsBarUIInfo;
 
     private String m_name;
+    private MetaNodeTemplateInformation m_templateInformation;
+    private URI m_templateInformationURI;
+    private String m_nameOverwrite;
     private List<FlowVariable> m_workflowVariables;
     private List<Credentials> m_credentials;
     private List<WorkflowAnnotation> m_workflowAnnotations;
@@ -238,6 +242,26 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_name;
     }
 
+    /** @param templateInformationURI the uri to set */
+    public void setTemplateInformationLinkURI(
+            final URI templateInformationURI) {
+        m_templateInformationURI = templateInformationURI;
+    }
+
+    /** Set a name that overloads the name as persisted in the worklow. Used
+     * to overwrite the name in meta node templates (name is then derived from
+     * the folder name).
+     * @param nameOverwrite the nameOverwrite to set */
+    public void setNameOverwrite(final String nameOverwrite) {
+        m_nameOverwrite = nameOverwrite;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return m_templateInformation;
+    }
+
     /** {@inheritDoc} */
     @Override
     public List<FlowVariable> getWorkflowVariables() {
@@ -349,7 +373,11 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowSett = subWFSettings;
 
         try {
-            m_name = loadWorkflowName(m_workflowSett);
+            if (m_nameOverwrite != null) {
+                m_name = m_nameOverwrite;
+            } else {
+                m_name = loadWorkflowName(m_workflowSett);
+            }
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow name: " + e.getMessage();
             getLogger().debug(error, e);
@@ -358,6 +386,21 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             m_name = null;
         }
 
+        try {
+            MetaNodeTemplateInformation ti =
+                loadTemplateInformation(m_workflowSett);
+            if (ti == null) {
+                throw new InvalidSettingsException("No template information");
+            }
+            m_templateInformation = fixTemplateInformation(ti);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow template information: "
+                + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_templateInformation = MetaNodeTemplateInformation.NONE;
+        }
         try {
             m_workflowVariables = loadWorkflowVariables(m_workflowSett);
         } catch (InvalidSettingsException e) {
@@ -590,7 +633,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 loadResult.addError(error);
                 isMeta = false;
             }
-            UIInformation uiInfo = null;
+            NodeUIInformation nodeUIInfo = null;
             String uiInfoClassName;
             try {
                 uiInfoClassName = loadUIInfoClassName(nodeSetting);
@@ -604,21 +647,33 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 uiInfoClassName = null;
             }
             if (uiInfoClassName != null) {
-                uiInfo = loadUIInfoInstance(uiInfoClassName);
+                UIInformation uiInfo = loadUIInfoInstance(uiInfoClassName);
                 if (uiInfo != null) {
-                    try {
-                        loadUIInfoSettings(uiInfo, nodeSetting);
-                    } catch (InvalidSettingsException e) {
-                        String error = "Unable to load UI information to "
-                            + "node with ID suffix " + nodeIDSuffix
-                            + ", no UI information available: "
-                            + e.getMessage();
-                        getLogger().debug(error, e);
+                    if (!(uiInfo instanceof NodeUIInformation)) {
+                        String error = "UI information to node with ID suffix "
+                            + nodeIDSuffix + " is not of class "
+                            + NodeUIInformation.class.getSimpleName() + " but "
+                            + uiInfo.getClass().getName();
+                        getLogger().debug(error);
                         setDirtyAfterLoad();
                         loadResult.addError(error);
                         uiInfo = null;
+                    } else {
+                        try {
+                            loadUIInfoSettings(uiInfo, nodeSetting);
+                        } catch (InvalidSettingsException e) {
+                            String error = "Unable to load UI information to "
+                                + "node with ID suffix " + nodeIDSuffix
+                                + ", no UI information available: "
+                                + e.getMessage();
+                            getLogger().debug(error, e);
+                            setDirtyAfterLoad();
+                            loadResult.addError(error);
+                            uiInfo = null;
+                        }
                     }
                 }
+                nodeUIInfo = (NodeUIInformation)uiInfo;
             }
             ReferencedFile nodeFile;
             try {
@@ -668,7 +723,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 nodeIDSuffix = randomID;
             }
             meta.setNodeIDSuffix(nodeIDSuffix);
-            meta.setUIInfo(uiInfo);
+            meta.setUIInfo(nodeUIInfo);
             if (persistor.isDirtyAfterLoad()) {
                 setDirtyAfterLoad();
             }
@@ -1035,12 +1090,21 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             throw new InvalidSettingsException("Source and Destination must "
                     + "not be equal, id is " + sourceID);
         }
-        UIInformation uiInfo = null;
+        ConnectionUIInformation connUIInfo = null;
         try {
             String uiInfoClass = loadUIInfoClassName(settings);
-            uiInfo = loadUIInfoInstance(uiInfoClass);
+            UIInformation uiInfo = loadUIInfoInstance(uiInfoClass);
             if (uiInfo != null) {
-                loadUIInfoSettings(uiInfo, settings);
+                if (!(uiInfo instanceof ConnectionUIInformation)) {
+                    getLogger().debug("Could not load UI information for "
+                            + "connection between nodes " + sourceID + " and "
+                            + destID + ": expected "
+                            + ConnectionUIInformation.class.getName()
+                            + " but got " + uiInfoClass.getClass().getName());
+                } else {
+                    loadUIInfoSettings(uiInfo, settings);
+                    connUIInfo = (ConnectionUIInformation)uiInfo;
+                }
             }
         } catch (InvalidSettingsException ise) {
             getLogger().debug("Could not load UI information for connection "
@@ -1051,7 +1115,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
-                destPort, isDeletable, uiInfo);
+                destPort, isDeletable, connUIInfo);
     }
 
     protected int loadConnectionDestID(final NodeSettingsRO settings)
@@ -1082,6 +1146,26 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return "Workflow Manager";
+    }
+
+    /** Load template information (in this version always
+     * {@link MetaNodeTemplateInformation#NONE}).
+     * @param settings To load from
+     * @return MetaNodeTemplateInformation#NONE
+     * @throws InvalidSettingsException If fails
+     */
+    protected MetaNodeTemplateInformation loadTemplateInformation(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return MetaNodeTemplateInformation.NONE;
+    }
+
+    protected MetaNodeTemplateInformation fixTemplateInformation(
+            final MetaNodeTemplateInformation original)
+        throws InvalidSettingsException {
+        if (m_templateInformationURI == null) {
+            return original;
+        }
+        return original.createLink(m_templateInformationURI);
     }
 
     /**

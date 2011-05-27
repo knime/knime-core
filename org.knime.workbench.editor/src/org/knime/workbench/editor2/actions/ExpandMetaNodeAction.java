@@ -49,9 +49,6 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
@@ -150,20 +147,11 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
         LOGGER.debug("Creating 'Expand MetaNode' job for "
                 + nodeParts.length + " node(s)...");
         WorkflowManager manager = getManager();
-        try {
-            WorkflowManager wfm = (WorkflowManager)nodeParts[0].getNodeContainer();
-            // create a command and push on stack to enable UNDO
-            ExpandMetaNodeCommand emnc =
-                new ExpandMetaNodeCommand(manager, wfm.getID());
-            manager.expandMetaNode(wfm.getID());
-            getCommandStack().execute(emnc);
-        } catch (Exception e) {
-            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
-                    SWT.ERROR);
-            mb.setMessage("Expanding Metanode failed: " + e.getMessage());
-            mb.setText("Expand failed");
-            mb.open();
-        }
+        WorkflowManager metaNode =
+            (WorkflowManager)nodeParts[0].getNodeContainer();
+        ExpandMetaNodeCommand emnc =
+            new ExpandMetaNodeCommand(manager, metaNode.getID());
+        execute(emnc);
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

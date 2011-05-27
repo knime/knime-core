@@ -69,7 +69,6 @@ import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
@@ -83,7 +82,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
-  
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PortGraphicalRoleEditPolicy.class);
     /**
@@ -96,13 +95,27 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
     @Override
     protected Command getConnectionCreateCommand(
             final CreateConnectionRequest req) {
-        CreateConnectionCommand cmd = new CreateConnectionCommand();
 
         if (!(getHost() instanceof AbstractPortEditPart)) {
             return null;
         }
-        ConnectableEditPart nodePart = (ConnectableEditPart)getHost()
-                .getParent();
+        ConnectableEditPart nodePart =
+            (ConnectableEditPart)getHost().getParent();
+
+        WorkflowManager wm;
+        // TODO: if NodeContainerEditPart -> getParent
+        if (nodePart instanceof NodeContainerEditPart) {
+            NodeContainerEditPart p = (NodeContainerEditPart)nodePart;
+            wm = p.getWorkflowManager();
+        } else if (nodePart instanceof WorkflowInPortBarEditPart) {
+            WorkflowInPortBarEditPart barEditPart =
+                (WorkflowInPortBarEditPart)nodePart;
+            WorkflowPortBar model = (WorkflowPortBar)barEditPart.getModel();
+            wm = model.getWorkflowManager();
+        } else {
+            return null;
+        }
+        CreateConnectionCommand cmd = new CreateConnectionCommand(wm);
 
         if (getHost() instanceof NodeOutPortEditPart
                 || getHost() instanceof WorkflowInPortEditPart
@@ -123,18 +136,6 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
         // we need the manager to execute the command
 
-        // TODO: if NodeContainerEditPart -> getParent
-        if (nodePart instanceof NodeContainerEditPart) {
-        cmd.setManager(
-                ((WorkflowRootEditPart)((NodeContainerEditPart)nodePart)
-                        .getParent()).getWorkflowManager());
-        } else if (nodePart instanceof WorkflowInPortBarEditPart) {
-            WorkflowInPortBarEditPart barEditPart 
-                = (WorkflowInPortBarEditPart)nodePart;
-            WorkflowManager manager = ((WorkflowPortBar)barEditPart.getModel())
-                .getWorkflowManager();
-            cmd.setManager(manager);
-        }
 
         // we must remember this partially initialized command in the request.
         req.setStartCommand(cmd);
@@ -150,7 +151,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
     @Override
     protected Command getConnectionCompleteCommand(
             final CreateConnectionRequest request) {
-        
+
         // get the previously started command
         CreateConnectionCommand cmd = (CreateConnectionCommand)request
                 .getStartCommand();
@@ -215,7 +216,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 //        WorkflowManager manager = ((WorkflowRootEditPart)nodePart.getParent())
 //                .getWorkflowManager();
 //
-//        ReconnectConnectionCommand reconnectCommand 
+//        ReconnectConnectionCommand reconnectCommand
         // = new ReconnectConnectionCommand(
 //                connection, manager, null, null);
 //
@@ -237,11 +238,11 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         }
         // get new target in port
         AbstractPortEditPart target = (AbstractPortEditPart)req.getTarget();
-        ReconnectConnectionCommand reconnectCmd 
+        ReconnectConnectionCommand reconnectCmd
             = new ReconnectConnectionCommand(
                     (ConnectionContainerEditPart)req.getConnectionEditPart(),
                     (AbstractPortEditPart)req.getConnectionEditPart()
-                    .getSource(), 
+                    .getSource(),
                     target);
         return reconnectCmd;
     }

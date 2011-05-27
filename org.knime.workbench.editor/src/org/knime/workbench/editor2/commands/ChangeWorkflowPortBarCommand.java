@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   21.02.2008 (Fabian Dill): created
  */
@@ -52,17 +52,16 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class ChangeWorkflowPortBarCommand extends Command {
-    
+public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
+
     private final Rectangle m_oldBounds;
     private final Rectangle m_newBounds;
 
@@ -76,6 +75,7 @@ public class ChangeWorkflowPortBarCommand extends Command {
     public ChangeWorkflowPortBarCommand(
             final AbstractWorkflowPortBarEditPart portBar,
             final Rectangle newBounds) {
+        super(portBar.getNodeContainer());
         WorkflowPortBar barModel = (WorkflowPortBar)portBar.getModel();
         NodeUIInformation uiInfo = barModel.getUIInfo();
         if (uiInfo != null) {
@@ -89,16 +89,16 @@ public class ChangeWorkflowPortBarCommand extends Command {
         m_newBounds = newBounds;
         m_bar = portBar;
     }
-        
-    
+
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean canExecute() {
         Dimension min = m_bar.getFigure().getMinimumSize();
-        if (m_newBounds.width < min.width 
+        if (m_newBounds.width < min.width
                 || m_newBounds.height < min.height) {
             return false;
         }

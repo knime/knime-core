@@ -52,7 +52,6 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -67,21 +66,17 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class NewBendpointCreateCommand extends Command {
+public class NewBendpointCreateCommand extends AbstractKNIMECommand {
     private final Point m_location;
 
     private final int m_index;
-
-    private ConnectionUIInformation m_uiInfo;
 
     private AbsoluteBendpoint m_bendpoint;
 
     private final ZoomManager m_zoomManager;
 
-    private final WorkflowManager m_manager;
-    
     private final NodeID m_destNodeID;
-    
+
     private final int m_destPort;
 
     /**
@@ -96,24 +91,27 @@ public class NewBendpointCreateCommand extends Command {
     public NewBendpointCreateCommand(
             final ConnectionContainerEditPart connection,
             final WorkflowManager manager,
-            final int index, final Point location, 
+            final int index, final Point location,
             final ZoomManager zoomManager) {
-        m_uiInfo = (ConnectionUIInformation)connection
-            .getUIInformation();
-        if (m_uiInfo == null) {
-            m_uiInfo = new ConnectionUIInformation();
-        }
+        super(manager);
         m_index = index;
         m_location = location;
         m_zoomManager = zoomManager;
         ConnectionContainer cc = connection.getModel();
         m_destNodeID = cc.getDest();
         m_destPort = cc.getDestPort();
-        m_manager = manager;
     }
-    
+
     private ConnectionContainer getConnectionContainer() {
-        return m_manager.getIncomingConnectionFor(m_destNodeID, m_destPort);
+        return getHostWFM().getIncomingConnectionFor(m_destNodeID, m_destPort);
+    }
+
+    private ConnectionUIInformation getUIInfo(final ConnectionContainer conn) {
+        ConnectionUIInformation uiInfo = conn.getUIInfo();
+        if (uiInfo == null) {
+            uiInfo = new ConnectionUIInformation();
+        }
+        return uiInfo;
     }
 
     /**
@@ -121,15 +119,17 @@ public class NewBendpointCreateCommand extends Command {
      */
     @Override
     public void execute() {
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
 
         m_bendpoint = new AbsoluteBendpoint(location);
         m_bendpoint.setLocation(location);
-        m_uiInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        uiInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
 
         // we need this to fire some update event up
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
 
     }
 
@@ -138,13 +138,15 @@ public class NewBendpointCreateCommand extends Command {
      */
     @Override
     public void redo() {
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
 
-        m_uiInfo.addBendpoint(location.x, location.y, m_index);
+        uiInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 
     /**
@@ -152,8 +154,10 @@ public class NewBendpointCreateCommand extends Command {
      */
     @Override
     public void undo() {
-        m_uiInfo.removeBendpoint(m_index);
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
+        uiInfo.removeBendpoint(m_index);
         // we need this to fire some update event up
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 }

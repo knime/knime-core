@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -56,7 +56,7 @@ import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
  * <p>
  * This monitor keeps a <code>NodeProgressMonitor</code> and forwards the
  * progress, as well as the cancel request to it.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ExecutionMonitor {
@@ -68,18 +68,18 @@ public class ExecutionMonitor {
      * Creates a new execution monitor with an empty default progress monitor.
      */
     public ExecutionMonitor() {
-        m_progress = new DefaultNodeProgressMonitor(null);
+        m_progress = new DefaultNodeProgressMonitor();
     }
 
     /**
      * Creates a new execution monitor with the given progress monitor which can
      * be <code>null</code>.
-     * 
+     *
      * @param progress The progress monitor can be null.
      */
     public ExecutionMonitor(final NodeProgressMonitor progress) {
         if (progress == null) {
-            m_progress = new DefaultNodeProgressMonitor(null);
+            m_progress = new DefaultNodeProgressMonitor();
         } else {
             m_progress = progress;
         }
@@ -138,7 +138,7 @@ public class ExecutionMonitor {
     public void setMessage(final String message) {
         m_progress.setMessage(message);
     }
-    
+
     /**
      * @see NodeProgressMonitor#setProgress(String)
      * @param message The message to be shown in the progress monitor.
@@ -146,22 +146,22 @@ public class ExecutionMonitor {
     public void setProgress(final String message) {
         m_progress.setProgress(message);
     }
-    
+
     /** Creates an execution monitor with a partial progress range.
      * Classes that use a progress monitor and report in the range of [0,1]
      * should get such a sub-progress monitor when their job is only partially
      * contributing to the entire progress. The progress of such sub-jobs is
-     * then automatically scaled to the "right" range. 
+     * then automatically scaled to the "right" range.
      * @param maxProg The fraction of the progress this sub progress
-     * contributes to the whole progress 
+     * contributes to the whole progress
      * @return A new execution monitor ready to use in sub jobs.
      * @throws IllegalArgumentException If the argument is not in (0, 1].
-     */ 
+     */
     public ExecutionMonitor createSubProgress(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
         return new ExecutionMonitor(subProgress);
     }
-    
+
     /** Creates an execution monitor with a partial progress range,  which
      * ignores any message set.
      * Classes that use a progress monitor and report in the range of [0,1]
@@ -169,26 +169,26 @@ public class ExecutionMonitor {
      * contributing to the entire progress. The progress of such sub-jobs is
      * then automatically scaled to the "right" range. This method
      * differs from the {@link #createSubProgress(double)} message in that it
-     * does not report any message but rather ignores any new string message.  
+     * does not report any message but rather ignores any new string message.
      * @param maxProg The fraction of the progress this sub progress
-     * contributes to the whole progress 
+     * contributes to the whole progress
      * @return A new execution monitor ready to use in sub jobs.
      * @throws IllegalArgumentException If the argument is not in (0, 1].
-     */ 
+     */
     public ExecutionMonitor createSilentSubProgress(final double maxProg) {
-        NodeProgressMonitor subProgress = 
+        NodeProgressMonitor subProgress =
             createSilentSubProgressMonitor(maxProg);
         return new ExecutionMonitor(subProgress);
     }
-    
-    /** 
+
+    /**
      * Factory method to create a new sub progress monitor. Only for
      * internal use (i.e. here and in ExecutionContext).
      * @param maxProg The fraction of the progress this sub progress
-     * contributes to the whole progress 
+     * contributes to the whole progress
      * @return A new sub node progress monitor.
      * @throws IllegalArgumentException If the argument is not in [0, 1].
-     */ 
+     */
     NodeProgressMonitor createSubProgressMonitor(final double maxProg) {
         if (maxProg > 1.0 || maxProg < 0.0) {
             throw new IllegalArgumentException(
@@ -196,12 +196,12 @@ public class ExecutionMonitor {
         }
         return new SubNodeProgressMonitor(m_progress, maxProg);
     }
-    
+
     /**
      * Factory method to create a new silent sub progress monitor. Only for
      * internal use (i.e. here an in ExecutionContext).
      * @param maxProg The fraction of the progress this sub progress
-     * contributes to the whole progress 
+     * contributes to the whole progress
      * @return A new silent sub node progress monitor.
      */
     NodeProgressMonitor createSilentSubProgressMonitor(final double maxProg) {
@@ -211,5 +211,5 @@ public class ExecutionMonitor {
         }
         return new SilentSubNodeProgressMonitor(m_progress, maxProg);
     }
-    
+
 } // ExecutionMonitor

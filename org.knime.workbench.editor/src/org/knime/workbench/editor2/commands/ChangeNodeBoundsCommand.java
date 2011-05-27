@@ -54,7 +54,6 @@ import java.util.Arrays;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -68,17 +67,14 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class ChangeNodeBoundsCommand extends Command {
+public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
 
     private final int[] m_oldBounds;
-
     private final int[] m_newBounds;
 
     /* must not keep NodeContainer here to enable undo/redo (the node container
      * instance may change if deleted and the delete is undone. */
     private final NodeID m_nodeID;
-
-    private final WorkflowManager m_manager;
 
     /**
      *
@@ -88,18 +84,23 @@ public class ChangeNodeBoundsCommand extends Command {
      */
     public ChangeNodeBoundsCommand(final NodeContainer container,
             final NodeContainerFigure figure, final Rectangle figureBounds) {
+        super(container.getParent());
 
         // must translate figure bounds into node figure ui info - which is
         // relative to the node's symbol
-        NodeUIInformation uiInfo =
-            (NodeUIInformation)container.getUIInformation();
+        NodeUIInformation uiInfo = container.getUIInformation();
         Point offset = figure.getOffsetToRefPoint(uiInfo);
         m_oldBounds = uiInfo.getBounds();
         m_newBounds = new int[]{figureBounds.x + offset.x,
                 figureBounds.y + offset.y, figureBounds.width,
-                figureBounds.height};;
+                figureBounds.height};
         m_nodeID = container.getID();
-        m_manager = container.getParent();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        return super.canExecute();
     }
 
     /**
@@ -110,10 +111,11 @@ public class ChangeNodeBoundsCommand extends Command {
     @Override
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
+            WorkflowManager wm = getHostWFM();
             NodeUIInformation information =
                     new NodeUIInformation(m_newBounds[0], m_newBounds[1],
                             m_newBounds[2], m_newBounds[3], true);
-            NodeContainer container = m_manager.getNodeContainer(m_nodeID);
+            NodeContainer container = wm.getNodeContainer(m_nodeID);
             // must set explicitly so that event is fired by container
             container.setUIInformation(information);
         }
@@ -130,7 +132,7 @@ public class ChangeNodeBoundsCommand extends Command {
             NodeUIInformation information =
                     new NodeUIInformation(m_oldBounds[0], m_oldBounds[1],
                             m_oldBounds[2], m_oldBounds[3], true);
-            NodeContainer container = m_manager.getNodeContainer(m_nodeID);
+            NodeContainer container = getHostWFM().getNodeContainer(m_nodeID);
             container.setUIInformation(information);
         }
     }

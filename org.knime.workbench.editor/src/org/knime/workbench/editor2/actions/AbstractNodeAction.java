@@ -62,7 +62,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.AbstractWorkflowEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -207,20 +206,6 @@ public abstract class AbstractNodeAction extends SelectionAction {
                 .getChildren().get(0);
 
         return editorPart.getChildren();
-    }
-
-    /**
-     * Returns all edit parts with the given ids.
-     *
-     * @param nodeIds the node container ids to retrieve the edit parts for
-     * @param connectionIds the connection container ids to retrieve the edit
-     *            parts for
-     * @return the edit parts of the specified ids
-     */
-    protected List<AbstractWorkflowEditPart> getEditPartsById(
-            final int[] nodeIds, final int[] connectionIds) {
-
-        throw new UnsupportedOperationException("This method no longer exist!");
     }
 
     /** {@inheritDoc} */

@@ -51,15 +51,15 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ChangeAnnotationBoundsCommand extends Command {
+public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
 
     private final Rectangle m_oldBounds;
 
@@ -69,13 +69,15 @@ public class ChangeAnnotationBoundsCommand extends Command {
     private final AnnotationEditPart m_annotationEditPart;
 
     /**
-     *
+     * @param hostWFM The host WFM
      * @param portBar The workflow port bar to change
      * @param newBounds The new bounds
      */
-    public ChangeAnnotationBoundsCommand(final AnnotationEditPart portBar,
+    public ChangeAnnotationBoundsCommand(final WorkflowManager hostWFM,
+            final AnnotationEditPart portBar,
             final Rectangle newBounds) {
-        WorkflowAnnotation anno = (WorkflowAnnotation)portBar.getModel();
+        super(hostWFM);
+        WorkflowAnnotation anno = portBar.getModel();
         m_oldBounds =
                 new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
                         anno.getHeight());
@@ -104,7 +106,7 @@ public class ChangeAnnotationBoundsCommand extends Command {
     @Override
     public void execute() {
         WorkflowAnnotation annotation =
-                (WorkflowAnnotation)m_annotationEditPart.getModel();
+                m_annotationEditPart.getModel();
         annotation.setDimension(m_newBounds.x, m_newBounds.y,
                 m_newBounds.width, m_newBounds.height);
         m_annotationEditPart.getFigure().setBounds(m_newBounds);
@@ -120,7 +122,7 @@ public class ChangeAnnotationBoundsCommand extends Command {
     @Override
     public void undo() {
         WorkflowAnnotation annotation =
-                (WorkflowAnnotation)m_annotationEditPart.getModel();
+                m_annotationEditPart.getModel();
         annotation.setDimension(m_oldBounds.x, m_oldBounds.y,
                         m_oldBounds.width, m_oldBounds.height);
         // must set explicitly so that event is fired by container

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -59,7 +59,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
  * Command for deletion of connection bendpoints.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewBendpointDeleteCommand extends Command {
@@ -69,12 +69,11 @@ public class NewBendpointDeleteCommand extends Command {
     private final int m_destPort;
 
     private int m_index;
-    private ConnectionUIInformation m_uiInfo;
     private int[] m_point;
 
     /**
      * New Bendpoint deletion command.
-     * 
+     *
      * @param connection The connecton container
      * @param workflowManager The workflow manager that contains the connection.
      * @param index bendpoint index
@@ -84,15 +83,22 @@ public class NewBendpointDeleteCommand extends Command {
             final WorkflowManager workflowManager,
             final int index) {
         m_workflowManager = workflowManager;
-        m_uiInfo = (ConnectionUIInformation)connection.getUIInformation();
         m_index = index;
         m_destNodeID = connection.getModel().getDest();
         m_destPort = connection.getModel().getDestPort();
     }
-    
+
     private ConnectionContainer getConnectionContainer() {
         return m_workflowManager.getIncomingConnectionFor(
                 m_destNodeID, m_destPort);
+    }
+
+    private ConnectionUIInformation getUIInfo(final ConnectionContainer conn) {
+        ConnectionUIInformation uiInfo = conn.getUIInfo();
+        if (uiInfo == null) {
+            uiInfo = new ConnectionUIInformation();
+        }
+        return uiInfo;
     }
 
     /**
@@ -100,11 +106,13 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void execute() {
-        m_point = m_uiInfo.getBendpoint(m_index);
-        m_uiInfo.removeBendpoint(m_index);
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
+        m_point = uiInfo.getBendpoint(m_index);
+        uiInfo.removeBendpoint(m_index);
 
         // issue notification
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 
     /**
@@ -112,9 +120,11 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void redo() {
-        m_uiInfo.removeBendpoint(m_index);
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
+        uiInfo.removeBendpoint(m_index);
         // issue notification
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 
     /**
@@ -122,8 +132,10 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void undo() {
-        m_uiInfo.addBendpoint(m_point[0], m_point[1], m_index);
+        ConnectionContainer connection = getConnectionContainer();
+        ConnectionUIInformation uiInfo = getUIInfo(connection);
+        uiInfo.addBendpoint(m_point[0], m_point[1], m_index);
         // issue notification
-        getConnectionContainer().setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 }

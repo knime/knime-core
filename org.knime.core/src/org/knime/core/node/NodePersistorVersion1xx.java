@@ -141,10 +141,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_logger;
     }
 
-    /** Version being loaded. This is given by the SNC-Persistor. If this
-     * persistor is used for saving, the value of this field is unimportant
-     * (will be the latest version).
-     * @return Version being loaded (or saved). Can also be null unless
+    /** Version being loaded. This is given by the SNC-Persistor.
+     * @return Version being loaded. Can also be null unless
      * enforced in constructor of subclass. */
     public LoadVersion getLoadVersion() {
         return m_loadVersion;

@@ -52,8 +52,8 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -65,20 +65,16 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class NewBendpointMoveCommand extends Command {
+public class NewBendpointMoveCommand extends AbstractKNIMECommand {
     private Point m_newLocation;
 
     private Point m_oldLocation;
 
     private int m_index;
 
-    private ConnectionUIInformation m_uiInfo;
-
     //private AbsoluteBendpoint m_bendpoint;
 
     private ZoomManager m_zoomManager;
-
-    private final WorkflowManager m_manager;
 
     private final ConnectionID m_connID;
 
@@ -96,8 +92,7 @@ public class NewBendpointMoveCommand extends Command {
             final WorkflowManager manager,
             final int index, final Point newLocation,
             final ZoomManager zoomManager) {
-        m_manager = manager;
-        m_uiInfo = (ConnectionUIInformation)connection.getUIInformation();
+        super(manager);
         m_connID = connection.getModel().getID();
 
         m_index = index;
@@ -110,7 +105,9 @@ public class NewBendpointMoveCommand extends Command {
      */
     @Override
     public void execute() {
-        int[] p = m_uiInfo.getBendpoint(m_index);
+        ConnectionContainer connection = getConnection();
+        ConnectionUIInformation uiInfo = connection.getUIInfo();
+        int[] p = uiInfo.getBendpoint(m_index);
 
         AbsoluteBendpoint bendpoint = new AbsoluteBendpoint(p[0], p[1]);
         m_oldLocation = bendpoint.getLocation();
@@ -120,11 +117,11 @@ public class NewBendpointMoveCommand extends Command {
 
         bendpoint = new AbsoluteBendpoint(newLocation);
 
-        m_uiInfo.removeBendpoint(m_index);
-        m_uiInfo.addBendpoint(bendpoint.x, bendpoint.y, m_index);
+        uiInfo.removeBendpoint(m_index);
+        uiInfo.addBendpoint(bendpoint.x, bendpoint.y, m_index);
 
         // issue notification
-        m_manager.getConnection(m_connID).setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
 
     /**
@@ -132,15 +129,17 @@ public class NewBendpointMoveCommand extends Command {
      */
     @Override
     public void redo() {
-        m_uiInfo.removeBendpoint(m_index);
+        ConnectionContainer connection = getConnection();
+        ConnectionUIInformation uiInfo = connection.getUIInfo();
+        uiInfo.removeBendpoint(m_index);
 
         Point newLocation = m_newLocation.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
 
-        m_uiInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
+        uiInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notification
-        m_manager.getConnection(m_connID).setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
 
     }
 
@@ -149,13 +148,23 @@ public class NewBendpointMoveCommand extends Command {
      */
     @Override
     public void undo() {
+        ConnectionContainer connection = getConnection();
+        ConnectionUIInformation uiInfo = connection.getUIInfo();
         Point oldLocation = m_oldLocation.getCopy();
         //WorkflowEditor.adaptZoom(m_zoomManager, oldLocation, true);
 
-        m_uiInfo.removeBendpoint(m_index);
-        m_uiInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);
+        uiInfo.removeBendpoint(m_index);
+        uiInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);
 
         // issue notification
-        m_manager.getConnection(m_connID).setUIInfo(m_uiInfo);
+        connection.setUIInfo(uiInfo);
     }
+
+    /**
+     * @return */
+    private ConnectionContainer getConnection() {
+        return getHostWFM().getConnection(m_connID);
+    }
+
+
 }

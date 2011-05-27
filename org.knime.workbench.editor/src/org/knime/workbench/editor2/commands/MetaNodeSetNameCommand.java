@@ -40,28 +40,60 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
+ *
+ * History
+ *   2011 05 12 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.commands;
+
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
- * @author Fabian Dill, KNIME.com GmbH
+ * Command to change name of a meta node (the name is the label above the
+ * node icon).
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface JobManagerChangedListener {
-    
-    /**
-     * Gets informed whenever the {@link NodeExecutionJobManager} has
-     * changed. The {@link JobManagerChangedEvent} contains the {@link NodeID}
-     * of the source, which has to be queried in order to get the new 
-     * {@link NodeExecutionJobManager}. 
-     * 
-     * @param e event containing the {@link NodeID} of the source node, whose 
-     * {@link NodeExecutionJobManager} has changed
-     */
-    public void jobManagerChanged(JobManagerChangedEvent e);
+public class MetaNodeSetNameCommand extends AbstractKNIMECommand {
 
+    private final WorkflowManager m_metaNode;
+    private final String m_newName;
+    private String m_oldName;
+
+    /**
+     * @param metaNode
+     * @param newName
+     */
+    public MetaNodeSetNameCommand(final WorkflowManager metaNode,
+            final String newName) {
+        super(metaNode.getParent());
+        m_metaNode = metaNode;
+        m_newName = newName;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        return super.canExecute() && !m_metaNode.isWriteProtected();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void execute() {
+        m_oldName = m_metaNode.getNameField();
+        m_metaNode.setName(m_newName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void undo() {
+        m_metaNode.setName(m_oldName);
+    }
 }

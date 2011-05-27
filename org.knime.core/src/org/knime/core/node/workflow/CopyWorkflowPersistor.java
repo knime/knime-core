@@ -77,6 +77,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final UIInformation m_outportUIInfo;
     private final WorkflowPortTemplate[] m_outportTemplates;
     private final String m_name;
+    private final MetaNodeTemplateInformation m_templateInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
     private final List<FlowVariable> m_workflowVariables;
@@ -115,6 +116,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_name = original.getNameField();
+        m_templateInformation = original.getTemplateInformation().clone();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
         if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
@@ -174,6 +176,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public String getName() {
         return m_name;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return m_templateInformation;
     }
 
     /** {@inheritDoc} */

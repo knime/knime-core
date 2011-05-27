@@ -55,6 +55,7 @@ Export-Package: log4j,
  org.knime.core.quickform,
  org.knime.core.quickform.in,
  org.knime.core.util,
+ org.knime.core.util.pathresolve,
  org.knime.core.util.tokenizer,
  org.knime.core.xml
 Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,

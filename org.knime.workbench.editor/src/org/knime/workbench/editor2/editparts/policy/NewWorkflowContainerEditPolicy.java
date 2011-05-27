@@ -69,7 +69,7 @@ import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.commands.DropNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore;
+import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
 
 /**
  * Container policy, handles the creation of new nodes that are inserted into
@@ -78,8 +78,15 @@ import org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore;
  * @author Florian Georg, University of Konstanz
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NewWorkflowContainerEditPolicy.class);
+
+    public static final String REQ_LINK_METANODE_TEMPLATE =
+        "link meta node template";
+
+    public static final String REQ_COPY_METANODE_TEMPLATE =
+        "copy meta node template";
 
     /**
      * {@inheritDoc}
@@ -114,16 +121,22 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
                 = (NodeFactory<? extends NodeModel>)obj;
             return new CreateNodeCommand(manager, factory, location);
         } else if (obj instanceof IFileStore) {
-            LocalWorkspaceFileStore fs = (LocalWorkspaceFileStore)obj;
-            return new CreateMetaNodeTemplateCommand(manager, fs, location);
+            IFileStore fs = (IFileStore)obj;
+            // TODO avoid this hack to distinguish between workflows and files
+            // dragged from the KNIME Explorer
+            if (fs instanceof ExplorerFileStore
+                    && fs.toString().endsWith("workflow.knime")) {
+                return new CreateMetaNodeTemplateCommand(manager,
+                        (ExplorerFileStore)fs, location);
+            }
         } else if (obj instanceof ReaderNodeSettings) {
             ReaderNodeSettings settings = (ReaderNodeSettings)obj;
             return new DropNodeCommand(manager, settings.getFactory(),
                     new NodeCreationContext(settings.getUrl()), location);
         } else {
             LOGGER.error("Illegal drop object: " + obj);
-            return null;
         }
+        return null;
     }
 
     /**
@@ -138,6 +151,12 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             return getHost();
         }
         if (REQ_MOVE.equals(request.getType())) {
+            return getHost();
+        }
+        if (REQ_COPY_METANODE_TEMPLATE.equals(request.getType())) {
+            return getHost();
+        }
+        if (REQ_LINK_METANODE_TEMPLATE.equals(request.getType())) {
             return getHost();
         }
         return super.getTargetEditPart(request);

@@ -53,29 +53,31 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
-import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
 
 
 /**
@@ -130,7 +132,6 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
      */
     @Override
     public void run(final IProgressMonitor pm) {
-        CheckThread checkThread = null;
         // indicates whether to create an empty workflow
         // this is done if the file is empty
         boolean createEmptyWorkflow = false;
@@ -144,25 +145,22 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
                     "Loading workflow...");
-            final DefaultNodeProgressMonitor progressMonitor
-                = new DefaultNodeProgressMonitor();
+            final CheckCancelNodeProgressMonitor progressMonitor
+                = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
-
-            checkThread = new CheckThread(pm, progressMonitor, true);
-
-            checkThread.start();
 
             File parentFile = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(
-                    d, parentFile.getName(), false);
+                    d, parentFile.getName());
             final WorkflowLoadResult result =
                 WorkflowManager.loadProject(parentFile,
                     new ExecutionMonitor(progressMonitor), loadHelper);
-            m_editor.setWorkflowManager(result.getWorkflowManager());
+            final WorkflowManager wm = result.getWorkflowManager();
+            m_editor.setWorkflowManager(wm);
             pm.subTask("Finished.");
             pm.done();
-            if (result.getWorkflowManager().isDirty()) {
+            if (wm.isDirty()) {
                 m_editor.markDirty();
             }
 
@@ -194,6 +192,28 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                             "Workflow Load", message, status);
                 }
             });
+            final List<WorkflowManager> linkedMNs =
+                new ArrayList<WorkflowManager>();
+            for (NodeContainer nc : wm.getNodeContainers()) {
+                if (nc instanceof WorkflowManager) {
+                    WorkflowManager mn = (WorkflowManager)nc;
+                    MetaNodeTemplateInformation templInfo =
+                        mn.getTemplateInformation();
+                    if (templInfo.getRole().equals(Role.Link)) {
+                        linkedMNs.add(mn);
+                    }
+                }
+            }
+            if (!linkedMNs.isEmpty()) {
+                final WorkflowEditor editor = m_editor;
+                m_editor.addAfterOpenRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        postLoadCheckForMetaNodeUpdates(
+                                editor, wm, linkedMNs);
+                    };
+                });
+            }
         } catch (FileNotFoundException fnfe) {
             m_throwable = fnfe;
             LOGGER.fatal("File not found", fnfe);
@@ -237,8 +257,6 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.error("Workflow could not be loaded. " + e.getMessage(), e);
             m_editor.setWorkflowManager(null);
         } finally {
-            // terminate the check thread
-            checkThread.finished();
             // create empty WFM if a new workflow is created
             // (empty workflow file)
             if (createEmptyWorkflow) {
@@ -274,52 +292,31 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
         return m_loadingCanceledMessage;
     }
 
-    /** Logs the argument error to LOGGER, preserving line breaks.
-     * This method will hopefully go into the NodeLogger facilities (and hence
-     * be public API).
-     * @param isError Whether to report to LOGGER.error (otherwise warn only).
-     * @param error The error string to log.
-     */
-    private static final void logPreseveLineBreaks(
-            final String error, final boolean isError) {
-        StringTokenizer t = new StringTokenizer(error, "\n");
-        while (t.hasMoreTokens()) {
-            if (isError) {
-                LOGGER.error(t.nextToken());
-            } else {
-                LOGGER.warn(t.nextToken());
-            }
+    static void postLoadCheckForMetaNodeUpdates(final WorkflowEditor editor,
+            final WorkflowManager parent, final List<WorkflowManager> links) {
+        StringBuilder m = new StringBuilder("The workflow contains ");
+        if (links.size() == 1) {
+            m.append("one meta node link (\"");
+            m.append(links.get(0).getNameWithID());
+            m.append("\").");
+        } else {
+            m.append(links.size()).append(" meta node links.");
         }
-    }
+        m.append("\n\n").append("Do you want to check for updates now?");
 
-    private static IStatus createStatus(final LoadResultEntry loadResult,
-            final boolean treatDataLoadErrorsAsOK) {
-        LoadResultEntry[] children = loadResult.getChildren();
-        if (children.length == 0) {
-            int severity;
-            switch (loadResult.getType()) {
-            case DataLoadError:
-                severity = treatDataLoadErrorsAsOK
-                ? IStatus.OK : IStatus.ERROR;
-                break;
-            case Error:
-                severity = IStatus.ERROR;
-                break;
-            case Warning:
-                severity = IStatus.WARNING;
-                break;
-            default:
-                severity = IStatus.OK;
+        final String message = m.toString();
+        final AtomicBoolean result = new AtomicBoolean(false);
+        final Display display = Display.getDefault();
+        display.syncExec(new Runnable() {
+            @Override
+            public void run() {
+                result.set(MessageDialog.openQuestion(display.getActiveShell(),
+                        "Meta Node Link Update", message));
             }
-            return new Status(severity, KNIMEEditorPlugin.PLUGIN_ID,
-                    loadResult.getMessage(), null);
+        });
+        if (result.get()) {
+            new CheckUpdateMetaNodeLinkAllAction(editor).run();
         }
-        IStatus[] subStatus = new IStatus[children.length];
-        for (int i = 0; i < children.length; i++) {
-            subStatus[i] = createStatus(children[i], treatDataLoadErrorsAsOK);
-        }
-        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK,
-                subStatus, loadResult.getMessage(), null);
     }
 
 }

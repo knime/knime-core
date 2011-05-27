@@ -84,8 +84,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.workflow.JobManagerChangedEvent;
-import org.knime.core.node.workflow.JobManagerChangedListener;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage;
@@ -94,6 +93,8 @@ import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -130,10 +131,19 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
         NodeUIInformationListener, EditPartListener, ConnectableEditPart,
-        JobManagerChangedListener, IPropertyChangeListener, IAdaptable {
+        NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainerEditPart.class);
+
+    private final Image META_NODE_LINK_GREEN_ICON =
+        ImageRepository.getImage("icons/meta/meta_node_link_green_decorator.png");
+
+    private final Image META_NODE_LINK_RED_ICON =
+        ImageRepository.getImage("icons/meta/meta_node_link_red_decorator.png");
+
+    private final Image META_NODE_LINK_PROBLEM_ICON =
+        ImageRepository.getImage("icons/meta/meta_node_link_problem_decorator.png");
 
     /**
      * true, if the figure was initialized from the node extra info object.
@@ -186,7 +196,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // If we already have extra info, init figure now
         NodeContainer cont = getNodeContainer();
         NodeUIInformation uiInfo =
-                (NodeUIInformation)cont.getUIInformation();
+                cont.getUIInformation();
         if (uiInfo != null) {
             // takes over all info except the coordinates
             updateFigureFromUIinfo(uiInfo);
@@ -207,7 +217,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         cont.addNodeMessageListener(this);
         cont.addProgressListener(this);
         cont.addUIInformationListener(this);
-        cont.addJobManagerChangedListener(this);
+        cont.addNodePropertyChangedListener(this);
         addEditPartListener(this);
 
         // set the job manager icon
@@ -215,6 +225,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             URL iconURL = cont.findJobManager().getIcon();
             setJobManagerIcon(iconURL);
         }
+        checkMetaNodeTemplateIcon();
         // set the active (or disabled) state
         boolean isInactive = false;
         LoopStatus loopStatus = LoopStatus.NONE;
@@ -243,7 +254,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         nc.removeNodeMessageListener(this);
         nc.removeNodeProgressListener(this);
         nc.removeUIInformationListener(this);
-        nc.removeJobManagerChangedListener(this);
+        nc.removeNodePropertyChangedListener(this);
         removeEditPartListener(this);
         for (Object o : getChildren()) {
             EditPart editPart = (EditPart)o;
@@ -423,8 +434,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             @Override
             public void run() {
                 NodeUIInformation uiInfo =
-                        (NodeUIInformation)getNodeContainer()
-                                .getUIInformation();
+                        getNodeContainer()
+                        .getUIInformation();
                 updateFigureFromUIinfo(uiInfo);
             }
 
@@ -730,11 +741,29 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return;
     }
 
-    /** {inheritDoc} */
+    /** {@inheritDoc} */
     @Override
-    public void jobManagerChanged(final JobManagerChangedEvent e) {
-        URL iconURL = getNodeContainer().findJobManager().getIcon();
-        setJobManagerIcon(iconURL);
+    public void nodePropertyChanged(final NodePropertyChangedEvent e) {
+        Display.getDefault().asyncExec(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                switch (e.getProperty()) {
+                case JobManager:
+                    URL iconURL = getNodeContainer().findJobManager().getIcon();
+                    setJobManagerIcon(iconURL);
+                    break;
+                case Name:
+                    updateHeaderField();
+                    break;
+                case TemplateConnection:
+                    checkMetaNodeTemplateIcon();
+                    break;
+                default:
+                    // unknown, ignore
+                }
+            }
+        });
     }
 
     private void setJobManagerIcon(final URL iconURL) {
@@ -743,6 +772,33 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             icon = ImageDescriptor.createFromURL(iconURL).createImage();
         }
         ((NodeContainerFigure)getFigure()).setJobExecutorIcon(icon);
+    }
+
+    private void checkMetaNodeTemplateIcon() {
+        NodeContainer nc = getNodeContainer();
+        if (nc instanceof WorkflowManager) {
+            WorkflowManager wm = (WorkflowManager)nc;
+            MetaNodeTemplateInformation templInfo = wm.getTemplateInformation();
+            NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+            switch (templInfo.getRole()) {
+            case Link:
+                Image i;
+                switch (templInfo.getUpdateStatus()) {
+                case HasUpdate:
+                    i = META_NODE_LINK_RED_ICON;
+                    break;
+                case UpToDate:
+                    i = META_NODE_LINK_GREEN_ICON;
+                    break;
+                default:
+                    i = META_NODE_LINK_PROBLEM_ICON;
+                }
+                fig.setMetaNodeLinkIcon(i);
+                break;
+            default:
+                fig.setMetaNodeLinkIcon(null);
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -806,8 +862,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             Display.getCurrent().syncExec(new Runnable() {
                 @Override
                 public void run() {
-                        updateFigureFromUIinfo((NodeUIInformation)
-                                getNodeContainer().getUIInformation());
+                        updateFigureFromUIinfo(getNodeContainer().getUIInformation());
                     getRootEditPart().getFigure().invalidate();
                     getRootEditPart().refreshVisuals();
                 }
@@ -839,10 +894,17 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /** Change hide/show node label status. */
     public void callHideNodeName() {
-        if (getRootEditPart() != null) {
-            ((NodeContainerFigure)getFigure()).hideNodeName(getRootEditPart()
-                    .hideNodeNames());
+        WorkflowRootEditPart root = getRootEditPart();
+        if (root != null) {
+            NodeContainerFigure ncFigure = (NodeContainerFigure)getFigure();
+            ncFigure.hideNodeName(root.hideNodeNames());
         }
+    }
+
+    /** Called when the name (label above the node) changes. */
+    public void updateHeaderField() {
+        NodeContainerFigure ncFigure = (NodeContainerFigure)getFigure();
+        ncFigure.setLabelText(getNodeContainer().getName());
     }
 
     /**

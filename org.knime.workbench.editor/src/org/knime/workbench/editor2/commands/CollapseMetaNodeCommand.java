@@ -44,22 +44,21 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   07.05.2011 (mb): created
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class CollapseMetaNodeCommand extends Command {
+public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CollapseMetaNodeCommand.class);
@@ -73,10 +72,17 @@ public class CollapseMetaNodeCommand extends Command {
      */
     public CollapseMetaNodeCommand(final WorkflowManager wfm,
             final NodeID wrapper) {
+        super(wfm);
         m_manager = wfm;
         m_wrapper = wrapper;
     }
-    
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        return super.canExecute();
+    }
+
     /**
      * {@inheritDoc}
      */

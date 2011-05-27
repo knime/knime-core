@@ -50,15 +50,14 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -69,7 +68,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class CreateConnectionCommand extends Command {
+public class CreateConnectionCommand extends AbstractKNIMECommand {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CreateConnectionCommand.class);
@@ -82,14 +81,12 @@ public class CreateConnectionCommand extends Command {
 
     private int m_targetPortID = -1;
 
-    private WorkflowManager m_manager;
-
     private boolean m_startedOnOutPort;
-    
-    private UIInformation m_newConnectionUIInfo;
+
+    private ConnectionUIInformation m_newConnectionUIInfo;
 
     private ConnectionContainer m_connection;
-    
+
     // for undo
     private ConnectionContainer m_oldConnection;
 
@@ -99,18 +96,12 @@ public class CreateConnectionCommand extends Command {
     /**
      * Initializes from preference store, whether to confirm reconnection or
      * not.
+     * @param hostWFM The host workflow
      */
-    public CreateConnectionCommand() {
+    public CreateConnectionCommand(final WorkflowManager hostWFM) {
+        super(hostWFM);
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
-    }
-
-    /**
-     * @param workflowManager The workflow manager to create the connection in
-     */
-    public void setManager(final WorkflowManager workflowManager) {
-        m_manager = workflowManager;
-
     }
 
     /**
@@ -135,7 +126,7 @@ public class CreateConnectionCommand extends Command {
      * @param newConnectionUIInfo the newConnectionUIInfo to set
      */
     public void setNewConnectionUIInfo(
-            final UIInformation newConnectionUIInfo) {
+            final ConnectionUIInformation newConnectionUIInfo) {
         m_newConnectionUIInfo = newConnectionUIInfo;
     }
 
@@ -237,18 +228,22 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
+        if (!super.canExecute()) {
+            return false;
+        }
         if (m_sourceNode == null || m_targetNode == null) {
             return false;
         }
+        WorkflowManager wm = getHostWFM();
         // check whether an existing connection can be removed
-        ConnectionContainer conn = m_manager.getIncomingConnectionFor(
+        ConnectionContainer conn = wm.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(),
                 m_targetPortID);
-        boolean canRemove = conn == null || m_manager.canRemoveConnection(conn);
+        boolean canRemove = conn == null || wm.canRemoveConnection(conn);
         // let the workflow manager check if the connection can be created
         // or removed
-        boolean canAdd = m_manager.canAddConnection(
-                m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
+        boolean canAdd = wm.canAddConnection(
+                m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         return canRemove && canAdd;
     }
@@ -261,7 +256,7 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        return m_manager.canRemoveConnection(m_connection);
+        return getHostWFM().canRemoveConnection(m_connection);
     }
 
     /**
@@ -270,7 +265,7 @@ public class CreateConnectionCommand extends Command {
     @Override
     public void execute() {
         // check whether it is the same connection
-        ConnectionContainer conn = m_manager.getIncomingConnectionFor(
+        ConnectionContainer conn = getHostWFM().getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         if (conn != null
                 && conn.getSource().equals(
@@ -282,6 +277,7 @@ public class CreateConnectionCommand extends Command {
             // it is the very same connection -> do nothing
             return;
         }
+        WorkflowManager wm = getHostWFM();
 
         // let the workflow manager check if the connection can be created
         // in case it can not an exception is thrown which is caught and
@@ -305,17 +301,17 @@ public class CreateConnectionCommand extends Command {
                     }
                 }
                 // remove existing connection
-                m_manager.removeConnection(conn);
+                wm.removeConnection(conn);
                 m_oldConnection = conn;
             }
 
-            LOGGER.debug("adding connection from " 
-                    + m_sourceNode.getNodeContainer().getID() + " " 
-                    + m_sourcePortID + " to " 
-                    + m_targetNode.getNodeContainer().getID() 
+            LOGGER.debug("adding connection from "
+                    + m_sourceNode.getNodeContainer().getID() + " "
+                    + m_sourcePortID + " to "
+                    + m_targetNode.getNodeContainer().getID()
                     + " " + m_targetPortID);
-            m_connection = m_manager.addConnection(
-                    m_sourceNode.getNodeContainer().getID(), m_sourcePortID, 
+            m_connection = wm.addConnection(
+                    m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
                     m_targetNode.getNodeContainer().getID(), m_targetPortID);
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
@@ -345,21 +341,22 @@ public class CreateConnectionCommand extends Command {
     public static MessageDialogWithToggle openReconnectConfirmDialog(
             final boolean confirm, final String question) {
         return MessageDialogWithToggle.openYesNoQuestion(
-            Display.getDefault().getActiveShell(), "Replace Connection?", 
+            Display.getDefault().getActiveShell(), "Replace Connection?",
             question, "Always replace without confirming.", !confirm,
             KNIMEUIPlugin.getDefault().getPreferenceStore(),
             PreferenceConstants.P_CONFIRM_RECONNECT);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void undo() {
-        m_manager.removeConnection(m_connection);
+        WorkflowManager wm = getHostWFM();
+        wm.removeConnection(m_connection);
         ConnectionContainer old = m_oldConnection;
         if (old != null) {
-            ConnectionContainer newConn = m_manager.addConnection(
+            ConnectionContainer newConn = wm.addConnection(
                     old.getSource(), old.getSourcePort(),
                     old.getDest(), old.getDestPort());
             newConn.setUIInfo(old.getUIInfo());

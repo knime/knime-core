@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,20 +44,18 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.03.2006 (Christoph Sieb): created
  */
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -65,23 +63,21 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  * GEF Command for changing the location of a <code>ConnectionContainer</code>
  * in the workflow. The bounds are stored into the <code>UIInformation</code>
  * object of the <code>ConnectionContainer</code>
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public class ChangeBendPointLocationCommand extends Command {
-    
+public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
+
     private final Point m_locationShift;
-    
+
     /* We keep destination node and port instead of the ConnectionContainer
-     * as field. This allows redo/undo to be performed even if the connection 
-     * was (temporarily) removed. 
+     * as field. This allows redo/undo to be performed even if the connection
+     * was (temporarily) removed.
      */
     /** ID of the connection's destination node. */
     private final NodeID m_destNodeID;
     /** Port the connection leads to. */
     private final int m_destPort;
-    /** The associated workflow manager. */
-    private final WorkflowManager m_manager;
     private final ZoomManager m_zoomManager;
 
     /**
@@ -93,35 +89,29 @@ public class ChangeBendPointLocationCommand extends Command {
     public ChangeBendPointLocationCommand(
             final ConnectionContainerEditPart container,
             final Point locationShift, final ZoomManager zoomManager) {
+        super(container.getWorkflowManager());
         m_zoomManager = zoomManager;
         m_locationShift = locationShift;
-        if (container != null) {
-            m_destNodeID = container.getModel().getDest();
-            m_destPort = container.getModel().getDestPort();
-            m_manager = container.getWorkflowManager();
-        } else {
-            m_destNodeID = null;
-            m_destPort = -1;
-            m_manager = null;
-        }
+        m_destNodeID = container.getModel().getDest();
+        m_destPort = container.getModel().getDestPort();
     }
 
     private ConnectionContainer getConnectionContainer() {
-        if (m_destNodeID == null || m_manager == null) {
+        if (m_destNodeID == null) {
             return null;
         }
-        return m_manager.getIncomingConnectionFor(m_destNodeID, m_destPort); 
+        return getHostWFM().getIncomingConnectionFor(m_destNodeID, m_destPort);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return getConnectionContainer() != null;
+        return super.canExecute() && getConnectionContainer() != null;
     }
-    
+
     /**
      * Shift all bendpoints in positive shift direction.
-     * 
+     *
      * @see org.eclipse.gef.commands.Command#execute()
      */
     @Override
@@ -130,16 +120,16 @@ public class ChangeBendPointLocationCommand extends Command {
                 " execute change bendpoint location command...");
         changeBendpointsUIInfo(false);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
         return canExecute();
     }
-    
+
     /**
      * Shift all bendpoints in negative shift direction.
-     * 
+     *
      * @see org.eclipse.gef.commands.Command#undo()
      */
     @Override
@@ -148,9 +138,9 @@ public class ChangeBendPointLocationCommand extends Command {
     }
 
     private void changeBendpointsUIInfo(final boolean shiftBack) {
-        
+
         ConnectionContainer cc = getConnectionContainer();
-        ConnectionUIInformation ui = (ConnectionUIInformation)cc.getUIInfo();
+        ConnectionUIInformation ui = cc.getUIInfo();
         if (ui == null) {
             return;
         }
@@ -164,7 +154,7 @@ public class ChangeBendPointLocationCommand extends Command {
         int length = bendpoints.length;
         int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
         int shiftY = shiftBack ? locationShift.y * -1 : locationShift.y;
-        
+
         ConnectionUIInformation newUI = new ConnectionUIInformation();
         for (int i = 0; i < length; i++) {
 

@@ -81,6 +81,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -182,10 +183,10 @@ public abstract class NodeContainer implements NodeProgressListener {
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners =
-            new CopyOnWriteArraySet<JobManagerChangedListener>();
+    private final CopyOnWriteArraySet<NodePropertyChangedListener> m_nodePropertyChangedListeners =
+            new CopyOnWriteArraySet<NodePropertyChangedListener>();
 
-    private UIInformation m_uiInformation;
+    private NodeUIInformation m_uiInformation;
 
 
     /**
@@ -250,7 +251,7 @@ public abstract class NodeContainer implements NodeProgressListener {
                     m_jobManager.closeAllViews();
                 }
                 m_jobManager = je;
-                notifyJobManagerChangedListener();
+                notifyNodePropertyChangedListener(NodeProperty.JobManager);
             }
         }
     }
@@ -290,20 +291,22 @@ public abstract class NodeContainer implements NodeProgressListener {
         return m_executionJob;
     }
 
-    public boolean addJobManagerChangedListener(
-            final JobManagerChangedListener l) {
-        return m_jobManagerListeners.add(l);
+    public boolean addNodePropertyChangedListener(
+            final NodePropertyChangedListener l) {
+        return m_nodePropertyChangedListeners.add(l);
     }
 
-    public boolean removeJobManagerChangedListener(
-            final JobManagerChangedListener l) {
-        return m_jobManagerListeners.remove(l);
+    public boolean removeNodePropertyChangedListener(
+            final NodePropertyChangedListener l) {
+        return m_nodePropertyChangedListeners.remove(l);
     }
 
-    protected void notifyJobManagerChangedListener() {
-        JobManagerChangedEvent e = new JobManagerChangedEvent(getID());
-        for (JobManagerChangedListener l : m_jobManagerListeners) {
-            l.jobManagerChanged(e);
+    protected void notifyNodePropertyChangedListener(
+            final NodeProperty property) {
+        NodePropertyChangedEvent e = new NodePropertyChangedEvent(
+                getID(), property);
+        for (NodePropertyChangedListener l : m_nodePropertyChangedListeners) {
+            l.nodePropertyChanged(e);
         }
     }
 
@@ -446,7 +449,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         m_messageListeners.clear();
         m_progressListeners.clear();
         m_uiListeners.clear();
-        m_jobManagerListeners.clear();
+        m_nodePropertyChangedListeners.clear();
     }
 
     /** Cancel execution of a marked, queued, or executing node. (Tolerate
@@ -739,7 +742,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     *
     * @return a the node information
     */
-   public UIInformation getUIInformation() {
+   public NodeUIInformation getUIInformation() {
            return m_uiInformation;
    }
 
@@ -748,7 +751,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @param uiInformation new user interface information of the node such as
     *   coordinates on workbench and custom name.
     */
-   public void setUIInformation(final UIInformation uiInformation) {
+   public void setUIInformation(final NodeUIInformation uiInformation) {
        // ui info is a property of the outer workflow (it just happened
        // to be a field member of this class)
        // there is no reason on settings the dirty flag when changed.

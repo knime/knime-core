@@ -121,6 +121,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        throw new IllegalStateException("No template information on root");
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<FlowVariable> getWorkflowVariables() {
         throw new IllegalStateException("can't set workflow variables on root");
     }

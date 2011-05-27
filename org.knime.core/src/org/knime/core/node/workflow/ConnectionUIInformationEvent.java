@@ -55,14 +55,14 @@ import java.util.EventObject;
 /**
  * Event that's fired by a {@link ConnectionContainer} when its UI information
  * changes.
- * 
- * @see ConnectionContainer#setUIInfo(UIInformation)
- * 
+ *
+ * @see ConnectionContainer#setUIInfo(ConnectionUIInformation)
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ConnectionUIInformationEvent extends EventObject {
 
-    private final UIInformation m_uiInformation;
+    private final ConnectionUIInformation m_uiInformation;
 
     /**
      * @param src the node id of the source node
@@ -70,7 +70,7 @@ public class ConnectionUIInformationEvent extends EventObject {
      */
     public ConnectionUIInformationEvent(
             final ConnectionContainer src,
-            final UIInformation uiInformation) {
+            final ConnectionUIInformation uiInformation) {
         super(src);
         m_uiInformation = uiInformation;
     }
@@ -79,7 +79,7 @@ public class ConnectionUIInformationEvent extends EventObject {
      *
      * @return the new UI information
      */
-    public UIInformation getUIInformation() {
+    public ConnectionUIInformation getUIInformation() {
         return m_uiInformation;
     }
 

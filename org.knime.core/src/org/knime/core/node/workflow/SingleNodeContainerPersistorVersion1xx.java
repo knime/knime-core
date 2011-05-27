@@ -112,9 +112,6 @@ public class SingleNodeContainerPersistorVersion1xx
             final String versionString) {
         this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(
                 nodeSettingsFile, loadHelper), versionString);
-        if (workflowPersistor == null) {
-            throw new NullPointerException();
-        }
     }
 
     /** Constructor used internally, not used outside this class or its
@@ -127,7 +124,7 @@ public class SingleNodeContainerPersistorVersion1xx
             final WorkflowPersistorVersion1xx wfmPersistor,
             final NodeContainerMetaPersistorVersion1xx metaPersistor,
             final String versionString) {
-        if (versionString == null) {
+        if (versionString == null || wfmPersistor == null) {
             throw new NullPointerException();
         }
         m_versionString = versionString;

@@ -39,14 +39,15 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
 /**
  *
@@ -80,7 +81,8 @@ public class WorkflowTestCase extends TestCase {
                     + workflowDirString);
         }
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
-                workflowDir, new ExecutionMonitor(), null, false);
+                workflowDir, new ExecutionMonitor(),
+                WorkflowLoadHelper.INSTANCE, false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: "

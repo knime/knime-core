@@ -51,7 +51,6 @@ package org.knime.workbench.editor2.commands;
 import java.util.Arrays;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -70,11 +69,9 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class CreateMetaNodeCommand extends Command {
+public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateMetaNodeCommand.class);
-
-    private final WorkflowManager m_manager;
 
     private final WorkflowPersistor m_persistor;
 
@@ -87,12 +84,12 @@ public class CreateMetaNodeCommand extends Command {
      * Creates a new command.
      *
      * @param manager The workflow manager that should host the new node
-     * @param factory The factory of the Node that should be added
+     * @param persistor the paste content
      * @param location Initial visual location in the
      */
     public CreateMetaNodeCommand(final WorkflowManager manager,
             final WorkflowPersistor persistor, final Point location) {
-        m_manager = manager;
+        super(manager);
         m_persistor = persistor;
         m_location = location;
     }
@@ -101,8 +98,7 @@ public class CreateMetaNodeCommand extends Command {
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return (m_manager != null) && (m_persistor != null)
-                && (m_location != null);
+        return super.canExecute() && m_persistor != null && m_location != null;
     }
 
     /** {@inheritDoc} */
@@ -110,11 +106,12 @@ public class CreateMetaNodeCommand extends Command {
     public void execute() {
         // Add node to workflow and get the container
         try {
-            m_copyContent = m_manager.paste(m_persistor);
+            WorkflowManager wfm = getHostWFM();
+            m_copyContent = wfm.paste(m_persistor);
             NodeID[] nodeIDs = m_copyContent.getNodeIDs();
             if (nodeIDs.length > 0) {
                 NodeID first = nodeIDs[0];
-                NodeContainer container = m_manager.getNodeContainer(first);
+                NodeContainer container = wfm.getNodeContainer(first);
                 // create extra info and set it
                 NodeUIInformation info = new NodeUIInformation(
                         m_location.x, m_location.y, -1, -1, false);
@@ -143,7 +140,7 @@ public class CreateMetaNodeCommand extends Command {
         }
         NodeID[] ids = m_copyContent.getNodeIDs();
         for (NodeID id : ids) {
-            if (!m_manager.canRemoveNode(id)) {
+            if (!getHostWFM().canRemoveNode(id)) {
                 return false;
             }
         }
@@ -165,12 +162,13 @@ public class CreateMetaNodeCommand extends Command {
             }
             LOGGER.debug(debug);
         }
+        WorkflowManager wm = getHostWFM();
         if (canUndo()) {
             for (NodeID id : ids) {
-                m_manager.removeNode(id);
+                wm.removeNode(id);
             }
             for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
-                m_manager.removeAnnotation(anno);
+                wm.removeAnnotation(anno);
             }
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),

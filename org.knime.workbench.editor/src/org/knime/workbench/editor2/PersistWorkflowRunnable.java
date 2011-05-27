@@ -48,15 +48,23 @@
  */
 package org.knime.workbench.editor2;
 
+import java.util.StringTokenizer;
+
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeProgress;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
+import org.knime.workbench.KNIMEEditorPlugin;
 
 /**
  * A runnable which is the abstract super class used by the
@@ -70,68 +78,35 @@ import org.knime.core.node.workflow.NodeProgressListener;
  */
 abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
 
-    class CheckThread extends Thread {
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-        private boolean m_finished = false;
+    /** A KNIME progress monitor that's using an eclipse progress monitor to
+     * check for cancelation. */
+    static class CheckCancelNodeProgressMonitor
+        extends DefaultNodeProgressMonitor {
 
         private final IProgressMonitor m_pm;
 
-        private final DefaultNodeProgressMonitor m_progressMonitor;
 
-        private final boolean m_cancelable;
-
-        /**
-         * Creates a new cancel execution checker.
-         *
-         * @param pm
-         *            the eclipse progress monitor
-         * @param progressMonitor
-         *            the KNIME progress monitor
-         * @param cancelable
-         *            if true the progress is cancelable by the user if false a
-         *            dialog informs the user that the progress is not
-         *            cancelable
-         */
-        public CheckThread(final IProgressMonitor pm,
-                final DefaultNodeProgressMonitor progressMonitor,
-                final boolean cancelable) {
-            super("CheckThread");
+        /** @param pm The prog to monitor for cancelation. */
+        public CheckCancelNodeProgressMonitor(final IProgressMonitor pm) {
             m_pm = pm;
-            m_progressMonitor = progressMonitor;
-            m_cancelable = cancelable;
         }
 
-        /**
-         * Sets the finished flag.
-         *
-         */
-        public void finished() {
-            m_finished = true;
-
-        }
-
+        /** {@inheritDoc} */
         @Override
-        public void run() {
+        protected boolean isCanceled() {
+            return super.isCanceled() || m_pm.isCanceled();
+        }
 
-            while (!m_finished) {
-
-                if (m_pm.isCanceled()) {
-
-                    if (m_cancelable) {
-
-                        m_progressMonitor.setExecuteCanceled();
-                    }
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    // nothing to do here
-                }
-            }
+        /** {@inheritDoc} */
+        @Override
+        public synchronized void reset() {
+            throw new IllegalStateException("Reset not supported");
         }
     }
 
-    class ProgressHandler implements NodeProgressListener {
+    static class ProgressHandler implements NodeProgressListener {
 
         private final IProgressMonitor m_progressMonitor;
 
@@ -160,9 +135,11 @@ abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
         /**
          * {@inheritDoc}
          */
+        @Override
         public synchronized void progressChanged(final NodeProgressEvent evt) {
             final NodeProgress pe = evt.getNodeProgress();
             Display.getDefault().asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     if (pe.hasProgress() && pe.getProgress() >= 0) {
                         double progress = pe.getProgress();
@@ -181,4 +158,69 @@ abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
             });
         }
     }
+
+    /** @return instance logger. */
+    protected NodeLogger getLogger() {
+        return m_logger;
+    }
+
+    /** Logs the argument error to logger, preserving line breaks.
+     * This method will hopefully go into the NodeLogger facilities (and hence
+     * be public API).
+     * @param isError Whether to report to LOGGER.error (otherwise warn only).
+     * @param error The error string to log.
+     */
+    protected final void logPreseveLineBreaks(
+            final String error, final boolean isError) {
+        StringTokenizer t = new StringTokenizer(error, "\n");
+        NodeLogger logger = getLogger();
+        while (t.hasMoreTokens()) {
+            if (isError) {
+                logger.error(t.nextToken());
+            } else {
+                logger.warn(t.nextToken());
+            }
+        }
+    }
+
+    /** Create IStatus from load result.
+     *
+     * @param loadResult Load result.
+     * @param treatDataLoadErrorsAsOK data loading is OK (exported with no data)
+     * @return The IStatus object to be shown. */
+    protected IStatus createStatus(final LoadResultEntry loadResult,
+            final boolean treatDataLoadErrorsAsOK) {
+        LoadResultEntry[] children = loadResult.getChildren();
+        if (children.length == 0) {
+            int severity;
+            switch (loadResult.getType()) {
+            case DataLoadError:
+                severity = treatDataLoadErrorsAsOK
+                ? IStatus.OK : IStatus.ERROR;
+                break;
+            case Error:
+                severity = IStatus.ERROR;
+                break;
+            case Warning:
+                severity = IStatus.WARNING;
+                break;
+            default:
+                severity = IStatus.OK;
+            }
+            return new Status(severity, KNIMEEditorPlugin.PLUGIN_ID,
+                    loadResult.getMessage(), null);
+        }
+        IStatus[] subStatus = new IStatus[children.length];
+        for (int i = 0; i < children.length; i++) {
+            subStatus[i] = createStatus(children[i], treatDataLoadErrorsAsOK);
+        }
+        return createMultiStatus(loadResult.getMessage(), subStatus);
+    }
+
+    protected IStatus createMultiStatus(
+            final String message, final IStatus[] stats) {
+        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK,
+                stats, message, null);
+    }
+
 }

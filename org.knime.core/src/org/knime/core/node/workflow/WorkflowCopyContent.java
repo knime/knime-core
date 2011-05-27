@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 
+
 /**
  * Class representing node IDs and workflow annotations that need to be
  * copied from a workflow. Both IDs and annotation must be contained in the
@@ -59,6 +60,8 @@ public final class WorkflowCopyContent {
 
     private NodeID[] m_nodeIDs;
     private WorkflowAnnotation[] m_annotations;
+    /** see {@link #setIncludeInOutConnections(boolean)}. */
+    private boolean m_isIncludeInOutConnections;
 
     /** @return the ids */
     public NodeID[] getNodeIDs() {
@@ -68,6 +71,22 @@ public final class WorkflowCopyContent {
     /** @param ids the ids to set */
     public void setNodeIDs(final NodeID... ids) {
         m_nodeIDs = ids;
+    }
+
+    /** see {@link #setIncludeInOutConnections(boolean)}.
+     * @return the isIncludeInOutConnections */
+    boolean isIncludeInOutConnections() {
+        return m_isIncludeInOutConnections;
+    }
+
+    /** Set whether connections that link to or from any of the contained nodes
+     * should be included in the copy content. Connections whose source and
+     * destination are part of the {@link #getNodeIDs() NodeIDs set} are
+     * automatically included, this property determines whether connections
+     * connecting to this island are included as well.
+     * @param isIncludeInOutConnections the isIncludeInOutConnections to set */
+    void setIncludeInOutConnections(final boolean isIncludeInOutConnections) {
+        m_isIncludeInOutConnections = isIncludeInOutConnections;
     }
 
     /** @return the annotations, never null */

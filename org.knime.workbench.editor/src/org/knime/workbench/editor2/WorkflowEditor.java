@@ -106,7 +106,9 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -137,6 +139,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -154,15 +158,18 @@ import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
+import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
+import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
+import org.knime.workbench.editor2.actions.MetaNodeSetNameAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.PasteAction;
@@ -172,8 +179,9 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
-import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNode;
-import org.knime.workbench.editor2.commands.CreateNewConnectedNode;
+import org.knime.workbench.editor2.actions.UpdateMetaNodeLinkAction;
+import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
+import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -195,8 +203,9 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  */
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
-        IResourceChangeListener, NodeStateChangeListener, ISaveablePart2,
-        NodeUIInformationListener, EventListener {
+        IResourceChangeListener, NodeStateChangeListener,
+        NodePropertyChangedListener, ISaveablePart2, NodeUIInformationListener,
+        EventListener {
 
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
@@ -211,6 +220,12 @@ public class WorkflowEditor extends GraphicalEditor implements
      * The static clipboard for copy/cut/paste.
      */
     private static ClipboardObject clipboard;
+
+    private static final Color BG_COLOR_WRITE_LOCK =
+        new Color(null, 235, 235, 235);
+
+    private static final Color BG_COLOR_DEFAULT =
+        Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 
     /** root model object (=editor input) that is handled by the editor. * */
     private WorkflowManager m_manager;
@@ -241,6 +256,13 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private final WorkflowSelectionTool m_selectionTool;
 
+    /** whether the afterOpen method has been run already (disallow queuing
+     * another runnable). */
+    private boolean m_hasAfterOpenRun = false;
+    /** A list of runnable to be run after the editor is initialized.
+     * See also {@link #addAfterOpenRunnable(Runnable)} for details. */
+    private List<Runnable> m_afterOpenRunnables;
+
     /** Indicates if this editor has been closed. */
     private boolean m_closed;
 
@@ -266,7 +288,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // initialize actions (can't be in init(), as setInput is called before)
         createActions();
-
     }
 
     /**
@@ -321,6 +342,39 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
+        m_manager.addNodePropertyChangedListener(this);
+
+        queueAfterOpen();
+    }
+
+    /** Add an action that is run in the SWT main thread after the editor
+     * is initialized. It's used to prompt for additional actions (update links)
+     * or to display notifications.
+     * @param action The action to queue.
+     * @throws IllegalStateException If editor is already initialized and the
+     * after-open method has already been called. */
+    public void addAfterOpenRunnable(final Runnable action) {
+        if (m_hasAfterOpenRun) {
+            throw new IllegalStateException("Can't queue afterOpen-runner - "
+                    + "method has already been run");
+        }
+        if (m_afterOpenRunnables == null) {
+            m_afterOpenRunnables = new ArrayList<Runnable>();
+        }
+        m_afterOpenRunnables.add(action);
+    }
+
+    /** Queues all {@link Runnable} in the after-open-runnable list in the
+     * SWT main thread. */
+    private void queueAfterOpen() {
+        m_hasAfterOpenRun = true;
+        if (m_afterOpenRunnables != null) {
+            final Display d = Display.getDefault();
+            for (final Runnable r : m_afterOpenRunnables) {
+                d.asyncExec(r);
+            }
+        }
+        m_afterOpenRunnables = null;
     }
 
     private List<IEditorPart> getSubEditors() {
@@ -378,6 +432,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             child.getEditorSite().getPage().closeEditor(child, false);
         }
         NodeProvider.INSTANCE.removeListener(this);
+        m_manager.removeNodePropertyChangedListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
         // remove resource listener..
@@ -442,6 +497,15 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new SetNameAndDescriptionAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
+        AbstractNodeAction metaNodeSetName =
+            new MetaNodeSetNameAction(this);
+        AbstractNodeAction checkUpdateMetaNodeLink =
+            new CheckUpdateMetaNodeLinkAction(this);
+        AbstractNodeAction updateMetaNodeLink =
+            new UpdateMetaNodeLinkAction(this);
+        AbstractNodeAction disconnectMetaNodeLink =
+            new DisconnectMetaNodeLinkAction(this);
+
         // new annotation action
         AddAnnotationAction annotation = new AddAnnotationAction(this);
 
@@ -481,6 +545,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(collapse);
         m_actionRegistry.registerAction(expand);
 
+        m_actionRegistry.registerAction(metaNodeSetName);
+        m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
+        m_actionRegistry.registerAction(updateMetaNodeLink);
+        m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(annotation);
 
         // remember ids for later updates via 'updateActions'
@@ -505,6 +573,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
+        m_editorActions.add(metaNodeSetName.getId());
+        m_editorActions.add(checkUpdateMetaNodeLink.getId());
+        m_editorActions.add(updateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());
 
 
@@ -600,7 +671,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         KeyHandler parentKeyHandler =
                 keyHandler.setParent(getCommonKeyHandler());
-
         viewer.setKeyHandler(parentKeyHandler);
 
         // hook the viewer into the EditDomain
@@ -621,6 +691,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 "org.knime.workbench.help.flow_editor_context");
 
         loadProperties();
+        updateEditorBackgroundColor();
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
@@ -938,20 +1009,33 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Sets the snap functionality.
      */
-    protected void loadProperties() {
+    private void loadProperties() {
         // Snap to Geometry property
-        getGraphicalViewer().setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
+        GraphicalViewer graphicalViewer = getGraphicalViewer();
+        graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
                 new Boolean(true));
 
         // Grid properties
-        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
                 new Boolean(false));
         // Grid properties
-        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
                 new Dimension(6, 6));
         // We keep grid visibility and enablement in sync
-        getGraphicalViewer().setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
                 new Boolean(false));
+    }
+
+    /** Sets background color according to edit mode (see
+     * {@link WorkflowManager#isWriteProtected()}. */
+    private void updateEditorBackgroundColor() {
+        GraphicalViewer gv = getGraphicalViewer();
+        Control control = gv.getControl();
+        if (m_manager.isWriteProtected()) {
+            control.setBackground(BG_COLOR_WRITE_LOCK);
+        } else {
+            control.setBackground(BG_COLOR_DEFAULT);
+        }
     }
 
     /**
@@ -1278,7 +1362,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             preID = preNode.getNodeContainer().getID();
         }
         Command newNodeCmd =
-                new CreateNewConnectedMetaNode(getViewer(), m_manager,
+                new CreateNewConnectedMetaNodeCommand(getViewer(), m_manager,
                         sourceManager, id, nodeLoc, preID);
         getCommandStack().execute(newNodeCmd);
         // after adding a node the editor should get the focus
@@ -1310,7 +1394,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else {
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
-                    new CreateNewConnectedNode(getViewer(), m_manager,
+                    new CreateNewConnectedNodeCommand(getViewer(), m_manager,
                             nodeFactory, nodeLoc, preNode.getNodeContainer()
                                     .getID());
         }
@@ -1377,8 +1461,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private Point getLocationRightOf(final NodeContainerEditPart refNode) {
         NodeUIInformation ui =
-                (NodeUIInformation)refNode.getNodeContainer()
-                        .getUIInformation();
+                refNode.getNodeContainer()
+                .getUIInformation();
         int xOffset = 100;
         int yOffset = 120;
         // first try: right of reference node
@@ -1469,6 +1553,21 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         });
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void nodePropertyChanged(final NodePropertyChangedEvent e) {
+        switch (e.getProperty()) {
+        case Name:
+            updatePartName();
+            break;
+        case TemplateConnection:
+            updateEditorBackgroundColor();
+            break;
+        default:
+            // ignore
+        }
     }
 
     /**

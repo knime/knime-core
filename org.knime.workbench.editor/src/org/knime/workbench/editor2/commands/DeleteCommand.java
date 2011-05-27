@@ -56,7 +56,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -77,10 +76,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DeleteCommand extends Command {
-
-    /** WFM, in which nodes/connections are deleted. */
-    private final WorkflowManager m_manager;
+public class DeleteCommand extends AbstractKNIMECommand {
 
     /** Ids of nodes being deleted. */
     private final NodeID[] m_nodeIDs;
@@ -113,7 +109,7 @@ public class DeleteCommand extends Command {
      */
     public DeleteCommand(final Collection<?> editParts,
             final WorkflowManager manager) {
-        m_manager = manager;
+        super(manager);
         Set<NodeID> idSet = new LinkedHashSet<NodeID>();
         Set<WorkflowAnnotation> annotationSet =
             new LinkedHashSet<WorkflowAnnotation>();
@@ -177,15 +173,16 @@ public class DeleteCommand extends Command {
     @Override
     public boolean canExecute() {
         boolean foundValid = false;
+        WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_nodeIDs) {
             foundValid = true;
-            if (!m_manager.canRemoveNode(id)) {
+            if (!hostWFM.canRemoveNode(id)) {
                 return false;
             }
         }
         for (ConnectionContainer cc : m_connections) {
             foundValid = true;
-            if (!m_manager.canRemoveConnection(cc)) {
+            if (!hostWFM.canRemoveConnection(cc)) {
                 return false;
             }
         }
@@ -195,16 +192,17 @@ public class DeleteCommand extends Command {
     /** {@inheritDoc} */
     @Override
     public void execute() {
+        WorkflowManager hostWFM = getHostWFM();
         // The WFM removes all connections for us, before the node is
         // removed.
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
             WorkflowCopyContent content = new WorkflowCopyContent();
             content.setNodeIDs(m_nodeIDs);
             content.setAnnotation(m_annotations);
-            m_undoPersitor = m_manager.copy(true, content);
+            m_undoPersitor = hostWFM.copy(true, content);
         }
         for (NodeID id : m_nodeIDs) {
-            NodeContainer nc = m_manager.getNodeContainer(id);
+            NodeContainer nc = hostWFM.getNodeContainer(id);
             if (nc instanceof WorkflowManager) {
                 // since the equals method of the WorkflowManagerInput
                 // only looks for the WorkflowManager, we can pass
@@ -220,13 +218,13 @@ public class DeleteCommand extends Command {
                             false);
                 }
             }
-            m_manager.removeNode(id);
+            hostWFM.removeNode(id);
         }
         for (ConnectionContainer cc : m_connections) {
-            m_manager.removeConnection(cc);
+            hostWFM.removeConnection(cc);
         }
         for (WorkflowAnnotation anno : m_annotations) {
-            m_manager.removeAnnotation(anno);
+            hostWFM.removeAnnotation(anno);
         }
     }
 
@@ -241,11 +239,12 @@ public class DeleteCommand extends Command {
             m_viewer.deselectAll();
         }
 
+        WorkflowManager hostWFM = getHostWFM();
         if (m_undoPersitor != null) {
-            m_manager.paste(m_undoPersitor);
+            hostWFM.paste(m_undoPersitor);
         }
         for (ConnectionContainer cc : m_connections) {
-            ConnectionContainer newCC = m_manager.addConnection(cc.getSource(),
+            ConnectionContainer newCC = hostWFM.addConnection(cc.getSource(),
                     cc.getSourcePort(), cc.getDest(), cc.getDestPort());
             newCC.setUIInfo(cc.getUIInfo());
         }

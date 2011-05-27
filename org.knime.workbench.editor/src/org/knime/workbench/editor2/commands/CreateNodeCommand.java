@@ -51,7 +51,6 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -70,11 +69,9 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class CreateNodeCommand extends Command {
+public class CreateNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateNodeCommand.class);
-
-    private final WorkflowManager m_manager;
 
     private final NodeFactory<? extends NodeModel> m_factory;
 
@@ -91,7 +88,7 @@ public class CreateNodeCommand extends Command {
      */
     public CreateNodeCommand(final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory, final Point location) {
-        m_manager = manager;
+        super(manager);
         m_factory = factory;
         m_location = location;
     }
@@ -100,17 +97,17 @@ public class CreateNodeCommand extends Command {
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return (m_manager != null) && (m_factory != null)
-                && (m_location != null);
+        return m_factory != null && m_location != null && super.canExecute();
     }
 
     /** {@inheritDoc} */
     @Override
     public void execute() {
+        WorkflowManager hostWFM = getHostWFM();
         // Add node to workflow and get the container
         try {
-            NodeID id = m_manager.createAndAddNode(m_factory);
-            m_container = m_manager.getNodeContainer(id);
+            NodeID id = hostWFM.createAndAddNode(m_factory);
+            m_container = hostWFM.getNodeContainer(id);
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
@@ -133,7 +130,7 @@ public class CreateNodeCommand extends Command {
     @Override
     public boolean canUndo() {
         return m_container != null
-            && m_manager.canRemoveNode(m_container.getID());
+            && getHostWFM().canRemoveNode(m_container.getID());
     }
 
     /**
@@ -143,7 +140,7 @@ public class CreateNodeCommand extends Command {
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         if (canUndo()) {
-            m_manager.removeNode(m_container.getID());
+            getHostWFM().removeNode(m_container.getID());
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
                     "Operation no allowed", "The node "

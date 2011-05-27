@@ -58,7 +58,6 @@ import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
@@ -105,27 +104,20 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
         m_monitor = monitor;
     }
 
-    /**
-     *
-     */
+    /** {@inheritDoc} */
+    @Override
     public void run(final IProgressMonitor pm) {
-        CheckThread checkThread = null;
         try {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, m_editor
                     .getWorkflowManager().getNodeContainers().size(),
                     "Saving workflow... (can not be canceled)");
-            final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
+            final CheckCancelNodeProgressMonitor progressMonitor =
+                new CheckCancelNodeProgressMonitor(pm);
+
             progressMonitor.addProgressListener(progressHandler);
 
-            // this task can not be canceled as the underlying
-            // system does not support this yet (false)
-            checkThread = new CheckThread(pm, progressMonitor, false);
-
-            checkThread.start();
-
-            // TODO: execution monitor? progress monitor??
-            m_editor.getWorkflowManager().save(m_workflowFile.getParentFile(), 
+            m_editor.getWorkflowManager().save(m_workflowFile.getParentFile(),
                     new ExecutionMonitor(progressMonitor), true);
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
@@ -171,7 +163,6 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
                     + e.getMessage());
             m_monitor.setCanceled(true);
         } finally {
-            checkThread.finished();
             pm.subTask("Finished.");
             pm.done();
             m_editor = null;

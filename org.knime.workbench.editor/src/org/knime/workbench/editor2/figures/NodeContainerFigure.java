@@ -48,14 +48,6 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
-
 import java.util.List;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -78,6 +70,14 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -212,6 +212,8 @@ public class NodeContainerFigure extends RectangleFigure {
     private String m_description;
 
     private Image m_jobExec;
+
+    private Image m_metaNodeLinkIcon;
 
     private boolean m_showFlowVarPorts;
 
@@ -357,6 +359,13 @@ public class NodeContainerFigure extends RectangleFigure {
         m_symbolFigure.refreshJobManagerIcon();
     }
 
+    public void setMetaNodeLinkIcon(final Image icon) {
+        if (!ConvenienceMethods.areEqual(m_metaNodeLinkIcon, icon)) {
+            m_metaNodeLinkIcon = icon;
+            m_symbolFigure.refreshMetaNodeLinkIcon();
+        }
+    }
+
     /**
      * Sets the text of the heading label.
      *
@@ -365,6 +374,7 @@ public class NodeContainerFigure extends RectangleFigure {
     public void setLabelText(final String text) {
         m_heading.setText(wrapText(text));
         m_headingTooltip.setText(text);
+        repaint();
     }
 
     private String wrapText(final String text) {
@@ -747,6 +757,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_jobExecutorLabel;
 
+        private Label m_metaNodeLinkedLabel;
+
         /**
          * Creates a new figure containing the symbol. That is the background
          * icon (depending on the type of the node) and the node's icon. Also
@@ -799,6 +811,24 @@ public class NodeContainerFigure extends RectangleFigure {
                             new RelativeLocator(m_backgroundIcon, 0.73, 0.73));
                 }
                 m_jobExecutorLabel.setIcon(m_jobExec);
+                repaint();
+            }
+        }
+
+        protected void refreshMetaNodeLinkIcon() {
+            // do we have to remove it?
+            if (m_metaNodeLinkedLabel != null && m_metaNodeLinkIcon == null) {
+                m_backgroundIcon.remove(m_metaNodeLinkedLabel);
+                m_metaNodeLinkedLabel = null;
+            } else {
+                if (m_metaNodeLinkedLabel == null) {
+                    m_metaNodeLinkedLabel = new Label();
+                    m_metaNodeLinkedLabel.setOpaque(false);
+                    m_backgroundIcon.add(m_metaNodeLinkedLabel);
+                    m_backgroundIcon.setConstraint(m_metaNodeLinkedLabel,
+                            new RelativeLocator(m_backgroundIcon, 0.21, .84));
+                }
+                m_metaNodeLinkedLabel.setIcon(m_metaNodeLinkIcon);
                 repaint();
             }
         }

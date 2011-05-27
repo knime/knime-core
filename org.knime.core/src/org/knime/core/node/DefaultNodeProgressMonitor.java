@@ -191,7 +191,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return <code>true</code> if the execution of the
      *         <code>NodeModel</code> has been canceled.
      */
-    boolean isCanceled() {
+    protected boolean isCanceled() {
         return m_cancelExecute || Thread.currentThread().isInterrupted();
     }
 

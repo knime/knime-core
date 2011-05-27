@@ -139,6 +139,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return m_loaderMap;
     }

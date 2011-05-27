@@ -29,12 +29,12 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.JobManagerChangedEvent;
-import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -188,16 +188,16 @@ public final class ProjectWorkflowMap {
 
     };
 
-    private static final Set<JobManagerChangedListener> JOB_MGR_LISTENERS =
-        new LinkedHashSet<JobManagerChangedListener>();
+    private static final Set<NodePropertyChangedListener> NODE_PROP_LISTENERS =
+        new LinkedHashSet<NodePropertyChangedListener>();
 
     // forwards events to registered listeners
-    private static final JobManagerChangedListener JOB_MGR_LISTENER =
-        new JobManagerChangedListener() {
+    private static final NodePropertyChangedListener NODE_PROP_LISTENER =
+        new NodePropertyChangedListener() {
         @Override
-        public void jobManagerChanged(final JobManagerChangedEvent e) {
-            for (JobManagerChangedListener l : JOB_MGR_LISTENERS) {
-                l.jobManagerChanged(e);
+        public void nodePropertyChanged(final NodePropertyChangedEvent e) {
+            for (NodePropertyChangedListener l : NODE_PROP_LISTENERS) {
+                l.nodePropertyChanged(e);
             }
         }
     };
@@ -295,7 +295,7 @@ public final class ProjectWorkflowMap {
             manager.removeListener(WF_LISTENER);
             manager.removeNodeStateChangeListener(NSC_LISTENER);
             manager.removeNodeMessageListener(MSG_LISTENER);
-            manager.removeJobManagerChangedListener(JOB_MGR_LISTENER);
+            manager.removeNodePropertyChangedListener(NODE_PROP_LISTENER);
             try {
                 manager.shutdown();
             } catch (Throwable t) {
@@ -326,13 +326,13 @@ public final class ProjectWorkflowMap {
             oldOne.removeNodeStateChangeListener(NSC_LISTENER);
             ((WorkflowManager)oldOne).removeListener(WF_LISTENER);
             oldOne.removeNodeMessageListener(MSG_LISTENER);
-            oldOne.removeJobManagerChangedListener(JOB_MGR_LISTENER);
+            oldOne.removeNodePropertyChangedListener(NODE_PROP_LISTENER);
         }
         PROJECTS.put(p, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
         manager.addNodeMessageListener(MSG_LISTENER);
-        manager.addJobManagerChangedListener(JOB_MGR_LISTENER);
+        manager.addNodePropertyChangedListener(NODE_PROP_LISTENER);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
                 WorkflowEvent.Type.NODE_ADDED, manager.getID(), null,
                 manager));
@@ -428,17 +428,17 @@ public final class ProjectWorkflowMap {
     /**
      * @param l The listener to add.
      */
-    public static void addJobManagerChangedListener(
-            final JobManagerChangedListener l) {
-        JOB_MGR_LISTENERS.add(l);
+    public static void addNodePropertyChangedListener(
+            final NodePropertyChangedListener l) {
+        NODE_PROP_LISTENERS.add(l);
     }
 
     /**
-     * @param l the job manager listener to remove
+     * @param l the listener to remove
      */
-    public static void removeJobManagerChangedListener(
-            final JobManagerChangedListener l) {
-        JOB_MGR_LISTENERS.remove(l);
+    public static void removeNodePropertyChangedListener(
+            final NodePropertyChangedListener l) {
+        NODE_PROP_LISTENERS.remove(l);
     }
 
     /**

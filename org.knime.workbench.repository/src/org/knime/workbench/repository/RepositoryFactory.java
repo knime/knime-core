@@ -246,6 +246,7 @@ public final class RepositoryFactory {
                     /**
                      * {@inheritDoc}
                      */
+                    @Override
                     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                             final String workflowVersionString) {
                         LOGGER.error("Installed meta nodes are of unkown version?!?");
@@ -255,6 +256,7 @@ public final class RepositoryFactory {
                     /**
                      * {@inheritDoc}
                      */
+                    @Override
                     public List<Credentials> loadCredentials(
                             final List<Credentials> credentials) {
                         return credentials;
@@ -270,7 +272,8 @@ public final class RepositoryFactory {
                 File f = new File(FileLocator.toFileURL(url).getFile());
                 LOGGER.debug("meta node template name: " + f.getName());
                 WorkflowManager metaNode = META_NODE_ROOT.load(f,
-                        new ExecutionMonitor(), loadHelper, false).getWorkflowManager();
+                        new ExecutionMonitor(), loadHelper,
+                        false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
                 LOGGER.error("Unexpected canceled execution exception",

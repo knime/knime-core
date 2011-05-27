@@ -56,7 +56,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -76,7 +75,8 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class PasteFromWorkflowPersistorCommand extends Command {
+public final class PasteFromWorkflowPersistorCommand
+    extends AbstractKNIMECommand {
 
     private final ClipboardObject m_clipboardObject;
     private final WorkflowEditor m_editor;
@@ -94,6 +94,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     public PasteFromWorkflowPersistorCommand(final WorkflowEditor editor,
             final ClipboardObject clipboardObject,
             final ShiftCalculator shiftCalculator) {
+        super(editor.getWorkflowManager());
         m_editor = editor;
         m_clipboardObject = clipboardObject;
         m_shiftCalculator = shiftCalculator;
@@ -102,6 +103,9 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
+        if (!super.canExecute()) {
+            return false;
+        }
         if (m_editor == null || m_clipboardObject == null) {
             return false;
         }
@@ -127,7 +131,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
         List<int[]> insertedElementBounds = new ArrayList<int[]>();
         for (NodeID i : pastedNodes) {
             NodeContainer nc = manager.getNodeContainer(i);
-            NodeUIInformation ui = (NodeUIInformation)nc.getUIInformation();
+            NodeUIInformation ui = nc.getUIInformation();
             int[] bounds = ui.getBounds();
             insertedElementBounds.add(bounds);
         }
@@ -143,7 +147,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
         for (NodeID id : pastedNodes) {
             newIDs.add(id);
             NodeContainer nc = manager.getNodeContainer(id);
-            NodeUIInformation oldUI = (NodeUIInformation)nc.getUIInformation();
+            NodeUIInformation oldUI = nc.getUIInformation();
             NodeUIInformation newUI =
                 oldUI.createNewWithOffsetPosition(moveDist);
             nc.setUIInformation(newUI);
@@ -153,7 +157,7 @@ public final class PasteFromWorkflowPersistorCommand extends Command {
                     && newIDs.contains(conn.getSource())) {
                 // get bend points and move them
                 ConnectionUIInformation oldUI =
-                    (ConnectionUIInformation)conn.getUIInfo();
+                    conn.getUIInfo();
                 if (oldUI != null) {
                     ConnectionUIInformation newUI =
                         oldUI.createNewWithOffsetPosition(moveDist);

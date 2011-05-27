@@ -92,7 +92,7 @@ interface NodeContainerMetaPersistor {
 
     State getState();
 
-    UIInformation getUIInfo();
+    NodeUIInformation getUIInfo();
 
     NodeMessage getNodeMessage();
 
@@ -100,7 +100,7 @@ interface NodeContainerMetaPersistor {
 
     boolean isDirtyAfterLoad();
 
-    void setUIInfo(final UIInformation uiInfo);
+    void setUIInfo(final NodeUIInformation uiInfo);
 
     /** Load content, gets both the current settings (first argument) and
      * the "parent settings", which are only used in 1.3.x flows and will be

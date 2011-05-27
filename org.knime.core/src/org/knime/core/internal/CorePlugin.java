@@ -51,9 +51,14 @@
 package org.knime.core.internal;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
@@ -62,6 +67,8 @@ import org.knime.core.node.NodeLogger;
  */
 public class CorePlugin extends org.eclipse.core.runtime.Plugin {
     private static CorePlugin instance;
+
+    private ServiceTracker m_serviceTracker;
 
     /**
      * {@inheritDoc}
@@ -96,6 +103,17 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
             NodeLogger.getLogger(getClass()).warn(
                     "Can't init knime home dir to workspace path.", e);
         }
+        m_serviceTracker = new ServiceTracker(
+                context, URIToFileResolve.class.getName(), null);
+        m_serviceTracker.open();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void stop(final BundleContext context) throws Exception {
+        m_serviceTracker.close();
+        instance = null;
+        super.stop(context);
     }
 
     /**
@@ -105,5 +123,26 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
      */
     public static CorePlugin getInstance() {
         return instance;
+    }
+
+    /** Fetches a service implementing the {@link URIToFileResolve} interface
+     * and returns the resolved file.
+     * @param uri The URI to resolve
+     * @return The local file underlying the URI (if any)
+     * @throws IOException If no service is registered or the URI can't be
+     * resolved.
+     */
+    public static File resolveURItoLocalFile(final URI uri) throws IOException {
+        if (instance == null) {
+            throw new IOException("Core bundle is not active, "
+                    + "can't resolve URI \"" + uri + "\"");
+        }
+        ServiceTracker serviceTracker = instance.m_serviceTracker;
+        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        if (res == null) {
+            throw new IOException("Can't resolve URI \"" + uri
+                    + "\"; no URI resolve service registered");
+        }
+        return res.resolveToFile(uri);
     }
 }

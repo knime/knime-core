@@ -94,8 +94,8 @@ import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.JobManagerChangedEvent;
-import org.knime.core.node.workflow.JobManagerChangedListener;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -130,7 +130,7 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
  * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        NodeStateChangeListener, NodeMessageListener, JobManagerChangedListener {
+        NodeStateChangeListener, NodeMessageListener, NodePropertyChangedListener {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(KnimeResourceNavigator.class);
@@ -158,7 +158,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
         ProjectWorkflowMap.addStateListener(this);
         ProjectWorkflowMap.addNodeMessageListener(this);
-        ProjectWorkflowMap.addJobManagerChangedListener(this);
+        ProjectWorkflowMap.addNodePropertyChangedListener(this);
         // WorkflowManager.ROOT.addListener(
         ProjectWorkflowMap.addWorkflowListener(new WorkflowListener() {
 
@@ -230,7 +230,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /** {@inheritDoc} */
     @Override
-    public void jobManagerChanged(final JobManagerChangedEvent e) {
+    public void nodePropertyChanged(final NodePropertyChangedEvent e) {
         LOGGER.debug("Job Manager changed for node  " + e.getSource());
         doRefresh(e.getSource());
     }
@@ -247,7 +247,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                                 ProjectWorkflowMap.findProjectFor(nodeResource);
                         if (wf != null) {
                             IResource rsrc =
-                                    KnimeResourceUtil.getResourceForURI(wf);
+                                KnimeResourceUtil.getResourceForURI(wf);
                             // we have to find the resource again, hence we
                             // cannot put the project's name with
                             // toLowercase into the map
@@ -508,6 +508,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
+
             }
         }
 
@@ -570,7 +571,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             menu.insertAfter(ExportKnimeWorkflowAction.ID,
                     new OpenWorkflowVariablesDialogAction());
         }
-
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
         menu.insertBefore(RefreshAction.ID, new GroupMarker(KNIME_ADDITIONS));

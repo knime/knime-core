@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   07.05.2011 (mb): created
  */
@@ -52,22 +52,24 @@ package org.knime.workbench.editor2.commands;
 
 import java.util.Collection;
 
-import org.eclipse.gef.commands.Command;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class ExpandMetaNodeCommand extends Command {
+public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ExpandMetaNodeCommand.class);
 
-    private WorkflowManager m_manager;
+    private final NodeID m_id;
+
     private String m_name;
     private NodeID[] m_nodes;
 
@@ -75,27 +77,38 @@ public class ExpandMetaNodeCommand extends Command {
      * @param wfm the workflow manager holding the new metanode
      * @param id of node to be expanded.
      */
-    public ExpandMetaNodeCommand(final WorkflowManager wfm,
-            final NodeID id) {
-        m_manager = wfm;
-        NodeContainer nc = wfm.getNodeContainer(id);
-        m_name = nc.getName();
-        WorkflowManager wm = (WorkflowManager)nc;
-        Collection<NodeContainer> ncs = wm.getNodeContainers();
-        m_nodes = new NodeID[ncs.size()];
-        int i = 0;
-        for (NodeContainer n : ncs) {
-            m_nodes[i] = n.getID();
-            i++;
-        }
+    public ExpandMetaNodeCommand(final WorkflowManager wfm, final NodeID id) {
+        super(wfm);
+        m_id = id;
     }
-    
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        if (!super.canExecute()) {
+            return false;
+        }
+        return getHostWFM().canExpandMetaNode(m_id) != null;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void execute() {
-        // do nothing - all done in corresponding Action.
+        try {
+            WorkflowManager metaNode =
+                (WorkflowManager)getHostWFM().getNodeContainer(m_id);
+            m_name = metaNode.getName();
+            Collection<NodeContainer> ncs = metaNode.getNodeContainers();
+            m_nodes = ncs.toArray(new NodeID[ncs.size()]);
+            getHostWFM().expandMetaNode(m_id);
+        } catch (Exception e) {
+            String error = "Expanding Metanode failed: " + e.getMessage();
+            LOGGER.error(error, e);
+            MessageDialog.openError(Display.getCurrent().getActiveShell(),
+                    "Expand failed", error);
+        }
     }
 
     /**
@@ -103,8 +116,8 @@ public class ExpandMetaNodeCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        if (m_manager != null && m_nodes != null) {
-            return null == m_manager.canCollapseNodesIntoMetaNode(m_nodes);
+        if (m_nodes != null) {
+            return null == getHostWFM().canCollapseNodesIntoMetaNode(m_nodes);
         }
         return false;
     }
@@ -114,8 +127,7 @@ public class ExpandMetaNodeCommand extends Command {
      */
     @Override
     public void undo() {
-        m_manager.collapseNodesIntoMetaNode(m_nodes, m_name);
-        m_manager = null;
+        getHostWFM().collapseNodesIntoMetaNode(m_nodes, m_name);
         m_name = null;
         m_nodes = null;
     }

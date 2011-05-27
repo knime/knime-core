@@ -22,7 +22,6 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -43,13 +42,11 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  *
  * @author ohl, University of Konstanz
  */
-public class CreateNewConnectedNode extends Command {
+public class CreateNewConnectedNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(CreateNewConnectedNode.class);
+            .getLogger(CreateNewConnectedNodeCommand.class);
 
     private final EditPartViewer m_viewer;
-
-    private final WorkflowManager m_manager;
 
     private final NodeFactory<? extends NodeModel> m_factory;
 
@@ -68,12 +65,12 @@ public class CreateNewConnectedNode extends Command {
      * @param location Initial visual location of the new node ABSOLTE COORDS!
      * @param connectTo node to which the new node should be connected to
      */
-    public CreateNewConnectedNode(final EditPartViewer viewer,
+    public CreateNewConnectedNodeCommand(final EditPartViewer viewer,
             final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory,
             final Point location, final NodeID connectTo) {
+        super(manager);
         m_viewer = viewer;
-        m_manager = manager;
         m_factory = factory;
         m_location = location;
         m_connectTo = connectTo;
@@ -86,7 +83,7 @@ public class CreateNewConnectedNode extends Command {
      */
     @Override
     public boolean canExecute() {
-        return m_manager != null && m_factory != null && m_location != null;
+        return m_factory != null && m_location != null && super.canExecute();
     }
 
     /** {@inheritDoc} */
@@ -106,8 +103,9 @@ public class CreateNewConnectedNode extends Command {
     protected NodeID createNewNode() {
         // Add node to workflow and get the container
         NodeID newID = null;
+        WorkflowManager hostWFM = getHostWFM();
         try {
-            newID = m_manager.createAndAddNode(m_factory);
+            newID = hostWFM.createAndAddNode(m_factory);
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
@@ -123,7 +121,7 @@ public class CreateNewConnectedNode extends Command {
         // create extra info and set it
         NodeUIInformation info =
                 new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
-        NodeContainer nc = m_manager.getNodeContainer(newID);
+        NodeContainer nc = hostWFM.getNodeContainer(newID);
         nc.setUIInformation(info);
         return newID;
     }
@@ -135,12 +133,13 @@ public class CreateNewConnectedNode extends Command {
         if (m_connectTo == null) {
             return;
         }
-        NodeContainer sourceNode = m_manager.getNodeContainer(m_connectTo);
+        WorkflowManager hostWFM = getHostWFM();
+        NodeContainer sourceNode = hostWFM.getNodeContainer(m_connectTo);
         if (sourceNode == null) {
             // it's gone...
             return;
         }
-        NodeContainer nc = m_manager.getNodeContainer(m_newNode);
+        NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
         int[] matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts == null) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
@@ -153,7 +152,7 @@ public class CreateNewConnectedNode extends Command {
                 + matchingPorts[1] + " with existing node " + sourceNode
                 + " port " + matchingPorts[0]);
         try {
-            m_manager.addConnection(m_connectTo, matchingPorts[0], m_newNode,
+            hostWFM.addConnection(m_connectTo, matchingPorts[0], m_newNode,
                     matchingPorts[1]).getID();
         } catch (Exception e) {
             String from = sourceNode.getNameWithID();
@@ -180,7 +179,7 @@ public class CreateNewConnectedNode extends Command {
                 NodeInPort rightPort = right.getInPort(rightPidx);
                 if (leftPort.getPortType().isSuperTypeOf(
                         rightPort.getPortType())) {
-                    if (m_manager.getOutgoingConnectionsFor(left.getID(),
+                    if (getHostWFM().getOutgoingConnectionsFor(left.getID(),
                             leftPidx).size() == 0) {
                         // output not connected: use it.
                         return new int[]{leftPidx, rightPidx};
@@ -202,7 +201,7 @@ public class CreateNewConnectedNode extends Command {
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_newNode != null && m_manager.canRemoveNode(m_newNode);
+        return m_newNode != null && getHostWFM().canRemoveNode(m_newNode);
     }
 
     /**
@@ -212,7 +211,7 @@ public class CreateNewConnectedNode extends Command {
     public void undo() {
         try {
             // blows away the connection as well.
-            m_manager.removeNode(m_newNode);
+            getHostWFM().removeNode(m_newNode);
         } catch (Exception e) {
             String msg =
                     "Undo failed: Node " + m_newNode + " can't be removed: "

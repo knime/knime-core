@@ -32,9 +32,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author ohl, University of Konstanz
  */
-public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
-
-    private final WorkflowManager m_destination;
+public class CreateNewConnectedMetaNodeCommand
+    extends CreateNewConnectedNodeCommand {
 
     private final WorkflowManager m_source;
 
@@ -49,11 +48,10 @@ public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
      * @param location absolute coordinates of the new node
      * @param connectTo
      */
-    public CreateNewConnectedMetaNode(final EditPartViewer viewer,
-            final WorkflowManager destination, final WorkflowManager source,
+    public CreateNewConnectedMetaNodeCommand(final EditPartViewer viewer,
+            final WorkflowManager hostWFM, final WorkflowManager source,
             final NodeID sourceID, final Point location, final NodeID connectTo) {
-        super(viewer, destination, null, location, connectTo);
-        m_destination = destination;
+        super(viewer, hostWFM, null, location, connectTo);
         m_source = source;
         m_sourceID = sourceID;
         m_location = location;
@@ -64,7 +62,7 @@ public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
      */
     @Override
     public boolean canExecute() {
-        return m_destination != null && m_source != null && m_sourceID != null
+        return super.canExecute() && m_source != null && m_sourceID != null
                 && m_location != null;
 
     }
@@ -76,14 +74,15 @@ public class CreateNewConnectedMetaNode extends CreateNewConnectedNode {
     protected NodeID createNewNode() {
         WorkflowCopyContent content = new WorkflowCopyContent();
         content.setNodeIDs(m_sourceID);
+        WorkflowManager hostWFM = getHostWFM();
         NodeID[] copied =
-                m_destination.copyFromAndPasteHere(m_source, content)
+                hostWFM.copyFromAndPasteHere(m_source, content)
                         .getNodeIDs();
         assert copied.length == 1;
         // create UI info
-        NodeContainer newNode = m_destination.getNodeContainer(copied[0]);
+        NodeContainer newNode = hostWFM.getNodeContainer(copied[0]);
         NodeUIInformation uiInfo =
-                (NodeUIInformation)newNode.getUIInformation();
+                newNode.getUIInformation();
         // create extra info and set it
         if (uiInfo == null) {
             uiInfo =

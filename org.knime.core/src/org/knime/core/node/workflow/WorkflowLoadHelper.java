@@ -55,12 +55,13 @@ import java.util.List;
  * user credentials and other information.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface WorkflowLoadHelper {
+public class WorkflowLoadHelper {
 
     /** Default (pessimistic) default load helper. */
     public static final WorkflowLoadHelper INSTANCE =
-        new DefaultWorkflowLoadHelper();
+        new WorkflowLoadHelper();
 
+    private final boolean m_isTemplate;
 
     /** How to proceed when a workflow written with a future KNIME version is
      * loaded. */
@@ -71,57 +72,56 @@ public interface WorkflowLoadHelper {
         Try
     };
 
+    /** Default instance. */
+    public WorkflowLoadHelper() {
+        this(false);
+    }
+
+    /** @param isTemplate whether this is a template loader */
+    public WorkflowLoadHelper(final boolean isTemplate) {
+        m_isTemplate = isTemplate;
+    }
+
     /**
      * Caller method invoked when credentials are needed during loading
      * of a workflow.
      * @param credentials to be initialized
      * @return a list of new <code>Credentials</code>
+     * (this implementation the argument)
      */
     public List<Credentials> loadCredentials(
-            final List<Credentials> credentials);
+            final List<Credentials> credentials) {
+        return credentials;
+    }
 
     /** Callback if an unknown version string is encountered in the KNIME
      * workflow.
      * @param workflowVersionString The version string as in the workflow file
      *        (possibly null or otherwise meaningless).
-     * @return A non-null policy
+     * @return A non-null policy (this implementation return "Abort").
      */
     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-            final String workflowVersionString);
+            final String workflowVersionString) {
+        return UnknownKNIMEVersionLoadPolicy.Abort;
+    }
 
     /** Returns true if the workflow is a template flow, i.e. it will be
      * disconnected from the location where it is loaded from and data will
      * not be imported.
-     * @return If flow is a template flow.
+     * @return If flow is a template flow (defaults to <code>false</code>).
      */
-    public boolean isTemplateFlow();
-
-    /** Default implementation of a load helper.
-     * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
-     */
-    public static class DefaultWorkflowLoadHelper
-        implements WorkflowLoadHelper {
-
-        /** {@inheritDoc} */
-        @Override
-        public List<Credentials> loadCredentials(final List<Credentials> cred) {
-            return cred;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                final String workflowVersionString) {
-            return UnknownKNIMEVersionLoadPolicy.Abort;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public boolean isTemplateFlow() {
-            return false;
-        }
-
+    public boolean isTemplateFlow() {
+        return m_isTemplate;
     }
 
+    /** Post load procedure: check for updates of meta node links.
+     * This method is only called when the workflow being loaded contains
+     * meta node links (<code>links</code> argument is not empty).
+     * @param parent The host WFM.
+     * @param links The meta node links. */
+    public void postLoadCheckForMetaNodeUpdates(final WorkflowManager parent,
+            final WorkflowManager[] links) {
+        // empty, potentially overwritten
+    }
 
 }

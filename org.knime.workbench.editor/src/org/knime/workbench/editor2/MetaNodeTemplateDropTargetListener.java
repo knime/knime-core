@@ -102,7 +102,7 @@ public class MetaNodeTemplateDropTargetListener extends
         boolean isMetaNodeTemplate = ExplorerFileStore.isWorkflow(fileStore);
         if (isMetaNodeTemplate) {
             event.feedback = DND.FEEDBACK_SELECT;
-            event.operations = DND.DROP_COPY;
+            event.operations = DND.DROP_COPY | DND.DROP_LINK;
             event.detail = DND.DROP_COPY;
         }
         return isMetaNodeTemplate;

@@ -78,7 +78,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private NodeSettingsRO m_executionJobSettings;
 
-    private UIInformation m_uiInfo;
+    private NodeUIInformation m_uiInfo;
 
     private State m_state = State.IDLE;
 
@@ -126,13 +126,13 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getUIInfo() {
+    public NodeUIInformation getUIInfo() {
         return m_uiInfo;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setUIInfo(final UIInformation uiInfo) {
+    public void setUIInfo(final NodeUIInformation uiInfo) {
         m_uiInfo = uiInfo;
     }
 

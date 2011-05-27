@@ -76,7 +76,6 @@ import org.knime.core.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeOutPort;
-import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
@@ -284,25 +283,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     }
 
     /**
-     * Forwards the ui information to the model and refreshes the connection.
-     *
-     * @param uiInfo the information about the connection (used only if
-     *            bendpoints are used)
-     */
-    public void setUIInformation(final UIInformation uiInfo) {
-        getModel().setUIInfo(uiInfo);
-    }
-
-    /**
-     *
-     * @return the ui information of this connection (may be null if no
-     *         bendpoints are involved)
-     */
-    public UIInformation getUIInformation() {
-        return (getModel()).getUIInfo();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -310,7 +290,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         super.refreshVisuals();
         LOGGER.debug("refreshing visuals for: " + getModel());
         ConnectionUIInformation ei = null;
-        ei = (ConnectionUIInformation)(getModel()).getUIInfo();
+        ei = getModel().getUIInfo();
         LOGGER.debug("modelling info: " + ei);
         if (ei == null) {
             return;

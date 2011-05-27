@@ -229,7 +229,8 @@ public final class MetaNodeTemplateRepositoryManager {
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
                         WorkflowManager metaNode = m_workflowmanager.load(f,
-                                new ExecutionMonitor(), null, false)
+                                new ExecutionMonitor(),
+                                WorkflowLoadHelper.INSTANCE, false)
                                 .getWorkflowManager();
                         MetaNodeTemplateRepositoryItem preItem
                             = new MetaNodeTemplateRepositoryItem(f.getName(),
@@ -285,6 +286,7 @@ public final class MetaNodeTemplateRepositoryManager {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                         final String workflowVersionString) {
                     LOGGER.error("Installed meta nodes are of unkown version?!?");
@@ -294,6 +296,7 @@ public final class MetaNodeTemplateRepositoryManager {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public List<Credentials> loadCredentials(
                         final List<Credentials> credentials) {
                     return credentials;

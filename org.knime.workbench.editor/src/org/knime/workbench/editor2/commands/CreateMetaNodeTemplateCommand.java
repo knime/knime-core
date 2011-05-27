@@ -50,11 +50,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -68,20 +65,19 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
+import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
 
 /**
  * GEF command for adding a MetaNode from a file location to the workflow.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
-public class CreateMetaNodeTemplateCommand extends Command {
+public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateMetaNodeTemplateCommand.class);
 
-    private final WorkflowManager m_manager;
-
-    private final IFileStore m_metaNodeWorkflowKNIMEFile;
+    private final ExplorerFileStore m_metaNodeWorkflowKNIMEFile;
 
     private final Point m_location;
 
@@ -95,10 +91,10 @@ public class CreateMetaNodeTemplateCommand extends Command {
      * @param metaNodeWorkflowKNIMEFile the file underlying the template
      * @param location Initial visual location in the
      */
-    public CreateMetaNodeTemplateCommand(
-            final WorkflowManager manager,
-            final IFileStore metaNodeWorkflowKNIMEFile, final Point location) {
-        m_manager = manager;
+    public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
+            final ExplorerFileStore metaNodeWorkflowKNIMEFile,
+            final Point location) {
+        super(manager);
         m_metaNodeWorkflowKNIMEFile = metaNodeWorkflowKNIMEFile;
         m_location = location;
     }
@@ -107,8 +103,10 @@ public class CreateMetaNodeTemplateCommand extends Command {
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        if (m_manager == null || m_location == null
-                || m_metaNodeWorkflowKNIMEFile == null) {
+        if (!super.canExecute()) {
+            return false;
+        }
+        if (m_location == null || m_metaNodeWorkflowKNIMEFile == null) {
             return false;
         }
         IFileInfo fileInfo = m_metaNodeWorkflowKNIMEFile.fetchInfo();
@@ -127,8 +125,8 @@ public class CreateMetaNodeTemplateCommand extends Command {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
-            loadRunnable = new LoadMetaNodeTemplateRunnable(m_manager,
-                    m_metaNodeWorkflowKNIMEFile.toLocalFile(EFS.NONE, null));
+            loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(),
+                    m_metaNodeWorkflowKNIMEFile);
             ps.busyCursorWhile(loadRunnable);
             WorkflowLoadResult result = loadRunnable.getWorkflowLoadResult();
             m_container = result.getWorkflowManager();
@@ -158,7 +156,7 @@ public class CreateMetaNodeTemplateCommand extends Command {
     @Override
     public boolean canUndo() {
         return m_container != null
-            && m_manager.canRemoveNode(m_container.getID());
+            && getHostWFM().canRemoveNode(m_container.getID());
     }
 
     /**
@@ -168,7 +166,7 @@ public class CreateMetaNodeTemplateCommand extends Command {
     public void undo() {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         if (canUndo()) {
-            m_manager.removeNode(m_container.getID());
+            getHostWFM().removeNode(m_container.getID());
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
                     "Operation no allowed", "The node "

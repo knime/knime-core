@@ -136,14 +136,20 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** @return the shouldFailOnLoadDataError */
     public boolean mustWarnOnDataLoadError();
 
+    /** template information associated with the workflow, e.g. whether it
+     * is linking to same central master meta node.
+     * @return The template info
+     */
+    public MetaNodeTemplateInformation getTemplateInformation();
+
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {
-        private final int m_sourceSuffix;
+        private int m_sourceSuffix;
         private int m_sourcePort;
-        private final int m_destSuffix;
+        private int m_destSuffix;
         private int m_destPort;
         private boolean m_isDeletable;
-        private final UIInformation m_uiInfo;
+        private final ConnectionUIInformation m_uiInfo;
 
         /**
          * Creates new template connection.
@@ -156,7 +162,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          */
         ConnectionContainerTemplate(final int source,
                 final int sourcePort, final int dest, final int destPort,
-                final boolean isDeletable, final UIInformation uiInfo) {
+                final boolean isDeletable,
+                final ConnectionUIInformation uiInfo) {
             m_sourceSuffix = source;
             m_sourcePort = sourcePort;
             m_destSuffix = dest;
@@ -194,7 +201,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
                 throw new InternalError("Unknown type " + original.getType());
             }
             m_isDeletable = !preserveDeletableFlag || original.isDeletable();
-            UIInformation origUIInfo = original.getUIInfo();
+            ConnectionUIInformation origUIInfo = original.getUIInfo();
             m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
         }
 
@@ -228,22 +235,32 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /**
          * @param isDeletable the isDeletable to set
          */
-        public void setDeletable(final boolean isDeletable) {
+        void setDeletable(final boolean isDeletable) {
             m_isDeletable = isDeletable;
         }
 
         /** @param destPort the destPort to set */
-        public void setDestPort(final int destPort) {
+        void setDestPort(final int destPort) {
             m_destPort = destPort;
         }
 
+        /** @param destSuffix the destSuffix to set */
+        void setDestSuffix(final int destSuffix) {
+            m_destSuffix = destSuffix;
+        }
+
         /** @param sourcePort the sourcePort to set */
-        public void setSourcePort(final int sourcePort) {
+        void setSourcePort(final int sourcePort) {
             m_sourcePort = sourcePort;
         }
 
+        /** @param sourceSuffix the sourceSuffix to set */
+        void setSourceSuffix(final int sourceSuffix) {
+            m_sourceSuffix = sourceSuffix;
+        }
+
         /** @return the uiInfo */
-        UIInformation getUiInfo() {
+        ConnectionUIInformation getUiInfo() {
             return m_uiInfo;
         }
 
@@ -518,6 +535,41 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             }
             return b.toString();
         }
+    }
+
+    public static class MetaNodeLinkUpdateResult extends LoadResult {
+
+        private WorkflowManager m_metaNode;
+        private WorkflowPersistor m_undoPersistor;
+
+        /** @param name Forwarded to super. */
+        public MetaNodeLinkUpdateResult(final String name) {
+            super(name);
+        }
+
+        /** @return the metaNode */
+        public WorkflowManager getMetaNode() {
+            return m_metaNode;
+        }
+
+        /** @param metaNode the metaNode to set */
+        void setMetaNode(final WorkflowManager metaNode) {
+            m_metaNode = metaNode;
+        }
+
+        /** @return the undoPersistor */
+        public WorkflowPersistor getUndoPersistor() {
+            return m_undoPersistor;
+        }
+
+        /** @param undoPersistor the undoPersistor to set */
+        void setUndoPersistor(final WorkflowPersistor undoPersistor) {
+            m_undoPersistor = undoPersistor;
+        }
+
+
+
+
     }
 
 }

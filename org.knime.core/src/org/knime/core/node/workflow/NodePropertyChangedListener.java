@@ -47,31 +47,21 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.EventObject;
-
 /**
- * 
- * @author Fabian Dill, KNIME.com GmbH
+ * A listener interface for objects interested in changed properties of a node.
+ *
+ * @see NodePropertyChangedEvent
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class JobManagerChangedEvent extends EventObject {
-    
-    /**
-     * 
-     * @param source the {@link NodeID} of the {@link NodeContainer} whose
-     * {@link NodeExecutionJobManager} has changed
-     */
-    public JobManagerChangedEvent(final NodeID source) {
-        super(source);
-    }
-    
+public interface NodePropertyChangedListener {
 
     /**
+     * Gets called whenever a property of a node changes.
      *
-     * {@inheritDoc}
+     * @param e event containing the {@link NodeID} of the source node, whose
+     * property has changed.
      */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
-    }
+    public void nodePropertyChanged(NodePropertyChangedEvent e);
 
 }

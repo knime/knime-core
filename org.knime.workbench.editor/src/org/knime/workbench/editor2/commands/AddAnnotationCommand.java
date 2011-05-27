@@ -54,7 +54,6 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.gef.GraphicalViewer;
-import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.graphics.Point;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -68,9 +67,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AddAnnotationCommand extends Command {
-
-    private final WorkflowManager m_wfm;
+public class AddAnnotationCommand extends AbstractKNIMECommand {
 
     private final GraphicalViewer m_viewer;
 
@@ -100,9 +97,15 @@ public class AddAnnotationCommand extends Command {
      */
     public AddAnnotationCommand(final WorkflowManager wfm,
             final GraphicalViewer viewer, final Point location) {
+        super(wfm);
         m_location = location;
         m_viewer = viewer;
-        m_wfm = wfm;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canExecute() {
+        return super.canExecute();
     }
 
     /**
@@ -129,7 +132,8 @@ public class AddAnnotationCommand extends Command {
         m_anno.setStyleRanges(new WorkflowAnnotation.StyleRange[0]);
         m_anno.setDimension((int)location.preciseX, (int)location.preciseY,
                 DEFAULT_WIDTH, DEFAULT_HEIGHT);
-        m_wfm.addWorkflowAnnotation(m_anno);
+        WorkflowManager hostWFM = getHostWFM();
+        hostWFM.addWorkflowAnnotation(m_anno);
         m_viewer.deselectAll();
         // select the new ones....
         if (m_viewer.getRootEditPart().getContents() != null
@@ -145,7 +149,7 @@ public class AddAnnotationCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        return m_wfm != null && m_anno != null;
+        return m_anno != null;
     }
 
     /**
@@ -153,7 +157,7 @@ public class AddAnnotationCommand extends Command {
      */
     @Override
     public void undo() {
-        m_wfm.removeAnnotation(m_anno);
+        getHostWFM().removeAnnotation(m_anno);
         m_anno = null;
     }
 }

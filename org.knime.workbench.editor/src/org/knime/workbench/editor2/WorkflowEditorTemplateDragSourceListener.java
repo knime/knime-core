@@ -64,7 +64,7 @@ public class WorkflowEditorTemplateDragSourceListener extends
          * containing only SubworkflowEditPart items. */
         List<WorkflowManager> wfm = new ArrayList<WorkflowManager>();
         for (Object item : getViewer().getSelectedEditParts()) {
-            wfm.add(((SubworkflowEditPart)item).getWorkflowManager());
+            wfm.add(((SubworkflowEditPart)item).getNodeContainer());
         }
         event.data = wfm;
         LOGGER.debug("dragSetData with event: " + event

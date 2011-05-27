@@ -371,23 +371,32 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             throw new InvalidSettingsException("Source and Destination must "
                     + "not be equal, id is " + sourceID);
         }
-        UIInformation uiInfo = null;
+        ConnectionUIInformation connUIInfo = null;
         try {
             String uiInfoClass = loadUIInfoClassName(settings);
-            uiInfo = loadUIInfoInstance(uiInfoClass);
+            UIInformation uiInfo = loadUIInfoInstance(uiInfoClass);
             if (uiInfo != null) {
-                loadUIInfoSettings(uiInfo, settings);
+                if (!(uiInfo instanceof ConnectionUIInformation)) {
+                    getLogger().debug("Could not load UI information for "
+                            + "connection between nodes " + sourceID + " and "
+                            + destID + ": expected "
+                            + ConnectionUIInformation.class.getName()
+                            + " but got " + uiInfoClass.getClass().getName());
+                } else {
+                    loadUIInfoSettings(uiInfo, settings);
+                    connUIInfo = (ConnectionUIInformation)uiInfo;
+                }
             }
         } catch (InvalidSettingsException ise) {
             getLogger().debug("Could not load UI information for connection "
                     + "between nodes " + sourceID + " and " + destID);
         } catch (Throwable t) {
-            getLogger().warn("Exception while loading connection UI " +
-            		"information between nodes " + sourceID + " and "
+            getLogger().warn("Exception while loading connection UI "
+                    + "information between nodes " + sourceID + " and "
             		+ destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
-                destPort, /*isDeletable*/true, uiInfo);
+                destPort, /*isDeletable*/true, connUIInfo);
     }
 
     private static boolean doesAnyArrayContain(final int value,
