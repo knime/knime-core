@@ -40,65 +40,58 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   13.02.2008 (thor): created
+ *   May 27, 2011 (wiswedel): created
  */
 package org.knime.base.node.meta.looper;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Loop End Node that joins the input table with the previous input
- * (colum wise concatenation).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class LoopEndJoinNodeFactory extends NodeFactory<LoopEndJoinNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new LoopEndJoinNodeDialogPane();
+final class LoopEndJoinNodeConfiguration {
+
+    private boolean m_hasSameRowsInEachIteration;
+
+    /** @return the hasSameRowsInEachIteration */
+    boolean hasSameRowsInEachIteration() {
+        return m_hasSameRowsInEachIteration;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LoopEndJoinNodeModel createNodeModel() {
-        return new LoopEndJoinNodeModel();
+    /** @param value the value to set */
+    void setHasSameRowsInEachIteration(final boolean value) {
+        m_hasSameRowsInEachIteration = value;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
+    /** Save current config.
+     * @param settings To save to. */
+    void saveConfiguration(final NodeSettingsWO settings) {
+        settings.addBoolean("hasSameRowsInEachIteration",
+                m_hasSameRowsInEachIteration);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    /** Load in NodeModel.
+     * @param settings To load from.
+     * @throws InvalidSettingsException Not actually thrown. */
+    void loadConfigurationInModel(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        m_hasSameRowsInEachIteration =
+            settings.getBoolean("hasSameRowsInEachIteration", false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<LoopEndJoinNodeModel> createNodeView(final int index,
-            final LoopEndJoinNodeModel model) {
-        return null;
+    /** Load in Dialog.
+     * @param settings To load from. */
+    void loadConfigurationInDialog(final NodeSettingsRO settings) {
+        m_hasSameRowsInEachIteration =
+            settings.getBoolean("hasSameRowsInEachIteration", false);
     }
 }

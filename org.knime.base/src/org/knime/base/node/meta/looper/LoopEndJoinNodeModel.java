@@ -81,6 +81,7 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  */
 public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
 
+    private LoopEndJoinNodeConfiguration m_configuration;
     private BufferedDataTable m_currentAppendTable;
     private int m_iteration = 0;
 
@@ -95,6 +96,10 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_configuration == null) {
+            // auto-guess, dialog added in v2.4
+            m_configuration = new LoopEndJoinNodeConfiguration();
+        }
         return null;
     }
 
@@ -102,6 +107,8 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        boolean hasSameRowsInEachIteration =
+            m_configuration.hasSameRowsInEachIteration();
         LoopStartNode startNode = getLoopStartNode();
         if (!(startNode instanceof LoopStartNodeTerminator)) {
             throw new IllegalStateException("Loop end is not connected"
@@ -112,6 +119,26 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
             !((LoopStartNodeTerminator)startNode).terminateLoop();
         if (m_currentAppendTable == null) {
             m_currentAppendTable = copy(inData[0], exec);
+        } else if (hasSameRowsInEachIteration) {
+            boolean isCacheNew = m_iteration % 50 == 0;
+            double amount = isCacheNew ? (1.0 / 3.0) : (1.0 / 2.0);
+            ExecutionContext copyCtx = exec.createSubExecutionContext(amount);
+            ExecutionContext joinCtx = exec.createSubExecutionContext(amount);
+            exec.setProgress("Copying input");
+            BufferedDataTable t = copy(inData[0], copyCtx);
+            copyCtx.setProgress(1.0);
+            exec.setProgress("Joining with previous input");
+            m_currentAppendTable = exec.createJoinedTable(
+                    m_currentAppendTable, t, joinCtx);
+            joinCtx.setProgress(1.0);
+            if (isCacheNew) {
+                exec.setProgress("Caching intermediate results (iteration "
+                        + m_iteration + ")");
+                ExecutionContext ctx = exec.createSubExecutionContext(amount);
+                m_currentAppendTable =
+                    exec.createBufferedDataTable(m_currentAppendTable, ctx);
+                ctx.setProgress(1.0);
+            }
         } else {
             Joiner2Settings settings = new Joiner2Settings();
             settings.setCompositionMode(CompositionMode.MatchAll);
@@ -170,21 +197,26 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // no op
+        if (m_configuration != null) {
+            m_configuration.saveConfiguration(settings);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // no op
+        LoopEndJoinNodeConfiguration c = new LoopEndJoinNodeConfiguration();
+        c.loadConfigurationInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // no op
+        LoopEndJoinNodeConfiguration c = new LoopEndJoinNodeConfiguration();
+        c.loadConfigurationInModel(settings);
+        m_configuration = c;
     }
 
     /** {@inheritDoc} */
