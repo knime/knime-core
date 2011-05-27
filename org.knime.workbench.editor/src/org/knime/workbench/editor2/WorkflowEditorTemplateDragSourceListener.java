@@ -39,7 +39,7 @@ import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
  */
 public class WorkflowEditorTemplateDragSourceListener extends
         AbstractTransferDragSourceListener {
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
             WorkflowEditorTemplateDragSourceListener.class);
 
     /**

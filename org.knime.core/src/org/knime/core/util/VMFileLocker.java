@@ -21,7 +21,6 @@
 package org.knime.core.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.knime.core.node.NodeLogger;
@@ -83,7 +82,7 @@ public final class VMFileLocker {
                     if (!fl.lock()) {
                         return false;
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     String m =
                             e.getMessage() == null ? "<no details>" : e
                                     .getMessage();

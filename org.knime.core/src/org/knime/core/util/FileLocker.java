@@ -63,7 +63,7 @@ import java.nio.channels.FileLock;
  * @author Christoph Sieb, University of Konstanz
  */
 public class FileLocker {
-    private File m_lockFile;
+    private final File m_lockFile;
 
     private FileLock m_fileLock;
 
@@ -91,7 +91,7 @@ public class FileLocker {
         m_raFile = new RandomAccessFile(m_lockFile, "rw");
         try {
             m_fileLock = m_raFile.getChannel().tryLock();
-        } catch (IOException ioe) {
+        } catch (Exception ioe) {
             // produce a more specific message for clients
             String specificMessage =
                     "Lock could not be aquired on: '" + m_lockFile
