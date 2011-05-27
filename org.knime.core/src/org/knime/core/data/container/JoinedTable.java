@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 15, 2007 (wiswedel): created
  */
@@ -59,27 +59,27 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
  * Class that realizes a join table of two {@link BufferedDataTable} arguments.
  * <p><b>This class is not intended to be used in any node implementation, it
  * is public only because some KNIME framework classes access it.</b>
  * <p>This class is used to represent the {@link BufferedDataTable} that is
- * returned by the {@link org.knime.core.node.ExecutionContext}s 
+ * returned by the {@link org.knime.core.node.ExecutionContext}s
  * {@link org.knime.core.node.ExecutionContext#createJoinedTable(
  * BufferedDataTable, BufferedDataTable, ExecutionMonitor)}
  * method.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class JoinedTable implements KnowsRowCountTable {
-    
+
     private final BufferedDataTable m_leftTable;
     private final BufferedDataTable m_rightTable;
     private final DataTableSpec m_spec;
@@ -87,14 +87,14 @@ public final class JoinedTable implements KnowsRowCountTable {
      * arguments. */
     private final int[] m_map;
     private final boolean[] m_flags;
-    
+
     /**
      * Creates new object. No checks are done.
      * @param left The left table.
      * @param right The right table.
      * @param spec The proper spec.
      */
-    private JoinedTable(final BufferedDataTable left, 
+    private JoinedTable(final BufferedDataTable left,
             final BufferedDataTable right, final DataTableSpec spec) {
         m_leftTable = left;
         m_rightTable = right;
@@ -116,28 +116,32 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public CloseableRowIterator iterator() {
-        return new JoinTableIterator(m_leftTable.iterator(), 
+        return new JoinTableIterator(m_leftTable.iterator(),
                 m_rightTable.iterator(), m_map, m_flags);
     }
-    
+
     /**
-     * Does nothing. 
+     * Does nothing.
      * {@inheritDoc}
      */
+    @Override
     public void clear() {
         // left empty, it's up to the node to clear our underlying tables.
     }
-    
-    /** Internal use. 
+
+    /** Internal use.
      * {@inheritDoc} */
+    @Override
     public void ensureOpen() {
         Node.invokeEnsureOpen(m_leftTable);
         Node.invokeEnsureOpen(m_rightTable);
@@ -146,6 +150,7 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public BufferedDataTable[] getReferenceTables() {
         return new BufferedDataTable[]{m_leftTable, m_rightTable};
     }
@@ -153,6 +158,7 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getRowCount() {
         return m_leftTable.getRowCount();
     }
@@ -160,6 +166,7 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
     }
@@ -167,10 +174,11 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
     }
-    
+
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_LEFT_TABLE_ID = "leftTableID";
     private static final String CFG_RIGHT_TABLE_ID = "rightTableID";
@@ -178,6 +186,7 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void saveToFile(final File f, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
@@ -185,7 +194,7 @@ public final class JoinedTable implements KnowsRowCountTable {
         internals.addInt(CFG_LEFT_TABLE_ID, m_leftTable.getBufferedTableId());
         internals.addInt(CFG_RIGHT_TABLE_ID, m_rightTable.getBufferedTableId());
     }
-    
+
     /** Method being called when the workflow is restored and the table shall
      * recreated.
      * @param s The settings object, contains tables ids.
@@ -194,22 +203,22 @@ public final class JoinedTable implements KnowsRowCountTable {
      * @return The restored table.
      * @throws InvalidSettingsException If the settings can't be read.
      */
-    public static JoinedTable load(final NodeSettingsRO s, 
-            final DataTableSpec spec, 
-            final Map<Integer, BufferedDataTable> tblRep) 
+    public static JoinedTable load(final NodeSettingsRO s,
+            final DataTableSpec spec,
+            final Map<Integer, BufferedDataTable> tblRep)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int leftID = subSettings.getInt(CFG_LEFT_TABLE_ID);
         int rightID = subSettings.getInt(CFG_RIGHT_TABLE_ID);
-        BufferedDataTable leftTable = 
+        BufferedDataTable leftTable =
             BufferedDataTable.getDataTable(tblRep, leftID);
-        BufferedDataTable rightTable = 
+        BufferedDataTable rightTable =
             BufferedDataTable.getDataTable(tblRep, rightID);
         return new JoinedTable(leftTable, rightTable, spec);
     }
-    
+
     /**
-     * Creates new join table, does the sanity checks. Called from the 
+     * Creates new join table, does the sanity checks. Called from the
      * {@link org.knime.core.node.ExecutionContext#createJoinedTable(
      * BufferedDataTable, BufferedDataTable, ExecutionMonitor)} method.
      * @param left The left table.
@@ -223,9 +232,10 @@ public final class JoinedTable implements KnowsRowCountTable {
     public static JoinedTable create(final BufferedDataTable left,
             final BufferedDataTable right, final ExecutionMonitor prog)
             throws CanceledExecutionException {
-        if (left.getRowCount() != right.getRowCount()) {
+        int cnt = left.getRowCount();
+        if (cnt != right.getRowCount()) {
             throw new IllegalArgumentException("Tables can't be joined, non "
-                    + "matching row counts: " + left.getRowCount() + " vs. "
+                    + "matching row counts: " + cnt + " vs. "
                     + right.getRowCount());
         }
         // throws exception when duplicates encountered.
@@ -236,16 +246,18 @@ public final class JoinedTable implements KnowsRowCountTable {
         RowIterator rightIt = right.iterator();
         int rowIndex = 0;
         while (leftIt.hasNext()) {
-            prog.checkCanceled();
             RowKey leftKey = leftIt.next().getKey();
             RowKey rightKey = rightIt.next().getKey();
             if (!leftKey.equals(rightKey)) {
                 throw new IllegalArgumentException(
                         "Tables contain non-matching rows or are sorted "
-                        + "differently, keys in row " + rowIndex 
-                        + " do not match: \"" + leftKey 
+                        + "differently, keys in row " + rowIndex
+                        + " do not match: \"" + leftKey
                         + "\" vs. \"" + rightKey + "\"");
             }
+            prog.checkCanceled();
+            prog.setProgress(rowIndex / (double)cnt, "\"" + leftKey
+                    + "\" (" + rowIndex + "/" + cnt + ")");
             rowIndex++;
         }
         return new JoinedTable(left, right, joinSpec);
