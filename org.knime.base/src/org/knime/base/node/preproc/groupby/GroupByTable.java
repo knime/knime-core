@@ -314,10 +314,6 @@ public abstract class GroupByTable {
     throws CanceledExecutionException {
         final ColumnRearranger rearranger =
             new ColumnRearranger(dataTable.getSpec());
-        final String[] workingColsArray =
-            workingCols.toArray(new String[0]);
-        rearranger.keepOnly(workingColsArray);
-        rearranger.permute(workingColsArray);
         rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(
                 retainOrderCol, IntCell.TYPE).createSpec()) {
             private int m_id = 0;
@@ -326,6 +322,9 @@ public abstract class GroupByTable {
                 return new IntCell(m_id++);
             }
         });
+        final String[] workingColsArray = workingCols.toArray(new String[0]);
+        rearranger.keepOnly(workingColsArray);
+        rearranger.permute(workingColsArray);
         return exec.createColumnRearrangeTable(dataTable, rearranger, exec);
     }
 
