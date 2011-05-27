@@ -266,7 +266,6 @@ public final class HiLiteTranslator {
      * @param mapper the new hilite mapper
      */
     public void setMapper(final HiLiteMapper mapper) {
-        m_sourceHandler.fireClearHiLiteEvent();
         m_mapper = mapper;
     }
 
