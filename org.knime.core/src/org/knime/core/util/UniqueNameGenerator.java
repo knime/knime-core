@@ -121,7 +121,7 @@ public final class UniqueNameGenerator {
         }
         String newName;
         do {
-           newName = baseName + "(#" + (index++) + ")";
+           newName = baseName + " (#" + (index++) + ")";
         } while (!m_nameHash.add(newName));
         return newName;
     }
