@@ -484,11 +484,11 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         boolean alreadySet = false;
+        m_progressFigure.reset();
         // and set the progress bar
         if (!isChild(m_progressFigure)) {
 
             // reset the progress first
-            m_progressFigure.reset();
             addAtIndex(m_progressFigure, 3);
             setConstraint(m_progressFigure, new NodeContainerLocator(this));
 
