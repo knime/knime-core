@@ -409,7 +409,10 @@ public class WrappedNodeDialog extends Dialog {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
-                        if (m_nodeContainer.getNrOutPorts() >= 1) {
+                        // can only show out-port view for nodes with at least
+                        // one out-port (whereby the first is used as flow 
+                        // variable port)
+                        if (m_nodeContainer.getNrOutPorts() > 1) {
                             NodeOutPort port = m_nodeContainer.getOutPort(1);
                             port.openPortView(port.getPortName());
                         }
