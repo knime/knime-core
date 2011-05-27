@@ -63,6 +63,7 @@ import javax.xml.stream.XMLStreamException;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
 import org.knime.core.data.xml.io.XMLCellWriter;
 import org.knime.core.data.xml.io.XMLCellWriterFactory;
+import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -120,9 +121,10 @@ public class XMLCellContent implements XMLValue {
     XMLCellContent(final Document doc) {
         m_content = doc;
         // Transform CDATA to text
-        m_content.getDomConfig().setParameter("cdata-sections", Boolean.FALSE);
+        DOMConfiguration domConfig = m_content.getDomConfig();
+        domConfig.setParameter("cdata-sections", Boolean.FALSE);
         // Resolve entities
-        m_content.getDomConfig().setParameter("entities", Boolean.FALSE);
+        domConfig.setParameter("entities", Boolean.FALSE);
         // normalizeDocument adds e.g. missing xmls attributes
         m_content.normalizeDocument();
     }
