@@ -97,6 +97,12 @@ public final class DBReaderNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane(true);
+        return new DBReaderDialogPane(true) {
+            /** {@inheritDoc} */
+            @Override
+            protected boolean runWithoutConfigure() {
+                return true;
+            }
+        };
     }
 }

@@ -79,6 +79,8 @@ class DBReaderNodeModel extends NodeModel
 
     private String m_query = null;
 
+    private boolean m_configureBox = false;
+
     private final DatabaseReaderConnection m_load =
         new DatabaseReaderConnection(null);
 
@@ -102,9 +104,9 @@ class DBReaderNodeModel extends NodeModel
         try {
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
                     m_load.getQueryConnection(), parseQuery(m_query)));
+            exec.setProgress("Reading data from database...");
             CredentialsProvider cp = getCredentialsProvider();
             m_lastSpec = m_load.getDataTableSpec(cp);
-            exec.setProgress("Reading data from database...");
             return new BufferedDataTable[]{m_load.createTable(exec, cp)};
         } catch (CanceledExecutionException cee) {
             throw cee;
@@ -205,6 +207,9 @@ class DBReaderNodeModel extends NodeModel
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_configureBox) {
+            return new DataTableSpec[] {null};
+        }
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
         }
@@ -268,6 +273,8 @@ class DBReaderNodeModel extends NodeModel
             }
         }
         m_query = query;
+        m_configureBox = settings.getBoolean(
+                DBReaderDialogPane.EXECUTE_WITHOUT_CONFIGURE, false);
     }
 
     /**
@@ -280,6 +287,8 @@ class DBReaderNodeModel extends NodeModel
             conn.saveConnection(settings);
         }
         settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
+        settings.addBoolean(DBReaderDialogPane.EXECUTE_WITHOUT_CONFIGURE,
+                m_configureBox);
     }
 
     /**
