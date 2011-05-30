@@ -126,6 +126,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
         if (getNrOutPorts() == 2) {
             falseMatch = exec.createDataContainer(spec);
         }
+        m_rowCount = inData[0].getRowCount();
         m_settings.setInputAndCompile(spec);
         ColumnCalculator cc = new ColumnCalculator(m_settings, this);
         final int rowCount = inData[0].getRowCount();
@@ -167,7 +168,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     protected void reset() {
-        // no internals
+        m_rowCount = -1;
     }
 
 
