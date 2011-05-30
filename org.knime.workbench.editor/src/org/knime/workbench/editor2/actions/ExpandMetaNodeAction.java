@@ -98,7 +98,8 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/missing.png");
+        return ImageRepository.getImageDescriptor(
+                "icons/meta/meta_node_expand.png");
     }
 
     /**
@@ -106,8 +107,8 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository
-                .getImageDescriptor("icons/missing_diabled.png");
+        return ImageRepository.getImageDescriptor(
+                "icons/meta/meta_node_expand.png");
     }
 
     /**

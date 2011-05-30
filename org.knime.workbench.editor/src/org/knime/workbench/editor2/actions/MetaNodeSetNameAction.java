@@ -101,14 +101,13 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
         return "Set name on meta node";
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_rename.png");
+                "icons/meta/meta_node_setname.png");
     }
 
     /**
