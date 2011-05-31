@@ -116,6 +116,9 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         return getEditor().getClipboardContent() != null;
     }
 

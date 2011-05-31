@@ -54,6 +54,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -121,8 +122,12 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        Object model = nodes[0].getModel();
-        return model instanceof WorkflowManager;
+        NodeContainer nc = nodes[0].getNodeContainer();
+        if (nc instanceof WorkflowManager) {
+            WorkflowManager metaNode = (WorkflowManager)nc;
+            return !metaNode.isWriteProtected();
+        }
+        return false;
     }
 
     /** {@inheritDoc} */

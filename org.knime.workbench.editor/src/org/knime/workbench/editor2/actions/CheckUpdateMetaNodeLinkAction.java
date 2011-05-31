@@ -146,6 +146,9 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         NodeContainerEditPart[] nodes =
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : nodes) {

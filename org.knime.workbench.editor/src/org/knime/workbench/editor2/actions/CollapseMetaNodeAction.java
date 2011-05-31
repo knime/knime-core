@@ -137,8 +137,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
         if (parts.length <= 1) {
             return false;
         }
-        // enabled if at least two items are selected.
-        return true;
+        return !getManager().isWriteProtected();
     }
 
     /**

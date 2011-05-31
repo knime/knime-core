@@ -179,6 +179,7 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
+import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.actions.UpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
@@ -495,6 +496,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription =
                 new SetNameAndDescriptionAction(this);
+        AbstractNodeAction toggleFlowVarPorts =
+            new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
         AbstractNodeAction metaNodeSetName =
@@ -534,6 +537,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(resume);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
+        m_actionRegistry.registerAction(toggleFlowVarPorts);
         m_actionRegistry.registerAction(setNameAndDescription);
         m_actionRegistry.registerAction(defaultOpenView);
 
@@ -565,6 +569,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
         m_editorActions.add(setNameAndDescription.getId());
+        m_editorActions.add(toggleFlowVarPorts.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());
         m_editorActions.add(collapse.getId());

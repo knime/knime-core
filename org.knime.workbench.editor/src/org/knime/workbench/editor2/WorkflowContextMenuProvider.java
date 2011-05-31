@@ -297,9 +297,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // ports
                     if (Boolean.parseBoolean(System.getProperty(
                             KNIMEConstants.PROPERTY_EXPERT_MODE, "false"))) {
-                        manager.appendToGroup(FLOW_VAR_PORT_GRP,
-                                new ToggleFlowVarPortsAction(
-                                        (NodeContainerEditPart)p));
+                        action = m_actionRegistry.getAction(
+                                ToggleFlowVarPortsAction.ID);
+                        manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
+                        ((AbstractNodeAction)action).update();
                     }
                 }
 

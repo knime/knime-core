@@ -172,6 +172,9 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
+        if (!super.canExecute()) {
+            return false;
+        }
         boolean foundValid = false;
         WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_nodeIDs) {

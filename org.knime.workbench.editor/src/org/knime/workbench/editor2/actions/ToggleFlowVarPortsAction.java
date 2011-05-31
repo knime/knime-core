@@ -50,38 +50,85 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.action.Action;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  *
  * @author ohl, University of Konstanz
  */
-public class ToggleFlowVarPortsAction extends Action {
+public class ToggleFlowVarPortsAction extends AbstractNodeAction {
 
-    private final NodeContainerEditPart m_node;
-
-    public ToggleFlowVarPortsAction(final NodeContainerEditPart node) {
-        m_node = node;
-    }
 
     /**
-     * {@inheritDoc}
+     * unique ID for this action.
      */
-    @Override
-    public void run() {
-        m_node.setShowImplFlowVarPorts(!m_node.getShowImplFlowVarPorts());
+    public static final String ID = "knime.action.showFlowVarPorts";
+
+    public ToggleFlowVarPortsAction(final WorkflowEditor editor) {
+        super(editor);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public String getText() {
-        if (m_node.getShowImplFlowVarPorts()) {
-            return "Hide Flow Variable Ports";
+    public String getId() {
+        return ID;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
+        NodeContainerEditPart[] sels =
+            getSelectedParts(NodeContainerEditPart.class);
+        for (NodeContainerEditPart p : sels) {
+            if (p.getNodeContainer() instanceof SingleNodeContainer) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void update() {
+        super.update();
+        boolean isToShow = isToShowPorts(
+                getSelectedParts(NodeContainerEditPart.class));
+        String text;
+        if (isToShow) {
+            text = "Show Flow Variable Ports";
         } else {
-            return "Show Flow Variable Ports";
+            text = "Hide Flow Variable Ports";
+        }
+        setText(text);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        NodeContainerEditPart[] sels =
+            getSelectedParts(NodeContainerEditPart.class);
+        boolean isToShow = isToShowPorts(sels);
+        for (NodeContainerEditPart p : sels) {
+            p.setShowImplFlowVarPorts(isToShow);
         }
     }
+
+    /**
+     * @param sels
+     * @return */
+    private boolean isToShowPorts(final NodeContainerEditPart[] sels) {
+        boolean isToShow = false;
+        for (NodeContainerEditPart p : sels) {
+            if (!p.getShowImplFlowVarPorts()) {
+                isToShow = true;
+            }
+        }
+        return isToShow;
+    }
+
 }

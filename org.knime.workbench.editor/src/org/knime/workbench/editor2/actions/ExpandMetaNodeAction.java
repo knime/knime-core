@@ -126,15 +126,18 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         if (parts.length != 1) {
             return false;
         }
         if (parts[0].getNodeContainer() instanceof WorkflowManager) {
-            return true;
+            WorkflowManager wm = (WorkflowManager)parts[0].getNodeContainer();
+            return !wm.isWriteProtected();
         }
-        // in all other cases: don't enable.
         return false;
     }
 

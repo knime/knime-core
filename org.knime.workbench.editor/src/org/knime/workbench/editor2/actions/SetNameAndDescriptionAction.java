@@ -123,7 +123,9 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
 

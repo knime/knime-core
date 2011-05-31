@@ -88,7 +88,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
         if (!super.canExecute()) {
             return false;
         }
-        return getHostWFM().canExpandMetaNode(m_id) != null;
+        return getHostWFM().canExpandMetaNode(m_id) == null;
     }
 
     /**
@@ -101,7 +101,11 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
                 (WorkflowManager)getHostWFM().getNodeContainer(m_id);
             m_name = metaNode.getName();
             Collection<NodeContainer> ncs = metaNode.getNodeContainers();
-            m_nodes = ncs.toArray(new NodeID[ncs.size()]);
+            m_nodes = new NodeID[ncs.size()];
+            int i = 0;
+            for (NodeContainer nc : ncs) {
+                m_nodes[i++] = nc.getID();
+            }
             getHostWFM().expandMetaNode(m_id);
         } catch (Exception e) {
             String error = "Expanding Metanode failed: " + e.getMessage();
