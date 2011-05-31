@@ -50,14 +50,13 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import java.util.Collection;
-
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  *
@@ -69,9 +68,8 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             ExpandMetaNodeCommand.class);
 
     private final NodeID m_id;
-
-    private String m_name;
-    private NodeID[] m_nodes;
+    private NodeID[] m_pastedNodes;
+    private WorkflowPersistor m_undoCopyPersistor;
 
     /**
      * @param wfm the workflow manager holding the new metanode
@@ -97,16 +95,12 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            WorkflowManager metaNode =
-                (WorkflowManager)getHostWFM().getNodeContainer(m_id);
-            m_name = metaNode.getName();
-            Collection<NodeContainer> ncs = metaNode.getNodeContainers();
-            m_nodes = new NodeID[ncs.size()];
-            int i = 0;
-            for (NodeContainer nc : ncs) {
-                m_nodes[i++] = nc.getID();
-            }
-            getHostWFM().expandMetaNode(m_id);
+            WorkflowManager hostWFM = getHostWFM();
+            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            cnt.setNodeIDs(m_id);
+            cnt.setIncludeInOutConnections(true);
+            m_undoCopyPersistor = hostWFM.copy(true, cnt);
+            m_pastedNodes = hostWFM.expandMetaNode(m_id);
         } catch (Exception e) {
             String error = "Expanding Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
@@ -120,8 +114,9 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canUndo() {
-        if (m_nodes != null) {
-            return null == getHostWFM().canCollapseNodesIntoMetaNode(m_nodes);
+        if (m_undoCopyPersistor != null) {
+            return true;
+//            return null == getHostWFM().canCollapseNodesIntoMetaNode(m_nodes);
         }
         return false;
     }
@@ -131,9 +126,13 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        getHostWFM().collapseNodesIntoMetaNode(m_nodes, m_name);
-        m_name = null;
-        m_nodes = null;
+        WorkflowManager hostWFM = getHostWFM();
+        for (NodeID id : m_pastedNodes) {
+            hostWFM.removeNode(id);
+        }
+        hostWFM.paste(m_undoCopyPersistor);
+        m_pastedNodes = null;
+        m_undoCopyPersistor = null;
     }
 
 }

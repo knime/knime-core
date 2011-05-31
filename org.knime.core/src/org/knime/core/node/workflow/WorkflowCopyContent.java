@@ -75,7 +75,7 @@ public final class WorkflowCopyContent {
 
     /** see {@link #setIncludeInOutConnections(boolean)}.
      * @return the isIncludeInOutConnections */
-    boolean isIncludeInOutConnections() {
+    public boolean isIncludeInOutConnections() {
         return m_isIncludeInOutConnections;
     }
 
@@ -85,7 +85,8 @@ public final class WorkflowCopyContent {
      * automatically included, this property determines whether connections
      * connecting to this island are included as well.
      * @param isIncludeInOutConnections the isIncludeInOutConnections to set */
-    void setIncludeInOutConnections(final boolean isIncludeInOutConnections) {
+    public void setIncludeInOutConnections(
+            final boolean isIncludeInOutConnections) {
         m_isIncludeInOutConnections = isIncludeInOutConnections;
     }
 

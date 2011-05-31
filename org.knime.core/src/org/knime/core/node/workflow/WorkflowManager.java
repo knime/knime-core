@@ -2576,7 +2576,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param orgID the id of the metanode to be expanded
      * @throws IllegalArgumentException if expand can not be done
      */
-    public void expandMetaNode(final NodeID wfmID)
+    public NodeID[] expandMetaNode(final NodeID wfmID)
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // check again, to be sure...
@@ -2614,13 +2614,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (subCC.getDest().equals(subWFM.getID())) {
                             // THROUGH connection - skip here, handled below!
                         } else {
-                            // reconnect
-                            NodeID newID = oldIDsHash.get(subCC.getDest());
-                            this.addConnection(cc.getSource(), cc.getSourcePort(),
-                                    newID, subCC.getDestPort());
-                        }
+                        // reconnect
+                        NodeID newID = oldIDsHash.get(subCC.getDest());
+                        this.addConnection(cc.getSource(), cc.getSourcePort(),
+                                newID, subCC.getDestPort());
                     }
                 }
+            }
             }
             // connect connection FROM the sub workflow
             for (ConnectionContainer cc :
@@ -2643,13 +2643,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // metanode (not done automatically)
                         this.removeConnection(incomingCC);
                     } else {
-                        // delete existing connection from Metanode to Node
+                    // delete existing connection from Metanode to Node
                         // (automatically) and reconnect
-                        NodeID newID = oldIDsHash.get(subCC.getSource());
-                        this.addConnection(newID, subCC.getSourcePort(),
-                                cc.getDest(), cc.getDestPort());
-                    }
+                    NodeID newID = oldIDsHash.get(subCC.getSource());
+                    this.addConnection(newID, subCC.getSourcePort(),
+                            cc.getDest(), cc.getDestPort());
                 }
+            }
             }
             // move nodes so that their center lies on the position of
             // the old metanode!
@@ -2690,6 +2690,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // and finally remove old sub workflow
             this.removeNode(wfmID);
+            Collection<NodeID> values = oldIDsHash.values();
+            return values.toArray(new NodeID[values.size()]);
         }
     }
 
@@ -5894,6 +5896,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : m_workflow.createBreadthFirstSortedList(
                          m_workflow.getNodeIDs(), true).keySet()) {
                 NodeContainer nc = getNodeContainer(id);
+                if (nc instanceof WorkflowManager) {
+                    WorkflowManager metaNode = (WorkflowManager)nc;
+                    if (metaNode.sweep(false)) {
+                        wasClean = false;
+                    }
+                }
                 Set<State> allowedStates =
                     new HashSet<State>(Arrays.asList(State.values()));
                 NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
