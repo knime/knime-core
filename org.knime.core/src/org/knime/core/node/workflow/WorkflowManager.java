@@ -2611,10 +2611,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 for (ConnectionContainer subCC :
                         subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
                     if (subCC.getSourcePort() == destPortIndex) {
-                        // reconnect
-                        NodeID newID = oldIDsHash.get(subCC.getDest());
-                        this.addConnection(cc.getSource(), cc.getSourcePort(),
-                                newID, subCC.getDestPort());
+                        if (subCC.getDest().equals(subWFM.getID())) {
+                            // THROUGH connection - skip here, handled below!
+                        } else {
+                            // reconnect
+                            NodeID newID = oldIDsHash.get(subCC.getDest());
+                            this.addConnection(cc.getSource(), cc.getSourcePort(),
+                                    newID, subCC.getDestPort());
+                        }
                     }
                 }
             }
@@ -2625,11 +2629,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 ConnectionContainer subCC = subWFM.getIncomingConnectionFor(
                         subWFM.getID(), sourcePortIndex);
                 if (subCC != null) {
-                    // delete existing connection from Metanode to Node
-                    // reconnect
-                    NodeID newID = oldIDsHash.get(subCC.getSource());
-                    this.addConnection(newID, subCC.getSourcePort(),
-                            cc.getDest(), cc.getDestPort());
+                    if (subCC.getSource().equals(subWFM.getID())) {
+                        // THROUGH connection
+                        ConnectionContainer incomingCC =
+                            this.getIncomingConnectionFor(
+                                subWFM.getID(), subCC.getSourcePort());
+                        // delete existing connection from Metanode to
+                        // Node (done automatically) and reconnect
+                        this.addConnection(incomingCC.getSource(),
+                                incomingCC.getSourcePort(),
+                                cc.getDest(), cc.getDestPort());
+                        // delete existing connection from node to
+                        // metanode (not done automatically)
+                        this.removeConnection(incomingCC);
+                    } else {
+                        // delete existing connection from Metanode to Node
+                        // (automatically) and reconnect
+                        NodeID newID = oldIDsHash.get(subCC.getSource());
+                        this.addConnection(newID, subCC.getSourcePort(),
+                                cc.getDest(), cc.getDestPort());
+                    }
                 }
             }
             // move nodes so that their center lies on the position of
