@@ -5898,7 +5898,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(id);
                 if (nc instanceof WorkflowManager) {
                     WorkflowManager metaNode = (WorkflowManager)nc;
-                    if (metaNode.sweep(false)) {
+                    if (!metaNode.sweep(false)) {
                         wasClean = false;
                     }
                 }
