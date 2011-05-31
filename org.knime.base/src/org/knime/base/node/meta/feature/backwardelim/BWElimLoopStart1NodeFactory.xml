@@ -16,8 +16,7 @@
             <i>n - 2</i>
             iterations follow where each of the remaining columns is left out once, and so on. The total number of
             iterations is therefore
-            <i>(n - 1) * (n - 2) / 2</i>
-            .
+            <i>n * (n + 1) / 2 - 1</i>.
             <br />
             The backward feature elimination loop can handle arbitrary target column, for numerical columns the squared
             error is taken as quality measure, for all other columns the error rate (i.e. the fraction of rows for which
