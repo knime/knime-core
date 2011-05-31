@@ -1197,7 +1197,7 @@ public final class SingleNodeContainer extends NodeContainer {
     /** enable (or disable) that after the next execution of this loop end node
      * the execution will be halted. This can also be called on a paused node
      * to trigger a "single step" execution.
-     * 
+     *
      * @param if true, pause is enabled. Otherwise disabled.
      */
     void pauseLoopExecution(final boolean enablePausing) {
@@ -1229,7 +1229,8 @@ public final class SingleNodeContainer extends NodeContainer {
             throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings);
-        return m_node.getDialogPaneWithSettings(inSpecs, settings);
+        return m_node.getDialogPaneWithSettings(inSpecs, settings,
+                getParent().isWriteProtected());
     }
 
     /** {@inheritDoc} */

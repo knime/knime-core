@@ -102,6 +102,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.util.FileUtil;
@@ -1567,9 +1568,12 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
-     *            {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}.
+     *        {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO,
+     *        PortObjectSpec[])}.
      * @param settings The current settings of this node. The settings object
      *        will also contain the settings of the outer SNC.
+     * @param isWriteProtected Whether write protected, see
+     *        {@link WorkflowManager#isWriteProtected()}.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
@@ -1581,7 +1585,8 @@ public final class Node implements NodeModelWarningListener {
      * @see #hasDialog()
      */
     public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final NodeSettingsRO settings)
+            final PortObjectSpec[] inSpecs, final NodeSettingsRO settings,
+            final boolean isWriteProtected)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
@@ -1610,7 +1615,8 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         dialogPane.internalLoadSettingsFrom(settings, corrInSpecs,
-                getFlowObjectStack(), getCredentialsProvider());
+                getFlowObjectStack(), getCredentialsProvider(),
+                isWriteProtected);
         return dialogPane;
     }
 

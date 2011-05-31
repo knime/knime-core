@@ -292,6 +292,10 @@ public class WrappedNodeDialog extends Dialog {
                 IDialogConstants.CANCEL_ID,
                 IDialogConstants.CANCEL_LABEL, false);
 
+        boolean writeProtected = m_dialogPane.isWriteProtected();
+        btnOK.setEnabled(!writeProtected);
+        btnApply.setEnabled(!writeProtected);
+
         final KeyListener keyListener = new KeyListener() {
             /** {@inheritDoc} */
             @Override
@@ -410,7 +414,7 @@ public class WrappedNodeDialog extends Dialog {
                     @Override
                     public void run() {
                         // can only show out-port view for nodes with at least
-                        // one out-port (whereby the first is used as flow 
+                        // one out-port (whereby the first is used as flow
                         // variable port)
                         if (m_nodeContainer.getNrOutPorts() > 1) {
                             NodeOutPort port = m_nodeContainer.getOutPort(1);
@@ -423,6 +427,9 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     private boolean doApply() {
+        if (m_dialogPane.isWriteProtected()) {
+            return false;
+        }
         // event.doit = false cancels the SWT selection event, so that the
         // dialog is not closed on errors.
         try {

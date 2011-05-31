@@ -3781,7 +3781,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         saveSettings(settings);
         dialogPane.internalLoadSettingsFrom(
                 settings, inSpecs, new FlowObjectStack(getID()),
-                        new CredentialsProvider(this, m_credentialsStore));
+                        new CredentialsProvider(this, m_credentialsStore),
+                        isWriteProtected());
         return dialogPane;
     }
 

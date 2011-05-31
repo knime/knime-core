@@ -199,6 +199,8 @@ public abstract class NodeDialogPane {
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
 
+    private boolean m_isWriteProtected;
+
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
      * ready to take additional components needed by the derived class
@@ -242,6 +244,15 @@ public abstract class NodeDialogPane {
      */
     public final JPanel getPanel() {
         return m_panel;
+    }
+
+    /** Returns true if the underlying node is write protected. A node is write
+     * protected if it is part of a linked meta node (i.e. referencing a
+     * template). Client code usually does not need to evaluate this flag, the
+     * framework will disable the OK/Apply button for write protected nodes.
+     * @return If this node is write protected. */
+    public final boolean isWriteProtected() {
+        return m_isWriteProtected;
     }
 
     /** @return available flow variables in a non-modifiable map
@@ -294,18 +305,22 @@ public abstract class NodeDialogPane {
      * @param specs The DTSs from the inports.
      * @param foStack Flow object stack (contains flow variables)
      * @param credentialsProvider The credentials available in the flow
+     * @param isWriteProtected Whether ok/apply should be disabled
+     *        (write protected meta node)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     public void internalLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final FlowObjectStack foStack,
-            final CredentialsProvider credentialsProvider)
+            final CredentialsProvider credentialsProvider,
+            final boolean isWriteProtected)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
         m_flowObjectStack = foStack;
         m_credentialsProvider = credentialsProvider;
         m_specs = specs;
+        m_isWriteProtected = isWriteProtected;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
@@ -598,7 +613,7 @@ public abstract class NodeDialogPane {
         throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack,
-                m_credentialsProvider);
+                m_credentialsProvider, m_isWriteProtected);
     }
 
     /**
