@@ -46,65 +46,49 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.deprecated;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.collection.ListCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.base.node.preproc.setoperator.GeneralDataValueComparator;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * Returns all values as a {@link SetCell} per group.
+ * Returns all values as a sorted {@link ListCell} per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-@Deprecated
-public class SetCellOperator extends AggregationOperator {
+public class SortedListCellOperator extends ListCellOperator {
 
-    private final Set<DataCell> m_cells;
+    private final DataValueComparator m_comparator;
 
-    /**Constructor for class SetCellOperator.
+
+    /**Constructor for class SortedListCellOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public SetCellOperator(final GlobalSettings globalSettings,
+    public SortedListCellOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Set", "Set", true, false, DataValue.class, true),
-                globalSettings, opColSettings);
-    }
-
-    /**Constructor for class SetCellOperator.
-     * @param operatorData the operator data
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     */
-    protected SetCellOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        super(operatorData, globalSettings, opColSettings);
-        try {
-            m_cells = new LinkedHashSet<DataCell>(getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
+        super(new OperatorData("List (sorted)", "Sorted list", false, false,
+                DataValue.class, true), globalSettings, opColSettings);
+        if (opColSettings.getOriginalColSpec() == null) {
+            //use the default comparator
+            m_comparator = GeneralDataValueComparator.getInstance();
+        } else {
+            m_comparator =
+                opColSettings.getOriginalColSpec().getType().getComparator();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataType getDataType(final DataType origType) {
-        return SetCell.getCollectionType(origType);
     }
 
     /**
@@ -114,19 +98,7 @@ public class SetCellOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new SetCellOperator(globalSettings, opColSettings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (m_cells.size() >= getMaxUniqueValues()) {
-            return true;
-        }
-        m_cells.add(cell);
-        return false;
+        return new SortedListCellOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -134,15 +106,12 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        return CollectionCellFactory.createSetCell(m_cells);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_cells.clear();
+        final List<DataCell> cells = super.getCells();
+        if (cells.isEmpty()) {
+            return DataType.getMissingCell();
+        }
+        Collections.sort(cells, m_comparator);
+        return CollectionCellFactory.createListCell(cells);
     }
 
     /**
@@ -150,7 +119,7 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains each element "
-                + "only once per group (including missing values).";
+        return "Creates a sorted ListCell that contains all elements "
+            + "per group (including missing values).";
     }
 }

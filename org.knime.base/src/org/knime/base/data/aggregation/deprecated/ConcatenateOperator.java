@@ -62,6 +62,8 @@ import org.knime.base.data.aggregation.OperatorData;
  * Returns the all values concatenated per group.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated changed in version 2.4 to return missing cell if group
+ * contains only missing cells
  */
 @Deprecated
 public class ConcatenateOperator extends AggregationOperator {

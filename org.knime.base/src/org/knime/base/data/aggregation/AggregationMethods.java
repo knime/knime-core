@@ -70,20 +70,20 @@ import org.knime.base.data.aggregation.date.DateMeanOperator;
 import org.knime.base.data.aggregation.date.DayRangeOperator;
 import org.knime.base.data.aggregation.date.MedianDateOperator;
 import org.knime.base.data.aggregation.date.MillisRangeOperator;
-import org.knime.base.data.aggregation.deprecated.ConcatenateOperator;
-import org.knime.base.data.aggregation.deprecated.ListCellOperator;
-import org.knime.base.data.aggregation.deprecated.SetCellOperator;
-import org.knime.base.data.aggregation.deprecated.SortedListCellOperator;
-import org.knime.base.data.aggregation.deprecated.UniqueConcatenateOperator;
-import org.knime.base.data.aggregation.deprecated.UniqueConcatenateWithCountOperator;
+import org.knime.base.data.aggregation.general.ConcatenateOperator;
 import org.knime.base.data.aggregation.general.CountOperator;
 import org.knime.base.data.aggregation.general.FirstOperator;
 import org.knime.base.data.aggregation.general.LastOperator;
+import org.knime.base.data.aggregation.general.ListCellOperator;
 import org.knime.base.data.aggregation.general.MaxOperator;
 import org.knime.base.data.aggregation.general.MinOperator;
 import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
 import org.knime.base.data.aggregation.general.PercentageOperator;
+import org.knime.base.data.aggregation.general.SetCellOperator;
+import org.knime.base.data.aggregation.general.SortedListCellOperator;
+import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
+import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
@@ -130,7 +130,17 @@ public final class AggregationMethods {
 
     /**The attribute of the aggregation method extension point.*/
     public static final String EXT_POINT_ATTR_DF = "AggregationOperator";
-
+    /**Default global settings object used in operator templates.*/
+    private static final GlobalSettings GLOBAL_SETTINGS = new GlobalSettings();
+    /**Default include missing values {@link OperatorColumnSettings} object
+     * used in operator templates.*/
+    private static final OperatorColumnSettings INCL_MISSING =
+            new OperatorColumnSettings(true, null);
+    /**Default exclude missing values {@link OperatorColumnSettings} object
+     * used in operator templates.*/
+    private static final OperatorColumnSettings EXCL_MISSING =
+            new OperatorColumnSettings(false, null);
+    /**Singleton instance.*/
     private static AggregationMethods instance = new AggregationMethods();
 
     /**Map with all valid operators that are available to the user.*/
@@ -154,101 +164,98 @@ public final class AggregationMethods {
     }
 
     private AggregationMethods() {
-        final GlobalSettings globalSettings = new GlobalSettings();
-        final OperatorColumnSettings inclMissing =
-            new OperatorColumnSettings(true, null);
-        final OperatorColumnSettings exclMissing =
-            new OperatorColumnSettings(false, null);
         //add all default methods
         try {
 //The collection methods
             /**And.*/
-            addOperator(new AndElementOperator(globalSettings, inclMissing));
+            addOperator(new AndElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**And count.*/
             addOperator(
-                    new AndElementCountOperator(globalSettings, inclMissing));
+                    new AndElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Or.*/
-            addOperator(new OrElementOperator(globalSettings, inclMissing));
+            addOperator(new OrElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Or count.*/
             addOperator(
-                    new OrElementCountOperator(globalSettings, inclMissing));
+                    new OrElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**XOR.*/
-            addOperator(new XORElementOperator(globalSettings, inclMissing));
+            addOperator(new XORElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**XOR count.*/
             addOperator(
-                    new XORElementCountOperator(globalSettings, inclMissing));
+                    new XORElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Element counter.*/
-            addOperator(new ElementCountOperator(globalSettings, inclMissing));
+            addOperator(
+                    new ElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
 //The date methods
             /**Date mean operator.*/
-            addOperator(new DateMeanOperator(globalSettings, exclMissing));
+            addOperator(new DateMeanOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Median date operator.*/
-            addOperator(new MedianDateOperator(globalSettings, exclMissing));
+            addOperator(new MedianDateOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Day range operator.*/
-            addOperator(new DayRangeOperator(globalSettings, exclMissing));
+            addOperator(new DayRangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Milliseconds range operator.*/
-            addOperator(new MillisRangeOperator(globalSettings, exclMissing));
+            addOperator(new MillisRangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
 
 //The numerical methods
             /**Mean.*/
             final AggregationOperator meanOperator =
-                new MeanOperator(globalSettings, exclMissing);
+                new MeanOperator(GLOBAL_SETTINGS, EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
             /**Median.*/
-            addOperator(new MedianOperator(globalSettings, exclMissing));
+            addOperator(new MedianOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Sum.*/
-            addOperator(new SumOperator(globalSettings, exclMissing));
+            addOperator(new SumOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Product.*/
-            addOperator(new ProductOperator(globalSettings, exclMissing));
+            addOperator(new ProductOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Range.*/
-            addOperator(new RangeOperator(globalSettings, exclMissing));
+            addOperator(new RangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Variance.*/
-            addOperator(new VarianceOperator(globalSettings, exclMissing));
+            addOperator(new VarianceOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Standard deviation.*/
-            addOperator(new StdDeviationOperator(globalSettings, exclMissing));
+            addOperator(
+                    new StdDeviationOperator(GLOBAL_SETTINGS, EXCL_MISSING));
 
 //The general methods that work with all DataCells
             /**Takes the first cell per group.*/
             final AggregationOperator firstOperator =
-                new FirstOperator(globalSettings, inclMissing);
+                new FirstOperator(GLOBAL_SETTINGS, INCL_MISSING);
             addOperator(firstOperator);
             m_defNotNumericalMeth = getOperator(firstOperator.getId());
-            m_rowOrderMethod = new FirstOperator(globalSettings, inclMissing);
+            m_rowOrderMethod = new FirstOperator(GLOBAL_SETTINGS, INCL_MISSING);
             /**Takes the last cell per group.*/
-            addOperator(new LastOperator(globalSettings, inclMissing));
+            addOperator(new LastOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Minimum.*/
-            addOperator(new MinOperator(globalSettings, inclMissing));
+            addOperator(new MinOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Maximum.*/
-            addOperator(new MaxOperator(globalSettings, inclMissing));
+            addOperator(new MaxOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Takes the value which occurs most.*/
-            addOperator(new ModeOperator(globalSettings, inclMissing));
+            addOperator(new ModeOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Concatenates all cell values.*/
-            addOperator(new ConcatenateOperator(globalSettings, inclMissing));
+            addOperator(new ConcatenateOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Concatenates all distinct cell values.*/
-            addOperator(
-                    new UniqueConcatenateOperator(globalSettings, exclMissing));
+            addOperator(new UniqueConcatenateOperator(GLOBAL_SETTINGS,
+                    EXCL_MISSING));
             /**Concatenates all distinct cell values and counts the members.*/
             addOperator(new UniqueConcatenateWithCountOperator(
-                    globalSettings, exclMissing));
+                    GLOBAL_SETTINGS, EXCL_MISSING));
             /**Counts the number of unique group members.*/
-            addOperator(new UniqueCountOperator(globalSettings, inclMissing));
+            addOperator(new UniqueCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Counts the number of group members.*/
-            addOperator(new CountOperator(globalSettings, inclMissing));
+            addOperator(new CountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Returns the percentage of the group.*/
-            addOperator(new PercentageOperator(globalSettings, inclMissing));
+            addOperator(new PercentageOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Counts the number of missing values per group.*/
-            addOperator(new MissingValueCountOperator(globalSettings,
-                    inclMissing));
+            addOperator(new MissingValueCountOperator(GLOBAL_SETTINGS,
+                    INCL_MISSING));
             /** List collection.*/
-            addOperator(new ListCellOperator(globalSettings, inclMissing));
+            addOperator(new ListCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /** Sorted list collection.*/
             addOperator(
-                    new SortedListCellOperator(globalSettings, inclMissing));
+                    new SortedListCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /** Set collection.*/
-            addOperator(new SetCellOperator(globalSettings, inclMissing));
+            addOperator(new SetCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
 
-            //add old and deprecated operators to be downward compatible
+            //add old and deprecated operators to be backward compatible
             registerDeprecatedOperators();
         } catch (final DuplicateOperatorException e) {
             throw new IllegalStateException(
@@ -261,27 +268,38 @@ public final class AggregationMethods {
 
     /**
      * This method registers previous methods which are deprecated in order to
-     * be downward compatible. The methods are stored separate from the
+     * be backward compatible. The methods are stored separate from the
      * methods to use.
      *
      * @throws DuplicateOperatorException if one of the methods already exists
      */
+    @SuppressWarnings("deprecation")
     private void registerDeprecatedOperators()
         throws DuplicateOperatorException {
-        final GlobalSettings globalSettings = new GlobalSettings();
         addDeprecatedOperator(new OrElementCountOperator(new OperatorData(
-                "Unique element count", true, false,
-                CollectionDataValue.class, false),
-                globalSettings, new OperatorColumnSettings(true, null)));
+                "Unique element count", true, false, CollectionDataValue.class,
+                false), GLOBAL_SETTINGS, INCL_MISSING));
         addDeprecatedOperator(new FirstOperator(new OperatorData("First value",
                     false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null)));
+                    GLOBAL_SETTINGS, EXCL_MISSING));
         addDeprecatedOperator(new LastOperator(new OperatorData("Last value",
                     false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null)));
+                    GLOBAL_SETTINGS, EXCL_MISSING));
         addDeprecatedOperator(new CountOperator(new OperatorData("Value count",
                     false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null)));
+                    GLOBAL_SETTINGS, EXCL_MISSING));
+
+        //methods changed in KNIME version 2.4
+        /** Concatenates all cell values. */
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
+                .ConcatenateOperator(GLOBAL_SETTINGS, INCL_MISSING));
+        /** Concatenates all distinct cell values. */
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
+                .UniqueConcatenateOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+        /** Concatenates all distinct cell values and counts the members. */
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
+                .UniqueConcatenateWithCountOperator(GLOBAL_SETTINGS,
+                        EXCL_MISSING));
     }
 
     /**

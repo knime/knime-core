@@ -46,68 +46,57 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.deprecated;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.util.MutableInteger;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Returns the concatenation of all different values per group and the
- * number of cells per distinct value.
+ * Returns all values as a {@link ListCell} per group.
  *
  * @author Tobias Koetter, University of Konstanz
- * @deprecated changed in version 2.4 to return missing cell if group
- * contains only missing cells
  */
-@Deprecated
-public class UniqueConcatenateWithCountOperator
-    extends AggregationOperator {
+public class ListCellOperator extends AggregationOperator {
 
-    private final DataType m_type = StringCell.TYPE;
+    private final List<DataCell> m_cells = new LinkedList<DataCell>();
 
-    private final Map<String, MutableInteger> m_vals;
-
-    /**Constructor for class UniqueConcatenateWithCountOperator.
+    /**Constructor for class ListCellOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public UniqueConcatenateWithCountOperator(
-            final GlobalSettings globalSettings,
+    public ListCellOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Unique concatenate with count", true, false,
-                DataValue.class, false), globalSettings, opColSettings);
+        this(new OperatorData("List", false, false,
+                DataValue.class, true), globalSettings, opColSettings);
     }
 
-    /**Constructor for class UniqueConcatenateWithCountOperator.
+    /**Constructor for class ListCellOperator.
      * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected UniqueConcatenateWithCountOperator(
-            final OperatorData operatorData,
+    protected ListCellOperator(final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-        try {
-            m_vals = new LinkedHashMap<String, MutableInteger>(
-                    getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
+    }
+
+    /**
+     * @return the cells
+     */
+    protected List<DataCell> getCells() {
+        return m_cells;
     }
 
     /**
@@ -115,7 +104,7 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return m_type;
+        return ListCell.getCollectionType(origType);
     }
 
     /**
@@ -125,8 +114,7 @@ public class UniqueConcatenateWithCountOperator
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new UniqueConcatenateWithCountOperator(globalSettings,
-                opColSettings);
+        return new ListCellOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -134,21 +122,10 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        final String val = cell.toString();
-        final MutableInteger counter = m_vals.get(val);
-        if (counter != null) {
-            counter.inc();
-            return false;
-        }
-        //check if the map contains more values than allowed
-        //before adding a new value
-        if (m_vals.size() >= getMaxUniqueValues()) {
+        if (m_cells.size() >= getMaxUniqueValues()) {
             return true;
         }
-        m_vals.put(val, new MutableInteger(1));
+        m_cells.add(cell);
         return false;
     }
 
@@ -157,22 +134,10 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected DataCell getResultInternal() {
-        final StringBuilder buf = new StringBuilder();
-        final Set<Entry<String, MutableInteger>> entrySet =
-            m_vals.entrySet();
-        boolean first = true;
-        for (final Entry<String, MutableInteger> entry : entrySet) {
-            if (first) {
-                first = false;
-            } else {
-                buf.append(getValueDelimiter());
-            }
-            buf.append(entry.getKey());
-            buf.append('(');
-            buf.append(Integer.toString(entry.getValue().intValue()));
-            buf.append(')');
+        if (m_cells.isEmpty()) {
+            return DataType.getMissingCell();
         }
-        return new StringCell(buf.toString());
+        return CollectionCellFactory.createListCell(m_cells);
     }
 
     /**
@@ -180,7 +145,7 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected void resetInternal() {
-        m_vals.clear();
+        m_cells.clear();
     }
 
     /**
@@ -188,7 +153,7 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     public String getDescription() {
-        return "Concatenates each value only once with the number of its "
-             + "occurrences per group.";
+        return "Creates a ListCell that contains all elements "
+            + "per group (including missing values).";
     }
 }

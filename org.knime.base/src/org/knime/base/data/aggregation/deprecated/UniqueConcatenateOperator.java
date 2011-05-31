@@ -65,6 +65,8 @@ import java.util.Set;
  * Returns the concatenation of all different values per group.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated changed in version 2.4 to return missing cell if group
+ * contains only missing cells
  */
 @Deprecated
 public class UniqueConcatenateOperator extends AggregationOperator {

@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.deprecated;
+package org.knime.base.data.aggregation.general;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -69,10 +69,7 @@ import java.util.Set;
  * number of cells per distinct value.
  *
  * @author Tobias Koetter, University of Konstanz
- * @deprecated changed in version 2.4 to return missing cell if group
- * contains only missing cells
  */
-@Deprecated
 public class UniqueConcatenateWithCountOperator
     extends AggregationOperator {
 
@@ -87,8 +84,10 @@ public class UniqueConcatenateWithCountOperator
     public UniqueConcatenateWithCountOperator(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Unique concatenate with count", true, false,
-                DataValue.class, false), globalSettings, opColSettings);
+        this(new OperatorData("uniqueConcatenateWithCount_V2.4",
+                "Unique concatenate with count",
+                "Unique concatenate with count", true, false,
+                DataValue.class, true), globalSettings, opColSettings);
     }
 
     /**Constructor for class UniqueConcatenateWithCountOperator.
@@ -134,9 +133,6 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
         final String val = cell.toString();
         final MutableInteger counter = m_vals.get(val);
         if (counter != null) {
@@ -157,6 +153,9 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected DataCell getResultInternal() {
+        if (m_vals.isEmpty()) {
+            return DataType.getMissingCell();
+        }
         final StringBuilder buf = new StringBuilder();
         final Set<Entry<String, MutableInteger>> entrySet =
             m_vals.entrySet();
