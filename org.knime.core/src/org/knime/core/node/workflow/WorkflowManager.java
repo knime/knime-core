@@ -2639,9 +2639,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         this.addConnection(incomingCC.getSource(),
                                 incomingCC.getSourcePort(),
                                 cc.getDest(), cc.getDestPort());
-                        // delete existing connection from node to
-                        // metanode (not done automatically)
-                        this.removeConnection(incomingCC);
                     } else {
                     // delete existing connection from Metanode to Node
                         // (automatically) and reconnect
