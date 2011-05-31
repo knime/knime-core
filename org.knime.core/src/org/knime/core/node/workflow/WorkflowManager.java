@@ -2700,7 +2700,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(id);
                 if (State.EXECUTED.equals(nc.getState())) {
                     // we can not - bail!
-                    return"Can not move executed nodes (reset first).";
+                    return "Can not move executed nodes (reset first).";
                 }
             }
             // Check if move will create loops in WFM connected to new Metanode
@@ -4585,8 +4585,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * read this flag.
      * @return Whether edit operations are not permitted. */
     public boolean isWriteProtected() {
+        if (this == ROOT) {
+            return false;
+        }
         synchronized (m_workflowMutex) {
-            return Role.Link.equals(getTemplateInformation().getRole());
+            return getParent().isWriteProtected()
+                || Role.Link.equals(getTemplateInformation().getRole());
         }
     }
 
@@ -4929,9 +4933,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         switch (property) {
         case JobManager:
             // TODO protect for intermediate changes to the node list
-            // TODO only notify affected children
             for (NodeContainer nc : getNodeContainers()) {
                 nc.notifyNodePropertyChangedListener(property);
+            }
+            break;
+        case TemplateConnection:
+            for (NodeContainer nc : getNodeContainers()) {
+                // only sub-workflows care as they possibly switch from
+                // write-protected to editable
+                if (nc instanceof WorkflowManager) {
+                    nc.notifyNodePropertyChangedListener(property);
+                }
             }
             break;
         default:
