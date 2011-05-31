@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -63,24 +65,30 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CollapseMetaNodeCommand.class);
 
-    private WorkflowManager m_manager;
+    private NodeID[] m_nodes;
     private NodeID m_wrapper;
+    private String m_name;
 
     /**
      * @param wfm the workflow manager holding the new metanode
-     * @param wrapper the id of the resulting metanode
+     * @param nodes the ids of the nodes to collapse
+     * @param name of new metanode
      */
     public CollapseMetaNodeCommand(final WorkflowManager wfm,
-            final NodeID wrapper) {
+            final NodeID[] nodes, final String name) {
         super(wfm);
-        m_manager = wfm;
-        m_wrapper = wrapper;
+        m_nodes = nodes;
+        m_name = name;
+        m_wrapper = null;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return super.canExecute();
+        if (!super.canExecute()) {
+            return false;
+        }
+        return null == getHostWFM().canCollapseNodesIntoMetaNode(m_nodes);
     }
 
     /**
@@ -88,7 +96,16 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void execute() {
-        // do nothing - all done in corresponding Action.
+        try {
+            m_wrapper = 
+                getHostWFM().collapseNodesIntoMetaNode(m_nodes, m_name).getID();
+        } catch (Exception e) {
+            String error = "Collapsing Metanode failed: " + e.getMessage();
+            LOGGER.error(error, e);
+            MessageDialog.openError(Display.getCurrent().getActiveShell(),
+                    "Collapse failed", error);
+        }
+
     }
 
     /**
@@ -96,8 +113,8 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canUndo() {
-        if (m_manager != null && m_wrapper != null) {
-            return null == m_manager.canExpandMetaNode(m_wrapper);
+        if (m_wrapper != null) {
+            return null == getHostWFM().canExpandMetaNode(m_wrapper);
         }
         return false;
     }
@@ -107,8 +124,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        m_manager.expandMetaNode(m_wrapper);
-        m_manager = null;
+        getHostWFM().expandMetaNode(m_wrapper);
         m_wrapper = null;
     }
 

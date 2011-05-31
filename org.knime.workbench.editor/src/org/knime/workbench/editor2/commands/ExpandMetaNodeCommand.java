@@ -115,8 +115,13 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public boolean canUndo() {
         if (m_undoCopyPersistor != null) {
+            WorkflowManager hostWFM = getHostWFM();
+            for (NodeID id : m_pastedNodes) {
+                if (!hostWFM.canRemoveNode(id)) {
+                    return false;
+                }
+            }
             return true;
-//            return null == getHostWFM().canCollapseNodesIntoMetaNode(m_nodes);
         }
         return false;
     }

@@ -134,7 +134,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
-        if (parts.length <= 1) {
+        if (parts.length < 1) {
             return false;
         }
         return !getManager().isWriteProtected();
@@ -168,8 +168,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             }
             // create a command and push on stack to enable UNDO
             CollapseMetaNodeCommand cmnc =
-                new CollapseMetaNodeCommand(manager,
-                        manager.collapseNodesIntoMetaNode(ids, name).getID());
+                new CollapseMetaNodeCommand(manager, ids, name);
             getCommandStack().execute(cmnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
