@@ -209,7 +209,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                     nrChunks++;
                 }
                 double prog = 0.9 + 0.1 * (double)(i) / ((double)nrChunks); 
-                exec.setProgress(prog, "Copying chunk " 
+                exec.setProgress(prog, "Collecting chunk " 
                         + (i+1) + " of " + nrChunks + "...");
                 ParallelizedChunkContent pcc = m_chunkMaster.getChunk(i);
                 if (pcc.isExecuted()) {
@@ -253,7 +253,7 @@ implements LoopEndParallelizeNode, InactiveBranchConsumer {
                             bdc[p] = exec.createDataContainer(
                                                     bdt.getDataTableSpec());
                         }
-                        exec.setProgress(0.99, "Copying last chunk " 
+                        exec.setProgress(0.99, "Collecting last chunk " 
                                 + " of " + (m_chunkMaster.nrChunks()+1) + "!");
                         for (DataRow row : bdt) {
                             if (m_configuration.addChunkIndexToID()) {

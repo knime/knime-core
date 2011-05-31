@@ -102,6 +102,11 @@ final class ParallelChunkStartNodeDialogPane extends NodeDialogPane {
 		
 		m_inactiveMainBranch = new JCheckBox("Disable Main Branch");
 		
+		// TODO: make sure this works properly (see problems with Inactive
+		// BranchObjectSpecs arriving at EndNode followed by a real BDT).
+		// Until this is isn't fixed: disable.
+		m_inactiveMainBranch.setEnabled(false);
+		
 		ActionListener l = new ActionListener() {
 			
 			@Override
