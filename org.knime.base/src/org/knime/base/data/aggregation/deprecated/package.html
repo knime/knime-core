@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,66 +43,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- */
-
-package org.knime.base.data.aggregation.numerical;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
-
-
-/**
- * Returns the standard deviation per group.
- *
- * @author Tobias Koetter, University of Konstanz
- */
-public class StdDeviationOperator extends VarianceOperator {
-
-    /**Constructor for class StdDeviationOperator.
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     */
-    public StdDeviationOperator(final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        super(new OperatorData("Standard deviation", false, false,
-                DoubleValue.class, false), globalSettings, opColSettings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AggregationOperator createInstance(
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        return new StdDeviationOperator(globalSettings, opColSettings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataCell getResultInternal() {
-        final DataCell result = super.getResultInternal();
-        if (!result.isMissing()) {
-            final double value = ((DoubleValue)result).getDoubleValue();
-            return new DoubleCell(Math.sqrt(Math.abs(value)));
-        }
-        return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Calculates the standard deviation per group.";
-    }
-}
+====================================================================
+-->
+<body>
+  This package contains previous implementations of aggregation methods that 
+  need to be kept to be backward compatible. Do not extend these methods they
+  might be deleted in future versions!
+</body>

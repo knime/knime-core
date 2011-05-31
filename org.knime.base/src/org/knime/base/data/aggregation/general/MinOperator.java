@@ -111,7 +111,8 @@ public class MinOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         return new MinOperator(globalSettings, opColSettings);
     }
 

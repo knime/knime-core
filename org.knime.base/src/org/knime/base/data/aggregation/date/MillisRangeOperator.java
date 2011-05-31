@@ -83,7 +83,9 @@ public class MillisRangeOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected MillisRangeOperator(final OperatorData operatorData, final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+    protected MillisRangeOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
     }
 
@@ -115,7 +117,8 @@ public class MillisRangeOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         return new MillisRangeOperator(globalSettings, opColSettings);
     }

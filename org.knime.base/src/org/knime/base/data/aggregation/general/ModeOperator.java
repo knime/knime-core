@@ -73,8 +73,8 @@ public class ModeOperator extends AggregationOperator {
     private final Map<DataCell, MutableInteger> m_valCounter;
 
     /**Constructor for class ModeOperator.
-     * @param globalSettings
-     * @param opColSettings
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
     public ModeOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {

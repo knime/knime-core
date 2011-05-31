@@ -64,8 +64,9 @@ public class OperatorData {
     /**If the method supports the setting of the missing value flag
      * by the user.*/
     private final boolean m_supportsMissingVals;
-    /**The unique label that is displayed to the user and that
-     * is used for registration.*/
+    /**The unique id that is used for registration.*/
+    private final String m_id;
+    /**The label that is displayed to the user.*/
     private final String m_label;
     /**The label of the aggregation method which is
     * used in the column name.*/
@@ -76,8 +77,8 @@ public class OperatorData {
 
     /**Constructor for class OperatorData.
      * @param label unique user readable label. The label need to be unique
-     * since it is used for registering and for the column name. It is also
-     * displayed to the user.
+     * since it is used for registration and column name generation.
+     * It is also displayed to the user in the aggregation method selection box.
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
      * @param keepColSpec <code>true</code> if the original column specification
@@ -98,8 +99,8 @@ public class OperatorData {
 
     /**Constructor for class OperatorData.
      *@param label unique user readable label. The label need to be unique
-     * since it is used for registering and for the column name. It is also
-     * displayed to the user.
+     * since it is used for registration.
+     * It is also displayed to the user in the aggregation method selection box.
      * @param colName the name of the result column
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
@@ -107,14 +108,42 @@ public class OperatorData {
      * should be kept if possible
      * @param supportedClass the {@link DataValue} class supported by
      * this method
-     * @param supportMissingValsOption <code>true</code> if the operator supports
-     * the alternation of the missing value flag
+     * @param supportMissingValsOption <code>true</code> if the operator
+     * supports the alternation of the missing value flag
      */
     public OperatorData(final String label, final String colName,
-            final boolean usesLimit,
+            final boolean usesLimit, final boolean keepColSpec,
+            final Class<? extends DataValue> supportedClass,
+            final boolean supportMissingValsOption) {
+        this(label, label, colName, usesLimit, keepColSpec, supportedClass,
+                supportMissingValsOption);
+    }
+
+    /**Constructor for class OperatorData.
+     * @param id the unique identifier used for registration
+     *@param label user readable label
+     * @param colName the name of the result column
+     * @param usesLimit <code>true</code> if the method checks the number of
+     * unique values limit.
+     * @param keepColSpec <code>true</code> if the original column specification
+     * should be kept if possible
+     * @param supportedClass the {@link DataValue} class supported by
+     * this method
+     * @param supportMissingValsOption <code>true</code> if the operator
+     * supports the alternation of the missing value flag
+     */
+    public OperatorData(final String id, final String label,
+            final String colName, final boolean usesLimit,
             final boolean keepColSpec,
             final Class<? extends DataValue> supportedClass,
             final boolean supportMissingValsOption) {
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("id must not be empty");
+        }
+        if (label == null || label.isEmpty()) {
+            throw new IllegalArgumentException("label must not be empty");
+        }
+        m_id = id;
         m_label = label;
         m_colName = colName;
         m_usesLimit = usesLimit;
@@ -144,6 +173,14 @@ public class OperatorData {
      */
     public boolean keepColumnSpec() {
         return m_keepColSpec;
+    }
+
+
+    /**
+     * @return the unique identifier
+     */
+    public String getId() {
+        return m_id;
     }
 
     /**

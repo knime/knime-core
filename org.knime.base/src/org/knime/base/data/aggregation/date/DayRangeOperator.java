@@ -101,7 +101,8 @@ public class DayRangeOperator extends MillisRangeOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         return new DayRangeOperator(globalSettings, opColSettings);
     }

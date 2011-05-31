@@ -106,7 +106,8 @@ public class XORElementOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         return new XORElementOperator(globalSettings, opColSettings);
     }

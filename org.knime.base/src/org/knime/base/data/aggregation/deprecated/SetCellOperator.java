@@ -46,12 +46,13 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation.deprecated;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.SetCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -62,37 +63,36 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Returns the concatenation of all different values per group.
+ * Returns all values as a {@link SetCell} per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class UniqueConcatenateOperator extends AggregationOperator {
+@Deprecated
+public class SetCellOperator extends AggregationOperator {
 
-    private final DataType m_type = StringCell.TYPE;
+    private final Set<DataCell> m_cells;
 
-    private final Set<String> m_vals;
-
-    /**Constructor for class Concatenate.
+    /**Constructor for class SetCellOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public UniqueConcatenateOperator(final GlobalSettings globalSettings,
+    public SetCellOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Unique concatenate", true, false,
-                DataValue.class, false), globalSettings, opColSettings);
+        this(new OperatorData("Set", "Set", true, false, DataValue.class, true),
+                globalSettings, opColSettings);
     }
 
-    /**Constructor for class UniqueConcatenateOperator.
+    /**Constructor for class SetCellOperator.
      * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected UniqueConcatenateOperator(final OperatorData operatorData,
+    protected SetCellOperator(final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<String>(getMaxUniqueValues());
+            m_cells = new LinkedHashSet<DataCell>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -104,7 +104,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return m_type;
+        return SetCell.getCollectionType(origType);
     }
 
     /**
@@ -114,8 +114,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new UniqueConcatenateOperator(globalSettings,
-                opColSettings);
+        return new SetCellOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -123,19 +122,10 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        final String val = cell.toString();
-        if (m_vals.contains(val)) {
-            return false;
-        }
-        //check if the set contains more values than allowed
-        //before adding a new value
-        if (m_vals.size() >= getMaxUniqueValues()) {
+        if (m_cells.size() >= getMaxUniqueValues()) {
             return true;
         }
-        m_vals.add(val);
+        m_cells.add(cell);
         return false;
     }
 
@@ -144,17 +134,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        final StringBuilder buf = new StringBuilder();
-        boolean first = true;
-        for (final String val : m_vals) {
-            if (first) {
-                first = false;
-            } else {
-                buf.append(getValueDelimiter());
-            }
-            buf.append(val);
-        }
-        return new StringCell(buf.toString());
+        return CollectionCellFactory.createSetCell(m_cells);
     }
 
     /**
@@ -162,7 +142,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected void resetInternal() {
-        m_vals.clear();
+        m_cells.clear();
     }
 
     /**
@@ -170,6 +150,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Concatenates each value only once per group.";
+        return "Creates a SetCell that contains each element "
+                + "only once per group (including missing values).";
     }
 }

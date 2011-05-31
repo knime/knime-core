@@ -137,6 +137,14 @@ public abstract class AggregationOperator implements AggregationMethod {
         return m_globalSettings.getValueDelimiter();
     }
 
+
+    /**
+     * @return the {@link GlobalSettings} object
+     */
+    public GlobalSettings getGlobalSettings() {
+        return m_globalSettings;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -262,6 +270,14 @@ public abstract class AggregationOperator implements AggregationMethod {
      * Should reset the operator to the start values.
      */
     protected abstract void resetInternal();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return m_operatorData.getId();
+    }
 
     /**
      * {@inheritDoc}

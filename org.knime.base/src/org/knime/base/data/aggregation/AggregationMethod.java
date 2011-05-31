@@ -67,8 +67,17 @@ import org.knime.core.data.DataValue;
 public interface AggregationMethod extends Comparable<AggregationMethod> {
 
     /**
-     * @return the unique label that is displayed to the user and that
-     * is used for registration
+     * The unique identifier of the method that is used for registration and
+     * identification of the aggregation method. The id is an internal
+     * used variable that is not displayed to the user.
+     *
+     * @return the unique id of the method that is used to register and
+     * identify the method.
+     */
+    String getId();
+
+    /**
+     * @return the label that is displayed to the user
      */
     String getLabel();
 

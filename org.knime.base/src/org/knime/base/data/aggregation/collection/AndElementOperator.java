@@ -106,7 +106,8 @@ public class AndElementOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(
+            final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         return new AndElementOperator(globalSettings, opColSettings);
     }

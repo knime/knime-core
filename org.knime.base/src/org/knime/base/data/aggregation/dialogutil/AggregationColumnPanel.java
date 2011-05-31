@@ -315,7 +315,7 @@ public class AggregationColumnPanel extends MouseAdapter {
                          */
                         @Override
                         public void actionPerformed(final ActionEvent e) {
-                            changeAggregationMethod(method.getLabel());
+                            changeAggregationMethod(method.getId());
                         }
                     });
                     menu.add(methodItem);
@@ -339,7 +339,7 @@ public class AggregationColumnPanel extends MouseAdapter {
                             @Override
                             public void actionPerformed(
                                     final ActionEvent e) {
-                                changeAggregationMethod(method.getLabel());
+                                changeAggregationMethod(method.getId());
                             }
                         });
                         subMenu.add(methodItem);
@@ -541,12 +541,12 @@ public class AggregationColumnPanel extends MouseAdapter {
     /**
      * Changes the aggregation method of all selected rows to the method
      * with the given label.
-     * @param methodLabel the label of the aggregation method
+     * @param methodId the label of the aggregation method
      */
-    protected void changeAggregationMethod(final String methodLabel) {
+    protected void changeAggregationMethod(final String methodId) {
         final int[] selectedRows = m_aggrColTable.getSelectedRows();
         m_aggrColTableModel.setAggregationMethod(selectedRows,
-                AggregationMethods.getMethod4Label(methodLabel));
+                AggregationMethods.getMethod4Id(methodId));
         final Collection<Integer> idxs = new LinkedList<Integer>();
         for (final int i : selectedRows) {
             idxs.add(new Integer(i));

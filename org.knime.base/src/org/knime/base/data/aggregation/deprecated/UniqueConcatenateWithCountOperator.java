@@ -46,53 +46,66 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation.deprecated;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.util.MutableInteger;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 /**
- * Returns the all values concatenated per group.
+ * Returns the concatenation of all different values per group and the
+ * number of cells per distinct value.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class ConcatenateOperator extends AggregationOperator {
+@Deprecated
+public class UniqueConcatenateWithCountOperator
+    extends AggregationOperator {
 
     private final DataType m_type = StringCell.TYPE;
 
-    private final StringBuilder m_buf = new StringBuilder();
+    private final Map<String, MutableInteger> m_vals;
 
-    private boolean m_first = true;
-
-    /**Constructor for class Concatenate.
+    /**Constructor for class UniqueConcatenateWithCountOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
-     * */
-    public ConcatenateOperator(
+     */
+    public UniqueConcatenateWithCountOperator(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Concatenate", false, false,
-                DataValue.class, true), globalSettings,
-                opColSettings);
+        this(new OperatorData("Unique concatenate with count", true, false,
+                DataValue.class, false), globalSettings, opColSettings);
     }
 
-
-    /**Constructor for class ConcatenateOperator.
+    /**Constructor for class UniqueConcatenateWithCountOperator.
      * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected ConcatenateOperator(final OperatorData operatorData,
+    protected UniqueConcatenateWithCountOperator(
+            final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
+        try {
+            m_vals = new LinkedHashMap<String, MutableInteger>(
+                    getMaxUniqueValues());
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(
+                    "Maximum unique values number to big");
+        }
     }
 
     /**
@@ -110,7 +123,8 @@ public class ConcatenateOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new ConcatenateOperator(globalSettings, opColSettings);
+        return new UniqueConcatenateWithCountOperator(globalSettings,
+                opColSettings);
     }
 
     /**
@@ -121,12 +135,18 @@ public class ConcatenateOperator extends AggregationOperator {
         if (cell.isMissing()) {
             return false;
         }
-        if (m_first) {
-            m_first = false;
-        } else {
-            m_buf.append(getValueDelimiter());
+        final String val = cell.toString();
+        final MutableInteger counter = m_vals.get(val);
+        if (counter != null) {
+            counter.inc();
+            return false;
         }
-        m_buf.append(cell.toString());
+        //check if the map contains more values than allowed
+        //before adding a new value
+        if (m_vals.size() >= getMaxUniqueValues()) {
+            return true;
+        }
+        m_vals.put(val, new MutableInteger(1));
         return false;
     }
 
@@ -135,7 +155,22 @@ public class ConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        return new StringCell(m_buf.toString());
+        final StringBuilder buf = new StringBuilder();
+        final Set<Entry<String, MutableInteger>> entrySet =
+            m_vals.entrySet();
+        boolean first = true;
+        for (final Entry<String, MutableInteger> entry : entrySet) {
+            if (first) {
+                first = false;
+            } else {
+                buf.append(getValueDelimiter());
+            }
+            buf.append(entry.getKey());
+            buf.append('(');
+            buf.append(Integer.toString(entry.getValue().intValue()));
+            buf.append(')');
+        }
+        return new StringCell(buf.toString());
     }
 
     /**
@@ -143,8 +178,7 @@ public class ConcatenateOperator extends AggregationOperator {
      */
     @Override
     protected void resetInternal() {
-        m_buf.setLength(0);
-        m_first = true;
+        m_vals.clear();
     }
 
     /**
@@ -152,6 +186,7 @@ public class ConcatenateOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Concatenates the values per group.";
+        return "Concatenates each value only once with the number of its "
+             + "occurrences per group.";
     }
 }

@@ -112,7 +112,8 @@ public class MaxOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         return new MaxOperator(globalSettings, opColSettings);
     }
 

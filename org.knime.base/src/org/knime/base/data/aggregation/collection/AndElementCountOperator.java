@@ -68,8 +68,8 @@ import org.knime.base.data.aggregation.OperatorData;
 public class AndElementCountOperator extends AndElementOperator {
 
     /**Constructor for class AndElementCountOperator.
-     * @param globalSettings
-     * @param opColSettings
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
     public AndElementCountOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {

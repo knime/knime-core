@@ -70,19 +70,20 @@ import org.knime.base.data.aggregation.date.DateMeanOperator;
 import org.knime.base.data.aggregation.date.DayRangeOperator;
 import org.knime.base.data.aggregation.date.MedianDateOperator;
 import org.knime.base.data.aggregation.date.MillisRangeOperator;
-import org.knime.base.data.aggregation.general.ConcatenateOperator;
+import org.knime.base.data.aggregation.deprecated.ConcatenateOperator;
+import org.knime.base.data.aggregation.deprecated.ListCellOperator;
+import org.knime.base.data.aggregation.deprecated.SetCellOperator;
+import org.knime.base.data.aggregation.deprecated.SortedListCellOperator;
+import org.knime.base.data.aggregation.deprecated.UniqueConcatenateOperator;
+import org.knime.base.data.aggregation.deprecated.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.CountOperator;
 import org.knime.base.data.aggregation.general.FirstOperator;
 import org.knime.base.data.aggregation.general.LastOperator;
-import org.knime.base.data.aggregation.general.ListCellOperator;
 import org.knime.base.data.aggregation.general.MaxOperator;
 import org.knime.base.data.aggregation.general.MinOperator;
 import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
-import org.knime.base.data.aggregation.general.SetCellOperator;
-import org.knime.base.data.aggregation.general.SortedListCellOperator;
-import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
-import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
+import org.knime.base.data.aggregation.general.PercentageOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
@@ -132,7 +133,12 @@ public final class AggregationMethods {
 
     private static AggregationMethods instance = new AggregationMethods();
 
+    /**Map with all valid operators that are available to the user.*/
     private final Map<String, AggregationOperator> m_operators =
+        new HashMap<String, AggregationOperator>();
+    /**Map with previously used but now deprecated operators. These
+     * operators are not shown to the user.*/
+    private final Map<String, AggregationOperator> m_deprecatedOperators =
         new HashMap<String, AggregationOperator>();
 
     private final AggregationMethod m_defNotNumericalMeth;
@@ -148,7 +154,7 @@ public final class AggregationMethods {
     }
 
     private AggregationMethods() {
-        final GlobalSettings globalSettings = new GlobalSettings(0);
+        final GlobalSettings globalSettings = new GlobalSettings();
         final OperatorColumnSettings inclMissing =
             new OperatorColumnSettings(true, null);
         final OperatorColumnSettings exclMissing =
@@ -184,22 +190,22 @@ public final class AggregationMethods {
             addOperator(new MillisRangeOperator(globalSettings, exclMissing));
 
 //The numerical methods
-                /**Mean.*/
+            /**Mean.*/
             final AggregationOperator meanOperator =
                 new MeanOperator(globalSettings, exclMissing);
             addOperator(meanOperator);
-            m_defNumericalMeth = getMethod(meanOperator.getLabel());
-                /**Median.*/
+            m_defNumericalMeth = getOperator(meanOperator.getId());
+            /**Median.*/
             addOperator(new MedianOperator(globalSettings, exclMissing));
-                /**Sum.*/
+            /**Sum.*/
             addOperator(new SumOperator(globalSettings, exclMissing));
-              /**Product.*/
+            /**Product.*/
             addOperator(new ProductOperator(globalSettings, exclMissing));
-              /**Range.*/
+            /**Range.*/
             addOperator(new RangeOperator(globalSettings, exclMissing));
-              /**Variance.*/
+            /**Variance.*/
             addOperator(new VarianceOperator(globalSettings, exclMissing));
-              /**Standard deviation.*/
+            /**Standard deviation.*/
             addOperator(new StdDeviationOperator(globalSettings, exclMissing));
 
 //The general methods that work with all DataCells
@@ -207,38 +213,43 @@ public final class AggregationMethods {
             final AggregationOperator firstOperator =
                 new FirstOperator(globalSettings, inclMissing);
             addOperator(firstOperator);
-            m_defNotNumericalMeth = getMethod(firstOperator.getLabel());
+            m_defNotNumericalMeth = getOperator(firstOperator.getId());
             m_rowOrderMethod = new FirstOperator(globalSettings, inclMissing);
             /**Takes the last cell per group.*/
             addOperator(new LastOperator(globalSettings, inclMissing));
-              /**Minimum.*/
+            /**Minimum.*/
             addOperator(new MinOperator(globalSettings, inclMissing));
-              /**Maximum.*/
+            /**Maximum.*/
             addOperator(new MaxOperator(globalSettings, inclMissing));
-              /**Takes the value which occurs most.*/
+            /**Takes the value which occurs most.*/
             addOperator(new ModeOperator(globalSettings, inclMissing));
-              /**Concatenates all cell values.*/
+            /**Concatenates all cell values.*/
             addOperator(new ConcatenateOperator(globalSettings, inclMissing));
-              /**Concatenates all distinct cell values.*/
+            /**Concatenates all distinct cell values.*/
             addOperator(
                     new UniqueConcatenateOperator(globalSettings, exclMissing));
-              /**Concatenates all distinct cell values and counts the members.*/
+            /**Concatenates all distinct cell values and counts the members.*/
             addOperator(new UniqueConcatenateWithCountOperator(
                     globalSettings, exclMissing));
-              /**Counts the number of unique group members.*/
+            /**Counts the number of unique group members.*/
             addOperator(new UniqueCountOperator(globalSettings, inclMissing));
-              /**Counts the number of group members.*/
+            /**Counts the number of group members.*/
             addOperator(new CountOperator(globalSettings, inclMissing));
+            /**Returns the percentage of the group.*/
+            addOperator(new PercentageOperator(globalSettings, inclMissing));
             /**Counts the number of missing values per group.*/
             addOperator(new MissingValueCountOperator(globalSettings,
                     inclMissing));
-              /** List collection.*/
+            /** List collection.*/
             addOperator(new ListCellOperator(globalSettings, inclMissing));
             /** Sorted list collection.*/
             addOperator(
                     new SortedListCellOperator(globalSettings, inclMissing));
-              /** Set collection.*/
+            /** Set collection.*/
             addOperator(new SetCellOperator(globalSettings, inclMissing));
+
+            //add old and deprecated operators to be downward compatible
+            registerDeprecatedOperators();
         } catch (final DuplicateOperatorException e) {
             throw new IllegalStateException(
                     "Exception while initializing class: "
@@ -246,6 +257,52 @@ public final class AggregationMethods {
         }
         //register all extension point implementations
         registerExtensionPoints();
+    }
+
+    /**
+     * This method registers previous methods which are deprecated in order to
+     * be downward compatible. The methods are stored separate from the
+     * methods to use.
+     *
+     * @throws DuplicateOperatorException if one of the methods already exists
+     */
+    private void registerDeprecatedOperators()
+        throws DuplicateOperatorException {
+        final GlobalSettings globalSettings = new GlobalSettings();
+        addDeprecatedOperator(new OrElementCountOperator(new OperatorData(
+                "Unique element count", true, false,
+                CollectionDataValue.class, false),
+                globalSettings, new OperatorColumnSettings(true, null)));
+        addDeprecatedOperator(new FirstOperator(new OperatorData("First value",
+                    false, true, DataValue.class, false),
+                    globalSettings, new OperatorColumnSettings(false, null)));
+        addDeprecatedOperator(new LastOperator(new OperatorData("Last value",
+                    false, true, DataValue.class, false),
+                    globalSettings, new OperatorColumnSettings(false, null)));
+        addDeprecatedOperator(new CountOperator(new OperatorData("Value count",
+                    false, true, DataValue.class, false),
+                    globalSettings, new OperatorColumnSettings(false, null)));
+    }
+
+    /**
+     * Registers the given operator as a deprecated operator. The operator is
+     * accessible via the
+     * @param operator the deprecated operator to register
+     * @throws DuplicateOperatorException if the method already exists
+     */
+    private void addDeprecatedOperator(final AggregationOperator operator)
+        throws DuplicateOperatorException {
+        if (operator == null) {
+            throw new NullPointerException("operator must not be null");
+        }
+        final String id = operator.getId();
+        final AggregationOperator existingOp = getOperator(id);
+        if (existingOp != null) {
+            throw new DuplicateOperatorException(
+                    "Operator with id: " + id + " already registered",
+                    existingOp);
+        }
+        m_deprecatedOperators.put(id, operator);
     }
 
     /**
@@ -300,14 +357,14 @@ public final class AggregationMethods {
         if (operator == null) {
             throw new NullPointerException("operator must not be null");
         }
-        final String label = operator.getLabel();
-        final AggregationOperator existingOp = getOperator(label);
+        final String id = operator.getId();
+        final AggregationOperator existingOp = getOperator(id);
         if (existingOp != null) {
             throw new DuplicateOperatorException(
-                    "Operator with label: " + label + " already registered",
+                    "Operator with id: " + id + " already registered",
                     existingOp);
         }
-        m_operators.put(label, operator);
+        m_operators.put(id, operator);
     }
 
     /**
@@ -325,29 +382,20 @@ public final class AggregationMethods {
     }
 
     /**
-     * @param name the unique name to check
+     * @param id the unique id to check
      * @return <code>true</code> if an operator with the given name is already
      * registered
      */
-    public static boolean operatorExists(final String name) {
-        return instance().getOperator(name) != null;
+    public static boolean operatorExists(final String id) {
+            return instance().getOperator(id) != null;
     }
 
     /**
-     * @param name the unique name of the operator
-     * @return the operator or <code>null</code> if none exists with
-     * the given name
-     */
-    private AggregationOperator getOperator(final String name) {
-        return m_operators.get(name);
-    }
-
-    /**
-     * @return {@link Collection} with all registered
+     * @return an unmodifiable {@link Collection} with all registered
      * {@link AggregationOperator}s
      */
     private Collection<AggregationOperator> getOperators() {
-        return m_operators.values();
+        return Collections.unmodifiableCollection(m_operators.values());
     }
 
     /**
@@ -380,9 +428,7 @@ public final class AggregationMethods {
         if (type == null) {
             return compatibleMethods;
         }
-        final Collection<AggregationOperator> operators =
-            instance().getOperators();
-        for (final AggregationOperator operator : operators) {
+        for (final AggregationOperator operator : instance().getOperators()) {
             if (operator.isCompatible(type)) {
                 compatibleMethods.add(operator);
             }
@@ -390,27 +436,6 @@ public final class AggregationMethods {
         Collections.sort(compatibleMethods);
         return compatibleMethods;
     }
-
-    /**
-     * @param type the {@link DataType} to check
-     * @return the labels of all aggregation methods that are compatible
-     * with the given {@link DataType}
-     */
-    public static List<String> getCompatibleMethodLabels(final DataType type) {
-        if (type == null) {
-            throw new IllegalArgumentException("type must not be empty");
-        }
-        final List<AggregationMethod> compatibleMethods =
-            getCompatibleMethods(type);
-        final List<String> methods =
-            new ArrayList<String>(compatibleMethods.size());
-        for (final AggregationMethod method : compatibleMethods) {
-            methods.add(method.getLabel());
-        }
-        return methods;
-    }
-
-
 
     /**
      * @param type the {@link DataType} to check
@@ -426,32 +451,6 @@ public final class AggregationMethods {
     }
 
     /**
-     * @param type the {@link DataType} to check
-     * @return the labels of all aggregation methods that are compatible
-     * with the given {@link DataType} group by the supported data type
-     */
-    public static Map<String, List<String>> getCompatibleMethodGroupLabels(
-            final DataType type) {
-        final List<AggregationMethod> methods = getCompatibleMethods(type);
-        final Map<Class<? extends DataValue>, List<AggregationMethod>>
-            methodGroups = groupMethodsByType(methods);
-        final Map<String, List<String>> methodGroupLabels =
-            new HashMap<String, List<String>>(methodGroups.size());
-        for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
-                entry : methodGroups.entrySet()) {
-            final Class<? extends DataValue> supportedType = entry.getKey();
-            final List<AggregationMethod> supportedMethods = entry.getValue();
-            final LinkedList<String> labels = new LinkedList<String>();
-            for (final AggregationMethod supportedMethod : supportedMethods) {
-                labels.add(supportedMethod.getLabel());
-            }
-            methodGroupLabels.put(
-                    getUserTypeLabel(supportedType) +  " Methods", labels);
-        }
-        return methodGroupLabels;
-    }
-
-    /**
      * Returns a set with all data types that are supported by at least one
      * {@link AggregationOperator}.
      * @return all data types that are supported by at least one
@@ -461,7 +460,7 @@ public final class AggregationMethods {
         final Set<Class<? extends DataValue>> supportedTypes =
             new HashSet<Class<? extends DataValue>>();
         for (final AggregationOperator operator
-                : instance().m_operators.values()) {
+                : instance.getOperators()) {
             supportedTypes.add(operator.getSupportedType());
         }
         return supportedTypes;
@@ -536,87 +535,53 @@ public final class AggregationMethods {
         if (methods.size() > 0) {
             return methods.get(0);
         }
-        return new FirstOperator(new GlobalSettings(0),
+        return new FirstOperator(new GlobalSettings(),
                 new OperatorColumnSettings(false, null));
     }
 
     /**
-     * @param model the {@link SettingsModelString} with the label of the
+     * @param model the {@link SettingsModelString} with the id of the
      * <code>AggregationMethod</code>
-     * @return the <code>AggregationMethod</code> for the given label
+     * @return the <code>AggregationMethod</code> for the given id
      */
     public static AggregationMethod getMethod4SettingsModel(
             final SettingsModelString model) {
         if (model == null) {
             throw new NullPointerException("model must not be null");
         }
-        return getMethod4Label(model.getStringValue());
+        return getMethod4Id(model.getStringValue());
     }
 
     /**
-     * @param label the label to get the <code>AggregationMethod</code> for.
-     * @return the <code>AggregationMethod</code> with the given label
+     * @param id the id to get the <code>AggregationMethod</code> for.
+     * @return the <code>AggregationMethod</code> with the given id
      * @throws IllegalArgumentException if no <code>AggregationMethod</code>
-     * exists for the given label
+     * exists for the given id
      */
-    public static AggregationMethod getMethod4Label(final String label)
+    public static AggregationMethod getMethod4Id(final String id)
     throws IllegalArgumentException {
-        return instance().getMethod(label);
-    }
-
-    /**
-     * @param label the label of the {@link AggregationMethod} to get
-     * @return the <code>AggregationMethod</code> with the given label
-     * @throws IllegalArgumentException if no <code>AggregationMethod</code>
-     * exists for the given label
-     */
-    private AggregationMethod getMethod(final String label)
-    throws IllegalArgumentException {
-        if (label == null) {
-            throw new NullPointerException("Label must not be null");
-        }
-        AggregationOperator operator = getOperator(label);
+        final AggregationOperator operator = instance().getOperator(id);
         if (operator == null) {
-            operator = oldOperators(label);
-            if (operator == null) {
-                throw new IllegalArgumentException("No method found for label: "
-                        + label);
-            }
+            throw new IllegalArgumentException("No method found for id: "
+                    + id);
         }
         return operator;
     }
 
     /**
-     * Compatibility method that returns old methods which are no longer
-     * available in the front end.
-     *
-     * @param label the unique label of the operator
-     * @return the operator for the given label or <code>null</code> if none
-     * exists
+     * @param id the id of the {@link AggregationOperator} to get
+     * @return the <code>AggregationOperator</code> with the given id or
+     * <code>null</code> if none exists with the id
      */
-    private AggregationOperator oldOperators(final String label) {
-        final GlobalSettings globalSettings = new GlobalSettings(0);
-        if (label.equals("Unique element count")) {
-            return new OrElementCountOperator(new OperatorData(label,
-                    true, false, CollectionDataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(true, null));
+    private AggregationOperator getOperator(final String id) {
+        if (id == null) {
+            throw new NullPointerException("id must not be null");
         }
-        if (label.equals("First value")) {
-            return new FirstOperator(new OperatorData(label,
-                    false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null));
+        AggregationOperator operator = m_operators.get(id);
+        if (operator == null) {
+            operator = m_deprecatedOperators.get(id);
         }
-        if (label.equals("Last value")) {
-            return new LastOperator(new OperatorData(label,
-                    false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null));
-        }
-        if (label.equals("Value count")) {
-            return new CountOperator(new OperatorData(label,
-                    false, true, DataValue.class, false),
-                    globalSettings, new OperatorColumnSettings(false, null));
-        }
-        return null;
+        return operator;
     }
 
     /**

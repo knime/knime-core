@@ -100,7 +100,8 @@ public class LastOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         return new LastOperator(globalSettings, opColSettings);
     }
 

@@ -241,7 +241,7 @@ public class ColumnAggregator {
         }
         for (int i = 0, length = aggrMethods.length; i < length; i++) {
             final AggregationMethod method =
-                AggregationMethods.getMethod4Label(aggrMethods[i]);
+                AggregationMethods.getMethod4Id(aggrMethods[i]);
             final boolean inclMissingVal;
             if (inclMissingVals != null) {
                 inclMissingVal = inclMissingVals[i];
@@ -275,7 +275,7 @@ public class ColumnAggregator {
         for (int i = 0, length = cols.size(); i < length; i++) {
             final ColumnAggregator aggrCol = cols.get(i);
             colNames[i] = aggrCol.getOriginalColName();
-            aggrMethods[i] = aggrCol.getMethodTemplate().getLabel();
+            aggrMethods[i] = aggrCol.getMethodTemplate().getId();
             types[i] = aggrCol.getOriginalDataType();
             inclMissingVals[i] = aggrCol.inclMissingCells();
         }

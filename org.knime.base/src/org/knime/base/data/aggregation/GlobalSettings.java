@@ -48,6 +48,9 @@
 
 package org.knime.base.data.aggregation;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+
 
 /**
  * Utility class that contains general information such as the
@@ -67,21 +70,37 @@ public class GlobalSettings {
     /**The delimiter to use for value separation.*/
     private final String m_valueDelimiter;
 
+    private final DataTableSpec m_spec;
+
+    private final int m_noOfRows;
+
+
+    /**Constructor for class GlobalSettings.
+     * This constructor is used to create a dummy object that contains
+     * default settings.
+     */
+    GlobalSettings() {
+        this(0);
+    }
+
     /**Constructor for class GlobalSettings that uses the standard
      * value delimiter.
      *
      * @param maxUniqueValues the maximum number of unique values to consider
      */
     public GlobalSettings(final int maxUniqueValues) {
-        this(maxUniqueValues, STANDARD_DELIMITER);
+        this(maxUniqueValues, STANDARD_DELIMITER, new DataTableSpec(), 0);
     }
 
     /**Constructor for class GlobalSettings.
      * @param maxUniqueValues the maximum number of unique values to consider
      * @param valueDelimiter the delimiter to use for value separation
+     * @param spec the {@link DataTableSpec} of the input table
+     * @param noOfRows the number of rows of the input table
      */
     public GlobalSettings(final int maxUniqueValues,
-            final String valueDelimiter) {
+            final String valueDelimiter, final DataTableSpec spec,
+            final int noOfRows) {
         if (maxUniqueValues < 0) {
             throw new IllegalArgumentException(
                     "Maximum unique values must be a positive integer");
@@ -90,8 +109,16 @@ public class GlobalSettings {
             throw new NullPointerException(
                     "Value delimiter should not be null");
         }
+        if (spec == null) {
+            throw new NullPointerException("spec must not be null");
+        }
+        if (noOfRows < 0) {
+            throw new IllegalArgumentException("No of rows must be positive");
+        }
         m_maxUniqueValues = maxUniqueValues;
         m_valueDelimiter = valueDelimiter;
+        m_spec = spec;
+        m_noOfRows = noOfRows;
     }
 
     /**
@@ -106,5 +133,61 @@ public class GlobalSettings {
      */
     public String getValueDelimiter() {
         return m_valueDelimiter;
+    }
+
+
+    /**
+     * @return the total number of rows of the input table
+     */
+    public int getNoOfRows() {
+        return m_noOfRows;
+    }
+
+    /**
+     * Returns the number of columns of the original input table.
+     *
+     * @return the number of columns
+     */
+    public int getNoOfColumns() {
+        return m_spec.getNumColumns();
+    }
+
+    /**
+     * Finds the column with the specified name in the TableSpec of the
+     * original input table and returns its index, or -1 if the name
+     * doesn't exist in the table. This method returns
+     * -1 if the argument is <code>null</code>.
+     *
+     * @param columnName the name to search for
+     * @return the index of the column with the specified name, or -1 if not
+     *         found.
+     */
+    public int findColumnIndex(final String columnName) {
+        return m_spec.findColumnIndex(columnName);
+    }
+
+    /**
+     * Returns column information of the original column with
+     * the provided index.
+     *
+     * @param index the column index within the table
+     * @return the column specification
+     * @throws ArrayIndexOutOfBoundsException if the index is out of range
+     */
+    public DataColumnSpec getOriginalColumnSpec(final int index) {
+        return m_spec.getColumnSpec(index);
+    }
+
+    /**
+     * Returns the {@link DataColumnSpec} of the original column with the
+     * provided name.
+     * This method returns <code>null</code> if the argument is
+     * <code>null</code>.
+     *
+     * @param column the column name to find the spec for
+     * @return the column specification or <code>null</code> if not available
+     */
+    public DataColumnSpec getOriginalColumnSpec(final String column) {
+        return m_spec.getColumnSpec(column);
     }
 }

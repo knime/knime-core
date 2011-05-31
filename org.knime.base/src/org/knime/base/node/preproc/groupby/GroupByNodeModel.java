@@ -50,24 +50,6 @@
  */
 package org.knime.base.node.preproc.groupby;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -89,6 +71,25 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses the
@@ -342,7 +343,7 @@ public class GroupByNodeModel extends NodeModel {
                         aggregators.size());
                 for (final ColumnAggregator aggregator : aggregators) {
                     final String uniqueName = aggregator.getOriginalColName()
-                            + "@" + aggregator.getMethodTemplate().getLabel()
+                            + "@" + aggregator.getMethodTemplate().getId()
                             + "@" + aggregator.inclMissingCells();
                     if (!uniqueAggregators.add(uniqueName)) {
                         throw new IllegalArgumentException(
@@ -485,7 +486,8 @@ public class GroupByNodeModel extends NodeModel {
         m_groupByCols.setExcludeList(exclList);
 
         // generate group-by spec given the original spec and selected columns
-        DataTableSpec groupBySpec = createGroupBySpec(origSpec, groupByCols);
+        final DataTableSpec groupBySpec =
+            createGroupBySpec(origSpec, groupByCols);
         return new DataTableSpec[] {groupBySpec};
     }
 
@@ -615,7 +617,8 @@ public class GroupByNodeModel extends NodeModel {
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
         .getPolicy4Label(m_columnNamePolicy.getStringValue());
         final GlobalSettings globalSettings = new GlobalSettings(maxUniqueVals,
-                m_valueDelimiter.getStringValue());
+                m_valueDelimiter.getStringValue(), table.getDataTableSpec(),
+                table.getRowCount());
 
         final GroupByTable resultTable;
         if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
@@ -689,9 +692,8 @@ public class GroupByNodeModel extends NodeModel {
             numeric = config.getString(OLD_CFG_NUMERIC_COL_METHOD);
             nominal = config.getString(OLD_CFG_NOMINAL_COL_METHOD);
         } catch (final InvalidSettingsException e) {
-            numeric = AggregationMethods.getDefaultNumericalMethod().getLabel();
-            nominal = AggregationMethods.getDefaultNotNumericalMethod()
-                    .getLabel();
+            numeric = AggregationMethods.getDefaultNumericalMethod().getId();
+            nominal = AggregationMethods.getDefaultNotNumericalMethod().getId();
         }
         return compCreateColumnAggregators(spec, excludeCols, numeric, nominal);
     }
@@ -734,9 +736,9 @@ public class GroupByNodeModel extends NodeModel {
             final DataTableSpec spec, final List<String> excludeCols,
             final String numeric, final String nominal) {
         final AggregationMethod numericMethod = AggregationMethods
-                .getMethod4Label(numeric);
+                .getMethod4Id(numeric);
         final AggregationMethod nominalMethod = AggregationMethods
-                .getMethod4Label(nominal);
+                .getMethod4Id(nominal);
         final Set<String> groupCols = new HashSet<String>(excludeCols);
         final List<ColumnAggregator> colAg = new LinkedList<ColumnAggregator>();
         for (int colIdx = 0, length = spec.getNumColumns(); colIdx < length;

@@ -104,7 +104,8 @@ public class UniqueCountOperator extends AggregationOperator {
      */
     @Override
     public AggregationOperator createInstance(
-            final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
         return new UniqueCountOperator(globalSettings, opColSettings);
     }
 

@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation.deprecated;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
@@ -68,6 +68,7 @@ import java.util.List;
  *
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class SortedListCellOperator extends ListCellOperator {
 
     private final DataValueComparator m_comparator;

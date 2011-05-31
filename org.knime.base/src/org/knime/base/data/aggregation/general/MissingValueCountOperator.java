@@ -70,8 +70,8 @@ public class MissingValueCountOperator extends AggregationOperator {
     private int m_counter = 0;
 
     /**Constructor for class MissingValueCountOperator.
-     * @param globalSettings
-     * @param opColSettings
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
      */
     public MissingValueCountOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
