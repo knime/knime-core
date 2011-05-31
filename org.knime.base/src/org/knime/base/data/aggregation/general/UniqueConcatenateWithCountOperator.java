@@ -187,7 +187,7 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     public String getDescription() {
-        return "Concatenates each value only once with the number of its "
+        return "Concatenates each member only once with the number of its "
              + "occurrences per group.";
     }
 }

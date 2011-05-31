@@ -171,6 +171,6 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Concatenates each value only once per group.";
+        return "Concatenates each member only once per group.";
     }
 }

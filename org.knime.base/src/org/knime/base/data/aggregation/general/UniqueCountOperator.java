@@ -159,6 +159,6 @@ public class UniqueCountOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Counts each value only once per group.";
+        return "Counts each member only once per group.";
     }
 }
