@@ -79,7 +79,7 @@ import org.knime.base.data.aggregation.general.MaxOperator;
 import org.knime.base.data.aggregation.general.MinOperator;
 import org.knime.base.data.aggregation.general.MissingValueCountOperator;
 import org.knime.base.data.aggregation.general.ModeOperator;
-import org.knime.base.data.aggregation.general.PercentageOperator;
+import org.knime.base.data.aggregation.general.PercentOperator;
 import org.knime.base.data.aggregation.general.SetCellOperator;
 import org.knime.base.data.aggregation.general.SortedListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
@@ -243,7 +243,7 @@ public final class AggregationMethods {
             /**Counts the number of group members.*/
             addOperator(new CountOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Returns the percentage of the group.*/
-            addOperator(new PercentageOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new PercentOperator(GLOBAL_SETTINGS, INCL_MISSING));
             /**Counts the number of missing values per group.*/
             addOperator(new MissingValueCountOperator(GLOBAL_SETTINGS,
                     INCL_MISSING));
