@@ -60,6 +60,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -78,6 +79,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -110,10 +112,10 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final String m_historyID;
 
-
     private final JLabel m_warnMsg;
 
     private int m_selectMode = JFileChooser.FILES_ONLY;
+
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
@@ -123,7 +125,7 @@ public final class FilesHistoryPanel extends JPanel {
      * @param suffixes the set of suffixes for the file chooser
      */
     public FilesHistoryPanel(final String historyID, final String... suffixes) {
-            this(null, historyID, false, suffixes);
+        this(null, historyID, false, suffixes);
     }
 
     /**
@@ -135,11 +137,10 @@ public final class FilesHistoryPanel extends JPanel {
      * @param suffixes the set of suffixes for the file chooser
      * @param fvm model to allow to use a variable instead of the text field.
      * @param showErrorMessage if true there are error messages if the file
-     * exists or the path is not available and so on.
+     *            exists or the path is not available and so on.
      */
     public FilesHistoryPanel(final FlowVariableModel fvm,
-            final String historyID,
-            final boolean showErrorMessage,
+            final String historyID, final boolean showErrorMessage,
             final String... suffixes) {
         if (historyID == null || suffixes == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -152,7 +153,6 @@ public final class FilesHistoryPanel extends JPanel {
         m_textBox = new JComboBox(new DefaultComboBoxModel());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-
 
         m_textBox.setPreferredSize(new Dimension(300, 25));
         m_textBox.setRenderer(new MyComboBoxRenderer());
@@ -261,13 +261,13 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
-      * Creates new instance, sets properties, for instance renderer,
+     * Creates new instance, sets properties, for instance renderer,
      * accordingly.
      *
      * @param historyID identifier for the string history, see
      *            {@link StringHistory}
      * @param showErrorMessage if true there are error messages if the file
-     * exists or the path is not available and so on.
+     *            exists or the path is not available and so on.
      */
     public FilesHistoryPanel(final String historyID,
             final boolean showErrorMessage) {
@@ -302,7 +302,9 @@ public final class FilesHistoryPanel extends JPanel {
         return null;
     }
 
-    /** Set file file as part of the suffix.
+    /**
+     * Set file file as part of the suffix.
+     *
      * @param suffixes The new list of valid suffixes.
      */
     public void setSuffixes(final String... suffixes) {
@@ -331,7 +333,23 @@ public final class FilesHistoryPanel extends JPanel {
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
     public void setSelectedFile(final String url) {
-        m_textBox.setSelectedItem(url);
+        if (SwingUtilities.isEventDispatchThread()) {
+            m_textBox.setSelectedItem(url);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_textBox.setSelectedItem(url);
+
+                    }
+                });
+            } catch (InterruptedException ex) {
+                // ignore
+            } catch (InvocationTargetException ex) {
+                // ignore
+            }
+        }
     }
 
     /** Updates the elements in the combo box, reads the file history. */
@@ -494,5 +512,46 @@ public final class FilesHistoryPanel extends JPanel {
         super.setEnabled(enabled);
         m_chooseButton.setEnabled(enabled);
         m_textBox.setEnabled(enabled);
+    }
+
+    private final ChangeListener m_checkIfExistsListener =
+            new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent e) {
+                    String file = getSelectedFile();
+                    // we can only check local files, thus ignore everything else
+                    try {
+                        URL u = new URL(file);
+                        if (!"file".equals(u.getProtocol())) {
+                            m_textBox.getEditor().getEditorComponent().setBackground(Color.WHITE);
+                            return;
+                        }
+                    } catch (MalformedURLException ex) {
+                    }
+
+                    if (file.startsWith("file:")) {
+                        file = file.substring("file:".length());
+                    }
+                    if (new File(file).exists()) {
+                        m_textBox.getEditor().getEditorComponent().setBackground(Color.WHITE);
+                    } else {
+                        m_textBox.getEditor().getEditorComponent().setBackground(Color.ORANGE);
+                    }
+                }
+            };
+
+    /**
+     * Sets if the text field should be colored if the selected file does not
+     * exist.
+     *
+     * @param b <code>true</code> if the text field should be colored,
+     *            <code>false</code> otherwise
+     */
+    public void setMarkIfNonexisting(final boolean b) {
+        if (b) {
+            addChangeListener(m_checkIfExistsListener);
+        } else {
+            removeChangeListener(m_checkIfExistsListener);
+        }
     }
 }
