@@ -53,6 +53,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.meta.AddMetaNodeWizard;
 import org.knime.workbench.editor2.meta.MetaNodeWizardDialog;
@@ -78,7 +79,12 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
     public void setActiveEditor(final IAction action,
             final IEditorPart targetEditor) {
         m_editor = (WorkflowEditor)targetEditor;
-        action.setEnabled(!m_editor.getWorkflowManager().isWriteProtected());
+        boolean enabled = false;
+        if (m_editor != null) {
+            WorkflowManager wm = m_editor.getWorkflowManager();
+            enabled = wm != null && !wm.isWriteProtected();
+        }
+        action.setEnabled(enabled);
     }
 
     /**
