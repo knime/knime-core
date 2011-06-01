@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
+import org.eclipse.ecf.filetransfer.IFileTransfer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.BundleContext;
@@ -106,6 +107,14 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
         m_serviceTracker = new ServiceTracker(
                 context, URIToFileResolve.class.getName(), null);
         m_serviceTracker.open();
+
+        /* Unfortunately we have to activate the plugin
+         * org.eclipse.ecf.filetransfer explicitly by accessing one of the
+         * contained classed. This will trigger the initialization of the
+         * extension point org.eclipse.ecf.filetransfer.urlStreamHandlerService
+         * contained in the plugin which is necessary for registering the
+         * "knime" URL protocol. */
+        IFileTransfer.class.getName();
     }
 
     /** {@inheritDoc} */
