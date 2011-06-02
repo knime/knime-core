@@ -49,6 +49,9 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
@@ -150,12 +153,24 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating 'Expand MetaNode' job for "
                 + nodeParts.length + " node(s)...");
-        WorkflowManager manager = getManager();
-        WorkflowManager metaNode =
-            (WorkflowManager)nodeParts[0].getNodeContainer();
-        ExpandMetaNodeCommand emnc =
-            new ExpandMetaNodeCommand(manager, metaNode.getID());
-        execute(emnc);
+        try {
+            WorkflowManager manager = getManager();
+            WorkflowManager metaNode =
+                (WorkflowManager)nodeParts[0].getNodeContainer();
+            String res = manager.canExpandMetaNode(metaNode.getID());
+            if (res != null) {
+                throw new IllegalArgumentException(res);
+            }
+            ExpandMetaNodeCommand emnc =
+                new ExpandMetaNodeCommand(manager, metaNode.getID());
+            execute(emnc);
+        } catch (IllegalArgumentException e) {
+            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
+                    SWT.ERROR);
+            mb.setMessage("Sorry, expanding Metanode failed: " + e.getMessage());
+            mb.setText("Expand failed");
+            mb.open();
+        }
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
