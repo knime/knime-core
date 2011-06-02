@@ -2564,8 +2564,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         if (!canRemoveNode(wfmID)) {
             // we can not - bail!
-            return "Can not move all "
-                    + "selected nodes (successor executing?).";
+            return "Can not move metanode or nodes inside metanode "
+                    + "(node(s) or successor still executing?).";
+        }
+        WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
+        if (wfm.containsExecutedNode()) {
+            return "Can not expand executed meta node (reset first).";
         }
         return null;
     }
