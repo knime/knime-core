@@ -90,9 +90,22 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     String getLoadVersionString();
 
+    /** The map of node ID suffix to persistor.
+     * @return The persistor map. */
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
 
+    /** The connections between the nodes that are loaded. The set only contains
+     * connections between nodes of the loader map, it does not contain
+     * any other connection (see {@link #getAdditionalConnectionSet()}).
+     * @return The connections */
     Set<ConnectionContainerTemplate> getConnectionSet();
+
+    /** Get additional connections. These are connections that connect nodes
+     * that were loaded to nodes that are already in the workflow. In most
+     * cases this list is empty except for undo commands that restore deleted
+     * nodes (and their connections to other nodes in the workflow).
+     * @return Such a set (often empty but never null). */
+    Set<ConnectionContainerTemplate> getAdditionalConnectionSet();
 
     HashMap<Integer, ContainerTable> getGlobalTableRepository();
 

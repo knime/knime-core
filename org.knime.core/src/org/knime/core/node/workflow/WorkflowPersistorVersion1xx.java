@@ -207,6 +207,12 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
+        return Collections.emptySet();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return m_nodeContainerLoaderMap;
     }

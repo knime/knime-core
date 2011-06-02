@@ -56,16 +56,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -205,22 +201,6 @@ public class DeleteCommand extends AbstractKNIMECommand {
             m_undoPersitor = hostWFM.copy(true, content);
         }
         for (NodeID id : m_nodeIDs) {
-            NodeContainer nc = hostWFM.getNodeContainer(id);
-            if (nc instanceof WorkflowManager) {
-                // since the equals method of the WorkflowManagerInput
-                // only looks for the WorkflowManager, we can pass
-                // null as the editor argument
-                WorkflowManagerInput in =
-                    new WorkflowManagerInput((WorkflowManager)nc, null);
-                IEditorPart editor =
-                    PlatformUI.getWorkbench()
-                    .getActiveWorkbenchWindow().getActivePage()
-                    .findEditor(in);
-                if (editor != null) {
-                    editor.getEditorSite().getPage().closeEditor(editor,
-                            false);
-                }
-            }
             hostWFM.removeNode(id);
         }
         for (ConnectionContainer cc : m_connections) {

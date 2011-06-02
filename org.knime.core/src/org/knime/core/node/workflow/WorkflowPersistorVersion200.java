@@ -476,115 +476,116 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                     + "\" because the directory can't be locked");
         }
         try {
-        if (workflowDirRef.equals(wm.getNodeContainerDirectory())
-                && !wm.isDirty()) {
+            if (workflowDirRef.equals(wm.getNodeContainerDirectory())
+                    && !wm.isDirty()) {
+                return WORKFLOW_FILE;
+            }
+            // delete "old" node directories if not saving to the working
+            // directory -- do this before saving the nodes (dirs newly created)
+            if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
+                wm.deleteObsoleteNodeDirs();
+            }
+            File workflowDir = workflowDirRef.getFile();
+            workflowDir.mkdirs();
+            if (!workflowDir.isDirectory()) {
+                throw new IOException("Unable to create or write directory \": "
+                        + workflowDir + "\"");
+            }
+            NodeSettings settings =
+                new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
+            settings.addString(
+                    WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
+            settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
+            saveWorkflowName(settings, wm.getNameField());
+            saveTemplateInformation(wm.getTemplateInformation(), settings);
+                NodeContainerMetaPersistorVersion200.save(
+                        settings, wm, workflowDirRef);
+            saveWorkflowVariables(wm, settings);
+            saveCredentials(wm, settings);
+            saveWorkflowAnnotations(wm, settings);
+
+            NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
+            Collection<NodeContainer> nodes = wm.getNodeContainers();
+            double progRatio = 1.0 / (nodes.size() + 1);
+
+            for (NodeContainer nextNode : nodes) {
+                int id = nextNode.getID().getIndex();
+                ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
+                execMon.setMessage(nextNode.getNameWithID());
+                    NodeSettingsWO sub =
+                        nodesSettings.addNodeSettings("node_" + id);
+                saveNodeContainer(
+                        sub, workflowDirRef, nextNode, subExec, isSaveData);
+                subExec.setProgress(1.0);
+            }
+
+            execMon.setMessage("connection information");
+            NodeSettingsWO connSettings = saveSettingsForConnections(settings);
+            int connectionNumber = 0;
+            for (ConnectionContainer cc : wm.getConnectionContainers()) {
+                NodeSettingsWO nextConnectionConfig = connSettings
+                        .addNodeSettings("connection_" + connectionNumber);
+                saveConnection(nextConnectionConfig, cc);
+                connectionNumber += 1;
+            }
+            int inCount = wm.getNrInPorts();
+            NodeSettingsWO inPortsSetts = inCount > 0
+                ? saveInPortsSetting(settings) : null;
+            NodeSettingsWO inPortsSettsEnum = null;
+            if (inPortsSetts != null) {
+                saveInportsBarUIInfoClassName(
+                        inPortsSetts, wm.getInPortsBarUIInfo());
+                saveInportsBarUIInfoSettings(
+                        inPortsSetts, wm.getInPortsBarUIInfo());
+                inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
+            }
+            for (int i = 0; i < inCount; i++) {
+                    NodeSettingsWO sPort = saveInPortSetting(inPortsSettsEnum, i);
+                    saveInPort(sPort, wm, i);
+            }
+            int outCount = wm.getNrOutPorts();
+            NodeSettingsWO outPortsSetts = outCount > 0
+                ? saveOutPortsSetting(settings) : null;
+            NodeSettingsWO outPortsSettsEnum = null;
+            if (outPortsSetts != null) {
+                saveOutportsBarUIInfoClassName(
+                        outPortsSetts, wm.getOutPortsBarUIInfo());
+                saveOutportsBarUIInfoSettings(
+                        outPortsSetts, wm.getOutPortsBarUIInfo());
+                outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
+            }
+            for (int i = 0; i < outCount; i++) {
+                NodeSettingsWO singlePort =
+                    saveOutPortSetting(outPortsSettsEnum, i);
+                saveOutPort(singlePort, wm, i);
+            }
+            File workflowFile = new File(workflowDir, WORKFLOW_FILE);
+            settings.saveToXML(new FileOutputStream(workflowFile));
+            File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
+                BufferedWriter o =
+                    new BufferedWriter(new FileWriter(saveWithDataFile));
+            o.write("Do not delete this file!");
+            o.newLine();
+                o.write("This file serves to indicate that the workflow was "
+                    + "written as part of the usual save routine "
+                    + "(not exported).");
+            o.newLine();
+            o.newLine();
+            o.write("Workflow was last saved by user ");
+            o.write(System.getProperty("user.name"));
+            o.write(" on " + new Date());
+            o.close();
+            if (wm.getNodeContainerDirectory() == null) {
+                wm.setNodeContainerDirectory(workflowDirRef);
+            }
+            if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
+                wm.unsetDirty();
+            }
+            execMon.setProgress(1.0);
             return WORKFLOW_FILE;
-        }
-        // delete "old" node directories if not saving to the working
-        // directory -- do this before saving the nodes (dirs newly created)
-        if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
-            wm.deleteObsoleteNodeDirs();
-        }
-        File workflowDir = workflowDirRef.getFile();
-        workflowDir.mkdirs();
-        if (!workflowDir.isDirectory()) {
-            throw new IOException("Unable to create or write directory \": "
-                    + workflowDir + "\"");
-        }
-        NodeSettings settings =
-            new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
-        settings.addString(
-                WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
-        settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
-        saveWorkflowName(settings, wm.getNameField());
-        saveTemplateInformation(wm.getTemplateInformation(), settings);
-            NodeContainerMetaPersistorVersion200.save(
-                    settings, wm, workflowDirRef);
-        saveWorkflowVariables(wm, settings);
-        saveCredentials(wm, settings);
-        saveWorkflowAnnotations(wm, settings);
-
-        NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
-        Collection<NodeContainer> nodes = wm.getNodeContainers();
-        double progRatio = 1.0 / (nodes.size() + 1);
-
-        for (NodeContainer nextNode : nodes) {
-            int id = nextNode.getID().getIndex();
-            ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
-            execMon.setMessage(nextNode.getNameWithID());
-                NodeSettingsWO sub =
-                    nodesSettings.addNodeSettings("node_" + id);
-            saveNodeContainer(
-                    sub, workflowDirRef, nextNode, subExec, isSaveData);
-            subExec.setProgress(1.0);
-        }
-
-        execMon.setMessage("connection information");
-        NodeSettingsWO connSettings = saveSettingsForConnections(settings);
-        int connectionNumber = 0;
-        for (ConnectionContainer cc : wm.getConnectionContainers()) {
-            NodeSettingsWO nextConnectionConfig = connSettings
-                    .addNodeSettings("connection_" + connectionNumber);
-            saveConnection(nextConnectionConfig, cc);
-            connectionNumber += 1;
-        }
-        int inCount = wm.getNrInPorts();
-        NodeSettingsWO inPortsSetts = inCount > 0
-            ? saveInPortsSetting(settings) : null;
-        NodeSettingsWO inPortsSettsEnum = null;
-        if (inPortsSetts != null) {
-            saveInportsBarUIInfoClassName(
-                    inPortsSetts, wm.getInPortsBarUIInfo());
-            saveInportsBarUIInfoSettings(
-                    inPortsSetts, wm.getInPortsBarUIInfo());
-            inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
-        }
-        for (int i = 0; i < inCount; i++) {
-                NodeSettingsWO sPort = saveInPortSetting(inPortsSettsEnum, i);
-                saveInPort(sPort, wm, i);
-        }
-        int outCount = wm.getNrOutPorts();
-        NodeSettingsWO outPortsSetts = outCount > 0
-            ? saveOutPortsSetting(settings) : null;
-        NodeSettingsWO outPortsSettsEnum = null;
-        if (outPortsSetts != null) {
-            saveOutportsBarUIInfoClassName(
-                    outPortsSetts, wm.getOutPortsBarUIInfo());
-            saveOutportsBarUIInfoSettings(
-                    outPortsSetts, wm.getOutPortsBarUIInfo());
-            outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
-        }
-        for (int i = 0; i < outCount; i++) {
-            NodeSettingsWO singlePort =
-                saveOutPortSetting(outPortsSettsEnum, i);
-            saveOutPort(singlePort, wm, i);
-        }
-        File workflowFile = new File(workflowDir, WORKFLOW_FILE);
-        settings.saveToXML(new FileOutputStream(workflowFile));
-        File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
-            BufferedWriter o =
-                new BufferedWriter(new FileWriter(saveWithDataFile));
-        o.write("Do not delete this file!");
-        o.newLine();
-            o.write("This file serves to indicate that the workflow was "
-                + "written as part of the usual save routine (not exported).");
-        o.newLine();
-        o.newLine();
-        o.write("Workflow was last saved by user ");
-        o.write(System.getProperty("user.name"));
-        o.write(" on " + new Date());
-        o.close();
-        if (wm.getNodeContainerDirectory() == null) {
-            wm.setNodeContainerDirectory(workflowDirRef);
-        }
-        if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
-            wm.unsetDirty();
-        }
-        execMon.setProgress(1.0);
-        return WORKFLOW_FILE;
         } finally {
             workflowDirRef.fileUnlockRootForVM();
-    }
+        }
     }
 
     protected static void saveWorkflowName(

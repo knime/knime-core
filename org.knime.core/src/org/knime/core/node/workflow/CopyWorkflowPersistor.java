@@ -156,6 +156,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
+        return Collections.emptySet();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
         return m_tableRep;
     }

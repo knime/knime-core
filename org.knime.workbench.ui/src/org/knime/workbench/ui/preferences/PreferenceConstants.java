@@ -93,7 +93,12 @@ public interface PreferenceConstants {
         "knime.node.font_size";
 
     /** Preference constant for mount points for the Explorer. */
-    public static final String P_EXPLORER_MOUNT_POINT
-            = "knime.explorer.mountpoint";
+    public static final String P_EXPLORER_MOUNT_POINT =
+        "knime.explorer.mountpoint";
+
+    /** Pref constant to link the original meta node to a newly
+     * defined template. */
+    public static final String P_EXPLORER_LINK_ON_NEW_TEMPLATE =
+        "knime.explorer.link_on_new_template";
 
 }

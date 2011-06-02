@@ -77,6 +77,7 @@ import org.knime.core.node.NodeSettingsRO;
 public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
+    private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
     private final WorkflowAnnotation[] m_copiedAnnotations;
     private final boolean m_isUndoableDeleteCommand;
@@ -84,6 +85,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** Create new persistor.
      * @param loaderMap The loader map.
      * @param connectionSet A copy of connection clones.
+     * @param additionalConnectionSet see {@link #getAdditionalConnectionSet()}
      * @param copiedAnnotations Copied workflow annotations.
      * @param isUndoableDeleteCommand If false, annotations will be cloned in
      *        {@link #getWorkflowAnnotations()}.
@@ -91,9 +93,11 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     PasteWorkflowContentPersistor(
             final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connectionSet,
+            final Set<ConnectionContainerTemplate> additionalConnectionSet,
             final WorkflowAnnotation[] copiedAnnotations,
             final boolean isUndoableDeleteCommand) {
         m_connectionSet = connectionSet;
+        m_additionalConnectionSet = additionalConnectionSet;
         m_loaderMap = loaderMap;
         m_copiedAnnotations = copiedAnnotations;
         m_isUndoableDeleteCommand = isUndoableDeleteCommand;
@@ -103,6 +107,12 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
         return m_connectionSet;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
+        return m_additionalConnectionSet;
     }
 
     /** {@inheritDoc} */

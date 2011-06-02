@@ -365,15 +365,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void removeProject(final NodeID id) {
         synchronized (m_workflowMutex) {
-            NodeContainer nc = m_workflow.getNode(id);
-            if (nc instanceof WorkflowManager) {
-                WorkflowManager wfm = (WorkflowManager)nc;
-                if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
-                    // looks like a project, remove it
-                    removeNode(id);
-                    return;
-                }
+        NodeContainer nc = m_workflow.getNode(id);
+        if (nc instanceof WorkflowManager) {
+            WorkflowManager wfm = (WorkflowManager)nc;
+            if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
+                // looks like a project, remove it
+                removeNode(id);
+                return;
             }
+        }
         }
         throw new IllegalArgumentException(
                 "Node: " + id + " is not a project!");
@@ -459,6 +459,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
+
         NodeContainer nc;
         synchronized (m_workflowMutex) {
             // if node does not exist, simply return
@@ -876,40 +877,40 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
         synchronized (m_workflowMutex) {
-            if (cc == null || !cc.isDeletable()) {
-                return false;
-            }
-            NodeID destID = cc.getDest();
-            NodeID sourceID = cc.getSource();
-            // make sure both nodes (well, their connection lists) exist
-            if (m_workflow.getConnectionsByDest(destID) == null) {
-                return false;
-            }
-            if (m_workflow.getConnectionsBySource(sourceID) == null) {
-                return false;
-            }
-            // make sure connection between those two nodes exists
-            if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
-                return false;
-            }
-            if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
-                return false;
-            }
-            if (destID.equals(getID())) { // wfm out connection
-                // note it is ok if the WFM itself is executing...
-                if (getParent().hasSuccessorInProgress(getID())) {
-                    return false;
-                }
-            } else {
-                if (hasSuccessorInProgress(destID)) {
-                    return false;
-                }
-                if (m_workflow.getNode(destID).getState().executionInProgress()) {
-                    return false;
-                }
-            }
-            return true;
+        if (cc == null || !cc.isDeletable()) {
+            return false;
         }
+        NodeID destID = cc.getDest();
+        NodeID sourceID = cc.getSource();
+        // make sure both nodes (well, their connection lists) exist
+        if (m_workflow.getConnectionsByDest(destID) == null) {
+            return false;
+        }
+        if (m_workflow.getConnectionsBySource(sourceID) == null) {
+            return false;
+        }
+        // make sure connection between those two nodes exists
+        if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
+            return false;
+        }
+        if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
+            return false;
+        }
+        if (destID.equals(getID())) { // wfm out connection
+            // note it is ok if the WFM itself is executing...
+            if (getParent().hasSuccessorInProgress(getID())) {
+                return false;
+            }
+        } else {
+            if (hasSuccessorInProgress(destID)) {
+                return false;
+            }
+            if (m_workflow.getNode(destID).getState().executionInProgress()) {
+                return false;
+            }
+        }
+        return true;
+    }
     }
 
     /** Remove connection.
@@ -2561,22 +2562,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public String canExpandMetaNode(final NodeID wfmID) {
         synchronized (m_workflowMutex) {
-            if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
-                // wrong type of node!
-                return "Can not expand "
-                        + "selected node (not a metanode).";
-            }
-            if (!canRemoveNode(wfmID)) {
-                // we can not - bail!
+        if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
+            // wrong type of node!
+            return "Can not expand "
+                    + "selected node (not a metanode).";
+        }
+        if (!canRemoveNode(wfmID)) {
+            // we can not - bail!
                 return "Can not move metanode or nodes inside metanode "
                         + "(node(s) or successor still executing?).";
             }
             WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
             if (wfm.containsExecutedNode()) {
                 return "Can not expand executed meta node (reset first).";
-            }
-            return null;
         }
+        return null;
+    }
     }
 
     /** Expand the selected metanode into a set of nodes in
@@ -2996,17 +2997,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     boolean canPerformReset() {
         synchronized (m_workflowMutex) {
-            // check for at least one executed and resetable node!
-            for (NodeContainer nc : m_workflow.getNodeValues()) {
-                if (nc.getState().executionInProgress()) {
-                    return false;
-                }
-                if (nc.canPerformReset()) {
-                    return true;
-                }
+        // check for at least one executed and resetable node!
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc.getState().executionInProgress()) {
+                return false;
             }
-            return false;
+            if (nc.canPerformReset()) {
+                return true;
+            }
         }
+        return false;
+    }
     }
 
     /** {@inheritDoc} */
@@ -4851,8 +4852,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     private static WorkflowManager WFM_TEMPLATE_ROOT;
 
-    public void saveAsMetaNodeTemplate(final File directory,
-            final ExecutionMonitor exec)
+    public MetaNodeTemplateInformation saveAsMetaNodeTemplate(
+            final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException {
         synchronized (WorkflowManager.class) {
             if (WFM_TEMPLATE_ROOT == null) {
@@ -4871,12 +4872,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeID cID = cnt.getNodeIDs()[0];
             WorkflowManager copy =
                 (WorkflowManager)WFM_TEMPLATE_ROOT.getNodeContainer(cID);
+            MetaNodeTemplateInformation template =
+                MetaNodeTemplateInformation.createNewTemplate();
             synchronized (copy.m_workflowMutex) {
-                copy.m_templateInformation =
-                    MetaNodeTemplateInformation.createNewTemplate();
+                copy.m_templateInformation = template;
                 copy.setName(null);
                 copy.save(directory, exec, true);
             }
+            return template;
         } finally {
             workflowDirRef.unlock();
         }
@@ -5048,6 +5051,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             new LinkedHashMap<Integer, NodeContainerPersistor>();
         Set<ConnectionContainerTemplate> connTemplates =
             new HashSet<ConnectionContainerTemplate>();
+        Set<ConnectionContainerTemplate> additionalConnTemplates =
+            new HashSet<ConnectionContainerTemplate>();
         boolean isIncludeInOut = content.isIncludeInOutConnections();
         synchronized (m_workflowMutex) {
             for (int i = 0; i < nodeIDs.length; i++) {
@@ -5057,10 +5062,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                       m_globalTableRepository, false, isUndoableDeleteCommand));
                 for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
-                    if (isIncludeInOut || idsHashed.contains(out.getDest())) {
+                    if (idsHashed.contains(out.getDest())) {
                         ConnectionContainerTemplate t =
                             new ConnectionContainerTemplate(out, false);
                         connTemplates.add(t);
+                    } else if (isIncludeInOut) {
+                        ConnectionContainerTemplate t =
+                            new ConnectionContainerTemplate(out, false);
+                        additionalConnTemplates.add(t);
                     }
                 }
                 if (isIncludeInOut) {
@@ -5068,12 +5077,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             : m_workflow.getConnectionsByDest(nodeIDs[i])) {
                         ConnectionContainerTemplate t =
                             new ConnectionContainerTemplate(in, false);
-                        connTemplates.add(t);
+                        additionalConnTemplates.add(t);
                     }
                 }
             }
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates,
-                    content.getAnnotations(), isUndoableDeleteCommand);
+                    additionalConnTemplates, content.getAnnotations(),
+                    isUndoableDeleteCommand);
         }
     }
 
@@ -5475,9 +5485,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
-        Map<Integer, NodeID> translationMap =
-            loadNodesAndConnections(nodeLoaderMap,
-                    persistor.getConnectionSet(), loadResult);
+        Map<Integer, NodeID> translationMap = loadNodesAndConnections(
+                nodeLoaderMap, persistor.getConnectionSet(), loadResult);
         for (Map.Entry<Integer, NodeID> e : translationMap.entrySet()) {
             NodeID id = e.getValue();
             NodeContainerPersistor p = nodeLoaderMap.get(e.getKey());
@@ -5500,6 +5509,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
         WorkflowAnnotation[] newAnnotations =
             annos.toArray(new WorkflowAnnotation[annos.size()]);
+        addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(),
+                loadResult, translationMap, false);
         WorkflowCopyContent result = new WorkflowCopyContent();
         result.setAnnotation(newAnnotations);
         result.setNodeIDs(newIDs);
@@ -5516,7 +5527,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         boolean isStateChangePredictable = false;
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
-                        persistorMap.keySet(), true).keySet()) {
+                persistorMap.keySet(), true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
             // initialize node container with CredentialsStore
             if (cont instanceof SingleNodeContainer) {
@@ -5783,6 +5794,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
 
+        addConnectionsFromTemplates(
+                connections, loadResult, translationMap, true);
+        return translationMap;
+    }
+
+    /**
+     * @param connections
+     * @param loadResult
+     * @param translationMap */
+    private void addConnectionsFromTemplates(
+            final Set<ConnectionContainerTemplate> connections,
+            final LoadResult loadResult,
+            final Map<Integer, NodeID> translationMap,
+            final boolean currentlyLoadingFlow) {
         for (ConnectionContainerTemplate c : connections) {
             int sourceSuffix = c.getSourceSuffix();
             int destSuffix = c.getDestSuffix();
@@ -5807,20 +5832,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 dest = translationMap.get(destSuffix);
                 source = translationMap.get(sourceSuffix);
             }
-            if (!canAddConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort(), true)) {
+            if (!canAddConnection(source, c.getSourcePort(),
+                    dest, c.getDestPort(), currentlyLoadingFlow)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);
                 loadResult.addError(warn);
                 continue;
             }
-            ConnectionContainer cc = addConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort(), true);
+            ConnectionContainer cc = addConnection(source, c.getSourcePort(),
+                    dest, c.getDestPort(), currentlyLoadingFlow);
             cc.setUIInfo(c.getUiInfo());
             cc.setDeletable(c.isDeletable());
             assert cc.getType().equals(type);
         }
-        return translationMap;
     }
 
     public void save(final File directory, final ExecutionMonitor exec,
@@ -5845,7 +5869,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     WorkflowPersistorVersion200.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
-                    LOGGER.info("Workflow was created with a previous version "
+                    LOGGER.info("Workflow was created with another version "
                             + "of KNIME (workflow version " + m_loadVersion
                             + "), converting to current version. This may "
                             + "take some time.");

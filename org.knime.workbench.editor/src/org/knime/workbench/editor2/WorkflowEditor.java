@@ -1553,6 +1553,26 @@ public class WorkflowEditor extends GraphicalEditor implements
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
+                switch (event.getType()) {
+                case NODE_REMOVED:
+                    Object oldValue = event.getOldValue();
+                    // close sub-editors if a child meta node is deleted
+                    if (oldValue instanceof WorkflowManager) {
+                        WorkflowManager wm = (WorkflowManager)oldValue;
+                        // since the equals method of the WorkflowManagerInput
+                        // only looks for the WorkflowManager, we can pass
+                        // null as the editor argument
+                        WorkflowManagerInput in =
+                            new WorkflowManagerInput(wm, null);
+                        IEditorPart editor =
+                            getEditorSite().getPage().findEditor(in);
+                        if (editor != null) {
+                            editor.getEditorSite().getPage().closeEditor(editor,
+                                    false);
+                        }
+                    }
+                default: // no further actions, all handled in edit policies etc
+                }
                 markDirty();
                 updateActions();
             }
