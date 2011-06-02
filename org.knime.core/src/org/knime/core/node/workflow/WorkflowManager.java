@@ -764,110 +764,112 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort, final boolean currentlyLoadingFlow) {
-        if (source == null || dest == null) {
-            return false;
-        }
-        // get NodeContainer for source/dest - can be null for WFM-connections!
-        NodeContainer sourceNode = m_workflow.getNode(source);
-        NodeContainer destNode = m_workflow.getNode(dest);
-        // sanity checks (index/null)
-        if (!(source.equals(this.getID()) || (sourceNode != null))) {
-            return false;  // source node exists or is WFM itself
-        }
-        if (!(dest.equals(this.getID()) || (destNode != null))) {
-            return false;  // dest node exists or is WFM itself
-        }
-        if ((sourcePort < 0) || (destPort < 0)) {
-            return false;  // port indices are >= 0
-        }
-        if (sourceNode != null) {
-            if (sourceNode.getNrOutPorts() <= sourcePort) {
-                return false;  // source Node index exists
-            }
-        } else {
-            if (this.getNrInPorts() <= sourcePort) {
-                return false;  // WFM inport index exists
-            }
-        }
-        if (destNode != null) { // ordinary node
-            if (destNode.getNrInPorts() <= destPort) {
-                return false;  // dest Node index exists
-            }
-            // omit execution checks during loading (dest node may
-            // be executing remotely -- SGE execution)
-            if (!currentlyLoadingFlow) {
-                // destination node may have optional inputs
-                if (hasSuccessorInProgress(dest)) {
-                    return false;
-                }
-                if (destNode.getState().executionInProgress()) {
-                    return false;
-                }
-            }
-        } else { // leaving workflow connection
-            assert dest.equals(getID());
-            if (this.getNrOutPorts() <= destPort) {
-                return false;  // WFM outport index exists
-            }
-            // node may be executing during load (remote cluster execution)
-            if (!currentlyLoadingFlow) {
-                // nodes with optional inputs may have executing successors
-                // note it is ok if the WFM itself is executing...
-                if (getParent().hasSuccessorInProgress(getID())) {
-                    return false;
-                }
-            }
-        }
-        // check if we are about to replace an existing connection
-        for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
-            if (cc.getDestPort() == destPort) {
-                // if that connection is not removable: fail
-                if (!canRemoveConnection(cc)) {
-                    return false;
-                }
-            }
-        }
-        // check type compatibility
-        PortType sourceType = (sourceNode != null
-            ? sourceNode.getOutPort(sourcePort).getPortType()
-            : this.getInPort(sourcePort).getPortType());
-        PortType destType = (destNode != null
-            ? destNode.getInPort(destPort).getPortType()
-            : this.getOutPort(destPort).getPortType());
-        /* ports can be connected in two cases (one exception below):
-         * - the destination type is a super type or the same type
-         *   of the source port (usual case) or
-         * - if the source port is a super type of the destination port,
-         *   for instance a reader node that reads a general PMML objects,
-         *   validity is checked using the runtime class of the actual
-         *   port object then
-         * if one port is a BDT and the other is not, no connection is allowed
-         * */
-        Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
-        Class<? extends PortObject> destCl = destType.getPortObjectClass();
-        if (BufferedDataTable.class.equals(sourceCl)
-                && !BufferedDataTable.class.equals(destCl)) {
-            return false;
-        } else if (BufferedDataTable.class.equals(destCl)
-                && !BufferedDataTable.class.equals(sourceCl)) {
-            return false;
-        } else if (!destCl.isAssignableFrom(sourceCl)
-            && !sourceCl.isAssignableFrom(destCl)) {
-            return false;
-        }
-        // and finally check if we are threatening to close a loop (if we
-        // are not trying to leave this metanode, of course).
-        if (!dest.equals(this.getID())
-                && !source.equals(this.getID())) {
-            Set<NodeID> sNodes
-                = m_workflow.getBreadthFirstListOfNodeAndSuccessors(
-                        dest, true).keySet();
-            if (sNodes.contains(source)) {
+        synchronized (m_workflowMutex) {
+            if (source == null || dest == null) {
                 return false;
             }
+            // get NodeContainer for source/dest - can be null for WFM-connections!
+            NodeContainer sourceNode = m_workflow.getNode(source);
+            NodeContainer destNode = m_workflow.getNode(dest);
+            // sanity checks (index/null)
+            if (!(source.equals(this.getID()) || (sourceNode != null))) {
+                return false;  // source node exists or is WFM itself
+            }
+            if (!(dest.equals(this.getID()) || (destNode != null))) {
+                return false;  // dest node exists or is WFM itself
+            }
+            if ((sourcePort < 0) || (destPort < 0)) {
+                return false;  // port indices are >= 0
+            }
+            if (sourceNode != null) {
+                if (sourceNode.getNrOutPorts() <= sourcePort) {
+                    return false;  // source Node index exists
+                }
+            } else {
+                if (this.getNrInPorts() <= sourcePort) {
+                    return false;  // WFM inport index exists
+                }
+            }
+            if (destNode != null) { // ordinary node
+                if (destNode.getNrInPorts() <= destPort) {
+                    return false;  // dest Node index exists
+                }
+                // omit execution checks during loading (dest node may
+                // be executing remotely -- SGE execution)
+                if (!currentlyLoadingFlow) {
+                    // destination node may have optional inputs
+                    if (hasSuccessorInProgress(dest)) {
+                        return false;
+                    }
+                    if (destNode.getState().executionInProgress()) {
+                        return false;
+                    }
+                }
+            } else { // leaving workflow connection
+                assert dest.equals(getID());
+                if (this.getNrOutPorts() <= destPort) {
+                    return false;  // WFM outport index exists
+                }
+                // node may be executing during load (remote cluster execution)
+                if (!currentlyLoadingFlow) {
+                    // nodes with optional inputs may have executing successors
+                    // note it is ok if the WFM itself is executing...
+                    if (getParent().hasSuccessorInProgress(getID())) {
+                        return false;
+                    }
+                }
+            }
+            // check if we are about to replace an existing connection
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
+                if (cc.getDestPort() == destPort) {
+                    // if that connection is not removable: fail
+                    if (!canRemoveConnection(cc)) {
+                        return false;
+                    }
+                }
+            }
+            // check type compatibility
+            PortType sourceType = (sourceNode != null
+                ? sourceNode.getOutPort(sourcePort).getPortType()
+                : this.getInPort(sourcePort).getPortType());
+            PortType destType = (destNode != null
+                ? destNode.getInPort(destPort).getPortType()
+                : this.getOutPort(destPort).getPortType());
+            /* ports can be connected in two cases (one exception below):
+             * - the destination type is a super type or the same type
+             *   of the source port (usual case) or
+             * - if the source port is a super type of the destination port,
+             *   for instance a reader node that reads a general PMML objects,
+             *   validity is checked using the runtime class of the actual
+             *   port object then
+             * if one port is a BDT and the other is not, no connection is allowed
+             * */
+            Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
+            Class<? extends PortObject> destCl = destType.getPortObjectClass();
+            if (BufferedDataTable.class.equals(sourceCl)
+                    && !BufferedDataTable.class.equals(destCl)) {
+                return false;
+            } else if (BufferedDataTable.class.equals(destCl)
+                    && !BufferedDataTable.class.equals(sourceCl)) {
+                return false;
+            } else if (!destCl.isAssignableFrom(sourceCl)
+                && !sourceCl.isAssignableFrom(destCl)) {
+                return false;
+            }
+            // and finally check if we are threatening to close a loop (if we
+            // are not trying to leave this metanode, of course).
+            if (!dest.equals(this.getID())
+                    && !source.equals(this.getID())) {
+                Set<NodeID> sNodes
+                    = m_workflow.getBreadthFirstListOfNodeAndSuccessors(
+                            dest, true).keySet();
+                if (sNodes.contains(source)) {
+                    return false;
+                }
+            }
+            // no reason to say no found - return true.
+            return true;
         }
-        // no reason to say no found - return true.
-        return true;
     }
 
     /** Check if a connection can safely be removed.
@@ -877,40 +879,40 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
         synchronized (m_workflowMutex) {
-        if (cc == null || !cc.isDeletable()) {
-            return false;
-        }
-        NodeID destID = cc.getDest();
-        NodeID sourceID = cc.getSource();
-        // make sure both nodes (well, their connection lists) exist
-        if (m_workflow.getConnectionsByDest(destID) == null) {
-            return false;
-        }
-        if (m_workflow.getConnectionsBySource(sourceID) == null) {
-            return false;
-        }
-        // make sure connection between those two nodes exists
-        if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
-            return false;
-        }
-        if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
-            return false;
-        }
-        if (destID.equals(getID())) { // wfm out connection
-            // note it is ok if the WFM itself is executing...
-            if (getParent().hasSuccessorInProgress(getID())) {
+            if (cc == null || !cc.isDeletable()) {
                 return false;
             }
-        } else {
-            if (hasSuccessorInProgress(destID)) {
+            NodeID destID = cc.getDest();
+            NodeID sourceID = cc.getSource();
+            // make sure both nodes (well, their connection lists) exist
+            if (m_workflow.getConnectionsByDest(destID) == null) {
                 return false;
             }
-            if (m_workflow.getNode(destID).getState().executionInProgress()) {
+            if (m_workflow.getConnectionsBySource(sourceID) == null) {
                 return false;
             }
+            // make sure connection between those two nodes exists
+            if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
+                return false;
+            }
+            if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
+                return false;
+            }
+            if (destID.equals(getID())) { // wfm out connection
+                // note it is ok if the WFM itself is executing...
+                if (getParent().hasSuccessorInProgress(getID())) {
+                    return false;
+                }
+            } else {
+                if (hasSuccessorInProgress(destID)) {
+                    return false;
+                }
+                if (m_workflow.getNode(destID).getState().executionInProgress()) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
-    }
     }
 
     /** Remove connection.
@@ -2562,22 +2564,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public String canExpandMetaNode(final NodeID wfmID) {
         synchronized (m_workflowMutex) {
-        if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
-            // wrong type of node!
-            return "Can not expand "
-                    + "selected node (not a metanode).";
-        }
-        if (!canRemoveNode(wfmID)) {
-            // we can not - bail!
-                return "Can not move metanode or nodes inside metanode "
-                        + "(node(s) or successor still executing?).";
+            if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
+                // wrong type of node!
+                return "Can not expand "
+                        + "selected node (not a metanode).";
             }
-            WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
-            if (wfm.containsExecutedNode()) {
-                return "Can not expand executed meta node (reset first).";
+            if (!canRemoveNode(wfmID)) {
+                // we can not - bail!
+                    return "Can not move metanode or nodes inside metanode "
+                            + "(node(s) or successor still executing?).";
+                }
+                WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
+                if (wfm.containsExecutedNode()) {
+                    return "Can not expand executed meta node (reset first).";
+            }
+            return null;
         }
-        return null;
-    }
     }
 
     /** Expand the selected metanode into a set of nodes in
@@ -3253,10 +3255,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if at least one successors is currently in progress.
      */
     private boolean hasSuccessorInProgress(final NodeID nodeID) {
-        NodeContainer nc = m_workflow.getNode(nodeID);
-        if (nc == null) {  // we are talking about this WFM
-            assert nodeID.equals(this.getID());
+        if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasSuccessorInProgress(nodeID);
+        }
+        NodeContainer nc = m_workflow.getNode(nodeID);
+        if (nc == null) {  // somehow the node has disappeared...
+            return false;
         }
         // else it's a node inside the WFM
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(nodeID)) {
