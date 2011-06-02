@@ -163,13 +163,17 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             String name = "Metanode";
             InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
                     "Enter Name of Metanode", "Enter name of metanode:", name, null);
-            if (idia.open() == Dialog.OK) {
-                name = idia.getValue();
+            int dialogreturn = idia.open();
+            if (dialogreturn == Dialog.CANCEL) {
+                return;
             }
-            // create a command and push on stack to enable UNDO
-            CollapseMetaNodeCommand cmnc =
-                new CollapseMetaNodeCommand(manager, ids, name);
-            getCommandStack().execute(cmnc);
+            if (dialogreturn == Dialog.OK) {
+                name = idia.getValue();
+                // create a command and push on stack to enable UNDO
+                CollapseMetaNodeCommand cmnc =
+                    new CollapseMetaNodeCommand(manager, ids, name);
+                getCommandStack().execute(cmnc);
+            }
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
                     SWT.ERROR);
