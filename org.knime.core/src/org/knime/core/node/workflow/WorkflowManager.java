@@ -364,13 +364,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of the project to be removed.
      */
     public void removeProject(final NodeID id) {
-        NodeContainer nc = m_workflow.getNode(id);
-        if (nc instanceof WorkflowManager) {
-            WorkflowManager wfm = (WorkflowManager)nc;
-            if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
-                // looks like a project, remove it
-                removeNode(id);
-                return;
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = m_workflow.getNode(id);
+            if (nc instanceof WorkflowManager) {
+                WorkflowManager wfm = (WorkflowManager)nc;
+                if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
+                    // looks like a project, remove it
+                    removeNode(id);
+                    return;
+                }
             }
         }
         throw new IllegalArgumentException(
@@ -457,7 +459,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
-
         NodeContainer nc;
         synchronized (m_workflowMutex) {
             // if node does not exist, simply return
@@ -874,39 +875,41 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
-        if (cc == null || !cc.isDeletable()) {
-            return false;
-        }
-        NodeID destID = cc.getDest();
-        NodeID sourceID = cc.getSource();
-        // make sure both nodes (well, their connection lists) exist
-        if (m_workflow.getConnectionsByDest(destID) == null) {
-            return false;
-        }
-        if (m_workflow.getConnectionsBySource(sourceID) == null) {
-            return false;
-        }
-        // make sure connection between those two nodes exists
-        if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
-            return false;
-        }
-        if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
-            return false;
-        }
-        if (destID.equals(getID())) { // wfm out connection
-            // note it is ok if the WFM itself is executing...
-            if (getParent().hasSuccessorInProgress(getID())) {
+        synchronized (m_workflowMutex) {
+            if (cc == null || !cc.isDeletable()) {
                 return false;
             }
-        } else {
-            if (hasSuccessorInProgress(destID)) {
+            NodeID destID = cc.getDest();
+            NodeID sourceID = cc.getSource();
+            // make sure both nodes (well, their connection lists) exist
+            if (m_workflow.getConnectionsByDest(destID) == null) {
                 return false;
             }
-            if (m_workflow.getNode(destID).getState().executionInProgress()) {
+            if (m_workflow.getConnectionsBySource(sourceID) == null) {
                 return false;
             }
+            // make sure connection between those two nodes exists
+            if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
+                return false;
+            }
+            if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
+                return false;
+            }
+            if (destID.equals(getID())) { // wfm out connection
+                // note it is ok if the WFM itself is executing...
+                if (getParent().hasSuccessorInProgress(getID())) {
+                    return false;
+                }
+            } else {
+                if (hasSuccessorInProgress(destID)) {
+                    return false;
+                }
+                if (m_workflow.getNode(destID).getState().executionInProgress()) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
     }
 
     /** Remove connection.
@@ -2557,21 +2560,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return null of ok otherwise reason (String) why not
      */
     public String canExpandMetaNode(final NodeID wfmID) {
-        if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
-            // wrong type of node!
-            return "Can not expand "
-                    + "selected node (not a metanode).";
+        synchronized (m_workflowMutex) {
+            if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
+                // wrong type of node!
+                return "Can not expand "
+                        + "selected node (not a metanode).";
+            }
+            if (!canRemoveNode(wfmID)) {
+                // we can not - bail!
+                return "Can not move metanode or nodes inside metanode "
+                        + "(node(s) or successor still executing?).";
+            }
+            WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
+            if (wfm.containsExecutedNode()) {
+                return "Can not expand executed meta node (reset first).";
+            }
+            return null;
         }
-        if (!canRemoveNode(wfmID)) {
-            // we can not - bail!
-            return "Can not move metanode or nodes inside metanode "
-                    + "(node(s) or successor still executing?).";
-        }
-        WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
-        if (wfm.containsExecutedNode()) {
-            return "Can not expand executed meta node (reset first).";
-        }
-        return null;
     }
 
     /** Expand the selected metanode into a set of nodes in
@@ -2990,16 +2995,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     boolean canPerformReset() {
-        // check for at least one executed and resetable node!
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc.getState().executionInProgress()) {
-                return false;
+        synchronized (m_workflowMutex) {
+            // check for at least one executed and resetable node!
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                if (nc.getState().executionInProgress()) {
+                    return false;
+                }
+                if (nc.canPerformReset()) {
+                    return true;
+                }
             }
-            if (nc.canPerformReset()) {
-                return true;
-            }
+            return false;
         }
-        return false;
     }
 
     /** {@inheritDoc} */
