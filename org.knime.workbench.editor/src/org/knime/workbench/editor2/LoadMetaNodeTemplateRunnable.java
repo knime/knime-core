@@ -91,7 +91,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     private WorkflowManager m_parentWFM;
 
-    private ExplorerFileStore m_workflowFileStore;
+    private ExplorerFileStore m_templateKNIMEFolder;
 
     private Throwable m_throwable = null;
 
@@ -103,13 +103,13 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     /**
      *
      * @param wfm target workflow (where to insert)
-     * @param workflowFileStore the workflow file from which the workflow
-     * should be loaded
+     * @param templateKNIMEFolder the workflow dir from which the template
+     *        should be loaded
      */
     public LoadMetaNodeTemplateRunnable(final WorkflowManager wfm,
-            final ExplorerFileStore workflowFileStore) {
+            final ExplorerFileStore templateKNIMEFolder) {
         m_parentWFM = wfm;
-        m_workflowFileStore = workflowFileStore;
+        m_templateKNIMEFolder = templateKNIMEFolder;
     }
 
     /**
@@ -136,15 +136,14 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 
-            File parentFile = m_workflowFileStore.toLocalFile(
-                    EFS.NONE, null).getParentFile();
+            File parentFile = m_templateKNIMEFolder.toLocalFile(EFS.NONE, null);
             Display d = Display.getDefault();
 
             GUIWorkflowLoadHelper loadHelper =
                 new GUIWorkflowLoadHelper(d, parentFile.getName(), true);
             WorkflowPersistorVersion1xx loadPersistor =
                 WorkflowManager.createLoadPersistor(parentFile, loadHelper);
-            URI sourceURI = m_workflowFileStore.toURI();
+            URI sourceURI = m_templateKNIMEFolder.toURI();
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadPersistor.setNameOverwrite(parentFile.getName());
             m_result = m_parentWFM.load(loadPersistor,
@@ -186,10 +185,10 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         } catch (IOException ioe) {
             m_throwable = ioe;
             LOGGER.error("Could not load meta node from: "
-                        + m_workflowFileStore.getName(), ioe);
+                        + m_templateKNIMEFolder.getName(), ioe);
         } catch (InvalidSettingsException ise) {
             LOGGER.error("Could not load meta node from: "
-                    + m_workflowFileStore.getName(), ise);
+                    + m_templateKNIMEFolder.getName(), ise);
             m_throwable = ise;
         } catch (UnsupportedWorkflowVersionException uve) {
             m_loadingCanceledMessage =
@@ -197,7 +196,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             LOGGER.info(m_loadingCanceledMessage, uve);
         } catch (CanceledExecutionException cee) {
             m_loadingCanceledMessage =
-                "Canceled loading meta node: " + m_workflowFileStore.getName();
+                "Canceled loading meta node: " + m_templateKNIMEFolder.getName();
             LOGGER.info(m_loadingCanceledMessage, cee);
         } catch (Throwable e) {
             m_throwable = e;
@@ -206,7 +205,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             // IMPORTANT: Remove the reference to the file and the
             // editor!!! Otherwise the memory can not be freed later
             m_parentWFM = null;
-            m_workflowFileStore = null;
+            m_templateKNIMEFolder = null;
         }
     }
 
@@ -229,7 +228,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     /** Set fields to null so that they can get GC'ed. */
     public void discard() {
         m_result = null;
-        m_workflowFileStore = null;
+        m_templateKNIMEFolder = null;
         m_parentWFM = null;
     }
 

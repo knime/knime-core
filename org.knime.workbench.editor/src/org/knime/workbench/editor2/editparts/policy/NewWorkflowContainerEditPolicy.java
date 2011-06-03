@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.editor2.editparts.policy;
 
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
@@ -120,14 +119,10 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             NodeFactory<? extends NodeModel> factory
                 = (NodeFactory<? extends NodeModel>)obj;
             return new CreateNodeCommand(manager, factory, location);
-        } else if (obj instanceof IFileStore) {
-            IFileStore fs = (IFileStore)obj;
-            // TODO avoid this hack to distinguish between workflows and files
-            // dragged from the KNIME Explorer
-            if (fs instanceof ExplorerFileStore
-                    && fs.toString().endsWith("workflow.knime")) {
-                return new CreateMetaNodeTemplateCommand(manager,
-                        (ExplorerFileStore)fs, location);
+        } else if (obj instanceof ExplorerFileStore) {
+            ExplorerFileStore fs = (ExplorerFileStore)obj;
+            if (ExplorerFileStore.isWorkflowTemplate(fs)) {
+                return new CreateMetaNodeTemplateCommand(manager, fs, location);
             }
         } else if (obj instanceof ReaderNodeSettings) {
             ReaderNodeSettings settings = (ReaderNodeSettings)obj;

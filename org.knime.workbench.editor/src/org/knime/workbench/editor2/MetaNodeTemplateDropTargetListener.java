@@ -50,13 +50,11 @@
  */
 package org.knime.workbench.editor2;
 
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
 import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
 import org.knime.workbench.explorer.view.ContentObject;
 
@@ -82,10 +80,8 @@ public class MetaNodeTemplateDropTargetListener extends
     protected void handleDrop() {
         ContentObject obj = getDragResources(getCurrentEvent());
         ExplorerFileStore store =  obj.getObject();
-        IFileStore workflowKNIMEFile =
-                store.getChild(WorkflowPersistorVersion1xx.WORKFLOW_FILE);
-        if (workflowKNIMEFile.fetchInfo().exists()) {
-            getFactory().setSourceFileStore(workflowKNIMEFile);
+        if (ExplorerFileStore.isWorkflowTemplate(store)) {
+            getFactory().setSourceFileStore(store);
             super.handleDrop();
         }
     }
@@ -99,7 +95,8 @@ public class MetaNodeTemplateDropTargetListener extends
             return false;
         }
         ExplorerFileStore fileStore = getDragResources(event).getObject();
-        boolean isMetaNodeTemplate = ExplorerFileStore.isWorkflow(fileStore);
+        boolean isMetaNodeTemplate =
+            ExplorerFileStore.isWorkflowTemplate(fileStore);
         if (isMetaNodeTemplate) {
             event.feedback = DND.FEEDBACK_SELECT;
             event.operations = DND.DROP_COPY | DND.DROP_LINK;

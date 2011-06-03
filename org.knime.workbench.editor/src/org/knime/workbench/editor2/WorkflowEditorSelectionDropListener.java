@@ -85,6 +85,7 @@ public class WorkflowEditorSelectionDropListener extends
         ExplorerFileStore fileStore = getDragResources(event).getObject();
         boolean enabled = !(ExplorerFileStore.isMetaNode(fileStore)
                 || ExplorerFileStore.isWorkflow(fileStore)
+                || ExplorerFileStore.isWorkflowTemplate(fileStore)
                 || ExplorerFileStore.isWorkflowGroup(fileStore));
         if (enabled) {
             event.feedback = DND.FEEDBACK_SELECT;

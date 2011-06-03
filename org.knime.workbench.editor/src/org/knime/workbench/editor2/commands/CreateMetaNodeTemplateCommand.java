@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -75,7 +74,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateMetaNodeTemplateCommand.class);
 
-    private final ExplorerFileStore m_metaNodeWorkflowKNIMEFile;
+    private final ExplorerFileStore m_templateKNIMEFolder;
 
     private final Point m_location;
 
@@ -86,14 +85,14 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
      * Creates a new command.
      *
      * @param manager The workflow manager that should host the new node
-     * @param metaNodeWorkflowKNIMEFile the file underlying the template
+     * @param templateFolder the directory underlying the template
      * @param location Initial visual location in the
      */
     public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
-            final ExplorerFileStore metaNodeWorkflowKNIMEFile,
+            final ExplorerFileStore templateFolder,
             final Point location) {
         super(manager);
-        m_metaNodeWorkflowKNIMEFile = metaNodeWorkflowKNIMEFile;
+        m_templateKNIMEFolder = templateFolder;
         m_location = location;
     }
 
@@ -104,14 +103,10 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
         if (!super.canExecute()) {
             return false;
         }
-        if (m_location == null || m_metaNodeWorkflowKNIMEFile == null) {
+        if (m_location == null || m_templateKNIMEFolder == null) {
             return false;
         }
-        IFileInfo fileInfo = m_metaNodeWorkflowKNIMEFile.fetchInfo();
-        if (fileInfo.exists() && !fileInfo.isDirectory()) {
-            return true;
-        }
-        return false;
+        return ExplorerFileStore.isWorkflowTemplate(m_templateKNIMEFolder);
     }
 
     /** {@inheritDoc} */
@@ -124,7 +119,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
             loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(),
-                    m_metaNodeWorkflowKNIMEFile);
+                    m_templateKNIMEFolder);
             ps.busyCursorWhile(loadRunnable);
             WorkflowLoadResult result = loadRunnable.getWorkflowLoadResult();
             if (result == null) {
