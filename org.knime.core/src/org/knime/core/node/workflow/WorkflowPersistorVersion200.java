@@ -72,6 +72,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -475,10 +476,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             throw new LockFailedException("Can't write workflow to \"" + workflowDirRef
                     + "\" because the directory can't be locked");
         }
+        Role r = wm.getTemplateInformation().getRole();
+        String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
         try {
             if (workflowDirRef.equals(wm.getNodeContainerDirectory())
                     && !wm.isDirty()) {
-                return WORKFLOW_FILE;
+                return fName;
             }
             // delete "old" node directories if not saving to the working
             // directory -- do this before saving the nodes (dirs newly created)
@@ -491,8 +494,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 throw new IOException("Unable to create or write directory \": "
                         + workflowDir + "\"");
             }
-            NodeSettings settings =
-                new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
+            NodeSettings settings = new NodeSettings(fName);
             settings.addString(
                     WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
             settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
@@ -559,7 +561,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                     saveOutPortSetting(outPortsSettsEnum, i);
                 saveOutPort(singlePort, wm, i);
             }
-            File workflowFile = new File(workflowDir, WORKFLOW_FILE);
+            File workflowFile = new File(workflowDir, fName);
             settings.saveToXML(new FileOutputStream(workflowFile));
             File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
                 BufferedWriter o =
@@ -582,7 +584,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 wm.unsetDirty();
             }
             execMon.setProgress(1.0);
-            return WORKFLOW_FILE;
+            return fName;
         } finally {
             workflowDirRef.fileUnlockRootForVM();
         }

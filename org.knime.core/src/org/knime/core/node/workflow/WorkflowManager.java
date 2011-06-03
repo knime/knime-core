@@ -4699,9 +4699,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowPersistorVersion1xx loadPersistor;
         try {
-            File localFile = CorePlugin.resolveURItoLocalFile(sourceURI);
+            File localDir = CorePlugin.resolveURItoLocalFile(sourceURI);
             loadPersistor = WorkflowManager.createLoadPersistor(
-                    localFile.getParentFile(), loadHelper);
+                    localDir, loadHelper);
             loadPersistor.preLoadNodeContainer(null, new LoadResult("ignored"));
         } catch (IOException e) {
             throw e;
@@ -4757,9 +4757,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return loadRes;
         }
         URI sourceURI = templInfo.getSourceURI();
-        File localFile;
+        File localDir;
         try {
-            localFile = CorePlugin.resolveURItoLocalFile(sourceURI);
+            localDir = CorePlugin.resolveURItoLocalFile(sourceURI);
         } catch (IOException e) {
             String error = "Failed to update meta node reference: "
                 + e.getMessage();
@@ -4769,10 +4769,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         WorkflowPersistorVersion1xx loadPersistor;
         try {
-            File d = localFile.getParentFile();
-            loadPersistor = WorkflowManager.createLoadPersistor(d, loadHelper);
+            loadPersistor = WorkflowManager.createLoadPersistor(
+                    localDir, loadHelper);
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
-            loadPersistor.setNameOverwrite(d.getName());
+            loadPersistor.setNameOverwrite(localDir.getName());
         } catch (IOException e) {
             String error = e.getClass().getSimpleName()
             + " while loading template: " + e.getMessage();
@@ -5221,17 +5221,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (directory == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
+        String fileName = loadHelper.isTemplateFlow()
+            ? WorkflowPersistor.TEMPLATE_FILE : WorkflowPersistor.WORKFLOW_FILE;
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
 
         ReferencedFile workflowknimeRef = new ReferencedFile(
-                new ReferencedFile(directory), WorkflowPersistor.WORKFLOW_FILE);
+                new ReferencedFile(directory), fileName);
         File workflowknime = workflowknimeRef.getFile();
         if (!workflowknime.isFile()) {
-            throw new IOException("No \"" + WorkflowPersistor.WORKFLOW_FILE
-                    + "\" file in directory \"" + directory.getAbsolutePath()
-                    + "\"");
+            throw new IOException("No \"" + fileName + "\" file in directory \""
+                    + directory.getAbsolutePath() + "\"");
         }
         if (!directory.canWrite()) {
             throw new IOException("Can't load workflow from a directory "
