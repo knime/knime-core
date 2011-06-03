@@ -53,9 +53,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
@@ -129,20 +127,26 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
                     m_metaNodeWorkflowKNIMEFile);
             ps.busyCursorWhile(loadRunnable);
             WorkflowLoadResult result = loadRunnable.getWorkflowLoadResult();
+            if (result == null) {
+                throw new RuntimeException(
+                        "No load result, see log for details");
+            }
             m_container = result.getWorkflowManager();
+            if (m_container == null) {
+                throw new RuntimeException("No template returned by load "
+                        + "routine, see log for details");
+            }
             // create extra info and set it
             NodeUIInformation info = new NodeUIInformation(
                     m_location.x, m_location.y, -1, -1, false);
             m_container.setUIInformation(info);
         } catch (Throwable t) {
             // if fails notify the user
-            LOGGER.debug("Node cannot be created.", t);
-            MessageBox mb = new MessageBox(Display.getDefault().
-                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Node cannot be created.");
-            mb.setMessage("The selected node could not be created "
-                    + "due to the following reason:\n" + t.getMessage());
-            mb.open();
+            String error = "The selected node could not be created "
+                + "due to the following reason:\n" + t.getMessage();
+            LOGGER.debug(error, t);
+            MessageDialog.openError(Display.getDefault().
+                    getActiveShell(), "Node cannot be created.", error);
             return;
         } finally {
             if (loadRunnable != null) {
