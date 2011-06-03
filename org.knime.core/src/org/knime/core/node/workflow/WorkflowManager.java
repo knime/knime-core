@@ -3785,7 +3785,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public boolean hasDialog() {
         int c = NodeExecutionJobManagerPool.getNumberOfJobManagersFactories();
-        return c > 1;
+        return c > 1 || findNodes(QuickFormInputNode.class, true).size() > 0;
     }
 
     /** {@inheritDoc} */
