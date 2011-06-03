@@ -80,6 +80,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Identifier for KNIME workflows when saved to disc. */
     public static final String WORKFLOW_FILE = "workflow.knime";
 
+    /** Identifier for KNIME meta mode templates when saved to disc. */
+    public static final String TEMPLATE_FILE = "template.knime";
+
     /** File used to signal that workflow was saved in usual manner. It will
      * always be present in the workflow directory unless the workflow is
      * exported with the "exclude data" flag being set. */
