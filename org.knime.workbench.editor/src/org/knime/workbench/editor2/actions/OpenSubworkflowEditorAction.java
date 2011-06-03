@@ -106,7 +106,7 @@ public class OpenSubworkflowEditorAction extends Action {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/meta/meta.png");
+        return ImageRepository.getImageDescriptor("icons/meta/metanode.png");
     }
 
     /**

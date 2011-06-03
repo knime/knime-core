@@ -105,16 +105,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/meta_node_collapse.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository
-                .getImageDescriptor("icons/meta/meta_node_collapse.png");
+                "icons/meta/metanode_collapse.png");
     }
 
     /**

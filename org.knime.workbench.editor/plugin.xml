@@ -153,8 +153,8 @@
          <action
                class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
                definitionId="knime.commands.addMetaNode"
-               disabledIcon="icons/meta/meta.png"
-               icon="icons/meta/meta.png"
+               disabledIcon="icons/meta/metanode_add.png"
+               icon="icons/meta/metanode_add.png"
                id="org.knime.workbench.editor.meta"
                label="Open Meta Node Wizard..."
                menubarPath="org.knime.workbench.editor.menu/group1"

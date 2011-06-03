@@ -112,14 +112,7 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/meta_node_link_disconnect.png");
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/meta_node_link_disconnect_disabled.png");
+                "icons/meta/metanode_link_disconnect.png");
     }
 
     /**

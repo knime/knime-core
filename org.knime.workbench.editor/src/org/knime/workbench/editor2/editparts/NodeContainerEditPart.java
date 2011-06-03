@@ -137,13 +137,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             .getLogger(NodeContainerEditPart.class);
 
     private final Image META_NODE_LINK_GREEN_ICON =
-        ImageRepository.getImage("icons/meta/meta_node_link_green_decorator.png");
+        ImageRepository.getImage("icons/meta/metanode_link_green_decorator.png");
 
     private final Image META_NODE_LINK_RED_ICON =
-        ImageRepository.getImage("icons/meta/meta_node_link_red_decorator.png");
+        ImageRepository.getImage("icons/meta/metanode_link_red_decorator.png");
 
     private final Image META_NODE_LINK_PROBLEM_ICON =
-        ImageRepository.getImage("icons/meta/meta_node_link_problem_decorator.png");
+        ImageRepository.getImage("icons/meta/metanode_link_problem_decorator.png");
 
     /**
      * true, if the figure was initialized from the node extra info object.

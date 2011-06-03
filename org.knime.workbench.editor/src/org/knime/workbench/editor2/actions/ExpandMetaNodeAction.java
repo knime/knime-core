@@ -102,16 +102,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/meta_node_expand.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/meta_node_expand.png");
+                "icons/meta/metanode_expand.png");
     }
 
     /**
