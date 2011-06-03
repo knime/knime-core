@@ -93,7 +93,6 @@ import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
-import org.knime.workbench.editor2.actions.UpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
@@ -353,12 +352,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             }
         }
         if (addMetaNodeActions) {
-            action = m_actionRegistry.getAction(
-                    UpdateMetaNodeLinkAction.ID);
-            manager.appendToGroup(
-                    IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-
             action = m_actionRegistry.getAction(
                     CheckUpdateMetaNodeLinkAction.ID);
             manager.appendToGroup(

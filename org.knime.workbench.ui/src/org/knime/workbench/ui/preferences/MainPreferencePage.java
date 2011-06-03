@@ -48,7 +48,9 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
@@ -161,6 +163,17 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.P_NODE_LABEL_FONT_SIZE,
                 "Change node name and label font size", parent);
         addField(fontSizeEditor);
+
+        ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
+                PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
+                "Update meta node links when workflow loads",
+                new String[][] {
+                        {"Always", MessageDialogWithToggle.ALWAYS},
+                        {"Never", MessageDialogWithToggle.NEVER},
+                        {"Prompt", MessageDialogWithToggle.PROMPT},
+                }, getFieldEditorParent());
+        addField(updateMetaNodeLinkOnLoadEditor);
+
     }
 
     /** {@inheritDoc} */

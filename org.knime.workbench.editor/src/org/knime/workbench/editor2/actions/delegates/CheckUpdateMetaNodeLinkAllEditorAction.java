@@ -40,67 +40,32 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   Jun 3, 2011 (wiswedel): created
  */
-package org.knime.workbench.ui.preferences;
+package org.knime.workbench.editor2.actions.delegates;
 
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.widgets.Display;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
 
 /**
- * Class used to initialize default preference values.
- *
- * @author Florian Georg, University of Konstanz
+ * Delegate action (used in menu bar) to update meta node links.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class PreferenceInitializer extends AbstractPreferenceInitializer {
+public class CheckUpdateMetaNodeLinkAllEditorAction
+    extends AbstractEditorAction {
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void initializeDefaultPreferences() {
-        // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
-
-        store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
-
-        store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
-
-        store.setDefault(PreferenceConstants.P_CONFIRM_RECONNECT, true);
-
-        store.setDefault(
-                PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED, true);
-
-        store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
-
-        store.setDefault(PreferenceConstants.P_FAV_LAST_USED_SIZE, 10);
-
-        store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
-
-        int defaultFontHeight = 8;
-        Display current = Display.getCurrent();
-        if (current != null) {
-            Font systemFont = current.getSystemFont();
-            FontData[] systemFontData = systemFont.getFontData();
-            if (systemFontData.length >= 1) {
-                defaultFontHeight = systemFontData[0].getHeight();
-            }
-        }
-        store.setDefault(
-                PreferenceConstants.P_NODE_LABEL_FONT_SIZE, defaultFontHeight);
-
-        store.setDefault(PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
-                MessageDialogWithToggle.PROMPT);
-
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new CheckUpdateMetaNodeLinkAllAction(editor);
     }
+
+
 }

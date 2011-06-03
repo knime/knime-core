@@ -92,6 +92,11 @@ public interface PreferenceConstants {
     public static final String P_NODE_LABEL_FONT_SIZE =
         "knime.node.font_size";
 
+    /** Preference constant for whether meta node links should be updated on
+     * workflow load. */
+    public static final String P_META_NODE_LINK_UPDATE_ON_LOAD =
+        "knime.metanode.updateOnLoad";
+
     /** Preference constant for mount points for the Explorer. */
     public static final String P_EXPLORER_MOUNT_POINT =
         "knime.explorer.mountpoint";

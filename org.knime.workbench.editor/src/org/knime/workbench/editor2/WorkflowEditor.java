@@ -180,7 +180,6 @@ import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
-import org.knime.workbench.editor2.actions.UpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
@@ -504,8 +503,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             new MetaNodeSetNameAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink =
             new CheckUpdateMetaNodeLinkAction(this);
-        AbstractNodeAction updateMetaNodeLink =
-            new UpdateMetaNodeLinkAction(this);
         AbstractNodeAction disconnectMetaNodeLink =
             new DisconnectMetaNodeLinkAction(this);
 
@@ -551,7 +548,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         m_actionRegistry.registerAction(metaNodeSetName);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
-        m_actionRegistry.registerAction(updateMetaNodeLink);
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(annotation);
 
@@ -580,9 +576,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(paste.getId());
         m_editorActions.add(metaNodeSetName.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
-        m_editorActions.add(updateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());
-
 
     }
 

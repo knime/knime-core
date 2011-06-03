@@ -70,6 +70,15 @@ public class CheckUpdateMetaNodeLinkAllAction extends
         super(editor);
     }
 
+    /** see {@link CheckUpdateMetaNodeLinkAction#
+     *  CheckUpdateMetaNodeLinkAction(WorkflowEditor, boolean)}.
+     * @param editor Host editor
+     * @param showInfoMsgIfNoUpdateAvail see super constructor */
+    public CheckUpdateMetaNodeLinkAllAction(final WorkflowEditor editor,
+            final boolean showInfoMsgIfNoUpdateAvail) {
+        super(editor, showInfoMsgIfNoUpdateAvail);
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getId() {

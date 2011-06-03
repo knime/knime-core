@@ -72,6 +72,11 @@
             name="Open Meta Node Wizard..."/>
       <command
             categoryId="knime.command.category"
+            description="Checks and updates meta node links"
+            id="knime.commands.updateMetaNodeLink"
+            name="Update meta node link"/>
+      <command
+            categoryId="knime.command.category"
             description="Do one loop step"
             id="knime.commands.steploop"
             name="Do one loop step"/>
@@ -161,6 +166,16 @@
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Opens the Add Meta Node Wizard"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.CheckUpdateMetaNodeLinkAllEditorAction"    
+               definitionId="knime.commands.updateMetaNodeLink"
+               disabledIcon="icons/meta/metanode_link_update.png"
+               icon="icons/meta/metanode_link_update.png"
+               id="knime.action.meta_node_check_update_link_all"
+               label="Update Meta Node Links"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               tooltip="Check and update meta node links"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.DefaultOpenViewEditorAction"
                definitionId="knime.commands.openView"
@@ -277,6 +292,11 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="SHIFT+F12"/>
+      <key
+            commandId="knime.commands.updateMetaNodeLink"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+ALT+U"/>
       <key
             commandId="knime.commands.setNameAndDescription"
             contextId="org.eclipse.ui.contexts.window"

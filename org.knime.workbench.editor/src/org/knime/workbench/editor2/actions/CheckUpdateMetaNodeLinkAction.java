@@ -87,15 +87,28 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CheckUpdateMetaNodeLinkAction.class);
 
+    private boolean m_showInfoMsgIfNoUpdateAvail;
+
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_check_update_link";
 
     /** Create new action based on given editor.
      * @param editor The associated editor. */
     public CheckUpdateMetaNodeLinkAction(final WorkflowEditor editor) {
-        super(editor);
+        this(editor, true);
     }
 
+    /** Create new action based on given editor.
+     * @param editor The associated editor.
+     * @param showInfoMsgIfNoUpdateAvail If to show an info box if no
+     * updates are available, true if this is a manually triggered command,
+     * false if is run as automatic procedure after load (no user interaction)
+     */
+    public CheckUpdateMetaNodeLinkAction(final WorkflowEditor editor,
+            final boolean showInfoMsgIfNoUpdateAvail) {
+        super(editor);
+        m_showInfoMsgIfNoUpdateAvail = showInfoMsgIfNoUpdateAvail;
+    }
     /**
      * {@inheritDoc}
      */
@@ -110,7 +123,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Check Update";
+        return "Update Link";
     }
 
     /**
@@ -119,8 +132,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Checks whether a newer copy of the underlying meta node "
-            + "template is available";
+        return "Checks whether a newer version of the underlying meta node "
+            + "template is available and updates the selected links";
     }
 
 
@@ -130,14 +143,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_template_check_refresh.png");
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_template_check_refresh_disabled.png");
+                "icons/meta/metanode_link_update.png");
     }
 
     /**
@@ -180,6 +186,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         final Shell shell = Display.getCurrent().getActiveShell();
         IWorkbench wb = PlatformUI.getWorkbench();
         IProgressService ps = wb.getProgressService();
+        LOGGER.debug("Checking for updates for " + candidateList.size()
+                + " meta node link(s)...");
         CheckUpdateRunnableWithProgress runner =
             new CheckUpdateRunnableWithProgress(getManager(), candidateList);
         try {
@@ -196,12 +204,17 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
             ErrorDialog.openError(
                     Display.getDefault().getActiveShell(),
                     null, "Errors while checking for "
-                    + "updates of meta node links", status);
+                    + "updates on meta node links", status);
         }
 
         if (updateList.isEmpty()) {
-            MessageDialog.openInformation(shell, "Meta Node Update",
-                    "No updates available");
+            if (m_showInfoMsgIfNoUpdateAvail) {
+                MessageDialog.openInformation(shell, "Meta Node Update",
+                        "No updates available");
+            } else {
+                LOGGER.info("No updates available ("
+                        + candidateList.size() + " meta node link(s))");
+            }
         } else {
             boolean isSingle = updateList.size() == 1;
             String title = "Update Meta Node" + (isSingle ? "" : "s");

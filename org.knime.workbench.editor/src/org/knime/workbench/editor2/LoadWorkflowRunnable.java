@@ -63,8 +63,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.ErrorDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -78,6 +81,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 
 /**
@@ -306,16 +311,38 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
         final String message = m.toString();
         final AtomicBoolean result = new AtomicBoolean(false);
-        final Display display = Display.getDefault();
-        display.syncExec(new Runnable() {
-            @Override
-            public void run() {
-                result.set(MessageDialog.openQuestion(display.getActiveShell(),
-                        "Meta Node Link Update", message));
-            }
-        });
+        final IPreferenceStore corePrefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        final String pKey = PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD;
+        String pref = corePrefStore.getString(pKey);
+        boolean showInfoMsg = true;
+        if (MessageDialogWithToggle.ALWAYS.equals(pref)) {
+            result.set(true);
+            showInfoMsg = false;
+        } else if (MessageDialogWithToggle.NEVER.equals(pref)) {
+            result.set(false);
+        } else {
+            final Display display = Display.getDefault();
+            display.syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    Shell activeShell = display.getActiveShell();
+                    MessageDialogWithToggle dlg = MessageDialogWithToggle.
+                        openYesNoCancelQuestion(activeShell,
+                                "Meta Node Link Update", message,
+                                "Remember my decision", false, corePrefStore,
+                                pKey);
+                    switch (dlg.getReturnCode()) {
+                    case IDialogConstants.YES_ID:
+                        result.set(true);
+                    default:
+                        result.set(false);
+                    }
+                }
+            });
+        }
         if (result.get()) {
-            new CheckUpdateMetaNodeLinkAllAction(editor).run();
+            new CheckUpdateMetaNodeLinkAllAction(editor, showInfoMsg).run();
         }
     }
 
