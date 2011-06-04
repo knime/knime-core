@@ -60,8 +60,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TimerTask;
 
 import org.eclipse.core.resources.IWorkspace;
@@ -84,7 +86,9 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
@@ -104,8 +108,8 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  */
 public final class BatchExecutor {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(BatchExecutor.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(BatchExecutor.class);
 
     private static class Option {
         private final int[] m_nodeIDs;
@@ -115,8 +119,10 @@ public final class BatchExecutor {
         private final String m_value;
 
         private final String m_type;
+
         /**
          * Create new <code>Option</code>.
+         *
          * @param nodeIDs node IDs, mostly one element, more for nested flows
          * @param name name
          * @param value value
@@ -157,8 +163,7 @@ public final class BatchExecutor {
                 String login = null;
                 String password = null;
                 if (m_credentialMap.containsKey(cred.getName())) {
-                    Credentials currCred = m_credentialMap.get(cred
-                            .getName());
+                    Credentials currCred = m_credentialMap.get(cred.getName());
                     if (currCred != null) {
                         login = currCred.getLogin();
                         password = currCred.getPassword();
@@ -167,66 +172,88 @@ public final class BatchExecutor {
                 if (login == null || password == null) {
                     if (cons == null) {
                         if ((cons = System.console()) == null) {
-                            System.err
-                            .println("No console for "
+                            System.err.println("No console for "
                                     + "credential prompt available");
                             return credentials;
                         }
                     }
-                    cons.printf("Enter for credential %s ", cred
-                            .getName());
+                    cons.printf("Enter for credential %s ", cred.getName());
                     if (login == null) {
-                        login = cons
-                        .readLine("%s", "Enter login: ");
+                        login = cons.readLine("%s", "Enter login: ");
                     }
                     char[] pwd = getPasswordFromConsole(cons);
                     password = new String(pwd);
                 }
-                newCredentials.add(new Credentials(cred.getName(),
-                        login, password));
+                newCredentials.add(new Credentials(cred.getName(), login,
+                        password));
             }
             return newCredentials;
         }
 
     }
 
+    /** A load helper for templates contained in the workflow. It will inherit
+     * the credentials from a batch workflow load helper. */
+    private static class BatchExecWorkflowTemplateLoadHelper
+        extends WorkflowLoadHelper {
+
+        private final BatchExecWorkflowLoadHelper m_lH;
+
+        /** Keeps the argument load helper as field to query it for credentials.
+         * @param lH Parent */
+        BatchExecWorkflowTemplateLoadHelper(
+                final BatchExecWorkflowLoadHelper lH) {
+            super(true);
+            m_lH = lH;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public List<Credentials> loadCredentials(
+                final List<Credentials> credentials) {
+            return m_lH.loadCredentials(credentials);
+        }
+    }
+
     private BatchExecutor() { /**/
     }
 
     private static void usage() {
-        System.err.println(
-              "Usage: The following options are available:\n"
-            + " -nosave => do not save the workflow after execution has finished\n"
-            + " -reset => reset workflow prior to execution\n"
-            + " -credential=name[;login[;password]] => for each credential enter credential\n"
-            + "                 name and optional login/password, otherwise its prompted for\n"
-            + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
-            + "                 if provided with argument, use argument instead of prompting\n"
-            + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
-            + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
-            + "                  of the ZIP\n"
-            + " -workflowDir=... => directory with a ready-to-execute workflow\n"
-            + " -destFile=... => ZIP file where the executed workflow should be written to\n"
-            + "                  if omitted the workflow is only saved in place\n"
-            + " -destDir=... => directory where the executed workflow is saved to\n"
-            + "                  if omitted the workflow is only saved in place\n"
-            + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
-            + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
-            + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
-            + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
-            + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
-            + "                  'type' can be any of the primitive Java types, \"String\"\n"
-            + "                  or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
-            + "                  If 'name' addresses a nested element (for instance \n"
-            + "                  \"rowFilter\" -> \"ColValRowFilterUpperBound\"), the entire\n"
-            + "                  path must be given, separated by \"/\".\n"
-            + "                  If the node is part of a meta node, provide also the node\n"
-            + "                  ids of the parent node(s), e.g. 90/56.\n"
-            + "\n"
-            + "Some KNIME settings can also be adjusted by Java properties;\n"
-            + "they need to be provided as last option in the command line:\n"
-            + " -vmargs -Dorg.knime.core.maxThreads=n => sets the maximum\n"
-            + "                  number of threads used by KNIME\n");
+        System.err
+                .println("Usage: The following options are available:\n"
+                        + " -nosave => do not save the workflow after execution has finished\n"
+                        + " -reset => reset workflow prior to execution\n"
+                        + " -failonloaderror => don't execute if there are errors during workflow loading\n"
+                        + " -updateLinks => update meta node links to latest version\n"
+                        + " -credential=name[;login[;password]] => for each credential enter credential\n"
+                        + "                 name and optional login/password, otherwise its prompted for\n"
+                        + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
+                        + "                 if provided with argument, use argument instead of prompting\n"
+                        + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
+                        + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
+                        + "                  of the ZIP\n"
+                        + " -workflowDir=... => directory with a ready-to-execute workflow\n"
+                        + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+                        + "                  if omitted the workflow is only saved in place\n"
+                        + " -destDir=... => directory where the executed workflow is saved to\n"
+                        + "                  if omitted the workflow is only saved in place\n"
+                        + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
+                        + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
+                        + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
+                        + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
+                        + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
+                        + "                  'type' can be any of the primitive Java types, \"String\"\n"
+                        + "                  or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
+                        + "                  If 'name' addresses a nested element (for instance \n"
+                        + "                  \"rowFilter\" -> \"ColValRowFilterUpperBound\"), the entire\n"
+                        + "                  path must be given, separated by \"/\".\n"
+                        + "                  If the node is part of a meta node, provide also the node\n"
+                        + "                  ids of the parent node(s), e.g. 90/56.\n"
+                        + "\n"
+                        + "Some KNIME settings can also be adjusted by Java properties;\n"
+                        + "they need to be provided as last option in the command line:\n"
+                        + " -vmargs -Dorg.knime.core.maxThreads=n => sets the maximum\n"
+                        + "                  number of threads used by KNIME\n");
     }
 
     /**
@@ -243,7 +270,8 @@ public final class BatchExecutor {
         System.exit(returnVal);
     }
 
-    /** Called from {@link #main(String[])} method. It parses the command line
+    /**
+     * Called from {@link #main(String[])} method. It parses the command line
      * and starts up KNIME. It returns 0 if the execution was run (even with
      * errors) and 1 if the command line could not be parsed (e.g. usage was
      * printed).
@@ -255,7 +283,7 @@ public final class BatchExecutor {
      * @throws CanceledExecutionException Delegated from WFM
      */
     public static int mainRun(final String[] args) throws IOException,
-        InvalidSettingsException, CanceledExecutionException {
+            InvalidSettingsException, CanceledExecutionException {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
             usage();
@@ -266,6 +294,7 @@ public final class BatchExecutor {
         boolean noSave = false;
         boolean noExecute = false;
         boolean reset = false;
+        boolean updateMetaNodeLinks = false;
         boolean isPromptForPassword = false;
         boolean outputZip = false;
         boolean failOnLoadError = false;
@@ -274,7 +303,7 @@ public final class BatchExecutor {
         List<Option> options = new ArrayList<Option>();
         List<FlowVariable> wkfVars = new ArrayList<FlowVariable>();
         final Map<String, Credentials> credentialMap =
-            new LinkedHashMap<String, Credentials>();
+                new LinkedHashMap<String, Credentials>();
 
         for (String s : args) {
             String[] parts = s.split("=", 2);
@@ -282,6 +311,8 @@ public final class BatchExecutor {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
+            } else if ("-updateLinks".equals(parts[0])) {
+                updateMetaNodeLinks = true;
             } else if ("-noexecute".equals(parts[0])) {
                 noExecute = true;
             } else if ("-failonloaderror".equals(parts[0])) {
@@ -299,7 +330,8 @@ public final class BatchExecutor {
             } else if ("-credential".equals(parts[0])) {
                 if (parts.length == 2) {
                     if (parts[1].length() == 0) {
-                        System.err.println("Credential name must not be empty.");
+                        System.err
+                                .println("Credential name must not be empty.");
                         return 1;
                     }
                     String credential = parts[1];
@@ -307,8 +339,8 @@ public final class BatchExecutor {
                     if (credParts.length > 0) {
                         String credName = credParts[0].trim();
                         if (credName.length() == 0) {
-                            System.err.println(
-                                "Credentials must not be empty.");
+                            System.err
+                                    .println("Credentials must not be empty.");
                             return 1;
                         }
                         if (credParts.length > 1) {
@@ -321,32 +353,33 @@ public final class BatchExecutor {
                                 credPassword = credParts[2];
                             }
                             credentialMap.put(credName, new Credentials(
-                                credName, credLogin, credPassword));
+                                    credName, credLogin, credPassword));
                         } else {
                             credentialMap.put(credName, null);
                         }
                     }
                 } else {
-                    System.err.println(
-                	    "Couldn't parse -credential argument: " + s);
+                    System.err.println("Couldn't parse -credential argument: "
+                            + s);
                     return 1;
                 }
             } else if ("-preferences".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -preferences argument: " + s);
+                    System.err.println("Couldn't parse -preferences argument: "
+                            + s);
                     return 1;
                 }
                 preferenceFile = new File(parts[1]);
                 if (!preferenceFile.isFile()) {
-                    System.err.println("Preference File '"
-                            + parts[1] + "' is not a file.");
+                    System.err.println("Preference File '" + parts[1]
+                            + "' is not a file.");
                     return 1;
                 }
             } else if ("-workflowFile".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -workflowFile argument: " + s);
+                    System.err
+                            .println("Couldn't parse -workflowFile argument: "
+                                    + s);
                     return 1;
                 }
                 input = new File(parts[1]);
@@ -357,8 +390,8 @@ public final class BatchExecutor {
                 }
             } else if ("-workflowDir".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -workflowDir argument: " + s);
+                    System.err.println("Couldn't parse -workflowDir argument: "
+                            + s);
                     return 1;
                 }
                 input = new File(parts[1]);
@@ -369,16 +402,16 @@ public final class BatchExecutor {
                 }
             } else if ("-destFile".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -destFile argument: " + s);
+                    System.err.println("Couldn't parse -destFile argument: "
+                            + s);
                     return 1;
                 }
                 output = new File(parts[1]);
                 outputZip = true;
             } else if ("-destDir".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -destDir argument: " + s);
+                    System.err
+                            .println("Couldn't parse -destDir argument: " + s);
                     return 1;
                 }
                 output = new File(parts[1]);
@@ -401,16 +434,14 @@ public final class BatchExecutor {
                 wkfVars.add(var);
             } else if ("-option".equals(parts[0])) {
                 if (parts.length != 2) {
-                    System.err.println(
-                            "Couldn't parse -option argument: " + s);
+                    System.err.println("Couldn't parse -option argument: " + s);
                     return 1;
                 }
                 String[] parts2;
                 try {
                     parts2 = splitOption(parts[1]);
                 } catch (IndexOutOfBoundsException ex) {
-                    System.err.println(
-                            "Couldn't parse -option argument: " + s);
+                    System.err.println("Couldn't parse -option argument: " + s);
                     return 1;
                 }
                 String[] nodeIDPath = parts2[0].split("/");
@@ -458,10 +489,11 @@ public final class BatchExecutor {
         }
 
         WorkflowLoadResult loadResult;
+        BatchExecWorkflowLoadHelper batchLH =
+            new BatchExecWorkflowLoadHelper(credentialMap);
         try {
             loadResult = WorkflowManager.loadProject(
-                    workflowDir, new ExecutionMonitor(),
-                    new BatchExecWorkflowLoadHelper(credentialMap));
+                    workflowDir, new ExecutionMonitor(), batchLH);
         } catch (UnsupportedWorkflowVersionException e) {
             System.err.println("Unknown workflow version: " + e.getMessage());
             return 1;
@@ -472,11 +504,30 @@ public final class BatchExecutor {
         if (failOnLoadError && loadResult.hasErrors()) {
             System.err.println("Error(s) during workflow loading. "
                     + "Check log file for details.");
-            LOGGER.error(
-                    loadResult.getFilteredError("", LoadResultEntryType.Error));
+            LOGGER.error(loadResult.getFilteredError("",
+                    LoadResultEntryType.Error));
             return 1;
         }
         final WorkflowManager wfm = loadResult.getWorkflowManager();
+
+        BatchExecWorkflowTemplateLoadHelper batchTemplateLH =
+            new BatchExecWorkflowTemplateLoadHelper(batchLH);
+        if (updateMetaNodeLinks) {
+            LOGGER.debug("Checking for meta node link updates...");
+            boolean couldUpdate;
+            try {
+                couldUpdate =
+                    updateMetaNodeLinks(wfm, batchTemplateLH, failOnLoadError);
+            } catch (Exception e) {
+                LOGGER.error("Failed to update meta node links: "
+                        + e.getMessage(), e);
+                return 1;
+            }
+            if (!couldUpdate) {
+                return 1;
+            }
+            LOGGER.debug("Checking for meta node link updates... done");
+        }
 
         if (!wkfVars.isEmpty()) {
             applyWorkflowVariables(wfm, reset, wkfVars);
@@ -503,23 +554,23 @@ public final class BatchExecutor {
             if (uri != null) {
                 File wsFile = new File(uri);
                 // file to be checked for
-                  final File cancelFile = new File(wsFile, ".cancel");
-                  // create new timer task
-                  KNIMETimer.getInstance().schedule(new TimerTask() {
-                      /** {@inheritDoc} */
-                      @Override
-                      public void run() {
-                           if (cancelFile.exists()) {
-                               // CANCEL workflow manager
-                              wfm.cancelExecution();
-                              // delete cancel file
-                              cancelFile.delete();
-                              executionCanceled.setValue(true);
-                              // cancel this timer
-                              this.cancel();
-                          }
-                      }
-                  }, 1000, 1000);
+                final File cancelFile = new File(wsFile, ".cancel");
+                // create new timer task
+                KNIMETimer.getInstance().schedule(new TimerTask() {
+                    /** {@inheritDoc} */
+                    @Override
+                    public void run() {
+                        if (cancelFile.exists()) {
+                            // CANCEL workflow manager
+                            wfm.cancelExecution();
+                            // delete cancel file
+                            cancelFile.delete();
+                            executionCanceled.setValue(true);
+                            // cancel this timer
+                            this.cancel();
+                        }
+                    }
+                }, 1000, 1000);
             }
             successful = wfm.executeAllAndWaitUntilDone();
         }
@@ -530,20 +581,21 @@ public final class BatchExecutor {
                 // save // in place when no output (file or dir) given
                 if (output == null) {
                     try {
-                    wfm.save(workflowDir, new ExecutionMonitor(), true);
-                    LOGGER.debug("Workflow saved: "
-                            + workflowDir.getAbsolutePath());
-                    if (input.isFile()) {
+                        wfm.save(workflowDir, new ExecutionMonitor(), true);
+                        LOGGER.debug("Workflow saved: "
+                                + workflowDir.getAbsolutePath());
+                        if (input.isFile()) {
                             // if input is a Zip file, overwrite input flow
                             // (Zip) workflow dir contains temp workflow dir
-                        FileUtil.zipDir(input, workflowDir, 9);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + input.getAbsolutePath());
-                    }
+                            FileUtil.zipDir(input, workflowDir, 9);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + input.getAbsolutePath());
+                        }
                     } catch (LockFailedException lfe) {
-                        String msg = "Workflow not saved after execution: "
-                            + "Unable to lock workflow destination \""
-                            + workflowDir + "\". ";
+                        String msg =
+                                "Workflow not saved after execution: "
+                                        + "Unable to lock workflow destination \""
+                                        + workflowDir + "\". ";
                         LOGGER.error(msg, lfe);
                         System.err.println(msg);
                         successful = false;
@@ -551,34 +603,36 @@ public final class BatchExecutor {
                 } else {
                     if (outputZip) { // save as Zip
                         File outputTempDir =
-                            FileUtil.createTempDir("BatchExecutorOutput");
+                                FileUtil.createTempDir("BatchExecutorOutput");
                         try {
                             wfm.save(outputTempDir, new ExecutionMonitor(),
                                     true);
-                        LOGGER.debug("Workflow saved: "
-                                + outputTempDir.getAbsolutePath());
-                        // to be saved into new output zip file
-                        FileUtil.zipDir(output, outputTempDir, 9);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + output.getAbsolutePath());
+                            LOGGER.debug("Workflow saved: "
+                                    + outputTempDir.getAbsolutePath());
+                            // to be saved into new output zip file
+                            FileUtil.zipDir(output, outputTempDir, 9);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + output.getAbsolutePath());
                         } catch (LockFailedException lfe) {
-                            String msg = "Workflow not saved after execution: "
-                                + "Unable to lock workflow destination \""
-                                + outputTempDir + "\". ";
+                            String msg =
+                                    "Workflow not saved after execution: "
+                                            + "Unable to lock workflow destination \""
+                                            + outputTempDir + "\". ";
                             LOGGER.error(msg, lfe);
                             System.err.println(msg);
                             successful = false;
                         }
                     } else { // save into dir
                         try {
-                        // copy current workflow dir
-                        wfm.save(output, new ExecutionMonitor(), true);
-                        LOGGER.info("Saved workflow availabe at: "
-                                + output.getAbsolutePath());
+                            // copy current workflow dir
+                            wfm.save(output, new ExecutionMonitor(), true);
+                            LOGGER.info("Saved workflow availabe at: "
+                                    + output.getAbsolutePath());
                         } catch (LockFailedException lfe) {
-                            String msg = "Workflow not saved after execution: "
-                                + "Unable to lock workflow destination \""
-                                + output + "\". ";
+                            String msg =
+                                    "Workflow not saved after execution: "
+                                            + "Unable to lock workflow destination \""
+                                            + output + "\". ";
                             LOGGER.error(msg, lfe);
                             System.err.println(msg);
                             successful = false;
@@ -591,8 +645,8 @@ public final class BatchExecutor {
         // get elapsed time in milliseconds
         long elapsedTimeMillis = System.currentTimeMillis() - t;
         String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
-        String timeString = ("Finished in " + niceTime
-                + " (" + elapsedTimeMillis + "ms)");
+        String timeString =
+                ("Finished in " + niceTime + " (" + elapsedTimeMillis + "ms)");
         System.out.println(timeString);
         if (executionCanceled.booleanValue()) {
             LOGGER.debug("Workflow execution canceled after " + timeString);
@@ -605,6 +659,61 @@ public final class BatchExecutor {
         dumpWorkflowToDebugLog(wfm);
         LOGGER.debug("------------------------------------");
         return successful ? 0 : 1;
+    }
+
+    /** Update meta node links (recursively).
+     * @param wfm The workflow
+     * @param failOnLoadError If to fail if there errors updating the links
+     * @return true if that was successful (also if there are no links), false
+     *         otherwise
+     * @throws CanceledExecutionException Not actually thrown
+     * @throws IOException Special errors during update (not accessible)*/
+    private static boolean updateMetaNodeLinks(final WorkflowManager wfm,
+            final WorkflowLoadHelper lH, final boolean failOnLoadError)
+            throws IOException, CanceledExecutionException {
+        // use queue, add meta node children while traversing the node list
+        Queue<NodeContainer> ncsToCheck =
+            new LinkedList<NodeContainer>(wfm.getNodeContainers());
+        NodeContainer nc;
+        int linksChecked = 0;
+        int linksUpdated = 0;
+        while ((nc = ncsToCheck.poll()) != null) {
+            if (nc instanceof WorkflowManager) {
+                WorkflowManager wm = (WorkflowManager)nc;
+                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
+                    linksChecked += 1;
+                    WorkflowManager parent = wm.getParent();
+                    if (parent.checkUpdateMetaNodeLink(wm.getID(), lH)) {
+                        MetaNodeLinkUpdateResult loadResult =
+                            parent.updateMetaNodeLink(
+                                    wm.getID(), new ExecutionMonitor(), lH);
+                        linksUpdated += 1;
+                        if (failOnLoadError && loadResult.hasErrors()) {
+                            System.err.println("Error(s) while updating ");
+                            LOGGER.error(loadResult.getFilteredError("",
+                                    LoadResultEntryType.Error));
+                            return false;
+                        }
+                        WorkflowManager wm2 = loadResult.getMetaNode();
+                        if (wm2 == null) {
+                            LOGGER.error("Updating meta node link \""
+                                    + wm.getNameWithID() + "\" failed, load"
+                                    + " routines did not return new meta node");
+                            return false;
+                        }
+                        wm = wm2;
+                    }
+                }
+                ncsToCheck.addAll(wm.getNodeContainers());
+            }
+        }
+        if (linksChecked == 0) {
+            LOGGER.debug("No meta node links in workflow, nothing updated");
+        } else {
+            LOGGER.debug("Workflow contains " + linksChecked
+                    + " meta node link(s), " + linksUpdated + " were updated");
+        }
+        return true;
     }
 
     private static void setNodeOptions(final List<Option> options,
@@ -623,8 +732,8 @@ public final class BatchExecutor {
                 }
             }
             if (cont == null) {
-                LOGGER.warn("No node with id "
-                        + Arrays.toString(idPath) + " found.");
+                LOGGER.warn("No node with id " + Arrays.toString(idPath)
+                        + " found.");
             } else {
                 WorkflowManager parent = cont.getParent();
                 NodeSettings settings = new NodeSettings("something");
@@ -633,8 +742,8 @@ public final class BatchExecutor {
                 String[] splitName = o.m_name.split("/");
                 String name = splitName[splitName.length - 1];
                 String[] pathElements = new String[splitName.length - 1];
-                System.arraycopy(splitName, 0,
-                        pathElements, 0, pathElements.length);
+                System.arraycopy(splitName, 0, pathElements, 0,
+                        pathElements.length);
                 for (String s : pathElements) {
                     model = model.getNodeSettings(s);
                 }
@@ -677,17 +786,16 @@ public final class BatchExecutor {
     }
 
     private static void setPreferences(final File preferenceFile)
-        throws IOException, CoreException {
-        InputStream in = new BufferedInputStream(
-                new FileInputStream(preferenceFile));
+            throws IOException, CoreException {
+        InputStream in =
+                new BufferedInputStream(new FileInputStream(preferenceFile));
         IPreferencesService prefService = Platform.getPreferencesService();
         IExportedPreferences prefs = prefService.readPreferences(in);
         IPreferenceFilter filter = new IPreferenceFilter() {
             @Override
             public String[] getScopes() {
-                return new String[]{ InstanceScope.SCOPE,
-                        ConfigurationScope.SCOPE,
-                        "profile" };
+                return new String[]{InstanceScope.SCOPE,
+                        ConfigurationScope.SCOPE, "profile"};
             }
 
             @Override
@@ -696,11 +804,12 @@ public final class BatchExecutor {
                 return null; // this filter is applicable for all nodes
             }
         };
-        /* Calling this method with filters and not the applyPreferences
-         * without filters is very important! The other method does not
-         * merge the preferences but deletes all default values. */
-        prefService.applyPreferences(prefs,
-                new IPreferenceFilter[] {filter});
+        /*
+         * Calling this method with filters and not the applyPreferences without
+         * filters is very important! The other method does not merge the
+         * preferences but deletes all default values.
+         */
+        prefService.applyPreferences(prefs, new IPreferenceFilter[]{filter});
     }
 
     private static void setupEncryptionKey(final boolean isPromptForPassword,
@@ -716,14 +825,14 @@ public final class BatchExecutor {
         }
         if (masterKey != null) {
             final String encryptionKey = masterKey;
-            KnimeEncryption.setEncryptionKeySupplier(
-                    new EncryptionKeySupplier() {
-                /** {@inheritDoc} */
-                @Override
-                public String getEncryptionKey() {
-                    return encryptionKey;
-                }
-            });
+            KnimeEncryption
+                    .setEncryptionKeySupplier(new EncryptionKeySupplier() {
+                        /** {@inheritDoc} */
+                        @Override
+                        public String getEncryptionKey() {
+                            return encryptionKey;
+                        }
+                    });
         }
     }
 
@@ -735,7 +844,7 @@ public final class BatchExecutor {
             second = cons.readPassword("%s", "Reenter Password:");
             areEqual = Arrays.equals(first, second);
             if (!areEqual) {
-                 System.out.println("Passwords don't match");
+                System.out.println("Passwords don't match");
             }
         } while (!areEqual);
         return first;
@@ -758,8 +867,10 @@ public final class BatchExecutor {
         return res;
     }
 
-    /** Splits the argument to -workflow.variable into its sub-components
-     * (name, value, type) and returns it as array.
+    /**
+     * Splits the argument to -workflow.variable into its sub-components (name,
+     * value, type) and returns it as array.
+     *
      * @param arg The string to split
      * @return The components of the string, no validation is done.
      */
@@ -769,9 +880,9 @@ public final class BatchExecutor {
         settings.addQuotePattern("\"", "\"", '\\');
         settings.addQuotePattern("'", "'", '\\');
         settings.addDelimiterPattern(",",
-                /* combine multiple= */false,
-                /* return as token= */ false,
-                /* include in token= */false);
+        /* combine multiple= */false,
+        /* return as token= */false,
+        /* include in token= */false);
         tokenizer.setSettings(settings);
         ArrayList<String> tokenList = new ArrayList<String>();
         String token;
@@ -781,9 +892,11 @@ public final class BatchExecutor {
         return tokenList.toArray(new String[tokenList.size()]);
     }
 
-    /** Creates a new flow variable from the sub-components of the
+    /**
+     * Creates a new flow variable from the sub-components of the
      * -workflow.variables commandline argument. If the string array does not
      * meet the requirements (e.g. length = 3), an exception is thrown.
+     *
      * @param args The arguments for the variable.
      * @return A new flow variable.
      */
@@ -805,11 +918,13 @@ public final class BatchExecutor {
         }
     }
 
-    /** Injects the workflow variables provided in the last argument into the
+    /**
+     * Injects the workflow variables provided in the last argument into the
      * workflow.
+     *
      * @param wfm The workflow, where to inject the variables
      * @param reset Whether to reset the workflow
-     * {@link WorkflowManager#addWorkflowVariables(boolean, FlowVariable...)}
+     *            {@link WorkflowManager#addWorkflowVariables(boolean, FlowVariable...)}
      * @param wkfVars The flow variables.
      */
     private static void applyWorkflowVariables(final WorkflowManager wfm,
@@ -833,8 +948,8 @@ public final class BatchExecutor {
         for (FlowVariable f : wkfVars) {
             LOGGER.debug("Setting workflow variable " + f);
         }
-        wfm.addWorkflowVariables(
-                !reset, wkfVars.toArray(new FlowVariable[wkfVars.size()]));
+        wfm.addWorkflowVariables(!reset,
+                wkfVars.toArray(new FlowVariable[wkfVars.size()]));
     }
 
     private static void dumpWorkflowToDebugLog(final WorkflowManager wfm) {

@@ -4644,6 +4644,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         setDirty();
     }
 
+    /** Query the template to the linked meta node with the given ID and check
+     * whether a newer version is available.
+     * @param id The ID of the linked meta node
+     * @param loadHelper The load helper to load the template
+     * @return true if a newer revision is available, false if not or this
+     *         is not a meta node link.
+     * @throws IOException If that fails (template not accessible) */
     public boolean checkUpdateMetaNodeLink(final NodeID id,
             final WorkflowLoadHelper loadHelper) throws IOException {
         if (!containsNodeContainer(id)) {
@@ -4828,14 +4835,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 for (ConnectionContainer cc : outConns) {
                     int sourcePort = cc.getSourcePort();
                     int destPort = cc.getDestPort();
-                    NodeID d = cc.getSource();
-                    if (!canAddConnection(id, sourcePort, d, destPort)) {
-                        loadRes.addWarning("Could not restore connection "
+                    NodeID des = cc.getDest();
+                    if (!canAddConnection(id, sourcePort, des, destPort)) {
+                        loadRes.addError("Could not restore connection "
                                 + "between meta node template and \""
-                                + getNodeContainer(d).getNameWithID() + "\"");
+                                + getNodeContainer(des).getNameWithID() + "\"");
                     } else {
                         ConnectionContainer c =
-                            addConnection(id, sourcePort, d, destPort);
+                            addConnection(id, sourcePort, des, destPort);
                         c.setDeletable(cc.isDeletable());
                         ConnectionUIInformation uiInfo = cc.getUIInfo();
                         c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
