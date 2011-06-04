@@ -358,7 +358,7 @@ public abstract class MultiThreadWorker<In, Out> {
         }
     }
 
-    /** Callback for subclasses to be informed about a new task submissing.
+    /** Callback for subclasses to be informed about a new task submission.
      * This method is called iteratively from the {@link #run(Iterable)} method.
      *
      * <p>This default implementation is empty.
