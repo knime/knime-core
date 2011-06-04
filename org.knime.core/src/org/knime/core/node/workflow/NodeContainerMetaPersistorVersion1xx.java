@@ -91,14 +91,18 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     private final ReferencedFile m_nodeSettingsFile;
 
     /** @param settingsFile The settings file associated with this node.
-     * @param loadHelper The load helper to query for additonal information.
+     * @param loadHelper The load helper to query for additional information.
      */
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile settingsFile,
             final WorkflowLoadHelper loadHelper) {
         m_nodeSettingsFile = settingsFile;
-        assert settingsFile.isRootFileLockedForVM()
-            : "Workflow must be locked before persistor is created "
-            + "(and unlocked after load)";
+        // the root folder is usually locked during load, one exception
+        // is the loading from templates in the node repository (X-Val, e.g.)
+        if (!settingsFile.isRootFileLockedForVM()) {
+            getLogger().debug("Workflow being loaded (\""
+                    + settingsFile.getParent().getFile().getName()
+                    + "\") is not locked");
+        }
         m_loadHelper = loadHelper;
     }
 

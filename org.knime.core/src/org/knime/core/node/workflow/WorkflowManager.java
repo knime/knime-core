@@ -5228,8 +5228,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (directory == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
-        String fileName = loadHelper.isTemplateFlow()
-            ? WorkflowPersistor.TEMPLATE_FILE : WorkflowPersistor.WORKFLOW_FILE;
+        String fileName = loadHelper.getDotKNIMEFileName();
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }

@@ -114,14 +114,14 @@ public class WorkflowLoadHelper {
         return m_isTemplate;
     }
 
-    /** Post load procedure: check for updates of meta node links.
-     * This method is only called when the workflow being loaded contains
-     * meta node links (<code>links</code> argument is not empty).
-     * @param parent The host WFM.
-     * @param links The meta node links. */
-    public void postLoadCheckForMetaNodeUpdates(final WorkflowManager parent,
-            final WorkflowManager[] links) {
-        // empty, potentially overwritten
+    /** Get the name of the *.knime file. This is "template.knime" for
+     * templates ({@link #isTemplateFlow()} and "workflow.knime" for workflows.
+     * The loader for templates in the node repository (e.g. X-Val Loop) will
+     * overwrite this.
+     * @return the name of the .knime file. */
+    public String getDotKNIMEFileName() {
+        return isTemplateFlow() ? WorkflowPersistor.TEMPLATE_FILE
+                : WorkflowPersistor.WORKFLOW_FILE;
     }
 
 }
