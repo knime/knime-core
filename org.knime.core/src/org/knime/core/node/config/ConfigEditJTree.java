@@ -108,7 +108,8 @@ public class ConfigEditJTree extends JTree {
                     + ConfigEditTreeModel.class.getSimpleName());
         }
         super.setModel(newModel);
-        expandAll();
+        // not sure whether to better expand all entries, seems ok either way?
+//        expandAll();
     }
 
     /** Expand the tree. */
