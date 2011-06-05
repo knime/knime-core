@@ -41,12 +41,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.LockFailedException;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 /**
@@ -282,30 +282,11 @@ public final class MetaNodeTemplateRepositoryManager {
 
     private WorkflowManager loadWorkflowManager() {
         try {
-            WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                        final String workflowVersionString) {
-                    LOGGER.error("Installed meta nodes are of unkown version?!?");
-                    return UnknownKNIMEVersionLoadPolicy.Try;
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public List<Credentials> loadCredentials(
-                        final List<Credentials> credentials) {
-                    return credentials;
-                }
-
+            WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true) {
                 /** {@inheritDoc} */
                 @Override
-                public boolean isTemplateFlow() {
-                    return true;
+                public String getDotKNIMEFileName() {
+                    return WorkflowPersistor.WORKFLOW_FILE;
                 }
             };
 
