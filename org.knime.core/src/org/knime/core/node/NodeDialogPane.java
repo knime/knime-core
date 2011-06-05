@@ -79,6 +79,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -391,9 +392,9 @@ public abstract class NodeDialogPane {
     }
 
     /**
-     * Called from the node when the current settings shall be writing to
+     * Called from the node when the current settings shall be written to
      * a NodeSettings object. It will call the abstract saveSettingsTo method
-     * and finally write misc settings to the argument object. Misc settings
+     * and finally write "misc" settings to the argument object.
      * @param settings To write to. Forwarded to abstract saveSettings method.
      * @throws InvalidSettingsException If any of the writing fails.
      */
@@ -1198,11 +1199,28 @@ public abstract class NodeDialogPane {
                         JOptionPane.ERROR_MESSAGE);
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
             }
-            model.update(variableModels);
-            m_tree.setFlowObjectStack(stack);
-            m_tree.getModel().removeConfigEditTreeEventListener(this);
-            m_tree.setModel(model);
-            model.addConfigEditTreeEventListener(this);
+            final ConfigEditTreeModel newModel = model;
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    newModel.update(variableModels);
+                    m_tree.setFlowObjectStack(stack);
+                    FlowVariablesTab lis = FlowVariablesTab.this;
+                    m_tree.getModel().removeConfigEditTreeEventListener(lis);
+                    m_tree.setModel(newModel);
+                    newModel.addConfigEditTreeEventListener(lis);
+                    // if this isn't run after initialization it will not paint
+                    // the very first row in the table correctly
+                    // (label slightly off & combo box not visible)
+                    SwingUtilities.invokeLater(new Runnable() {
+                        /** {@inheritDoc} */
+                        @Override
+                        public void run() {
+                            m_tree.repaint();
+                        }
+                    });
+                };
+            });
         }
 
         /**
