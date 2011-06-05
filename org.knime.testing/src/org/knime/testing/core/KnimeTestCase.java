@@ -42,6 +42,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -156,7 +157,7 @@ public class KnimeTestCase extends TestCase {
 
             WorkflowLoadResult loadRes = WorkflowManager.loadProject(
                     m_knimeWorkFlow.getParentFile(),
-                    new ExecutionMonitor(), null);
+                    new ExecutionMonitor(), WorkflowLoadHelper.INSTANCE);
 
             boolean mustReportErrors;
             switch (loadRes.getType()) {
