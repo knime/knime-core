@@ -24,7 +24,7 @@ package org.knime.workbench.editor2;
 
 import java.net.URL;
 
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeModel;
 
 /**
@@ -33,14 +33,14 @@ import org.knime.core.node.NodeModel;
  *
  */
 public class ReaderNodeSettings {
-    private final NodeFactory<NodeModel> m_factory;
+    private final ContextAwareNodeFactory<NodeModel> m_factory;
     private final URL m_url;
 
     /**
      * @param factory the node factory of the node
      * @param url the url of the file to be read
      */
-    public ReaderNodeSettings(final NodeFactory<NodeModel> factory,
+    public ReaderNodeSettings(final ContextAwareNodeFactory<NodeModel> factory,
             final URL url) {
         super();
         m_factory = factory;
@@ -50,7 +50,7 @@ public class ReaderNodeSettings {
     /**
      * @return the factory of the node
      */
-    public NodeFactory<NodeModel> getFactory() {
+    public ContextAwareNodeFactory<NodeModel> getFactory() {
         return m_factory;
     }
 

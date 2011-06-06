@@ -59,7 +59,7 @@
                   Specify a node factory that accepts a file with the associated extension.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.core.node.NodeFactory:"/>
+                  <meta.attribute kind="java" basedOn="org.knime.core.node.ContextAwareNodeFactory:"/>
                </appInfo>
             </annotation>
          </attribute>

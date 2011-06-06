@@ -40,7 +40,7 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.workbench.explorer.view.ContentObject;
@@ -55,7 +55,7 @@ public abstract class WorkflowEditorDropTargetListener
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorFileDropTargetListener.class);
 
-    private static Map<String, Class<? extends NodeFactory<NodeModel>>>
+    private static Map<String, Class<? extends ContextAwareNodeFactory<NodeModel>>>
             extensionRegistry;
     private final T m_factory;
 
@@ -75,7 +75,7 @@ public abstract class WorkflowEditorDropTargetListener
 
    private static void initRegistry() {
        extensionRegistry = new TreeMap<String,
-               Class<? extends NodeFactory<NodeModel>>>();
+               Class<? extends ContextAwareNodeFactory<NodeModel>>>();
        IExtensionRegistry registry = Platform.getExtensionRegistry();
        for (IConfigurationElement element : registry
                .getConfigurationElementsFor(
@@ -89,8 +89,8 @@ public abstract class WorkflowEditorDropTargetListener
                final Object o =
                        element.createExecutableExtension("NodeFactory");
                @SuppressWarnings("unchecked")
-               Class<? extends NodeFactory<NodeModel>> clazz =
-                       (Class<? extends NodeFactory<NodeModel>>)o.getClass();
+               Class<? extends ContextAwareNodeFactory<NodeModel>> clazz =
+                       (Class<? extends ContextAwareNodeFactory<NodeModel>>)o.getClass();
 
                for (IConfigurationElement child : element.getChildren()) {
                    String extension = child.getAttribute("extension");
@@ -113,16 +113,21 @@ public abstract class WorkflowEditorDropTargetListener
    }
 
     /**
-     * @param extension the file extension
+     * @param url the url for which a node factory should be returned
      * @return the node factory registered for this extension, or null if
      *      the extension is not registered.
      */
-    protected static Class<? extends NodeFactory<NodeModel>> getNodeFactory(
-            final String extension) {
+    protected static Class<? extends ContextAwareNodeFactory<NodeModel>> getNodeFactory(
+            final String url) {
         if (extensionRegistry == null) {
             initRegistry();
         }
-        return extensionRegistry.get(extension);
+        for (Map.Entry<String, Class<? extends ContextAwareNodeFactory<NodeModel>>>e : extensionRegistry.entrySet()) {
+            if (url.endsWith(e.getKey())) {
+                return e.getValue();
+            }
+        }
+        return null;
     }
 
 
@@ -131,14 +136,13 @@ public abstract class WorkflowEditorDropTargetListener
      * @return a node factory creating a node that is registered for handling
      *      this type of file
      */
-    protected NodeFactory<NodeModel> getNodeFactory(final URL url) {
+    protected ContextAwareNodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
-        String extension = path.substring(path.lastIndexOf(".") + 1);
-        Class<? extends NodeFactory<NodeModel>> clazz
-                = WorkflowEditorDropTargetListener.getNodeFactory(extension);
+        Class<? extends ContextAwareNodeFactory<NodeModel>> clazz
+                = getNodeFactory(path);
         if (clazz == null) {
-            LOGGER.warn("No node factory is registered for handling files "
-                    + "of type \"" + extension + "\"");
+            LOGGER.warn("No node factory is registered for handling "
+                    + " \"" + path + "\"");
             return null;
         }
         try {

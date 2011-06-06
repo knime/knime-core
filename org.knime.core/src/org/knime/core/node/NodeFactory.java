@@ -658,11 +658,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param context
      * @return
      */
-    public T createNodeModel(final NodeCreationContext context) {
+    protected T createNodeModel(final NodeCreationContext context) {
         // normally correct implementations overwrite this
         LOGGER.coding("If you register a node to be created in a certain"
-                + " context, you should override "
-                + "NodeFactory#createNodeModel(context)");
+                + " context, you should extends "
+                + "ContextAwareNodeFactory");
         return createNodeModel();
     }
 

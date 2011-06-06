@@ -50,9 +50,9 @@
  */
 package org.knime.base.node.io.csvreader;
 
+import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
@@ -60,7 +60,7 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class CSVReaderNodeFactory
-    extends NodeFactory<CSVReaderNodeModel> {
+    extends ContextAwareNodeFactory<CSVReaderNodeModel> {
 
     /** {@inheritDoc} */
     @Override

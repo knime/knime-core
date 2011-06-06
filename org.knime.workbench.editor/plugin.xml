@@ -403,31 +403,4 @@
             id="org.knime.workbench.helpview"
             name="Node Description"/>
    </extension>
-     <extension
-           point="org.knime.workbench.editor.editor_filedrop">
-        <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.csvreader.CSVReaderNodeFactory">
-           <FileExtension
-                 extension="csv">
-           </FileExtension>
-        </FileExtensionMapping>
-        <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.filereader.FileReaderNodeFactory">
-           <FileExtension
-                 extension="txt">
-           </FileExtension>
-           <FileExtension
-                 extension="tsv">
-           </FileExtension>
-           <FileExtension
-                 extension="all">
-           </FileExtension>
-        </FileExtensionMapping>
-        <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.table.read.ReadTableNodeFactory">
-           <FileExtension
-                 extension="table">
-           </FileExtension>
-        </FileExtensionMapping>
-     </extension>    
 </plugin>

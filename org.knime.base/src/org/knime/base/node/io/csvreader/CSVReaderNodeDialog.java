@@ -179,20 +179,17 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         }
         URL url;
         try {
-            if (!fileS.matches("^[a-z]*:/")) {
-                File f = new File(fileS);
-                if (!f.exists()) {
-                    throw new InvalidSettingsException(
-                            "No such file: " + fileS);
-                }
+            File f = new File(fileS);
+            if (f.exists()) {
                 url = f.toURI().toURL();
             } else {
                 url = new URL(fileS);
             }
         } catch (MalformedURLException e) {
             throw new InvalidSettingsException(
-                    "Unable to set URL: " + e.getMessage(), e);
+                    "Invalid URL: " + e.getMessage(), e);
         }
+
         config.setUrl(url);
         config.setColDelimiter(unescape(m_colDelimiterField.getText()));
         config.setRowDelimiter(unescape(m_rowDelimiterField.getText()));

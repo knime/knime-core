@@ -43,71 +43,31 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   06.06.2011 (meinl): created
  */
-package org.knime.base.node.io.pmml.read;
-
-import org.knime.core.node.ContextAwareNodeFactory;
-import org.knime.core.node.NodeCreationContext;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeView;
+package org.knime.core.node;
 
 /**
+ * This extension of {@link NodeFactory} is used in order to create a new node
+ * in a certain context. Implementors who wish that their nodes can be used in a
+ * context (e.g. when a file is dropped onto the workflow editor) should extend
+ * this class instead of {@link NodeFactory} and register the factory in the
+ * plugin.xml (in addition to the normal registration).
  *
- * @author Fabian Dill, University of Konstanz
+ * @param <T> any subclass of {@link NodeModel}
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class PMMLReaderNodeFactory
-    extends ContextAwareNodeFactory<PMMLReaderNodeModel> {
-
+public abstract class ContextAwareNodeFactory<T extends NodeModel> extends
+        NodeFactory<T> {
     /**
-     * {@inheritDoc}
+     * Creates a new node model.
+     *
+     * @param context the context in which the node should be created
+     * @return a node model
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new PMMLReaderNodeDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PMMLReaderNodeModel createNodeModel() {
-        return new PMMLReaderNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<PMMLReaderNodeModel> createNodeView(
-            final int viewIndex,
-            final PMMLReaderNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PMMLReaderNodeModel createNodeModel(
-            final NodeCreationContext context) {
-        return new PMMLReaderNodeModel(context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
+    public abstract T createNodeModel(final NodeCreationContext context);
 }

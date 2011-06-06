@@ -47,15 +47,16 @@
  */
 package org.knime.base.node.io.filereader;
 
+import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  * @author Peter Ohl, University of Konstanz
  */
-public class FileReaderNodeFactory extends NodeFactory<FileReaderNodeModel> {
+public class FileReaderNodeFactory extends
+    ContextAwareNodeFactory<FileReaderNodeModel> {
 
     private String m_defaultXMLFile;
 

@@ -1298,5 +1298,37 @@
        <PersistedMetaNode category-path="/meta" description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow." icon="icons/meta_nodes/loop_x_times_flow.png" id="looper" name="Loop x-times" workflowDir="metanode_templates/Looper/">
        </PersistedMetaNode>
     </extension>
-   
+     <extension
+           point="org.knime.workbench.editor.editor_filedrop">
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.csvreader.CSVReaderNodeFactory">
+           <FileExtension
+                 extension=".csv">
+           </FileExtension>
+           <FileExtension
+                 extension=".csv.gz">
+           </FileExtension>
+        </FileExtensionMapping>
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.filereader.FileReaderNodeFactory">
+           <FileExtension
+                 extension=".txt">
+           </FileExtension>
+           <FileExtension
+                 extension=".tsv">
+           </FileExtension>
+           <FileExtension
+                 extension=".all">
+           </FileExtension>
+           <FileExtension
+                 extension=".txt.gz">
+           </FileExtension>
+        </FileExtensionMapping>
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.table.read.ReadTableNodeFactory">
+           <FileExtension
+                 extension=".table">
+           </FileExtension>
+        </FileExtensionMapping>
+     </extension>   
 </plugin>

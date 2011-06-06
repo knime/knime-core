@@ -23,8 +23,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NotConfigurableException;
@@ -44,7 +44,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DropNodeCommand.class);
 
-    private final NodeFactory<NodeModel> m_factory;
+    private final ContextAwareNodeFactory<NodeModel> m_factory;
 
     private final Point m_location;
 
@@ -61,7 +61,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      */
     public DropNodeCommand(final WorkflowManager manager,
-            final NodeFactory<NodeModel> factory,
+            final ContextAwareNodeFactory<NodeModel> factory,
             final NodeCreationContext context, final Point location) {
         super(manager);
         m_factory = factory;
