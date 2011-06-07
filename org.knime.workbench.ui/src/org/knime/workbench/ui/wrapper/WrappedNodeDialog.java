@@ -89,6 +89,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -413,11 +414,19 @@ public class WrappedNodeDialog extends Dialog {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
-                        // can only show out-port view for nodes with at least
+                        // show out-port view for nodes with at least
                         // one out-port (whereby the first is used as flow
-                        // variable port)
-                        if (m_nodeContainer.getNrOutPorts() > 1) {
-                            NodeOutPort port = m_nodeContainer.getOutPort(1);
+                        // variable port for SingleNodeContainer), otherwise
+                        // handle meta node (without flow variable port)
+                        final int pIndex;
+                        if (m_nodeContainer instanceof SingleNodeContainer) {
+                            pIndex = 1;
+                        } else {
+                            pIndex = 0;
+                        }
+                        if (m_nodeContainer.getNrOutPorts() > pIndex) {
+                            NodeOutPort port = m_nodeContainer.getOutPort(
+                                    pIndex);
                             port.openPortView(port.getPortName());
                         }
                     }
