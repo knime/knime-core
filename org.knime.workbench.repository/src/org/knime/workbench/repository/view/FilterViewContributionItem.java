@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.01.2006 (Florian Georg): created
  */
@@ -67,30 +67,48 @@ import org.eclipse.swt.widgets.Control;
  * Contribution Item in der RepositoryView. This registers a
  * <code>RepositoryViewFilter</code> on the viewer, that is able to filter
  * rquested nodes.
- * 
+ *
  * @see RepositoryViewFilter
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class FilterViewContributionItem extends ControlContribution implements
         KeyListener {
-    private TreeViewer m_viewer;
+    private final TreeViewer m_viewer;
 
     private Combo m_combo;
 
-    private RepositoryViewFilter m_filter;
+    private final TextualViewFilter m_filter;
+
+    private final boolean m_liveUpdate;
 
     /**
      * Creates the contribution item.
-     * 
+     *
      * @param viewer The viewer.
+     * @param filter The filter to use.
      */
-    public FilterViewContributionItem(final TreeViewer viewer) {
-        super("@knime.repository.view.filter");
+    public FilterViewContributionItem(final TreeViewer viewer,
+            final TextualViewFilter filter) {
+       this(viewer, filter, true);
+    }
 
+    /**
+     * Creates the contribution item.
+     *
+     * @param viewer The viewer.
+     * @param filter The filter to use.
+     * @param liveUpdate Set to true if the filter should be updated on every
+     *      key pressed. If false, it is only updated on pressing enter.
+     *
+     */
+    public FilterViewContributionItem(final TreeViewer viewer,
+            final TextualViewFilter filter, final boolean liveUpdate) {
+        super("org.knime.workbench.repository.view.FilterViewContributionItem");
         m_viewer = viewer;
-        m_filter = new RepositoryViewFilter();
+        m_filter = filter;
         m_viewer.addFilter(m_filter);
+        m_liveUpdate = liveUpdate;
     }
 
     /**
@@ -100,23 +118,27 @@ public class FilterViewContributionItem extends ControlContribution implements
     protected Control createControl(final Composite parent) {
         m_combo = new Combo(parent, SWT.DROP_DOWN);
         m_combo.addKeyListener(this);
-        m_combo.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                m_filter.setQueryString(m_combo.getText());
-                m_viewer.refresh();
-                if (m_combo.getText().length() > 0) {
-                    m_viewer.expandAll();
-                }
-
-            }
-
-        });
-        
+        m_combo.addSelectionListener(createSelectionAdaptor());
         return m_combo;
     }
-    
+
+    /**
+     * @return a selection adaptor that updates the filter
+     */
+    protected SelectionAdapter createSelectionAdaptor() {
+        return new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                getFilter().setQueryString(getCombo().getText());
+                getViewer().refresh();
+                if (getCombo().getText().length() > 0) {
+                    getViewer().expandAll();
+                }
+            }
+
+        };
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -128,6 +150,7 @@ public class FilterViewContributionItem extends ControlContribution implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void keyPressed(final KeyEvent e) {
 
     }
@@ -135,34 +158,72 @@ public class FilterViewContributionItem extends ControlContribution implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void keyReleased(final KeyEvent e) {
+        boolean shouldExpand = true;
         String str = m_combo.getText();
-        boolean shouldExpand = false;
+        boolean update = m_liveUpdate;
 
         if (e.character == SWT.CR) {
-            shouldExpand = true;
             if ((str.length() > 0)
                     && (!Arrays.asList(m_combo.getItems()).contains(str))) {
                 m_combo.add(str, 0);
                 m_combo.select(0);
-
-            } else if (str.length() == 0) {
-                m_viewer.collapseAll();
-                shouldExpand = false;
             }
-
+            update = true;
         } else if (e.character == SWT.ESC) {
             m_combo.setText("");
             str = "";
-            m_viewer.collapseAll();
+            update = true;
         }
 
+        if (str.length() == 0) {
+            m_viewer.collapseAll();
+            shouldExpand = false;
+            update = true;
+        }
         m_filter.setQueryString(str);
 
-        m_viewer.refresh();
-
-        if (shouldExpand) {
-            m_viewer.expandAll();
+        if (update) {
+            m_viewer.refresh();
+            if (shouldExpand) {
+                m_viewer.expandAll();
+            }
         }
+    }
+
+    /**
+     * @return the combo
+     */
+    protected Combo getCombo() {
+        return m_combo;
+    }
+
+    /**
+     * @param combo the combo to set
+     */
+    protected void setCombo(final Combo combo) {
+        m_combo = combo;
+    }
+
+    /**
+     * @return the filter
+     */
+    protected TextualViewFilter getFilter() {
+        return m_filter;
+    }
+
+    /**
+     * @return the liveUpdate
+     */
+    protected boolean getLiveUpdate() {
+        return m_liveUpdate;
+    }
+
+    /**
+     * @return the viewer
+     */
+    protected TreeViewer getViewer() {
+        return m_viewer;
     }
 }

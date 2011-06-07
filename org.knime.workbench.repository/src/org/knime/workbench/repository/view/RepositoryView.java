@@ -287,7 +287,8 @@ public class RepositoryView extends ViewPart {
     private void fillLocalToolBar(final IToolBarManager manager) {
         // create the combo contribution item that can filter our view
 
-        m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer);
+        m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer,
+                new RepositoryViewFilter());
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
 

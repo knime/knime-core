@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,14 +44,12 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.01.2006 (Florian Georg): created
  */
 package org.knime.workbench.repository.view;
 
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -60,42 +58,19 @@ import org.knime.workbench.repository.model.Root;
 
 /**
  * Viewer Filter for the reprository view.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class RepositoryViewFilter extends ViewerFilter {
-    private String m_query;
+public class RepositoryViewFilter extends TextualViewFilter {
 
     /**
+     *  An element is selected if itself, a parent or a
+     * child contains the query string in its name.
      * {@inheritDoc}
      */
     @Override
-    public boolean select(final Viewer viewer, final Object parentElement,
-            final Object element) {
-
-        // this means that the filter has been cleared
-        if ((m_query == null) || (m_query.equals(""))) {
-            return true;
-        }
-
-        // call helper method
-        return doSelect((IRepositoryObject)parentElement,
-                (IRepositoryObject)element, true);
-
-    }
-
-    /**
-     * Actual select method. An element is selected if itself, a parent or a
-     * child contains the query string in its name.
-     * 
-     * @param parentElement
-     * @param element
-     * @param recurse whether to recurse into categories or not
-     * @return <code>true</code> if the element should be selected
-     */
-    private boolean doSelect(final IRepositoryObject parentElement,
-            final IRepositoryObject element, final boolean recurse) {
-
+    protected boolean doSelect(final Object parentElement,
+            final Object element, final boolean recurse) {
         boolean selectThis = false;
 
         // Node Template : Match against name
@@ -108,7 +83,7 @@ public class RepositoryViewFilter extends ViewerFilter {
             }
             // we must also check towards root, as we want to include all
             // children of a selected category
-            IRepositoryObject temp = parentElement;
+            IRepositoryObject temp = (IRepositoryObject)parentElement;
             while (!(temp instanceof Root)) {
 
                 // check parent category, but do *not* recurse !!!!
@@ -117,14 +92,14 @@ public class RepositoryViewFilter extends ViewerFilter {
                 }
                 temp = temp.getParent();
             }
-        } else 
+        } else
         // MetaNodeTemplate: check agains name and names of contained nodes
         if (element instanceof MetaNodeTemplate) {
             selectThis = match(((MetaNodeTemplate)element).getName())
                 || match(((MetaNodeTemplate)element).getManager().getName());
             if (selectThis) {
                 return true;
-            } 
+            }
             /*
              * enable if advanced search in NodeRepository is available
             for (NodeContainer cont : ((MetaNodeTemplate)element).getManager()
@@ -158,27 +133,5 @@ public class RepositoryViewFilter extends ViewerFilter {
         }
 
         return false;
-    }
-
-    /**
-     * 
-     * @param test String to test
-     * @return <code>true</code> if the test is contained in the m_query
-     *         String (ignoring case)
-     */
-    private boolean match(final String test) {
-        if (test == null) {
-            return false;
-        }
-        return test.toUpperCase().contains(m_query.toUpperCase());
-    }
-
-    /**
-     * Set the query String that is responsible for selecting nodes/categories.
-     * 
-     * @param query The query string
-     */
-    public void setQueryString(final String query) {
-        m_query = query;
     }
 }
