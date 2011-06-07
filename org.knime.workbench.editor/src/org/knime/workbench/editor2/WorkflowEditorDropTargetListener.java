@@ -23,14 +23,7 @@
 package org.knime.workbench.editor2;
 
 import java.net.URL;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.InvalidRegistryObjectException;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.dnd.AbstractTransferDropTargetListener;
@@ -44,6 +37,7 @@ import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.workbench.explorer.view.ContentObject;
+import org.knime.workbench.repository.util.ContextAwareNodeFactoryMapper;
 
 /**
  *
@@ -55,8 +49,7 @@ public abstract class WorkflowEditorDropTargetListener
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditorFileDropTargetListener.class);
 
-    private static Map<String, Class<? extends ContextAwareNodeFactory<NodeModel>>>
-            extensionRegistry;
+
     private final T m_factory;
 
     /**
@@ -69,68 +62,6 @@ public abstract class WorkflowEditorDropTargetListener
         m_factory = factory;
     }
 
-
-
-
-
-   private static void initRegistry() {
-       extensionRegistry = new TreeMap<String,
-               Class<? extends ContextAwareNodeFactory<NodeModel>>>();
-       IExtensionRegistry registry = Platform.getExtensionRegistry();
-       for (IConfigurationElement element : registry
-               .getConfigurationElementsFor(
-                       "org.knime.workbench.editor.editor_filedrop")) {
-           try {
-               /*
-                * Use the configuration element method to load an object of the
-                * given class name. This method ensures the correct classpath
-                * is used providing access to all extension points.
-                */
-               final Object o =
-                       element.createExecutableExtension("NodeFactory");
-               @SuppressWarnings("unchecked")
-               Class<? extends ContextAwareNodeFactory<NodeModel>> clazz =
-                       (Class<? extends ContextAwareNodeFactory<NodeModel>>)o.getClass();
-
-               for (IConfigurationElement child : element.getChildren()) {
-                   String extension = child.getAttribute("extension");
-                   if (extensionRegistry.get(extension) == null) {
-                       // add class
-                       extensionRegistry.put(extension, clazz);
-                   } // else already registered -> first come first serve
-               }
-           } catch (InvalidRegistryObjectException e) {
-               throw new IllegalArgumentException(e);
-           } catch (CoreException e) {
-               throw new IllegalArgumentException(e);
-           }
-       }
-       for (String key : extensionRegistry.keySet()) {
-           LOGGER.debug("File extension: \"" + key + "\" registered for "
-                   + "Node Factory: "
-                   + extensionRegistry.get(key).getSimpleName() + ".");
-       }
-   }
-
-    /**
-     * @param url the url for which a node factory should be returned
-     * @return the node factory registered for this extension, or null if
-     *      the extension is not registered.
-     */
-    protected static Class<? extends ContextAwareNodeFactory<NodeModel>> getNodeFactory(
-            final String url) {
-        if (extensionRegistry == null) {
-            initRegistry();
-        }
-        for (Map.Entry<String, Class<? extends ContextAwareNodeFactory<NodeModel>>>e : extensionRegistry.entrySet()) {
-            if (url.endsWith(e.getKey())) {
-                return e.getValue();
-            }
-        }
-        return null;
-    }
-
-
     /**
      * @param url the URL of the file
      * @return a node factory creating a node that is registered for handling
@@ -139,7 +70,7 @@ public abstract class WorkflowEditorDropTargetListener
     protected ContextAwareNodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
         Class<? extends ContextAwareNodeFactory<NodeModel>> clazz
-                = getNodeFactory(path);
+                = ContextAwareNodeFactoryMapper.getNodeFactory(path);
         if (clazz == null) {
             LOGGER.warn("No node factory is registered for handling "
                     + " \"" + path + "\"");

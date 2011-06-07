@@ -1,13 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.knime.workbench.editor" xmlns="http://www.w3.org/2001/XMLSchema">
+<schema targetNamespace="org.knime.workbench.core" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.knime.workbench.editor" id="editor_filedrop" name="Workbench Editor File Drop Extension"/>
+         <meta.schema plugin="org.knime.workbench.repository" id="registeredFileExtensions" name="File Extensions Registered for Workbench"/>
       </appInfo>
       <documentation>
-         Allows to register a node factory for file extensions. This node factory is then used to create a new node when
-         a file is droped into the workbench editor.
+         Allows to register a node factory for file extensions. This node factory is then used to create a new node when a file is droped into the workbench editor. Only registered types are shown in the workbench explorer.
       </documentation>
    </annotation>
 

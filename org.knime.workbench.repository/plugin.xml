@@ -2,9 +2,10 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-     <extension-point id="nodes" name="Node" schema="schema/Node.exsd"/>
+   <extension-point id="nodes" name="Node" schema="schema/Node.exsd"/>
    <extension-point id="categories" name="Category" schema="schema/Category.exsd"/>
    <extension-point id="metanode" name="MetaNode" schema="schema/metanode.exsd"/>
+   <extension-point id="registeredFileExtensions" name="FileExtension" schema="schema/registeredFileExtensions.exsd"/>
    
    <extension
          point="org.eclipse.ui.views">
