@@ -48,10 +48,16 @@
 package org.knime.product.rcp;
 
 import org.eclipse.core.net.proxy.IProxyService;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.osgi.framework.Bundle;
 
 /**
  * Provides the initial workbench perspective ID (KNIME perspective).
@@ -104,5 +110,24 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // for the Update Manager is set and it ask the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void postShutdown() {
+        super.postShutdown();
+        if (ResourcesPlugin.getWorkspace() != null) {
+            try {
+                ResourcesPlugin.getWorkspace().save(true, null);
+            } catch (CoreException ex) {
+                Bundle myself = Platform.getBundle("org.knime.product");
+                Status error =
+                        new Status(IStatus.ERROR, "org.knime.product",
+                                "Error while saving workspace", ex);
+                Platform.getLog(myself).log(error);
+            }
+        }
     }
 }
