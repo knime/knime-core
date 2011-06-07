@@ -46,7 +46,7 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
 
 import java.awt.FlowLayout;
 import java.util.LinkedHashMap;
@@ -58,11 +58,16 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.QuickFormConfigurationPanel;
 import org.knime.core.quickform.in.QuickFormInputNode;
+import org.knime.core.util.Pair;
 
 /**
  * An empty dialog, which is used to create dialogs with only miscellaneous tabs
@@ -72,25 +77,25 @@ import org.knime.core.quickform.in.QuickFormInputNode;
  */
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
-    private final Map<QuickFormInputNode, QuickFormConfigurationPanel
-            <AbstractQuickFormConfiguration>> m_nodes;
+    private final Map<Pair<NodeID, QuickFormInputNode>,
+         QuickFormConfigurationPanel<AbstractQuickFormConfiguration>> m_nodes;
+
+    private final JPanel m_panel;
 
     /** Constructor. */
     public MetaNodeDialogPane() {
-        m_nodes = null;
-    }
-
-    /** Constructor.
-     * @param nodes map of <code>NodeID</code> to {@link QuickFormInputNode}
-     */
-    public MetaNodeDialogPane(final Map<NodeID, QuickFormInputNode> nodes) {
-        m_nodes = new LinkedHashMap<QuickFormInputNode,
+        m_nodes = new LinkedHashMap<Pair<NodeID, QuickFormInputNode>,
             QuickFormConfigurationPanel<AbstractQuickFormConfiguration>>();
 
-        JPanel panel = new JPanel();
-        final BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
-        panel.setLayout(boxLayout);
+        m_panel = new JPanel();
+        final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
+        m_panel.setLayout(boxLayout);
+        addTab("Quickforms", m_panel);
+    }
 
+    void setQuickformNodes(final Map<NodeID, QuickFormInputNode> nodes) {
+        // remove all quickform components from current panel
+        m_panel.removeAll();
 //        Collections.sort(m_nodes, new FormComparator<QuickFormInputNode>());
 
         // a list of quick form elements that will sorted below according to
@@ -98,12 +103,15 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         for (Map.Entry<NodeID, QuickFormInputNode> e : nodes.entrySet()) {
 //            m_forms.add(new Pair<NodeID, AbstractQuickFormInElement>(
 //                    e.getKey(), e.getValue().getQuickFormElement()));
+
             AbstractQuickFormConfiguration config =
                 e.getValue().getConfiguration();
             QuickFormConfigurationPanel<AbstractQuickFormConfiguration>
                 quickform = (QuickFormConfigurationPanel
                     <AbstractQuickFormConfiguration>)
                             config.createController();
+            m_nodes.put(new Pair<NodeID, QuickFormInputNode>(
+                    e.getKey(), e.getValue()), quickform);
 
             JPanel qpanel = new JPanel();
             final BoxLayout boxLayout2 = new BoxLayout(qpanel,
@@ -118,24 +126,25 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 p.add(comp);
                 qpanel.add(p);
             }
-            panel.add(qpanel);
-            m_nodes.put(e.getValue(), quickform);
+            m_panel.add(qpanel);
+
         }
-        addTab("Quickforms", panel);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        // TODO
-        if (m_nodes != null) {
-            for (Map.Entry<QuickFormInputNode, QuickFormConfigurationPanel
-                    <AbstractQuickFormConfiguration>> e : m_nodes.entrySet()) {
-                AbstractQuickFormConfiguration config =
-                    e.getKey().getConfiguration();
-                e.getValue().saveSettings(config);
-            }
+        for (Map.Entry<Pair<NodeID, QuickFormInputNode>,
+                QuickFormConfigurationPanel<AbstractQuickFormConfiguration>> e
+                    : m_nodes.entrySet()) {
+            Pair<NodeID, QuickFormInputNode> pair = e.getKey();
+            AbstractQuickFormConfiguration config =
+                pair.getSecond().getConfiguration();
+            e.getValue().saveSettings(config);
+            NodeSettingsWO subSettings = settings.addNodeSettings(
+                    (Integer.toString(pair.getFirst().getIndex())));
+            config.saveValue(subSettings);
         }
     }
 
@@ -143,13 +152,19 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        // TODO
-        if (m_nodes != null) {
-            for (Map.Entry<QuickFormInputNode, QuickFormConfigurationPanel
-                    <AbstractQuickFormConfiguration>> e : m_nodes.entrySet()) {
-                AbstractQuickFormConfiguration config =
-                    e.getKey().getConfiguration();
+        for (Map.Entry<Pair<NodeID, QuickFormInputNode>,
+                QuickFormConfigurationPanel<AbstractQuickFormConfiguration>> e
+                    : m_nodes.entrySet()) {
+            Pair<NodeID, QuickFormInputNode> pair = e.getKey();
+            AbstractQuickFormConfiguration config =
+                pair.getSecond().getConfiguration();
+            try {
+                NodeSettingsRO subSettings = settings.getNodeSettings(
+                    Integer.toString(pair.getFirst().getIndex()));
+                config.loadValueInDialog(subSettings);
                 e.getValue().loadSettings(config);
+            } catch (InvalidSettingsException ise) {
+                // no op
             }
         }
     }

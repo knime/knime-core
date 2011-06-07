@@ -89,7 +89,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.MetaNodeDialogPane;
 import org.knime.core.node.Node;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeCreationContext;
@@ -3793,6 +3792,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs) throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
+        // find all quickform input nodes and update meta dialog
+        Map<NodeID, QuickFormInputNode> nodes =
+            findNodes(QuickFormInputNode.class, false);
+        ((MetaNodeDialogPane) dialogPane).setQuickformNodes(nodes);
         NodeSettings settings = new NodeSettings("wfm_settings");
         saveSettings(settings);
         dialogPane.internalLoadSettingsFrom(
@@ -3807,11 +3810,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     NodeDialogPane getDialogPane() {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
-                // find all quickform input nodes
-                Map<NodeID, QuickFormInputNode> nodes =
-                    findNodes(QuickFormInputNode.class, true);
                 // create meta node dialog with quickforms
-                m_nodeDialogPane = new MetaNodeDialogPane(nodes);
+                m_nodeDialogPane = new MetaNodeDialogPane();
                 // workflow manager jobs can't be split
                 m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
             } else {
@@ -6199,7 +6199,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         super.loadSettings(settings);
+        NodeSettingsRO modelSettings = settings.getNodeSettings("model");
+        Map<NodeID, QuickFormInputNode> nodes =
+            findNodes(QuickFormInputNode.class, false);
+        for (NodeID id : nodes.keySet()) {
+            String nodeID = Integer.toString(id.getIndex());
+            NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+            QuickFormInputNode qfin = nodes.get(id);
+            NodeSettingsWO oldSettings = new NodeSettings(nodeID);
+            qfin.getConfiguration().saveValue(oldSettings);
+            if (!conf.equals(oldSettings)) {
+            // FIXME: likely not here but in the WFM...
+            // not needed (actually nodes not work) because WFM itself
+            // was reset completely if any one of the settings change.
+//                SingleNodeContainer snc =
+//                    (SingleNodeContainer)this.getNodeContainer(id);
+//                 snc.reset();
+                qfin.getConfiguration().loadValueInModel(conf);
+             // see above: not needed
+//             this.configureNodeAndSuccessors(id, true);
+            }
+        }
     }
+
 
     /** {@inheritDoc} */
     @Override
@@ -6215,7 +6237,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //        l.setModelSettings(model);
 //        l.setVariablesSettings(variables);
 //        l.save(settings);
-        settings.addNodeSettings("model");
+        NodeSettingsWO modelSettings = settings.addNodeSettings("model");
+        for (Map.Entry<NodeID, QuickFormInputNode> e
+                : findNodes(QuickFormInputNode.class, false).entrySet()) {
+            String nodeID = Integer.toString(e.getKey().getIndex());
+            NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
+            e.getValue().getConfiguration().saveValue(subSettings);
+        }
+
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.save(settings);
