@@ -18,7 +18,7 @@
  */
 package org.knime.base.node.mine.cluster;
 
-import java.io.File;
+import java.io.InputStream;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -33,30 +33,31 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLDataDictionaryParser extends TestCase {
-    
+
 
     private SAXParser m_parser;
     private DataDictionaryContentHandler m_handler;
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         SAXParserFactory fac = SAXParserFactory.newInstance();
         m_parser =  fac.newSAXParser();
         m_handler = new DataDictionaryContentHandler();
     }
-    
-    
+
+
     public void testOwnClusterModel() throws Exception {
-        File f = new File(getClass().getResource(
-                "files/iris_kMeans.pmml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream is = getClass().getResourceAsStream(
+                "files/iris_kMeans.pmml");
+        m_parser.parse(is, m_handler);
         DataTableSpec spec = m_handler.getDataTableSpec();
         assertEquals(5, spec.getNumColumns());
         assertEquals(0, spec.findColumnIndex("sepal length"));
@@ -70,7 +71,7 @@ public class PMMLDataDictionaryParser extends TestCase {
                 .getLowerBound()).getDoubleValue());
         assertEquals(7.9, ((DoubleValue)sepalLength.getDomain()
                 .getUpperBound()).getDoubleValue());
-        
+
         DataColumnSpec sepalWidth = spec.getColumnSpec(1);
         assertEquals("sepal width", sepalWidth.getName());
         assertEquals(2.0, ((DoubleValue)sepalWidth.getDomain()
@@ -84,8 +85,8 @@ public class PMMLDataDictionaryParser extends TestCase {
                 .getLowerBound()).getDoubleValue());
         assertEquals(6.9, ((DoubleValue)petalLength.getDomain()
                 .getUpperBound()).getDoubleValue());
-        
-        
+
+
         DataColumnSpec petalWidth = spec.getColumnSpec(3);
         assertEquals("petal width", petalWidth.getName());
         assertEquals(0.1, ((DoubleValue)petalWidth.getDomain()
@@ -106,20 +107,20 @@ public class PMMLDataDictionaryParser extends TestCase {
         }
 
     public void testAssociationruleModelFile() throws Exception {
-        File f = new File(getClass().getResource(
-                "files/association_rules_model.xml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream is = getClass().getResourceAsStream(
+                "files/association_rules_model.xml");
+        m_parser.parse(is, m_handler);
         DataTableSpec spec = m_handler.getDataTableSpec();
         assertEquals(0, spec.findColumnIndex("cardid"));
         assertEquals(1, spec.findColumnIndex("Product"));
         assertEquals(StringCell.TYPE, spec.getColumnSpec("cardid").getType());
-        assertEquals(StringCell.TYPE, spec.getColumnSpec("Product").getType());        
+        assertEquals(StringCell.TYPE, spec.getColumnSpec("Product").getType());
     }
-    
+
     public void testCenterBasedClusteringModelFile() throws Exception {
-        File f = new File(getClass().getResource(
-                "files/CenterbasedClustering.xml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream is = getClass().getResourceAsStream(
+                "files/CenterbasedClustering.xml");
+        m_parser.parse(is, m_handler);
         DataTableSpec spec = m_handler.getDataTableSpec();
         // column names
         assertEquals(0, spec.findColumnIndex("PETALLEN"));
@@ -166,11 +167,11 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertTrue(spec.getColumnSpec(4).getDomain().getValues().contains(
                 new StringCell("setosa")));
     }
-    
+
     public void testClusModelFile() throws Exception {
-        File f = new File(getClass().getResource(
-                "files/ClusModel.xml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream is= getClass().getResourceAsStream(
+                "files/ClusModel.xml");
+        m_parser.parse(is, m_handler);
         // names
         DataTableSpec spec = m_handler.getDataTableSpec();
         assertEquals(spec.findColumnIndex("INT_0_1"), 0);
@@ -191,39 +192,39 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertEquals(spec.findColumnIndex("TARGET_INT100"), 15);
         assertEquals(spec.findColumnIndex("TARGET_CONT"), 16);
         // types
-        assertEquals(spec.getColumnSpec(0).getType(), 
+        assertEquals(spec.getColumnSpec(0).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(1).getType(), 
+        assertEquals(spec.getColumnSpec(1).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(2).getType(), 
+        assertEquals(spec.getColumnSpec(2).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(3).getType(), 
+        assertEquals(spec.getColumnSpec(3).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(4).getType(), 
+        assertEquals(spec.getColumnSpec(4).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(5).getType(), 
+        assertEquals(spec.getColumnSpec(5).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(6).getType(), 
+        assertEquals(spec.getColumnSpec(6).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(7).getType(), 
+        assertEquals(spec.getColumnSpec(7).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(8).getType(), 
+        assertEquals(spec.getColumnSpec(8).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(9).getType(), 
+        assertEquals(spec.getColumnSpec(9).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(10).getType(), 
+        assertEquals(spec.getColumnSpec(10).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(11).getType(), 
+        assertEquals(spec.getColumnSpec(11).getType(),
                 StringCell.TYPE);
-        assertEquals(spec.getColumnSpec(12).getType(), 
+        assertEquals(spec.getColumnSpec(12).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(13).getType(), 
+        assertEquals(spec.getColumnSpec(13).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(14).getType(), 
+        assertEquals(spec.getColumnSpec(14).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(15).getType(), 
+        assertEquals(spec.getColumnSpec(15).getType(),
                 DoubleCell.TYPE);
-        assertEquals(spec.getColumnSpec(16).getType(), 
+        assertEquals(spec.getColumnSpec(16).getType(),
                 DoubleCell.TYPE);
         // values and bounds
         assertTrue(spec.getColumnSpec(0).getDomain().hasBounds());
@@ -231,31 +232,31 @@ public class PMMLDataDictionaryParser extends TestCase {
                 .getLowerBound()).getDoubleValue(), 0.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(0).getDomain()
                 .getUpperBound()).getDoubleValue(), 1.0);
-        
+
         assertTrue(spec.getColumnSpec(1).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
                 .getLowerBound()).getDoubleValue(), 1.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
                 .getUpperBound()).getDoubleValue(), 1.0);
-        
+
         assertTrue(spec.getColumnSpec(2).getDomain().hasBounds());
         assertEquals(0.0, ((DoubleValue)spec.getColumnSpec(2).getDomain()
                 .getLowerBound()).getDoubleValue());
         assertEquals(((DoubleValue)spec.getColumnSpec(2).getDomain()
                 .getUpperBound()).getDoubleValue(), 1.0);
-        
+
         assertTrue(spec.getColumnSpec(3).getDomain().hasValues());
         assertTrue(spec.getColumnSpec(3).getDomain().getValues().contains(
                 new StringCell("A")));
         assertEquals(spec.getColumnSpec(3).getDomain().getValues().size(), 1);
-        
+
         assertTrue(spec.getColumnSpec(4).getDomain().hasValues());
         assertTrue(spec.getColumnSpec(4).getDomain().getValues().contains(
                 new StringCell("A")));
         assertTrue(spec.getColumnSpec(4).getDomain().getValues().contains(
                 new StringCell("B")));
         assertEquals(spec.getColumnSpec(4).getDomain().getValues().size(), 2);
-        
+
         assertTrue(spec.getColumnSpec(5).getDomain().hasValues());
         assertTrue(spec.getColumnSpec(5).getDomain().getValues().contains(
                 new StringCell("A")));
@@ -264,12 +265,12 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertTrue(spec.getColumnSpec(5).getDomain().getValues().contains(
                 new StringCell("C")));
         assertEquals(spec.getColumnSpec(5).getDomain().getValues().size(), 3);
-        
+
         assertTrue(spec.getColumnSpec(6).getDomain().hasValues());
         assertTrue(spec.getColumnSpec(6).getDomain().getValues().contains(
                 new StringCell("A")));
         assertEquals(spec.getColumnSpec(6).getDomain().getValues().size(), 1);
-        
+
         assertTrue(spec.getColumnSpec(7).getDomain().hasValues());
         assertTrue(spec.getColumnSpec(7).getDomain().getValues().contains(
                 new StringCell("A")));
@@ -312,7 +313,7 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertTrue(spec.getColumnSpec(11).getDomain().getValues().contains(
                 new StringCell("a")));
         assertEquals(spec.getColumnSpec(11).getDomain().getValues().size(), 3);
-    
+
     }
-    
+
 }

@@ -18,7 +18,7 @@
  */
 package org.knime.base.node.mine.svm;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,8 +57,8 @@ public class PMMLSVMModelsParser extends TestCase {
      * @throws Exception
      */
     public void testIrisSVMFile() throws Exception {
-        File f = new File(getClass().getResource("files/Iris_SVM.xml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream in = getClass().getResourceAsStream("files/Iris_SVM.xml");
+        m_parser.parse(in, m_handler);
         // test kernel
         Kernel kernel = m_handler.getKernel();
         assertTrue(kernel.getType().equals(KernelType.RBF));
