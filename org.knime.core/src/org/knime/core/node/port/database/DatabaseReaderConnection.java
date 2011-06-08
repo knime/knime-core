@@ -150,7 +150,8 @@ public final class DatabaseReaderConnection {
      * @throws SQLException if the connection to the database or the statement
      *         could not be created
      */
-    private void initStatement(final CredentialsProvider cp) throws SQLException {
+    private void initStatement(final CredentialsProvider cp)
+            throws SQLException {
         if (m_stmt == null) {
             final Connection conn;
             try {
@@ -252,15 +253,20 @@ public final class DatabaseReaderConnection {
         synchronized (sync) {
             try {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                    m_stmt.setFetchSize(
-                            DatabaseConnectionSettings.FETCH_SIZE);
+                    // fix 2741: postgresql databases ignore fetchsize when 
+                    // AUTOCOMMIT on; setting it to false
+                    if (m_stmt.getClass().getCanonicalName().startsWith(
+                            "org.postgresql")) {
+                        m_stmt.getConnection().setAutoCommit(false);
+                    }
+                    m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                 } else {
                     // fix 2040: mySQL databases read everything into one, big
                     // ResultSet leading to an heap space error
                     // Integer.MIN_VALUE is an indicator in order to enable
                     // streaming results
-                    if (m_stmt.getClass().getCanonicalName().equals(
-                            "com.mysql.jdbc.Statement")) {
+                    if (m_stmt.getClass().getCanonicalName().startsWith(
+                            "com.mysql")) {
                         m_stmt.setFetchSize(Integer.MIN_VALUE);
                         LOGGER.info("Database fetchsize for mySQL database set"
                                 + " to \"" + Integer.MIN_VALUE + "\".");
@@ -307,6 +313,12 @@ public final class DatabaseReaderConnection {
                 if (cachedNoRows < 0) {
                     query = m_conn.getQuery();
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
+                        // fix 2741: postgresql databases ignore fetchsize when 
+                        // AUTOCOMMIT on; setting it to false
+                        if (m_stmt.getClass().getCanonicalName().startsWith(
+                                "org.postgresql")) {
+                            m_stmt.getConnection().setAutoCommit(false);
+                        }
                         m_stmt.setFetchSize(
                                 DatabaseConnectionSettings.FETCH_SIZE);
                     } else {
@@ -314,8 +326,8 @@ public final class DatabaseReaderConnection {
                         // big ResultSet leading to an heap space error
                         // Integer.MIN_VALUE is an indicator in order to enable
                         // streaming results
-                        if (m_stmt.getClass().getCanonicalName().equals(
-                                "com.mysql.jdbc.Statement")) {
+                        if (m_stmt.getClass().getCanonicalName().startsWith(
+                                "com.mysql")) {
                             m_stmt.setFetchSize(Integer.MIN_VALUE);
                             LOGGER.info("Database fetchsize for mySQL database "
                                     + "set to \"" + Integer.MIN_VALUE + "\".");
