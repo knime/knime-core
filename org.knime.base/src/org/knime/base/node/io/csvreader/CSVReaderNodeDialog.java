@@ -104,6 +104,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
                 m_filePanel.setEnabled(!wvm.isVariableReplacementEnabled());
             }
         });
+        m_filePanel.setSuffixes(".csv", ".txt");
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
         m_rowDelimiterField = new JTextField("###", col);
@@ -173,23 +174,40 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         CSVReaderConfig config = new CSVReaderConfig();
-        String fileS = m_filePanel.getSelectedFile();
-        if (fileS == null) {
+        String fileS = m_filePanel.getSelectedFile().trim();
+        if (fileS == null || fileS.isEmpty()) {
             throw new InvalidSettingsException("No input selected");
         }
         URL url;
         try {
-            File f = new File(fileS);
-            if (f.exists()) {
-                url = f.toURI().toURL();
-            } else {
-                url = new URL(fileS);
+            url = new URL(fileS);
+        } catch (Exception e) {
+            // see if they specified a file without giving the protocol
+            File tmp = new File(fileS);
+            try {
+                url = tmp.getAbsoluteFile().toURI().toURL();
+            } catch (MalformedURLException e1) {
+                throw new InvalidSettingsException("Invalid URL: "
+                        + e1.getMessage(), e1);
             }
-        } catch (MalformedURLException e) {
-            throw new InvalidSettingsException(
-                    "Invalid URL: " + e.getMessage(), e);
         }
-
+        if ("file".equals(url.getProtocol())) {
+            File tmp;
+            try {
+                tmp = new File(url.toURI());
+                if (!tmp.exists()) {
+                    throw new InvalidSettingsException(
+                            "Specified input file doesn't exist.");
+                }
+                if (!tmp.isFile() || !tmp.canRead()) {
+                    throw new InvalidSettingsException(
+                            "Specified input file is not a readable file.");
+                }
+            } catch (URISyntaxException e) {
+                throw new InvalidSettingsException("Invalid URL: "
+                        + e.getMessage(), e);
+            }
+        }
         config.setUrl(url);
         config.setColDelimiter(unescape(m_colDelimiterField.getText()));
         config.setRowDelimiter(unescape(m_rowDelimiterField.getText()));
