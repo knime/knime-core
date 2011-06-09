@@ -3801,7 +3801,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         dialogPane.internalLoadSettingsFrom(
                 settings, inSpecs, new FlowObjectStack(getID()),
                         new CredentialsProvider(this, m_credentialsStore),
-                        isWriteProtected());
+                        getParent().isWriteProtected());
         return dialogPane;
     }
 
@@ -4793,7 +4793,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             loadRes.addError(error);
             return loadRes;
         }
+        NodeSettings ncSettings = new NodeSettings("metanode_settings");
         synchronized (m_workflowMutex) {
+            try {
+                saveNodeSettings(id, ncSettings);
+            } catch (InvalidSettingsException e1) {
+                String error =
+                    "Unable to store meta node settings: " + e1.getMessage();
+                LOGGER.warn(error, e1);
+                loadRes.addError(error);
+            }
             WorkflowCopyContent oldContent = new WorkflowCopyContent();
             oldContent.setNodeIDs(id);
             oldContent.setIncludeInOutConnections(true);
@@ -4809,10 +4818,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 loadPersistor.getMetaPersistor();
             metaPersistor.setNodeIDSuffix(id.getIndex());
             metaPersistor.setUIInfo(newUI);
+            WorkflowManager newLinkMN;
             try {
                 WorkflowLoadResult wmLoadResult =
                     load(loadPersistor, exec, false);
-                WorkflowManager newLinkMN = wmLoadResult.getWorkflowManager();
+                newLinkMN = wmLoadResult.getWorkflowManager();
                 loadRes.addChildError(wmLoadResult);
                 loadRes.setMetaNode(newLinkMN);
                 for (ConnectionContainer cc : inConns) {
@@ -4855,6 +4865,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 loadRes.addError(error);
                 paste(copy);
                 return loadRes;
+            }
+            try {
+                loadNodeSettings(newLinkMN.getID(), ncSettings);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't apply previous settigs to new meta "
+                    + "node link: " + e.getMessage();
+                LOGGER.warn(error, e);
+                loadRes.addError(error);
             }
             loadRes.setUndoPersistor(copy);
             return loadRes;
