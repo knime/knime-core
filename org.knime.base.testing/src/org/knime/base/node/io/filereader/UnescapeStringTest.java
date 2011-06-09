@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.04.2005 (ohl): created
  */
@@ -26,8 +26,10 @@ package org.knime.base.node.io.filereader;
 
 import junit.framework.TestCase;
 
+import org.knime.core.util.tokenizer.TokenizerSettings;
+
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class UnescapeStringTest extends TestCase {
@@ -41,52 +43,50 @@ public class UnescapeStringTest extends TestCase {
         String s;
         // pure and single occurances should be handled
         s = "\\t";
-        assertEquals("\t", FileReaderSettings.unescapeString(s));
+        assertEquals("\t", TokenizerSettings.unescapeString(s));
         s = "\\n";
-        assertEquals("\n", FileReaderSettings.unescapeString(s));
+        assertEquals("\n", TokenizerSettings.unescapeString(s));
         // escaped sequences at the end of the string.
         s = "foo\\t";
-        assertEquals("foo\t", FileReaderSettings.unescapeString(s));
+        assertEquals("foo\t", TokenizerSettings.unescapeString(s));
         s = "foo\\n";
-        assertEquals("foo\n", FileReaderSettings.unescapeString(s));
+        assertEquals("foo\n", TokenizerSettings.unescapeString(s));
         // escaped sequences at the beginning of the string
         s = "\\tfoo";
-        assertEquals("\tfoo", FileReaderSettings.unescapeString(s));
+        assertEquals("\tfoo", TokenizerSettings.unescapeString(s));
         s = "\\nfoo";
-        assertEquals("\nfoo", FileReaderSettings.unescapeString(s));
+        assertEquals("\nfoo", TokenizerSettings.unescapeString(s));
         // combinations of all of that
         s = "\\tfoo\\n\\t\\nfoo\\tfoo\\t";
-        assertEquals("\tfoo\n\t\nfoo\tfoo\t", 
-                FileReaderSettings.unescapeString(s));
+        assertEquals("\tfoo\n\t\nfoo\tfoo\t",
+                TokenizerSettings.unescapeString(s));
         s = "foo\\n\\t\\nfoo\\tfoo\\t";
-        assertEquals("foo\n\t\nfoo\tfoo\t", 
-                FileReaderSettings.unescapeString(s));
+        assertEquals("foo\n\t\nfoo\tfoo\t",
+                TokenizerSettings.unescapeString(s));
         s = "\\tfoo\\n\\t\\nfoo\\tfoo";
-        assertEquals("\tfoo\n\t\nfoo\tfoo", 
-                FileReaderSettings.unescapeString(s));
+        assertEquals("\tfoo\n\t\nfoo\tfoo",
+                TokenizerSettings.unescapeString(s));
         // make sure backslashes are handled correctly
         s = "foo\\\\foo\\t\\\\\\nfoo";
-        assertEquals("foo\\foo\t\\\nfoo", FileReaderSettings.unescapeString(s));
+        assertEquals("foo\\foo\t\\\nfoo", TokenizerSettings.unescapeString(s));
         // characters other than t and n shouldn't be escaped
         s = "\\gfoo\\h";
-        assertEquals("gfooh", FileReaderSettings.unescapeString(s));
+        assertEquals("gfooh", TokenizerSettings.unescapeString(s));
         // strings without backslash should be returned unchanged
         s = "blahblah";
-        assertSame(s, FileReaderSettings.unescapeString(s));
-        // should not choke on null 
+        assertSame(s, TokenizerSettings.unescapeString(s));
+        // should not choke on null
         s = null;
-        assertNull(FileReaderSettings.unescapeString(s));
+        assertNull(TokenizerSettings.unescapeString(s));
         // nor empty strings
         s = "";
-        assertEquals("", FileReaderSettings.unescapeString(s));
+        assertEquals("", TokenizerSettings.unescapeString(s));
         // nor backslashes at the end
         s = "\\";
-        assertEquals("\\", FileReaderSettings.unescapeString(s));
+        assertEquals("\\", TokenizerSettings.unescapeString(s));
         s = "foo\\";
-        assertEquals("foo\\", FileReaderSettings.unescapeString(s));
+        assertEquals("foo\\", TokenizerSettings.unescapeString(s));
         s = "foo\\n\\";
-        assertEquals("foo\n\\", FileReaderSettings.unescapeString(s));
-
-        
+        assertEquals("foo\n\\", TokenizerSettings.unescapeString(s));
     }
 }
