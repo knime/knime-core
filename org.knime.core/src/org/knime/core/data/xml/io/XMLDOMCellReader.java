@@ -72,131 +72,138 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * A @link{XMLCellReader} to read a single cell from given 
- * @link{InputStream}.
- * 
+ * A @link{XMLCellReader} to read a single cell from given
+ *
+ * @link{InputStream .
+ *
  * @author Heiko Hofer
  */
 class XMLDOMCellReader implements XMLCellReader {
-	private final InputStream m_in;
-	private final DocumentBuilder m_builder;
-	private boolean m_first;
+    private final InputStream m_in;
 
-	/**
-	 * Create a new instance of a @link{XMLCellReader} to read a single cell 
-	 * from given @link{InputStream}.
-	 * @param is the resource to read from 
-	 * @throws ParserConfigurationException when the factory object for 
-	 * DOMs could not be created.
-	 */
-	public XMLDOMCellReader(final InputStream is)
-			throws ParserConfigurationException {
-		this.m_in = is;
+    private final DocumentBuilder m_builder;
 
-		DocumentBuilderFactory domFactory = DocumentBuilderFactory
-				.newInstance();
+    private boolean m_first;
 
-		domFactory.setValidating(false);
-		domFactory.setNamespaceAware(true);
-		domFactory.setXIncludeAware(true);
-		m_builder = domFactory.newDocumentBuilder();
+    private static final DocumentBuilderFactory PARSER_FAC;
 
-		m_first = true;
-	}
+    static {
+        PARSER_FAC = DocumentBuilderFactory.newInstance();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public XMLValue readXML() throws IOException {
-		if (m_first) {
-			m_first = false;
+        PARSER_FAC.setValidating(false);
+        PARSER_FAC.setNamespaceAware(true);
+        PARSER_FAC.setXIncludeAware(true);
+    }
 
-			InputSource source = null;
+    /**
+     * Create a new instance of a @link{XMLCellReader} to read a single cell
+     * from given @link{InputStream}.
+     *
+     * @param is the resource to read from
+     * @throws ParserConfigurationException when the factory object for DOMs
+     *             could not be created.
+     */
+    public XMLDOMCellReader(final InputStream is)
+            throws ParserConfigurationException {
+        this.m_in = is;
 
-			source = new InputSource(m_in);
+        m_builder = PARSER_FAC.newDocumentBuilder();
+        m_first = true;
+    }
 
-			Document doc;
-			try {
-				doc = m_builder.parse(source);
-			} catch (SAXException e) {
-				throw new IOException(e);
-			}
-			removeEmptyTextRecursive(doc, new LinkedList<Boolean>());
-			XMLValue cell = (XMLValue)XMLCellFactory.create(doc);
-			return cell;
-		} else {
-			return null;
-		}
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public XMLValue readXML() throws IOException {
+        if (m_first) {
+            m_first = false;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void close() throws IOException {
-		m_in.close();
-	}
+            InputSource source = null;
 
-	/**
-	 * Removes all descendent text nodes that contain only whitespace. These
-	 * come from the newlines and indentation between child elements. Take
-	 * xml:space declaration into account.
-	 */
-	private void removeEmptyTextRecursive(final Node node,
-			final List<Boolean> preserveSpaceStack) {
-		boolean hasXmlSpaceAttr = false;
-		if (node.getNodeType() == Node.ELEMENT_NODE) {
-			NamedNodeMap attrs = node.getAttributes();
-			for (int i = 0; i < attrs.getLength(); i++) {
-				Node attr = attrs.item(i);
-				if (attr.getNodeName().equals("xml:space")
-						&& attr.getNamespaceURI().equals(
-								XMLConstants.XML_NS_URI)) {
-					if (attr.getNodeValue().equals("preserve")) {
-						hasXmlSpaceAttr = true;
-						preserveSpaceStack.add(0, true);
-					} else if (attr.getNodeValue().equals("default")) {
-						hasXmlSpaceAttr = true;
-						preserveSpaceStack.add(0, false);
-					} else {
-						// Wrong attribute value of xml:space, ignored.
-					}
-				}
-			}
+            source = new InputSource(m_in);
 
-		}
-		boolean preserveSpace = !preserveSpaceStack.isEmpty()
-				&& preserveSpaceStack.get(0);
-		List<Node> toRemove = new ArrayList<Node>();
-		NodeList list = node.getChildNodes();
-		for (int i = 0; i < list.getLength(); i++) {
-			Node child = list.item(i);
-			switch (child.getNodeType()) {
-			case Node.ELEMENT_NODE:
-				removeEmptyTextRecursive(child, preserveSpaceStack);
-				break;
-			case Node.CDATA_SECTION_NODE:
-			case Node.TEXT_NODE:
-				if (!preserveSpace) {
-					String str = child.getNodeValue();
-					if (null == str || str.trim().isEmpty()) {
-						toRemove.add(child);
-					} else {
-						((CharacterData) child).setData(str);
-					}
-				}
-				break;
-			default:
-				// do nothing
-			}
-		}
-		for (Node child : toRemove) {
-			node.removeChild(child);
-		}
-		if (hasXmlSpaceAttr) {
-			preserveSpaceStack.remove(0);
-		}
-	}
+            Document doc;
+            try {
+                doc = m_builder.parse(source);
+            } catch (SAXException e) {
+                throw new IOException(e);
+            }
+            removeEmptyTextRecursive(doc, new LinkedList<Boolean>());
+            XMLValue cell = (XMLValue)XMLCellFactory.create(doc);
+            return cell;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
+        m_in.close();
+    }
+
+    /**
+     * Removes all descendent text nodes that contain only whitespace. These
+     * come from the newlines and indentation between child elements. Take
+     * xml:space declaration into account.
+     */
+    private void removeEmptyTextRecursive(final Node node,
+            final List<Boolean> preserveSpaceStack) {
+        boolean hasXmlSpaceAttr = false;
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            NamedNodeMap attrs = node.getAttributes();
+            for (int i = 0; i < attrs.getLength(); i++) {
+                Node attr = attrs.item(i);
+                if (attr.getNodeName().equals("xml:space")
+                        && attr.getNamespaceURI().equals(
+                                XMLConstants.XML_NS_URI)) {
+                    if (attr.getNodeValue().equals("preserve")) {
+                        hasXmlSpaceAttr = true;
+                        preserveSpaceStack.add(0, true);
+                    } else if (attr.getNodeValue().equals("default")) {
+                        hasXmlSpaceAttr = true;
+                        preserveSpaceStack.add(0, false);
+                    } else {
+                        // Wrong attribute value of xml:space, ignored.
+                    }
+                }
+            }
+
+        }
+        boolean preserveSpace =
+                !preserveSpaceStack.isEmpty() && preserveSpaceStack.get(0);
+        List<Node> toRemove = new ArrayList<Node>();
+        NodeList list = node.getChildNodes();
+        for (int i = 0; i < list.getLength(); i++) {
+            Node child = list.item(i);
+            switch (child.getNodeType()) {
+                case Node.ELEMENT_NODE:
+                    removeEmptyTextRecursive(child, preserveSpaceStack);
+                    break;
+                case Node.CDATA_SECTION_NODE:
+                case Node.TEXT_NODE:
+                    if (!preserveSpace) {
+                        String str = child.getNodeValue();
+                        if (null == str || str.trim().isEmpty()) {
+                            toRemove.add(child);
+                        } else {
+                            ((CharacterData)child).setData(str);
+                        }
+                    }
+                    break;
+                default:
+                    // do nothing
+            }
+        }
+        for (Node child : toRemove) {
+            node.removeChild(child);
+        }
+        if (hasXmlSpaceAttr) {
+            preserveSpaceStack.remove(0);
+        }
+    }
 
 }

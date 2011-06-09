@@ -63,35 +63,51 @@ import javax.xml.stream.XMLStreamException;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
 import org.knime.core.data.xml.io.XMLCellWriter;
 import org.knime.core.data.xml.io.XMLCellWriterFactory;
+import org.knime.core.node.NodeLogger;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * This class encapsulates a {@link Document}. It is the common content
- * of a {@link XMLCell} and a {@link XMLBlobCell}.
+ * This class encapsulates a {@link Document}. It is the common content of a
+ * {@link XMLCell} and a {@link XMLBlobCell}.
  *
  * @author Heiko Hofer
  */
 public class XMLCellContent implements XMLValue {
-    private SoftReference<String> m_xmlString;
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(XMLCellContent.class);
 
-    private final Document m_content;
+    private final String m_xmlString;
+
+    private SoftReference<Document> m_content;
 
     /**
-     * Creates a {@link Document} by parsing the passed string. It must
-     * contain a valid XML document.
+     * Creates a {@link Document} by parsing the passed string. It must contain
+     * a valid XML document.
      *
      * @param xmlString an XML document
+     * @param checkXML if the XML string should be parsed in order to check if
+     *            it is a valid XML document
      * @throws IOException If any IO errors occur.
-     * @throws ParserConfigurationException If {@link DocumentBuilder} cannot
-     *          be created.
+     * @throws ParserConfigurationException If {@link DocumentBuilder} cannot be
+     *             created.
      * @throws SAXException If xmlString cannot be parsed
      * @throws XMLStreamException
      */
-    XMLCellContent(final String xmlString) throws IOException,
-            ParserConfigurationException, SAXException, XMLStreamException {
-       this(new ByteArrayInputStream(xmlString.getBytes("UTF-8")));
+    XMLCellContent(final String xmlString, final boolean checkXML)
+            throws IOException, ParserConfigurationException, SAXException,
+            XMLStreamException {
+        if (checkXML) {
+            // check if XML string is valid XML
+            Document doc = parse(xmlString);
+            // store the normalized string as cell content
+            m_xmlString = serialize(doc);
+            m_content = new SoftReference<Document>(doc);
+        } else {
+            m_xmlString = xmlString;
+            m_content = new SoftReference<Document>(null);
+        }
     }
 
     /**
@@ -100,17 +116,16 @@ public class XMLCellContent implements XMLValue {
      *
      * @param is an XML document
      * @throws IOException If any IO errors occur.
-     * @throws ParserConfigurationException If {@link DocumentBuilder} cannot
-     *          be created.
+     * @throws ParserConfigurationException If {@link DocumentBuilder} cannot be
+     *             created.
      * @throws SAXException If xmlString cannot be parsed.
      * @throws XMLStreamException
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
-        m_content = (XMLCellReaderFactory.createXMLCellReader(is)
-                .readXML()).getDocument();
-
-
+        Document doc = parse(is);
+        m_content = new SoftReference<Document>(doc);
+        m_xmlString = serialize(doc);
     }
 
     /**
@@ -119,43 +134,74 @@ public class XMLCellContent implements XMLValue {
      * @param doc an XML document
      */
     XMLCellContent(final Document doc) {
-        m_content = doc;
+        m_content = new SoftReference<Document>(doc);
         // Transform CDATA to text
-        DOMConfiguration domConfig = m_content.getDomConfig();
+        DOMConfiguration domConfig = doc.getDomConfig();
         domConfig.setParameter("cdata-sections", Boolean.FALSE);
         // Resolve entities
         domConfig.setParameter("entities", Boolean.FALSE);
         // normalizeDocument adds e.g. missing xmls attributes
-        m_content.normalizeDocument();
+        doc.normalizeDocument();
+        String s = null;
+        try {
+            s = serialize(doc);
+        } catch (IOException ex) {
+            // should not happen
+        }
+        m_xmlString = s;
     }
 
     /**
      * Return the document. The returned document must not be changed!
+     *
      * @return The document.
      */
     @Override
     public Document getDocument() {
-        return m_content;
+        Document doc = m_content.get();
+        if (doc == null) {
+            try {
+                doc = parse(m_xmlString);
+                m_content = new SoftReference<Document>(doc);
+            } catch (Exception ex) {
+                LOGGER.error("Error while parsing XML in XML Cell", ex);
+            }
+        }
+        return doc;
     }
 
     /**
      * Returns the XML Document as a string.
+     *
      * @return The XML Document as a string.
      */
     String getStringValue() {
-        if (null != m_xmlString && null != m_xmlString.get()) {
-            return m_xmlString.get();
-        }
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os);
-            writer.write(this);
-            String xmlString = os.toString();
-            m_xmlString = new SoftReference<String>(xmlString);
-            return xmlString;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+        return m_xmlString;
+    }
+
+    private static String serialize(final Document doc) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os);
+        writer.write(new XMLValue() {
+            @Override
+            public Document getDocument() {
+                return doc;
+            }
+        });
+        return os.toString();
+    }
+
+    private static Document parse(final String xmlString) throws IOException,
+            ParserConfigurationException {
+        ByteArrayInputStream is =
+                new ByteArrayInputStream(xmlString.getBytes());
+        return parse(is);
+    }
+
+    private static Document parse(final InputStream is) throws IOException,
+            ParserConfigurationException {
+        return XMLCellReaderFactory.createXMLCellReader(is).readXML()
+                .getDocument();
     }
 
     /**
@@ -172,7 +218,7 @@ public class XMLCellContent implements XMLValue {
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof XMLCellContent) {
-            XMLCellContent that = (XMLCellContent) obj;
+            XMLCellContent that = (XMLCellContent)obj;
             return this.getStringValue().equals(that.getStringValue());
         } else {
             return false;

@@ -138,7 +138,7 @@ public class XMLCellFactory {
         if (xml == null) {
             throw new NullPointerException("XML must not be null");
         }
-        XMLCellContent content = new XMLCellContent(xml);
+        XMLCellContent content = new XMLCellContent(xml, true);
         if (xml.length() >= MIN_BLOB_SIZE_IN_BYTES) {
             return new XMLBlobCell(content);
         } else {

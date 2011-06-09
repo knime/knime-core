@@ -98,7 +98,7 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
                 throws IOException {
             String s = input.readUTF();
             try {
-                return new XMLBlobCell(new XMLCellContent(s));
+                return new XMLBlobCell(new XMLCellContent(s, false));
             } catch (ParserConfigurationException e) {
                 throw new IOException(e.getMessage(), e);
             } catch (SAXException e) {

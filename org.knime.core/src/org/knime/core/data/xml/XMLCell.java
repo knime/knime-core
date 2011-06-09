@@ -103,7 +103,7 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
                 throws IOException {
             String s = input.readUTF();
             try {
-                return new XMLCell(new XMLCellContent(s));
+                return new XMLCell(new XMLCellContent(s, false));
             } catch (ParserConfigurationException e) {
                 throw new IOException(e.getMessage(), e);
             } catch (SAXException e) {
