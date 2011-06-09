@@ -35,6 +35,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import junit.framework.TestCase;
 
+import org.eclipse.core.runtime.FileLocator;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -75,6 +76,11 @@ public class WorkflowTestCase extends TestCase {
             throw new Exception("Can't load workflow that's expected to be "
                     + "in package " + workflowDirString);
         }
+
+        if (!"file".equals(workflowURL.getProtocol())) {
+            workflowURL = FileLocator.resolve(workflowURL);
+        }
+
         File workflowDir = new File(workflowURL.getFile());
         if (!workflowDir.isDirectory()) {
             throw new Exception("Can't load workflow directory: "
