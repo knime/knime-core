@@ -78,7 +78,7 @@ public class WorkflowTestCase extends TestCase {
         File workflowDir = new File(workflowURL.getFile());
         if (!workflowDir.isDirectory()) {
             throw new Exception("Can't load workflow directory: "
-                    + workflowDirString);
+                    + workflowDir);
         }
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
                 workflowDir, new ExecutionMonitor(),
