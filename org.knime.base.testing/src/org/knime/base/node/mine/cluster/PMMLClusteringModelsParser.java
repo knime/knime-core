@@ -18,7 +18,6 @@
  */
 package org.knime.base.node.mine.cluster;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -118,9 +117,9 @@ public class PMMLClusteringModelsParser extends TestCase {
 
 
     public void testCenterbasedClusteringFile() throws Exception {
-        File f = new File(getClass().getResource(
-                "files/CenterbasedClustering.xml").toURI());
-        m_parser.parse(f, m_handler);
+        InputStream is = getClass().getResourceAsStream(
+                "files/CenterbasedClustering.xml");
+        m_parser.parse(is, m_handler);
         // TODO: evaluate result
         // check number of clusters
         assertEquals(6, m_handler.getNrOfClusters());
