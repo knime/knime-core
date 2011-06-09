@@ -93,23 +93,25 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         addTab("Quickforms", m_panel);
     }
 
-    void setQuickformNodes(final Map<NodeID, QuickFormInputNode> nodes) {
+    /**
+     * Set quickform nodes into this dialog; called just before
+     * {@link #loadSettingsFrom(NodeSettingsRO,
+     * org.knime.core.data.DataTableSpec[])} is called.
+     * @param nodes the quickform nodes to show settings for
+     */
+    final void setQuickformNodes(final Map<NodeID, QuickFormInputNode> nodes) {
         // remove all quickform components from current panel
         m_panel.removeAll();
-//        Collections.sort(m_nodes, new FormComparator<QuickFormInputNode>());
 
         // a list of quick form elements that will sorted below according to
         // the weight values
         for (Map.Entry<NodeID, QuickFormInputNode> e : nodes.entrySet()) {
-//            m_forms.add(new Pair<NodeID, AbstractQuickFormInElement>(
-//                    e.getKey(), e.getValue().getQuickFormElement()));
-
             AbstractQuickFormConfiguration config =
                 e.getValue().getConfiguration();
+            @SuppressWarnings("unchecked")
             QuickFormConfigurationPanel<AbstractQuickFormConfiguration>
                 quickform = (QuickFormConfigurationPanel
-                    <AbstractQuickFormConfiguration>)
-                            config.createController();
+                    <AbstractQuickFormConfiguration>)config.createController();
             m_nodes.put(new Pair<NodeID, QuickFormInputNode>(
                     e.getKey(), e.getValue()), quickform);
 
@@ -127,8 +129,8 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 qpanel.add(p);
             }
             m_panel.add(qpanel);
-
         }
+//        Collections.sort(m_nodes, new FormComparator<QuickFormInputNode>());
     }
 
     /** {@inheritDoc} */
@@ -168,7 +170,5 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             }
         }
     }
-
-
 
 }
