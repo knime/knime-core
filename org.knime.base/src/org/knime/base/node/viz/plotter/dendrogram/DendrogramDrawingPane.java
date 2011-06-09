@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.10.2006 (Fabian Dill): created
  */
@@ -69,29 +69,29 @@ import org.knime.core.data.property.ShapeFactory;
  * Interprets the {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree}
  * of {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s such
  * that the leaf nodes (the data points) are painted and the cluster nodes are
- * drawn with a horizontal line between the contained subnodes and vertical 
+ * drawn with a horizontal line between the contained subnodes and vertical
  * lines to that subnodes. The distance of the two subclsuters is displayed on
  * the y axis, the data points are displayed on the x axis. A tooltip to provide
  * information about the exct distance is provided for the nodes.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class DendrogramDrawingPane extends AbstractDrawingPane {
-    
+
     /** The tree containing the DendrogramPoints. */
     private BinaryTree<DendrogramPoint> m_rootNode;
-    
+
     /** Flag to display or hide the points. */
     private boolean m_showDots = true;
-    
+
     private int m_dotSize = 4;
-    
+
     private int m_lineThickness = 1;
-    
-    /** Constant by which the thickness of hilited or selected lines is 
+
+    /** Constant by which the thickness of hilited or selected lines is
      * increased. */
     private static final float EMPH = 1.4f;
-    
+
     /**
      * Inititalizes the tooltip.
      *
@@ -99,7 +99,7 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
     public DendrogramDrawingPane() {
         setToolTipText("");
     }
-    
+
     /**
      * Sets the view model (a binary tree containing points).
      * @param root the view model.
@@ -107,54 +107,54 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
     public void setRootNode(final BinaryTree<DendrogramPoint> root) {
         m_rootNode = root;
     }
-    
+
     /**
-     * 
+     *
      * @param show true if dots should be displayed
      */
     public void setShowDots(final boolean show) {
         m_showDots = show;
     }
-    
+
     /**
-     * 
+     *
      * @return the size of the dots.
      */
     public int getDotSize() {
         return m_dotSize;
     }
-    
+
     /**
-     * 
+     *
      * @param dotSize sets the dot size
      */
     public void setDotSize(final int dotSize) {
         m_dotSize = dotSize;
     }
-    
+
     /**
-     * 
+     *
      * @param thickness sets the line thickness
      */
     public void setLineThickness(final int thickness) {
         m_lineThickness = thickness;
     }
-    
+
 
     /**
      * Paints a dendrogram such that the leaf nodes are painted at the border
-     * (with distance 0) and on the nominal x axis and the cluster nodes are 
-     * drawn with increasing distance to the top (that is the distance is 
-     * plotted on the y axis). Each cluster node has exactly two subnodes, 
-     * a horizontal line on the height of the distance between these two 
-     * subnodes and two vertical lines from the end points of the 
-     * horizontal line to the subnodes. 
-     * 
+     * (with distance 0) and on the nominal x axis and the cluster nodes are
+     * drawn with increasing distance to the top (that is the distance is
+     * plotted on the y axis). Each cluster node has exactly two subnodes,
+     * a horizontal line on the height of the distance between these two
+     * subnodes and two vertical lines from the end points of the
+     * horizontal line to the subnodes.
+     *
      * <p>
-     * Hilited (sub)nodes are colored with the hilite color and hilited and 
-     * selected clusteres are visualized through color and emphasized line 
+     * Hilited (sub)nodes are colored with the hilite color and hilited and
+     * selected clusteres are visualized through color and emphasized line
      * thickness.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -170,63 +170,63 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
             DendrogramPoint dendroPoint = node.getContent();
             // set the correct stroke and color
             g.setColor(ColorAttr.DEFAULT.getColor(
-                    node.getContent().isSelected(), 
+                    node.getContent().isSelected(),
                     node.getContent().isHilite()));
-            if (node.getContent().isSelected() 
+            if (node.getContent().isSelected()
                     || node.getContent().isHilite()) {
                 ((Graphics2D)g).setStroke(new BasicStroke(
-                        (float)(m_lineThickness * EMPH)));
+                        (m_lineThickness * EMPH)));
             } else {
                 ((Graphics2D)g).setStroke(new BasicStroke(m_lineThickness));
             }
-            
-            if (node.getLeftChild() != null 
+
+            if (node.getLeftChild() != null
                     || node.getRightChild() != null) {
 //                draw horizontal line
                 Point leftPoint = node.getLeftChild().getContent().getPoint();
                 Point rightPoint = node.getRightChild().getContent().getPoint();
-                g.drawLine(leftPoint.x, node.getContent().getPoint().y, 
+                g.drawLine(leftPoint.x, node.getContent().getPoint().y,
                         rightPoint.x, node.getContent().getPoint().y);
             }
             // draw vertical line
             if (node.getParent() != null) {
                 g.setColor(ColorAttr.DEFAULT.getColor(
-                        node.getParent().getContent().isSelected(), 
+                        node.getParent().getContent().isSelected(),
                         node.getParent().getContent().isHilite()));
                 // check if parent is selected
                 // if yes bold line, else normal line
-                if (!node.getParent().getContent().isSelected() 
+                if (!node.getParent().getContent().isSelected()
                         && !node.getParent().getContent().isHilite()) {
                     ((Graphics2D)g).setStroke(new BasicStroke(m_lineThickness));
                 } else {
                     ((Graphics2D)g).setStroke(new BasicStroke(
-                            (float)(m_lineThickness * EMPH)));
+                            (m_lineThickness * EMPH)));
                 }
-                g.drawLine(node.getContent().getPoint().x, 
+                g.drawLine(node.getContent().getPoint().x,
                         node.getContent().getPoint().y,
-                        node.getContent().getPoint().x, 
+                        node.getContent().getPoint().x,
                         node.getParent().getContent().getPoint().y);
             }
             if (m_showDots) {
                 Point p = node.getContent().getPoint();
                 ShapeFactory.Shape shape = node.getContent().getShape();
-                int size = (int)(node.getContent().getRelativeSize() 
+                int size = (int)(node.getContent().getRelativeSize()
                         * m_dotSize);
-                shape.paint(g, p.x, p.y, size, 
-                        node.getContent().getColor().getColor(), 
-                        dendroPoint.isHilite(), dendroPoint.isSelected(), 
+                shape.paint(g, p.x, p.y, size,
+                        node.getContent().getColor().getColor(),
+                        dendroPoint.isHilite(), dendroPoint.isSelected(),
                         false);
             }
             ((Graphics2D)g).setStroke(backupStroke);
             g.setColor(backupColor);
         }
     }
-    
-    
+
+
     /**
      * The original (not mapped) distance of the clustering between the two
-     * subnodes. 
-     * 
+     * subnodes.
+     *
      * {@inheritDoc}
      */
     @Override
@@ -239,12 +239,12 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
                 BinaryTree.Traversal.IN);
         for (BinaryTreeNode<DendrogramPoint> node : nodes) {
             Point nodePoint = node.getContent().getPoint();
-            double dotSize = m_dotSize 
+            double dotSize = m_dotSize
                     * node.getContent().getRelativeSize();
-            if (p.x > nodePoint.x - (dotSize / 2) 
-                    && p.x < nodePoint.x + (dotSize / 2)
-                    && p.y > nodePoint.y - (dotSize / 2)
-                    && p.y < nodePoint.y + (dotSize / 2)) {
+            if (p.x >= nodePoint.x - (dotSize / 2)
+                    && p.x <= nodePoint.x + (dotSize / 2)
+                    && p.y >= nodePoint.y - (dotSize / 2)
+                    && p.y <= nodePoint.y + (dotSize / 2)) {
                 if (node.getContent().getRows().size() == 1) {
                     for (RowKey row : node.getContent().getRows()) {
                         return row.toString();
@@ -254,7 +254,7 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
                             node.getContent().getDistance(), 1000);
                 }
             }
-                    
+
         }
         return "";
     }
