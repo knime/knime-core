@@ -103,6 +103,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         if (m_ids == null) {
             return false;
         }
+        boolean containsUpdateableMN = false;
         WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_ids) {
             NodeContainer nc = hostWFM.getNodeContainer(id);
@@ -110,11 +111,14 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
                 WorkflowManager wm = (WorkflowManager)nc;
                 MetaNodeTemplateInformation lI = wm.getTemplateInformation();
                 if (UpdateStatus.HasUpdate.equals(lI.getUpdateStatus())) {
-                    return true;
+                    containsUpdateableMN = true;
+                    if (!hostWFM.canUpdateMetaNodeLink(wm.getID())) {
+                        return false;
+                    }
                 }
             }
         }
-        return false;
+        return containsUpdateableMN;
     }
 
     /** {@inheritDoc} */

@@ -111,7 +111,8 @@ class Workflow {
         return m_id;
     }
 
-    /** Return NodeContainer for a given id.
+    /** Return NodeContainer for a given id or null if that node does not exist
+     * in this workflow.
      *
      * @param id of the node
      * @return node with that id
@@ -555,6 +556,7 @@ class Workflow {
         }
         // make sure nodes are list sorted by their final depth!
         Collections.sort(tempOutput, new Comparator() {
+            @Override
             public int compare(final Object nai0, final Object nai1) {
                 return (new Integer(((NodeAndInports)nai0).m_depth).
                         compareTo(((NodeAndInports)nai1).m_depth));
@@ -818,15 +820,15 @@ class Workflow {
         public void setDepth(final int d) { m_depth = d; }
         public int getDepth() { return m_depth; }
     }
-    
+
     /** Return matching LoopEnd node for the given LoopStart
-     * 
-     * @param id The requested start node (instanceof LoopStart) 
+     *
+     * @param id The requested start node (instanceof LoopStart)
      * @throws IllegalLoopException if loop setup is wrong
      * @throws IllegalArgumentException if argument is not a LoopStart node
      * @return id of end node or null if no such node was found.
      */
-    NodeID getMatchingLoopEnd(final NodeID id) 
+    NodeID getMatchingLoopEnd(final NodeID id)
     throws IllegalLoopException, IllegalArgumentException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
@@ -881,13 +883,13 @@ class Workflow {
     }
 
     /** Return matching LoopStart node for the given LoopEnd
-     * 
-     * @param id The requested end node (instanceof LoopEnd) 
+     *
+     * @param id The requested end node (instanceof LoopEnd)
      * @throws IllegalLoopException if loop setup is wrong
      * @throws IllegalArgumentException if argument is not a LoopEnd node
      * @return id of start node or null if no such node was found.
      */
-    NodeID getMatchingLoopStart(final NodeID id) 
+    NodeID getMatchingLoopStart(final NodeID id)
     throws IllegalLoopException, IllegalArgumentException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
@@ -955,7 +957,7 @@ class Workflow {
      * @param endNode if of tail of loop
      * @return list of nodes within loop body & any dangling branches. The list
      *   also contains the used input ports of each node.
-     * @throws IllegalLoopException 
+     * @throws IllegalLoopException
      *    If there is a ill-posed loop (dangling branches)
      *
      * @FIXME: this is an almost complete replication of the function

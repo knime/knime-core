@@ -157,16 +157,20 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         }
         NodeContainerEditPart[] nodes =
             getSelectedParts(NodeContainerEditPart.class);
+        boolean containsTemplate = false;
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
             if (model instanceof WorkflowManager) {
                 WorkflowManager wm = (WorkflowManager)model;
                 if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    return true;
+                    containsTemplate = true;
+                    if (!getManager().canUpdateMetaNodeLink(wm.getID())) {
+                        return false;
+                    }
                 }
             }
         }
-        return false;
+        return containsTemplate;
     }
 
     /** {@inheritDoc} */
@@ -207,6 +211,17 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                     + "updates on meta node links", status);
         }
 
+        // find nodes that will be reset as part of the update
+        int metaNodesToResetCount = 0;
+        for (NodeID id : updateList) {
+            WorkflowManager metaNode =
+                (WorkflowManager)getManager().getNodeContainer(id);
+            // TODO problematic with through-connections
+            if (metaNode.containsExecutedNode()) {
+                metaNodesToResetCount += 1;
+            }
+        }
+
         if (updateList.isEmpty()) {
             if (m_showInfoMsgIfNoUpdateAvail) {
                 MessageDialog.openInformation(shell, "Meta Node Update",
@@ -231,7 +246,12 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                 messageBuilder.append(updateList.size());
                 messageBuilder.append(" meta nodes.");
             }
-            messageBuilder.append("\n\nUpdate now?");
+            messageBuilder.append("\n\n");
+            if (metaNodesToResetCount > 0) {
+                messageBuilder.append("Reset nodes and update now?");
+            } else {
+                messageBuilder.append("Update now?");
+            }
             String message = messageBuilder.toString();
             if (MessageDialog.openQuestion(shell, title, message)) {
                 execute(new UpdateMetaNodeLinkCommand(getManager(),

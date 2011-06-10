@@ -4733,6 +4733,38 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return templDate.after(linkDate);
     }
 
+    /** Returns true if the argument node is a valid meta node link and is not
+     * executing and has no successor in execution. Used from the GUI to enable
+     * or disable the update action. It does not test whether there is a newer
+     * version of the meta node available. It may also return true even if the
+     * meta node is executed or contains executed nodes.
+     * @param id The meta node in question.
+     * @return The above described property. */
+    public boolean canUpdateMetaNodeLink(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = m_workflow.getNode(id);
+            if (nc == null) {
+                LOGGER.debug("Invalid node ID \"" + id + "\"");
+                return false;
+            }
+            if (!(nc instanceof WorkflowManager)) {
+                LOGGER.debug("Node \"" + nc.getNameWithID()
+                        + "\" is not a meta node");
+            }
+            WorkflowManager meta = (WorkflowManager)nc;
+            MetaNodeTemplateInformation templInfo =
+                meta.getTemplateInformation();
+            switch (templInfo.getRole()) {
+            case Link:
+                break;
+            default:
+                return false;
+            }
+            return !(meta.getState().executionInProgress()
+                    || hasSuccessorInProgress(id));
+        }
+    }
+
     /** Update link meta nodes with the given ID.
      * @param id The ids of the meta node (must be existing meta node
      *           and must be a link).
