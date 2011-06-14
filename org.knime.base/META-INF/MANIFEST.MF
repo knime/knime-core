@@ -251,4 +251,4 @@ Export-Package: Jama,
  org.knime.base.util.pmml.samples
 Require-Bundle: org.knime.core;visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Eclipse-RegisterBuddy: org.knime.core
+Eclipse-BuddyPolicy: dependent

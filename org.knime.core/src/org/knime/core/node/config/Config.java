@@ -73,7 +73,6 @@ import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -1000,7 +999,7 @@ public abstract class Config extends ConfigBase
         if (className == null) {
             ois = new GlobalObjectInputStream(bais);
         } else {
-            final Class<?> cl = GlobalClassCreator.createClass(className);
+            final Class<?> cl = Class.forName(className);
             if (cl == null) {
                 throw new ClassNotFoundException("Could not find class: " + cl);
             }

@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
@@ -609,7 +608,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             if (specClass != null) {
                 Class<?> cl;
                 try {
-                    cl = GlobalClassCreator.createClass(specClass);
+                    cl = Class.forName(specClass);
                 } catch (ClassNotFoundException e) {
                     throw new IOException("Can't load class \"" + specClass
                             + "\"", e);
@@ -645,7 +644,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             if (spec != null && objectClass != null) {
                 Class<?> cl;
                 try {
-                    cl = GlobalClassCreator.createClass(objectClass);
+                    cl = Class.forName(objectClass);
                 } catch (ClassNotFoundException e) {
                     throw new IOException("Can't load port object class \""
                             + objectClass + "\"", e);

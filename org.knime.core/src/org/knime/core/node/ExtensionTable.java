@@ -58,7 +58,6 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.WrappedTable;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
@@ -253,7 +252,7 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
 
         Class<?> clazz;
         try {
-            clazz = GlobalClassCreator.createClass(tableImpl);
+            clazz = Class.forName(tableImpl);
         } catch (ClassNotFoundException e) {
             throw new InvalidSettingsException("Unknown table identifier: "
                     + tableImpl);

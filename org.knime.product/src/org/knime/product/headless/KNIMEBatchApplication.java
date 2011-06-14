@@ -50,7 +50,6 @@ package org.knime.product.headless;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
-import org.knime.workbench.repository.RepositoryManager;
 
 /**
  * The run method of this class is executed when KNIME is run headless, that is
@@ -73,8 +72,6 @@ public class KNIMEBatchApplication implements IApplication {
         }
         // load the ui plugin to read the preferences
         // KNIMEUIPlugin.getDefault();
-        // this is just to load the repository plugin
-        RepositoryManager.INSTANCE.toString();
         Object args =
                 context.getArguments()
                         .get(IApplicationContext.APPLICATION_ARGS);

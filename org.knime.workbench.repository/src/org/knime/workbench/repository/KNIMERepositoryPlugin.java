@@ -55,7 +55,6 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.NodeLogger;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -68,9 +67,6 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     /** The plugin-id. */
     public static final String PLUGIN_ID = "org.knime.workbench."
             + "repository";
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            KNIMERepositoryPlugin.class);
 
     // The shared instance.
     private static KNIMERepositoryPlugin plugin;
@@ -87,26 +83,6 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     public KNIMERepositoryPlugin() {
         super();
         plugin = this;
-    }
-
-    /**
-     * This method is called upon plug-in activation. We're showing a little
-     * opening splashScreen wit a progress bar, while building up the
-     * repository.
-     *
-     * @param context The context
-     * @throws Exception some startup exception
-     */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-        // Do the actual work: load the repository
-        try {
-            RepositoryManager.INSTANCE.create();
-        } catch (Throwable e) {
-            LOGGER.error("FATAL: error initializing KNIME"
-                    + " repository - check plugin.xml" + " and classpath", e);
-        }
     }
 
     /**

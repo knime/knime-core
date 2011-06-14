@@ -56,7 +56,6 @@ import java.util.zip.ZipEntry;
 
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -158,7 +157,7 @@ public abstract class AbstractPortObject implements PortObject {
             }
             Class<?> cl;
             try {
-                cl = GlobalClassCreator.createClass(className);
+                cl = Class.forName(className);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(
                         "Unable to load class " + className, e);

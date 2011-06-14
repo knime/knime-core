@@ -66,7 +66,6 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocOperation;
@@ -130,7 +129,7 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
                     String clazzName = entry.getName();
                     Class<?> clazz;
                     try {
-                        clazz = GlobalClassCreator.createClass(clazzName);
+                        clazz = Class.forName(clazzName);
                         if (!PMMLPreprocOperation.class.isAssignableFrom(clazz)) {
                             // throw exception
                             throw new IllegalArgumentException(

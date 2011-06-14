@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.03.2008 (Fabian Dill): created
  */
@@ -61,73 +61,70 @@ import org.eclipse.ui.IMemento;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public final class NodeUsageRegistry {
-    
+
     private static int maxMostFrequent = 10;
+
     private static int maxLastUsed = 10;
-    
-    private static final List<NodeTemplateFrequency> FREQUENCIES 
-        = new LinkedList<NodeTemplateFrequency>();
-    
-    private static final List<NodeTemplate> LAST_USED 
-        = new ArrayList<NodeTemplate>();
-    
-    private static final Set<NodeUsageListener> LISTENERS 
-        = new HashSet<NodeUsageListener>();
-    
+
+    private static final List<NodeTemplateFrequency> FREQUENCIES =
+            new LinkedList<NodeTemplateFrequency>();
+
+    private static final List<NodeTemplate> LAST_USED =
+            new ArrayList<NodeTemplate>();
+
+    private static final Set<NodeUsageListener> LISTENERS =
+            new HashSet<NodeUsageListener>();
+
     private static List<NodeTemplate> cachedFrequent;
 
-    private NodeUsageRegistry() { }
-    
-    
-    
+    private NodeUsageRegistry() {
+    }
+
     /**
-     * 
+     *
      * @param listener adds the listener (if not already registered), which gets
-     * informed if a node was added to thew last used or most frequent nodes
+     *            informed if a node was added to thew last used or most
+     *            frequent nodes
      */
-    public static void addNodeUsageListener(
-            final NodeUsageListener listener) {
+    public static void addNodeUsageListener(final NodeUsageListener listener) {
         if (!LISTENERS.contains(listener)) {
             LISTENERS.add(listener);
         }
     }
-    
+
     /**
-     * 
+     *
      * @param listener deregisters this listener
      */
-    public static void removeNodeUsageListener(
-            final NodeUsageListener listener) {
+    public static void removeNodeUsageListener(final NodeUsageListener listener) {
         LISTENERS.remove(listener);
     }
-    
+
     private static void notifyListener() {
         for (NodeUsageListener listener : LISTENERS) {
             listener.nodeAdded();
         }
     }
-    
+
     private static void notifyLastHistoryListener() {
         for (NodeUsageListener listener : LISTENERS) {
             listener.usedHistoryChanged();
-        }        
+        }
     }
-    
+
     private static void notifyFrequencyHistoryListener() {
         for (NodeUsageListener listener : LISTENERS) {
             listener.frequentHistoryChanged();
-        }        
+        }
     }
 
-    
     /**
-     * 
-     * @param newMaxSize the new max size for the most frequent 
-     *  nodes
+     *
+     * @param newMaxSize the new max size for the most frequent nodes
      */
     public static void setMaxFrequentSize(final int newMaxSize) {
         cachedFrequent = null;
@@ -136,14 +133,13 @@ public final class NodeUsageRegistry {
     }
 
     /**
-     * 
-     * @param newMaxSize the new max size for the most frequent 
-     *  nodes
+     *
+     * @param newMaxSize the new max size for the most frequent nodes
      */
     public static void setMaxLastUsedSize(final int newMaxSize) {
         synchronized (LAST_USED) {
             maxLastUsed = newMaxSize;
-            List<NodeTemplate>temp = new ArrayList<NodeTemplate>(); 
+            List<NodeTemplate> temp = new ArrayList<NodeTemplate>();
             for (int i = 0; i < Math.min(LAST_USED.size(), maxLastUsed); i++) {
                 temp.add(LAST_USED.get(i));
             }
@@ -152,29 +148,28 @@ public final class NodeUsageRegistry {
         }
         notifyLastHistoryListener();
     }
-    
-    
+
     /**
-     * 
+     *
      * @param node the last used node (is added to last used nodes and the
-     *  frequency is counted
+     *            frequency is counted
      */
     public static void addNode(final NodeTemplate node) {
-        NodeTemplateFrequency nodeFreq = new NodeTemplateFrequency(node); 
+        NodeTemplateFrequency nodeFreq = new NodeTemplateFrequency(node);
         if (!FREQUENCIES.contains(nodeFreq)) {
             FREQUENCIES.add(nodeFreq);
             Collections.sort(FREQUENCIES);
         }
         cachedFrequent = null;
         int pos = FREQUENCIES.indexOf(nodeFreq);
-        
+
         FREQUENCIES.get(pos).increment();
         Collections.sort(FREQUENCIES);
-        
+
         addToLastUsedNodes(node);
         notifyListener();
     }
-    
+
     private static void addToLastUsedNodes(final NodeTemplate node) {
         // check if it is already contained in
         if (LAST_USED.contains(node)) {
@@ -189,40 +184,40 @@ public final class NodeUsageRegistry {
             LAST_USED.remove(LAST_USED.size() - 1);
         }
     }
-    
+
     /**
-     * 
+     *
      * @return the n (defined by max size) most frequently used nodes
      */
     public static List<NodeTemplate> getMostFrequentNodes() {
-        
+
         if (cachedFrequent != null) {
             return cachedFrequent;
         }
-        List<NodeTemplateFrequency> mostFrequent = FREQUENCIES.subList(0, 
-                Math.min(FREQUENCIES.size(), maxMostFrequent));
+        List<NodeTemplateFrequency> mostFrequent =
+                FREQUENCIES.subList(0,
+                        Math.min(FREQUENCIES.size(), maxMostFrequent));
         cachedFrequent = new ArrayList<NodeTemplate>();
         // TODO: add in correct order
         for (NodeTemplateFrequency freq : mostFrequent) {
             cachedFrequent.add(freq.getNode());
         }
         /*
-        for (int i = (mostFrequent.size() - 1); i >= 0; i--) {
-            cachedFrequent.add(mostFrequent.get(i).getNode());
-        }
-        */
+         * for (int i = (mostFrequent.size() - 1); i >= 0; i--) {
+         * cachedFrequent.add(mostFrequent.get(i).getNode()); }
+         */
         return cachedFrequent;
     }
-    
+
     /**
-     * 
-     * @return the <code>n</code> most last used nodes (where <code>n</code> 
-     * is defined by the max size parameter
+     *
+     * @return the <code>n</code> most last used nodes (where <code>n</code> is
+     *         defined by the max size parameter
      */
-    public static List<NodeTemplate>getLastUsedNodes() {
+    public static List<NodeTemplate> getLastUsedNodes() {
         return LAST_USED;
     }
-    
+
     /**
      * Clears most frequent and last used history.
      */
@@ -231,58 +226,59 @@ public final class NodeUsageRegistry {
         clearLastUsedHistory();
         notifyListener();
     }
-    
+
     private static void clearFrequencyHistory() {
         cachedFrequent = null;
         FREQUENCIES.clear();
     }
-    
+
     private static void clearLastUsedHistory() {
         LAST_USED.clear();
     }
-    
-    private static class NodeTemplateFrequency 
-        implements Comparable<NodeTemplateFrequency> {
-        
+
+    private static class NodeTemplateFrequency implements
+            Comparable<NodeTemplateFrequency> {
+
         private final NodeTemplate m_node;
+
         private int m_frequency;
-        
+
         /**
-         * 
-         * @param node creates a new node template frequency for the given 
-         * {@link NodeTemplate} with frequency 0
+         *
+         * @param node creates a new node template frequency for the given
+         *            {@link NodeTemplate} with frequency 0
          */
         public NodeTemplateFrequency(final NodeTemplate node) {
             m_node = node;
             m_frequency = 0;
         }
-        
+
         /**
          * Incremetns the freqeuncy of the node template.
          */
         public void increment() {
             m_frequency++;
         }
-        
+
         /**
-         * 
+         *
          * @return the underlying node
          */
         public NodeTemplate getNode() {
             return m_node;
         }
-        
+
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         @Override
         public boolean equals(final Object obj) {
             return m_node.equals(((NodeTemplateFrequency)obj).m_node);
         }
-        
+
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         @Override
@@ -291,16 +287,16 @@ public final class NodeUsageRegistry {
         }
 
         /**
-         * 
+         *
          * {@inheritDoc}
          */
+        @Override
         public int compareTo(final NodeTemplateFrequency o) {
             return o.m_frequency - m_frequency;
         }
-        
-        
+
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         @Override
@@ -308,15 +304,17 @@ public final class NodeUsageRegistry {
             return m_node.toString();
         }
     }
-    
+
     private static final String TAG_NODE_ID = "nodeid";
+
     private static final String TAG_FAVORITE = "favorite";
+
     private static final String TAG_FREQUENCY = "frequency";
-    
+
     /**
-     * Saves most frequent nodes to XML memento. Called from 
+     * Saves most frequent nodes to XML memento. Called from
      * FavoriteNodesManager#saveFavoriteNodes.
-     * 
+     *
      * @see #loadFrequentNodes(IMemento)
      * @param freqNodes XML memento to save most frequently used nodes to
      */
@@ -329,9 +327,9 @@ public final class NodeUsageRegistry {
     }
 
     /**
-     * Saves last used nodes to XML memento. Called from 
+     * Saves last used nodes to XML memento. Called from
      * FavoriteNodesManager#saveFavoriteNodes.
-     * 
+     *
      * @see #loadLastUsedNodes(IMemento)
      * @param lastUsedNodes XML memento to save last used nodes to
      */
@@ -341,47 +339,44 @@ public final class NodeUsageRegistry {
             item.putString(TAG_NODE_ID, node.getID());
         }
     }
-    
+
     /**
-     * Loads the most frequently used nodes from XML memento. Called from 
+     * Loads the most frequently used nodes from XML memento. Called from
      * FavoriteNodesManager#loadFavoriteNodes.
-     * 
+     *
      * @see #saveFrequentNodes(IMemento)
-     * @param freqNodes the XML memento containing the most frequently used 
-     *  nodes
+     * @param freqNodes the XML memento containing the most frequently used
+     *            nodes
      */
     public static void loadFrequentNodes(final IMemento freqNodes) {
         for (IMemento freqNode : freqNodes.getChildren(TAG_FAVORITE)) {
             String id = freqNode.getString(TAG_NODE_ID);
             int frequency = freqNode.getInteger(TAG_FREQUENCY);
-            NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
-                .getRoot().clone().getChildByID(id, true);
+            NodeTemplate node = RepositoryManager.INSTANCE.getNodeTemplate(id);
             if (node != null) {
-                NodeTemplateFrequency nodeFreq = new NodeTemplateFrequency(
-                        node);
+                NodeTemplateFrequency nodeFreq =
+                        new NodeTemplateFrequency(node);
                 nodeFreq.m_frequency = frequency;
                 FREQUENCIES.add(nodeFreq);
-            } 
+            }
         }
     }
-    
+
     /**
-     * Loads the last used nodes from XML memento. Called from 
+     * Loads the last used nodes from XML memento. Called from
      * FavoriteNodesManager#loadFavoriteNodes.
-     * 
+     *
      * @see #saveLastUsedNodes(IMemento)
      * @param lastUsedNodes the XML memento to load the last used nodes from
      */
     public static void loadLastUsedNodes(final IMemento lastUsedNodes) {
         for (IMemento lastNode : lastUsedNodes.getChildren(TAG_FAVORITE)) {
             String id = lastNode.getString(TAG_NODE_ID);
-            NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
-                .getRoot().clone().getChildByID(id, true);
+            NodeTemplate node = RepositoryManager.INSTANCE.getNodeTemplate(id);
             if (node != null) {
                 addToLastUsedNodes(node);
             }
         }
     }
-    
-    
+
 }

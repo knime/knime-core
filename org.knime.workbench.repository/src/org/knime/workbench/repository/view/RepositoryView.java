@@ -53,6 +53,10 @@ package org.knime.workbench.repository.view;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -66,13 +70,14 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -97,8 +102,8 @@ import org.knime.workbench.repository.model.Root;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class RepositoryView extends ViewPart {
-
+public class RepositoryView extends ViewPart implements
+        RepositoryManager.Listener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RepositoryView.class);
 
@@ -106,21 +111,10 @@ public class RepositoryView extends ViewPart {
 
     private DrillDownAdapter m_drillDownAdapter;
 
-    private Root m_root;
-
     private final IPropertySourceProvider m_propertyProvider =
             new PropertyProvider();
 
     private FilterViewContributionItem m_toolbarFilterCombo;
-
-    /**
-     * This fetches the root repository object from the RepositoryManager.
-     *
-     */
-    private void initialize() {
-
-        m_root = RepositoryManager.INSTANCE.getRoot();
-    }
 
     /**
      * The constructor.
@@ -129,7 +123,7 @@ public class RepositoryView extends ViewPart {
     }
 
     /**
-     * This callback creates the contant of the view. The TreeViewer is
+     * This callback creates the content of the view. The TreeViewer is
      * initialized.
      *
      * @see org.eclipse.ui.IWorkbenchPart
@@ -137,26 +131,58 @@ public class RepositoryView extends ViewPart {
      */
     @Override
     public void createPartControl(final Composite parent) {
-        this.initialize();
+        parent.setCursor(new Cursor(Display.getDefault(), SWT.CURSOR_WAIT));
 
-        //
-        // Create and configure the tree viewer
-        //
         m_viewer =
                 new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-        // m_drillDownAdapter = new DrillDownAdapter(m_viewer);
+        m_viewer.getControl().setToolTipText("Loading node repository...");
         m_viewer.setContentProvider(new RepositoryContentProvider());
         m_viewer.setLabelProvider(new RepositoryLabelProvider());
-        // m_viewer.setSorter(new NameRepositorySorter());
-        m_viewer.setInput(m_root);
+        m_viewer.setInput("Loading node repository...");
+        contributeToActionBars();
+        hookContextMenu();
+        hookDoubleClickAction();
+        // The viewer provides the selection to the workbench.
+        this.getSite().setSelectionProvider(m_viewer);
+        // The viewer supports drag&drop
+        // (well, actually only drag - objects are dropped into the editor ;-)
+        Transfer[] transfers =
+                new Transfer[]{LocalSelectionTransfer.getTransfer()};
+        m_viewer.addDragSupport(DND.DROP_COPY, transfers,
+                new NodeTemplateDragListener(m_viewer));
+        PlatformUI
+                .getWorkbench()
+                .getHelpSystem()
+                .setHelp(m_viewer.getControl(),
+                        "org.knime.workbench.help.repository_view_context");
 
-        // check if there were categories that could not be processed properly
-        // i.e. the afer-relationship information was wrong
-        List<Category> problemCategories = m_root.getProblemCategories();
+        Job treeUpdater = new Job("Node Repository Scanner") {
+            @Override
+            protected IStatus run(final IProgressMonitor monitor) {
+                final Root root = readRepository();
+                Display.getDefault().asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_viewer.setInput(root);
+                        parent.setCursor(null);
+                        m_viewer.getControl().setToolTipText(null);
+                    }
+                });
+                return Status.OK_STATUS;
+            }
+        };
+        treeUpdater.schedule();
+    }
 
+    private Root readRepository() {
+        m_count = 0;
+        Root root = RepositoryManager.INSTANCE.getRoot(this);
+        // check if there were categories that could not be
+        // processed properly
+        // i.e. the after-relationship information was wrong
+        List<Category> problemCategories = root.getProblemCategories();
         if (problemCategories.size() > 0) {
-
-            StringBuffer message = new StringBuffer();
+            final StringBuilder message = new StringBuilder();
             message.append("The following categories could not be inserted at a "
                     + "proper position in the node repository due to wrong "
                     + "positioning information.\n"
@@ -172,43 +198,23 @@ public class RepositoryView extends ViewPart {
 
             // send the message also to the log file.
             LOGGER.warn(message.toString());
-            try {
-                MessageBox mb =
-                        new MessageBox(Display.getDefault().getActiveShell(),
-                                SWT.ICON_INFORMATION | SWT.OK);
-                mb.setText("Problem categories...");
-                mb.setMessage(message.toString());
-                mb.open();
-            } catch (Exception e) {
-                // do nothing as this is just an information box
-            }
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    MessageBox mb =
+                            new MessageBox(Display.getDefault()
+                                    .getActiveShell(), SWT.ICON_INFORMATION
+                                    | SWT.OK);
+                    mb.setText("Problem categories...");
+                    mb.setMessage(message.toString());
+                    mb.open();
+                }
+            });
         }
-
-        // The viewer provides the selection to the workbench.
-        this.getSite().setSelectionProvider(m_viewer);
-        // The viewer supports drag&drop
-        // (well, actually only drag - objects are dropped into the editor ;-)
-        Transfer[] transfers =
-                new Transfer[]{LocalSelectionTransfer.getTransfer()};
-        m_viewer.addDragSupport(DND.DROP_COPY, transfers,
-                new NodeTemplateDragListener(m_viewer));
-
-        //
-        // Configure actions and context menus
-        //
-        // this.makeActions();
-        this.hookContextMenu();
-        this.hookDoubleClickAction();
-        this.contributeToActionBars();
-
-        // add Help context
-        WorkbenchHelpSystem.getInstance().setHelp(m_viewer.getControl(),
-                "org.knime.workbench.help.repository_view_context");
-
+        return root;
     }
 
     private void hookDoubleClickAction() {
-
         m_viewer.addDoubleClickListener(new IDoubleClickListener() {
             @Override
             public void doubleClick(final DoubleClickEvent event) {
@@ -309,7 +315,6 @@ public class RepositoryView extends ViewPart {
      */
     @Override
     public Object getAdapter(final Class adapter) {
-
         if (adapter == IPropertySourceProvider.class) {
             return m_propertyProvider;
         }
@@ -330,7 +335,6 @@ public class RepositoryView extends ViewPart {
          */
         @Override
         public IPropertySource getPropertySource(final Object object) {
-
             // Look if we can get an adapter to IPropertySource....
             if (object instanceof IAdaptable) {
                 IAdaptable adaptable = (IAdaptable)object;
@@ -341,6 +345,48 @@ public class RepositoryView extends ViewPart {
 
             // well, no :-(
             return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void newCategory(final Root root, final Category category) {
+        // do nothing yet (this is quite fast)
+    }
+
+    private int m_count = 0;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void newNode(final Root root, final NodeTemplate node) {
+        if (m_count++ % 20 == 0) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_viewer.getControl().setToolTipText("Loading node repository... " + m_count + " nodes found");
+                    m_viewer.setInput(root);
+                }
+            });
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void newMetanode(final Root root, final MetaNodeTemplate metanode) {
+        if (m_count++ % 20 == 0) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_viewer.getControl().setToolTipText("Loading node repository... " + m_count + " nodes found");
+                    m_viewer.setInput(root);
+                }
+            });
         }
     }
 }

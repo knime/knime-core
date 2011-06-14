@@ -307,7 +307,6 @@ public final class NodeDescriptionConverter {
      */
     public synchronized void buildDocumentationFor(final String pluginId,
             final File destinationDir) throws Exception {
-        RepositoryManager.INSTANCE.create();
         final Root root = RepositoryManager.INSTANCE.getRoot();
 
         if (m_monitor != null) {

@@ -67,7 +67,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -977,8 +976,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         String fixedName = fixUIInfoClassName(className);
         try {
             // avoid NoClassDefFoundErrors by using magic class loader
-            return (UIInformation)(GlobalClassCreator
-                    .createClass(fixedName).newInstance());
+            return (UIInformation)(Class.forName(fixedName).newInstance());
         } catch (Exception e) {
             StringBuilder b = new StringBuilder();
             b.append("UIInfo class \"");

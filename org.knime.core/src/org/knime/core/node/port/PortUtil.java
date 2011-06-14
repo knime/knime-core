@@ -16,7 +16,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -229,7 +228,7 @@ public final class PortUtil {
         }
         Class<?> cl;
         try {
-            cl = GlobalClassCreator.createClass(objClassName);
+            cl = Class.forName(objClassName);
         } catch (ClassNotFoundException e) {
             throw new IOException("Can't load class \"" + specClassName
                     + "\"", e);
@@ -286,7 +285,7 @@ public final class PortUtil {
         }
         Class<?> cl;
         try {
-            cl = GlobalClassCreator.createClass(specClassName);
+            cl = Class.forName(specClassName);
         } catch (ClassNotFoundException e) {
             throw new IOException("Can't load class \"" + specClassName
                     + "\"", e);

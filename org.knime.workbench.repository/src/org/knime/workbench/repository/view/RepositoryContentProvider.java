@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,37 +44,38 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
 package org.knime.workbench.repository.view;
 
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
-import org.knime.workbench.repository.model.ISimpleObject;
 
 /**
  * ContentProvider for the object repository.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class RepositoryContentProvider implements IStructuredContentProvider,
-        ITreeContentProvider {
+public class RepositoryContentProvider implements ITreeContentProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object[] getElements(final Object inputElement) {
+        if (inputElement instanceof String) {
+            return new Object[] {inputElement};
+        }
         return ((IContainerObject)inputElement).getChildren();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object[] getChildren(final Object parentElement) {
         if (parentElement instanceof IContainerObject) {
             return ((IContainerObject)parentElement).getChildren();
@@ -85,6 +86,7 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getParent(final Object element) {
         return ((IRepositoryObject)element).getParent();
     }
@@ -92,32 +94,36 @@ public class RepositoryContentProvider implements IStructuredContentProvider,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean hasChildren(final Object element) {
-        // If we have a simple object, this contains no children
-        if (element instanceof ISimpleObject) {
-            return false;
+        if (element instanceof IContainerObject) {
+            return ((IContainerObject)element).hasChildren();
         }
-
-        return ((IContainerObject)element).hasChildren();
-
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void dispose() {
 
     }
 
     /**
      * Changes the input.
-     * 
+     *
      * @see org.eclipse.jface.viewers.IContentProvider#
      *      inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object,
      *      java.lang.Object)
      */
+    @Override
     public void inputChanged(final Viewer viewer, final Object oldInput,
             final Object newInput) {
+        if (newInput instanceof String) {
+            return;
+        }
+
         if (!((newInput instanceof IContainerObject) || (newInput == null))) {
             throw new IllegalArgumentException(
                     "ContentProvider needs an 'IContainerObject' as input");

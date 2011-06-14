@@ -62,7 +62,6 @@ import javax.swing.JScrollPane;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -180,8 +179,7 @@ public class ImagePortObject extends AbstractPortObject {
         Class<? extends ImageContent> contentCl;
         try {
             contentCl =
-                    (Class<? extends ImageContent>)GlobalClassCreator
-                            .createClass(contentClName);
+                    (Class<? extends ImageContent>)Class.forName(contentClName);
         } catch (ClassNotFoundException ex) {
             throw new IOException("ImageContent class '" + contentClName + "'"
                     + " does not exist", ex);

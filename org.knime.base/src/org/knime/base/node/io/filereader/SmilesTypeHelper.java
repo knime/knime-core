@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.io.filereader;
 
@@ -51,19 +51,18 @@ import java.lang.reflect.Constructor;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.NodeLogger;
 
 /**
  * This a a little helper class that enables the FileReader to create
  * SmilesCells if the chem-Plugin is available. Because it is not visible from
  * the base plugin, the necessary classes and fields are loaded via reflection.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 final class SmilesTypeHelper {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SmilesTypeHelper.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(SmilesTypeHelper.class);
 
     /** The one and only instance of this class. */
     public static final SmilesTypeHelper INSTANCE = new SmilesTypeHelper();
@@ -76,16 +75,15 @@ final class SmilesTypeHelper {
     private SmilesTypeHelper() {
         try {
             Class<? extends DataCell> smilesClass =
-                    (Class<? extends DataCell>)GlobalClassCreator
-                            .createClass("org.knime.chem.types.SmilesCell");
-            m_cons = (Constructor<? extends DataCell>)smilesClass
-                            .getConstructor(String.class);
+                    (Class<? extends DataCell>)Class
+                            .forName("org.knime.chem.types.SmilesCell");
+            m_cons = smilesClass.getConstructor(String.class);
             if (m_cons == null) {
                 throw new NullPointerException("Smiles cell doesn't provide "
                         + "the required String constructor.");
             }
             m_smilesType = DataType.getType(smilesClass);
-            
+
         } catch (ClassNotFoundException ex) {
             LOGGER.info("Smiles type not available", ex);
         } catch (Exception ex) {
@@ -95,7 +93,7 @@ final class SmilesTypeHelper {
 
     /**
      * Creates a new SmilesCell using the given String as Smiles.
-     * 
+     *
      * @param smiles a Smiles string
      * @return a SmilesCell
      */
@@ -104,12 +102,12 @@ final class SmilesTypeHelper {
             return m_cons.newInstance(smiles);
         } catch (Exception ex) {
             throw new IllegalStateException("Couldn't create SMILES cell.");
-        } 
+        }
     }
 
     /**
      * Returns the Smiles type.
-     * 
+     *
      * @return the Smiles type
      */
     public DataType getSmilesType() {
@@ -118,7 +116,7 @@ final class SmilesTypeHelper {
 
     /**
      * Returns if SmilesCells are available.
-     * 
+     *
      * @return <code>true</code> if SmilesCells are available,
      *         <code>false</code> otherwise
      */

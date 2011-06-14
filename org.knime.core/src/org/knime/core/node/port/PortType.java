@@ -52,7 +52,6 @@ package org.knime.core.node.port;
 
 import java.lang.reflect.Method;
 
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -174,7 +173,7 @@ public final class PortType {
         }
         Class<?> obClass;
         try {
-            obClass = GlobalClassCreator.createClass(objectClassString);
+            obClass = Class.forName(objectClassString);
         } catch (ClassNotFoundException e) {
             throw new InvalidSettingsException("Unable to restore port type, "
                     + "can't load class \"" + objectClassString + "\"");

@@ -51,7 +51,6 @@ import java.lang.reflect.Constructor;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -62,8 +61,8 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, University of Konstanz
  */
 final public class SmilesTypeHelper {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SmilesTypeHelper.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(SmilesTypeHelper.class);
 
     /** The one and only instance of this class. */
     public static final SmilesTypeHelper INSTANCE = new SmilesTypeHelper();
@@ -76,10 +75,9 @@ final public class SmilesTypeHelper {
     private SmilesTypeHelper() {
         try {
             Class<? extends DataCell> smilesClass =
-                    (Class<? extends DataCell>)GlobalClassCreator
-                            .createClass("org.knime.chem.types.SmilesCell");
-            m_cons = smilesClass
-                            .getConstructor(String.class);
+                    (Class<? extends DataCell>)Class
+                            .forName("org.knime.chem.types.SmilesCell");
+            m_cons = smilesClass.getConstructor(String.class);
             if (m_cons == null) {
                 throw new NullPointerException("Smiles cell doesn't provide "
                         + "the required String constructor.");

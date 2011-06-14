@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 5, 2008 (wiswedel): created
  */
@@ -56,7 +56,6 @@ import java.util.zip.ZipEntry;
 import javax.swing.JComponent;
 
 import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -68,12 +67,12 @@ import org.knime.core.node.workflow.ModelContentOutPortView;
  * themselves from {@link ModelContentRO} objects. This class should be used in
  * cases where the content of a model can be easily broke up into basic types
  * (such as String, int, double, ...) and array of those.
- * 
+ *
  * <p>
  * Subclasses <b>must</b> provide an empty no-arg constructor with public scope
  * (which will be used to restore the content). The do not need to provide a
  * static serializer method as required by the interface {@link PortObjectSpec}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
@@ -81,27 +80,27 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
     /**
      * Abstract serializer method as required by interface
      * {@link PortObjectSpec}.
-     * 
+     *
      * @return A serializer that reads/writes any implementation of this class.
      */
-    public static final PortObjectSpecSerializer<AbstractSimplePortObjectSpec> 
+    public static final PortObjectSpecSerializer<AbstractSimplePortObjectSpec>
     getPortObjectSpecSerializer() {
         return MyPortObjectSerializer.INSTANCE;
     }
-    
+
     /** Public no-arg constructor. Subclasses must also provide such a
      * constructor in order to allow the serializer to instantiate them using
      * reflection. */
     public AbstractSimplePortObjectSpec() {
     }
-    
-    /** Saves this object to model content object. 
+
+    /** Saves this object to model content object.
      * @param model To save to.
      */
     protected abstract void save(final ModelContentWO model);
-    
+
     /** Loads the content into the freshly instantiated object. This method
-     * is called at most once in the life time of the object 
+     * is called at most once in the life time of the object
      * (after the serializer has created a new object using the public no-arg
      * constructor.)
      * @param model To load from.
@@ -109,7 +108,7 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
      */
     protected abstract void load(final ModelContentRO model)
         throws InvalidSettingsException;
-    
+
     /** Final implementation of the serializer. */
     private static final class MyPortObjectSerializer extends
             PortObjectSpecSerializer<AbstractSimplePortObjectSpec> {
@@ -140,25 +139,25 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             }
             Class<?> cl;
             try {
-                cl = GlobalClassCreator.createClass(className);
+                cl = Class.forName(className);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(
                         "Unable to load class " + className, e);
             }
             if (!AbstractSimplePortObjectSpec.class.isAssignableFrom(cl)) {
                 throw new RuntimeException(
-                        "Class \"" + className + "\" is not of type " 
+                        "Class \"" + className + "\" is not of type "
                         + AbstractSimplePortObjectSpec.class.getSimpleName());
             }
-            Class<? extends AbstractSimplePortObjectSpec> acl = 
+            Class<? extends AbstractSimplePortObjectSpec> acl =
                 cl.asSubclass(AbstractSimplePortObjectSpec.class);
             AbstractSimplePortObjectSpec result;
             try {
                 result = acl.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException("Failed to instantiate class \""
-                        + acl.getSimpleName() 
-                        + "\" (failed to invoke no-arg constructor): " 
+                        + acl.getSimpleName()
+                        + "\" (failed to invoke no-arg constructor): "
                         + e.getMessage(), e);
             }
             try {
@@ -186,9 +185,9 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             model.saveToXML(out);
         }
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -196,9 +195,9 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             ModelContent model = new ModelContent("Model Content Spec");
             save(model);
             return new JComponent[] {
-                    new ModelContentOutPortView((ModelContentRO)model)};
+                    new ModelContentOutPortView(model)};
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object ospec) {
@@ -217,7 +216,7 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
         ((AbstractSimplePortObjectSpec) ospec).save(ocont);
         return tcont.equals(ocont);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
