@@ -381,6 +381,12 @@
             factory-class="org.knime.base.node.preproc.binner.BinnerNodeFactory"
             id="org.knime.base.node.preproc.binner.BinnerNodeFactory"/>
       <node
+            category-path="/manipulation/column/binning"
+            factory-class="org.knime.base.node.preproc.binnerdictionary.BinByDictionaryNodeFactory"
+            id="org.knime.base.node.preproc.binnerdictionary.BinByDictionaryNodeFactory"
+            after="org.knime.base.node.preproc.binner.BinnerNodeFactory">
+      </node>
+      <node
             category-path="/io"
             factory-class="org.knime.base.node.util.cache.CacheNodeFactory"
             id="org.knime.base.node.util.cache.CacheNodeFactory"/>
@@ -501,6 +507,11 @@
             category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
       <node
+            category-path="/manipulation/row/row-transform"
+            factory-class="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
+            id="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
+            after="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
+      <node
             factory-class="org.knime.base.node.preproc.partition.PartitionNodeFactory"
             category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
@@ -546,6 +557,11 @@
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            factory-class="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
+            id="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
+            after="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
@@ -782,6 +798,12 @@
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
             id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-split+combine"
+            factory-class="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
+            id="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
+            after="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
       </node>
       <node
             category-path="/mining/clustering"
@@ -1178,9 +1200,14 @@
       </node>
       <node
             category-path="/manipulation/row/row-other"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory"
             id="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-other"
+            factory-class="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
+            id="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
+            after="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
       </node>
       <node
             after="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
@@ -1237,14 +1264,6 @@
             factory-class="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
             id="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory">
       </node>
-      <!--  
-      <node
-            category-path="misc"
-            expert-flag="false"
-            factory-class="org.knime.base.node.image.writepng.WritePNGNodeFactory"
-            id="org.knime.base.node.image.writepng.WritePNGNodeFactory">
-      </node>
-      -->
       <node
             category-path="/misc"
             expert-flag="false"
@@ -1258,6 +1277,9 @@
             factory-class="org.knime.base.node.image.writepng.WritePNGNodeFactory"
             id="org.knime.base.node.image.writepng.WritePNGNodeFactory">
       </node>  
+      <!-- new ones -->
+      
+
    </extension>
    
       
