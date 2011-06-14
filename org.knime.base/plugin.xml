@@ -440,6 +440,13 @@
             factory-class="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
             id="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"/>
       <node
+            after="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
+            category-path="/io/read"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.linereader.LineReaderNodeFactory"
+            id="org.knime.base.node.io.linereader.LineReaderNodeFactory">
+      </node>
+      <node
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
             id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
