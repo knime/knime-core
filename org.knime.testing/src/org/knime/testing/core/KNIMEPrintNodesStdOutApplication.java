@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 18, 2009 (wiswedel): created
  */
@@ -42,7 +42,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Scans the node repository and creates an html file listing all available 
+ * Scans the node repository and creates an html file listing all available
  * nodes. Usefult to fill the features list on <a href="http://www.knime.org">
  * http://www.knime.org</a>.
  * @author wiswedel, University of Konstanz
@@ -52,7 +52,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
     /** {@inheritDoc} */
     @Override
     public Object start(final IApplicationContext context) throws Exception {
-        Object args = 
+        Object args =
             context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
         Writer writer = new OutputStreamWriter(System.out);
         String name = "-outFile";
@@ -71,21 +71,17 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         if (!found) {
             System.err.println("Options: " + name + " file_to_write.html");
         }
-        RepositoryManager manager = RepositoryManager.INSTANCE;
-        if (manager.getRoot() == null) {
-            manager.create();
-        }
-        Root root = manager.getRoot();
+        Root root = RepositoryManager.INSTANCE.getRoot();
         writer.write("<html><body>\n");
         print(writer, 0, root, false);
         writer.write("</body></html>\n");
         writer.close();
         return IApplication.EXIT_OK;
     }
-    
+
     /** Recursive print of nodes, categories, meta nodes to argument writer. */
-    private static void print(final Writer writer, final int indent, 
-            final IRepositoryObject object, final boolean topLevel) 
+    private static void print(final Writer writer, final int indent,
+            final IRepositoryObject object, final boolean topLevel)
         throws IOException {
         indent(indent, writer);
         if (object instanceof Root) {
@@ -122,7 +118,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                 writer.write("</em> - ");
                 try {
                     writer.append(readShortDescriptionFromXML(
-                            t.getFactory().newInstance().getXMLDescription(), 
+                            t.getFactory().newInstance().getXMLDescription(),
                             indent));
                 } catch (Exception e) {
                     writer.append("ERROR reading description: " + e);
@@ -141,7 +137,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             writer.write("</li>");
         }
     }
-    
+
     private static String readShortDescriptionFromXML(final Element knimeNode,
             final int indent) {
         if (knimeNode == null) {
@@ -162,7 +158,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         return shortDescription.replace("\n", "\n" + new String(indentChars));
     }
 
-    private static final void indent(final int indent, final Writer writer) 
+    private static final void indent(final int indent, final Writer writer)
     throws IOException {
         for (int i = 0; i < indent; i++) {
             writer.append(' ');
