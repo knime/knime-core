@@ -90,7 +90,7 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Set name";
+        return "Rename";
     }
 
     /**
@@ -141,8 +141,8 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
         if (id.open() == Dialog.OK) {
             String value = id.getValue();
             newName = value == null || value.length() == 0 ? null : value;
+            getCommandStack().execute(new MetaNodeSetNameCommand(w, newName));
         }
-        getCommandStack().execute(new MetaNodeSetNameCommand(w, newName));
     }
 
 }
