@@ -48,6 +48,9 @@
  */
 package org.knime.core.data;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -55,40 +58,39 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.node.NodeLogger;
 
 /**
- * The interface all value interfaces of {@link org.knime.core.data.DataCell}s 
+ * The interface all value interfaces of {@link org.knime.core.data.DataCell}s
  * are derived from.
- * {@link org.knime.core.data.DataCell}s implement different 
- * <code>DataValue</code> interfaces to allow access to generic 
+ * {@link org.knime.core.data.DataCell}s implement different
+ * <code>DataValue</code> interfaces to allow access to generic
  * (or complex) fields from the cell.
- * Typically a <code>DataValue</code> brings along its own 
- * (set of) renderers, an icon (which is displayed in table column headers, 
- * for instance) and a comparator, which are all defined through the definition 
+ * Typically a <code>DataValue</code> brings along its own
+ * (set of) renderers, an icon (which is displayed in table column headers,
+ * for instance) and a comparator, which are all defined through the definition
  * of a static member {@link DataValue#UTILITY}.
- *  
+ *
  * <p>
- * For more information regarding the definition of new <code>DataCell</code>s 
- * see the <a href="package-summary.html">package description</a> and the 
+ * For more information regarding the definition of new <code>DataCell</code>s
+ * see the <a href="package-summary.html">package description</a> and the
  * <a href="doc-files/newtypes.html">manual</a> on how to define new types, in
  * particular the <a href="doc-files/newtypes.html#newtypes">remarks</a> on
  * <code>DataValue</code>.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface DataValue {
-
     /**
      * Static singleton for meta description. This field is accessed via
-     * reflection in the {@link org.knime.core.data.DataType} class. It is 
-     * used to determine renderer, comparator, and icon. Sub-Interfaces 
-     * will &quot;override&quot; this static member, if they desire to define 
+     * reflection in the {@link org.knime.core.data.DataType} class. It is
+     * used to determine renderer, comparator, and icon. Sub-Interfaces
+     * will &quot;override&quot; this static member, if they desire to define
      * own renderers, comparator, and/or icon.
      */
     public static final UtilityFactory UTILITY = new UtilityFactory();
 
     /**
      * Implementation of the meta information to a <code>DataValue</code>.
-     * <code>DataValue</code> implementations with customized meta information 
-     * must provide a static final member called <code>UTILTIY</code> of this 
+     * <code>DataValue</code> implementations with customized meta information
+     * must provide a static final member called <code>UTILTIY</code> of this
      * class.
      */
     public static class UtilityFactory {
@@ -110,11 +112,11 @@ public interface DataValue {
         /**
          * Get an icon representing this value. This is used in table headers
          * and lists, for instance.
-         * 
+         *
          * <p>
-         * It is recommended to override this method and return an appropriate 
+         * It is recommended to override this method and return an appropriate
          * icon of size 16x16px.
-         * 
+         *
          * @return an icon for this value
          */
         public Icon getIcon() {
@@ -122,19 +124,19 @@ public interface DataValue {
         }
 
         /**
-         * Returns a family of all renderers this type natively supports. 
-         * Derived classes should override this method to provide their own 
+         * Returns a family of all renderers this type natively supports.
+         * Derived classes should override this method to provide their own
          * renderer family for the native value class.
-         * 
+         *
          * <p>
          * Views that rely on renderer implementations will get a list of all
          * available renderers by invoking
-         * {@link DataType#getRenderer(DataColumnSpec)} on the column's 
+         * {@link DataType#getRenderer(DataColumnSpec)} on the column's
          * {@link org.knime.core.data.DataType}
          * which makes sure that all renderer implementations of compatible
          * values are returned.
-         * 
-         * @param spec the {@link org.knime.core.data.DataColumnSpec} of the 
+         *
+         * @param spec the {@link org.knime.core.data.DataColumnSpec} of the
          *            column for which the renderers are
          *            used. Most of the renderer implementations won't need
          *            column domain information but some do. For instance a
@@ -150,46 +152,59 @@ public interface DataValue {
         }
 
         /**
-         * Derived classes should override this and provide a 
+         * Derived classes should override this and provide a
          * {@link org.knime.core.data.DataValueComparator} that
-         * compares the respective <code>DataValue</code>. If <code>null</code> 
-         * is returned the cell implementing the <code>DataValue</code> 
-         * interface is said to be not comparable with respect to this 
+         * compares the respective <code>DataValue</code>. If <code>null</code>
+         * is returned the cell implementing the <code>DataValue</code>
+         * interface is said to be not comparable with respect to this
          * <code>DataValue</code> interface. If none of the implemented
-         * <code>DataValue</code> interfaces is comparable, the fallback 
-         * comparator based on the cell's <code>toString()</code> method is 
+         * <code>DataValue</code> interfaces is comparable, the fallback
+         * comparator based on the cell's <code>toString()</code> method is
          * used.
-         * 
+         *
          * @return this default implementation returns <code>null</code>
          */
         protected DataValueComparator getComparator() {
             return null;
         }
-        
+
         /** Convenience method to allow subclasses to load their icon. The icon
          * is supposed to be located relative to the package associated with the
-         * argument class under the path <code>path</code>. This method will 
-         * not throw an exception when the loading fails but instead return a 
+         * argument class under the path <code>path</code>. This method will
+         * not throw an exception when the loading fails but instead return a
          * <code>null</code> icon.
-         * @param className The class object, from which to retrieve the 
+         * @param className The class object, from which to retrieve the
          * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
-         * @param path The icon path relative to package associated with the 
-         * class argument. 
+         * @param path The icon path relative to package associated with the
+         * class argument.
          * @return the icon loaded from that path or null if it loading fails
          */
         protected static Icon loadIcon(
                 final Class<?> className, final String path) {
             ImageIcon icon;
             try {
-                ClassLoader loader = className.getClassLoader(); 
-                String packagePath = 
+                ClassLoader loader = className.getClassLoader();
+                String packagePath =
                     className.getPackage().getName().replace('.', '/');
                 String correctedPath = path;
                 if (!path.startsWith("/")) {
                     correctedPath = "/" + path;
                 }
-                icon = new ImageIcon(
-                        loader.getResource(packagePath + correctedPath));
+
+                correctedPath = packagePath + correctedPath;
+                if (correctedPath.contains("..")) {
+                    // replace relative paths such as "/abc/../bla.png"
+                    // with "/bla.png" because otherwise resources in Jar-files
+                    // won't be found
+                    Pattern p = Pattern.compile("/[^/\\.]+/\\.\\./");
+                    Matcher m = p.matcher(correctedPath);
+                    while (m.find()) {
+                        correctedPath = m.replaceFirst("/");
+                        m = p.matcher(correctedPath);
+                    }
+                }
+
+                icon = new ImageIcon(loader.getResource(correctedPath));
             } catch (Exception e) {
                 NodeLogger.getLogger(DataValue.class).debug(
                         "Unable to load icon at path " + path, e);
