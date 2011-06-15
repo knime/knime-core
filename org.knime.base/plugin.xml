@@ -955,6 +955,13 @@
             after="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
             category-path="/flowcontrol/loopsupport"
             expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory"
+            id="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory">
+      </node>  
+      <node
+            after="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory"
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
             id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
       </node>
