@@ -277,30 +277,40 @@ public final class FileUtil {
      * @return If that was successful.
      */
     public static boolean deleteRecursively(final File dir) {
-        // to see if this directory is actually a symbolic link to a directory,
-        // we want to get its canonical path - that is, we follow the link to
-        // the file it's actually linked to
-        File candir;
+        String name = dir.getName();
+        File dirWithCanonicalParent = dir;
+        File parentFile = dir.getParentFile();
+        if (parentFile != null)  {
+            try {
+                // get canonical parent (resolve symlinks in parent path)
+                dirWithCanonicalParent =
+                    new File(parentFile.getCanonicalFile(), name);
+            } catch (IOException e) {
+                // ignore, leave dir as it is
+            }
+        }
+        File canonicalDir;
         try {
-            candir = dir.getCanonicalFile();
+            canonicalDir = dirWithCanonicalParent.getCanonicalFile();
         } catch (IOException e) {
             return false;
         }
 
         // a symbolic link has a different canonical path than its actual path,
         // unless it's a link to itself
-        if (!IS_WINDOWS && !candir.equals(dir.getAbsoluteFile())) {
+        if (!IS_WINDOWS && !canonicalDir.equals(
+                dirWithCanonicalParent.getAbsoluteFile())) {
             // this file is a symbolic link, and there's no reason for us to
             // follow it, because then we might be deleting something outside of
             // the directory we were told to delete
 
             // we delete the link here and return
-            return dir.delete();
+            return dirWithCanonicalParent.delete();
         }
 
         // now we go through all of the files and subdirectories in the
         // directory and delete them one by one
-        File[] files = candir.listFiles();
+        File[] files = canonicalDir.listFiles();
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 File file = files[i];
@@ -321,7 +331,7 @@ public final class FileUtil {
         }
         // now that we tried to clear the directory out, we can try to delete it
         // again
-        return dir.delete();
+        return dirWithCanonicalParent.delete();
     } // deleteRecursively(File)
 
     // size of read buffer when reading/writing from/to a zip stream
@@ -551,6 +561,7 @@ public final class FileUtil {
     public static final ZipFileFilter ZIP_INCLUDEALL_FILTER =
             new ZipFileFilter() {
 
+                @Override
                 public boolean include(final File f) {
                     return true;
                 }
