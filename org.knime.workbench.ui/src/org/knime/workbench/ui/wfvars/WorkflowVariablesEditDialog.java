@@ -102,9 +102,11 @@ public class WorkflowVariablesEditDialog extends Dialog {
     protected Control createDialogArea(final Composite parent) {
         parent.getShell().setText("Add/Edit Workflow Variable");
         Composite twoColComp = new Composite(parent, SWT.NONE);
-        twoColComp.setLayout(new GridLayout(2, true));
+        twoColComp.setLayout(new GridLayout(3, true));
 
-        GridData horizontalFill = new GridData(GridData.FILL_HORIZONTAL);
+        GridData horizontalFill = 
+            new GridData(SWT.FILL, SWT.CENTER, true, false);
+        horizontalFill.horizontalSpan = 2;
 
         // first row: node settings name
         Label varNameLabel = new Label(twoColComp, SWT.NONE);
