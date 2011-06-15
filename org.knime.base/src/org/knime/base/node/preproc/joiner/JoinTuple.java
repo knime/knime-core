@@ -52,6 +52,9 @@ package org.knime.base.node.preproc.joiner;
 
 import java.util.Arrays;
 
+import org.knime.base.node.preproc.joiner.InputDataRow.WildCardCell;
+import org.knime.core.data.DataCell;
+
 /**
  * Two {@link InputDataRow} do join when two of there JoinTuples do match.
  *
@@ -59,14 +62,14 @@ import java.util.Arrays;
  */
 class JoinTuple {
     /** The cells in the tuple. */
-    private Object[] m_cells;
+    private DataCell[] m_cells;
 
     /**
      * Creates a new JoinTuple.
      *
      * @param cells The cells which are used to test for a match.
      */
-    public JoinTuple(final Object[] cells) {
+    public JoinTuple(final DataCell[] cells) {
         m_cells = cells;
     }
 
@@ -83,13 +86,22 @@ class JoinTuple {
      */
     @Override
     public boolean equals(final Object obj) {
-        boolean result = false;
         if (obj instanceof JoinTuple) {
             JoinTuple that = (JoinTuple)obj;
-            result = Arrays.equals(this.m_cells, that.m_cells);
+            for (int i = 0; i < this.m_cells.length; i++) {
+                if (this.m_cells[i].isMissing()
+                        || that.m_cells[i].isMissing()) {
+                    // Missing cells no not match
+                    return false;
+                } else if (!(this.m_cells[i] instanceof WildCardCell
+                        || that.m_cells[i] instanceof WildCardCell)) {
+                    if (!this.m_cells[i].equals(that.m_cells[i])) {
+                        return false;
+                    }
+                }
+            }
         }
-        return result;
-
+        return true;
     }
 }
 

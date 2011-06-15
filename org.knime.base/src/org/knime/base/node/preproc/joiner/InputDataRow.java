@@ -53,6 +53,7 @@ package org.knime.base.node.preproc.joiner;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.def.StringCell;
 
@@ -101,20 +102,15 @@ class InputDataRow implements Comparable<InputDataRow> {
         indices = m_settings.getJoiningIndices(m_port);
         if (!m_settings.getMultipleMatchCanOccur()) {
             int numJoinAttributes = indices.size();
-            Object[] cells = new Object[numJoinAttributes];
+            DataCell[] cells = new DataCell[numJoinAttributes];
             for (int i = 0; i < numJoinAttributes; i++) {
                 int index = indices.get(i);
                 if (index >= 0) {
-                    // String-Cells must be converted to string so that
-                    // they match with row-keys
-                    if (m_row.getCell(index).getType().equals(
-                            StringCell.TYPE)) {
-                        cells[i] = m_row.getCell(index).toString();
-                    } else {
-                        cells[i] = m_row.getCell(index);
-                    }
+                    cells[i] = m_row.getCell(index);
                 } else {
-                    cells[i] = m_row.getKey().getString();
+                    // create a StringCell since row IDs may match
+                    // StringCell's
+                    cells[i] = new StringCell(m_row.getKey().getString());
                 }
             }
             return new JoinTuple[]{new JoinTuple(cells)};
@@ -124,21 +120,16 @@ class InputDataRow implements Comparable<InputDataRow> {
 
             for (int i = 0; i < numJoinAttributes; i++) {
                 int index = indices.get(i);
-                Object[] cells = new Object[numJoinAttributes];
+                DataCell[] cells = new DataCell[numJoinAttributes];
                 for (int k = 0; k < numJoinAttributes; k++) {
                     cells[k] = new WildCardCell();
                 }
                 if (index >= 0) {
-                    // String-Cells must be converted to string so that
-                    // they match with row-keys
-                    if (m_row.getCell(index).getType().equals(
-                            StringCell.TYPE)) {
-                        cells[i] = m_row.getCell(index).toString();
-                    } else {
-                        cells[i] = m_row.getCell(index);
-                    }
+                    cells[i] = m_row.getCell(index);
                 } else {
-                    cells[i] = m_row.getKey().getString();
+                    // create a StringCell since row IDs may match
+                    // StringCell's
+                    cells[i] = new StringCell(m_row.getKey().getString());
                 }
                 joinCells[i] = new JoinTuple(cells);
             }
@@ -221,7 +212,7 @@ class InputDataRow implements Comparable<InputDataRow> {
     * Used in the match any case.
     * @author Heiko Hofer
     */
-   private static class WildCardCell {
+   static class WildCardCell extends DataCell {
        /**
         * {@inheritDoc}
         */
@@ -230,12 +221,22 @@ class InputDataRow implements Comparable<InputDataRow> {
            return 0;
        }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public boolean equals(final Object obj) {
-           return true;
-       }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            throw new UnsupportedOperationException(
+                    "This method should never be called.");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            throw new UnsupportedOperationException(
+                    "This method should never be called.");
+        }
    }
 }
