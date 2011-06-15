@@ -94,12 +94,12 @@ import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.NodePropertyChangedEvent;
-import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -162,6 +162,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // WorkflowManager.ROOT.addListener(
         ProjectWorkflowMap.addWorkflowListener(new WorkflowListener() {
 
+            @Override
             public void workflowChanged(final WorkflowEvent event) {
                 LOGGER.debug("ROOT's workflow has changed " + event.getType());
                 switch (event.getType()) {
@@ -171,6 +172,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             + " added");
                     if (getViewer() != null) {
                         Display.getDefault().asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 getViewer().refresh();
                             }
@@ -183,6 +185,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             + " removed");
                     if (getViewer() != null) {
                         Display.getDefault().asyncExec(new Runnable() {
+                            @Override
                             public void run() {
                                 if (!getViewer().getControl().isDisposed()) {
                                     getViewer().refresh();
@@ -213,6 +216,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      *
      * {@inheritDoc}
      */
+    @Override
     public void stateChanged(final NodeStateEvent state) {
         LOGGER.debug("state changed to " + state.getState());
         doRefresh(state.getSource());
@@ -240,6 +244,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     private void doRefresh(final NodeID nodeResource) {
         if (m_updateInProgressFlag.compareAndSet(false, true)) {
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                @Override
                 public void run() {
                     m_updateInProgressFlag.set(false);
                     try {
@@ -512,20 +517,27 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             }
         }
 
-        // rename must be our own action (due to workflow locks)
-        menu.insertBefore(ResourceNavigatorRenameAction.ID, new RenameAction(
-                getTreeViewer()));
-        menu.remove(ResourceNavigatorRenameAction.ID);
+        /* Rename must be our own action (due to workflow locks). Hence
+         * replace the default rename action if it is there. */
+        if (menu.find(ResourceNavigatorRenameAction.ID) != null) {
+            menu.insertBefore(ResourceNavigatorRenameAction.ID,
+                    new RenameAction(getTreeViewer()));
+            menu.remove(ResourceNavigatorRenameAction.ID);
+        }
 
         // delete must be our own action (due to workflow locks)
-        menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
-                getTreeViewer().getControl().getShell(), getTreeViewer()));
-        menu.remove(DeleteResourceAction.ID);
+        if (menu.find(DeleteResourceAction.ID) != null) {
+            menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
+                    getTreeViewer().getControl().getShell(), getTreeViewer()));
+            menu.remove(DeleteResourceAction.ID);
+        }
 
         // move must be our own action (due to workflow locks)
-        menu.insertBefore(MoveResourceAction.ID, new MoveWorkflowAction(
-                getTreeViewer()));
-        menu.remove(MoveResourceAction.ID);
+        if (menu.find(MoveResourceAction.ID) != null) {
+            menu.insertBefore(MoveResourceAction.ID, new MoveWorkflowAction(
+                    getTreeViewer()));
+            menu.remove(MoveResourceAction.ID);
+        }
 
         // copy and paste doesn't work as expected - dismissed
         menu.remove("org.eclipse.ui.CopyAction");
