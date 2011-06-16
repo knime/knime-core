@@ -5291,11 +5291,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             throw new IOException("No \"" + fileName + "\" file in directory \""
                     + directory.getAbsolutePath() + "\"");
         }
-        if (!directory.canWrite()) {
-            throw new IOException("Can't load workflow from a directory "
-                    + "without write permissions. (Required to lock workflow.) "
-                    + "Location: " + directory.getAbsolutePath());
-        }
 
         WorkflowLoadHelper lh = loadHelper != null
         ? loadHelper : WorkflowLoadHelper.INSTANCE;
@@ -5408,7 +5403,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!isTemplate) {
                 rootFile.fileUnlockRootForVM();
             }
-    }
+        }
     }
 
     /**
@@ -6256,27 +6251,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (NodeID id : nodes.keySet()) {
             String nodeID = Integer.toString(id.getIndex());
             if (modelSettings.containsKey(nodeID)) {
-                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
-                QuickFormInputNode qfin = nodes.get(id);
-                NodeSettingsWO oldSettings = new NodeSettings(nodeID);
-                qfin.getConfiguration().saveValue(oldSettings);
-                if (!conf.equals(oldSettings)) {
-                // FIXME: likely not here but in the WFM...
-                // not needed (actually nodes not work) because WFM itself
-                // was reset completely if any one of the settings change.
-    //                SingleNodeContainer snc =
-    //                    (SingleNodeContainer)this.getNodeContainer(id);
-    //                 snc.reset();
+            NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+            QuickFormInputNode qfin = nodes.get(id);
+            NodeSettingsWO oldSettings = new NodeSettings(nodeID);
+            qfin.getConfiguration().saveValue(oldSettings);
+            if (!conf.equals(oldSettings)) {
+            // FIXME: likely not here but in the WFM...
+            // not needed (actually nodes not work) because WFM itself
+            // was reset completely if any one of the settings change.
+//                SingleNodeContainer snc =
+//                    (SingleNodeContainer)this.getNodeContainer(id);
+//                 snc.reset();
                     AbstractQuickFormConfiguration config =
                         qfin.getConfiguration();
                     if (config != null) {
                         config.loadValueInModel(conf);
                     }
-                 // see above: not needed
-    //             this.configureNodeAndSuccessors(id, true);
-                }
+             // see above: not needed
+//             this.configureNodeAndSuccessors(id, true);
             }
         }
+    }
     }
 
 
