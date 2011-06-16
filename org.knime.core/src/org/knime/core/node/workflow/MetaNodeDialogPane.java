@@ -108,6 +108,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         for (Map.Entry<NodeID, QuickFormInputNode> e : nodes.entrySet()) {
             AbstractQuickFormConfiguration config =
                 e.getValue().getConfiguration();
+            if (config == null) { // quickform nodes has no valid configuration
+                continue;
+            }
             @SuppressWarnings("unchecked")
             QuickFormConfigurationPanel<AbstractQuickFormConfiguration>
                 quickform = (QuickFormConfigurationPanel
@@ -129,6 +132,10 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 qpanel.add(p);
             }
             m_panel.add(qpanel);
+        }
+        if (m_nodes.isEmpty()) {
+            m_panel.add(new JLabel(
+                    "No Quickforms nodes available in workflow."));
         }
 //        Collections.sort(m_nodes, new FormComparator<QuickFormInputNode>());
     }
