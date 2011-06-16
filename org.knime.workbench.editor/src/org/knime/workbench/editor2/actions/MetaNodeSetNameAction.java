@@ -90,7 +90,7 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Rename";
+        return "Rename Meta Node";
     }
 
     /**

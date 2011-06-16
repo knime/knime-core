@@ -93,7 +93,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Expand selected metanode.";
+        return "Expand Meta Node";
     }
 
     /**
@@ -110,7 +110,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Expand selected metanode.";
+        return "Expand selected Meta Node";
     }
 
     /**

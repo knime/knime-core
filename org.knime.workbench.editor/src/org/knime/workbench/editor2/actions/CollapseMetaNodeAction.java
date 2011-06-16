@@ -96,7 +96,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Collapse selected nodes into new metanode.";
+        return "Collapse into Meta Node";
     }
 
     /**
@@ -113,7 +113,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Collapse nodes into new metanode.";
+        return "Collapse Nodes into new Meta Node";
     }
 
     /**

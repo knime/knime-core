@@ -123,7 +123,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Update Link";
+        return "Update Meta Node Link";
     }
 
     /**
