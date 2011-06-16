@@ -293,8 +293,9 @@ public class RepositoryView extends ViewPart implements
     private void fillLocalToolBar(final IToolBarManager manager) {
         // create the combo contribution item that can filter our view
 
-        m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer,
-                new RepositoryViewFilter());
+        m_toolbarFilterCombo =
+                new FilterViewContributionItem(m_viewer,
+                        new RepositoryViewFilter());
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
 
@@ -367,8 +368,12 @@ public class RepositoryView extends ViewPart implements
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    m_viewer.getControl().setToolTipText("Loading node repository... " + m_count + " nodes found");
-                    m_viewer.setInput(root);
+                    if (!m_viewer.getControl().isDisposed()) {
+                        m_viewer.getControl().setToolTipText(
+                                "Loading node repository... " + m_count
+                                        + " nodes found");
+                        m_viewer.setInput(root);
+                    }
                 }
             });
         }
@@ -383,8 +388,12 @@ public class RepositoryView extends ViewPart implements
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    m_viewer.getControl().setToolTipText("Loading node repository... " + m_count + " nodes found");
-                    m_viewer.setInput(root);
+                    if (!m_viewer.getControl().isDisposed()) {
+                        m_viewer.getControl().setToolTipText(
+                                "Loading node repository... " + m_count
+                                        + " nodes found");
+                        m_viewer.setInput(root);
+                    }
                 }
             });
         }
