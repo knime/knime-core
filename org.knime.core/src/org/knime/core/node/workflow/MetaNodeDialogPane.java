@@ -134,8 +134,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             m_panel.add(qpanel);
         }
         if (m_nodes.isEmpty()) {
-            m_panel.add(new JLabel(
-                    "No Quickforms nodes available in workflow."));
+            m_panel.add(new JLabel("No valid Quickform configurations."));
         }
 //        Collections.sort(m_nodes, new FormComparator<QuickFormInputNode>());
     }
