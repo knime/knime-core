@@ -23,6 +23,7 @@ package org.knime.core.util;
 import java.io.File;
 import java.util.HashMap;
 
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -41,6 +42,9 @@ public final class VMFileLocker {
 
     private static final HashMap<File, FileLocker> LOCKS =
             new HashMap<File, FileLocker>();
+
+    private static final boolean DISABLE_VM_LOCKS =
+        Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_VM_FILE_LOCK);
 
     /** filename of lock file. */
     public static final String LOCK_FILE = ".knimeLock";
@@ -65,6 +69,9 @@ public final class VMFileLocker {
      *         r/o).
      */
     public static synchronized boolean lockForVM(final File dir) {
+        if (DISABLE_VM_LOCKS) {
+            return true;
+        }
         if (!dir.isDirectory()) {
             LOGGER.coding("Files should not be locked. Only directories.");
             return false;
@@ -110,6 +117,9 @@ public final class VMFileLocker {
      * @param dir to release one lock from
      */
     public static synchronized void unlockForVM(final File dir) {
+        if (DISABLE_VM_LOCKS) {
+            return;
+        }
         if (!dir.isDirectory()) {
             LOGGER.coding("Files should not be un/locked. Only directories.");
             return;
@@ -143,6 +153,9 @@ public final class VMFileLocker {
      * @return true if this VM has a lock on the specified directory
      */
     public static synchronized boolean isLockedForVM(final File dir) {
+        if (DISABLE_VM_LOCKS) {
+            return true;
+        }
         if (!dir.isDirectory()) {
             LOGGER.coding("Files should not be un/locked. Only directories.");
             return false;

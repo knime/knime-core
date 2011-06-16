@@ -123,6 +123,15 @@ public final class KNIMEConstants {
     public static final String PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK =
         "knime.disable.rowid.duplicatecheck";
 
+    /** Java property to enable/disable workflow locks. As of KNIME v2.4
+     * workflows will be locked when opened; this property will disable the
+     * locking (allowing multiple instances to have the same workflow open).
+     * <p><strong>Warning:</strong> This property should not be changed by
+     * the user.
+     * @since v2.4 */
+    public static final String PROPERTY_DISABLE_VM_FILE_LOCK =
+        "knime.disable.vmfilelock";
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
