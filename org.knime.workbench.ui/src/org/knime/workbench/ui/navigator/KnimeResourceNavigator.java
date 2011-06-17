@@ -516,19 +516,20 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             }
         }
 
-        /* Rename must be our own action (due to workflow locks). Hence
-         * replace the default rename action if it is there. */
+        // delete must be our own action (due to workflow locks)
+        if (menu.find(DeleteResourceAction.ID) != null) {
+            menu.insertBefore(DeleteResourceAction.ID, new Separator());
+            menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
+                    getTreeViewer().getControl().getShell(), getTreeViewer()));
+            menu.remove(DeleteResourceAction.ID);
+        }
+
+        // Rename must be our own action (due to workflow locks). Hence
+        // replace the default rename action if it is there. */
         if (menu.find(ResourceNavigatorRenameAction.ID) != null) {
             menu.insertBefore(ResourceNavigatorRenameAction.ID,
                     new RenameAction(getTreeViewer()));
             menu.remove(ResourceNavigatorRenameAction.ID);
-        }
-
-        // delete must be our own action (due to workflow locks)
-        if (menu.find(DeleteResourceAction.ID) != null) {
-            menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
-                    getTreeViewer().getControl().getShell(), getTreeViewer()));
-            menu.remove(DeleteResourceAction.ID);
         }
 
         // move must be our own action (due to workflow locks)
@@ -537,10 +538,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     getTreeViewer()));
             menu.remove(MoveResourceAction.ID);
         }
-
-        // copy and paste doesn't work as expected - dismissed
-        menu.remove("org.eclipse.ui.CopyAction");
-        menu.remove("org.eclipse.ui.PasteAction");
 
         // remove the default import export actions to store the own one
         // that invokes the knime export wizard directly
