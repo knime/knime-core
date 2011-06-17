@@ -875,13 +875,12 @@ public class WorkflowImportSelectionPage extends WizardPage {
             });
             return;
         }
+        if (parent == null || parent.isWorkflow()) {
+            return; // abort recursion
+        }
         // public in order to make it possible to import from a given zip entry
         ILeveledImportStructureProvider provider = parent.getProvider();
         Object entry = parent.getEntry();
-        if (parent.isWorkflow()) {
-            // abort recursion
-            return;
-        }
         List children = provider.getChildren(entry);
         if (children == null) {
             return;
