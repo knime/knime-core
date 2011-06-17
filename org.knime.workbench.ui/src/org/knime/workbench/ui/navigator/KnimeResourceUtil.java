@@ -63,6 +63,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -550,15 +551,12 @@ public final class KnimeResourceUtil {
         if (location == null) {
             return null;
         }
-        URI rootURI = ResourcesPlugin.getWorkspace().getRoot().getLocationURI();
-        if (!location.toString().startsWith(rootURI.toString())) {
-            // not in workspace
-            return null;
+        IWorkspaceRoot rootPath = ResourcesPlugin.getWorkspace().getRoot();
+        IContainer[] conts = rootPath.findContainersForLocationURI(location);
+        if (conts.length >= 1) {
+            return conts[0];
         }
-        Path locPath =
-                new Path(location.toString().substring(
-                        rootURI.toString().length()));
-        return ResourcesPlugin.getWorkspace().getRoot().findMember(locPath);
+        return null;
     }
 
 }
