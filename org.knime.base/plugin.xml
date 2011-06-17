@@ -1289,16 +1289,13 @@
      <extension
            point="org.knime.workbench.repository.registeredFileExtensions">
         <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.csvreader.CSVReaderNodeFactory">
+              NodeFactory="org.knime.base.node.io.filereader.FileReaderNodeFactory">
            <FileExtension
                  extension=".csv">
            </FileExtension>
            <FileExtension
                  extension=".csv.gz">
            </FileExtension>
-        </FileExtensionMapping>
-        <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.filereader.FileReaderNodeFactory">
            <FileExtension
                  extension=".txt">
            </FileExtension>
