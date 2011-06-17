@@ -294,11 +294,11 @@ public class OutPortView extends JFrame {
                 views.put(comp.getName(), comp);
             }
         }
-        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            FlowObjectStackView stackView = new FlowObjectStackView();
-            stackView.update(stack);
-            views.put("Flow Variables", stackView);
-        }
+
+        FlowObjectStackView stackView = new FlowObjectStackView();
+        stackView.update(stack);
+        views.put("Flow Variables", stackView);
+
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             @Override
             public void run() {

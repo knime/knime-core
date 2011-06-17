@@ -123,8 +123,6 @@ public final class RepositoryFactory {
         NodeTemplate node = new NodeTemplate(id);
 
         node.setAfterID(str(element.getAttribute("after"), ""));
-        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
-        node.setExpertNode(b);
 
         // Try to load the node factory class...
         NodeFactory<? extends NodeModel> factory;
@@ -186,8 +184,6 @@ public final class RepositoryFactory {
         String after = configuration.getAttribute("after");
         String iconPath = configuration.getAttribute("icon");
         String categoryPath = configuration.getAttribute("category-path");
-        boolean isExpertNode = Boolean.parseBoolean(
-                configuration.getAttribute("expert-flag"));
         String pluginId = configuration.getDeclaringExtension()
             .getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
@@ -207,7 +203,6 @@ public final class RepositoryFactory {
         if (description != null) {
             template.setDescription(description);
         }
-        template.setExpertNode(isExpertNode);
         if (!Boolean.valueOf(
                 System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin

@@ -341,8 +341,7 @@ public abstract class NodeDialogPane {
             m_logger.error("Error loading model settings", e);
         }
         // add flow variables tab if not yet done
-        if (getTab(TAB_NAME_VARIABLES) == null
-                && Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
+        if (getTab(TAB_NAME_VARIABLES) == null) {
             addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
                 /** {@inheritDoc} */

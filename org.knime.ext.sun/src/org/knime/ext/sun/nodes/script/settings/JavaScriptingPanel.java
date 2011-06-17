@@ -284,14 +284,12 @@ public class JavaScriptingPanel extends JPanel {
             pane.setBorder(createEmptyTitledBorder("Column List"));
             varSplitPane.setTopComponent(pane);
         }
-        // set variable panel only if expert mode is enabled.
-        if (m_customizer.getShowVariableList()) {
-            JScrollPane pane = new JScrollPane(m_flowVarsList);
-            pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
-            varSplitPane.setBottomComponent(pane);
-            varSplitPane.setOneTouchExpandable(true);
-            varSplitPane.setResizeWeight(0.9);
-        }
+        // set variable panel
+        JScrollPane pane = new JScrollPane(m_flowVarsList);
+        pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
+        varSplitPane.setBottomComponent(pane);
+        varSplitPane.setOneTouchExpandable(true);
+        varSplitPane.setResizeWeight(0.9);
         JComponent editorMainPanel = createEditorPanel();
 
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));

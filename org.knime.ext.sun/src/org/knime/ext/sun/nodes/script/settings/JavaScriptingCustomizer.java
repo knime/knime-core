@@ -57,8 +57,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.core.node.KNIMEConstants;
-
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -66,8 +64,6 @@ import org.knime.core.node.KNIMEConstants;
 public class JavaScriptingCustomizer {
 
     private boolean m_showColumnList = true;
-    private boolean m_showVariableList =
-        Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
     private boolean m_showGlobalDeclarationList = true;
     private boolean m_showOutputPanel = true;
     private boolean m_showOutputTypePanel = true;
@@ -84,14 +80,6 @@ public class JavaScriptingCustomizer {
     /** @param showColumnList the showColumnList to set */
     public void setShowColumnList(final boolean showColumnList) {
         m_showColumnList = showColumnList;
-    }
-    /** @return the showVariableList */
-    public boolean getShowVariableList() {
-        return m_showVariableList;
-    }
-    /** @param showVariableList the showVariableList to set */
-    public void setShowVariableList(final boolean showVariableList) {
-        m_showVariableList = showVariableList;
     }
     /** @return the showGlobalDeclarationList */
     public boolean getShowGlobalDeclarationList() {

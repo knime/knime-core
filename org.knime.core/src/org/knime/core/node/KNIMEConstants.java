@@ -82,8 +82,8 @@ public final class KNIMEConstants {
     public static final String BUILD_DATE = "November 25, 2009";
 
     /** Java property name that is used to identify whether KNIME is started
-     * in expert mode or not (e.g. whether to show loop nodes or not).
-     * This field is also used for the preference pages.
+     * in expert mode or not. Note, with KNIME v2.4 this field became obsolete
+     * and is not used anymore, including all variable specific features/nodes.
      * <p>Values of this field must be either "true" or "false". */
     public static final String PROPERTY_EXPERT_MODE = "knime.expert.mode";
 

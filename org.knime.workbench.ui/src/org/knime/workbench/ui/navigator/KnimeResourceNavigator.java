@@ -91,7 +91,6 @@ import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer;
@@ -579,10 +578,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new OpenCredentialVariablesDialogAction());
-        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            menu.insertAfter(ExportKnimeWorkflowAction.ID,
-                    new OpenWorkflowVariablesDialogAction());
-        }
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                new OpenWorkflowVariablesDialogAction());
+
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 
         menu.insertBefore(RefreshAction.ID, new GroupMarker(KNIME_ADDITIONS));

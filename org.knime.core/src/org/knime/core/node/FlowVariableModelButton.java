@@ -87,7 +87,7 @@ import org.knime.core.node.workflow.FlowVariable;
  *
  * This allows NodeDialogPane implementations to easily use Variables
  * for individual options.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 @SuppressWarnings("serial")
@@ -118,7 +118,7 @@ implements ChangeListener, ActionListener {
 
     /** React to state changes in the underlying WorkflowVariableModel
      * and set tool tip accordingly.
-     * 
+     *
      * @param evt event
      */
     @Override
@@ -127,8 +127,8 @@ implements ChangeListener, ActionListener {
         try {
             // try to load icon(s)
             ImageIcon icon;
-            ClassLoader loader = this.getClass().getClassLoader(); 
-            String packagePath = 
+            ClassLoader loader = this.getClass().getClassLoader();
+            String packagePath =
                 this.getClass().getPackage().getName().replace('.', '/');
             String correctedPath = "/icon/"
                 + (enabled ? "varbuttonON.png"
@@ -137,11 +137,7 @@ implements ChangeListener, ActionListener {
                     loader.getResource(packagePath + correctedPath));
             this.setText("");
             this.setBorder(new LineBorder(Color.gray, 0));
-            this.setIcon(icon);                
-            if (!Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-                // if in non expert mode hide icon by making it invisible
-                this.setVisible(false);
-            }
+            this.setIcon(icon);
         } catch (Exception e) {
             this.setText(enabled ? "v!" : "v?");
             return;
@@ -163,8 +159,8 @@ implements ChangeListener, ActionListener {
         }
         this.setToolTipText(tooltip.toString());
     }
-    
-    /** @return the model as passed in 
+
+    /** @return the model as passed in
      * {@linkplain #FlowVariableModelButton(FlowVariableModel) constructor}.
      */
     public FlowVariableModel getFlowVariableModel() {
@@ -173,7 +169,7 @@ implements ChangeListener, ActionListener {
 
     /** React to clicks on the underlying button: open dialog which enables
      * the user to change the underlying settings.
-     * 
+     *
      * @param e event
      */
     @Override
@@ -194,13 +190,13 @@ implements ChangeListener, ActionListener {
     }
 
     private class FlowVarEditDialog extends JDialog {
-        
+
         FlowVarEditDialog(final Frame f) {
             // set title and make dialog modal
             super(f, "Variable Settings", true);
             // set icon of dialog frame
-            ClassLoader loader = this.getClass().getClassLoader(); 
-            String packagePath = 
+            ClassLoader loader = this.getClass().getClassLoader();
+            String packagePath =
                 this.getClass().getPackage().getName().replace('.', '/');
             String correctedPath = "/icon/variable_dialog_active.png";
             ImageIcon icon = new ImageIcon(
@@ -211,14 +207,14 @@ implements ChangeListener, ActionListener {
             initComponents();
             pack();
         }
-        
+
         private JCheckBox m_enableInputVar;
         private JComboBox m_inputVar;
         private JCheckBox m_enableOutputVar;
         private JTextField m_outputVar;
         private JButton m_cancel;
         private JButton m_ok;
-        
+
         private void initComponents() {
             Container cont = this.getContentPane();
             cont.setLayout(new BorderLayout());
@@ -309,7 +305,7 @@ implements ChangeListener, ActionListener {
             cp.add(panelBottom);
             cp.add(Box.createVerticalGlue());
         }
-        
+
         void setInputVariableName(final String s) {
             if (s == null) {
                 m_inputVar.setEnabled(false);
@@ -390,15 +386,15 @@ implements ChangeListener, ActionListener {
                 m_outputVar.setText("");
             }
         }
-        
+
     }
 
     /** Helper class to allow also the display of disabled list elements. */
     class CustomListCellRenderer extends FlowVariableListCellRenderer {
         private String m_toDisable;
-        
+
         /** Create new render which disables given string.
-         * 
+         *
          * @param s string to disable
          */
         CustomListCellRenderer(final String s) {

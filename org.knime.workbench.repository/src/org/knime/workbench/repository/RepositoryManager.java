@@ -62,7 +62,6 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
@@ -126,7 +125,7 @@ public final class RepositoryManager {
         }
 
         @Override
-        public void newMetanode(final Root root, final MetaNodeTemplate metanode) {
+        public void newMetanode(final Root root, final MetaNodeTemplate meta) {
         }
     };
 
@@ -161,16 +160,13 @@ public final class RepositoryManager {
     }
 
     private void readRepository(final Listener listener) {
-        boolean isInExpertMode =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
-
         readCategories(listener);
-        readNodes(listener, isInExpertMode);
-        readMetanodes(listener, isInExpertMode);
+        readNodes(listener);
+        readMetanodes(listener);
         removeEmptyCategories(m_root);
     }
 
-    private void readMetanodes(final Listener l, final boolean isInExpertMode) {
+    private void readMetanodes(final Listener l) {
         // iterate over the meta node config elements
         // and create meta node templates
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
@@ -181,16 +177,8 @@ public final class RepositoryManager {
                 try {
                     MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
-                    boolean skip = !isInExpertMode && metaNode.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping meta node definition '"
-                                + metaNode.getID() + "': " + metaNode.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found meta node definition '"
-                                + metaNode.getID() + "': " + metaNode.getName());
-                    }
+                    LOGGER.debug("Found meta node definition '"
+                            + metaNode.getID() + "': " + metaNode.getName());
                     l.newMetanode(m_root, metaNode);
 
                     IContainerObject parentContainer =
@@ -301,7 +289,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodes(final Listener l, final boolean isInExpertMode) {
+    private void readNodes(final Listener l) {
         //
         // Second, process the contributed nodes
         //
@@ -313,17 +301,8 @@ public final class RepositoryManager {
             for (IConfigurationElement e : elements) {
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
-
-                    boolean skip = !isInExpertMode && node.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping node extension '" + node.getID()
-                                + "': " + node.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found node extension '" + node.getID()
+                    LOGGER.debug("Found node extension '" + node.getID()
                                 + "': " + node.getName());
-                    }
                     l.newNode(m_root, node);
 
                     m_nodesById.put(node.getID(), node);

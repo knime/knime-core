@@ -65,7 +65,6 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -292,15 +291,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         (NodeContainer)((NodeContainerEditPart)p).getModel();
 
                 if (!(container instanceof WorkflowManager)) {
-                    // in expert mode you can switch display of the flow var
-                    // ports
-                    if (Boolean.parseBoolean(System.getProperty(
-                            KNIMEConstants.PROPERTY_EXPERT_MODE, "false"))) {
-                        action = m_actionRegistry.getAction(
-                                ToggleFlowVarPortsAction.ID);
-                        manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
-                        ((AbstractNodeAction)action).update();
-                    }
+                    action = m_actionRegistry.getAction(
+                            ToggleFlowVarPortsAction.ID);
+                    manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
+                    ((AbstractNodeAction)action).update();
                 }
 
                 // add for node views option if applicable

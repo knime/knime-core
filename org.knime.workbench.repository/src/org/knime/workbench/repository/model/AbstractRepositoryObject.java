@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -52,7 +52,7 @@ package org.knime.workbench.repository.model;
 
 /**
  * Abstract base implementation of a generic repository object.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractRepositoryObject implements IRepositoryObject,
@@ -62,14 +62,14 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     private String m_name;
 
     private String m_id;
-    
+
     private String m_afterID;
 
     private boolean m_isExpertNode;
-    
+
     /**
      * Default implementation, provides no adapters.
-     * 
+     *
      * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
      */
     public Object getAdapter(final Class adapter) {
@@ -79,7 +79,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     /**
      * Sets the parent. Make sure to remove childn references on old parent as
      * well !
-     * 
+     *
      * @param parent The parent
      */
     public void setParent(final IContainerObject parent) {
@@ -95,7 +95,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * @return returns the parent object
-     * 
+     *
      * @see org.knime.workbench.repository.model.IRepositoryObject#
      *      getParent()
      */
@@ -105,7 +105,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * Moves this object to another parent.
-     * 
+     *
      * @see org.knime.workbench.repository.model.IRepositoryObject#
      *      move(org.knime.workbench.repository.model.IContainerObject)
      */
@@ -116,7 +116,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * internal, sets parent to null.
-     * 
+     *
      */
     protected void detach() {
         m_parent = null;
@@ -131,7 +131,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * Set the id.
-     * 
+     *
      * @param id the id
      */
     protected void setID(final String id) {
@@ -144,7 +144,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     public String getName() {
         return m_name;
     }
-    
+
     /**
      * @return Returns the afterID.
      */
@@ -158,7 +158,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     public void setName(final String name) {
         m_name = name;
     }
-    
+
     /**
      * @param id the id to set
      */
@@ -167,23 +167,9 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * @return the isExpertNode
-     */
-    public boolean isExpertNode() {
-        return m_isExpertNode;
-    }
-
-    /**
-     * @param isExpertNode the isExpertNode to set
-     */
-    public void setExpertNode(final boolean isExpertNode) {
-        m_isExpertNode = isExpertNode;
-    }
-
-    /**
-     * Compares two repository objects lexicographically accordint to their
+     * Compares two repository objects lexicographically according to their
      * name.
-     * 
+     *
      * @see java.lang.Comparable#compareTo(Object)
      */
     public int compareTo(final AbstractRepositoryObject o) {

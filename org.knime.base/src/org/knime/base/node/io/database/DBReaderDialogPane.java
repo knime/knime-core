@@ -67,7 +67,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -132,39 +131,35 @@ class DBReaderDialogPane extends NodeDialogPane {
         m_listModelVars = new DefaultListModel();
         m_listVars = new JList(m_listModelVars);
 
-        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
-            JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-            jsp.setResizeWeight(0.25);
-            jsp.setRightComponent(configurePanel);
+        JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        jsp.setResizeWeight(0.25);
+        jsp.setRightComponent(configurePanel);
 
-            m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
-            m_listVars.addMouseListener(new MouseAdapter() {
-                /** {@inheritDoc} */
-                @Override
-                public final void mouseClicked(final MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        Object o = m_listVars.getSelectedValue();
-                        if (o != null) {
-                            FlowVariable var = (FlowVariable) o;
-                            m_statmnt.replaceSelection(
-                                DBVariableSupportNodeModel.Resolver.wrap(var));
-                            m_listVars.clearSelection();
-                            m_statmnt.requestFocus();
-                        }
+        m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
+        m_listVars.addMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public final void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    Object o = m_listVars.getSelectedValue();
+                    if (o != null) {
+                        FlowVariable var = (FlowVariable) o;
+                        m_statmnt.replaceSelection(
+                            DBVariableSupportNodeModel.Resolver.wrap(var));
+                        m_listVars.clearSelection();
+                        m_statmnt.requestFocus();
                     }
                 }
-            });
-            JScrollPane scrollVars = new JScrollPane(m_listVars,
-                    ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            scrollVars.setBorder(BorderFactory.createTitledBorder(
-                " Flow Variable List "));
-            jsp.setLeftComponent(scrollVars);
-            allPanel.add(jsp, BorderLayout.CENTER);
-        } else {
-            allPanel.add(configurePanel, BorderLayout.CENTER);
-        }
+            }
+        });
+        JScrollPane scrollVars = new JScrollPane(m_listVars,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollVars.setBorder(BorderFactory.createTitledBorder(
+            " Flow Variable List "));
+        jsp.setLeftComponent(scrollVars);
+        allPanel.add(jsp, BorderLayout.CENTER);
         super.addTab("Settings", allPanel);
     }
 
