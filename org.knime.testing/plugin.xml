@@ -40,7 +40,6 @@
       </node>
       <node
             category-path="/testing"
-            expert-flag="false"
             factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
             id="org.knime.testing.node.datagenerator.TestDataNodeFactory">
       </node>
