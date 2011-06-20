@@ -70,14 +70,13 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -136,6 +135,14 @@ public class WorkflowExportWizard extends ExportWizard
      */
     @Override
     public boolean canFinish() {
+        Collection<IContainer> workflows = m_page.getWorkflows();
+        final List<IResource> resourceList = new ArrayList<IResource>();
+        for (IContainer c : workflows) {
+            addResourcesFor(resourceList, c, m_excludeData);
+        }
+        if (resourceList.isEmpty()) {
+            return false;
+        }
         return m_page.isPageComplete();
     }
 
@@ -211,6 +218,7 @@ public class WorkflowExportWizard extends ExportWizard
         }
 
         IRunnableWithProgress op = new IRunnableWithProgress() {
+            @Override
             public void run(final IProgressMonitor monitor)
                     throws InvocationTargetException {
                 try {
@@ -309,8 +317,7 @@ public class WorkflowExportWizard extends ExportWizard
         final List<IResource> resourceList = new ArrayList<IResource>();
         for (IContainer child : m_workflowsToExport) {
             // add all files within the workflow
-            addResourcesFor(resourceList, child,
-                    m_excludeData);
+            addResourcesFor(resourceList, child, m_excludeData);
         }
         monitor.worked(1);
         try {
@@ -333,13 +340,17 @@ public class WorkflowExportWizard extends ExportWizard
             monitor.beginTask("Write to file... " + fileName, 3);
             exportOperation.run(monitor);
         } catch (Throwable t) {
-            t.printStackTrace();
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Export could not be completed...");
-            mb.setMessage("KNIME project could not be exported.\n Reason: "
-                    + t.getMessage());
+            final String error = "KNIME project could not be exported."
+                + "\n Reason: " + t.getMessage();
+            NodeLogger.getLogger(getClass()).error(error, t);
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    MessageDialog.openError(
+                            Display.getDefault().getActiveShell(),
+                            "Export could not be completed...", error);
+                }
+            });
         }
         monitor.worked(1);
 

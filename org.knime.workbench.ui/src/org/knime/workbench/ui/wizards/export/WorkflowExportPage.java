@@ -151,6 +151,7 @@ public class WorkflowExportPage extends WizardPage {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void createControl(final Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);
         // place components vertically
@@ -170,6 +171,7 @@ public class WorkflowExportPage extends WizardPage {
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         m_containerText.setLayoutData(gd);
         m_containerText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(final ModifyEvent e) {
                 dialogChanged();
             }
@@ -191,6 +193,7 @@ public class WorkflowExportPage extends WizardPage {
         gd = new GridData(GridData.FILL_HORIZONTAL);
         m_fileText.setLayoutData(gd);
         m_fileText.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(final ModifyEvent e) {
                 dialogChanged();
             }
@@ -531,7 +534,7 @@ public class WorkflowExportPage extends WizardPage {
 
     private void dialogChanged() {
         IContainer container = getSelectedContainer();
-        if (container == null) {
+        if (container == null || container instanceof IWorkspaceRoot) {
             updateStatus("Select an element to export!");
             return;
         }
