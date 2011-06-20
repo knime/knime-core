@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   28.09.2009 (Fabian Dill): created
  */
@@ -80,62 +80,60 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
 
 /**
- * Takes a column containing {@link DateAndTimeValue}s and converts them into 
- * strings by using a {@link SimpleDateFormat} which can be selected or entered 
- * in the dialog. 
- * 
+ * Takes a column containing {@link DateAndTimeValue}s and converts them into
+ * strings by using a {@link SimpleDateFormat} which can be selected or entered
+ * in the dialog.
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class Time2StringNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             Time2StringNodeModel.class);
-    
-    /** Suffix to append to existing column name as proposal for new col name. 
+
+    /** Suffix to append to existing column name as proposal for new col name.
      */
     static final String COL_NAME_SUFFIX = "string";
-    
+
     private final SettingsModelString m_selectedCol = String2DateDialog
         .createColumnSelectionModel();
-    
+
     private final SettingsModelString m_newColName = String2DateDialog
         .createColumnNameModel();
-    
+
     private final SettingsModelBoolean m_replaceCol = String2DateDialog
         .createReplaceModel();
-    
+
     private final SettingsModelString m_pattern = String2DateDialog
         .createFormatModel();
-    
+
     /**
      * One in port for the input table containing a time column, and one out
-     * port with the time converted to string.  
+     * port with the time converted to string.
      */
     public Time2StringNodeModel() {
         super(1, 1);
-        String2DateDialog.addColSelectionListener(m_selectedCol, m_newColName, 
-                COL_NAME_SUFFIX);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check if input has dateandtime column 
+        // check if input has dateandtime column
         DataTableSpec inSpec = inSpecs[0];
         if (!inSpec.containsCompatibleType(DateAndTimeValue.class)) {
             throw new InvalidSettingsException(
                     "Input table must contain at least timestamp column!");
         }
         // currently selected column still there?
-        String selectedColName = m_selectedCol.getStringValue(); 
+        String selectedColName = m_selectedCol.getStringValue();
         if (selectedColName != null && !selectedColName.isEmpty()) {
             if (!inSpec.containsName(selectedColName)) {
                 throw new InvalidSettingsException(
-                        "Column " + selectedColName 
+                        "Column " + selectedColName
                         + " not found in input spec!");
             }
         } else {
@@ -148,18 +146,18 @@ public class Time2StringNodeModel extends NodeModel {
                     break;
                 }
             }
-        }        
+        }
         // create output spec
         ColumnRearranger colRearranger = createColumnRearranger(inSpec);
         return new DataTableSpec[] {colRearranger.createSpec()};
     }
-    
+
     private ColumnRearranger createColumnRearranger(
             final DataTableSpec inSpec) {
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         // if replace -> use original column name
         final boolean replace = m_replaceCol.getBooleanValue();
-        String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+        String colName = DataTableSpec.getUniqueColumnName(inSpec,
                 m_newColName.getStringValue());
         if (replace) {
             colName = m_selectedCol.getStringValue();
@@ -185,7 +183,7 @@ public class Time2StringNodeModel extends NodeModel {
                                     v.getUTCCalendarClone().getTime());
                             return new StringCell(result);
                         }
-                        LOGGER.error("Encountered unsupported data type: " 
+                        LOGGER.error("Encountered unsupported data type: "
                                 + dc.getType() + " in row: " + row.getKey());
                         return DataType.getMissingCell();
                     }
@@ -197,9 +195,9 @@ public class Time2StringNodeModel extends NodeModel {
         }
         return rearranger;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -207,11 +205,11 @@ public class Time2StringNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         ColumnRearranger rearranger = createColumnRearranger(
                 inData[0].getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], 
+        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
                 rearranger, exec);
         return new BufferedDataTable[] {out};
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -275,7 +273,7 @@ public class Time2StringNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "New column name must not be empty!");
         }
-        
+
         m_pattern.validateSettings(settings);
         SettingsModelString patternStringModel = m_pattern
             .createCloneWithValidatedValue(settings);
@@ -284,7 +282,7 @@ public class Time2StringNodeModel extends NodeModel {
         try {
             new SimpleDateFormat(patternString);
         } catch (Exception e) {
-            throw new InvalidSettingsException("Pattern " + patternString 
+            throw new InvalidSettingsException("Pattern " + patternString
                     + " is invalid!");
         }
     }
@@ -293,20 +291,20 @@ public class Time2StringNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // no internals
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // no internals
     }
-    
+
 }
