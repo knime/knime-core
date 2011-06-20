@@ -14,7 +14,7 @@
             link.
         </intro>
         <option name="Directory base name">
-           Name prefix of the temporary direction. It will be amended by some random
+           Name prefix of the temporary directory. It will be amended by some random
            number to ensure uniqueness.
         </option>
         <option name="Export path as (variable name)">
