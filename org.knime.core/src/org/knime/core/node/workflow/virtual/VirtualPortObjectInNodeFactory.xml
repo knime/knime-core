@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./virtualIn.png" type="LoopStart">
+    <name>Virtual Start</name>
+    <shortDescription>Start node of a parallelized loop execution</shortDescription>
+    <fullDescription>
+    <intro>
+        Start node of a parallelized loop execution. The node passes the chunk of the
+        current execution into the loop body.
+    </intro>
+    </fullDescription>
+    <ports>
+        <outPort index="0" name="Output Data">
+            Data for current chunk.
+        </outPort>
+    </ports>
+</knimeNode>
