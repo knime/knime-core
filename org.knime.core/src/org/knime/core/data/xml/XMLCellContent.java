@@ -188,6 +188,7 @@ public class XMLCellContent implements XMLValue {
                 return doc;
             }
         });
+        writer.close();
         return os.toString();
     }
 
