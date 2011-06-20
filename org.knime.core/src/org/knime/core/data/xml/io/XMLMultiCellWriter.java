@@ -79,6 +79,8 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	private final boolean m_hasDedicatedRoot;
 	private final List<Boolean> m_preserveSpaceStack;
 	private final OutputStream m_os;
+    private static XMLOutputFactory XMLOUTPUTFACTORY =
+        XMLOutputFactory.newInstance();
 
 	/**
 	 * Create writer to write xml cells. This writer can be configured to skip
@@ -88,7 +90,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	 * @param writeHeader true when the xml header should be written
 	 * @throws IOException when header could not be written.
 	 */
-	XMLMultiCellWriter(final OutputStream os, boolean writeHeader)
+	XMLMultiCellWriter(final OutputStream os, final boolean writeHeader)
 	throws IOException {
 		try {
 			initWriter(os);
@@ -190,8 +192,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	/** Initialize the stream writer object.
 	 */
 	private void initWriter(final OutputStream os) throws XMLStreamException {
-		XMLOutputFactory factory = XMLOutputFactory.newInstance();
-		m_writer = factory.createXMLStreamWriter(os, "UTF-8");
+		m_writer = XMLOUTPUTFACTORY.createXMLStreamWriter(os, "UTF-8");
 	}
 
 
