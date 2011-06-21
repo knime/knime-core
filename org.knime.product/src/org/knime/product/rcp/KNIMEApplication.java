@@ -108,9 +108,9 @@ public class KNIMEApplication implements IApplication {
             if (isWin64) {
                 JOptionPane.showMessageDialog(null,
                         "\nDue to a known issue with Windows 64bit the "
-                                + "automatic relauch is disabled.\n\n"
-                                + "Please re-start KNIME manually.\n\n",
-                                "Manually Re-start KNIME",
+                                + "automatic restart is disabled.\n\n"
+                                + "Please restart KNIME manually.\n\n",
+                                "Manually restart KNIME",
                                 JOptionPane.WARNING_MESSAGE);
                 return EXIT_OK;
             }
