@@ -76,7 +76,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -84,7 +83,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
@@ -155,7 +153,7 @@ public final class FilesHistoryPanel extends JPanel {
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
 
         m_textBox.setPreferredSize(new Dimension(300, 25));
-        m_textBox.setRenderer(new MyComboBoxRenderer());
+        m_textBox.setRenderer(new ConvenientComboBoxRenderer());
         m_textBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -485,23 +483,6 @@ public final class FilesHistoryPanel extends JPanel {
         repaint();
         invalidate();
         repaint();
-    }
-
-    /** renderer that also supports to show customized tooltip. */
-    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            if (index > -1) {
-                list.setToolTipText(value.toString());
-            }
-            return super.getListCellRendererComponent(list, value, index,
-                    isSelected, cellHasFocus);
-        }
     }
 
     /**
