@@ -20,6 +20,11 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -29,6 +34,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
@@ -140,62 +146,76 @@ public class CreateNewConnectedNodeCommand extends AbstractKNIMECommand {
             return;
         }
         NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
-        int[] matchingPorts = getMatchingPorts(sourceNode, nc);
+        Map<Integer, Integer> matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts == null) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
                     + "no matching port type found at node "
                     + sourceNode.getNameWithID());
             return;
         }
-
-        LOGGER.info("Autoconnect: Connecting new node " + m_newNode + " port "
-                + matchingPorts[1] + " with existing node " + sourceNode
-                + " port " + matchingPorts[0]);
-        try {
-            hostWFM.addConnection(m_connectTo, matchingPorts[0], m_newNode,
-                    matchingPorts[1]).getID();
-        } catch (Exception e) {
-            String from = sourceNode.getNameWithID();
-            String to = nc.getNameWithID();
-            String msg =
-                    "Unable to add connection from " + from + " port "
-                            + matchingPorts[0] + " to " + to + "port "
-                            + matchingPorts[1] + ": " + e.getMessage();
-            LOGGER.error(msg);
+        for (Map.Entry<Integer, Integer> entry : matchingPorts.entrySet()) {
+            Integer leftPort = entry.getKey();
+            Integer rightPort = entry.getValue();
+            LOGGER.info("Autoconnect: Connecting new node " + m_newNode + " port "
+                    + rightPort + " with existing node " + sourceNode
+                    + " port " + leftPort);
+            try {
+                hostWFM.addConnection(m_connectTo, leftPort, m_newNode,
+                        rightPort).getID();
+            } catch (Exception e) {
+                String from = sourceNode.getNameWithID();
+                String to = nc.getNameWithID();
+                String msg =
+                        "Unable to add connection from " + from + " port "
+                                + leftPort + " to " + to + "port "
+                                + rightPort + ": " + e.getMessage();
+                LOGGER.error(msg);
+            }
         }
-
     }
 
-    private int[] getMatchingPorts(final NodeContainer left,
+    private Map<Integer, Integer> getMatchingPorts(final NodeContainer left,
             final NodeContainer right) {
         // don't auto connect to flow var ports - start with port index 1
         int leftFirst = (left instanceof WorkflowManager) ? 0 : 1;
         int rightFirst = (right instanceof WorkflowManager) ? 0 : 1;
-        int maybeLeft = -1;
-        int maybeRight = -1;
+        Map<Integer, Integer> matchingPorts = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> possibleMatches = new TreeMap<Integer, Integer>();
+        Set<Integer> assignedRight = new HashSet<Integer>();
         for (int rightPidx = rightFirst; rightPidx < right.getNrInPorts(); rightPidx++) {
             for (int leftPidx = leftFirst; leftPidx < left.getNrOutPorts(); leftPidx++) {
                 NodeOutPort leftPort = left.getOutPort(leftPidx);
                 NodeInPort rightPort = right.getInPort(rightPidx);
-                if (leftPort.getPortType().isSuperTypeOf(
-                        rightPort.getPortType())) {
+                PortType leftPortType = leftPort.getPortType();
+                PortType rightPortType = rightPort.getPortType();
+                if (leftPortType.isSuperTypeOf(rightPortType)) {
                     if (getHostWFM().getOutgoingConnectionsFor(left.getID(),
                             leftPidx).size() == 0) {
-                        // output not connected: use it.
-                        return new int[]{leftPidx, rightPidx};
-                    }
-                    // port already connected - we MAY use it
-                    if (maybeLeft < 0) {
-                        maybeLeft = leftPidx;
-                        maybeRight = rightPidx;
+                        if (!matchingPorts.containsKey(leftPidx)
+                                && !assignedRight.contains(rightPidx)) {
+                            // output not connected: use it.
+                            matchingPorts.put(leftPidx, rightPidx);
+                            assignedRight.add(rightPidx);
+                        }
+                    } else {
+                        // port already connected - we MAY use it
+                        if (!possibleMatches.containsKey(leftPidx)
+                                && !assignedRight.contains(rightPidx)) {
+                            possibleMatches.put(leftPidx, rightPidx);
+                        }
                     }
                 }
             }
         }
-        if (maybeLeft != -1) {
-            return new int[]{maybeLeft, maybeRight};
+        for (Map.Entry<Integer, Integer> entry : possibleMatches.entrySet()) {
+            Integer pl = entry.getKey();
+            Integer pr = entry.getValue();
+            if(!matchingPorts.containsKey(pl) && !assignedRight.contains(pr)) {
+                matchingPorts.put(pl, pr);
+                assignedRight.add(pr);
+            }
         }
-        return null;
+        return matchingPorts;
     }
 
     /** {@inheritDoc} */
