@@ -136,6 +136,7 @@ import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
+import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
@@ -6254,7 +6255,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
             QuickFormInputNode qfin = nodes.get(id);
             NodeSettingsWO oldSettings = new NodeSettings(nodeID);
-            qfin.getConfiguration().saveValue(oldSettings);
+            qfin.getConfiguration().getValueConfiguration().saveValue(oldSettings);
             if (!conf.equals(oldSettings)) {
             // FIXME: likely not here but in the WFM...
             // not needed (actually nodes not work) because WFM itself
@@ -6262,10 +6263,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //                SingleNodeContainer snc =
 //                    (SingleNodeContainer)this.getNodeContainer(id);
 //                 snc.reset();
-                    AbstractQuickFormConfiguration config =
-                        qfin.getConfiguration();
+                    AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
+                        (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
                     if (config != null) {
-                        config.loadValueInModel(conf);
+                        config.getValueConfiguration().loadValueInModel(conf);
                     }
              // see above: not needed
 //             this.configureNodeAndSuccessors(id, true);
@@ -6294,10 +6295,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 : findNodes(QuickFormInputNode.class, false).entrySet()) {
             String nodeID = Integer.toString(e.getKey().getIndex());
             NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
-            AbstractQuickFormConfiguration config =
-                e.getValue().getConfiguration();
+            AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
+                (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)e.getValue().getConfiguration();
             if (config != null) {
-                config.saveValue(subSettings);
+                config.getValueConfiguration().saveValue(subSettings);
             }
         }
 

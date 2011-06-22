@@ -45,51 +45,37 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
+ * History
+ *   Jun 20, 2011 (wiswedel): created
  */
 package org.knime.core.quickform;
 
-import java.awt.LayoutManager;
-
-import javax.swing.JPanel;
-
 import org.knime.core.node.InvalidSettingsException;
-
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  *
- * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
- *
- * @param <CFG> type configuration
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class QuickFormConfigurationPanel
-    <CFG extends AbstractQuickFormValueInConfiguration> extends JPanel {
+public abstract class AbstractQuickFormValueInConfiguration {
 
-
-    /**
-     *  */
-    public QuickFormConfigurationPanel() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
-
-    /**
-     * @param layout */
-    public QuickFormConfigurationPanel(final LayoutManager layout) {
-        super(layout);
-    }
-
-    /**
-     * Save quickform configuration.
-     * @param config save into
-     * @throws InvalidSettingsException if settings can't be saved
+    /** Save config to argument.
+     * @param settings To save value to.
      */
-    public abstract void saveSettings(final CFG config)
-            throws InvalidSettingsException;
+    public abstract void saveValue(final NodeSettingsWO settings);
 
-    /**
-     * Load quickform configuration.
-     * @param config load from
+    /** Load config in model.
+     * @param settings To load value from.
+     * @throws InvalidSettingsException If that fails for any reason.
      */
-    public abstract void loadSettings(final CFG config);
+    public abstract void loadValueInModel(final NodeSettingsRO settings)
+        throws InvalidSettingsException;
+
+    /** Load settings in dialog, init defaults if that fails.
+     * @param settings To load value from.
+     */
+    public abstract void loadValueInDialog(final NodeSettingsRO settings);
+
 
 }

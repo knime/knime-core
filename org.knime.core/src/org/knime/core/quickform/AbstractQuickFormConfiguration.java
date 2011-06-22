@@ -49,18 +49,23 @@
 package org.knime.core.quickform;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Abstract configuration, contains fields for label, description and weight.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class AbstractQuickFormConfiguration {
+public abstract class AbstractQuickFormConfiguration
+    <V extends AbstractQuickFormValueInConfiguration> {
 
     private String m_label = "Label";
     private String m_description;
+    private String m_variableName;
     private int m_weight;
+    private V m_valueConfiguration;
 
     /** @return the label */
     public String getLabel() {
@@ -91,15 +96,44 @@ public abstract class AbstractQuickFormConfiguration {
         m_description = description;
     }
 
+    /** @return the variableName */
+    public String getVariableName() {
+        return m_variableName;
+    }
+
+    /** @param variableName the variableName to set */
+    public void setVariableName(final String variableName) {
+        m_variableName = variableName;
+    }
+
+    /** @param reference the valueConfiguration to copy from, not null. */
+    public void copyValueConfigurationFrom(final V reference)
+        throws InvalidSettingsException {
+        V valueConfig = createValueConfiguration();
+        NodeSettings settings = new NodeSettings("copy");
+        reference.saveValue(settings);
+        valueConfig.loadValueInModel(settings);
+        m_valueConfiguration = valueConfig;
+    }
+
+    /** @return the valueConfiguration */
+    public V getValueConfiguration() {
+        if (m_valueConfiguration == null) {
+            m_valueConfiguration = createValueConfiguration();
+        }
+        return m_valueConfiguration;
+    }
+
     /** Save config to argument.
      * @param settings To save to.
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString("label", m_label);
         settings.addString("description", m_description);
+        settings.addString("variableName", m_variableName);
         settings.addInt("weight", m_weight);
-        // save the underlying value
-        saveValue(settings);
+        NodeSettingsWO valueSet = settings.addNodeSettings("value");
+        m_valueConfiguration.saveValue(valueSet);
     }
 
     /** Load config in model.
@@ -113,9 +147,13 @@ public abstract class AbstractQuickFormConfiguration {
             throw new InvalidSettingsException("Label must not be null");
         }
         m_description = settings.getString("description");
+        m_variableName =
+            verifyFlowVariableName(settings.getString("variableName"));
         m_weight = settings.getInt("weight");
-        // load the underlying value
-        loadValueInModel(settings);
+        NodeSettingsRO valueSet = settings.getNodeSettings("value");
+        V valueConfiguration = createValueConfiguration();
+        valueConfiguration.loadValueInModel(valueSet);
+        m_valueConfiguration = valueConfiguration;
     }
 
     /** Load settings in dialog, init defaults if that fails.
@@ -127,27 +165,34 @@ public abstract class AbstractQuickFormConfiguration {
             m_label = "Label";
         }
         m_description = settings.getString("description", "Enter Description");
+        m_variableName = settings.getString("variableName", "new variable");
         m_weight = settings.getInt("weight", 1);
-        // load the underlying value
-        loadValueInDialog(settings);
+        try {
+            verifyFlowVariableName(m_variableName);
+        } catch (InvalidSettingsException ise) {
+            m_variableName = "new variable";
+        }
+        V valueConfiguration = createValueConfiguration();
+        NodeSettingsRO valueSet;
+        try {
+            valueSet = settings.getNodeSettings("value");
+        } catch (InvalidSettingsException ise) {
+            valueSet = new NodeSettings("empty");
+        }
+        valueConfiguration.loadValueInDialog(valueSet);
+        m_valueConfiguration = valueConfiguration;
     }
 
-    /** Save config to argument.
-     * @param settings To save value to.
-     */
-    public abstract void saveValue(final NodeSettingsWO settings);
-
-    /** Load config in model.
-     * @param settings To load value from.
-     * @throws InvalidSettingsException If that fails for any reason.
-     */
-    public abstract void loadValueInModel(final NodeSettingsRO settings)
-        throws InvalidSettingsException;
-
-    /** Load settings in dialog, init defaults if that fails.
-     * @param settings To load value from.
-     */
-    public abstract void loadValueInDialog(final NodeSettingsRO settings);
+    private static String verifyFlowVariableName(
+            final String name) throws InvalidSettingsException {
+        try {
+            FlowVariable.Scope.Flow.verifyName(name);
+            return name;
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Invalid variable name \""
+                    + name + "\": " + e.getMessage(), e);
+        }
+    }
 
     /**
      * Create and return a controller that shows the label and description
@@ -155,8 +200,8 @@ public abstract class AbstractQuickFormConfiguration {
      * configuration.
      * @return a controller that layouts this quickform
      */
-    public abstract QuickFormConfigurationPanel
-            <? extends AbstractQuickFormConfiguration> createController();
+    public abstract QuickFormConfigurationPanel<V> createController();
 
+    public abstract V createValueConfiguration();
 
 }

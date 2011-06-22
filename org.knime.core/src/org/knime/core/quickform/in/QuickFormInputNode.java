@@ -50,6 +50,7 @@ package org.knime.core.quickform.in;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
+import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
 
 /**
@@ -71,7 +72,8 @@ public interface QuickFormInputNode {
     /** Get handle on current (filled) configuration or null.
      * @return The config to use.
      */
-    public AbstractQuickFormConfiguration getConfiguration();
+    public AbstractQuickFormConfiguration
+        <? extends AbstractQuickFormValueInConfiguration> getConfiguration();
 
     /** Loads values from the argument form element.
      * @param formElement To load from.
