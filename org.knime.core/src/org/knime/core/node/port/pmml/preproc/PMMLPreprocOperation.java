@@ -63,9 +63,13 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
+ * This class will be removed in a future version. Switching to XmlBeans makes
+ * it obsolete. Please implement a {@link PMMLPreprocTranslator} instead.
+ *
  * Abstract base class for all preprocessing operations in KNIME.
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public abstract class PMMLPreprocOperation {
     protected static final String LOCAL_TRANS = "LocalTransformations";
     protected static final String DATA_DICT = "DataDictionary";

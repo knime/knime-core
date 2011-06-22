@@ -48,21 +48,21 @@
 package org.knime.core.node.port.pmml;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 import javax.xml.transform.sax.TransformerHandler;
 
-import org.knime.core.data.DataCell;
+import org.dmg.pmml40.ApplicationDocument.Application;
+import org.dmg.pmml40.HeaderDocument.Header;
+import org.dmg.pmml40.PMMLDocument.PMML;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,47 +82,24 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class PMMLPortObjectSpec implements PortObjectSpec {
 
-    /** Constant for CDATA. */
-    protected static final String CDATA = "CDATA";
-
-    /** Constant for DataDictionary. */
-    protected static final String DATA_DICT = "DataDictionary";
-
-    /** Constant for DataField. */
-    protected static final String DATA_FIELD = "DataField";
-
-    /** Constant for Value. */
-    protected static final String VALUE = "Value";
-
-    /** Constant for MiningField tag. */
-    protected static final String MINING_FIELD = "MiningField";
-
-    /** Constant for the MiningSchema tag. */
-    public static final String MINING_SCHEMA = "MiningSchema";
-
-    /** Constant for the LocalTransformations tag. */
-    public static final String LOCAL_TRANS = "LocalTransformations";
+    /** The application name for PMML generated with KNIME. */
+    public static final String KNIME = "KNIME";
 
     private final DataTableSpec m_dataTableSpec;
 
     private final List<String> m_learningFields;
 
-    private final List<String> m_targetFields;
+    private final List<String> m_predictedFields;
+
+    private final List<String> m_preprocFields;
 
     private List<DataColumnSpec> m_learningCols;
 
-    private List<DataColumnSpec> m_targetCols;
+    private List<DataColumnSpec> m_predictedCols;
+
+    private List<DataColumnSpec> m_preprocCols;
 
     private static PortObjectSpecSerializer<PMMLPortObjectSpec> serializer;
-
-    private static final TreeSet<String> SUPPORTED_PMML_VERSIONS;
-
-    static {
-            SUPPORTED_PMML_VERSIONS = new TreeSet<String>();
-            SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V3_1);
-            SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V3_2);
-            SUPPORTED_PMML_VERSIONS.add(PMMLPortObject.PMML_V4_0);
-    };
 
     /**
      *
@@ -142,21 +119,29 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      * {@link PMMLPortObjectSpecCreator}.
      *
      * @param dataDictionary {@link DataTableSpec} describing the training data
-     * @param learningCols columns used for learning of the model
-     * @param targetCols columns to be predicted
+     * @param preprocFields all columns involved in preprocessing steps
+     * @param learningFields columns used for learning of the model
+     * @param targetFields columns to be predicted
      */
     PMMLPortObjectSpec(final DataTableSpec dataDictionary,
-            final List<String> learningCols, final List<String> targetCols) {
+            final List<String> preprocFields, final List<String> learningFields,
+            final List<String> targetFields) {
         m_dataTableSpec = dataDictionary;
-        if (learningCols == null) {
+
+        if (preprocFields == null) {
+            m_preprocFields = new LinkedList<String>();
+        } else {
+            m_preprocFields = new LinkedList<String>(preprocFields);
+        }
+        if (learningFields == null) {
             m_learningFields = new LinkedList<String>();
         } else {
-            m_learningFields = learningCols;
+            m_learningFields = new LinkedList<String>(learningFields);
         }
-        if (targetCols == null) {
-            m_targetFields = new LinkedList<String>();
+        if (targetFields == null) {
+            m_predictedFields = new LinkedList<String>();
         } else {
-            m_targetFields = targetCols;
+            m_predictedFields = new LinkedList<String>(targetFields);
         }
     }
 
@@ -173,7 +158,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      * @return those columns used for learning of the model
      */
     public List<String> getLearningFields() {
-        return m_learningFields;
+        return Collections.unmodifiableList(m_learningFields);
     }
 
     /**
@@ -185,14 +170,14 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             return m_learningCols;
         }
         List<DataColumnSpec> learningCols = new LinkedList<DataColumnSpec>();
-        for (String learncol : m_learningFields) {
-            DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(learncol);
-            assert colspec != null : "Learning column " + learncol + " not "
+        for (String learnCol : m_learningFields) {
+            DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(learnCol);
+            assert colspec != null : "Learning column " + learnCol + " not "
                     + "found in DataTableSpec.";
             learningCols.add(colspec);
         }
         m_learningCols = learningCols;
-        return m_learningCols;
+        return Collections.unmodifiableList(m_learningCols);
     }
 
     /**
@@ -200,7 +185,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      * @return by the model predicted columns
      */
     public List<String> getTargetFields() {
-        return m_targetFields;
+        return Collections.unmodifiableList(m_predictedFields);
     }
 
     /**
@@ -208,158 +193,93 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      * @return those columns used for learning of the model
      */
     public List<DataColumnSpec> getTargetCols() {
-        if (m_targetCols != null) {
-            return m_targetCols;
+        if (m_predictedCols != null) {
+            return m_predictedCols;
         }
         List<DataColumnSpec> targetCols = new LinkedList<DataColumnSpec>();
-        for (String targetCol : m_targetFields) {
+        for (String targetCol : m_predictedFields) {
             DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(targetCol);
             assert colspec != null : "Target column " + targetCol + " not "
                     + "found in DataTableSpec.";
             targetCols.add(colspec);
         }
-        m_targetCols = targetCols;
-        return m_targetCols;
+        m_predictedCols = targetCols;
+        return Collections.unmodifiableList(m_predictedCols);
     }
+
+    /**
+    * @return those columns involved in preprocessing steps
+    */
+   public List<String> getPreprocessingFields() {
+       return Collections.unmodifiableList(m_preprocFields);
+   }
+
+   /**
+    * @return those columns involved in preprocessing steps
+    */
+   public List<DataColumnSpec> getPreprocessingCols() {
+       if (m_preprocCols != null) {
+           return m_preprocCols;
+       }
+       List<DataColumnSpec> preprocCols = new LinkedList<DataColumnSpec>();
+       for (String preproc : m_preprocFields) {
+           DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(preproc);
+           assert colspec != null : "Preprocessing column " + preproc + " not "
+                   + "found in DataTableSpec.";
+           preprocCols.add(colspec);
+       }
+       m_preprocCols = preprocCols;
+       return Collections.unmodifiableList(m_preprocCols);
+   }
+
+   /**
+   *
+   * @return those columns used for preprocessing and learning the model
+   */
+  public Set<String> getActiveFields() {
+      LinkedHashSet<String> active = new LinkedHashSet<String>(
+              m_learningFields);
+      active.addAll(m_preprocFields);
+      return Collections.unmodifiableSet(active);
+  }
+
+ /**
+  *
+  * @return those columns used for preprocessing and learning the model
+  */
+  public List<DataColumnSpec> getActiveCols() {
+      Set<String> activeFields = getActiveFields();
+      List<DataColumnSpec> activeCols = new LinkedList<DataColumnSpec>();
+      for (String field : activeFields) {
+        activeCols.add(m_dataTableSpec.getColumnSpec(field));
+      }
+      return Collections.unmodifiableList(activeCols);
+  }
+
 
     // **************** Persistence methods*****************/
 
     /**
-     * Convenience method to write a PMML DataDictionary based on the data table
-     * spec.
-     *
-     * @param spec the spec to be converted into a PMML DataDictionary
-     * @param handler th econtent handler to write to
-     * @param pmmlVersion The version to write,
-     * e.g. {@link PMMLPortObject#PMML_V3_1}. This method fails if the version
-     * is not supported.
-     * @throws SAXException if something goes wrong during writing
+     * @param pmmlDoc the PMML document to write the header to
      */
-    static void writeDataDictionary(final DataTableSpec spec,
-            final TransformerHandler handler, final String pmmlVersion)
-            throws SAXException {
-        if (!SUPPORTED_PMML_VERSIONS.contains(pmmlVersion)) {
-            throw new SAXException("PMML model seems to be of an "
-                    + "unsupported version. Only PMML versions "
-                    + SUPPORTED_PMML_VERSIONS
-                    + " are supported. Found " + pmmlVersion);
+    public static void writeHeader(final PMML pmmlDoc) {
+        Header header = Header.Factory.newInstance();
+        String owner = System.getProperty("user.name");
+        if (owner == null || owner.isEmpty()) {
+            owner = KNIME;
         }
-        AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute(null, null, "numberOfFields", CDATA, ""
-                + spec.getNumColumns());
-        handler.startElement(null, null, DATA_DICT, attr);
-        // DataFields
-        attr = new AttributesImpl();
-        for (DataColumnSpec colSpec : spec) {
-            // name
-            attr.addAttribute(null, null, "name", CDATA, colSpec.getName());
-            // optype
-            String opType = "";
-            if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                opType = "continuous";
-            } else if (colSpec.getType().isCompatible(NominalValue.class)) {
-                opType = "categorical";
-            } else {
-                throw new SAXException("Type " + colSpec.getType()
-                        + " is not supported"
-                        + " by PMML. Allowed types are only all "
-                        + "double-compatible and all nominal value "
-                        + "compatible types.");
-            }
-            attr.addAttribute(null, null, "optype", CDATA, opType);
-            // data type
-            String dataType = getDataType(colSpec);
+        header.setCopyright(owner);
 
-            attr.addAttribute(null, null, "dataType", CDATA, dataType);
-            handler.startElement(null, null, DATA_FIELD, attr);
-            // Value
-            if (colSpec.getType().isCompatible(NominalValue.class)
-                    && colSpec.getDomain().hasValues()) {
-                for (DataCell possVal : colSpec.getDomain().getValues()) {
-                    AttributesImpl attr2 = new AttributesImpl();
-                    attr2.addAttribute(null, null, "value", CDATA, possVal
-                            .toString());
-                    handler.startElement(null, null, VALUE, attr2);
-                    handler.endElement(null, null, VALUE);
-                }
-            } else if (colSpec.getType().isCompatible(DoubleValue.class)
-                    && colSpec.getDomain().hasBounds()) {
-                // Interval
-                AttributesImpl attr2 = new AttributesImpl();
-                attr2.addAttribute(null, null, "closure", CDATA,
-                                "closedClosed");
-                attr2.addAttribute(null, null, "leftMargin", CDATA, ""
-                        + colSpec.getDomain().getLowerBound());
-                attr2.addAttribute(null, null, "rightMargin", CDATA, ""
-                        + colSpec.getDomain().getUpperBound());
-                handler.startElement(null, null, "Interval", attr2);
-                handler.endElement(null, null, "Interval");
-            }
-            handler.endElement(null, null, DATA_FIELD);
-        }
-        handler.endElement(null, null, DATA_DICT);
+        Application application = Application.Factory.newInstance();
+        application.setName(KNIME);
+        application.setVersion(KNIMEConstants.MAJOR + "." + KNIMEConstants.MINOR
+                + "." + KNIMEConstants.REV);
+        header.setApplication(application);
+
+        pmmlDoc.setHeader(header);
     }
 
-    /**
-     *
-     * @param colSpec the column spec to get the PMML data type attribute from
-     * @return the PMML data type for the {@link DataColumnSpec}
-     */
-    public static String getDataType(final DataColumnSpec colSpec) {
-        String dataType = "unknown";
-        if (colSpec.getType().isCompatible(IntValue.class)) {
-            dataType = "integer";
-        } else if (colSpec.getType().isCompatible(DoubleValue.class)) {
-            dataType = "double";
-        } else if (colSpec.getType().isCompatible(StringValue.class)) {
-            dataType = "string";
-        }
-        return dataType;
-    }
 
-    /**
-     * Writes the MiningSchema based upon the fields of the passed
-     * {@link PMMLPortObjectSpec}. Since the MiningSchema is inside the model
-     * tag of the PMML file, implementing classes have to take open their model
-     * tag, then call this method, write their model content and close the model
-     * tag.
-     *
-     * @param portSpec based upon this port object spec the mining schema is
-     *            written
-     * @param handler transformation handler to write to
-     * {@link PMMLPortObject#PMML_V3_1}. This method fails if the version is
-     * unsupported.
-     * @throws SAXException if something goes wrong
-     */
-    public static void writeMiningSchema(final PMMLPortObjectSpec portSpec,
-            final TransformerHandler handler)
-            throws SAXException {
-        // start MiningSchema
-        handler.startElement(null, null, MINING_SCHEMA, null);
-        // active columns = learning fields
-        for (String colSpec : portSpec.getLearningFields()) {
-            AttributesImpl atts = new AttributesImpl();
-            // don't write usageType = active (is default)
-            atts.addAttribute(null, null, "name", CDATA, colSpec);
-            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
-                    "asIs");
-            handler.startElement(null, null, MINING_FIELD, atts);
-            handler.endElement(null, null, MINING_FIELD);
-        }
-        // target columns = predicted
-        for (String colSpec : portSpec.getTargetFields()) {
-            AttributesImpl atts = new AttributesImpl();
-            // name
-            atts.addAttribute(null, null, "name", CDATA, colSpec);
-            // usageType = active
-            atts.addAttribute(null, null, "usageType", CDATA, "predicted");
-            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
-                    "asIs");
-            handler.startElement(null, null, MINING_FIELD, atts);
-            handler.endElement(null, null, MINING_FIELD);
-        }
-        handler.endElement(null, null, MINING_SCHEMA);
-    }
 
     private static final String DTS_KEY = "DataTableSpec";
 
@@ -372,6 +292,10 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     private static final String LEARNING_KEY = "learning";
 
     private static final String TARGET_KEY = "target";
+
+    private static final String PREPROC_COL_FILE = "ActiveColumns.xml";
+    private static final String PREPROC_KEY = "preprocessing";
+    private static final String PREPROC_COL_KEY = "preprocColumns";
 
     /**
      *
@@ -389,11 +313,15 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         NodeSettings miningSchema = new NodeSettings(MINING_SCHEMA_KEY);
         miningSchema.addStringArray(LEARNING_KEY, m_learningFields
                 .toArray(new String[0]));
-        miningSchema.addStringArray(TARGET_KEY, m_targetFields
+        miningSchema.addStringArray(TARGET_KEY, m_predictedFields
                 .toArray(new String[0]));
-
         out.putNextEntry(new ZipEntry(MINING_SCHEMA_FILE));
         miningSchema.saveToXML(noCloseOut);
+        out.putNextEntry(new ZipEntry(PREPROC_COL_FILE));
+        NodeSettings preprocessing = new NodeSettings(PREPROC_KEY);
+        preprocessing.addStringArray(PREPROC_COL_KEY,
+                m_preprocFields.toArray(new String[0]));
+        preprocessing.saveToXML(noCloseOut);
         out.close();
     }
 
@@ -438,39 +366,26 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
             }
             targetCols.add(colName);
         }
-        return new PMMLPortObjectSpec(dataTableSpec, learningCols, targetCols);
-    }
 
-    /**
-     *
-     * @param handler the handler to write to
-     * @param pmmlVersion The PMML version to write, e.g.
-     * {@link PMMLPortObject#PMML_V3_1}. This method fails if the version is
-     * unsupported.
-     * @throws SAXException if something goes wrong
-     */
-    static void writeHeader(final TransformerHandler handler,
-            final String pmmlVersion) throws SAXException {
-        if (!SUPPORTED_PMML_VERSIONS.contains(pmmlVersion)) {
-            throw new SAXException("PMML model seems to be of an "
-                    + "unsupported version. Only PMML versions "
-                    + SUPPORTED_PMML_VERSIONS
-                    + " are supported. Found " + pmmlVersion);
+        // the preprocessing settings if existent
+        ZipEntry preprocEntry = in.getNextEntry();
+        List<String> activeCols = null;
+        if (preprocEntry != null) {
+            NodeSettingsRO preprocSettings = NodeSettings.loadFromXML(
+                    noCloseIn);
+            activeCols = new LinkedList<String>();
+            for (String colName : preprocSettings.getStringArray(
+                    PREPROC_COL_KEY)) {
+                DataColumnSpec colSpec = dataTableSpec.getColumnSpec(colName);
+                if (colSpec == null) {
+                    throw new InvalidSettingsException("Column " + colName
+                            + " is not in DataTableSpec");
+                }
+                activeCols.add(colName);
+            }
         }
-        AttributesImpl atts = new AttributesImpl();
-        String owner = System.getProperty("user.name");
-        if (owner == null || owner.isEmpty()) {
-            owner = "KNIME";
-        }
-        atts.addAttribute(null, null, "copyright", CDATA, owner);
-        handler.startElement(null, null, "Header", atts);
-        atts = new AttributesImpl();
-        atts.addAttribute(null, null, "name", CDATA, "KNIME");
-        atts.addAttribute(null, null, "version", CDATA, KNIMEConstants.MAJOR
-                + "." + KNIMEConstants.MINOR + "." + KNIMEConstants.REV);
-        handler.startElement(null, null, "Application", atts);
-        handler.endElement(null, null, "Application");
-        handler.endElement(null, null, "Header");
+        return new PMMLPortObjectSpec(dataTableSpec, activeCols,
+                learningCols, targetCols);
     }
 
     /**
@@ -479,6 +394,65 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
      */
     @Override
     public JComponent[] getViews() {
-        return new JComponent[]{new DataTableSpecView(getDataTableSpec())};
+        DataTableSpec activeTableSpec = new DataTableSpec(
+                getActiveCols().toArray(new DataColumnSpec[0]));
+        return new JComponent[]{new DataTableSpecView(activeTableSpec)};
+    }
+
+/*__________________________________________________________________________*/
+    /* TODO Remove after all has been switched to XMLBeans!
+     * Just added temporary for models still using SAX. Will be removed soon.*/
+    /** Constant for CDATA. */
+    private static final String CDATA = "CDATA";
+
+    /** Constant for MiningField tag. */
+    private static final String MINING_FIELD = "MiningField";
+
+    /** Constant for the MiningSchema tag. */
+    private static final String MINING_SCHEMA = "MiningSchema";
+
+    /**
+     * Writes the MiningSchema based upon the fields of the passed
+     * {@link PMMLPortObjectSpec}. Since the MiningSchema is inside the model
+     * tag of the PMML file, implementing classes have to take open their model
+     * tag, then call this method, write their model content and close the model
+     * tag.
+     *
+     * @param portSpec based upon this port object spec the mining schema is
+     *            written
+     * @param handler transformation handler to write to
+     * {@link PMMLPortObject#PMML_V3_1}. This method fails if the version is
+     * unsupported.
+     * @throws SAXException if something goes wrong
+     */
+    @Deprecated
+    public static void writeMiningSchema(final PMMLPortObjectSpec portSpec,
+            final TransformerHandler handler)
+            throws SAXException {
+        // start MiningSchema
+        handler.startElement(null, null, MINING_SCHEMA, null);
+        // active columns = learning fields
+        for (String colSpec : portSpec.getLearningFields()) {
+            AttributesImpl atts = new AttributesImpl();
+            // don't write usageType = active (is default)
+            atts.addAttribute(null, null, "name", CDATA, colSpec);
+            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
+                    "asIs");
+            handler.startElement(null, null, MINING_FIELD, atts);
+            handler.endElement(null, null, MINING_FIELD);
+        }
+        // target columns = predicted
+        for (String colSpec : portSpec.getTargetFields()) {
+            AttributesImpl atts = new AttributesImpl();
+            // name
+            atts.addAttribute(null, null, "name", CDATA, colSpec);
+            // usageType = active
+            atts.addAttribute(null, null, "usageType", CDATA, "predicted");
+            atts.addAttribute(null, null, "invalidValueTreatment", CDATA,
+                    "asIs");
+            handler.startElement(null, null, MINING_FIELD, atts);
+            handler.endElement(null, null, MINING_FIELD);
+        }
+        handler.endElement(null, null, MINING_SCHEMA);
     }
 }

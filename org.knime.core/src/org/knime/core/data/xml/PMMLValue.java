@@ -25,7 +25,7 @@ package org.knime.core.data.xml;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 

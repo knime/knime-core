@@ -60,22 +60,80 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Dominik Morent, KNIME.com GmbH, Zuerich, Switzerland
  */
 public class PMMLPortObjectSpecCreator {
 
-    private final DataTableSpec m_dataTableSpec;
+    private DataTableSpec m_dataTableSpec;
 
-    private final List<String> m_learningCols;
+    private List<String> m_learningCols;
 
-    private final List<String> m_targetCols;
+    private List<String> m_targetCols;
+
+    private List<String> m_preprocCols;
 
     /**
      * @param tableSpec equivalent to the data dictionary
      */
     public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) {
-        m_dataTableSpec = tableSpec;
-        m_learningCols = new LinkedList<String>();
-        m_targetCols = new LinkedList<String>();
+       init(null, tableSpec);
+    }
+
+    /**
+     * Creates a new {@link PMMLPortObjectSpecCreator} based on an existing
+     * {@link PMMLPortObject}. If portObject is null it has the same effect as
+     * calling {@link #PMMLPortObjectSpecCreator(DataTableSpec)}.
+     *
+     * @param portObject the {@link PMMLPortObject} to base this instance on
+     * @param tableSpec the {@link DataTableSpec}
+     */
+    public PMMLPortObjectSpecCreator(final PMMLPortObject portObject,
+            final DataTableSpec tableSpec) {
+        if (portObject != null) {
+            PMMLPortObjectSpec portSpec = portObject.getSpec();
+            init(portSpec, tableSpec);
+        } else {
+            init(null, tableSpec);
+        }
+    }
+
+
+    /**
+     * Creates a new {@link PMMLPortObjectSpecCreator} based on an existing
+     * {@link PMMLPortObjectSpec} and a {@link DataTableSpec}.
+     *
+     * @param portSpec the {@link PMMLPortObjectSpec} to base this instance on
+     * @param tableSpec the {@link DataTableSpec}
+     */
+    public PMMLPortObjectSpecCreator(final PMMLPortObjectSpec portSpec,
+            final DataTableSpec tableSpec) {
+        init(portSpec, tableSpec);
+    }
+
+    /**
+     * Creates a new {@link PMMLPortObjectSpecCreator} based on an existing
+     * {@link PMMLPortObjectSpec}.
+     *
+     * @param portSpec the {@link PMMLPortObjectSpec} to base this instance on
+     */
+    public PMMLPortObjectSpecCreator(final PMMLPortObjectSpec portSpec) {
+        init(portSpec, portSpec.getDataTableSpec());
+    }
+
+    private void init(final PMMLPortObjectSpec portSpec,
+            final DataTableSpec newSpec) {
+        m_dataTableSpec = newSpec;
+        if (portSpec != null) {
+            m_learningCols = new LinkedList<String>(
+                    portSpec.getLearningFields());
+            m_targetCols = new LinkedList<String>(portSpec.getTargetFields());
+            m_preprocCols = new LinkedList<String>(
+                    portSpec.getPreprocessingFields());
+        } else {
+            m_learningCols = new LinkedList<String>();
+            m_targetCols = new LinkedList<String>();
+            m_preprocCols = new LinkedList<String>();
+        }
     }
 
     /**
@@ -89,10 +147,9 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Learning columns must not be null!");
         }
-        if (isValidColumnSpecNames(learningCols)) {
-            m_learningCols.clear();
-            m_learningCols.addAll(learningCols);
-        }
+        validateColumnNames(learningCols);
+        m_learningCols.clear();
+        m_learningCols.addAll(learningCols);
     }
 
     /**
@@ -105,11 +162,10 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Learning columns must not be null!");
         }
-        if (isValidColumnSpec(learningCols)) {
-            m_learningCols.clear();
-            for (DataColumnSpec colSpec : learningCols) {
-                m_learningCols.add(colSpec.getName());
-            }
+        validateColumns(learningCols);
+        m_learningCols.clear();
+        for (DataColumnSpec colSpec : learningCols) {
+            m_learningCols.add(colSpec.getName());
         }
     }
 
@@ -130,13 +186,6 @@ public class PMMLPortObjectSpecCreator {
         // add all columns as learning columns
         List<String>colNames = new LinkedList<String>();
         for (DataColumnSpec colSpec : tableSpec) {
-            if (!colSpec.getType().isCompatible(DoubleValue.class)
-                    && !colSpec.getType().isCompatible(NominalValue.class)) {
-                colNames.clear();
-                throw new InvalidSettingsException(
-                        "Only double and nominal value compatible columns "
-                        + "are yet supported for PMML models!");
-            }
             colNames.add(colSpec.getName());
         }
         setLearningColsNames(colNames);
@@ -171,10 +220,9 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Target columns must not be null!");
         }
-        if (isValidColumnSpecNames(targetCols)) {
-            m_targetCols.clear();
-            m_targetCols.addAll(targetCols);
-        }
+        validateColumnNames(targetCols);
+        m_targetCols.clear();
+        m_targetCols.addAll(targetCols);
         m_learningCols.removeAll(m_targetCols);
     }
 
@@ -189,13 +237,44 @@ public class PMMLPortObjectSpecCreator {
             throw new IllegalArgumentException(
                     "Target columns must not be null!");
         }
-        if (isValidColumnSpec(targetCols)) {
-            m_targetCols.clear();
-            for (DataColumnSpec colSpec : targetCols) {
-                m_targetCols.add(colSpec.getName());
-            }
+        validateColumns(targetCols);
+        m_targetCols.clear();
+        for (DataColumnSpec colSpec : targetCols) {
+            m_targetCols.add(colSpec.getName());
         }
         m_learningCols.removeAll(m_targetCols);
+    }
+
+    /**
+     * Adds the specified columns as preprocessing column. Nothing happens if
+     * they are already set as preprocessing column.
+     *
+     * @param activeCols active columns
+     */
+    public void addPreprocCols(final List<DataColumnSpec> activeCols) {
+        if (activeCols == null) {
+            throw new IllegalArgumentException(
+                    "Target columns must not be null!");
+        }
+        validateColumns(activeCols);
+        for (DataColumnSpec colSpec : activeCols) {
+            m_preprocCols.add(colSpec.getName());
+        }
+    }
+
+    /**
+     * Adds the specified column names as preprocessing column. Nothing happens
+     * if they are already set as preprocessing column.
+     *
+     * @param colNames the names of the columns to be marked as active
+     */
+    public void addPreprocColNames(final List<String> colNames) {
+        validateColumnNames(colNames);
+        for (String columnName : colNames) {
+            if (!m_preprocCols.contains(columnName)) {
+                m_preprocCols.add(columnName);
+            }
+        }
     }
 
     /**
@@ -205,42 +284,20 @@ public class PMMLPortObjectSpecCreator {
      * @return created spec based upon the set attributes
      */
     public PMMLPortObjectSpec createSpec() {
-        if (m_learningCols.isEmpty()) {
-            /*
-             * Add remaining compatible columns as learning columns if no
-             * learning column has been set explicitly. Remaining columns are
-             * all columns that have not been set as target or ignore column.
-             */
-            List<String> colNames = new LinkedList<String>();
-            for (DataColumnSpec colSpec : m_dataTableSpec) {
-                if (isValidColumnSpec(colSpec)) {
-                    colNames.add(colSpec.getName());
-                }
-            }
-            colNames.removeAll(m_targetCols);
-            setLearningColsNames(colNames);
-        }
-        return new PMMLPortObjectSpec(m_dataTableSpec, m_learningCols, m_targetCols);
+        return new PMMLPortObjectSpec(m_dataTableSpec, m_preprocCols,
+                m_learningCols, m_targetCols);
     }
 
-    private boolean isValidColumnSpec(final List<DataColumnSpec> colSpecs) {
-        for (DataColumnSpec colSpec : colSpecs) {
-            if (m_dataTableSpec.getColumnSpec(colSpec.getName()) == null) {
-                throw new IllegalArgumentException("Column with name "
-                        + colSpec.getName()
-                        + " is not in underlying DataTableSpec!");
-            }
-            if (!isValidColumnSpec(colSpec)) {
-                throw new IllegalArgumentException(
-                        "Only double and nominal value compatible columns "
-                                + "are yet supported for PMML models!");
-            }
-        }
-        return true;
-    }
-
-    private boolean isValidColumnSpecNames(final List<String> colSpecs) {
-        for (String colSpec : colSpecs) {
+    /**
+     * Checks if the provided column names are valid.
+     *
+     * @param columnNames a list of column names
+     * @throws IllegalArgumentException if the column names are not valid and
+     *      cannot be set as learning, target or preprocessing column
+     */
+    private void validateColumnNames(final List<String> columnNames)
+            throws IllegalArgumentException {
+        for (String colSpec : columnNames) {
             DataColumnSpec columnSpec = m_dataTableSpec.getColumnSpec(colSpec);
             if (m_dataTableSpec.getColumnSpec(colSpec) == null) {
                 throw new IllegalArgumentException("Column with name "
@@ -252,10 +309,19 @@ public class PMMLPortObjectSpecCreator {
                                 + "are yet supported for PMML models!");
             }
         }
-        return true;
     }
 
-    private boolean isValidColumnSpec(final DataColumnSpec columnSpec) {
+    private static void validateColumns(final List<DataColumnSpec> colSpecs) {
+        for (DataColumnSpec colSpec : colSpecs) {
+            if (!isValidColumnSpec(colSpec)) {
+                throw new IllegalArgumentException(
+                        "Only double and nominal value compatible columns "
+                                + "are yet supported for PMML models!");
+            }
+        }
+    }
+
+    private static boolean isValidColumnSpec(final DataColumnSpec columnSpec) {
         return columnSpec.getType().isCompatible(DoubleValue.class)
                 || columnSpec.getType().isCompatible(NominalValue.class);
     }

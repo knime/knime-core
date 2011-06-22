@@ -79,9 +79,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
+ * This class should no longer be used. PMML support is handled now with the
+ * help of XMLBeans. A {@link PMMLTranslator} should be implemented to provide
+ * the translation from PMML to KNIME and vice versa.
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public abstract class PMMLContentHandler extends DefaultHandler
         implements ContentHandler {
     /**
@@ -311,6 +315,37 @@ public abstract class PMMLContentHandler extends DefaultHandler
         }
     }
 
+        /**
+         * @param spec the pmml port object spec
+         * @return an input stream containing the model fragment
+         * @throws SAXException if the model cannot be added
+         */
+        public final ByteArrayInputStream getPMMLModelFragment(
+                final PMMLPortObjectSpec spec)
+                throws SAXException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            SAXTransformerFactory fac =
+                    (SAXTransformerFactory)TransformerFactory.newInstance();
+            TransformerHandler handler;
+            try {
+                handler = fac.newTransformerHandler();
+            } catch (TransformerConfigurationException e) {
+                throw new SAXException(e);
+            }
+            Transformer t = handler.getTransformer();
+            t.setOutputProperty(OutputKeys.METHOD, "xml");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            handler.setResult(new StreamResult(out));
+            handler.startDocument();
+
+            /* Here the subclasses can insert the content by overriding the
+             * addModelContent method.*/
+            addPMMLModelContent(handler, spec);
+
+            handler.endDocument();
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+
     /**
      * Derived classes should override this method to add the model content.
      * They can assume that the document is started and will be ended and should
@@ -318,6 +353,7 @@ public abstract class PMMLContentHandler extends DefaultHandler
      * If they want to support the addition of LocalTransformations they have to
      * provide an empty <LocalTransformation></LocalTransformations> element
      * that can be filled later with preprocessing operations.
+     *
      *
      * @param handler the transformer handler
      * @param spec the port object spec

@@ -50,10 +50,6 @@ package org.knime.core.node.port.pmml;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
@@ -106,16 +102,8 @@ public final class PMMLPortObjectSerializer extends
     public void savePortObject(final PMMLPortObject portObject,
             final PortObjectZipOutputStream out, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        try {
-            out.putNextEntry(new ZipEntry(FILE_NAME));
-            portObject.save(out);
-        } catch (TransformerConfigurationException e) {
-            throw new IOException(e);
-        } catch (TransformerFactoryConfigurationError e) {
-            throw new IOException(e);
-        } catch (TransformerException e) {
-            throw new IOException(e);
-        }
+        out.putNextEntry(new ZipEntry(FILE_NAME));
+        portObject.save(out);
     }
 
 }

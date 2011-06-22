@@ -44,108 +44,39 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- */
+  *
+  * History
+  *   Apr 15, 2011 (morent): created
+  */
+
 package org.knime.core.node.port.pmml;
 
-import java.util.Set;
-import java.util.TreeSet;
+import org.apache.xmlbeans.SchemaType;
+import org.dmg.pmml40.PMMLDocument;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+
 
 /**
- *
- * @author Fabian Dill, University of Konstanz
+ * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
-public class ExtractModelTypeHandler extends PMMLContentHandler {
-    /** Public ID .*/
-    public static final String ID = "ExtractModel";
+public interface PMMLTranslator {
 
-    private PMMLModelType m_type = null;
-
-    private boolean m_hasNamespace = false;
-
+    /* @param pmmlDoc the PMML document to initialize from
+    *      ("consume") successfully processed elements from the PMML document*/
     /**
+     * Initializes the translator based on a PMML document.
      *
-     * @return the type of valid PMML models
+     * @param pmmlDoc the PMML document
      */
-    public PMMLModelType getModelType() {
-        return m_type;
-    }
+    public void initializeFrom(PMMLDocument pmmlDoc);
 
     /**
-     * {@inheritDoc}
+     * Exports the translators state to a PMML document.
+     * @param pmmlDoc the PMML document to export to
+     * @param spec the spec of the PMMLPortObject
+     * @return the schema type of the exported schema if applicable,
+     *      otherwise null
      */
-    @Override
-    public void characters(final char[] ch, final int start, final int length)
-            throws SAXException {
-        // ignore -> we are only searching for the model type
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void endDocument() throws SAXException {
-        if (m_type == null) {
-            m_type = PMMLModelType.None;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void endElement(final String uri, final String localName,
-            final String name) throws SAXException {
-        for (PMMLModelType t : PMMLModelType.values()) {
-            if (t.name().equals(name)) {
-                if (m_type != null) {
-                    throw new SAXException("Multiple PMML models in one PMML "
-                            + "file are not yet supported. Found "
-                            + m_type.name() + " and " + name + ".");
-                }
-                m_type = t;
-                break;
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void startElement(final String uri, final String localName,
-            final String name, final Attributes atts) throws SAXException {
-        // leave empty -> we are only searching for the model type
-        if (name.equals("PMML")) {
-            if (atts.getValue("xmlns") != null
-                    && atts.getValue("xmlns").startsWith(
-                            "http://www.dmg.org/PMML-")) {
-                m_hasNamespace = true;
-            }
-        }
-    }
-
-    /**
-     *
-     * @return true if there is a PMML namespace declaration
-     */
-    public boolean hasNamespace() {
-        return m_hasNamespace;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Set<String> getSupportedVersions() {
-        Set<String> versions = new TreeSet<String>();
-        versions.add(PMMLPortObject.PMML_V3_0);
-        versions.add(PMMLPortObject.PMML_V3_1);
-        versions.add(PMMLPortObject.PMML_V3_2);
-        versions.add(PMMLPortObject.PMML_V4_0);
-        return versions;
-    }
+    public SchemaType exportTo(PMMLDocument pmmlDoc, PMMLPortObjectSpec spec);
 
 }

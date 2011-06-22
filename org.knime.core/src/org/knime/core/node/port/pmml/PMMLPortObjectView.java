@@ -62,6 +62,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
+import org.knime.core.pmml.PMMLModelType;
 import org.xml.sax.InputSource;
 
 /**
@@ -91,12 +92,12 @@ public class PMMLPortObjectView extends JComponent {
 
         Set<PMMLModelType> types = portObject.getPMMLValue().getModelTypes();
         if (types.isEmpty()) {
-            setName("Unknown PMML model");
+            setName("PMML model");
         } else {
             StringBuffer sb = new StringBuffer();
             sb.append("PMML: ");
             for (PMMLModelType pmmlModelType : types) {
-                sb.append(pmmlModelType.getClass().getName());
+                sb.append(pmmlModelType.toString());
                 sb.append(" ");
             }
             setName(sb.toString());
