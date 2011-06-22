@@ -63,9 +63,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
-import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeHandler;
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator;
 import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
@@ -180,6 +179,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /** Index of input data port. */
     public static final int DATA_INPORT = 0;
+    /** Index of optional model in port. */
+    public static final int MODEL_INPORT = 1;
 
     /** Index of model out port. */
     public static final int MODEL_OUTPORT = 0;
@@ -347,10 +348,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Inits a new Decision Tree model with one data in- and one model output
-     * port.
+     * port. In addition it has an optional model input.
      */
     public DecisionTreeLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
+        super(new PortType[]{BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)},
                 new PortType[]{PMMLPortObject.TYPE});
     }
 
@@ -485,15 +487,23 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
-        PMMLPortObjectSpec pmmlOutSpec = createPMMLPortObjectSpec(
-                inData.getDataTableSpec());
-        PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
-                new PMMLDecisionTreeHandler(m_decisionTree));
-        return new PortObject[]{pmmlPort};
+
+        // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)data[1];
+        DataTableSpec inSpec = inData.getSpec();
+        PMMLPortObjectSpec outPortSpec = createPMMLPortObjectSpec(
+                inPMMLPort == null ? null : inPMMLPort.getSpec(),
+                        inSpec);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec,
+                inPMMLPort, inData.getSpec());
+        outPMMLPort.addModelTranslater(new PMMLDecisionTreeTranslator(
+                m_decisionTree));
+
+        return new PortObject[]{outPMMLPort};
     }
 
     private PMMLPortObjectSpec createPMMLPortObjectSpec(
-            final DataTableSpec spec) throws InvalidSettingsException {
+            final PMMLPortObjectSpec modelSpec, final DataTableSpec spec) {
         String targetCol = m_classifyColumn.getStringValue();
         List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
@@ -508,8 +518,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         String[] usedCols = learnCols.toArray(new String[learnCols.size() + 1]);
         usedCols[usedCols.length - 1] = targetCol;
         PMMLPortObjectSpecCreator pmmlSpecCreator =
-                new PMMLPortObjectSpecCreator(
-                       FilterColumnTable.createFilterTableSpec(spec, usedCols));
+                new PMMLPortObjectSpecCreator(modelSpec, spec);
         pmmlSpecCreator.setLearningColsNames(learnCols);
         pmmlSpecCreator.setTargetColName(targetCol);
         return pmmlSpecCreator.createSpec();
@@ -786,6 +795,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
+        PMMLPortObjectSpec modelSpec
+                = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
         // check spec with selected column
         String classifyColumn = m_classifyColumn.getStringValue();
         DataColumnSpec columnSpec = inSpec.getColumnSpec(classifyColumn);
@@ -812,7 +823,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throw new InvalidSettingsException("Table contains no nominal"
                     + " attribute for classification.");
         }
-        return new PortObjectSpec[]{createPMMLPortObjectSpec(inSpec)};
+        return new PortObjectSpec[]{createPMMLPortObjectSpec(modelSpec,
+                inSpec)};
     }
 
     /**

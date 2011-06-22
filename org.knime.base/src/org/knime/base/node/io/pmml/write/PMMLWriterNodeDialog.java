@@ -56,33 +56,43 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
-    
+
     /**
-     * 
+     *
      */
     public PMMLWriterNodeDialog() {
         addDialogComponent(new DialogComponentFileChooser(
-                createFileModel(), "pmml.writer.history", 
+                createFileModel(), "pmml.writer.history",
                 JFileChooser.SAVE_DIALOG, ".pmml", ".xml"));
+        DialogComponentBoolean validateComponent = new DialogComponentBoolean(
+                createValidateModel(), "Validate PMML before export.");
+        validateComponent.setToolTipText("It is recommended to perform the "
+                + "validation.");
+        addDialogComponent(validateComponent);
         addDialogComponent(new DialogComponentBoolean(
                 createOverwriteOKModel(), "Overwrite OK"));
     }
-    
+
     /**
-     * 
+     *
      * @return name of PMML file model
      */
     static SettingsModelString createFileModel() {
         return new SettingsModelString("PMMLWriterFile", "");
     }
-    
+
     /** @return new model for "overwrite OK" checker. */
     static SettingsModelBoolean createOverwriteOKModel() {
         return new SettingsModelBoolean("overwriteOK", false);
+    }
+
+    /** @return new model for "overwrite OK" checker. */
+    static SettingsModelBoolean createValidateModel() {
+        return new SettingsModelBoolean("validatePMML", true);
     }
 
 }

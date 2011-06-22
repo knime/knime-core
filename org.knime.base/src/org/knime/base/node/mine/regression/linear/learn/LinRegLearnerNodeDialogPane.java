@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 22, 2006 (wiswedel): created
  */
@@ -72,12 +72,13 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionPanel;
 
 /**
  * Dialog for the linear regression learner.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
@@ -137,6 +138,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(southPanel, BorderLayout.SOUTH);
 
         m_selectionPanel.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 Object selected = e.getItem();
                 if (selected instanceof DataColumnSpec) {
@@ -156,10 +158,11 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         // must check if there are at least two numeric columns
         int numColsCount = 0;
-        for (DataColumnSpec c : specs[0]) {
+        DataTableSpec dts = (DataTableSpec)specs[0];
+        for (DataColumnSpec c : dts) {
             if (c.getType().isCompatible(DoubleValue.class)) {
                 numColsCount++;
                 if (numColsCount >= 2) {
@@ -181,16 +184,16 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
                 LinRegLearnerNodeModel.CFG_CALC_ERROR, true);
         int first = settings.getInt(LinRegLearnerNodeModel.CFG_FROMROW, 1);
         int count = settings.getInt(LinRegLearnerNodeModel.CFG_ROWCNT, 10000);
-        m_selectionPanel.update(specs[0], target);
+        m_selectionPanel.update(dts, target);
         m_filterPanel.setKeepAllSelected(includeAll);
         // if includes list is empty, put everything into the include list
-        m_filterPanel.update(specs[0], includes.length == 0, includes);
+        m_filterPanel.update(dts, includes.length == 0, includes);
         // must hide the target from filter panel
         // updating m_filterPanel first does not work as the first
         // element in the spec will always be in the exclude list.
         String selected = m_selectionPanel.getSelectedColumn();
         if (selected != null) {
-            DataColumnSpec colSpec = specs[0].getColumnSpec(selected);
+            DataColumnSpec colSpec = dts.getColumnSpec(selected);
             m_filterPanel.hideColumns(colSpec);
         }
         m_isCalcErrorChecker.setSelected(isCalcError);

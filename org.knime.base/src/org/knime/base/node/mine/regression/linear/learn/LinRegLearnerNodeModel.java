@@ -118,7 +118,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /** Key for whether to include all appropriate columns by default. */
     static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
-    
+
     /** Key for the target column, used for dialog settings. */
     static final String CFG_TARGET = "target";
 
@@ -127,11 +127,11 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /** The column names to include. */
     private String[] m_includes;
-    
+
     /** Whether to include all appropriate columns by default, overwrites
      * {@link #m_includes}. (added in v2.1) */
     private boolean m_includeAll;
-    
+
     /** Names of the columns that were actually used. If {@link #m_includeAll}
      * is false, this is identical to {@link #m_includes}. */
     private String[] m_actualUsedColumns;
@@ -161,9 +161,11 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /** The learned values and also the means for each input variable. */
     private LinearRegressionContent m_params;
 
-    /** Inits a new node model, it will have 1 data input and 1 model output. */
+    /** Inits a new node model, it will have 1 data input, 1 optional
+     * model input and 1 model output. */
     public LinRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
+        super(new PortType[]{BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)},
                 new PortType[]{PMMLPortObject.TYPE});
     }
 
@@ -384,6 +386,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                 m_error += (b - out) * (b - out);
             }
         }
+        // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+
         DataTableSpec outSpec = getLearningSpec(spec);
         double offset = multipliers[0];
         multipliers = Arrays.copyOfRange(multipliers, 1, multipliers.length);
@@ -393,7 +398,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         // may be lost (filtering out the "colored" column)
         m_rowContainer = new DefaultDataArray(data, m_firstRowPaint,
                 m_rowCountPaint);
-        return new PortObject[]{m_params.createPortObject()};
+
+
+        return new PortObject[]{m_params.createPortObject(inPMMLPort, spec)};
     }
 
     /**
@@ -482,29 +489,29 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec in = (DataTableSpec)inSpecs[0];
-        return new PortObjectSpec[]{getOutputSpec(in)};
+        return new PortObjectSpec[]{getOutputSpec(inSpecs)};
     }
 
-    private PMMLPortObjectSpec getOutputSpec(final DataTableSpec in)
-        throws InvalidSettingsException {
+    private PMMLPortObjectSpec getOutputSpec(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         return LinearRegressionContent.createPortObjectSpec(
-                getLearningSpec(in));
+                (PMMLPortObjectSpec)inSpecs[1], tableSpec);
     }
 
-    private DataTableSpec getLearningSpec(final DataTableSpec in)
-    throws InvalidSettingsException {
+    private DataTableSpec getLearningSpec(final DataTableSpec tableSpec)
+            throws InvalidSettingsException {
         if (m_target == null) {
             throw new InvalidSettingsException("No target column set");
         }
-        String[] includes = computeIncludes(in);
+        String[] includes = computeIncludes(tableSpec);
         // array containing element from m_include and also m_target
         String[] mustHaveColumns = new String[includes.length + 1];
         System.arraycopy(includes, 0, mustHaveColumns, 0, includes.length);
         mustHaveColumns[includes.length] = m_target;
         // check if contained in data and if DoubleValue-compatible.
         for (String include : mustHaveColumns) {
-            DataColumnSpec colSpec = in.getColumnSpec(include);
+            DataColumnSpec colSpec = tableSpec.getColumnSpec(include);
             if (colSpec == null) {
                 throw new InvalidSettingsException("No such column in data: "
                         + include);
@@ -514,19 +521,20 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                         + include + "\" is not numeric: " + colSpec.getType());
             }
         }
-        return FilterColumnTable.createFilterTableSpec(in, mustHaveColumns);
+        return FilterColumnTable.createFilterTableSpec(tableSpec,
+                        mustHaveColumns);
     }
-    
+
     /** Determines the list of variate columns (learning columns). This is
      * either the m_includes[] field or, if m_includeAll is set, the list
-     * of double-compatible columns in the input table spec (excluding the 
+     * of double-compatible columns in the input table spec (excluding the
      * response column).
      * @param in Spec contributing the column list
      * @return A new array containg the variates
      * @throws InvalidSettingsException If no double-compatible learning columns
      * exist in the input table.
      */
-    private String[] computeIncludes(final DataTableSpec in) 
+    private String[] computeIncludes(final DataTableSpec in)
         throws InvalidSettingsException {
         String[] includes;
         if (m_includeAll) {
@@ -541,7 +549,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             }
             includes = includeList.toArray(new String[includeList.size()]);
             if (includes.length == 0) {
-                throw new InvalidSettingsException("No double-compatible " 
+                throw new InvalidSettingsException("No double-compatible "
                         + "variables (learning columns) in input table");
             }
         } else {
@@ -552,7 +560,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         }
         return includes;
     }
-    
+
     /**
      * @return the nrRowsProcessed.
      */
@@ -583,6 +591,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      * @return a reference to the current values
      * @see LinRegDataProvider#getParams()
      */
+    @Override
     public LinearRegressionContent getParams() {
         return m_params;
     }
@@ -590,6 +599,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getRowContainer() {
         return m_rowContainer;
     }
@@ -598,6 +608,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         return m_rowContainer;
     }
@@ -605,6 +616,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public String[] getLearningColumns() {
         return m_actualUsedColumns;
     }

@@ -62,7 +62,9 @@ import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTable;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -94,8 +96,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.RegressionTable;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.NumericPredictor;
 import org.xml.sax.SAXException;
 
 /**
@@ -126,8 +126,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * Creates a new model for the polynomial regression learner node.
      */
     public PolyRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-                BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        super(new PortType[] {BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)},
+                    new PortType[] {BufferedDataTable.TYPE,
+                            PMMLPortObject.TYPE});
     }
 
     /**
@@ -137,6 +139,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
         String[] selectedCols = computeSelectedColumns(tableSpec);
         for (String colName : selectedCols) {
             DataColumnSpec dcs = tableSpec.getColumnSpec(colName);
@@ -169,27 +172,30 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
         return new PortObjectSpec[]{
                 AppendedColumnTable.getTableSpec(tableSpec, col1, col2),
-                createModelSpec(tableSpec)};
+                createModelSpec(pmmlSpec, tableSpec)};
     }
 
-    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec)
+    private PMMLPortObjectSpec createModelSpec(
+            final PMMLPortObjectSpec inModelSpec,
+            final DataTableSpec inDataSpec)
         throws InvalidSettingsException {
-        String[] selectedCols = computeSelectedColumns(inSpec);
+        String[] selectedCols = computeSelectedColumns(inDataSpec);
         DataColumnSpec[] usedColumns =
             new DataColumnSpec[selectedCols.length + 1];
         int k = 0;
         Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
-        for (DataColumnSpec dcs : inSpec) {
+        for (DataColumnSpec dcs : inDataSpec) {
             if (hash.contains(dcs.getName())) {
                 usedColumns[k++] = dcs;
             }
         }
 
-        usedColumns[k++] = inSpec.getColumnSpec(m_settings.getTargetColumn());
+        usedColumns[k++] = inDataSpec.getColumnSpec(
+                m_settings.getTargetColumn());
 
         DataTableSpec tableSpec = new DataTableSpec(usedColumns);
         PMMLPortObjectSpecCreator crea =
-                new PMMLPortObjectSpecCreator(tableSpec);
+                new PMMLPortObjectSpecCreator(inModelSpec, inDataSpec);
         crea.setLearningCols(tableSpec);
         crea.setTargetCol(usedColumns[k - 1]);
         return crea.createSpec();
@@ -325,16 +331,21 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(
                 m_settings.getTargetColumn())));
 
+        // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+
         PortObject[] bdt =
                 new PortObject[]{
                         exec.createColumnRearrangeTable(inTable, crea, exec
                                 .createSubProgress(0.6)),
-                        createPMMLModel(inTable.getDataTableSpec())};
+                        createPMMLModel(inPMMLPort,
+                                inTable.getDataTableSpec())};
         m_squaredError /= rowCount;
         return bdt;
     }
 
-    private PMMLPortObject createPMMLModel(final DataTableSpec inSpec)
+    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort,
+            final DataTableSpec inSpec)
         throws InvalidSettingsException, SAXException {
         NumericPredictor[] preds = new NumericPredictor[m_betas.length - 1];
 
@@ -349,21 +360,37 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
         RegressionTable tab =
                 new RegressionTable(m_betas[0], preds);
+        PMMLPortObjectSpec pmmlSpec = null;
+        if (inPMMLPort != null) {
+            pmmlSpec = inPMMLPort.getSpec();
+        }
+        PMMLPortObjectSpec spec = createModelSpec(pmmlSpec, inSpec);
 
-        PMMLPortObjectSpec spec = createModelSpec(inSpec);
-        PMMLRegressionContentHandler ch =
-                new PMMLRegressionContentHandler(spec);
-        ch.setRegressionTable(tab);
-        ch.setAlgorithmName("PolynomialRegression");
-        ch.setModelName("KNIME Polynomial Regression");
 
-        return new PMMLPortObject(spec, ch);
+        /* To maintain compatibility with the previous SAX-based implementation.
+         * */
+        String targetField = "Response";
+        List<String> targetFields = spec.getTargetFields();
+        if (!targetFields.isEmpty()) {
+            targetField = targetFields.get(0);
+        }
+
+        PMMLPortObject outPMMLPort = new PMMLPortObject(spec,
+                inPMMLPort, inSpec);
+
+        PMMLRegressionTranslator trans = new PMMLRegressionTranslator(
+                "KNIME Polynomial Regression", "PolynomialRegression",
+                tab, targetField);
+        outPMMLPort.addModelTranslater(trans);
+
+        return outPMMLPort;
     }
 
     private CellFactory getCellFactory(final int dependentIndex) {
         final int degree = m_settings.getDegree();
 
         return new CellFactory() {
+            @Override
             public DataCell[] getCells(final DataRow row) {
                 double sum = m_betas[0];
                 int betaCount = 1;
@@ -389,6 +416,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                 return new DataCell[]{new DoubleCell(sum), new DoubleCell(err)};
             }
 
+            @Override
             public DataColumnSpec[] getColumnSpecs() {
                 DataColumnSpecCreator crea =
                         new DataColumnSpecCreator("PolyReg prediction",
@@ -402,6 +430,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                 return new DataColumnSpec[]{col1, col2};
             }
 
+            @Override
             public void setProgress(final int curRowNr, final int rowCount,
                     final RowKey lastKey, final ExecutionMonitor execMon) {
                 // do nothing
@@ -602,6 +631,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         return m_rowContainer;
     }

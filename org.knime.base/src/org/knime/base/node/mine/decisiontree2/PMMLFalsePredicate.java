@@ -50,13 +50,10 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
-import org.xml.sax.SAXException;
 
 /**
  * False predicate as specified in PMML
@@ -91,17 +88,6 @@ public class PMMLFalsePredicate extends PMMLPredicate {
     @Override
     public String toString() {
         return NAME;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws SAXException
-     */
-    @Override
-    public void writePMML(final TransformerHandler handler)
-            throws SAXException {
-        handler.startElement(null, null, NAME, null);
-        handler.endElement(null, null, NAME);
     }
 
     /**

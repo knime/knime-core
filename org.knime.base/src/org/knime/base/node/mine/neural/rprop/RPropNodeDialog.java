@@ -101,7 +101,7 @@ public class RPropNodeDialog extends DefaultNodeSettingsPane {
                 new SettingsModelString(
         /* config-name: */RPropNodeModel.CLASSCOL_KEY, ""),
         /* label: */"class column: ",
-        /* columns from which port?: */RPropNodeModel.INPORT,
+        /* columns from which port?: */RPropNodeModel.INDATA,
         /* column-type filter: */DataValue.class));
         
         this.addDialogComponent(new DialogComponentBoolean(

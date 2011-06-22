@@ -67,6 +67,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionPanel;
 
@@ -102,6 +103,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(m_filterPanel, BorderLayout.CENTER);
 
         m_selectionPanel.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 Object selected = e.getItem();
                 if (selected instanceof DataColumnSpec) {
@@ -119,27 +121,28 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
         boolean includeAll = m_settings.getIncludeAll();
         String[] includes = m_settings.getIncludedColumns();
         String target = m_settings.getTargetColumn();
 
-        m_selectionPanel.update(specs[0], target);
+        DataTableSpec dts = (DataTableSpec)specs[0];
+        m_selectionPanel.update(dts, target);
         m_filterPanel.setKeepAllSelected(includeAll);
         // if includes is not set, put everything into the include list
         if (null != includes) {
-            m_filterPanel.update(specs[0], false, includes);
+            m_filterPanel.update(dts, false, includes);
         } else {
-            m_filterPanel.update(specs[0], true, new String[0]);
+            m_filterPanel.update(dts, true, new String[0]);
         }
         // must hide the target from filter panel
         // updating m_filterPanel first does not work as the first
         // element in the spec will always be in the exclude list.
         String selected = m_selectionPanel.getSelectedColumn();
         if (null == selected) {
-            for (DataColumnSpec colSpec : specs[0]) {
+            for (DataColumnSpec colSpec : dts) {
                 if (colSpec.getType().isCompatible(NominalValue.class)) {
                     selected = colSpec.getName();
                     break;
@@ -147,7 +150,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             }
         }
         if (selected != null) {
-            DataColumnSpec colSpec = specs[0].getColumnSpec(selected);
+            DataColumnSpec colSpec = dts.getColumnSpec(selected);
             m_filterPanel.hideColumns(colSpec);
         }
     }

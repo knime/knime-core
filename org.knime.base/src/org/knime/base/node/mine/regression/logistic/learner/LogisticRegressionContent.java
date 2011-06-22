@@ -64,7 +64,6 @@ import java.util.Map;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCovCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
@@ -83,7 +82,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
@@ -120,7 +118,7 @@ public final class LogisticRegressionContent {
      * @param beta the estimated regression factors
      * @param loglike the estimated likelihood
      * @param covMat the covariance matrix
-     * @param iter
+     * @param iter the number of iterations
      */
     LogisticRegressionContent(
             final PMMLPortObjectSpec outSpec,
@@ -173,9 +171,10 @@ public final class LogisticRegressionContent {
         return waldStat;
     }
 
-    /** Computes the two-tailed p-values of the z-test, which can be calculated
-     *  by 2*Phi(−|Z|), where Phi is the standard normal cumulative
-     *  distribution function
+    /**
+     * Computes the two-tailed p-values of the z-test, which can be calculated
+     * by 2*Phi(-|Z|), where Phi is the standard normal cumulative
+     * distribution function.
      */
     private Matrix getPValueMatrix() {
         Matrix zScore = getZScoreMatrix();
@@ -183,7 +182,7 @@ public final class LogisticRegressionContent {
         Matrix pvalue = new Matrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
             double absZ = Math.abs(zScore.get(0, i));
-            pvalue.set(0, i, 2*Gaussian.Phi(-absZ));
+            pvalue.set(0, i, 2 * Gaussian.Phi(-absZ));
         }
         return pvalue;
     }
@@ -362,7 +361,7 @@ public final class LogisticRegressionContent {
      */
     public double getInterceptPValue(final DataCell logit) {
         double absZ = Math.abs(getInterceptZScore(logit));
-        return 2*Gaussian.Phi(-absZ);
+        return 2 * Gaussian.Phi(-absZ);
     }
 
     private double getInterceptValue(final DataCell logit,
@@ -426,18 +425,6 @@ public final class LogisticRegressionContent {
         }
         dc.close();
         return dc.getTable();
-    }
-
-    /**
-     * Creates a new PMML regression port object from this logistic regression
-     * model.
-     *
-     * @return a port object
-     */
-    public PMMLPortObject createPMMLPortObject() {
-        PMMLGeneralRegressionContent content = createGeneralRegressionContent();
-        return new PMMLPortObject(m_outSpec,
-                new PMMLGeneralRegressionContentHandler(m_outSpec, content));
     }
 
     /**
@@ -639,7 +626,7 @@ public final class LogisticRegressionContent {
 
         // standard gaussian probability function
         public static double phi(final double x) {
-            return Math.exp(-x*x / 2) / Math.sqrt(2 * Math.PI);
+            return Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI);
         }
 
         // standard Gaussian cumulative distributaion function,

@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -76,7 +75,9 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
@@ -89,46 +90,53 @@ public final class LogRegLearner {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(LogRegLearner.class);
 
-    private LogRegLearnerSettings m_settings;
+    private final LogRegLearnerSettings m_settings;
 
     private Learner m_learner;
 
     private PMMLPortObjectSpec m_pmmlOutSpec;
 
     /**
-     * @param spec The <code>DataTableSpec</code> of the input table.
+     * @param specs The input specs.
      * @param settings The settings object.
      * @throws InvalidSettingsException when settings are not consistent
+     * @see LogRegLearnerNodeModel#configure(PortObjectSpec[])
      */
-    public LogRegLearner(final DataTableSpec spec,
+    public LogRegLearner(final PortObjectSpec[] specs,
             final LogRegLearnerSettings settings)
             throws InvalidSettingsException {
         m_settings = settings;
-        init(spec);
+        DataTableSpec dataSpec = (DataTableSpec)specs[0];
+        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)specs[1];
+        init(dataSpec, pmmlSpec);
     }
 
 
     /**
      * Compute logistic regression model.
      *
-     * @param data the training data
+     * @param portObjects The input objects.
      * @param exec the execution context
      * @return a {@link LogisticRegressionContent} storing computed data
      * @throws Exception if computation of the logistic regression model is
      * not successful or if given data is inconsistent with the settings
      * defined in the constructor.
+     * @see LogRegLearnerNodeModel#execute(PortObjectSpec[])
      */
     public LogisticRegressionContent execute(
-            final BufferedDataTable data, final ExecutionContext exec)
+            final PortObject[] portObjects, final ExecutionContext exec)
     throws Exception {
-        init(data.getDataTableSpec());
-        DataTable dataTable = recalcDomainIfNeccessary(data, exec);
+        BufferedDataTable data = (BufferedDataTable)portObjects[0];
+        PMMLPortObject inPMMLPort = (PMMLPortObject)portObjects[1];
+        PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
+        init(data.getDataTableSpec(), inPMMLSpec);
+        DataTable dataTable = recalcDomainIfNeccessary(data, inPMMLSpec, exec);
         return m_learner.perform(dataTable, exec);
     }
 
     private DataTable recalcDomainIfNeccessary(
-            final BufferedDataTable data, final ExecutionContext exec)
-    throws InvalidSettingsException {
+            final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
+            final ExecutionContext exec) throws InvalidSettingsException {
         List<String> recalcValuesFor = new ArrayList<String>();
         for (String col : m_pmmlOutSpec.getLearningFields()) {
             DataColumnSpec colSpec = data.getDataTableSpec().getColumnSpec(col);
@@ -188,7 +196,7 @@ public final class LogRegLearner {
         DataTable newDataTable = exec.createSpecReplacerTable(data, spec);
         // initilize m_learner so that it has the correct DataTableSpec of
         // the input
-        init(newDataTable.getDataTableSpec());
+        init(newDataTable.getDataTableSpec(), inPMMLSpec);
         return newDataTable;
     }
 
@@ -209,7 +217,8 @@ public final class LogRegLearner {
     }
 
     /** Initialize instance and check if settings are consistent. */
-    private void init(final DataTableSpec inSpec)
+    private void init(final DataTableSpec inSpec,
+            final PMMLPortObjectSpec pmmlSpec)
             throws InvalidSettingsException {
 
         List<String> inputCols = new ArrayList<String>();
@@ -283,9 +292,7 @@ public final class LogRegLearner {
             }
             learnerCols[learnerCols.length - 1] = targetColSpec.getName();
             PMMLPortObjectSpecCreator creator =
-                new PMMLPortObjectSpecCreator(
-                        FilterColumnTable.createFilterTableSpec(inSpec,
-                                learnerCols));
+                new PMMLPortObjectSpecCreator(pmmlSpec, inSpec);
             creator.setTargetCols(Arrays.asList(targetColSpec));
             creator.setLearningCols(regressorColSpecs);
             m_pmmlOutSpec = creator.createSpec();

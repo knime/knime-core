@@ -79,6 +79,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * The NormalizeNodeModel uses the Normalizer to normalize the input DataTable.
@@ -142,10 +143,13 @@ public class NormalizerNodeModel extends NodeModel {
     }
 
     /**
-     * @param modelPortType
+     * @param modelPortType the port type of the model
      */
     protected NormalizerNodeModel(final PortType modelPortType) {
-        super(new PortType[]{BufferedDataTable.TYPE},
+        super(PMMLPortObject.TYPE.equals(modelPortType)
+                ? new PortType[]{BufferedDataTable.TYPE,
+                    new PortType(PMMLPortObject.class, true)}
+                : new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE,
                 modelPortType});
     }
@@ -163,7 +167,7 @@ public class NormalizerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec spec = (DataTableSpec)inSpecs[0];
         // extract selected numeric columns
-        m_columns = numericColumnSelection(spec);
+        updateNumericColumnSelection(spec);
         if (m_mode == NONORM_MODE) {
             return new PortObjectSpec[]{spec, new DataTableSpec()};
         }
@@ -192,7 +196,11 @@ public class NormalizerNodeModel extends NodeModel {
         return prepareConfigure(inSpecs);
     }
 
-    private String[] numericColumnSelection(final DataTableSpec spec)
+    /**
+     * @param spec the data table spec
+     * @throws InvalidSettingsException if no normalization mode is set
+     */
+    protected void updateNumericColumnSelection(final DataTableSpec spec)
             throws InvalidSettingsException {
         // if the node has not been configured before OR all columns have been
         // selected in the dialog, then return all numeric columns from the
@@ -230,8 +238,7 @@ public class NormalizerNodeModel extends NodeModel {
                             + "for normalization. Mode: " + mode);
                 }
             }
-
-            return allNumColumns;
+            m_columns = allNumColumns;
         }
         // sanity check: selected columns in actual spec?
         for (String name : m_columns) {
@@ -245,7 +252,6 @@ public class NormalizerNodeModel extends NodeModel {
         if (m_mode == NONORM_MODE) {
             super.setWarningMessage("No normalization mode set.");
         }
-        return m_columns;
     }
 
     /**
@@ -293,7 +299,7 @@ public class NormalizerNodeModel extends NodeModel {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
         DataTableSpec inSpec = inTable.getSpec();
         // extract selected numeric columns
-        m_columns = numericColumnSelection(inSpec);
+        updateNumericColumnSelection(inSpec);
         Normalizer ntable = new Normalizer(inTable, m_columns);
 
         int rowcount = inTable.getRowCount();
@@ -486,6 +492,20 @@ public class NormalizerNodeModel extends NodeModel {
         public AffineTransConfiguration getConfig() {
             return m_config;
         }
+    }
+
+    /**
+     * @param columns the columns to set
+     */
+    protected void setColumns(final String[] columns) {
+        m_columns = columns;
+    }
+
+    /**
+     * @return the mode
+     */
+    protected int getMode() {
+        return m_mode;
     }
 
 }

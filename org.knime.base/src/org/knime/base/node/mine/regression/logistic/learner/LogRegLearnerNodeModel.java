@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -75,6 +76,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  * NodeModel to the logistic regression learner node. It delegates the
@@ -88,11 +91,13 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     /** The learned regression model. */
     private LogisticRegressionContent m_content;
 
-    /** Inits a new node model, it will have 1 data input and 1 model output. */
+    /** Inits a new node model, it will have 1 data input, and optional PMML
+     * model inport, 1 model and 1 data output. */
     public LogRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{PMMLPortObject.TYPE,
-                BufferedDataTable.TYPE});
+        super(new PortType[] {BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true) },
+                    new PortType[] {PMMLPortObject.TYPE,
+                            BufferedDataTable.TYPE});
         m_settings = new LogRegLearnerSettings();
     }
 
@@ -126,15 +131,34 @@ public final class LogRegLearnerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable data = (BufferedDataTable)inData[0];
+        final BufferedDataTable data = (BufferedDataTable)inObjects[0];
+        DataTableSpec tableSpec = data.getDataTableSpec();
 
-        LogRegLearner learner = new LogRegLearner(data.getDataTableSpec(),
-                m_settings);
-        m_content = learner.execute(data, exec);
+        // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+        PMMLPortObjectSpec inPMMLSpec = null;
+        if (inPMMLPort != null) {
+            inPMMLSpec = inPMMLPort.getSpec();
+        } else {
+            PMMLPortObjectSpecCreator creator
+                    = new PMMLPortObjectSpecCreator(tableSpec);
+            inPMMLSpec = creator.createSpec();
+            inPMMLPort = new PMMLPortObject(inPMMLSpec);
+        }
+        LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {
+                tableSpec, inPMMLSpec}, m_settings);
+        m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
 
-        return new PortObject[]{m_content.createPMMLPortObject(),
+        PMMLPortObject outPMMLPort = new PMMLPortObject(
+                (PMMLPortObjectSpec)learner.getOutputSpec()[0], inPMMLPort,
+                tableSpec);
+        PMMLGeneralRegressionTranslator trans
+                = new PMMLGeneralRegressionTranslator(
+                        m_content.createGeneralRegressionContent());
+        outPMMLPort.addModelTranslater(trans);
+        return new PortObject[]{outPMMLPort,
                 m_content.createTablePortObject(exec)};
     }
 
@@ -142,8 +166,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        LogRegLearner learner = new LogRegLearner((DataTableSpec)inSpecs[0],
-                m_settings);
+        LogRegLearner learner = new LogRegLearner(inSpecs, m_settings);
         return learner.getOutputSpec();
     }
 

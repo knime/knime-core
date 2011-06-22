@@ -50,8 +50,6 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -59,19 +57,18 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * Implements a SimplePredicate as specified in PMML
  * (<a>http://www.dmg.org/v4-0/TreeModel.html</a>).
- *
+ * 
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLSimplePredicate extends PMMLPredicate {
 
     /** The string representation of the predicate's XML-element. */
     public static final String NAME = "SimplePredicate";
+
     /** The key to store the threshold in configurations. */
     protected static final String THRESHOLD_KEY = "threshold";
 
@@ -81,12 +78,12 @@ public class PMMLSimplePredicate extends PMMLPredicate {
     /** Build a new simple predicate. */
     public PMMLSimplePredicate() {
         super();
-		// for usage with loadFromPredParams(Config)
-	}
+        // for usage with loadFromPredParams(Config)
+    }
 
-	/**
+    /**
      * Build a new simple predicate.
-     *
+     * 
      * @param attribute the field the predicate is applied on
      * @param operator the string representation of the operator
      * @param value the value to be compared with (the threshold)
@@ -100,7 +97,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
 
     /**
      * Build a new simple predicate.
-     *
+     * 
      * @param attribute the field the predicate is applied on
      * @param operator the PMML operator to be set
      * @param value the value to be compared with (the threshold)
@@ -111,7 +108,6 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         setOperator(operator);
         setThreshold(value);
     }
-
 
     /**
      * @param threshold the threshold to set
@@ -131,7 +127,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         }
         if (cell.getType().isCompatible(DoubleValue.class)) {
             double current = Double.parseDouble(m_threshold);
-            double value = ((DoubleValue) cell).getDoubleValue();
+            double value = ((DoubleValue)cell).getDoubleValue();
             return getOperator().evaluate(value, current);
         } else {
             return getOperator().evaluate(cell.toString(), m_threshold);
@@ -150,23 +146,15 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         } catch (NumberFormatException nfe) {
             // not a double, use fallback
         }
-        return getSplitAttribute() + " "
-                + getOperator().getSymbol() + " " + value;
+        return getSplitAttribute() + " " + getOperator().getSymbol() + " "
+                + value;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the threshold
      */
-    @Override
-    public void writePMML(final TransformerHandler handler)
-            throws SAXException {
-        AttributesImpl predAtts = new AttributesImpl();
-        predAtts.addAttribute(null, null, "field", CDATA, getSplitAttribute());
-        predAtts.addAttribute(null, null, "operator", CDATA,
-                getOperator().toString());
-        predAtts.addAttribute(null, null, "value", CDATA, m_threshold);
-        handler.startElement(null, null, "SimplePredicate", predAtts);
-        handler.endElement(null, null, "SimplePredicate");
+    String getThreshold() {
+        return m_threshold;
     }
 
     /**
@@ -200,4 +188,4 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         conf.addString(THRESHOLD_KEY, m_threshold);
     }
 
-   }
+}

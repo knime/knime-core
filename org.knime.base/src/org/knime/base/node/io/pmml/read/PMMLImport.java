@@ -47,117 +47,45 @@
  */
 package org.knime.base.node.io.pmml.read;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.InvalidRegistryObjectException;
-import org.eclipse.core.runtime.Platform;
+import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlObject;
+import org.dmg.pmml40.PMMLDocument;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
-import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
-import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
+import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.pmml.PMMLUtils;
+import org.w3c.dom.Document;
 
 /**
- *
- * @author Fabian Dill, University of Konstanz
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLImport {
-
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PMMLImport.class);
 
-    private static final Map<String, String> NS_MAP =
-            new HashMap<String, String>();
-
-    private static final Map<String, Class<? extends PMMLPortObject>> REGISTRY =
-            new HashMap<String, Class<? extends PMMLPortObject>>();
-
-    static {
-        NS_MAP.put("3.0", "http://www.dmg.org/PMML-3_0");
-        NS_MAP.put("3.1", "http://www.dmg.org/PMML-3_1");
-        NS_MAP.put("3.2", "http://www.dmg.org/PMML-3_2");
-
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        for (IConfigurationElement element : registry
-                .getConfigurationElementsFor("org.knime.base.pmmlports")) {
-            String modelType = element.getAttribute("modeltype");
-            try {
-                /*
-                 * Use the configuration element method to load an object of the
-                 * given class name. This method ensures the correct classpath
-                 * is used providing access to all extension points.
-                 */
-                final Object o =
-                        element.createExecutableExtension("PMMLPortObject");
-                @SuppressWarnings("unchecked")
-                Class<? extends PMMLPortObject> clazz =
-                        (Class<? extends PMMLPortObject>)o.getClass();
-                if (REGISTRY.get(modelType) == null) {
-                    // add class
-                    REGISTRY.put(modelType, clazz);
-                } // else already registered -> first come first serve
-            } catch (InvalidRegistryObjectException e) {
-                throw new IllegalArgumentException(e);
-            } catch (CoreException e) {
-                throw new IllegalArgumentException(e);
-            }
-            for (String key : REGISTRY.keySet()) {
-                LOGGER.debug("model type: " + key);
-                LOGGER.debug("port object: "
-                        + REGISTRY.get(key).getSimpleName());
-            }
-        }
-    }
-
-    private File m_file;
-
-    private PMMLModelType m_modelType = PMMLModelType.None;
-
-    private String m_version;
-
-    private boolean m_hasNamespace;
-
-    private PMMLPortObjectSpec m_portObjectSpec;
-
     private PMMLPortObject m_portObject;
 
-    private PMMLImport() {
-        //
-    }
-
     /**
-     * Reads the passed file, checks the PMML version, the PMML model type, and
-     * namespace and also validates the file against the schema, then creates
-     * the {@link PMMLPortObjectSpec} and {@link PMMLPortObject} from the
-     * content of the file.
+     * Reads and validates the passed file and creates the
+     * {@link PMMLPortObjectSpec} from the content of the file.
      *
      * @param file containing the PMML model
-     * @param errorHandler error handler used during parsing
-     * @throws SAXException if something goes wrong (wrong version, unsupported
-     *             model type or invalid file)
+     * @throws IOException if something goes wrong reading the file
+     * @throws XmlException if an invalid PMML file is passed
+     * @throws IllegalArgumentException if the input file is invalid or has
+     *      invalid content
      */
-    public PMMLImport(final File file, @SuppressWarnings("unused") final ErrorHandler errorHandler)
-            throws SAXException {
+    public PMMLImport(final File file) throws IOException, XmlException,
+            IllegalArgumentException {
         if (file == null) {
             throw new IllegalArgumentException("File must not be null!");
         }
@@ -165,62 +93,97 @@ public class PMMLImport {
             throw new IllegalArgumentException("File " + file.getName()
                     + " does not exists.");
         }
-        m_file = file;
-        // initial file parsing:
-        // extract model type, version, and if namespace is available
-        preCollectInformation();
-        initializePortObjectClass();
-        if (!m_hasNamespace) {
-            // add namespace in order to have the parser set the default values
-            try {
-                m_file = addNamespace(m_file);
-            } catch (IOException e) {
-                throw new SAXException(e);
+
+        PMMLDocument pmmlDoc = null;
+        XmlObject xmlDoc = XmlObject.Factory.parse(file);
+        if (xmlDoc instanceof PMMLDocument) {
+            pmmlDoc = (PMMLDocument)xmlDoc;
+        } else {
+            /* Try to recover when reading a PMML 3.x document that
+             * was produced by KNIME by just replacing the PMML version and
+             * namespace. */
+            if (PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
+                try {
+                    String updatedPMML
+                            = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
+                    /* Parse the modified document and assign it to a
+                     * PMMLDocument.*/
+                    pmmlDoc = PMMLDocument.Factory.parse(updatedPMML);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Parsing of PMML v 3.x document failed.", e);
+                }
+                LOGGER.info("KNIME produced PMML 3.x updated to PMML 4.0.");
             }
         }
-        m_portObjectSpec = PMMLPortObject.parseSpec(m_file);
-        m_portObject = parseModel(m_portObjectSpec);
-//        m_portObject.validate();
-        if (!m_hasNamespace) {
-            // if the file had no namespace a new file with namespace added was
-            // created in temp dir -> now we can delete it;
-            m_file.delete();
+
+        if (pmmlDoc == null || !pmmlDoc.validate()) {
+            throw new IllegalArgumentException("File \"" + file
+                    + "\" is not a valid PMML 4.0 file.");
+        }
+        init(pmmlDoc);
+    }
+
+    /**
+     * @param pmmlDoc
+     */
+    private void init(final PMMLDocument pmmlDoc) {
+        PMMLDataDictionaryTranslator dictTrans
+                = new PMMLDataDictionaryTranslator();
+        dictTrans.initializeFrom(pmmlDoc);
+        DataTableSpec tableSpec = dictTrans.getDataTableSpec();
+        List<String> activeDerivedFields = dictTrans.getActiveDerivedFields();
+        PMMLPortObjectSpecCreator specCreator
+                = new PMMLPortObjectSpecCreator(tableSpec);
+
+        PMMLMiningSchemaTranslator miningTrans
+                = new PMMLMiningSchemaTranslator();
+        miningTrans.initializeFrom(pmmlDoc);
+
+        List<String> activeFields = new ArrayList<String>();
+        List<String> miningFields = miningTrans.getActiveFields();
+        /* If we have a model all active fields of the data dictionary
+         * are passed through the mining schema. */
+        activeFields.addAll(miningFields);
+        activeFields.addAll(activeDerivedFields);
+        specCreator.setLearningColsNames(activeFields);
+        specCreator.setTargetColsNames(miningTrans.getTargetFields());
+
+        PMMLPortObjectSpec portObjectSpec = specCreator.createSpec();
+        m_portObject = new PMMLPortObject(portObjectSpec, pmmlDoc);
+    }
+
+    /**
+     * Reads and validates the passed file and creates the
+     * {@link PMMLPortObjectSpec} from the content of the file.
+     *
+     * @param doc the document containing the PMML model
+     * @throws IOException if something goes wrong reading the file
+     * @throws XmlException if an invalid PMML file is passed
+     * @throws IllegalArgumentException if the input file is invalid or has
+     *      invalid content
+     */
+    public PMMLImport(final Document doc) throws IOException, XmlException,
+            IllegalArgumentException {
+        if (doc == null) {
+            throw new IllegalArgumentException("Document must not be null!");
         }
 
+        PMMLDocument pmmlDoc = PMMLDocument.Factory.parse(doc);
+        if (!pmmlDoc.validate()) {
+            throw new IllegalArgumentException("Document \"" + doc
+                    + "\" is not a valid PMML 4.0 file.");
+        }
+        init(pmmlDoc);
     }
 
-    /**
-     * @see PMMLImport#PMMLImport(File, ErrorHandler) with default error
-     *      handler: {@link LoggingErrorHandler}.
-     *
-     * @param file containing the PMML model
-     * @throws SAXException if something goes wrong
-     */
-    public PMMLImport(final File file) throws SAXException {
-        this(file, new LoggingErrorHandler());
-    }
-
-    /**
-     *
-     * @param file the file containing the PMML model
-     * @return true if the type of model is supported by the current platform
-     *         configuration
-     * @throws SAXException if something goes wrong
-     */
-    public static boolean isModelSupported(final File file)
-            throws SAXException {
-        PMMLImport importer = new PMMLImport();
-        importer.m_file = file;
-        importer.preCollectInformation();
-        return REGISTRY.get(importer.m_modelType.name()) != null;
-    }
 
     /**
      *
      * @return the parsed port object spec (data dictionary and mining schema)
      */
     public PMMLPortObjectSpec getPortObjectSpec() {
-        return m_portObjectSpec;
+        return m_portObject.getSpec();
     }
 
     /**
@@ -231,87 +194,6 @@ public class PMMLImport {
         return m_portObject;
     }
 
-    private void preCollectInformation() throws SAXException {
-        try {
-            SAXParserFactory fac = SAXParserFactory.newInstance();
-            SAXParser parser = fac.newSAXParser();
-            PMMLMasterContentHandler masterHandler =
-                    new PMMLMasterContentHandler();
-            ExtractModelTypeHandler modelTypeHdl =
-                    new ExtractModelTypeHandler();
-            masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
-                    modelTypeHdl);
-            parser.parse(m_file, masterHandler);
-            m_version = masterHandler.getVersion();
-            m_modelType = modelTypeHdl.getModelType();
-            m_hasNamespace = modelTypeHdl.hasNamespace();
-        } catch (IOException io) {
-            throw new SAXException(io);
-        } catch (ParserConfigurationException pce) {
-            throw new SAXException(pce);
-        }
-    }
 
-    private void initializePortObjectClass() {
-        Class<? extends PMMLPortObject> portClass =
-                REGISTRY.get(m_modelType.name());
-        if (portClass == null) {
-            m_portObject = new PMMLPortObject();
-        } else {
-            try {
-                m_portObject = portClass.newInstance();
-            } catch (IllegalAccessException iae) {
-                throw new IllegalArgumentException("PortObject for model "
-                        + m_modelType + " could not be initialized!", iae);
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException("PortObject for model "
-                        + m_modelType + " could not be initialized!", e);
-            }
-        }
-    }
 
-    private File addNamespace(final File file) throws IOException {
-        LOGGER.debug("adding namespace");
-        File f = File.createTempFile("ns_added", ".xml");
-        f.deleteOnExit();
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(f));
-        String line = reader.readLine();
-        boolean tagOpen = false;
-        while (line != null) {
-            if (line.startsWith("<PMML")) {
-                tagOpen = true;
-            }
-            if (tagOpen && line.endsWith(">")) {
-                tagOpen = false;
-                // add namespace declaration
-                line =
-                       "<PMML version=\"" + m_version + "\" xmlns=\""
-                           + NS_MAP.get(m_version) + "\" xmlns:xsi="
-                           + "\"http://www.w3.org/2001/XMLSchema-instance\">";
-                LOGGER.debug(line);
-            }
-            if (!tagOpen) {
-                writer.write(line + "\n");
-            }
-            line = reader.readLine();
-        }
-        reader.close();
-        writer.close();
-        return f;
-    }
-
-    private PMMLPortObject parseModel(final PMMLPortObjectSpec portObjectSpec)
-            throws SAXException {
-        try {
-            m_portObject.loadFrom(portObjectSpec, new FileInputStream(m_file));
-        } catch (FileNotFoundException e) {
-            throw new SAXException(e);
-        } catch (ParserConfigurationException e) {
-            throw new SAXException(e);
-        } catch (IOException e) {
-            throw new SAXException(e);
-        }
-        return m_portObject;
-    }
 }

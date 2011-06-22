@@ -55,16 +55,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 
 /**
  *  Implements a SimpleSetPredicate as specified in PMML
@@ -127,7 +123,7 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
 		super();
 		// for usage with loadFromPredParams(Config)
 	}
-    
+
     /**
      * Build a new simple set predicate without values.
      *
@@ -247,46 +243,6 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
     @Override
     public String toString() {
         return getSplitAttribute() + " " + m_op + " " + m_values + " ";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void writePMML(final TransformerHandler handler)
-            throws SAXException {
-        AttributesImpl predAtts = new AttributesImpl();
-        predAtts.addAttribute(null, null, "field", CDATA, getSplitAttribute());
-        predAtts.addAttribute(null, null, "booleanOperator", CDATA,
-                m_op.toString());
-        handler.startElement(null, null, "SimpleSetPredicate", predAtts);
-
-        // write the array
-        AttributesImpl arrayAtts = new AttributesImpl();
-        arrayAtts.addAttribute(null, null, "n", CDATA, String.valueOf(
-                m_values.size()));
-        arrayAtts.addAttribute(null, null, "type", CDATA,
-                m_arrayType.toString());
-        handler.startElement(null, null, "Array", arrayAtts);
-        StringBuffer sb = new StringBuffer();
-        if (m_arrayType == PMMLArrayType.STRING) {
-            for (String value : m_values) {
-                sb.append('"');
-                sb.append(value.replace("\"", "\\\""));
-                sb.append('"');
-                sb.append(' ');
-            }
-        } else {
-            for (String value : m_values) {
-                sb.append(value);
-                sb.append(' ');
-            }
-        }
-        handler.characters(sb.toString().toCharArray(), 0, sb.length());
-        handler.endElement(null, null, "Array");
-
-        handler.endElement(null, null, "SimpleSetPredicate");
-
     }
 
     /**

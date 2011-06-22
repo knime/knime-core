@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   29.01.2008 (cebron): created
  */
@@ -57,8 +57,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.base.node.mine.cluster.PMMLClusterHandler;
-import org.knime.base.node.mine.cluster.PMMLClusterHandler.ComparisonMeasure;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator.ComparisonMeasure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -80,26 +80,26 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class ClusterAssignerNodeModel extends NodeModel {
-   
+
    private static final int PMML_PORT = 0;
    private static final int DATA_PORT = 1;
-   
+
    /** The node logger for this class. */
    private static final NodeLogger LOGGER =
            NodeLogger.getLogger(ClusterAssignerNodeModel.class);
 
     /**
-     * 
+     *
      */
     public ClusterAssignerNodeModel() {
         super(new PortType[] {
@@ -116,19 +116,19 @@ public class ClusterAssignerNodeModel extends NodeModel {
         PMMLPortObjectSpec spec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT]);
         DataTableSpec dataSpec = (DataTableSpec) inSpecs[DATA_PORT];
         ColumnRearranger colre = new ColumnRearranger(dataSpec);
-      
+
         colre.append(new ClusterAssignFactory(
-                null, null, createNewOutSpec(dataSpec), 
+                null, null, createNewOutSpec(dataSpec),
                 findLearnedColumnIndices(dataSpec, 
-                		 new HashSet<String>(spec.getLearningFields()))));
-        
+                        new HashSet<String>(spec.getLearningFields()))));
+
         DataTableSpec out = colre.createSpec();
         return new DataTableSpec[]{out};
     }
-    
+
     private DataColumnSpec createNewOutSpec(final DataTableSpec inSpec) {
-        String newColName = DataTableSpec.getUniqueColumnName(inSpec, 
-                "Cluster"); 
+        String newColName = DataTableSpec.getUniqueColumnName(inSpec,
+                "Cluster");
         return new DataColumnSpecCreator(newColName, StringCell.TYPE)
             .createSpec();
     }
@@ -148,31 +148,31 @@ public class ClusterAssignerNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
-        PMMLClusterHandler handler = new PMMLClusterHandler();
-        handler.parse(models.get(0));        
-       
-        ComparisonMeasure measure = handler.getComparisonMeasure();
+        PMMLClusterTranslator trans = new PMMLClusterTranslator();
+        port.initializeModelTranslator(trans);
+
+        ComparisonMeasure measure = trans.getComparisonMeasure();
         List<Prototype> prototypes = new ArrayList<Prototype>();
-        String[] labels = handler.getLabels();
-        double[][] protos = handler.getPrototypes();
+        String[] labels = trans.getLabels();
+        double[][] protos = trans.getPrototypes();
         for (int i = 0; i < protos.length; i++) {
             double[] prototype = protos[i];
-            prototypes.add(new Prototype(prototype, 
+            prototypes.add(new Prototype(prototype,
                     new StringCell(labels[i])));
         }
         BufferedDataTable data = (BufferedDataTable)inData[DATA_PORT];
         ColumnRearranger colre = new ColumnRearranger(data.getSpec());
         colre.append(new ClusterAssignFactory(
-                measure, prototypes, createNewOutSpec(data.getDataTableSpec()), 
+                measure, prototypes, createNewOutSpec(data.getDataTableSpec()),
                 findLearnedColumnIndices(data.getSpec(), 
-                		handler.getUsedColumns())));
+                        trans.getUsedColumns())));
         BufferedDataTable bdt =
                 exec.createColumnRearrangeTable(data, colre, exec);
         return new BufferedDataTable[]{bdt};
     }
-    
+
     private static int[] findLearnedColumnIndices(final DataTableSpec ospec,
-            final Set<String> learnedCols) 
+            final Set<String> learnedCols)
             throws InvalidSettingsException {
         int[] colIndices = new int[learnedCols.size()];
         int idx = 0;
@@ -186,8 +186,8 @@ public class ClusterAssignerNodeModel extends NodeModel {
         }
         return colIndices;
     }
-        
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -241,7 +241,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
         private final ComparisonMeasure m_measure;
         private final List<Prototype> m_prototypes;
         private final int[] m_colIndices;
-       
+
         /**
          * Constructor.
          * @param measure comparison measure
@@ -249,9 +249,9 @@ public class ClusterAssignerNodeModel extends NodeModel {
          * @param newColspec the DataColumnSpec of the appended column
          * @param learnedCols columns used for training
          */
-        ClusterAssignFactory(final ComparisonMeasure measure, 
-                final List<Prototype> prototypes, 
-                final DataColumnSpec newColspec, 
+        ClusterAssignFactory(final ComparisonMeasure measure,
+                final List<Prototype> prototypes,
+                final DataColumnSpec newColspec,
                 final int[] learnedCols) {
             super(newColspec);
             m_measure = measure;
@@ -284,6 +284,6 @@ public class ClusterAssignerNodeModel extends NodeModel {
             }
             return winnercell;
         }
-        
+
     }
 }

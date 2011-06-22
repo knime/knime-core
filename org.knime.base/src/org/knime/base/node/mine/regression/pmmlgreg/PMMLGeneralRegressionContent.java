@@ -69,7 +69,11 @@ public final class PMMLGeneralRegressionContent {
         /** Multinomial Target (logistic regression). */
         multinomialLogistic,
         /** Currently not supported. */
-        ordinalMultinomial
+        ordinalMultinomial,
+        /** Currently not supported. */
+        generalizedLinear,
+        /** Currently not supported. */
+        CoxRegression
     }
 
     /**

@@ -67,26 +67,29 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLWriterNodeModel extends NodeModel {
-    
-    
+
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLWriterNodeModel.class);
-    
-    private final SettingsModelString m_outfile 
+
+    private final SettingsModelString m_outfile
         = PMMLWriterNodeDialog.createFileModel();
-    
+
     private final SettingsModelBoolean m_overwriteOK
-        = PMMLWriterNodeDialog.createOverwriteOKModel();
-    
+            = PMMLWriterNodeDialog.createOverwriteOKModel();
+
+    private final SettingsModelBoolean m_validatePMML
+            = PMMLWriterNodeDialog.createValidateModel();
+
     /**
-     * 
+     *
      */
     public PMMLWriterNodeModel() {
-        super(new PortType[] {new PortType(PMMLPortObject.class)}, 
+        super(new PortType[] {new PortType(PMMLPortObject.class)},
                 new PortType[] {});
     }
 
@@ -104,12 +107,15 @@ public class PMMLWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData, 
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec)
             throws Exception {
         checkFileLocation(m_outfile.getStringValue());
         File f = new File(m_outfile.getStringValue());
         PMMLPortObject pmml = (PMMLPortObject)inData[0];
+        if (m_validatePMML.getBooleanValue()) {
+            pmml.validate();
+        }
         pmml.save(new FileOutputStream(f));
         return new PortObject[] {};
     }
@@ -118,7 +124,7 @@ public class PMMLWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // ignore
@@ -137,6 +143,12 @@ public class PMMLWriterNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             m_overwriteOK.setBooleanValue(true);
         }
+        try {
+            // property added in v2.4 -- if missing (old flow), set it to true
+            m_validatePMML.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_validatePMML.setBooleanValue(true);
+        }
     }
 
     /**
@@ -151,7 +163,7 @@ public class PMMLWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // ignore -> no view
@@ -164,14 +176,15 @@ public class PMMLWriterNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_outfile.saveSettingsTo(settings);
         m_overwriteOK.saveSettingsTo(settings);
+        m_validatePMML.saveSettingsTo(settings);
     }
-    
+
     private void checkFileLocation(final String fileName)
             throws InvalidSettingsException {
         LOGGER.debug("file name: " + fileName);
         if (fileName == null || fileName.isEmpty()) {
-            throw new InvalidSettingsException("No file name provided! " 
-                    + "Please enter a valid file name.");            
+            throw new InvalidSettingsException("No file name provided! "
+                    + "Please enter a valid file name.");
         }
         File f = new File(fileName);
         if ((f.exists() && !f.canWrite())

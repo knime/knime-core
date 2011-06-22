@@ -47,25 +47,15 @@
  */
 package org.knime.base.node.io.pmml.read;
 
-import java.io.File;
-
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.xml.sax.SAXException;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            PMMLReaderNodeDialog.class);
-//
-//
     private final SettingsModelString m_fileNameModel;
 
     /**
@@ -76,26 +66,6 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentFileChooser(
                 m_fileNameModel, "pmml.reader", ".pmml", ".xml"));
     }
-
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        // adding the specific port object class name.
-        try {
-            String fileS = m_fileNameModel.getStringValue();
-            File file = PMMLReaderNodeModel.getFileFromSettings(fileS);
-            PMMLImport.isModelSupported(file);
-        } catch (SAXException e) {
-            throw new InvalidSettingsException(e);
-        }
-        super.saveAdditionalSettingsTo(settings);
-    }
-
 
     /**
      *

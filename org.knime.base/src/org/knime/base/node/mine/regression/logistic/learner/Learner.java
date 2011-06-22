@@ -200,7 +200,7 @@ final class Learner {
         List<String> covariateList = new ArrayList<String>();
         Map<String, List<DataCell>> factorDomainValues =
             new HashMap<String, List<DataCell>>();
-        for (int i : trainingData.getLearningCols()) {
+        for (int i : trainingData.getActiveCols()) {
             if (trainingData.getIsNominal().get(i)) {
                 String factor =
                     data.getDataTableSpec().getColumnSpec(i).getName();
@@ -464,7 +464,7 @@ final class Learner {
         /**
          * @return the indices
          */
-        public List<Integer> getLearningCols() {
+        public List<Integer> getActiveCols() {
             return m_learningCols;
         }
 

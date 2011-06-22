@@ -69,7 +69,6 @@ import javax.swing.border.Border;
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
 import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -81,6 +80,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Dialog for the SVM Learner. Lets the user choose the overlapping penalty,
@@ -90,13 +90,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class SVMLearnerNodeDialog extends NodeDialogPane {
 
-    private JPanel m_panel;
+    private final JPanel m_panel;
 
-    private ArrayList<DialogComponent> m_components;
+    private final ArrayList<DialogComponent> m_components;
 
-    private ArrayList<JRadioButton> m_kernels;
+    private final ArrayList<JRadioButton> m_kernels;
 
-    private ArrayList<KernelPanel> m_kernelPanels;
+    private final ArrayList<KernelPanel> m_kernelPanels;
 
     /**
      * Constructor.
@@ -156,6 +156,7 @@ public class SVMLearnerNodeDialog extends NodeDialogPane {
             }
             m_kernelPanels.add(kernelpanel);
             kernelbutton.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     if (kernelbutton.isSelected()) {
                         for (int j = 0; j < m_kernels.size(); j++) {
@@ -190,7 +191,7 @@ public class SVMLearnerNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         for (DialogComponent comp : m_components) {
             comp.loadSettingsFrom(settings, specs);
         }

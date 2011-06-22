@@ -63,7 +63,7 @@ import java.util.Map.Entry;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeHandler;
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -93,9 +93,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.knime.core.util.Pair;
 import org.w3c.dom.Node;
 
@@ -205,9 +205,9 @@ public class DecTreePredictorNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
-        PMMLDecisionTreeHandler handler = new PMMLDecisionTreeHandler();
-        handler.parse(models.get(0));
-        m_decTree = handler.getDecisionTree();
+        PMMLDecisionTreeTranslator trans = new PMMLDecisionTreeTranslator();
+        port.initializeModelTranslator(trans);
+        m_decTree = trans.getDecisionTree();
 
         m_decTree.resetColorInformation();
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
@@ -353,8 +353,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
                         + "data to be predicted");
             }
         }
-        return new PortObjectSpec[]{
-                createOutTableSpec(inSpecs)};
+        return new PortObjectSpec[]{createOutTableSpec(inSpecs)};
     }
 
     private LinkedList<DataCell> getPredictionValues(

@@ -59,8 +59,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.cluster.PMMLClusterHandler;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator.ComparisonMeasure;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -83,7 +83,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.knime.base.node.mine.cluster.PMMLClusterHandler.ComparisonMeasure;
 
 /**
  * Generate a fuzzy c-means clustering using a fixed number of cluster centers.
@@ -420,31 +419,23 @@ public class FuzzyClusterNodeModel extends NodeModel {
             clustercentres = cleaned;
         }
         exec.setMessage("Creating PMML cluster model...");
-        PMMLPortObjectSpec pmmlOutSpec 
-        			= createPMMLPortObjectSpec(m_spec, learningCols);
-        PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
-                new PMMLClusterHandler(ComparisonMeasure.squaredEuclidean, 
-                		m_nrClusters, 
-                		clustercentres, 
-                		null, 
-                		new HashSet<String>(pmmlOutSpec.getLearningFields())));
-        return new PortObject[]{result, pmmlPort};
-    } // end execute()
-    
-    
-    private static List<DataColumnSpec> getColumnSpecsFor(final List<String> colNames,
-            final DataTableSpec tableSpec) {
-        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
-        for (String colName : colNames) {
-            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
-            if (colName == null) {
-                throw new IllegalArgumentException(
-                        "Column " + colName + " not found in data table spec!");
-            }
-            colSpecs.add(colSpec);
+
+     // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+        PMMLPortObjectSpec inPMMLSpec = null;
+        if (inPMMLPort != null) {
+            inPMMLSpec = inPMMLPort.getSpec();
         }
-        return colSpecs;
-    }
+        PMMLPortObjectSpec pmmlOutSpec
+                = createPMMLPortObjectSpec(inPMMLSpec, m_spec, learningCols);
+        PMMLPortObject outPMMLPort
+                = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
+        outPMMLPort.addModelTranslater(new PMMLClusterTranslator(
+                ComparisonMeasure.squaredEuclidean, m_nrClusters,
+                        clustercentres, null,
+                        new HashSet<String>(pmmlOutSpec.getLearningFields())));
+        return new PortObject[]{result, outPMMLPort};
+    } // end execute()
 
     /**
      * {@inheritDoc}
@@ -638,19 +629,16 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 "Winner Cluster", StringCell.TYPE).createSpec();
         DataTableSpec newspec = new DataTableSpec(newSpec);
         DataTableSpec returnspec = new DataTableSpec(inspec, newspec);
-
+        PMMLPortObjectSpec inPmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
         return new PortObjectSpec[]{returnspec,
-                createPMMLPortObjectSpec(inspec, learningCols)};
+                createPMMLPortObjectSpec(inPmmlSpec, inspec, learningCols)};
     }
 
     private PMMLPortObjectSpec createPMMLPortObjectSpec(
-            final DataTableSpec inspec, final List<String> learningCols)
-        throws InvalidSettingsException {
+            final PMMLPortObjectSpec pmmlSpec,
+            final DataTableSpec inspec, final List<String> learningCols) {
         PMMLPortObjectSpecCreator pmmlSpecCreator =
-            new PMMLPortObjectSpecCreator(
-                    FilterColumnTable.createFilterTableSpec(inspec,
-                            learningCols.toArray(
-                                    new String[learningCols.size()])));
+            new PMMLPortObjectSpecCreator(pmmlSpec, inspec);
         pmmlSpecCreator.setLearningColsNames(learningCols);
         return pmmlSpecCreator.createSpec();
     }

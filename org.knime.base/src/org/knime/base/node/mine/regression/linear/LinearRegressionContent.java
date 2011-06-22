@@ -51,10 +51,11 @@
 package org.knime.base.node.mine.regression.linear;
 
 import java.util.Arrays;
+import java.util.List;
 
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.NumericPredictor;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.RegressionTable;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -78,7 +79,8 @@ import org.xml.sax.SAXException;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class LinearRegressionContent {
-
+    private static final String MODEL_NAME = "KNIME Linear Regression";
+    private static final String ALGORITHM_NAME = "LinearRegression";
     private static final String CFG_OFFSET = "offset";
     private static final String CFG_MULTIPLIER = "multipliers";
     private static final String CFG_MEANS = "means";
@@ -99,6 +101,7 @@ public final class LinearRegressionContent {
 
     /** Public no arg constructor as required by super class. */
     public LinearRegressionContent() {
+        // see comment 
     }
 
     /**
@@ -135,24 +138,43 @@ public final class LinearRegressionContent {
     /**
      * Creates a new PMML regression port object from this linear regression
      * model.
-     *
+     * @param inPMMLPort the incoming PMMLPort object (can be null)
+     * @param dts the incoming data table spec
      * @return a port object
      * @throws InvalidSettingsException if the settings are invalid
-     * @throws SAXException 
+     * @throws SAXException
      */
-    public PMMLPortObject createPortObject()
-        throws InvalidSettingsException, SAXException {
-        PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
-        PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
-        c.setAlgorithmName("LinearRegression");
-        c.setModelName("KNIME Linear Regression");
+    public PMMLPortObject createPortObject(final PMMLPortObject inPMMLPort,
+            final DataTableSpec dts)
+        throws InvalidSettingsException {
+        PMMLPortObjectSpec inPMMLSpec = null;
+        if (inPMMLPort != null) {
+            inPMMLSpec = inPMMLPort.getSpec();
+        }
+        PMMLPortObjectSpec spec = createPortObjectSpec(inPMMLSpec, dts);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(spec,
+                inPMMLPort);
+
         NumericPredictor[] nps = new NumericPredictor[m_multipliers.length];
         for (int i = 0; i < nps.length; i++) {
             nps[i] = new NumericPredictor(
                     m_spec.getColumnSpec(i).getName(), 1, m_multipliers[i]);
         }
-        c.setRegressionTable(new RegressionTable(m_offset, nps));
-        return new PMMLPortObject(spec, c);
+        RegressionTable regressionTable = new RegressionTable(m_offset, nps);
+
+        /* To maintain compatibility with the previous SAX-based implementation.
+         * */
+        String targetField = "Response";
+        List<String> targetFields = spec.getTargetFields();
+        if (!targetFields.isEmpty()) {
+            targetField = targetFields.get(0);
+        }
+
+        PMMLRegressionTranslator trans = new PMMLRegressionTranslator(
+                MODEL_NAME, ALGORITHM_NAME, regressionTable, targetField);
+        outPMMLPort.addModelTranslater(trans);
+
+        return outPMMLPort;
     }
 
     /**
@@ -160,18 +182,20 @@ public final class LinearRegressionContent {
      * table spec. <b>The target column must be the last column in the table
      * spec!</b>
      *
-     * @param spec the data table spec with which the regression model was
-     *            created.
-     *
+     * @param pmmlSpec the optional {@link PMMLPortObjectSpec} which can be null
+     * @param tableSpec the port object spec with which the regression
+     *      model was created.
      * @return a PMML port object spec
      * @throws InvalidSettingsException if PMML incompatible type was found
      */
     public static PMMLPortObjectSpec createPortObjectSpec(
-            final DataTableSpec spec) throws InvalidSettingsException {
-        PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
-        c.setLearningCols(spec);
-        c.setTargetCols(Arrays.asList(spec.getColumnSpec(
-                spec.getNumColumns() - 1)));
+            final PMMLPortObjectSpec pmmlSpec, final DataTableSpec tableSpec)
+            throws InvalidSettingsException {
+        PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(pmmlSpec,
+                tableSpec);
+        c.setLearningCols(tableSpec);
+        c.setTargetCols(Arrays.asList(tableSpec.getColumnSpec(
+                tableSpec.getNumColumns() - 1)));
         return c.createSpec();
     }
 

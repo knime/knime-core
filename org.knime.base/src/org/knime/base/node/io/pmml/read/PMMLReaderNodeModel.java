@@ -51,7 +51,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
+import org.apache.xmlbeans.XmlException;
+import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -65,7 +68,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.xml.sax.SAXException;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  *
@@ -76,14 +80,15 @@ public class PMMLReaderNodeModel extends NodeModel {
     private final SettingsModelString m_file = PMMLReaderNodeDialog
             .createFileChooserModel();
 
-    private PMMLImport m_importer;
+
+    private PMMLPortObject m_pmmlPort;
 
     /**
-     *
+     * Create a new PMML reader node model with optional PMML in port.
      */
     public PMMLReaderNodeModel() {
-        super(new PortType[]{}, new PortType[]{new PortType(
-                PMMLPortObject.class)});
+        super(new PortType[]{new PortType(PMMLPortObject.class, true)},
+                new PortType[]{new PortType(PMMLPortObject.class)});
     }
 
     /**
@@ -115,39 +120,49 @@ public class PMMLReaderNodeModel extends NodeModel {
                     + file + "\".");
         }
         try {
-            m_importer = new PMMLImport(file);
-        } catch (SAXException e) {
+            PMMLImport pmmlImport = new PMMLImport(file);
+            m_pmmlPort = pmmlImport.getPortObject();
+        } catch (IllegalArgumentException e) {
             setWarningMessage("File \"" + file
                     + "\" is not a valid PMML file:\n" + e.getMessage());
             throw new InvalidSettingsException(e);
+        } catch (XmlException e) {
+            throw new InvalidSettingsException(e);
+        } catch (IOException e) {
+            throw new InvalidSettingsException(e);
         }
-        return new PortObjectSpec[]{m_importer.getPortObjectSpec()};
+        PMMLPortObjectSpec parsedSpec = m_pmmlPort.getSpec();
+        PMMLPortObjectSpec outSpec = createPMMLOutSpec(
+                (PMMLPortObjectSpec)inSpecs[0], parsedSpec);
+        return new PortObjectSpec[]{outSpec};
     }
 
-    /*
-     * private void validate() throws Exception { InputStream xsltStream =
-     * getSchemaInputStream( "/schemata/pmml.xslt"); TransformerFactory transFac
-     * = TransformerFactory.newInstance(); StreamSource ss = new
-     * StreamSource(xsltStream);
-     *
-     * Transformer transformer = transFac.newTransformer( ss); // XFilter filter
-     * = new XFilter(); // filter.setParent(parser.getXMLReader()); //
-     * InputSource fileSource = new InputSource( // new FileInputStream(new
-     * File(m_file.getStringValue()))); // SAXSource saxSrc = new
-     * SAXSource(filter, fileSource); //
-     * TransformerFactory.newInstance().newTransformer().transform( // saxSrc,
-     * result);
-     *
-     * StreamResult result = new StreamResult(System.out); // SAXParserFactory
-     * saxFac = SAXParserFactory.newInstance(); saxFac.setValidating(false);
-     * saxFac.setNamespaceAware(true); SAXParser parser = saxFac.newSAXParser();
-     *
-     * SAXSource saxSrc = new SAXSource(parser.getXMLReader(), new
-     * InputSource(new FileInputStream( new File(m_file.getStringValue()))));
-     * transformer.transform(saxSrc, result);
-     *
-     * }
+    /**
+     * @param inModelSpec the spec of the optional PMML in port
+     * @param parsedSpec the spec of the parsed PMML document
+     * @return the merged {@link PMMLPortObjectSpec}
      */
+    private PMMLPortObjectSpec createPMMLOutSpec(
+            final PMMLPortObjectSpec inModelSpec,
+            final PMMLPortObjectSpec parsedSpec)
+            throws InvalidSettingsException {
+        PMMLPortObjectSpec outSpec = parsedSpec;
+        if (inModelSpec != null) {
+            List<String> preprocCols = inModelSpec.getPreprocessingFields();
+            for (String colName : preprocCols) {
+                if (!parsedSpec.getActiveFields().contains(colName)) {
+                    throw new InvalidSettingsException("Preprocessing column "
+                            + colName
+                            + " is not contained in the read PMML file.");
+                }
+            }
+            PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                    parsedSpec);
+            creator.addPreprocColNames(preprocCols);
+            outSpec = creator.createSpec();
+        }
+        return outSpec;
+    }
 
     /**
      * {@inheritDoc}
@@ -155,12 +170,14 @@ public class PMMLReaderNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        // retrieve selected PortObject class -> instantiate and load it
-        if (m_importer == null) {
-            File f = getFileFromSettings(m_file.getStringValue());
-            m_importer = new PMMLImport(f);
+        PMMLPortObject inPort = (PMMLPortObject)inData[0];
+        if (inPort != null) {
+            TransformationDictionary dict
+                    = TransformationDictionary.Factory.newInstance();
+            dict.setDerivedFieldArray(inPort.getDerivedFields());
+            m_pmmlPort.addGlobalTransformations(dict);
         }
-        return new PortObject[]{m_importer.getPortObject()};
+        return new PortObject[]{m_pmmlPort};
     }
 
     /**
@@ -212,7 +229,7 @@ public class PMMLReaderNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        // nothing to unregister
     }
 
     /**
@@ -239,7 +256,7 @@ public class PMMLReaderNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // no internals to load
     }
 
     /**
@@ -249,5 +266,6 @@ public class PMMLReaderNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // no internals to save
     }
 }

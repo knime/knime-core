@@ -57,7 +57,7 @@ import java.util.List;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContentHandler;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -76,9 +76,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
@@ -143,14 +143,14 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
-        PMMLGeneralRegressionContentHandler handler
-			 = new PMMLGeneralRegressionContentHandler(
-							(PMMLPortObjectSpec) inData[0].getSpec());
-        handler.parse(models.get(0));
+        PMMLGeneralRegressionTranslator trans
+                = new PMMLGeneralRegressionTranslator();
+        port.initializeModelTranslator(trans);
 
         BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
-        ColumnRearranger c = createRearranger(handler, spec);
+        ColumnRearranger c = createRearranger(trans.getContent(),
+                port.getSpec(), spec);
         BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
     }
@@ -186,15 +186,13 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
     }
 
     private ColumnRearranger createRearranger(
-            final PMMLGeneralRegressionContentHandler handler,
-            final DataTableSpec inSpec)
+            final PMMLGeneralRegressionContent content,
+            final PMMLPortObjectSpec pmmlSpec,
+            final DataTableSpec inDataSpec)
             throws InvalidSettingsException {
-        if (handler == null) {
+        if (content == null) {
             throw new InvalidSettingsException("No input");
         }
-
-        // content stores information about the model
-        PMMLGeneralRegressionContent content = handler.getContent();
 
         // the predictor can only predict logistic regression models
         if (!content.getModelType().equals(ModelType.multinomialLogistic)) {
@@ -209,7 +207,8 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         // check if all factors are in the given data table and that they
         // are nominal values
         for (PMMLPredictor factor : content.getFactorList()) {
-            DataColumnSpec columnSpec = inSpec.getColumnSpec(factor.getName());
+            DataColumnSpec columnSpec = inDataSpec.getColumnSpec(
+                    factor.getName());
             if (null == columnSpec) {
                 throw new InvalidSettingsException("The column \""
                         + factor.getName()
@@ -225,7 +224,7 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         // are numeric values
         for (PMMLPredictor covariate : content.getCovariateList()) {
             DataColumnSpec columnSpec =
-                    inSpec.getColumnSpec(covariate.getName());
+                    inDataSpec.getColumnSpec(covariate.getName());
             if (null == columnSpec) {
                 throw new InvalidSettingsException("The column \""
                         + covariate.getName()
@@ -238,9 +237,9 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             }
         }
 
-        ColumnRearranger c = new ColumnRearranger(inSpec);
-        c.append(new LogRegPredictor(handler.getContent(), inSpec,
-                handler.getSpec(), handler.getTargetVariableName(),
+        ColumnRearranger c = new ColumnRearranger(inDataSpec);
+        c.append(new LogRegPredictor(content, inDataSpec,
+                pmmlSpec, pmmlSpec.getTargetFields().get(0),
                 m_settings.getIncludeProbabilities()));
         return c;
     }

@@ -60,8 +60,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.cluster.PMMLClusterHandler;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator;
+import org.knime.base.node.mine.cluster.PMMLClusterTranslator.ComparisonMeasure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -162,22 +162,23 @@ public class ClusterNodeModel extends NodeModel {
      * Introduced a column filter.
      * 02.05.2007 Dill
      */
-    private SettingsModelIntegerBounded m_nrOfClusters
+    private final SettingsModelIntegerBounded m_nrOfClusters
         = new SettingsModelIntegerBounded(CFG_NR_OF_CLUSTERS,
                 INITIAL_NR_CLUSTERS, 1, Integer.MAX_VALUE);
 
-    private SettingsModelIntegerBounded m_nrMaxIterations
+    private final SettingsModelIntegerBounded m_nrMaxIterations
         = new SettingsModelIntegerBounded(CFG_MAX_ITERATIONS,
                 INITIAL_MAX_ITERATIONS, 1, Integer.MAX_VALUE);
 
-    private SettingsModelFilterString m_usedColumns
+    private final SettingsModelFilterString m_usedColumns
         = new SettingsModelFilterString(CFG_COLUMNS);
 
     /**
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE},
+        super(new PortType[] {BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)},
                 new PortType[] {
                     BufferedDataTable.TYPE,
                     PMMLPortObject.TYPE});
@@ -512,7 +513,26 @@ public class ClusterNodeModel extends NodeModel {
         m_translator.setMapper(new DefaultHiLiteMapper(mapping));
         BufferedDataTable outData = exec.createBufferedDataTable(
                 labeledInput.getTable(), exec);
-        return new PortObject[]{outData, getPMMLOutPortObject()};
+
+        // handle the optional PMML input
+        PMMLPortObject inPMMLPort = (PMMLPortObject)data[1];
+        PMMLPortObjectSpec inPMMLSpec = null;
+        if (inPMMLPort != null) {
+            inPMMLSpec = inPMMLPort.getSpec();
+        }
+        PMMLPortObjectSpec pmmlOutSpec = createPMMLSpec(inPMMLSpec,
+                outData.getSpec());
+        PMMLPortObject outPMMLPort
+                = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
+        Set<String> columns = new HashSet<String>();
+        for (String s : pmmlOutSpec.getLearningFields()) {
+            columns.add(s);
+        }
+        outPMMLPort.addModelTranslater(new PMMLClusterTranslator(
+                ComparisonMeasure.squaredEuclidean,
+                m_nrOfClusters.getIntValue(), m_clusters, m_clusterCoverage,
+                columns));
+        return new PortObject[]{outData, outPMMLPort};
     }
 
     private void initialize(final DataTable input) {
@@ -656,7 +676,9 @@ public class ClusterNodeModel extends NodeModel {
         addExcludeColumnsToIgnoreList();
         DataTableSpec appendedSpec = createAppendedSpec();
         // return spec for data and model outport!
-        return new PortObjectSpec[]{appendedSpec, createPMMLSpec(m_spec)};
+        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        return new PortObjectSpec[]{appendedSpec,
+                createPMMLSpec(pmmlSpec, m_spec)};
     }
 
     private DataTableSpec createAppendedSpec() {
@@ -710,25 +732,6 @@ public class ClusterNodeModel extends NodeModel {
         }
     }
 
-    private PMMLPortObject getPMMLOutPortObject() throws Exception {
-
-    	  PMMLPortObjectSpec pmmlOutSpec 
-          			= createPMMLSpec(m_spec);
-    	  Set<String> columns = new HashSet<String>();
-    	  for(String s: pmmlOutSpec.getLearningFields()){
-    		  columns.add(s);
-    	  }
-          PMMLPortObject pmmlPort = new PMMLPortObject(pmmlOutSpec,
-                  new PMMLClusterHandler(
-                  		org.knime.base.node.mine.cluster.
-                  		PMMLClusterHandler.ComparisonMeasure.squaredEuclidean, 
-                  		m_nrOfClusters.getIntValue(), 
-                  		m_clusters, 
-                  		m_clusterCoverage, 
-                  		columns));
-          return pmmlPort;
-    }
-
     private static List<DataColumnSpec> getColumnSpecsFor(
     		final List<String> colNames,
             final DataTableSpec tableSpec) {
@@ -743,7 +746,9 @@ public class ClusterNodeModel extends NodeModel {
         }
         return colSpecs;
     }
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec)
+
+    private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec,
+            final DataTableSpec tableSpec)
             throws InvalidSettingsException {
         List<String> includes;
         if (m_usedColumns.isKeepAllSelected()) {
@@ -773,8 +778,7 @@ public class ClusterNodeModel extends NodeModel {
         }
 
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
-                FilterColumnTable.createFilterTableSpec(tableSpec,
-                        activeCols.toArray(new String[activeCols.size()])));
+                pmmlSpec, tableSpec);
         creator.setLearningColsNames(activeCols);
         return creator.createSpec();
     }

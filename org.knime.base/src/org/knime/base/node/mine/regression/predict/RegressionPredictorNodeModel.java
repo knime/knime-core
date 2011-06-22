@@ -55,10 +55,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.NumericPredictor;
-import org.knime.base.node.mine.regression.PMMLRegressionContentHandler.RegressionTable;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -73,17 +72,17 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
@@ -92,16 +91,17 @@ import org.w3c.dom.Node;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RegressionPredictorNodeModel extends NodeModel {
-	
 
-	   /** The node logger for this class. */
-	   private static final NodeLogger LOGGER =
-	           NodeLogger.getLogger(RegressionPredictorNodeModel.class);
+
+    /** The node logger for this class. */
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RegressionPredictorNodeModel.class);
 
     /** Initialization with 1 data input, 1 model input and 1 data output. */
     public RegressionPredictorNodeModel() {
         super(new PortType[]{PMMLPortObject.TYPE,
-                BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
+                BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -109,6 +109,7 @@ public class RegressionPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // nothing to save
     }
 
     /**
@@ -117,6 +118,7 @@ public class RegressionPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // nothing to validate
     }
 
     /**
@@ -125,31 +127,31 @@ public class RegressionPredictorNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // nothing to load
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-	public PortObject[] execute(final PortObject[] inData,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-    	PMMLPortObject regModel = (PMMLPortObject)inData[0];
-        
-           List<Node> models = regModel.getPMMLValue().getModels(
-                   PMMLModelType.RegressionModel);
-           if (models.isEmpty()) {
-               String msg = "No Regression Model found.";
-               LOGGER.error(msg);
-               throw new RuntimeException(msg);
-           }
-           PMMLRegressionContentHandler handler 
-           					= new PMMLRegressionContentHandler(
-           							(PMMLPortObjectSpec)inData[0].getSpec());
-           handler.parse(models.get(0));        
+        PMMLPortObject regModel = (PMMLPortObject)inData[0];
+
+        List<Node> models =
+                regModel.getPMMLValue()
+                        .getModels(PMMLModelType.RegressionModel);
+        if (models.isEmpty()) {
+            String msg = "No Regression Model found.";
+            LOGGER.error(msg);
+            throw new RuntimeException(msg);
+        }
+        PMMLRegressionTranslator trans = new PMMLRegressionTranslator();
+        regModel.initializeModelTranslator(trans);
+
         BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
-        ColumnRearranger c =
-                createRearranger(spec, regModel.getSpec(), handler);
+        ColumnRearranger c = createRearranger(spec, regModel.getSpec(), trans);
         BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
     }
@@ -159,6 +161,7 @@ public class RegressionPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        // nothing to do
     }
 
     /** {@inheritDoc} */
@@ -171,6 +174,13 @@ public class RegressionPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
+        for (String learnColName : regModelSpec.getLearningFields()) {
+            if (!dataSpec.containsName(learnColName)) {
+                throw new InvalidSettingsException(
+                        "Learning column \"" + learnColName
+                        + "\" not found in input data to be predicted");
+            }
+        }
         ColumnRearranger rearranger =
                 createRearranger(dataSpec, regModelSpec, null);
         DataTableSpec outSpec = rearranger.createSpec();
@@ -179,7 +189,7 @@ public class RegressionPredictorNodeModel extends NodeModel {
 
     private ColumnRearranger createRearranger(final DataTableSpec inSpec,
             final PMMLPortObjectSpec regModelSpec,
-            final PMMLRegressionContentHandler regModel)
+            final PMMLRegressionTranslator regModel)
             throws InvalidSettingsException {
         if (regModelSpec == null) {
             throw new InvalidSettingsException("No input");
@@ -265,6 +275,7 @@ public class RegressionPredictorNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // nothing to load
     }
 
     /**
@@ -274,5 +285,6 @@ public class RegressionPredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // nothing to save
     }
 }

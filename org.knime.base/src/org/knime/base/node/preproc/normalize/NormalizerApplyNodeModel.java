@@ -91,9 +91,22 @@ public class NormalizerApplyNodeModel extends NodeModel {
      * @param modelPortType
      */
     protected NormalizerApplyNodeModel(final PortType modelPortType) {
-        super(new PortType[]{modelPortType, BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+        this(modelPortType, false);
     }
+
+    /**
+     * @param modelPortType
+     * @param passThrough if set to true, the incoming model is passed through
+     *          as model outport
+     */
+    protected NormalizerApplyNodeModel(final PortType modelPortType,
+            final boolean passThrough) {
+        super(new PortType[]{modelPortType, BufferedDataTable.TYPE},
+                passThrough ?
+                        new PortType[]{modelPortType, BufferedDataTable.TYPE}
+                        : new PortType[]{BufferedDataTable.TYPE});
+    }
+
 
     /**
      * {@inheritDoc}

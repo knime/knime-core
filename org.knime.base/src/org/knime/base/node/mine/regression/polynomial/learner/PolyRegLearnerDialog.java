@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
@@ -70,6 +70,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
@@ -77,18 +78,18 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * This is the dialog for the polynomial regression learner node. The user can
  * select the target column with the dependent variable and the degree of the
  * polynomial used for regression.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLearnerDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
-    private final ColumnSelectionComboxBox m_targetColumn = 
+    private final ColumnSelectionComboxBox m_targetColumn =
         new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
 
     private final JSpinner m_degree = new JSpinner(new SpinnerNumberModel(2, 1,
             10, 1));
 
-    private final PolyRegLearnerSettings m_settings = 
+    private final PolyRegLearnerSettings m_settings =
         new PolyRegLearnerSettings();
 
     private final JSpinner m_viewRows = new JSpinner(new SpinnerNumberModel(
@@ -111,6 +112,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         c.gridx = 1;
         p.add(m_targetColumn, c);
         m_targetColumn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ev) {
                 if (m_targetColumn.getSelectedItem() != null) {
                     m_colSelectionPanel.resetHiding();
@@ -157,12 +159,13 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        DataTableSpec dataTableSpec = (DataTableSpec)specs[0];
         try {
             m_settings.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ex) {
             LinkedHashSet<String> defSelected = new LinkedHashSet<String>();
-            for (DataColumnSpec s : specs[0]) {
+            for (DataColumnSpec s : dataTableSpec) {
                 if (s.getType().isCompatible(DoubleValue.class)) {
                     defSelected.add(s.getName());
                 }
@@ -170,11 +173,11 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
             m_settings.setSelectedColumns(defSelected);
             // for the rest: ignore it, defaults are used instead
         }
-        m_targetColumn.update(specs[0], m_settings.getTargetColumn());
+        m_targetColumn.update(dataTableSpec, m_settings.getTargetColumn());
         m_degree.getModel().setValue(m_settings.getDegree());
         m_viewRows.getModel().setValue(m_settings.getMaxRowsForView());
         m_colSelectionPanel
-                .update(specs[0], false, m_settings.getSelectedColumns());
+                .update(dataTableSpec, false, m_settings.getSelectedColumns());
         m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
                 .getSelectedItem());
         m_colSelectionPanel.setKeepAllSelected(m_settings.isIncludeAll());

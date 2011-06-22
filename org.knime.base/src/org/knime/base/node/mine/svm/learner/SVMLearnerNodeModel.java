@@ -66,7 +66,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.knime.base.node.mine.svm.PMMLSVMHandler;
+import org.knime.base.node.mine.svm.PMMLSVMTranslator;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
@@ -200,7 +200,8 @@ public class SVMLearnerNodeModel extends NodeModel {
      *
      */
     public SVMLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
+        super(new PortType[]{BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)},
                 new PortType[]{PMMLPortObject.TYPE});
         m_kernelParameters = createKernelParams();
     }
@@ -212,11 +213,12 @@ public class SVMLearnerNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
+        PMMLPortObjectSpec portSpec = (PMMLPortObjectSpec)inSpecs[1];
         LearnColumnsAndColumnRearrangerTuple tuple =
             createTrainTableColumnRearranger(inSpec);
         DataTableSpec trainSpec = tuple.getTrainingRearranger().createSpec();
         PMMLPortObjectSpecCreator pmmlcreate =
-                new PMMLPortObjectSpecCreator(trainSpec);
+                new PMMLPortObjectSpecCreator(portSpec, trainSpec);
         pmmlcreate.setTargetCol(tuple.getTargetColumn());
         pmmlcreate.setLearningCols(tuple.getLearningColumns());
         return new PortObjectSpec[]{pmmlcreate.createSpec()};
@@ -343,16 +345,23 @@ public class SVMLearnerNodeModel extends NodeModel {
             timerTask.cancel();
         }
 
-        PMMLPortObjectSpecCreator pmmlcreate =
-            new PMMLPortObjectSpecCreator(trainSpec);
-        pmmlcreate.setLearningCols(trainSpec);
-        pmmlcreate.setTargetCol(trainSpec.getColumnSpec(m_classcol
+        // the optional PMML input (can be null)
+        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+
+        // create the outgoing PMML spec
+        PMMLPortObjectSpecCreator specCreator =
+            new PMMLPortObjectSpecCreator(inPMMLPort, trainSpec);
+        specCreator.setLearningCols(trainSpec);
+        specCreator.setTargetCol(trainSpec.getColumnSpec(m_classcol
                 .getStringValue()));
-        PMMLPortObjectSpec pmmlspec = pmmlcreate.createSpec();
-        PMMLPortObject pmml =
-            new PMMLPortObject(pmmlspec, new PMMLSVMHandler(categories,
-                    Arrays.asList(m_svms), kernel));
-        return new PortObject[]{pmml};
+
+        // create the outgoing PMML port object
+        PMMLPortObject outPMMLPort = new PMMLPortObject(
+                specCreator.createSpec(), inPMMLPort, inTable.getSpec());
+        outPMMLPort.addModelTranslater(new PMMLSVMTranslator(categories,
+                Arrays.asList(m_svms), kernel));
+
+        return new PortObject[]{outPMMLPort};
     }
 
     private LearnColumnsAndColumnRearrangerTuple

@@ -239,6 +239,7 @@
             name="Convert &amp; Replace"
             path="/manipulation/column">
       </category>
+      
       <category
             icon="icons/missing.gif"
             level-id="row-filter"
@@ -460,6 +461,27 @@
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
+     <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
+            id="org.knime.base.node.preproc.normalize.NormalizePMMLNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLApplyNodeFactory"
+            id="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"
+            id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"/>
+      <node  
+            after="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"
+            id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"
+            id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
@@ -476,22 +498,6 @@
             category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
-      <node
-            category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"
-            id="org.knime.base.node.preproc.pmml.PMMLPreprocIntegratorNodeFactory"/>
-      <node
-            category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"
-            id="org.knime.base.node.preproc.normalize.PMMLNormalizerNodeFactory"/>
-      <node
-            category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"
-            id="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"/>
-      <node
-            category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"
-            id="org.knime.base.node.preproc.pmml.PMMLPreprocCombinerNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             category-path="/manipulation/row/row-filter"

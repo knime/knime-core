@@ -55,14 +55,11 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
-import org.xml.sax.SAXException;
 
 /**
  * Base class for Predicate as specified in PMML
@@ -76,7 +73,8 @@ public abstract class PMMLPredicate {
         = NodeLogger.getLogger(PMMLPredicate.class);
 
     /** For formatting the predicates toString output. */
-    protected static NumberFormat NUMBERFORMAT = NumberFormat.getInstance();
+    protected static final NumberFormat NUMBERFORMAT 
+            = NumberFormat.getInstance();
 
     /** The key to store the predicate type in configurations. */
     protected static final String TYPE_KEY = "type";
@@ -214,16 +212,6 @@ public abstract class PMMLPredicate {
      * @return the name of the predicate
      */
     public abstract String getName();
-
-    /**
-     * Writes the PMML XML object for the predicate.
-     *
-     * @param handler TransformerHandler for parsing and transforming events
-     * @throws SAXException - any SAX exception, possibly wrapping another
-     *             exception
-     */
-    public abstract void writePMML(TransformerHandler handler)
-            throws SAXException;
 
     /**
      * Save internal predicate settings to a config object.
@@ -371,5 +359,4 @@ public abstract class PMMLPredicate {
         }
 
     }
-
 }

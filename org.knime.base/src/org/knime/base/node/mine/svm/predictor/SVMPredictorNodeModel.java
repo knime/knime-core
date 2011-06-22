@@ -55,7 +55,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
-import org.knime.base.node.mine.svm.PMMLSVMHandler;
+import org.knime.base.node.mine.svm.PMMLSVMTranslator;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -73,9 +73,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
@@ -152,11 +152,10 @@ public class SVMPredictorNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
+        PMMLSVMTranslator trans = new PMMLSVMTranslator();
+        port.initializeModelTranslator(trans);
 
-        PMMLSVMHandler handler = new PMMLSVMHandler();
-        handler.parse(models.get(0));
-
-        List<Svm> svms = handler.getSVMs();
+        List<Svm> svms = trans.getSVMs();
         m_svms = svms.toArray(new Svm[svms.size()]);
         DataTableSpec testSpec =
                 ((BufferedDataTable)inData[1]).getDataTableSpec();

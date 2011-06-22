@@ -90,17 +90,17 @@ public class Svm {
     /*
      * the threshold.
      */
-    private double m_b;
+    private final double m_b;
 
     /*
      * the kernel type to use.
      */
-    private KernelType m_kernelType;
+    private final KernelType m_kernelType;
 
     /*
      * the actual kernel.
      */
-    private Kernel m_kernel;
+    private final Kernel m_kernel;
 
     /**
      * Constructor.
@@ -280,6 +280,23 @@ public class Svm {
      */
     public double[] getAlphas() {
         return m_alpha;
+    }
+
+    /**
+     * Multiplies the alpha coefficients of the SVM with the target value
+     * (-1 or 1, depending if the input is a 'positive' example or not). Use
+     * this method for retrieving the alphas for a PMML compliant
+     * representation instead of the {@link #getAlphas()} method.
+     *
+     * @return the alpha coefficients oft the SVM multiplied by the target
+     *      factor
+     */
+    public double[] getTargetAlphas() {
+        double[] targetAlpha = new double[m_alpha.length];
+        for (int i = 0; i < m_alpha.length; i++) {
+            targetAlpha[i] = m_alpha[i] * target(i);
+        }
+        return targetAlpha;
     }
 
     /**

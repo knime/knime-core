@@ -52,14 +52,10 @@ package org.knime.base.node.mine.decisiontree2;
 
 import java.util.LinkedList;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 
 /**
  *
@@ -69,8 +65,10 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
 
     /** The string representation of the predicate's XML-element. */
     public static final String NAME = "CompoundPredicate";
+
     /** The key to store the number of predicates in configurations. */
     private static final String NUM_PREDICATES = "num_predicates";
+
     /** The key prefix to store the predicates in configurations. */
     private static final String PRED = "predicate";
 
@@ -84,12 +82,13 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
      * Build a new PMMLCompoundPredicate.
      */
     public PMMLCompoundPredicate() {
-		super();
-		// for usage with loadFromPredParams(Config)
-	}
-    
+        super();
+        // for usage with loadFromPredParams(Config)
+    }
+
     /**
      * Build a new PMMLCompoundPredicate.
+     *
      * @param operator the string representation of the operator
      */
     public PMMLCompoundPredicate(final String operator) {
@@ -106,7 +105,7 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
      * @param operator the PMML operator to be set
      */
     public PMMLCompoundPredicate(final PMMLBooleanOperator operator) {
-            m_op = operator;
+        m_op = operator;
     }
 
     /**
@@ -148,48 +147,45 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
         m_predicates = predicates;
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean evaluate(final DataRow row,
-            final DataTableSpec spec) {
+    public Boolean evaluate(final DataRow row, final DataTableSpec spec) {
         Boolean eval = false;
         int count = 0;
 
-        search:
-        for (PMMLPredicate pred : m_predicates) {
+        search: for (PMMLPredicate pred : m_predicates) {
             eval = pred.evaluate(row, spec);
             switch (m_op) {
-                case AND:
-                    if (eval == null || !eval) {
-                        // break evaluation on first negative result
-                        break search;
-                    }
-                    break;
-                case OR:
-                    if (eval == null || eval) {
-                        // break evaluation on first positive result
-                        break search;
-                    }
-                    break;
-                case XOR:
-                    if (eval == null) {
-                        break search;
-                    } else if (eval) {
-                        // count positive results
-                        count++;
-                    }
-                    break;
-                case SURROGATE:
-                    if (eval == null) {
-                        // just continue on unknown result (missing values)
-                        continue;
-                    } else {
-                        // break the loop to return the evaluation result
-                        break search;
-                    }
+            case AND:
+                if (eval == null || !eval) {
+                    // break evaluation on first negative result
+                    break search;
+                }
+                break;
+            case OR:
+                if (eval == null || eval) {
+                    // break evaluation on first positive result
+                    break search;
+                }
+                break;
+            case XOR:
+                if (eval == null) {
+                    break search;
+                } else if (eval) {
+                    // count positive results
+                    count++;
+                }
+                break;
+            case SURROGATE:
+                if (eval == null) {
+                    // just continue on unknown result (missing values)
+                    continue;
+                } else {
+                    // break the loop to return the evaluation result
+                    break search;
+                }
             }
         }
         if (m_op == PMMLBooleanOperator.XOR) {
@@ -207,12 +203,15 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
             return super.getSplitAttribute();
         } else {
             if (m_predicates == null) {
-                throw new IllegalAccessError("Split attribute cannot be access "
-                        + "before predicate is initialized.");
+                throw new IllegalAccessError(
+                        "Split attribute cannot be access "
+                                + "before predicate is initialized.");
             } else {
-                /* Compare the split attributes of all contained predicates. If
+                /*
+                 * Compare the split attributes of all contained predicates. If
                  * they are all the same return the common attribute, otherwise
-                 * "". */
+                 * "".
+                 */
                 String splitAttribute =
                         m_predicates.getFirst().getSplitAttribute();
                 for (PMMLPredicate pred : m_predicates) {
@@ -238,6 +237,12 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
         return NAME;
     }
 
+    /**
+     * @return the boolean operator
+     */
+    PMMLBooleanOperator getBooleanOperator() {
+        return m_op;
+    }
 
     /**
      * {@inheritDoc}
@@ -247,8 +252,9 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
             throws InvalidSettingsException {
         assert conf.getString(PMMLPredicate.TYPE_KEY).equals(NAME);
         try {
-            m_op = PMMLBooleanOperator.get(conf.getString(
-                    PMMLPredicate.OPERATOR_KEY));
+            m_op =
+                    PMMLBooleanOperator.get(conf
+                            .getString(PMMLPredicate.OPERATOR_KEY));
         } catch (InstantiationException e) {
             throw new InvalidSettingsException(e);
         }
@@ -291,22 +297,4 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
         sb.append(")");
         return sb.toString();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void writePMML(final TransformerHandler handler)
-            throws SAXException {
-        AttributesImpl predAtts = new AttributesImpl();
-        predAtts.addAttribute(null, null, "booleanOperator", CDATA,
-                m_op.toString());
-        handler.startElement(null, null, "CompoundPredicate", predAtts);
-        for (PMMLPredicate pred : m_predicates) {
-            pred.writePMML(handler);
-        }
-        handler.endElement(null, null, "CompoundPredicate");
-    }
-
-
 }

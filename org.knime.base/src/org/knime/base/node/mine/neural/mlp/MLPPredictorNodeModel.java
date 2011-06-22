@@ -89,9 +89,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
 /**
@@ -201,9 +201,9 @@ public class MLPPredictorNodeModel extends NodeModel {
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
-        PMMLNeuralNetworkHandler handler = new PMMLNeuralNetworkHandler();
-        handler.parse(models.get(0));
-        m_mlp = handler.getMLP();
+        PMMLNeuralNetworkTranslator trans = new PMMLNeuralNetworkTranslator();
+        pmmlPort.initializeModelTranslator(trans);
+        m_mlp = trans.getMLP();
 
         m_columns =
                 getLearningColumnIndices(testdata.getDataTableSpec(),
