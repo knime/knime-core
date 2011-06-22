@@ -303,8 +303,18 @@ public final class LogRegPredictor extends AbstractCellFactory {
                         row.getCell(m_parameterI.get(parameter));
                     int index = values.indexOf(cell);
                     // these are design variables
-                    x.set(0, i + index - 1, 1);
-                    i += values.size() - 2;
+                    /* When building ageneral regression model, for each 
+                    categorical fields, there is one category used as the 
+                    default baseline and therefore it didn't show in the 
+                    ParameterList in PMML. This design for the training is fine, 
+                    but in the prediction, when the input of Employment is 
+                    the default baseline, the parameters should all be 0. 
+                    See the commit message for an example and more details.
+                    */
+                    if (index > 0) {
+                        x.set(0, i + index - 1, 1);
+                        i += values.size() - 2;
+                    }
                 } else {
                     DataCell cell =
                         row.getCell(m_parameterI.get(parameter));
