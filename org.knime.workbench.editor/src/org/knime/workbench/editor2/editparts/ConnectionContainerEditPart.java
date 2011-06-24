@@ -292,9 +292,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         ConnectionUIInformation ei = null;
         ei = getModel().getUIInfo();
         LOGGER.debug("modelling info: " + ei);
-        if (ei == null) {
-            return;
-        }
 
         // make flow variable port connections look red.
         PolylineConnection fig = (PolylineConnection)getFigure();
@@ -303,12 +300,14 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         }
 
         // recreate list of bendpoints
-        int[][] p = ei.getAllBendpoints();
         ArrayList<AbsoluteBendpoint> constraint =
                 new ArrayList<AbsoluteBendpoint>();
-        for (int i = 0; i < p.length; i++) {
-            AbsoluteBendpoint bp = new AbsoluteBendpoint(p[i][0], p[i][1]);
-            constraint.add(bp);
+        if (ei != null) {
+            int[][] p = ei.getAllBendpoints();
+            for (int i = 0; i < p.length; i++) {
+                AbsoluteBendpoint bp = new AbsoluteBendpoint(p[i][0], p[i][1]);
+                constraint.add(bp);
+            }
         }
 
         fig.setRoutingConstraint(constraint);
