@@ -163,7 +163,11 @@ public class RepositoryView extends ViewPart implements
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        m_viewer.setInput(root);
+                        if (!(m_viewer.getInput() instanceof Root)) {
+                            m_viewer.setInput(root);
+                        } else {
+                            m_viewer.refresh(root);
+                        }
                         parent.setCursor(null);
                         m_viewer.getControl().setToolTipText(null);
                     }
@@ -372,7 +376,11 @@ public class RepositoryView extends ViewPart implements
                         m_viewer.getControl().setToolTipText(
                                 "Loading node repository... " + m_count
                                         + " nodes found");
-                        m_viewer.setInput(root);
+                        if (!(m_viewer.getInput() instanceof Root)) {
+                            m_viewer.setInput(root);
+                        } else {
+                            m_viewer.refresh(root);
+                        }
                     }
                 }
             });
@@ -392,7 +400,11 @@ public class RepositoryView extends ViewPart implements
                         m_viewer.getControl().setToolTipText(
                                 "Loading node repository... " + m_count
                                         + " nodes found");
-                        m_viewer.setInput(root);
+                        if (!(m_viewer.getInput() instanceof Root)) {
+                            m_viewer.setInput(root);
+                        } else {
+                            m_viewer.refresh(root);
+                        }
                     }
                 }
             });
