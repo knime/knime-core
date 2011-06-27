@@ -121,7 +121,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private boolean m_mustWarnOnDataLoadError;
 
     private NodeSettingsRO m_workflowSett;
-    private List<ReferencedFile> m_obsoleteNodeDirectories;
+    private final List<ReferencedFile> m_obsoleteNodeDirectories;
 
     static boolean canReadVersion(final String versionString) {
         boolean result = versionString.equals("0.9.0");
@@ -898,8 +898,10 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 int modelPortCount = 0;
                 // first port is flow variable input port
                 for (int i = 1; i < node.getNrInPorts(); i++) {
-                    if (!node.getInputType(i).getPortObjectClass().
-                            isAssignableFrom(BufferedDataTable.class)) {
+                    PortType portType = node.getInputType(i);
+                    if (!portType.getPortObjectClass().
+                            isAssignableFrom(BufferedDataTable.class)
+                            && !portType.isOptional()) {
                         modelPortCount += 1;
                     }
                 }
@@ -908,6 +910,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 }
                 int destPort = c.getDestPort();
                 if (destPort < modelPortCount) { // c represent data connection
+                    node.getInputType(2);
                     c.setDestPort(destPort + modelPortCount);
                 } else { // c represents model connection
                     c.setDestPort(destPort - modelPortCount);
