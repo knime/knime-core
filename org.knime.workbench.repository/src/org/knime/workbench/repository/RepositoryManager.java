@@ -174,6 +174,10 @@ public final class RepositoryManager {
             IConfigurationElement[] mnConfigElems =
                     mnExt.getConfigurationElements();
             for (IConfigurationElement mnConfig : mnConfigElems) {
+                if (!Platform.isRunning()) { // shutdown was initiated
+                    return;
+                }
+
                 try {
                     MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
@@ -299,6 +303,10 @@ public final class RepositoryManager {
             // objects
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement e : elements) {
+                if (!Platform.isRunning()) { // shutdown was initiated
+                    return;
+                }
+
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
                     LOGGER.debug("Found node extension '" + node.getID()
