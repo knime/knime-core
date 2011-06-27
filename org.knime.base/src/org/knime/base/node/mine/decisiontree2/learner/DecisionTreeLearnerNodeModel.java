@@ -384,7 +384,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         exec.setProgress("Preparing...");
 
         // check input data
-        assert (data != null && data.length == 1 && data[DATA_INPORT] != null);
+        assert (data != null && data[DATA_INPORT] != null);
 
         BufferedDataTable inData = (BufferedDataTable)data[DATA_INPORT];
         // get column with color information
