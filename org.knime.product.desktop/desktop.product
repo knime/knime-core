@@ -29,7 +29,7 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-Xmx512m -XX:MaxPermSize=192m -server -Dsun.java2d.d3d=false -Dknime.expert.mode=false</vmArgs>
+      <vmArgs>-Xmx512m -XX:MaxPermSize=192m -server -Dsun.java2d.d3d=false</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Xdock:icon=../Resources/knime.icns -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
