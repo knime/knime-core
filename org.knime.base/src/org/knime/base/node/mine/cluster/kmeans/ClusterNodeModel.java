@@ -386,7 +386,6 @@ public class ClusterNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
         // FIXME actually do something useful with missing values!
-        assert (data.length == 1);
         BufferedDataTable inData = (BufferedDataTable)data[0];
         m_spec = inData.getDataTableSpec();
         // get dimension of feature space
@@ -624,8 +623,6 @@ public class ClusterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        // make sure we are a 1-input
-        assert (inSpecs.length == 1);
         m_spec = (DataTableSpec)inSpecs[0];
         // input is output spec with all double compatible values set to
         // Double.
