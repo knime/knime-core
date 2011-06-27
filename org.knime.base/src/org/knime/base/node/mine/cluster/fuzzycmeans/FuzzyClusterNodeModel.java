@@ -271,7 +271,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Constructor, remember parent and initialize status.
      */
     public FuzzyClusterNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+        super(new PortType[]{BufferedDataTable.TYPE,
+                new PortType(PMMLPortObject.class, true)}, new PortType[]{
                 BufferedDataTable.TYPE, PMMLPortObject.TYPE});
 
         m_nrClusters = INITIAL_NR_CLUSTERS;
