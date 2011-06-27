@@ -746,6 +746,10 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
     }
 
     private DataCell getMajorityClass(final Node node) {
+        String score = node.getScore();
+        if (score != null) {
+            return  new StringCell(score);
+        }
 		LinkedHashMap<DataCell, Double> knimeScoreDistribution
 		        = getClassCount(node);
         double maxValue = 0;
@@ -753,8 +757,10 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
         for (Entry<DataCell, Double> entry
                 : knimeScoreDistribution.entrySet()) {
             // first encountered value wins on ties
-            if (entry.getValue() > maxValue) {
+            if (category == null // set the first value as default
+                    || entry.getValue() > maxValue) {
                 category = entry.getKey().toString();
+                maxValue = entry.getValue();
             }
         }
         return new StringCell(category);
