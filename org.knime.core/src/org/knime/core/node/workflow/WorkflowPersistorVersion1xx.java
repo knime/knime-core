@@ -910,7 +910,6 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 }
                 int destPort = c.getDestPort();
                 if (destPort < modelPortCount) { // c represent data connection
-                    node.getInputType(2);
                     c.setDestPort(destPort + modelPortCount);
                 } else { // c represents model connection
                     c.setDestPort(destPort - modelPortCount);
