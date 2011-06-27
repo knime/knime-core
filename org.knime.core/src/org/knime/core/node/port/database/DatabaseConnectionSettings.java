@@ -160,9 +160,7 @@ public class DatabaseConnectionSettings {
     private String m_user = null;
     private String m_pass = null;
 
-    /**
-     * Create a default settings connection object.
-     */
+    /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
@@ -176,18 +174,32 @@ public class DatabaseConnectionSettings {
         m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
     }
 
+    /** Create a default database connection object.
+     * @param driver the database driver
+     * @param dbName database URL
+     * @param user user name
+     * @param pass password for user name
+     * @param credName credential id from {@link CredentialsProvider} or null
+     */
+    public DatabaseConnectionSettings(final String driver, final String dbName,
+            final String user, final String pass, final String credName) {
+        this();
+        m_driver   = driver;
+        m_dbName   = dbName;
+        m_user     = user;
+        m_pass     = pass;
+        m_credName = credName;
+    }
+
     /**
      * Creates a new <code>DBConnection</code> based on the given connection
      * object.
      * @param conn connection used to copy settings from
+     * @throws NullPointerException if the connection is null
      */
     public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
-        this();
-        m_driver   = conn.m_driver;
-        m_dbName   = conn.m_dbName;
-        m_user     = conn.m_user;
-        m_pass     = conn.m_pass;
-        m_credName = conn.m_credName;
+        this(conn.m_driver, conn.m_dbName, conn.m_user, conn.m_pass,
+                conn.m_credName);
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -592,6 +604,50 @@ public class DatabaseConnectionSettings {
     @Deprecated
     public final String getPassword() {
         return getPassword(null);
+    }
+
+    /**
+     * Set a new database driver.
+     * @param driver used to open the connection
+     * @deprecated use {@link DatabaseConnectionSettings#
+     * DatabaseConnectionSettings(String, String, String, String, String)}
+     */
+    @Deprecated
+    public final void setDriver(final String driver) {
+        m_driver = driver;
+    }
+
+    /**
+     * Set a new database name.
+     * @param databaseName used to access the database URL
+     * @deprecated use {@link DatabaseConnectionSettings#
+     * DatabaseConnectionSettings(String, String, String, String, String)}
+     */
+    @Deprecated
+    public final void setDBName(final String databaseName) {
+        m_dbName = databaseName;
+    }
+
+    /**
+     * Set a new user name.
+     * @param userName used to login to the database
+     * @deprecated use {@link DatabaseConnectionSettings#
+     * DatabaseConnectionSettings(String, String, String, String, String)}
+     */
+    @Deprecated
+    public final void setUserName(final String userName) {
+        m_user = userName;
+    }
+
+    /**
+     * Set a new password.
+     * @param password (decrypted) used to login to the database
+     * @deprecated use {@link DatabaseConnectionSettings#
+     * DatabaseConnectionSettings(String, String, String, String, String)}
+     */
+    @Deprecated
+    public final void setPassword(final String password) {
+        m_pass = password;
     }
 
 }
