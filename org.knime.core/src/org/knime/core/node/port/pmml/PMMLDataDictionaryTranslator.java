@@ -146,11 +146,13 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
                 } else if (dataType.isCompatible(DoubleValue.class)) {
                     Double leftMargin = null;
                     Double rightMargin = null;
-                    if (dataField.getIntervalArray() != null) {
+                    Interval[] intervalArray = dataField.getIntervalArray();
+                    if (intervalArray != null && intervalArray.length > 0) {
                        Interval interval = dataField.getIntervalArray(0);
                        leftMargin = interval.getLeftMargin();
                        rightMargin = interval.getRightMargin();
-                   } else if (dataField.getValueArray() != null) {
+                   } else if (dataField.getValueArray() != null
+                           && dataField.getValueArray().length > 0) {
                        // try to derive the bounds from the values
                        Value[] valueArray = dataField.getValueArray();
                        List<Double> values = new ArrayList<Double>();
@@ -168,18 +170,24 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
                        leftMargin = Collections.min(values);
                        rightMargin = Collections.max(values);
                    }
-                    DataCell lowerBound = null;
-                    DataCell upperBound = null;
-                    if (DataType.getType(IntCell.class).equals(dataType)) {
-                        lowerBound = new IntCell(leftMargin.intValue());
-                        upperBound = new IntCell(rightMargin.intValue());
-                    } else if (DataType.getType(DoubleCell.class).equals(
-                            dataType)) {
-                        lowerBound = new DoubleCell(leftMargin);
-                        upperBound = new DoubleCell(rightMargin);
+                    if (leftMargin != null && rightMargin != null) {
+                        // set the bounds of the domain if available
+                        DataCell lowerBound = null;
+                        DataCell upperBound = null;
+                        if (DataType.getType(IntCell.class).equals(dataType)) {
+                            lowerBound = new IntCell(leftMargin.intValue());
+                            upperBound = new IntCell(rightMargin.intValue());
+                        } else if (DataType.getType(DoubleCell.class).equals(
+                                dataType)) {
+                            lowerBound = new DoubleCell(leftMargin);
+                            upperBound = new DoubleCell(rightMargin);
+                        }
+                        domain = new DataColumnDomainCreator(lowerBound,
+                                upperBound).createDomain();
+                    } else {
+                        domain = new DataColumnDomainCreator().createDomain();
                     }
-                    domain = new DataColumnDomainCreator(lowerBound,
-                            upperBound).createDomain();
+
                 }
                specCreator.setDomain(domain);
                colSpecs.add(specCreator.createSpec());
