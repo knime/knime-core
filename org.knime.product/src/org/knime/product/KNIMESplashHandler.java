@@ -1,6 +1,8 @@
 package org.knime.product;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -46,8 +48,8 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private static final int SPLASH_SCREEN_BEVEL = 8;
 
-    private static final Rectangle PROGRESS_RECT =
-            new Rectangle(5, 295, 445, 15);
+    private static final Rectangle PROGRESS_RECT = new Rectangle(5, 295, 445,
+            15);
 
     private static final Rectangle MESSAGE_RECT =
             new Rectangle(7, 272, 445, 20);
@@ -68,8 +70,35 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         splash.setBackgroundMode(SWT.INHERIT_DEFAULT);
         // Get all splash handler extensions
         IExtension[] extensions =
-                Platform.getExtensionRegistry().getExtensionPoint(
-                        SPLASH_EXTENSION_ID).getExtensions();
+                Platform.getExtensionRegistry()
+                        .getExtensionPoint(SPLASH_EXTENSION_ID).getExtensions();
+        Arrays.sort(extensions, new Comparator<IExtension>() {
+            @Override
+            public int compare(final IExtension o1, final IExtension o2) {
+                String name1 = o1.getContributor().getName();
+                String name2 = o2.getContributor().getName();
+                if (name1.startsWith("org.knime.")) {
+                    if (name2.startsWith("org.knime.")) {
+                        return name1.compareTo(name2);
+                    } else {
+                        return -1;
+                    }
+                } else if (name2.startsWith("org.knime")) {
+                    return 1;
+                } else if (name1.startsWith("com.knime.")) {
+                    if (name2.startsWith("com.knime.")) {
+                        return name1.compareTo(name2);
+                    } else {
+                        return -1;
+                    }
+                } else if (name2.startsWith("com.knime.")) {
+                    return 1;
+                } else {
+                    return name1.compareTo(name2);
+                }
+            }
+        });
+
         // Process all splash handler extensions
         for (int i = 0; i < extensions.length; i++) {
             processSplashExtension(extensions[i]);
@@ -137,8 +166,9 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         final int horizontalSpacing = 10;
         // each item requires space "(maxWidth + horizontalSpacing)", except
         // for the very last image
-        int maxColumnCount = (getUsableSplashScreenWidth() + horizontalSpacing)
-            / (maxWidth + horizontalSpacing);
+        int maxColumnCount =
+                (getUsableSplashScreenWidth() + horizontalSpacing)
+                        / (maxWidth + horizontalSpacing);
         // Limit size to the maximum number of columns if the number of images
         // exceed this amount; otherwise, use the exact number of columns
         // required.
@@ -155,11 +185,13 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             m_installedExtensions = new Label(splash, SWT.NONE);
             m_installedExtensions.setText("Installed Extensions:");
 
-            /* On Mac OS X the origin of the coordinate system is in the bottom
-             * left corner. Therefore we need other y coordinates here. */
+            /*
+             * On Mac OS X the origin of the coordinate system is in the bottom
+             * left corner. Therefore we need other y coordinates here.
+             */
             int y = 195;
             if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            	y = 110;
+                y = 110;
             }
             m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, y, 200, 20);
         }
@@ -174,11 +206,13 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         int xWidth = panelSize.x;
         int yWidth = panelSize.y;
 
-        /* On Mac OS X the origin of the coordinate system is in the bottom
-         * left corner. Therefor we need other y coordinates here. */
+        /*
+         * On Mac OS X the origin of the coordinate system is in the bottom left
+         * corner. Therefor we need other y coordinates here.
+         */
         int y = 225;
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-        	y = 65;
+            y = 65;
         }
         m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, y, xWidth, yWidth);
     }
@@ -228,8 +262,9 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         }
         // Create a corresponding image descriptor
         ImageDescriptor descriptor =
-                AbstractUIPlugin.imageDescriptorFromPlugin(configurationElement
-                        .getNamespaceIdentifier(), iconImageFilePath);
+                AbstractUIPlugin.imageDescriptorFromPlugin(
+                        configurationElement.getNamespaceIdentifier(),
+                        iconImageFilePath);
         // Abort if no corresponding image was found
         if (descriptor == null) {
             return;
