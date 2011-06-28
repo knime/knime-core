@@ -78,12 +78,16 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.SAXException;
 
 /**
+ * The PMML preprocessing operations can now be included directly in the
+ * {@link PMMLPortObject} instead of handling them in a special port type.
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class PMMLPreprocPortObject extends AbstractPortObject {
     /** Convenience accessor for the port type. */
     public static final PortType TYPE =
@@ -185,10 +189,10 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
                 TransformerHandler handler =
                     createTransformerHandlerForSave(sout);
                 String writeElement = op.getTransformElement().toString();
-                handler.startElement(null, null, writeElement, null);
+                handler.startElement("", "", writeElement, null);
                 op.save(handler,
                         exec.createSubProgress(subProgress));
-                handler.endElement(null, null, writeElement);
+                handler.endElement("", "", writeElement);
                 handler.endDocument();
 
                 out.closeEntry();
