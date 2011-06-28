@@ -123,6 +123,8 @@ public final class RepositoryFactory {
         NodeTemplate node = new NodeTemplate(id);
 
         node.setAfterID(str(element.getAttribute("after"), ""));
+        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
+        node.setExpertNode(b);
 
         // Try to load the node factory class...
         NodeFactory<? extends NodeModel> factory;
@@ -184,6 +186,8 @@ public final class RepositoryFactory {
         String after = configuration.getAttribute("after");
         String iconPath = configuration.getAttribute("icon");
         String categoryPath = configuration.getAttribute("category-path");
+        boolean isExpertNode = Boolean.parseBoolean(
+                configuration.getAttribute("expert-flag"));
         String pluginId = configuration.getDeclaringExtension()
             .getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
@@ -203,6 +207,7 @@ public final class RepositoryFactory {
         if (description != null) {
             template.setDescription(description);
         }
+        template.setExpertNode(isExpertNode);
         if (!Boolean.valueOf(
                 System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
@@ -310,7 +315,6 @@ public final class RepositoryFactory {
         String pathSoFar = "";
         // start at root
         IContainerObject container = root;
-        IContainerObject child = null;
 
         for (int i = 0; i < segments.length; i++) {
 
@@ -322,41 +326,8 @@ public final class RepositoryFactory {
                         + segments[i] + "' in path '" + path
                         + "' does not exist!");
             }
-
-            child = (IContainerObject)obj;
-
-            // if we have found a category (root will be skipped) ....
-            if (child instanceof Category) {
-                Category category = (Category)child;
-                if (category == null) {
-
-                    // should not be null. unknown paths are not allowed!!
-                    throw new IllegalArgumentException("The segment '"
-                            + segments[i] + "' in path '" + path
-                            + "' does not exist!");
-                    // // ASSERT: the segment is not empty
-                    // assert (segments[i] != null)
-                    // && (!segments[i].trim().equals(""));
-                    //
-                    // //
-                    // // Create a new category, set all fields to defaults
-                    // where
-                    // // appropriate.
-                    //
-                    // // the segment is the id of this new category
-                    // category = new Category(segments[i]);
-                    // category.setName(segments[i]);
-                    // category.setPath(pathSoFar);
-                    // // this loads the default icon
-                    // category.setIcon(KNIMERepositoryPlugin.getDefault()
-                    // .getImage(pluginID, ""));
-                    //
-                    // // add this category to the current container
-                    // container.addChild(category);
-                }
-            }
             // continue at this level
-            container = child;
+            container = (IContainerObject)obj;
         }
 
         // append the newly created category to the container

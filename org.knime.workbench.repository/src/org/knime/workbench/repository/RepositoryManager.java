@@ -62,6 +62,7 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
@@ -160,13 +161,16 @@ public final class RepositoryManager {
     }
 
     private void readRepository(final Listener listener) {
+        boolean isInExpertMode =
+                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
+
         readCategories(listener);
-        readNodes(listener);
-        readMetanodes(listener);
+        readNodes(listener, isInExpertMode);
+        readMetanodes(listener, isInExpertMode);
         removeEmptyCategories(m_root);
     }
 
-    private void readMetanodes(final Listener l) {
+    private void readMetanodes(final Listener l, final boolean isInExpertMode) {
         // iterate over the meta node config elements
         // and create meta node templates
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
@@ -177,12 +181,20 @@ public final class RepositoryManager {
                 if (!Platform.isRunning()) { // shutdown was initiated
                     return;
                 }
-
+                
                 try {
                     MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
-                    LOGGER.debug("Found meta node definition '"
+                    boolean skip = !isInExpertMode && metaNode.isExpertNode();
+                    if (skip) {
+                        LOGGER.debug("Skipping meta node definition '"
+                                + metaNode.getID() + "': " + metaNode.getName()
+                                + " (not in expert mode)");
+                        continue;
+                    } else {
+                        LOGGER.debug("Found meta node definition '"
                             + metaNode.getID() + "': " + metaNode.getName());
+                    }
                     l.newMetanode(m_root, metaNode);
 
                     IContainerObject parentContainer =
@@ -293,7 +305,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodes(final Listener l) {
+    private void readNodes(final Listener l, final boolean isInExpertMode) {
         //
         // Second, process the contributed nodes
         //
@@ -306,11 +318,20 @@ public final class RepositoryManager {
                 if (!Platform.isRunning()) { // shutdown was initiated
                     return;
                 }
-
+                
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
-                    LOGGER.debug("Found node extension '" + node.getID()
+
+                    boolean skip = !isInExpertMode && node.isExpertNode();
+                    if (skip) {
+                        LOGGER.debug("Skipping node extension '" + node.getID()
+                                + "': " + node.getName()
+                                + " (not in expert mode)");
+                        continue;
+                    } else {
+                        LOGGER.debug("Found node extension '" + node.getID()
                                 + "': " + node.getName());
+                    }
                     l.newNode(m_root, node);
 
                     m_nodesById.put(node.getID(), node);
@@ -445,7 +466,7 @@ public final class RepositoryManager {
 
     /**
      * Returns the repository root. If the repository has not yet read, it will
-     * be created during the call. Thus the first call to this methode can take
+     * be created during the call. Thus the first call to this method can take
      * some time.
      *
      * @return the root object

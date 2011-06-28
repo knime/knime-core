@@ -69,15 +69,15 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * Default implementation, provides no adapters.
-     *
-     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+     * {@inheritDoc}
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         return null;
     }
 
     /**
-     * Sets the parent. Make sure to remove childn references on old parent as
+     * Sets the parent. Make sure to remove child references on old parent as
      * well !
      *
      * @param parent The parent
@@ -95,20 +95,18 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * @return returns the parent object
-     *
-     * @see org.knime.workbench.repository.model.IRepositoryObject#
-     *      getParent()
+     * {@inheritDoc}
      */
+    @Override
     public IContainerObject getParent() {
         return m_parent;
     }
 
     /**
      * Moves this object to another parent.
-     *
-     * @see org.knime.workbench.repository.model.IRepositoryObject#
-     *      move(org.knime.workbench.repository.model.IContainerObject)
+     * {@inheritDoc}
      */
+    @Override
     public void move(final IContainerObject newParent) {
         this.getParent().removeChild(this);
         newParent.addChild(this);
@@ -125,6 +123,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     /**
      * @return Returns the id.
      */
+    @Override
     public String getID() {
         return m_id;
     }
@@ -167,11 +166,25 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
+     * @return the isExpertNode
+     */
+    public boolean isExpertNode() {
+        return m_isExpertNode;
+    }
+
+    /**
+     * @param isExpertNode the isExpertNode to set
+     */
+    public void setExpertNode(final boolean isExpertNode) {
+        m_isExpertNode = isExpertNode;
+    }
+
+    /**
      * Compares two repository objects lexicographically according to their
      * name.
-     *
-     * @see java.lang.Comparable#compareTo(Object)
+     * {@inheritDoc}
      */
+    @Override
     public int compareTo(final AbstractRepositoryObject o) {
         return m_name.compareTo(o.m_name);
     }
