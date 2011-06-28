@@ -215,11 +215,11 @@ public class WorkflowAnnotation implements UIInformation {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        if (m_text.length() < 60) {
-            return m_text;
-        } else {
-            return m_text.substring(0, 60).concat("...");
+        String result = m_text.replaceAll("[\r\n]+", " ");
+        if (result.length() > 60) {
+            result = result.substring(0, 60).concat("...");
         }
+        return result;
     }
 
     /**
