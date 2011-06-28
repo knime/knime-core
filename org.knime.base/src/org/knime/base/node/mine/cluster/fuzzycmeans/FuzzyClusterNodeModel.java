@@ -418,11 +418,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
             clustercentres = cleaned;
         }
-        int i = 0;
-        System.out.println("RUNNN");
-        for (double[] ds : clustercentres) {
-            System.out.println(i++ +": "+ ds[0]);
-        }
         exec.setMessage("Creating PMML cluster model...");
 
 
