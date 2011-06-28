@@ -400,7 +400,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                 m_rowCountPaint);
 
 
-        return new PortObject[]{m_params.createPortObject(inPMMLPort, spec)};
+        return new PortObject[]{m_params.createPortObject(inPMMLPort, spec,
+                outSpec)};
     }
 
     /**
@@ -496,7 +497,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         return LinearRegressionContent.createPortObjectSpec(
-                (PMMLPortObjectSpec)inSpecs[1], tableSpec);
+                (PMMLPortObjectSpec)inSpecs[1], tableSpec,
+                getLearningSpec(tableSpec));
     }
 
     private DataTableSpec getLearningSpec(final DataTableSpec tableSpec)

@@ -53,6 +53,7 @@ package org.knime.base.node.mine.regression.linear;
 import java.util.Arrays;
 import java.util.List;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTable;
@@ -69,7 +70,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.xml.sax.SAXException;
 
 
 /**
@@ -101,7 +101,7 @@ public final class LinearRegressionContent {
 
     /** Public no arg constructor as required by super class. */
     public LinearRegressionContent() {
-        // see comment 
+        // see comment
     }
 
     /**
@@ -139,19 +139,21 @@ public final class LinearRegressionContent {
      * Creates a new PMML regression port object from this linear regression
      * model.
      * @param inPMMLPort the incoming PMMLPort object (can be null)
-     * @param dts the incoming data table spec
+     * @param dts the full data table spec with which the regression
+     *      model was created.
+     * @param learningSpec a data table spec containing only learning columns
      * @return a port object
      * @throws InvalidSettingsException if the settings are invalid
-     * @throws SAXException
      */
     public PMMLPortObject createPortObject(final PMMLPortObject inPMMLPort,
-            final DataTableSpec dts)
+            final DataTableSpec dts, final DataTableSpec learningSpec)
         throws InvalidSettingsException {
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
         }
-        PMMLPortObjectSpec spec = createPortObjectSpec(inPMMLSpec, dts);
+        PMMLPortObjectSpec spec = createPortObjectSpec(inPMMLSpec, dts,
+                learningSpec);
         PMMLPortObject outPMMLPort = new PMMLPortObject(spec,
                 inPMMLPort);
 
@@ -183,19 +185,28 @@ public final class LinearRegressionContent {
      * spec!</b>
      *
      * @param pmmlSpec the optional {@link PMMLPortObjectSpec} which can be null
-     * @param tableSpec the port object spec with which the regression
+     * @param tableSpec the full data table spec with which the regression
      *      model was created.
+     * @param learningSpec a data table spec containing only columns used for
+     *      learning the model
      * @return a PMML port object spec
      * @throws InvalidSettingsException if PMML incompatible type was found
      */
     public static PMMLPortObjectSpec createPortObjectSpec(
-            final PMMLPortObjectSpec pmmlSpec, final DataTableSpec tableSpec)
+            final PMMLPortObjectSpec pmmlSpec, final DataTableSpec tableSpec,
+            final DataTableSpec learningSpec)
             throws InvalidSettingsException {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(pmmlSpec,
                 tableSpec);
-        c.setLearningCols(tableSpec);
-        c.setTargetCols(Arrays.asList(tableSpec.getColumnSpec(
-                tableSpec.getNumColumns() - 1)));
+        int numColumns = learningSpec.getNumColumns();
+        String[] learningCols = new String[numColumns - 1];
+        for (int i = 0; i < learningCols.length; i++) {
+            learningCols[i] = learningSpec.getColumnSpec(i).getName();
+        }
+        c.setLearningCols(FilterColumnTable.createFilterTableSpec(learningSpec,
+                learningCols));
+        c.setTargetCols(Arrays.asList(learningSpec.getColumnSpec(
+                numColumns - 1)));
         return c.createSpec();
     }
 
