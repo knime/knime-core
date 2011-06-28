@@ -655,7 +655,7 @@ public final class PMMLPortObject implements PortObject {
             StringBuffer sb = new StringBuffer("Invalid PMML document found. "
                     + "Errors: ");
             for (Map.Entry<String, String> entry : errors.entrySet()) {
-                String location = entry.getKey().substring(0, 50) + " ...";
+                String location = entry.getKey();
                 String errorMsg = entry.getValue();
                 sb.append(location);
                 sb.append(": ");

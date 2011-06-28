@@ -123,9 +123,10 @@ public class PMMLReaderNodeModel extends NodeModel {
             PMMLImport pmmlImport = new PMMLImport(file);
             m_pmmlPort = pmmlImport.getPortObject();
         } catch (IllegalArgumentException e) {
-            setWarningMessage("File \"" + file
-                    + "\" is not a valid PMML file:\n" + e.getMessage());
-            throw new InvalidSettingsException(e);
+            String msg = "File \"" + file
+                    + "\" is not a valid PMML file:\n" + e.getMessage();
+            setWarningMessage(msg);
+            throw new InvalidSettingsException(msg);
         } catch (XmlException e) {
             throw new InvalidSettingsException(e);
         } catch (IOException e) {

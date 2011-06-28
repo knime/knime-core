@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
@@ -63,6 +64,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.pmml.PMMLUtils;
+import org.knime.core.pmml.PMMLValidator;
 import org.w3c.dom.Document;
 
 /**
@@ -122,10 +124,24 @@ public class PMMLImport {
                 }
             }
         }
-
-        if (pmmlDoc == null || !pmmlDoc.validate()) {
+        if (pmmlDoc == null) {
             throw new IllegalArgumentException("File \"" + file
-                    + "\" is not a valid PMML 4.0 file.");
+                    + "\" is not a valid PMML 4.0 file." );
+        }
+        Map<String, String> msg = PMMLValidator.validatePMML(pmmlDoc);
+        if (!msg.isEmpty()) {
+            StringBuffer sb = new StringBuffer();
+            sb.append("File \"" + file
+                    + "\" is not a valid PMML 4.0 file. Errors:\n");
+            for (Map.Entry<String, String> entry : msg.entrySet()) {
+                String location = entry.getKey();
+                String message = entry.getValue();
+                sb.append(location);
+                sb.append(": ");
+                sb.append(message);
+                sb.append("\n");
+            }
+            throw new IllegalArgumentException(sb.toString());
         }
         init(pmmlDoc);
     }
