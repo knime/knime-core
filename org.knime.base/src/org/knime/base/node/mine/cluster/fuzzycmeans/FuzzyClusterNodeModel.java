@@ -56,6 +56,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -346,8 +347,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 ignoreCols.add(colname);
             }
         }
-//        PMMLPortObjectSpec pmmlspec =
-//                createPMMLPortObjectSpec(m_spec, learningCols);
 
         ColumnRearranger colre = new ColumnRearranger(m_spec);
         colre.keepOnly(columns);
@@ -419,7 +418,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
             clustercentres = cleaned;
         }
+        int i = 0;
+        System.out.println("RUNNN");
+        for (double[] ds : clustercentres) {
+            System.out.println(i++ +": "+ ds[0]);
+        }
         exec.setMessage("Creating PMML cluster model...");
+
 
      // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
@@ -433,8 +438,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
         outPMMLPort.addModelTranslater(new PMMLClusterTranslator(
                 ComparisonMeasure.squaredEuclidean, m_nrClusters,
-                        clustercentres, null,
-                        new HashSet<String>(pmmlOutSpec.getLearningFields())));
+                        clustercentres, null, new LinkedHashSet<String>(
+                                pmmlOutSpec.getLearningFields())));
         return new PortObject[]{result, outPMMLPort};
     } // end execute()
 
