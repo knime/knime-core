@@ -79,13 +79,15 @@ public class PMMLImport {
      * {@link PMMLPortObjectSpec} from the content of the file.
      *
      * @param file containing the PMML model
+     * @param update try to update the PMML to version 4.0 if an older version
+     *      is imported
      * @throws IOException if something goes wrong reading the file
      * @throws XmlException if an invalid PMML file is passed
      * @throws IllegalArgumentException if the input file is invalid or has
      *      invalid content
      */
-    public PMMLImport(final File file) throws IOException, XmlException,
-            IllegalArgumentException {
+    public PMMLImport(final File file, final boolean update)
+            throws IOException, XmlException, IllegalArgumentException {
         if (file == null) {
             throw new IllegalArgumentException("File must not be null!");
         }
@@ -101,8 +103,8 @@ public class PMMLImport {
         } else {
             /* Try to recover when reading a PMML 3.x document that
              * was produced by KNIME by just replacing the PMML version and
-             * namespace. */
-            if (PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
+             * namespace or when the recover flag is set. */
+            if (update || PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
                 try {
                     String updatedPMML
                             = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
@@ -113,7 +115,11 @@ public class PMMLImport {
                     throw new RuntimeException(
                             "Parsing of PMML v 3.x document failed.", e);
                 }
-                LOGGER.info("KNIME produced PMML 3.x updated to PMML 4.0.");
+                if (!update) {
+                    LOGGER.info("KNIME produced PMML 3.x updated to PMML 4.0.");
+                } else {
+                    LOGGER.info("Older PMML version updated to PMML 4.0.");
+                }
             }
         }
 
@@ -122,6 +128,21 @@ public class PMMLImport {
                     + "\" is not a valid PMML 4.0 file.");
         }
         init(pmmlDoc);
+    }
+
+    /**
+     * Reads and validates the passed file and creates the
+     * {@link PMMLPortObjectSpec} from the content of the file.
+     *
+     * @param file containing the PMML model
+     * @throws IOException if something goes wrong reading the file
+     * @throws XmlException if an invalid PMML file is passed
+     * @throws IllegalArgumentException if the input file is invalid or has
+     *      invalid content
+     */
+    public PMMLImport(final File file) throws IOException, XmlException,
+            IllegalArgumentException {
+        this(file, false);
     }
 
     /**
