@@ -104,9 +104,9 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
                     TransformerHandler handler =
                         createTransformerHandlerForSave(sout);
                     String writeElement = op.getTransformElement().toString();
-                    handler.startElement(null, null, writeElement, null);
+                    handler.startElement("", "", writeElement, null);
                     op.save(handler, null);
-                    handler.endElement(null, null, writeElement);
+                    handler.endElement("", "", writeElement);
 
                         handler.endDocument();
 
