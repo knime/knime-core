@@ -901,6 +901,9 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     PortType portType = node.getInputType(i);
                     if (!portType.getPortObjectClass().
                             isAssignableFrom(BufferedDataTable.class)
+                            // with v2.4 we added model ports to the
+                            // PMML learner nodes that don't count as model
+                            // ports in legacy workflows (not connected anyway)
                             && !portType.isOptional()) {
                         modelPortCount += 1;
                     }
