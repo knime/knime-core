@@ -77,21 +77,21 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             public int compare(final IExtension o1, final IExtension o2) {
                 String name1 = o1.getContributor().getName();
                 String name2 = o2.getContributor().getName();
-                if (name1.startsWith("org.knime.")) {
-                    if (name2.startsWith("org.knime.")) {
-                        return name1.compareTo(name2);
-                    } else {
-                        return -1;
-                    }
-                } else if (name2.startsWith("org.knime")) {
-                    return 1;
-                } else if (name1.startsWith("com.knime.")) {
+                if (name1.startsWith("com.knime.")) {
                     if (name2.startsWith("com.knime.")) {
                         return name1.compareTo(name2);
                     } else {
                         return -1;
                     }
-                } else if (name2.startsWith("com.knime.")) {
+                } else if (name2.startsWith("com.knime")) {
+                    return 1;
+                } else if (name1.startsWith("org.knime.")) {
+                    if (name2.startsWith("org.knime.")) {
+                        return name1.compareTo(name2);
+                    } else {
+                        return -1;
+                    }
+                } else if (name2.startsWith("org.knime.")) {
                     return 1;
                 } else {
                     return name1.compareTo(name2);
