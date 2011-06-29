@@ -54,6 +54,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +105,21 @@ public class SingleNodeContainerPersistorVersion1xx
     private boolean m_isDirtyAfterLoad;
     private List<FlowObject> m_flowObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
+
+    private static final Method REPOS_LOAD_METHOD;
+    private static final Object REPOS_MANAGER;
+    static {
+        Class<?> repManClass;
+        try {
+            repManClass = Class.forName(
+                "org.knime.workbench.repository.RepositoryManager");
+            Field instanceField = repManClass.getField("INSTANCE");
+            REPOS_MANAGER = instanceField.get(null);
+            REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     /** Load persistor. */
     SingleNodeContainerPersistorVersion1xx(
@@ -360,6 +377,16 @@ public class SingleNodeContainerPersistorVersion1xx
                     .createClass(factoryClassName)).newInstance());
             return f;
         } catch (ClassNotFoundException ex) {
+            try {
+                // Because of the changed startup process, not all factories
+                // may be loaded. Therefore in order to search for a matching
+                // factory below we need to initialize the whole repository
+                // first
+                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
+            } catch (Exception ex1) {
+                getLogger().error("Could not load repository manager", ex1);
+            }
+
             String[] x = factoryClassName.split("\\.");
             String simpleClassName = x[x.length - 1];
 
