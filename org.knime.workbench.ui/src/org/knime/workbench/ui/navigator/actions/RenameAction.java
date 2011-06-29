@@ -74,6 +74,9 @@ public class RenameAction extends Action {
      */
     @Override
     public boolean isEnabled() {
+        return true;
+    }
+    private boolean isEnabledPrivate() {
         IStructuredSelection selection =
                 (IStructuredSelection)m_viewer.getSelection();
         if (selection.size() != 1) {
@@ -90,8 +93,18 @@ public class RenameAction extends Action {
      */
     @Override
     public void run() {
+        if (!isEnabledPrivate()) {
+            LOGGER.error(
+                    "This action is disabled. Even though it is "
+                    + "available through the menu - it is doing nothing "
+                    + "with the current selection. This is a know issue. "
+                    + "Aka feature.");
+            return;
+        }
+
         IStructuredSelection selection =
                 (IStructuredSelection)m_viewer.getSelection();
+
         if (selection.size() != 1) {
             return;
         }

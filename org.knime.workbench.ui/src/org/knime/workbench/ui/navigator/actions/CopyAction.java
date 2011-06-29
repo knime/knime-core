@@ -21,12 +21,19 @@
 package org.knime.workbench.ui.navigator.actions;
 
 import java.io.File;
+import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.TreeViewer;
-
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.VMFileLocker;
 
 /**
+ * Copies a resource to a target resource.
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
@@ -44,7 +51,6 @@ public class CopyAction extends MoveWorkflowAction {
         setActionDefinitionId("Copy...");
     }
 
-
     /**
      * @param viewer
      */
@@ -57,8 +63,55 @@ public class CopyAction extends MoveWorkflowAction {
      */
     @Override
     protected void moveFiles(final File source, final File target) {
+        // copy action copies.
+        assert source.isDirectory();
+        assert target.isDirectory();
 
-
+        try {
+            copyRecWithoutLockFile(source, target);
+        } catch (IOException e) {
+            NodeLogger.getLogger(CopyAction.class)
+                    .error("Error while copying workflow/groups: "
+                            + e.getMessage(), e);
+        }
     }
 
+    private void copyRecWithoutLockFile(final File src, final File target)
+            throws IOException {
+        File[] list = src.listFiles();
+        if (list == null) {
+            throw new IOException("Unable to read source "
+                    + src.getAbsolutePath());
+        }
+        for (File f : list) {
+            if (f.isDirectory()) {
+                File targetDir = new File(target, f.getName());
+                targetDir.mkdir();
+                copyRecWithoutLockFile(f, targetDir);
+            } else {
+                // skip the lock file
+                if (!f.getName().equalsIgnoreCase(VMFileLocker.LOCK_FILE)) {
+                    FileUtils.copyFileToDirectory(f, target);
+                }
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void deleteSourceDir(final IResource source,
+            final IProgressMonitor monitor) throws CoreException {
+        // don't delete in copy action
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean containsOpenWorkflows(final IResource src) {
+        // open workflows are okay during copy
+        return false;
+    }
 }

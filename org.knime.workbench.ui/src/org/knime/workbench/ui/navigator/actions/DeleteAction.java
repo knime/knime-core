@@ -75,8 +75,18 @@ public class DeleteAction extends Action {
     @Override
     public void run() {
 
+        if (!isEnabledPrivate()) {
+            LOGGER.error(
+                    "This action is disabled. Even though it is "
+                    + "available through the menu - it is doing nothing "
+                    + "with the current selection. This is a know issue. "
+                    + "Aka feature.");
+            return;
+        }
+
         IStructuredSelection sel =
                 (IStructuredSelection)m_viewer.getSelection();
+
         List<IContainer> toDel = getTopLevelResources(sel);
         if (toDel.size() <= 0) {
             LOGGER.debug("No workflow or workflow "
@@ -109,6 +119,23 @@ public class DeleteAction extends Action {
         deleteWorkflows(toDelWorkflows);
         deleteWorkflowGroups(toDel);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+    private boolean isEnabledPrivate() {
+        IStructuredSelection sel =
+                (IStructuredSelection)m_viewer.getSelection();
+        List<IContainer> toDel = getTopLevelResources(sel);
+        if (toDel.size() <= 0) {
+            return false;
+        }
+        return true;
     }
 
     private void closeOpenWorkflows(final List<IContainer> allWorkflows) {

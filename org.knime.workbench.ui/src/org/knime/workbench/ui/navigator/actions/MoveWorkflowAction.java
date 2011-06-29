@@ -114,6 +114,15 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
     @Override
     public void run() {
 
+        if (!isEnabled()) {
+            LOGGER.error(
+                    "This action is disabled. Even though it is "
+                    + "available through the menu - it is doing nothing "
+                    + "with the current selection. This is a know issue. "
+                    + "Aka feature.");
+            return;
+        }
+
         if (getTarget() == null) {
             if (!setSourceAndselectTarget()) {
                 LOGGER.debug("Move canceled by user.");
@@ -212,6 +221,11 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
         }
     }
 
+    protected void deleteSourceDir(final IResource source,
+            final IProgressMonitor monitor) throws CoreException {
+        source.delete(true, monitor);
+    }
+
     /**
      *
      * {@inheritDoc}
@@ -307,10 +321,11 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                                     newProject.getName(), natureId);
                 }
                 // exception handling
-                source.delete(true, monitor);
+                deleteSourceDir(source, monitor);
                 targetRes.refreshLocal(IResource.DEPTH_INFINITE, monitor);
             } catch (Exception e) {
-                LOGGER.error("Error while moving resource " + source, e);
+                LOGGER.error("Error while moving/copying resource " + source,
+                        e);
                 throw new InvocationTargetException(e);
             }
         }
@@ -322,7 +337,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
      * @param src the flow or group to test
      * @return true if src is or contains open workflows
      */
-    private boolean containsOpenWorkflows(final IResource src) {
+    protected boolean containsOpenWorkflows(final IResource src) {
         if (KnimeResourceUtil.isWorkflow(src)) {
             return KnimeResourceUtil.isOpenedWorkflow(src);
         }
@@ -404,12 +419,14 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                             .getActiveShell(), "Locked Workflow",
                             "The selected workflow group contains a workflow "
                                     + "that is locked by another "
-                                    + "user/instance and can't be moved.");
+                                    + "user/instance and can't "
+                                    + "be moved/copied.");
                 } else {
                     MessageDialog.openInformation(Display.getDefault()
                             .getActiveShell(), "Locked Workflow",
                             "The selected workflow is locked by another "
-                                    + "user/instance and can't be renamed.");
+                                    + "user/instance and can't "
+                                    + "be moved/copied.");
                 }
             }
         });
@@ -423,7 +440,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                         Display.getDefault().getActiveShell(),
                         "Resource already exists", "A folder \"" + name
                                 + "\" already exists in \"" + target
-                                + "\". Please rename before moving.");
+                                + "\". Please rename before moving/copying.");
             }
         });
     }
@@ -434,7 +451,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             public void run() {
                 MessageDialog.openWarning(
                         Display.getDefault().getActiveShell(),
-                        "Cannot Move Resource", "Operation not allowed. \""
+                        "Cannot Move/Copy Resource", "Operation not allowed. \""
                                 + source + "\" is parent resource of target \""
                                 + target + "\"");
             }
