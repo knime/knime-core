@@ -198,7 +198,7 @@ public class StringToNumberNodeModel extends NodeModel {
         }
         if (warnings.length() > 0) {
             LOGGER.warn(errorMessage);
-            setWarningMessage(warnings.toString());
+            setWarningMessage(warnings.toString().replaceAll("[\r\n]+$", ""));
         }
         return new BufferedDataTable[]{resultTable};
     }
