@@ -156,7 +156,7 @@ public class RepositoryView extends ViewPart implements
                 .setHelp(m_viewer.getControl(),
                         "org.knime.workbench.help.repository_view_context");
 
-        Job treeUpdater = new Job("Node Repository Scanner") {
+        Job treeUpdater = new Job("Node Repository Loader") {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 final Root root = readRepository();
@@ -175,6 +175,7 @@ public class RepositoryView extends ViewPart implements
                 return Status.OK_STATUS;
             }
         };
+        treeUpdater.setSystem(true);
         treeUpdater.schedule();
     }
 
