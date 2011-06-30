@@ -63,6 +63,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DoubleCell;
@@ -175,12 +176,18 @@ public class RuleEngineNodeModel extends NodeModel {
                 }
             }
         }
-        DataType outType;
+        final DataType outType;
         if (types.size() > 0) {
-            outType = types.get(0);
+            DataType temp = types.get(0);
             for (int i = 1; i < types.size(); i++) {
-                outType = DataType.getCommonSuperType(outType, types.get(i));
+                temp = DataType.getCommonSuperType(temp, types.get(i));
             }
+            if ((temp.getValueClasses().size() == 1)
+                    && temp.getValueClasses().contains(DataValue.class)) {
+                // a non-native type, we replace it with string
+                temp = StringCell.TYPE;
+            }
+            outType = temp;
         } else {
             outType = StringCell.TYPE;
         }
@@ -195,11 +202,17 @@ public class RuleEngineNodeModel extends NodeModel {
                     if (r.matches(row)) {
                         Object outcome = r.getOutcome();
                         if (outcome instanceof ColumnReference) {
-                            return row
-                                    .getCell(((ColumnReference)outcome).index);
-                        } else if (outcome instanceof Integer) {
+                            DataCell cell =
+                                    row.getCell(((ColumnReference)outcome).index);
+                            if (outType.equals(StringCell.TYPE)
+                                    && !cell.getType().equals(StringCell.TYPE)) {
+                                return new StringCell(cell.toString());
+                            } else {
+                                return cell;
+                            }
+                        } else if (outType.equals(IntCell.TYPE)) {
                             return new IntCell((Integer)outcome);
-                        } else if (outcome instanceof Double) {
+                        } else if (outType.equals(DoubleCell.TYPE)) {
                             return new DoubleCell((Double)outcome);
                         } else {
                             return new StringCell(outcome.toString());
@@ -208,9 +221,19 @@ public class RuleEngineNodeModel extends NodeModel {
                 }
 
                 if (defaultLabelColumnIndex >= 0) {
-                    return row.getCell(defaultLabelColumnIndex);
+                    DataCell cell = row.getCell(defaultLabelColumnIndex);
+                    if (outType.equals(StringCell.TYPE)
+                            && !cell.getType().equals(StringCell.TYPE)) {
+                        return new StringCell(cell.toString());
+                    } else {
+                        return cell;
+                    }
                 } else if (m_settings.getDefaultLabel().length() > 0) {
                     String l = m_settings.getDefaultLabel();
+                    if (outType.equals(StringCell.TYPE)) {
+                        return new StringCell(l);
+                    }
+
                     try {
                         int i = Integer.parseInt(l);
                         return new IntCell(i);
