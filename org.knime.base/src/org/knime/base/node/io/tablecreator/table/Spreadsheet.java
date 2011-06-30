@@ -91,12 +91,12 @@ import org.knime.core.data.DataCell;
  * @author Heiko Hofer
  */
 public class Spreadsheet extends JComponent {
-    private SpreadsheetTable m_table;
-    private RowHeaderTable m_rowHeaderTable;
-    private JTextField m_inputLine;
+    private final SpreadsheetTable m_table;
+    private final RowHeaderTable m_rowHeaderTable;
+    private final JTextField m_inputLine;
     private JCheckBox m_highlightOutputTable;
     private JLabel m_outputTableMessage;
-    private JScrollPane m_scrollPane;
+    private final JScrollPane m_scrollPane;
 
     /**
      * Create a new instance.
@@ -211,7 +211,8 @@ public class Spreadsheet extends JComponent {
         p.add(m_outputTableMessage, BorderLayout.CENTER);
         m_highlightOutputTable = new JCheckBox("Highlight output table");
         m_highlightOutputTable.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
+            @Override
+			public void actionPerformed(final ActionEvent e) {
                 m_table.showOutputTable(m_highlightOutputTable.isSelected());
                 m_rowHeaderTable.showOutputTable(m_highlightOutputTable.isSelected());
                 // repaint table
@@ -246,7 +247,8 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
-        public void tableChanged(final TableModelEvent e) {
+        @Override
+		public void tableChanged(final TableModelEvent e) {
             int col =  m_table.getSpreadsheetModel().getMaxColumn() - 1;
             if (col == -1) {
                 return;
@@ -288,7 +290,8 @@ public class Spreadsheet extends JComponent {
         /**
          * {@inheritDoc}
          */
-        public void tableChanged(final TableModelEvent e) {
+        @Override
+		public void tableChanged(final TableModelEvent e) {
             SortedMap<Integer, ColProperty> props =
                 m_table.getSpreadsheetModel().getColumnProperties();
             int numColumns = m_table.getSpreadsheetModel().getMaxColumn();
@@ -352,6 +355,9 @@ public class Spreadsheet extends JComponent {
                 } else {
                     m_inputLine.setText(value.toString());
                 }
+                // set caret to 0 so that the beginning of long text
+                // is displayed (and not the end).
+                m_inputLine.setCaretPosition(0);
             } else {
                 m_inputLine.setEnabled(false);
             }
@@ -376,10 +382,18 @@ public class Spreadsheet extends JComponent {
 
                 if (row > -1 && col > -1) {
                     String text = m_inputLine.getText();
+                    // remove this form the table model listener,
+                    // since we will trigger an event in the next line.
+                    m_table.getModel().removeTableModelListener(this);
+                    // this triggers a table model changed event
                     m_table.getModel().setValueAt(text, row, col);
+                    m_table.getModel().addTableModelListener(this);
                 }
             } else {
                 m_inputLine.setText(m_table.getEditorTextField().getText());
+                // set caret to 0 so that the beginning of long text
+                // is displayed (and not the end).
+                m_inputLine.setCaretPosition(0);
             }
         }
 
