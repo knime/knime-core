@@ -96,6 +96,12 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         addTab("Quickforms", m_panel);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected void addFlowVariablesTab() {
+        // no op: disables flow variables tab
+    }
+
     /**
      * Set quickform nodes into this dialog; called just before
      * {@link #loadSettingsFrom(NodeSettingsRO,

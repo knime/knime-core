@@ -340,19 +340,8 @@ public abstract class NodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Error loading model settings", e);
         }
-        // add flow variables tab if not yet done
-        if (getTab(TAB_NAME_VARIABLES) == null) {
-            addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
-            m_pane.addChangeListener(new ChangeListener() {
-                /** {@inheritDoc} */
-                @Override
-                public void stateChanged(final ChangeEvent e) {
-                    if (m_pane.getSelectedComponent() == m_flowVariableTab) {
-                        updateFlowVariablesTab();
-                    }
-                }
-            });
-        }
+        // add the flow variables tab
+        addFlowVariablesTab();
         m_flowVariableTab.setModified(false);
         m_flowVariablesModelChanged = false;
         if (m_pane.getSelectedComponent() == m_flowVariableTab
@@ -648,6 +637,23 @@ public abstract class NodeDialogPane {
             for (int i = 0; i < cs.length; i++) {
                 commitComponentsRecursively(cs[i]);
             }
+        }
+    }
+
+    /** Add the flow variables tab. Override to disable this tab. */
+    protected void addFlowVariablesTab() {
+        // add flow variables tab if not yet done
+        if (getTab(TAB_NAME_VARIABLES) == null) {
+            addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
+            m_pane.addChangeListener(new ChangeListener() {
+                /** {@inheritDoc} */
+                @Override
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_pane.getSelectedComponent() == m_flowVariableTab) {
+                        updateFlowVariablesTab();
+                    }
+                }
+            });
         }
     }
 
