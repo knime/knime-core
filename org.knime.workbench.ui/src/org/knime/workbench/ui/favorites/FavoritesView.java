@@ -50,7 +50,12 @@
  */
 package org.knime.workbench.ui.favorites;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -69,6 +74,7 @@ import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageListener;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.model.NodeTemplate;
+import org.knime.workbench.repository.model.Root;
 import org.knime.workbench.repository.view.RepositoryContentProvider;
 import org.knime.workbench.repository.view.RepositoryLabelProvider;
 
@@ -100,24 +106,33 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
 
         // no sorting
         m_viewer.setComparator(null);
+        m_viewer.setInput("Loading favorite nodes...");
 
-        // lazy initialization of the manager
-        Display.getDefault().syncExec(new Runnable() {
+        Job treeUpdater = new Job("Favorite Nodes Loader") {
+            @Override
+            protected IStatus run(final IProgressMonitor monitor) {
+                final Root root = FavoriteNodesManager.getInstance().getRoot();
+                final Object category = root.getChildByID(
+                        FavoriteNodesManager.FAV_CAT_ID, false);
 
-            public void run() {
-                m_viewer.setInput(FavoriteNodesManager.getInstance().getRoot());
-                Object category = FavoriteNodesManager.getInstance().getRoot()
-                    .getChildByID(FavoriteNodesManager.FAV_CAT_ID, false);
-                m_viewer.expandToLevel(category, 1);
+                Display.getDefault().asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_viewer.setInput(root);
+                        m_viewer.expandToLevel(category, 1);
+                    }
+                });
+                return Status.OK_STATUS;
             }
+        };
+        treeUpdater.setSystem(true);
+        treeUpdater.schedule();
 
-        });
+        NodeUsageRegistry.addNodeUsageListener(FavoritesView.this);
         hookDoubleClickAction();
-        NodeUsageRegistry.addNodeUsageListener(this);
     }
 
     private void hookDoubleClickAction() {
-
         m_viewer.addDoubleClickListener(new IDoubleClickListener() {
             @Override
             public void doubleClick(final DoubleClickEvent event) {
@@ -168,7 +183,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
     void addNodeTemplate(final NodeTemplate template) {
         FavoriteNodesManager.getInstance().addFavoriteNode(template);
         m_viewer.refresh();
-        m_viewer.expandToLevel(template, TreeViewer.ALL_LEVELS);
+        m_viewer.expandToLevel(template, AbstractTreeViewer.ALL_LEVELS);
     }
 
 
@@ -180,7 +195,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      */
     public void removeFavorite(final NodeTemplate node) {
         FavoriteNodesManager.getInstance().removeFavoriteNode(node);
-        m_viewer.refresh();
+        refreshView();
     }
 
 
@@ -203,55 +218,43 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      *
      * {@inheritDoc}
      */
+    @Override
     public void nodeAdded() {
         FavoriteNodesManager.getInstance().updateNodes();
-        Display.getDefault().syncExec(new Runnable() {
-
-            public void run() {
-                if (!m_viewer.getControl().isDisposed()) {
-                    m_viewer.refresh();
-                }
-            }
-
-        });
+        refreshView();
     }
-
 
     /**
      *
      * {@inheritDoc}
      */
+    @Override
     public void frequentHistoryChanged() {
         FavoriteNodesManager.getInstance().updateFrequentUsedNodes();
-        Display.getDefault().syncExec(new Runnable() {
-
-            public void run() {
-                if (!m_viewer.getControl().isDisposed()) {
-                    m_viewer.refresh();
-                }
-            }
-
-        });
+        refreshView();
     }
 
     /**
      *
      * {@inheritDoc}
      */
+    @Override
     public void usedHistoryChanged() {
         FavoriteNodesManager.getInstance().updateLastUsedNodes();
         // TODO: if the manager would know the view,
         // or the view would have access to the categories
         // we could refresh more specifically this categroy
-        Display.getDefault().syncExec(new Runnable() {
+        refreshView();
+    }
 
+    private void refreshView() {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 if (!m_viewer.getControl().isDisposed()) {
                     m_viewer.refresh();
                 }
             }
-
         });
     }
-
 }
