@@ -1028,13 +1028,28 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** Sets background color according to edit mode (see
      * {@link WorkflowManager#isWriteProtected()}. */
     private void updateEditorBackgroundColor() {
-        GraphicalViewer gv = getGraphicalViewer();
-        Control control = gv.getControl();
+        final Color color;
         if (m_manager.isWriteProtected()) {
-            control.setBackground(BG_COLOR_WRITE_LOCK);
+            color = BG_COLOR_WRITE_LOCK;
         } else {
-            control.setBackground(BG_COLOR_DEFAULT);
+            color = BG_COLOR_DEFAULT;
         }
+        Runnable r = new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                GraphicalViewer gv = getGraphicalViewer();
+                Control control = gv.getControl();
+                control.setBackground(color);
+            }
+        };
+        Display display = Display.getDefault();
+        if (display.getThread() == Thread.currentThread()) {
+            r.run();
+        } else {
+            display.asyncExec(r);
+        }
+
     }
 
     /**
