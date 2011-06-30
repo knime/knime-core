@@ -254,6 +254,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
             }
             String message = messageBuilder.toString();
             if (MessageDialog.openQuestion(shell, title, message)) {
+                LOGGER.debug("Running update for " + updateList.size()
+                        + " meta node(s): " + updateList);
                 execute(new UpdateMetaNodeLinkCommand(getManager(),
                         updateList.toArray(new NodeID[updateList.size()])));
             }
