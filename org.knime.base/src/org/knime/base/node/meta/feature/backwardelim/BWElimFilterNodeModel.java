@@ -115,7 +115,7 @@ public class BWElimFilterNodeModel extends NodeModel {
                 missing++;
             }
         }
-        if (missing >= allColumns.size()) {
+        if ((allColumns.size() > 0) && (missing >= allColumns.size())) {
             throw new InvalidSettingsException("Input table does not contain "
                     + "any of the columns used in the feature elimination ");
         }
