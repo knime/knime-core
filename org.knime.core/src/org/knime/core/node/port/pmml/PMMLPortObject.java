@@ -530,6 +530,9 @@ public final class PMMLPortObject implements PortObject {
                             "Parsing of PMML v 3.x document failed.", e);
                 }
                 LOGGER.info("KNIME produced PMML 3.x  converted to PMML 4.0.");
+            } else {
+                throw new RuntimeException(
+                        "Parsing of PMML v 3.x document failed.");
             }
         }
         m_spec = spec;
