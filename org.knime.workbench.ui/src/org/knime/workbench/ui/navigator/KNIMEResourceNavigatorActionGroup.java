@@ -20,14 +20,18 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.SelectionListenerAction;
+import org.eclipse.ui.actions.DeleteResourceAction;
 import org.eclipse.ui.views.navigator.IResourceNavigator;
 import org.eclipse.ui.views.navigator.MainActionGroup;
+import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
 import org.knime.workbench.ui.navigator.actions.CopyToClipboard;
 import org.knime.workbench.ui.navigator.actions.DeleteAction;
 import org.knime.workbench.ui.navigator.actions.PasteAction;
@@ -39,8 +43,6 @@ import org.knime.workbench.ui.navigator.actions.RenameAction;
  */
 @SuppressWarnings("deprecation")
 public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
-
-    private final TreeViewer m_viewer;
 
     private final Clipboard m_clipboard;
 
@@ -59,21 +61,20 @@ public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
             final IResourceNavigator navigator, final TreeViewer viewer,
             final Clipboard clipboard) {
         super(navigator);
-        m_viewer = viewer;
         m_clipboard = clipboard;
-        m_delAction =
-            new DeleteAction(m_viewer.getControl().getShell(), m_viewer);
-        m_renAction = new RenameAction(m_viewer);
-        m_copyAction = new CopyToClipboard(m_viewer, m_clipboard);
-        m_pasteAction = new PasteAction(m_viewer, m_clipboard);
+        m_delAction = new DeleteAction(viewer.getControl().getShell(), viewer);
+        m_renAction = new RenameAction(viewer);
+        m_copyAction = new CopyToClipboard(viewer, m_clipboard);
+        m_pasteAction = new PasteAction(viewer, m_clipboard);
+        // the copy action must notify the paste action of new clipboard content
+        m_copyAction.setPasteAction(m_pasteAction);
     }
 
-     /**
+    /**
      * {@inheritDoc}
      */
     @Override
     public void fillActionBars(final IActionBars actionBars) {
-
         super.fillActionBars(actionBars);
         actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(),
                 m_delAction);
@@ -83,6 +84,7 @@ public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
                 m_copyAction);
         actionBars.setGlobalActionHandler(ActionFactory.PASTE.getId(),
                 m_pasteAction);
+        updateMyActions();
         actionBars.updateActionBars();
         actionBars.getMenuManager().updateAll(true);
     }
@@ -91,11 +93,50 @@ public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
      * {@inheritDoc}
      */
     @Override
-    public void updateActionBars() {
-        super.updateActionBars();
-        IStructuredSelection selection =
-                (IStructuredSelection)getContext().getSelection();
-        ((SelectionListenerAction)m_pasteAction).selectionChanged(selection);
+    public void fillContextMenu(final IMenuManager menu) {
+        super.fillContextMenu(menu);
+        IContributionItem copyItem = menu.find("org.eclipse.ui.CopyAction");
+        if (copyItem != null) {
+            // move must be our own action (due to workflow locks)
+            menu.insertBefore("org.eclipse.ui.CopyAction", m_copyAction);
+            menu.remove("org.eclipse.ui.CopyAction");
+        }
+        if (menu.find("org.eclipse.ui.PasteAction") != null) {
+            // move must be our own action (due to workflow locks)
+            menu.insertBefore("org.eclipse.ui.PasteAction", m_pasteAction);
+            menu.remove("org.eclipse.ui.PasteAction");
+        }
+        // delete must be our own action (due to workflow locks)
+        if (menu.find(DeleteResourceAction.ID) != null) {
+            menu.insertBefore(DeleteResourceAction.ID, new Separator());
+            menu.insertBefore(DeleteResourceAction.ID, m_delAction);
+            menu.remove(DeleteResourceAction.ID);
+        }
+
+        // Rename must be our own action (due to workflow locks). Hence
+        // replace the default rename action if it is there. */
+        if (menu.find(ResourceNavigatorRenameAction.ID) != null) {
+            menu.insertBefore(ResourceNavigatorRenameAction.ID, m_renAction);
+            menu.remove(ResourceNavigatorRenameAction.ID);
+        }
+        updateMyActions();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateActionBars() {
+        updateMyActions();
+    }
+
+    private void updateMyActions() {
+        IStructuredSelection selection =
+                (IStructuredSelection)getContext().getSelection();
+        m_copyAction.selectionChanged(selection);
+        m_pasteAction.selectionChanged(selection);
+        m_renAction.selectionChanged(selection);
+        m_delAction.selectionChanged(selection);
+
+    }
 }

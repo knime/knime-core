@@ -80,13 +80,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
-import org.eclipse.ui.actions.DeleteResourceAction;
 import org.eclipse.ui.actions.MoveResourceAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.actions.RefreshAction;
@@ -95,7 +92,6 @@ import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.eclipse.ui.views.navigator.ResourceNavigatorActionGroup;
-import org.eclipse.ui.views.navigator.ResourceNavigatorRenameAction;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer;
@@ -112,7 +108,6 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.actions.CancelWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ConfigureWorkflowAction;
-import org.knime.workbench.ui.navigator.actions.CopyToClipboard;
 import org.knime.workbench.ui.navigator.actions.CreateWorkflowGroupAction;
 import org.knime.workbench.ui.navigator.actions.DeleteAction;
 import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
@@ -122,7 +117,6 @@ import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.OpenCredentialVariablesDialogAction;
 import org.knime.workbench.ui.navigator.actions.OpenWorkflowVariablesDialogAction;
-import org.knime.workbench.ui.navigator.actions.PasteAction;
 import org.knime.workbench.ui.navigator.actions.RenameAction;
 import org.knime.workbench.ui.navigator.actions.ResetWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
@@ -232,34 +226,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     }
 
-    @Override
-    public void createPartControl(final Composite parent) {
-        super.createPartControl(parent);
-
-        IActionBars actionBars = getViewSite().getActionBars();
-        actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(),
-                m_delAction);
-        actionBars.setGlobalActionHandler(ActionFactory.RENAME.getId(),
-                m_renAction);
-        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(),
-                m_copyAction);
-        actionBars.setGlobalActionHandler(ActionFactory.PASTE.getId(),
-                m_pasteAction);
-        actionBars.updateActionBars();
-        actionBars.getMenuManager().updateAll(true);
-
-    }
-
-    @Override
-    protected void makeActions() {
-        super.makeActions();
-        m_delAction =
-            new DeleteAction(getViewer().getControl().getShell(), getViewer());
-        m_renAction = new RenameAction(getViewer());
-        m_copyAction = new CopyToClipboard(getViewer(), getClipboard());
-        m_pasteAction = new PasteAction(getViewer(), getClipboard());
-
-    }
     /**
      *
      * {@inheritDoc}
@@ -605,40 +571,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             }
         }
 
-        // delete must be our own action (due to workflow locks)
-        if (menu.find(DeleteResourceAction.ID) != null) {
-            menu.insertBefore(DeleteResourceAction.ID, new Separator());
-            menu.insertBefore(DeleteResourceAction.ID, new DeleteAction(
-                    getTreeViewer().getControl().getShell(), getTreeViewer()));
-            menu.remove(DeleteResourceAction.ID);
-        }
-
-        // Rename must be our own action (due to workflow locks). Hence
-        // replace the default rename action if it is there. */
-        if (menu.find(ResourceNavigatorRenameAction.ID) != null) {
-            menu.insertBefore(ResourceNavigatorRenameAction.ID,
-                    new RenameAction(getTreeViewer()));
-            menu.remove(ResourceNavigatorRenameAction.ID);
-        }
-
         // move must be our own action (due to workflow locks)
         if (menu.find(MoveResourceAction.ID) != null) {
             menu.insertBefore(MoveResourceAction.ID, new MoveWorkflowAction(
                     getTreeViewer()));
             menu.remove(MoveResourceAction.ID);
-        }
-        IContributionItem copyItem = menu.find("org.eclipse.ui.CopyAction");
-        if (copyItem != null) {
-            // move must be our own action (due to workflow locks)
-            menu.insertBefore("org.eclipse.ui.CopyAction", new CopyToClipboard(
-                    getTreeViewer(), getClipboard()));
-            menu.remove("org.eclipse.ui.CopyAction");
-        }
-        if (menu.find("org.eclipse.ui.PasteAction") != null) {
-            // move must be our own action (due to workflow locks)
-            menu.insertBefore("org.eclipse.ui.PasteAction", new PasteAction(
-                    getTreeViewer(), getClipboard()));
-            menu.remove("org.eclipse.ui.PasteAction");
         }
 
         // remove the default import export actions to store the own one

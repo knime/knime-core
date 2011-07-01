@@ -28,7 +28,6 @@ import java.util.List;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -36,8 +35,10 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.SelectionListenerAction;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -50,7 +51,7 @@ import org.knime.workbench.ui.navigator.WorkflowEditorAdapter;
  *
  * @author ohl, University of Konstanz
  */
-public class DeleteAction extends Action {
+public class DeleteAction extends SelectionListenerAction {
 
     /** ID of this action. */
     public static final String ID = "org.knime.deleteAction";
@@ -65,6 +66,8 @@ public class DeleteAction extends Action {
     public DeleteAction(final Shell shell, final TreeViewer viewer) {
         super("Delete...");
         setId(ID);
+        setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+                .getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
         m_shell = shell;
         m_viewer = viewer;
     }
@@ -75,17 +78,13 @@ public class DeleteAction extends Action {
     @Override
     public void run() {
 
-        if (!isEnabledPrivate()) {
-            LOGGER.error(
-                    "This action is disabled. Even though it is "
-                    + "available through the menu - it is doing nothing "
-                    + "with the current selection. This is a know issue. "
-                    + "Aka feature.");
+        IStructuredSelection sel =
+            (IStructuredSelection)m_viewer.getSelection();
+
+        if (!isEnabledPrivate(sel)) {
+            LOGGER.debug("This action is should have been disabled.");
             return;
         }
-
-        IStructuredSelection sel =
-                (IStructuredSelection)m_viewer.getSelection();
 
         List<IContainer> toDel = getTopLevelResources(sel);
         if (toDel.size() <= 0) {
@@ -121,16 +120,7 @@ public class DeleteAction extends Action {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-    private boolean isEnabledPrivate() {
-        IStructuredSelection sel =
-                (IStructuredSelection)m_viewer.getSelection();
+    private boolean isEnabledPrivate(final IStructuredSelection sel) {
         List<IContainer> toDel = getTopLevelResources(sel);
         if (toDel.size() <= 0) {
             return false;
@@ -357,4 +347,15 @@ public class DeleteAction extends Action {
             VMFileLocker.unlockForVM(wfFile);
         }
     }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean updateSelection(final IStructuredSelection selection) {
+        super.updateSelection(selection);
+        boolean enable = isEnabledPrivate(selection);
+        setEnabled(enable); // fires prop change events
+        return enable;
+    }
+
 }

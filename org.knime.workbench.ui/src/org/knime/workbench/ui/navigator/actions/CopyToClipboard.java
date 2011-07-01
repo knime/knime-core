@@ -26,7 +26,6 @@ import java.util.LinkedList;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -36,6 +35,9 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.SelectionListenerAction;
 import org.eclipse.ui.part.ResourceTransfer;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
@@ -44,7 +46,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author ohl, University of Konstanz
  */
-public class CopyToClipboard extends Action {
+public class CopyToClipboard extends SelectionListenerAction {
 
     /** The id of this action. */
     public static final String ID = "org.knime.workbench.ui.CopyToClipboard";
@@ -53,11 +55,28 @@ public class CopyToClipboard extends Action {
 
     private final TreeViewer m_viewer;
 
+    private PasteAction m_pasteAction;
+
     public CopyToClipboard(final TreeViewer viewer, final Clipboard clipboard) {
         super("&Copy");
         m_clipboard = clipboard;
         m_viewer = viewer;
+        m_pasteAction = null;
         setId(ID);
+        setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+                .getImageDescriptor(ISharedImages.IMG_TOOL_COPY));
+    }
+
+    /**
+     * If a paste action is set, it is notified of a new clipboard content. As
+     * the paste action's enable state is only updated with selection changes
+     * (and the selection doesn't change when content is copied to the
+     * clipboard) the paste action must be notified explicitly.
+     *
+     * @param pasteAction
+     */
+    public void setPasteAction(final PasteAction pasteAction) {
+        m_pasteAction = pasteAction;
     }
 
     /**
@@ -66,18 +85,15 @@ public class CopyToClipboard extends Action {
     @Override
     public void run() {
 
-        if (!isEnabledPrivate()) {
-            NodeLogger.getLogger(CopyToClipboard.class).error(
-                    "This action is disabled. Even though it is "
-                    + "available through the menu - it is doing nothing "
-                    + "with the current selection. This is a know issue. "
-                    + "Aka feature.");
-            return;
-        }
-
         // set the source from the tree selection
         IStructuredSelection sel =
                 (IStructuredSelection)m_viewer.getSelection();
+
+        if (!isEnabledPrivate(sel)) {
+            NodeLogger.getLogger(CopyToClipboard.class).debug(
+                    "This action is should have been disabled.");
+            return;
+        }
 
         // Add resources, filepaths and filenames to clipboard
         ArrayList<IResource> res = new ArrayList<IResource>();
@@ -113,6 +129,9 @@ public class CopyToClipboard extends Action {
         setContents(new Object[]{resArray, pathArray, names.toString()},
                 new Transfer[]{ResourceTransfer.getInstance(),
                 FileTransfer.getInstance(), TextTransfer.getInstance()});
+        if (m_pasteAction != null) {
+            m_pasteAction.updateSelection(sel);
+        }
     }
 
     private void setContents(final Object[] objs, final Transfer[] trans) {
@@ -132,17 +151,8 @@ public class CopyToClipboard extends Action {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-    private boolean isEnabledPrivate() {
+    private boolean isEnabledPrivate(final IStructuredSelection sel) {
         if (m_viewer != null) {
-            IStructuredSelection sel =
-                    (IStructuredSelection)m_viewer.getSelection();
             LinkedList<IResource> selWFs = new LinkedList<IResource>();
             // selection should at least contain one flow or group
             Iterator iter = sel.iterator();
@@ -175,6 +185,17 @@ public class CopyToClipboard extends Action {
         } else {
             return false;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean updateSelection(final IStructuredSelection selection) {
+        super.updateSelection(selection);
+        boolean enable = isEnabledPrivate(selection);
+        setEnabled(enable); // fires prop change events
+        return enable;
     }
 
 }

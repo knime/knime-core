@@ -28,13 +28,13 @@ import java.util.List;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.actions.SelectionListenerAction;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
@@ -46,7 +46,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class RenameAction extends Action {
+public class RenameAction extends SelectionListenerAction {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RenameAction.class);
@@ -69,16 +69,7 @@ public class RenameAction extends Action {
         setToolTipText("Renames a KNIME workflow or workflow group.");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-    private boolean isEnabledPrivate() {
-        IStructuredSelection selection =
-                (IStructuredSelection)m_viewer.getSelection();
+    private boolean isEnabledPrivate(final IStructuredSelection selection) {
         if (selection.size() != 1) {
             return false;
         }
@@ -93,17 +84,14 @@ public class RenameAction extends Action {
      */
     @Override
     public void run() {
-        if (!isEnabledPrivate()) {
-            LOGGER.error(
-                    "This action is disabled. Even though it is "
-                    + "available through the menu - it is doing nothing "
-                    + "with the current selection. This is a know issue. "
-                    + "Aka feature.");
-            return;
-        }
 
         IStructuredSelection selection =
-                (IStructuredSelection)m_viewer.getSelection();
+            (IStructuredSelection)m_viewer.getSelection();
+
+        if (!isEnabledPrivate(selection)) {
+            LOGGER.debug("This action should have been is disabled.");
+            return;
+        }
 
         if (selection.size() != 1) {
             return;
@@ -267,12 +255,12 @@ public class RenameAction extends Action {
                 if (isGroup) {
                     msg =
                             "Cannot rename workflow groups containing open "
-                                    + "workflows. Please save and close the "
+                                    + "workflows.\nPlease save and close the "
                                     + "corresponding workflow editor ("
                                     + flowNames + ").";
                 } else {
                     msg =
-                            "Cannot rename open workflows. Please save and "
+                            "Cannot rename open workflows.\nPlease save and "
                                     + "close the corresponding workflow "
                                     + "editor (" + flowNames + ").";
                 }
@@ -319,6 +307,17 @@ public class RenameAction extends Action {
                                 + (isGroup ? " group" : "") + ".");
             }
         });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean updateSelection(final IStructuredSelection selection) {
+        super.updateSelection(selection);
+        boolean enable = isEnabledPrivate(selection);
+        setEnabled(enable); // fires prop change events
+        return enable;
     }
 
 }

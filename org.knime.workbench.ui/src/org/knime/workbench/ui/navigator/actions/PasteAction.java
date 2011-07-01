@@ -43,6 +43,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.eclipse.ui.part.ResourceTransfer;
@@ -82,6 +83,8 @@ public class PasteAction extends SelectionListenerAction {
     public PasteAction(final TreeViewer viewer, final Clipboard clipboard) {
         super("&Paste");
         setId(ID);
+        setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+                .getImageDescriptor(ISharedImages.IMG_TOOL_PASTE));
         m_viewer = viewer;
         m_clipboard = clipboard;
     }
@@ -91,12 +94,10 @@ public class PasteAction extends SelectionListenerAction {
      */
     @Override
     public void run() {
-        if (!isEnabledPrivate()) {
-            LOGGER.error(
-                    "This action is disabled. Even though it is "
-                    + "available through the menu - it is doing nothing "
-                    + "with the current selection. This is a know issue. "
-                    + "Aka feature.");
+        IStructuredSelection sel =
+            (IStructuredSelection)m_viewer.getSelection();
+        if (!isEnabledPrivate(sel)) {
+            LOGGER.debug("This action is shoudl have been disabled");
             return;
         }
 
@@ -129,8 +130,6 @@ public class PasteAction extends SelectionListenerAction {
         }
         m_target = null;
         // can only paste in one workflow group
-        IStructuredSelection sel =
-                (IStructuredSelection)m_viewer.getSelection();
         if (sel == null || sel.size() != 1) {
             return;
         }
@@ -171,13 +170,6 @@ public class PasteAction extends SelectionListenerAction {
             showWorkflowInUseMessage();
             return;
         }
-
-        // copy
-        // for (IResource src : m_sources) {
-        // CopyAction copyAction =
-        // new CopyAction(src.getFullPath(), m_target.getFullPath());
-        // copyAction.run();
-        // }
 
         try {
             PlatformUI.getWorkbench().getProgressService()
@@ -331,15 +323,7 @@ public class PasteAction extends SelectionListenerAction {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
-    private boolean isEnabledPrivate() {
+    private boolean isEnabledPrivate(final IStructuredSelection sel) {
         Object c = m_clipboard.getContents(ResourceTransfer.getInstance());
         if (c == null || !(c instanceof IResource[])) {
             return false;
@@ -348,8 +332,6 @@ public class PasteAction extends SelectionListenerAction {
             return false;
         }
         // can only paste in one workflow or workflow group
-        IStructuredSelection sel =
-                (IStructuredSelection)m_viewer.getSelection();
         if (sel == null || sel.size() != 1) {
             return false;
         }
@@ -367,10 +349,8 @@ public class PasteAction extends SelectionListenerAction {
      */
     @Override
     protected boolean updateSelection(final IStructuredSelection selection) {
-        if (!super.updateSelection(selection)) {
-            return false;
-        }
-        boolean result = isEnabledPrivate();
+        super.updateSelection(selection);
+        boolean result = isEnabledPrivate(selection);
         setEnabled(result); // fires prop change events
         return result;
     }
