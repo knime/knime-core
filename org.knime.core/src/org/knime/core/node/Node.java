@@ -97,7 +97,6 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.InactiveBranchFlowLoopContext;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.MetaNodeDialogPane;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -114,8 +113,8 @@ import org.w3c.dom.Element;
  * object is the place where the data flow starts, ends, or intersects. Thus a
  * Node can be connected with predecessors and successors through its input and
  * output ports, {@link org.knime.core.node.workflow.NodeInPort} and
- * {@link org.knime.core.node.workflow.NodeOutPort}, respectively. There are 
- * data ports for exchanging data tables, and prediction model ports for 
+ * {@link org.knime.core.node.workflow.NodeOutPort}, respectively. There are
+ * data ports for exchanging data tables, and prediction model ports for
  * transferring computed data models. <br />
  * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
  * and a {@link NodeDialogPane} implementing the Model-View-Controller paradigm.
@@ -1636,7 +1635,7 @@ public final class Node implements NodeModelWarningListener {
                 if (m_factory.hasDialog()) {
                     m_dialogPane = m_factory.createNodeDialogPane();
                 } else {
-                    m_dialogPane = new MetaNodeDialogPane();
+                    m_dialogPane = new EmptyNodeDialogPane();
                 }
                 if (getNrOutPorts() > 0) {
                     m_dialogPane.addMiscTab();
