@@ -76,7 +76,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.StringValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -133,6 +133,10 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
                    Value[] valueArray = dataField.getValueArray();
                    DataCell[] cells;
                    if (DataType.getType(StringCell.class).equals(dataType)) {
+                       if (dataField.getIntervalArray().length > 0) {
+                           throw new IllegalArgumentException(
+                                   "Intervals cannot be defined for Strings.");
+                       }
                        cells = new StringCell[valueArray.length];
                        if (valueArray != null && valueArray.length > 0) {
                            for (int j = 0; j < cells.length; j++) {
@@ -162,7 +166,8 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
                                value = valueArray[j].getValue();
                             values.add(Double.parseDouble(value));
                             } catch (Exception e) {
-                                LOGGER.warn("Skipping domain calculation. "
+                                throw new IllegalArgumentException(
+                                        "Skipping domain calculation. "
                                         + "Value \"" + value
                                         + "\" cannot be cast to double.");
                             }
@@ -292,7 +297,8 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
      */
      public static OPTYPE.Enum getOptype(final DataType dataType) {
          OPTYPE.Enum opType;
-        if (dataType.isCompatible(NominalValue.class)) {
+        if (dataType.isCompatible(NominalValue.class)
+                || dataType.isCompatible(DateAndTimeValue.class)) {
             opType = OPTYPE.CATEGORICAL;
         } else if (dataType.isCompatible(DoubleValue.class)) {
             opType = OPTYPE.CONTINUOUS;
@@ -326,8 +332,8 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
 //         } else if (DATATYPE.XXX == pmmlType) {
 //             return DataType.getType(XXX.class);
          } else {
-           throw new IllegalArgumentException("PMML data type " + pmmlType
-                   + " is not supported in KNIME.");
+           // handle it as string
+             return DataType.getType(StringCell.class);
          }
      }
 
@@ -346,14 +352,14 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
             pmmlDataType = DATATYPE.INTEGER;
         } else if (dataType.isCompatible(DoubleValue.class)) {
             pmmlDataType = DATATYPE.DOUBLE;
-        } else if (dataType.isCompatible(StringValue.class)) {
-            pmmlDataType = DATATYPE.STRING;
         } else {
-            throw new IllegalArgumentException("Type " + dataType
-                    + " is not supported"
-                    + " by PMML. Allowed types are only all "
-                    + "double-compatible and all nominal value "
-                    + "compatible types.");
+            // handle everything else as String to stay backward compatible
+            pmmlDataType = DATATYPE.STRING;
+//            throw new IllegalArgumentException("Type " + dataType
+//                    + " is not supported"
+//                    + " by PMML. Allowed types are only all "
+//                    + "double-compatible and all nominal value "
+//                    + "compatible types.");
         }
         return pmmlDataType;
     }
