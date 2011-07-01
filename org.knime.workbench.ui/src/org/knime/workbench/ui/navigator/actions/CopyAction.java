@@ -41,12 +41,17 @@ public class CopyAction extends MoveWorkflowAction {
 
     public static final String ID = "org.knime.workbench.CopyAction";
 
+    private final String m_newName;
+
     /**
      * @param source
      * @param target
+     * @param newName name of the copy (of the source) in the target, if null
+     * it is the name of the source.
      */
-    public CopyAction(final IPath source, final IPath target) {
+    public CopyAction(final IPath source, final IPath target, final String newName) {
         super(source, target);
+        m_newName = newName;
         setId(ID);
         setActionDefinitionId("Copy...");
     }
@@ -56,9 +61,23 @@ public class CopyAction extends MoveWorkflowAction {
      */
     public CopyAction(final TreeViewer viewer) {
         super(viewer);
+        m_newName = null;
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getSourceNameInTarget() {
+        if (m_newName == null || m_newName.isEmpty()) {
+            return super.getSourceNameInTarget();
+        } else {
+            return m_newName;
+        }
+    }
+
+    /**
+     * Copies the content of the source into the target directory.
      * {@inheritDoc}
      */
     @Override

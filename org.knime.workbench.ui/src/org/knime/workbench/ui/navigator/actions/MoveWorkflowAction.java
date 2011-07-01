@@ -285,7 +285,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             LOGGER.debug("target path: " + targetFile);
             // create path here
             File targetDir =
-                    new File(targetFile, getSource().toFile().getName());
+                    new File(targetFile, getSourceNameInTarget());
             if (!targetDir.mkdir()) {
                 // don't complain if target dir is parent of source...
                 if (!targetFile.equals(sourceFile.getParentFile())) {
@@ -301,11 +301,11 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             try {
                 if (targetRes instanceof IWorkspaceRoot) {
                     IProject newProject =
-                            ((IWorkspaceRoot)targetRes).getProject(sourceFile
+                            ((IWorkspaceRoot)targetRes).getProject(targetDir
                                     .getName());
                     if (newProject.exists()) {
                         // exception handling -> project already exists
-                        LOGGER.warn("A workflow " + sourceFile.getName()
+                        LOGGER.warn("A workflow " + targetDir.getName()
                                 + " already exists in /");
                         showAlreadyExists(newProject.getName(),
                                 "workspace root");
@@ -329,6 +329,13 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                 throw new InvocationTargetException(e);
             }
         }
+    }
+
+    /**
+     * @return the name of the source when moved/copied into the target.
+     */
+    protected String getSourceNameInTarget() {
+        return getSource().toFile().getName();
     }
 
     /**
@@ -440,7 +447,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                         Display.getDefault().getActiveShell(),
                         "Resource already exists", "A folder \"" + name
                                 + "\" already exists in \"" + target
-                                + "\". Please rename before moving/copying.");
+                                + "\".\nPlease rename before moving/copying.");
             }
         });
     }
@@ -451,9 +458,10 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             public void run() {
                 MessageDialog.openWarning(
                         Display.getDefault().getActiveShell(),
-                        "Cannot Move/Copy Resource", "Operation not allowed. \""
-                                + source + "\" is parent resource of target \""
-                                + target + "\"");
+                        "Cannot Move/Copy Resource",
+                        "Operation not allowed.\n\""
+                        + source + "\" is parent resource of target \""
+                        + target + "\"");
             }
         });
     }

@@ -28,14 +28,19 @@ import java.util.List;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
@@ -49,7 +54,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author ohl, University of Konstanz
  */
-public class PasteAction extends SelectionListenerAction  {
+public class PasteAction extends SelectionListenerAction {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(PasteAction.class);
@@ -66,6 +71,8 @@ public class PasteAction extends SelectionListenerAction  {
     private LinkedList<IContainer> m_lockedFlows;
 
     private IContainer m_target;
+
+    private String[] m_newNames;
 
     /**
      * @param viewer the corresponding viewer
@@ -132,14 +139,25 @@ public class PasteAction extends SelectionListenerAction  {
             return;
         }
         m_target = (IContainer)o;
-        if (!KnimeResourceUtil.isWorkflowGroup(m_target)) {
+        if (!KnimeResourceUtil.isWorkflowGroup(m_target)
+                && !KnimeResourceUtil.isWorkflow(m_target)) {
             return;
         }
-
-        for (IResource s : m_sources) {
+        if (KnimeResourceUtil.isWorkflow(m_target)) {
+            // automatically paste in the parent group
+            m_target = m_target.getParent();
+        }
+        // get new names for existing sources
+        m_newNames = new String[m_sources.length];
+        for (int i = 0; i < m_sources.length; i++) {
+            // default is the original name
+            m_newNames[i] = m_sources[i].getName();
+        }
+        for (int i = 0; i < m_sources.length; i++) {
+            IResource s = m_sources[i];
             if (m_target.findMember(s.getName()) != null) {
-                showTargetExistsMessage();
-                return;
+                m_newNames[i] = queryNewName(i);
+                // if newName is null we must not copy this source!
             }
         }
 
@@ -155,11 +173,11 @@ public class PasteAction extends SelectionListenerAction  {
         }
 
         // copy
-//        for (IResource src : m_sources) {
-//            CopyAction copyAction =
-//                    new CopyAction(src.getFullPath(), m_target.getFullPath());
-//            copyAction.run();
-//        }
+        // for (IResource src : m_sources) {
+        // CopyAction copyAction =
+        // new CopyAction(src.getFullPath(), m_target.getFullPath());
+        // copyAction.run();
+        // }
 
         try {
             PlatformUI.getWorkbench().getProgressService()
@@ -178,17 +196,22 @@ public class PasteAction extends SelectionListenerAction  {
                             }
                             // we can't specify work ticks - copy works recursive
                             monitor.beginTask(msg, IProgressMonitor.UNKNOWN);
-                            for (IResource src : m_sources) {
+                            for (int i = 0; i < m_sources.length; i++) {
+                                if (m_newNames[i] == null) {
+                                    // user chose to skip this existing workflow
+                                    continue;
+                                }
+                                IResource src = m_sources[i];
                                 CopyAction copyAction =
-                                        new CopyAction(src.getFullPath(), m_target.getFullPath());
+                                        new CopyAction(src.getFullPath(), m_target.getFullPath(), m_newNames[i]);
                                 // as the target is set in CopyAction we can call this run method
                                 copyAction.run(new SubProgressMonitor(monitor, 1));
                                 if (monitor.isCanceled()) {
                                     MessageDialog.openInformation(m_viewer.getControl().getShell(),
-                                            "Copy Canceled",
-                                            "Copy operation canceled. Some workflows or "
-                                                    + "workflow groups are already copied and "
-                                                    + "will not be deleted.");
+                                                    "Copy Canceled",
+                                                    "Copy operation canceled. Some workflows or "
+                                                            + "workflow groups are already copied and "
+                                                            + "will not be deleted.");
                                     monitor.done();
                                     return;
                                 }
@@ -196,11 +219,10 @@ public class PasteAction extends SelectionListenerAction  {
                             try {
                                 m_target.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                             } catch (CoreException e) {
-                                //ignore
+                                // ignore
                             }
                             monitor.done();
                         }
-
 
                     });
         } catch (InvocationTargetException e) {
@@ -212,6 +234,78 @@ public class PasteAction extends SelectionListenerAction  {
         unlockWorkflows(m_lockedFlows);
         return;
 
+    }
+
+    private String queryNewName(final int i) {
+        final String sourceName = m_sources[i].getName();
+        final String targetDir = m_target.getName();
+        final String multiMsg =
+                m_sources.length <= 1 ? "" : " of this resource";
+        final String[] result = new String[1];
+        final String newName = getDefaultReplacementName(sourceName);
+        Display.getDefault().syncExec(new Runnable() {
+            public void run() {
+                InputDialog inpDlg =
+                        new InputDialog(Display.getDefault().getActiveShell(),
+                                "Name Conflict", "Please enter a new name for "
+                                        + sourceName + " in " + targetDir
+                                        + ".\n(or Cancel to skip copying"
+                                        + multiMsg + ".)", newName,
+                                new IInputValidator() {
+                                    @Override
+                                    public String isValid(final String newText) {
+                                        if (newText == null
+                                                || newText.trim().isEmpty()) {
+                                            return "Enter a valid new name (or click cancel).";
+                                        }
+                                        String newDest = newText.trim();
+                                        IStatus status =
+                                                ResourcesPlugin
+                                                        .getWorkspace()
+                                                        .validateName(
+                                                                newDest,
+                                                                m_sources[i]
+                                                                        .getType());
+                                        if (!status.isOK()) {
+                                            return status.getMessage();
+                                        }
+                                        return checkNameExistence(newDest);
+                                    }
+                                });
+                inpDlg.setBlockOnOpen(true);
+                if (inpDlg.open() == Window.OK) {
+                    result[0] = inpDlg.getValue();
+                } else {
+                    // user canceled.
+                    result[0] = null;
+                }
+            }
+        });
+        return result[0];
+    }
+
+    private String checkNameExistence(final String newName) {
+        if (m_target.findMember(newName) != null) {
+            return "Entered name already exists in "
+                    + m_target.getName();
+        }
+        for (int j = 0; j < m_newNames.length; j++) {
+            if (newName.equals(m_newNames[j])) {
+                return "This is the name of another source "
+                        + "resource. Choose a different one";
+            }
+        }
+        return null;
+    }
+
+    private String getDefaultReplacementName(final String originalName) {
+        int i = 1;
+        String result = "Copy of " + originalName;
+        while (checkNameExistence(result) != null) {
+            i++;
+            result = "Copy" + i + " of " + originalName;
+        }
+        return result;
     }
 
     private boolean lockWorkflows(final List<IContainer> toBeLockedWFs,
@@ -237,7 +331,6 @@ public class PasteAction extends SelectionListenerAction  {
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -245,6 +338,7 @@ public class PasteAction extends SelectionListenerAction  {
     public boolean isEnabled() {
         return true;
     }
+
     private boolean isEnabledPrivate() {
         Object c = m_clipboard.getContents(ResourceTransfer.getInstance());
         if (c == null || !(c instanceof IResource[])) {
@@ -253,7 +347,7 @@ public class PasteAction extends SelectionListenerAction  {
         if (((IResource[])c).length == 0) {
             return false;
         }
-        // can only paste in one workflow group
+        // can only paste in one workflow or workflow group
         IStructuredSelection sel =
                 (IStructuredSelection)m_viewer.getSelection();
         if (sel == null || sel.size() != 1) {
@@ -263,7 +357,8 @@ public class PasteAction extends SelectionListenerAction  {
         if (!(o instanceof IContainer)) {
             return false;
         }
-        boolean result = KnimeResourceUtil.isWorkflowGroup((IContainer)o);
+        boolean result = KnimeResourceUtil.isWorkflowGroup((IContainer)o)
+                            || KnimeResourceUtil.isWorkflow((IContainer)o);
         return result;
     }
 
