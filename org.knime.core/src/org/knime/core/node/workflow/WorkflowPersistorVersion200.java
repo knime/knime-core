@@ -472,12 +472,13 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final ReferencedFile workflowDirRef, final ExecutionMonitor execMon,
             final boolean isSaveData) throws IOException,
             CanceledExecutionException, LockFailedException {
-        if (!workflowDirRef.fileLockRootForVM()) {
-            throw new LockFailedException("Can't write workflow to \"" + workflowDirRef
-                    + "\" because the directory can't be locked");
-        }
         Role r = wm.getTemplateInformation().getRole();
         String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
+        if (!workflowDirRef.fileLockRootForVM()) {
+            throw new LockFailedException("Can't write workflow to \""
+                    + workflowDirRef
+                    + "\" because the directory can't be locked");
+        }
         try {
             if (workflowDirRef.equals(wm.getNodeContainerDirectory())
                     && !wm.isDirty()) {

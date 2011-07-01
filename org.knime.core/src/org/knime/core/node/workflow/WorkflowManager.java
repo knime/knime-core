@@ -4924,6 +4924,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     ROOT.createAndAddProject("Workflow Template Root");
             }
         }
+        WorkflowManager copy = null;
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         workflowDirRef.lock();
         try {
@@ -4933,8 +4934,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 cnt = WFM_TEMPLATE_ROOT.copyFromAndPasteHere(getParent(), cnt);
             }
             NodeID cID = cnt.getNodeIDs()[0];
-            WorkflowManager copy =
-                (WorkflowManager)WFM_TEMPLATE_ROOT.getNodeContainer(cID);
+            copy = (WorkflowManager)WFM_TEMPLATE_ROOT.getNodeContainer(cID);
             MetaNodeTemplateInformation template =
                 MetaNodeTemplateInformation.createNewTemplate();
             synchronized (copy.m_workflowMutex) {
@@ -4944,6 +4944,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             return template;
         } finally {
+            if (copy != null) {
+                WFM_TEMPLATE_ROOT.removeNode(copy.getID());
+            }
             workflowDirRef.unlock();
         }
     }
