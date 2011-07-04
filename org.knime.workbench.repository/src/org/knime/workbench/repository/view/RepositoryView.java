@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.repository.view;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -391,7 +392,12 @@ public class RepositoryView extends ViewPart implements
                         if (!(m_viewer.getInput() instanceof Root)) {
                             m_viewer.setInput(root);
                         } else {
-                            m_viewer.refresh(root);
+                            try {
+                                m_viewer.refresh(root);
+                            } catch (ConcurrentModificationException ex) {
+                                // ignore, this may happen if new nodes
+                                // are added while the viewer is updating
+                            }
                         }
                     }
                 }
@@ -415,7 +421,12 @@ public class RepositoryView extends ViewPart implements
                         if (!(m_viewer.getInput() instanceof Root)) {
                             m_viewer.setInput(root);
                         } else {
-                            m_viewer.refresh(root);
+                            try {
+                                m_viewer.refresh(root);
+                            } catch (ConcurrentModificationException ex) {
+                                // ignore, this may happen if new nodes
+                                // are added while the viewer is updating
+                            }
                         }
                     }
                 }
