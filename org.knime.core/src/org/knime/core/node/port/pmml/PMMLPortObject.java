@@ -92,6 +92,7 @@ import org.dmg.pmml40.TimeSeriesModelDocument.TimeSeriesModel;
 import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
 import org.dmg.pmml40.TreeModelDocument.TreeModel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.xml.PMMLCellFactory;
 import org.knime.core.data.xml.PMMLValue;
 import org.knime.core.node.NodeLogger;
@@ -116,7 +117,6 @@ public final class PMMLPortObject implements PortObject {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLPortObject.class);
-
 
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(PMMLPortObject.class);
@@ -608,7 +608,14 @@ public final class PMMLPortObject implements PortObject {
      */
     public void loadFrom(final PMMLPortObjectSpec spec, final InputStream is)
             throws IOException, XmlException {
-        XmlObject xmlDoc = XmlObject.Factory.parse(is);
+        // disallow close in the factory -- we had indeterministic behavior
+        // where close was called more than once (which should be OK) but as
+        // the argument input stream is a NonClosableZipInput, which delegates
+        // close to closeEntry(), we have to make sure that close is only
+        // called once.
+        XmlObject xmlDoc = XmlObject.Factory.parse(
+                new NonClosableInputStream(is));
+        is.close();
         if (xmlDoc instanceof PMMLDocument) {
             m_pmmlDoc = (PMMLDocument)xmlDoc;
         } else {
@@ -897,4 +904,5 @@ public final class PMMLPortObject implements PortObject {
         }
         return false;
     }
+
 }
