@@ -207,6 +207,7 @@ Export-Package: Jama,
  org.knime.base.node.viz.aggregation,
  org.knime.base.node.viz.aggregation.util,
  org.knime.base.node.viz.condbox,
+ org.knime.base.node.viz.crosstable,
  org.knime.base.node.viz.enrichment,
  org.knime.base.node.viz.histogram,
  org.knime.base.node.viz.histogram.datamodel,
@@ -249,6 +250,7 @@ Export-Package: Jama,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
-Require-Bundle: org.knime.core;visibility:=reexport
+Require-Bundle: org.knime.core;visibility:=reexport,
+  org.apache.commons.math;bundle-version="2.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-BuddyPolicy: dependent

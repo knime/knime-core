@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="./crosstable.png">
+    <name>Crosstab</name>
+    <shortDescription>Creates a cross-tabulation (also referred as contingency table or cross-tab).</shortDescription>
+    <fullDescription>
+        <intro>
+            <p>Creates a cross table (also referred as contingency table or cross tab).
+            It can be used to analyze the relation of two columns with categorical
+            data and does display the frequency distribution of the categorical
+            variables in a table.</p>
+            <p>This node provides chi-square test statistics and in case of a
+            cross tabulation of dimension 2x2 Fisher's exact test is provided,
+            additionally. </p>
+		</intro>    
+        <option name="Row variable">
+            The input column used as the row variable in the cross-tabulation.
+        </option>
+        <option name="Column variable">
+            The input column used as the row variable in the cross-tabulation.
+        </option>
+        <option name="Weight column">
+            Applies a numeric weight for each observation in the input. It is most
+            likely used for cell count data.
+        </option>
+        <option name="Max. categories">
+            The maximal number of categories of the row and column variable
+            that are are taken into account.
+        </option>
+        <option name="Enable hiliting">
+            If enabled, the hiliting of a cell in the crosstab will hilite
+            all cells with same categories in attached views.
+            Depending on the number of rows, enabling this feature might 
+            consume a lot of memory.
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort index="0" name="Input Table">
+            Input table containing columns with categorical data.
+        </inPort>  
+        <outPort index="0" name="Cross-Table">
+            The cross table in list form.
+        </outPort>           
+        <outPort index="1" name="Statistics Table">
+            The table with the statistics.
+        </outPort>      
+    </ports>
+	<views>
+	   <view name="Cross tabulation" index="0"></view>
+	</views>
+</knimeNode>
+
+

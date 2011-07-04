@@ -458,6 +458,16 @@
             id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
             after="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
       <node
+            category-path="/statistics"
+            factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
+            id="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
+            after="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
+      <node
+            category-path="/statistics"
+            factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
+            id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
+            after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
+      <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
@@ -728,11 +738,6 @@
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"
             id="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"/>
-      <node
-            category-path="/statistics"
-            factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
-            id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
-            after="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
       <node
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
