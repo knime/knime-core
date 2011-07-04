@@ -55,6 +55,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.xmlbeans.SchemaType;
 import org.dmg.pmml40.DATATYPE;
@@ -209,10 +210,11 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
         DerivedField[] derivedFields = DerivedFieldMapper.getDerivedFields(
                 pmmlDoc.getPMML());
         DerivedFieldMapper mapper = new DerivedFieldMapper(derivedFields);
+        Set<String> mappedColumnNames = mapper.getDerivedNames();
         for (DerivedField df : derivedFields) {
             String name = df.getName();
             DataType dataType = getKNIMEDataType(df.getDataType());
-            if (!mapper.getMappedColumnNames().contains(name)) {
+            if (!mappedColumnNames.contains(name)) {
                 /* It is a "real" column - not one that is mapping to another
                  * column. Hence add a data column spec. */
                 DataColumnSpecCreator specCreator = new DataColumnSpecCreator(

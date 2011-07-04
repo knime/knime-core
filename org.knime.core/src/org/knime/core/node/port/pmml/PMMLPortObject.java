@@ -60,6 +60,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.swing.JComponent;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.SchemaType;
@@ -116,6 +117,7 @@ public final class PMMLPortObject implements PortObject {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLPortObject.class);
 
+
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(PMMLPortObject.class);
 
@@ -150,6 +152,39 @@ public final class PMMLPortObject implements PortObject {
     public static final String PMML_V3_2 = "3.2";
     /** Constant for version 4.0.*/
     public static final String PMML_V4_0 = "4.0";
+
+    /** Static initialization of all expressions needed for XPath.*/
+    private static final String NAMESPACE_DECLARATION =
+            "declare namespace pmml='http://www.dmg.org/PMML-4_0'; ";
+    private static final String PATH_END = "']";
+    private static final String FIELD = "field";
+    private static final String NAME = "name";
+    private static final String LABEL = "label";
+    private static final String PREDICTOR_NAME = "predictorName";
+    private static final String TREE_PATH =
+            "./pmml:TreeModel/descendant::pmml:Node/descendant::*[@field='";
+    private static final String CLUSTERING_PATH =
+            "./pmml:ClusteringModel/pmml:ClusteringField[@field='";
+    private static final String NN_PATH =
+            "./pmml:NeuralNetwork/pmml:NeuralInputs/pmml:NeuralInput"
+            + "/pmml:DerivedField/descendant::*[@field='";
+    private static final String SVM_PATH =
+            "./pmml:SupportVectorMachineModel/pmml:VectorDictionary/"
+            + "pmml:VectorFields/pmml:FieldRef[@field='";
+    private static final String REGRESSION_PATH_1 =
+           "./pmml:RegressionModel/pmml:RegressionTable/descendant::*[@field='";
+    private static final String REGRESSION_PATH_2 =
+            "./pmml:RegressionModel/pmml:RegressionTable/descendant::*[@name='";
+    private static final String GR_PATH_1 =
+            "./pmml:GeneralRegressionModel/*/pmml:Predictor[@name='";
+    private static final String GR_PATH_2 =
+            "./pmml:GeneralRegressionModel/pmml:ParameterList/"
+            + "pmml:Parameter[@label='";
+    private static final String GR_PATH_3 =
+            "./pmml:GeneralRegressionModel/pmml:PPMatrix/"
+            + "pmml:PPCell[@predictorName='";
+    /* ------------------------------------------------------ */
+
 
     private static final Map<String, String> VERSION_NAMESPACE_MAP
             = new HashMap<String, String>();
@@ -385,6 +420,68 @@ public final class PMMLPortObject implements PortObject {
                 new MiningField[0]));
     }
 
+
+    /** Moves the content of the transformation dictionary to local
+     * transformations of the model if a model exists. */
+    public void moveGlobalTransformationsToModel() {
+        PMML pmml = m_pmmlDoc.getPMML();
+        TransformationDictionary transDict
+                = pmml.getTransformationDictionary();
+        if (transDict == null || transDict.getDerivedFieldArray() == null
+                || transDict.getDerivedFieldArray().length == 0) {
+            // nothing to be moved
+            return;
+        }
+        DerivedField[] globalDerivedFields = transDict.getDerivedFieldArray();
+        LocalTransformations localTrans = null;
+        if (pmml.getTreeModelArray().length > 0) {
+            TreeModel model = pmml.getTreeModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        } else if (pmml.getClusteringModelArray().length > 0) {
+            ClusteringModel model = pmml.getClusteringModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        } else if (pmml.getNeuralNetworkArray().length > 0) {
+            NeuralNetwork model = pmml.getNeuralNetworkArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        } else if (pmml.getSupportVectorMachineModelArray().length > 0) {
+            SupportVectorMachineModel model
+                    = pmml.getSupportVectorMachineModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        } else if (pmml.getRegressionModelArray().length > 0) {
+            RegressionModel model = pmml.getRegressionModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        } else if (pmml.getGeneralRegressionModelArray().length > 0) {
+            GeneralRegressionModel model
+                    = pmml.getGeneralRegressionModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
+        }
+        if (localTrans != null) {
+            DerivedField[] derivedFields = appendDerivedFields(
+                    localTrans.getDerivedFieldArray(), globalDerivedFields);
+            localTrans.setDerivedFieldArray(derivedFields);
+            // remove derived fields from TransformationDictionary
+            transDict.setDerivedFieldArray(new DerivedField[0]);
+        } // else do nothing as no model exists yet
+    }
+
     /* Moves the content of the transformation dictionary to local
      * transformations. */
     private void moveDerivedFields(final SchemaType type) {
@@ -581,11 +678,9 @@ public final class PMMLPortObject implements PortObject {
         } else {
             // append the transformations to the existing dictionary
             DerivedField[] existingFields = dict.getDerivedFieldArray();
-            DerivedField[] newFields = dictionary.getDerivedFieldArray();
-            DerivedField[] result = Arrays.copyOf(existingFields,
-                    existingFields.length + newFields.length);
-            System.arraycopy(newFields, 0, result, existingFields.length,
-                    newFields.length);
+            DerivedField[] result =
+                    appendDerivedFields(existingFields,
+                            dictionary.getDerivedFieldArray());
             dict.setDerivedFieldArray(result);
         }
         DerivedField[] df = dict.getDerivedFieldArray();
@@ -620,10 +715,93 @@ public final class PMMLPortObject implements PortObject {
         }
         dataDict.setDataFieldArray(dataFields.toArray(new DataField[0]));
 
+        // -------------------------------------------------
+        // update field names in the model if applicable
+        DerivedFieldMapper dfm = new DerivedFieldMapper(df);
+        Map<String, String> derivedFieldMap = dfm.getDerivedFieldMap();
+        /* Use XPATH to update field names in the model and move the derived
+         * fields to local transformations. */
+        PMML pmml = m_pmmlDoc.getPMML();
+        if (pmml.getTreeModelArray().length > 0) {
+            fixAttributeAtPath(pmml, TREE_PATH, FIELD, derivedFieldMap);
+        } else if (pmml.getClusteringModelArray().length > 0) {
+            fixAttributeAtPath(pmml, CLUSTERING_PATH, FIELD, derivedFieldMap);
+        } else if (pmml.getNeuralNetworkArray().length > 0) {
+            fixAttributeAtPath(pmml, NN_PATH, FIELD, derivedFieldMap);
+        } else if (pmml.getSupportVectorMachineModelArray().length > 0) {
+            fixAttributeAtPath(pmml, SVM_PATH, FIELD, derivedFieldMap);
+        } else if (pmml.getRegressionModelArray().length > 0) {
+            fixAttributeAtPath(pmml, REGRESSION_PATH_1, FIELD, derivedFieldMap);
+            fixAttributeAtPath(pmml, REGRESSION_PATH_2, NAME, derivedFieldMap);
+        } else if (pmml.getGeneralRegressionModelArray().length > 0) {
+            fixAttributeAtPath(pmml, GR_PATH_1, NAME, derivedFieldMap);
+            fixAttributeAtPath(pmml, GR_PATH_2, LABEL, derivedFieldMap);
+            fixAttributeAtPath(pmml, GR_PATH_3, PREDICTOR_NAME,
+                    derivedFieldMap);
+        } // else do nothing as no model exists yet
+        // --------------------------------------------------
+
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(this,
                 m_spec.getDataTableSpec());
         creator.addPreprocColNames(colNames);
         m_spec = creator.createSpec();
+    }
+
+
+
+    /**
+     * @param existingFields the existing field array
+     * @param newFields the field array to be appended
+     * @return the combined field array
+     */
+    private DerivedField[] appendDerivedFields(
+            final DerivedField[] existingFields,
+            final DerivedField[] newFields) {
+        if (existingFields == null) {
+            return Arrays.copyOf(newFields, newFields.length);
+        }
+        DerivedField[] result = Arrays.copyOf(existingFields,
+                existingFields.length + newFields.length);
+        System.arraycopy(newFields, 0, result, existingFields.length,
+                newFields.length);
+        return result;
+    }
+
+
+    /**
+     * @param pmml
+     *            the PMML file we want to update
+     * @param xpath
+     *            the Xpath where we want to perform the update
+     * @param attribute
+     *            string the attribute we want to update
+     * @param derivedFieldMap
+     *            a map containing the derived field names for column names
+     */
+    private void fixAttributeAtPath(final PMML pmml, final String xpath,
+            final String attribute, final Map<String, String> derivedFieldMap) {
+        for (Map.Entry<String, String> entry : derivedFieldMap.entrySet()) {
+            String colName = entry.getKey();
+            String mappedName = entry.getValue();
+            String fullPath
+                    = NAMESPACE_DECLARATION + xpath + colName + PATH_END;
+            try {
+                XmlObject[] xmlDescendants = pmml.selectPath(fullPath);
+                for (XmlObject xo : xmlDescendants) {
+                    XmlCursor xmlCursor = xo.newCursor();
+                    if (!xmlCursor.isStart()) {
+                        throw new RuntimeException(
+                             "Could not add transformations to the PMML file.");
+                    }
+                    xmlCursor
+                            .setAttributeText(new QName(attribute), mappedName);
+                    xmlCursor.dispose();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(
+                        "Could not add transformations to the PMML file.", e);
+            }
+        }
     }
 
     /**
@@ -719,5 +897,4 @@ public final class PMMLPortObject implements PortObject {
         }
         return false;
     }
-
 }

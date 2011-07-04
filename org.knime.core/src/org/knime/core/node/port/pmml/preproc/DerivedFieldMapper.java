@@ -53,6 +53,7 @@ package org.knime.core.node.port.pmml.preproc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,8 +195,15 @@ public class DerivedFieldMapper {
     /**
      * @return all column names that have a mapping to a derived field name
      */
-    public Set<String> getMappedColumnNames() {
+    public Set<String> getDerivedNames() {
         return m_colNames.keySet();
+    }
+
+    /**
+     * @return a mapping of column names to derived field names
+     */
+    public Map<String, String> getDerivedFieldMap() {
+        return Collections.unmodifiableMap(m_derivedNames);
     }
 
     /**
