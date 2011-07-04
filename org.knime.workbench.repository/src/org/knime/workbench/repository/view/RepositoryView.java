@@ -116,6 +116,10 @@ public class RepositoryView extends ViewPart implements
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
+
+    private static final boolean FAST_LOAD_DISABLED = "false".equals(
+            System.getProperty("knime.fastload"));
+
     /**
      * The constructor.
      */
@@ -177,6 +181,13 @@ public class RepositoryView extends ViewPart implements
         };
         treeUpdater.setSystem(true);
         treeUpdater.schedule();
+        if (FAST_LOAD_DISABLED) {
+            try {
+                treeUpdater.join();
+            } catch (InterruptedException ex) {
+                LOGGER.error("Interrupted", ex);
+            }
+        }
     }
 
     private Root readRepository() {
