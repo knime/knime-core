@@ -106,6 +106,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
     private final SettingsModelBoolean m_totalAggregation =
         Pivot2NodeDialog.createSettingsTotal();
 
+    private final SettingsModelBoolean m_ignoreDomain =
+        Pivot2NodeDialog.createSettingsIgnoreDomain();
 
     private static final String PIVOT_COLUMN_DELIMITER = "_";
     private static final String PIVOT_AGGREGATION_DELIMITER = "+";
@@ -188,7 +190,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         for (int i = 0; i < pivotIdx.length; i++) {
             DataColumnSpec cspec = groupSpec.getColumnSpec(pivotIdx[i]);
             DataColumnDomain domain = cspec.getDomain();
-            if (domain.hasValues()) {
+            if (!m_ignoreDomain.getBooleanValue() && domain.hasValues()) {
                 combPivots[i] = new LinkedHashSet<String>();
                 Set<DataCell> values = domain.getValues();
                 for (DataCell pivotValue : values) {
@@ -464,6 +466,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         m_pivotCols.saveSettingsTo(settings);
         m_ignoreMissValues.saveSettingsTo(settings);
         m_totalAggregation.saveSettingsTo(settings);
+        m_ignoreDomain.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -472,12 +475,9 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             throws InvalidSettingsException {
         super.validateSettings(settings);
         m_pivotCols.validateSettings(settings);
-        try {
-            m_ignoreMissValues.validateSettings(settings);
-            m_totalAggregation.validateSettings(settings);
-        } catch (InvalidSettingsException ise) {
-            // ignored: added later
-        }
+        m_ignoreMissValues.validateSettings(settings);
+        m_totalAggregation.validateSettings(settings);
+        m_ignoreDomain.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
@@ -486,12 +486,9 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         m_pivotCols.loadSettingsFrom(settings);
-        try {
-            m_ignoreMissValues.loadSettingsFrom(settings);
-            m_totalAggregation.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ise) {
-            // ignored: added later
-        }
+        m_ignoreMissValues.loadSettingsFrom(settings);
+        m_totalAggregation.loadSettingsFrom(settings);
+        m_ignoreDomain.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */

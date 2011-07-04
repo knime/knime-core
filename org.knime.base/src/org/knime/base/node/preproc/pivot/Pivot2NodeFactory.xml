@@ -50,6 +50,10 @@
             Appends the overall pivot totals with each aggregation performed 
             together on all selected pivot columns.
           </option>
+          <option name="Ignore domain">
+            Ignore domain and use only the possible values available in the 
+            input data.
+          </option>
         </tab>
         <tab name="Aggregation settings">
           <option name="Aggregation methods">

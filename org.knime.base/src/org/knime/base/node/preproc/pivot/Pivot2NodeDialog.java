@@ -88,6 +88,8 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
 
     private final DialogComponentBoolean m_totalComponent;
 
+    private final DialogComponentBoolean m_domainComponent;
+
     /** Constructor for class Pivot2NodeDialog. */
     public Pivot2NodeDialog() {
 //pivot column box
@@ -119,12 +121,20 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
         m_missComponent.setToolTipText("Appends the overall pivot totals with "
                 + "each aggregation performed together on all selected pivot "
                 + "columns.");
+
+//create domain option
+        m_domainComponent = new DialogComponentBoolean(
+                createSettingsIgnoreDomain(), "Ignore domain");
+        m_domainComponent.setToolTipText("Ignore domain and use only the "
+            + "possible values available in the input data.");
+
 //build pivot column filter and missing value panel
         JPanel pivotAllPanel = new JPanel(new BorderLayout());
         pivotAllPanel.add(pivotColPanel, BorderLayout.CENTER);
         JPanel pivotOptions = new JPanel(new FlowLayout());
         pivotOptions.add(m_missComponent.getComponentPanel());
         pivotOptions.add(m_totalComponent.getComponentPanel());
+        pivotOptions.add(m_domainComponent.getComponentPanel());
         pivotAllPanel.add(pivotOptions, BorderLayout.SOUTH);
         addPanel(pivotAllPanel, "Pivots");
     }
@@ -137,6 +147,11 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
     /** @return settings model boolean for total aggregation */
     static final SettingsModelBoolean createSettingsTotal() {
         return new SettingsModelBoolean("total_aggregation", false);
+    }
+
+    /** @return settings model boolean for ignoring domain */
+    static final SettingsModelBoolean createSettingsIgnoreDomain() {
+        return new SettingsModelBoolean("ignore_domain", true);
     }
 
     /** {@inheritDoc} */
@@ -164,6 +179,7 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
         }
         m_missComponent.loadSettingsFrom(settings, specs);
         m_totalComponent.loadSettingsFrom(settings, specs);
+        m_domainComponent.loadSettingsFrom(settings, specs);
     }
 
     /** {@inheritDoc} */
@@ -174,6 +190,7 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
         m_pivotCol.saveSettingsTo(settings);
         m_missComponent.saveSettingsTo(settings);
         m_totalComponent.saveSettingsTo(settings);
+        m_domainComponent.saveSettingsTo(settings);
     }
 
 }
