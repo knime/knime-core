@@ -177,6 +177,7 @@ public class PMMLReaderNodeModel extends NodeModel {
                     = TransformationDictionary.Factory.newInstance();
             dict.setDerivedFieldArray(inPort.getDerivedFields());
             m_pmmlPort.addGlobalTransformations(dict);
+            m_pmmlPort.moveGlobalTransformationsToModel();
         }
         return new PortObject[]{m_pmmlPort};
     }
