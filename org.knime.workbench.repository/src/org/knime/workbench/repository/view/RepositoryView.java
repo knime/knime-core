@@ -83,6 +83,7 @@ import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.IPropertySourceProvider;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -117,9 +118,8 @@ public class RepositoryView extends ViewPart implements
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
-
-    private static final boolean FAST_LOAD_DISABLED = "false".equals(
-            System.getProperty("knime.fastload"));
+    private static final boolean FAST_LOAD_DISABLED = Boolean.getBoolean(
+            KNIMEConstants.PROPERTY_DISABLE_FAST_LOADING);
 
     /**
      * The constructor.
