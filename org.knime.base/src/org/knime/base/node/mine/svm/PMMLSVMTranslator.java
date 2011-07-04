@@ -223,7 +223,6 @@ public class PMMLSVMTranslator implements PMMLTranslator {
 
         for (SupportVectorMachine supportVectorMachine : svmModel
                 .getSupportVectorMachineArray()) {
-
             // collect support vectors
             SupportVectors svs = supportVectorMachine.getSupportVectors();
             DoubleVector[] supportVectors =
@@ -252,6 +251,16 @@ public class PMMLSVMTranslator implements PMMLTranslator {
             }
             m_svms.add(new Svm(supportVectors, alpha, supportVectorMachine
                     .getTargetCategory(), threshold, m_kernel));
+
+            /* The KNIME internal representation requires two SVMs for the
+             * binary classification case. Therefore add a second SVM with the
+             * same configuration as the first one except for the negative
+             * threshold. */
+            if (svmModel.getSupportVectorMachineArray().length == 1) {
+                m_svms.add(new Svm(supportVectors.clone(), alpha,
+                        supportVectorMachine.getAlternateTargetCategory(),
+                        threshold * -1, m_kernel));
+            }
         }
     }
 
