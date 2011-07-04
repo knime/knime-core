@@ -168,7 +168,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
                     SWT.ERROR);
-            mb.setMessage("Sorry, collapsing to Metanode failed: " + e.getMessage());
+            mb.setMessage("Collapsing to meta node failed: " + e.getMessage());
             mb.setText("Collapse failed");
             mb.open();
         }
