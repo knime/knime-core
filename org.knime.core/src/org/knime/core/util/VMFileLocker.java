@@ -73,7 +73,8 @@ public final class VMFileLocker {
             return true;
         }
         if (!dir.isDirectory()) {
-            LOGGER.coding("Files should not be locked. Only directories.");
+            LOGGER.coding("Files should not be locked. Only directories. ("
+                    + dir.getAbsolutePath() + " is not a dir.)");
             return false;
         }
         MutableInteger cnt = COUNTS.get(dir);
