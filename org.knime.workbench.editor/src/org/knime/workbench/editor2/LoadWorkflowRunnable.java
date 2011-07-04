@@ -335,6 +335,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                     switch (dlg.getReturnCode()) {
                     case IDialogConstants.YES_ID:
                         result.set(true);
+                        break;
                     default:
                         result.set(false);
                     }
