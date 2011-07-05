@@ -51,9 +51,12 @@
 package org.knime.workbench.editor2.directannotationedit;
 
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.GraphicalEditPart;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.figures.AnnotationFigure3;
 
 /**
@@ -64,9 +67,17 @@ public class StyledTextEditorLocator implements CellEditorLocator {
 
     private final AnnotationFigure3 m_figure;
 
+    private AnnotationEditPart m_editPart = null;
+
     public StyledTextEditorLocator(final AnnotationFigure3 figure) {
         figure.getClass(); // must not be null
         m_figure = figure;
+    }
+
+    public void setEditPart(final GraphicalEditPart editpart) {
+        if (editpart instanceof AnnotationEditPart) {
+            m_editPart = (AnnotationEditPart)editpart;
+        }
     }
 
     /**
@@ -75,12 +86,23 @@ public class StyledTextEditorLocator implements CellEditorLocator {
     public void relocate(final CellEditor celleditor) {
         Composite edit = (Composite)celleditor.getControl();
         Rectangle figBounds = m_figure.getBounds().getCopy();
+        ZoomManager zoomManager = null;
+        if (m_editPart != null) {
+            zoomManager = (ZoomManager)(m_editPart.getRoot().getViewer()
+                    .getProperty(ZoomManager.class.toString()));
+        }
+        double zooFactor = 1;
+        if (zoomManager != null) {
+            if (zoomManager.getZoom() < 1.0) {
+                zooFactor = zoomManager.getZoom();
+            }
+        }
         // adapt to zoom level and viewport
         m_figure.translateToAbsolute(figBounds);
         org.eclipse.swt.graphics.Rectangle trim = edit.computeTrim(0, 0, 0, 0);
         figBounds.translate(trim.x, trim.y);
-        figBounds.width += trim.width;
-        figBounds.height += trim.height;
+        figBounds.width = (int)((figBounds.width + trim.width) / zooFactor);
+        figBounds.height = (int)((figBounds.height + trim.height) / zooFactor);
         edit.setBounds(new org.eclipse.swt.graphics.Rectangle(figBounds.x,
                 figBounds.y - StyledTextEditor.TOOLBAR_HEIGHT, figBounds.width,
                 figBounds.height + StyledTextEditor.TOOLBAR_HEIGHT));

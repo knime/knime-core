@@ -63,6 +63,9 @@ public class AnnotationEditManager extends DirectEditManager {
     public AnnotationEditManager(final GraphicalEditPart editPart,
             final CellEditorLocator locator) {
         super(editPart, StyledTextEditor.class, locator);
+        if (locator instanceof StyledTextEditorLocator) {
+            ((StyledTextEditorLocator)locator).setEditPart(editPart);
+        }
     }
 
     /**
