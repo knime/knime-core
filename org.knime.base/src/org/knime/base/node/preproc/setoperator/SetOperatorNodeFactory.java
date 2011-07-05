@@ -53,7 +53,6 @@ package org.knime.base.node.preproc.setoperator;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 
@@ -61,7 +60,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class SetOperatorNodeFactory extends NodeFactory {
+public class SetOperatorNodeFactory extends NodeFactory<SetOperatorNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -75,7 +74,7 @@ public class SetOperatorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SetOperatorNodeModel createNodeModel() {
         return new SetOperatorNodeModel();
     }
 
@@ -99,8 +98,8 @@ public class SetOperatorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<SetOperatorNodeModel> createNodeView(final int viewIndex,
+            final SetOperatorNodeModel nodeModel) {
         return null;
     }
 

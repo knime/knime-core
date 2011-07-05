@@ -51,11 +51,6 @@
 
 package org.knime.base.node.preproc.setoperator;
 
-import java.net.URL;
-
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -63,6 +58,11 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.StringIconOption;
+
+import java.net.URL;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 
 /**
@@ -204,14 +204,21 @@ public enum SetOperation implements StringIconOption {
      * is a duplicate.
      * @param cell2 the member of the second set or <code>null</code> if it
      * is a duplicate.
+     * @param oldCell1 the previous member of the first set or <code>null</code>
+     * if this is the first member of the set
+     * @param oldCell2 the previous member of the first set or <code>null</code>
+     * if this is the first member of the set
      * @param differentTypes <code>true</code> if both sets are of a
      * different type
      * @return the result of the combination. Could be <code>null</code>.
      */
     public DataCell compute(final DataCell cell1, final DataCell cell2,
+            final DataCell oldCell1, final DataCell oldCell2,
             final boolean differentTypes) {
         final DataCell c1;
         final DataCell c2;
+        final DataCell oldC1;
+        final DataCell oldC2;
         if (differentTypes) {
             if (cell1 != null) {
                 c1 = new StringCell(cell1.toString());
@@ -223,17 +230,45 @@ public enum SetOperation implements StringIconOption {
             } else {
                 c2 = null;
             }
+            if (oldCell1 != null) {
+                oldC1 = new StringCell(oldCell1.toString());
+            } else {
+                oldC1 = null;
+            }
+            if (oldCell2 != null) {
+                oldC2 = new StringCell(oldCell2.toString());
+            } else {
+                oldC2 = null;
+            }
         } else {
             c1 = cell1;
             c2 = cell2;
+            oldC1 = oldCell1;
+            oldC2 = oldCell2;
         }
         switch (this) {
         case AND:
+            //they are equal
             if (c1 != null && c1.equals(c2)) {
                 return c1;
             }
+            //c1 is a duplicate check if the previous value is the same as c2
+            if (c1 == null && oldC1 != null) {
+                if (oldC1.equals(c2)) {
+                    return c2;
+                }
+                return null;
+            }
+          //c2 is a duplicate check if the previous value is the same as c1
+            if (c2 == null && oldC2 != null) {
+                if (oldC2.equals(c1)) {
+                    return c1;
+                }
+                return null;
+            }
             return null;
         case OR:
+            //simply return the first occurring cell
             if (c1 != null) {
                 return c1;
             } else if (c2 != null) {
@@ -241,14 +276,28 @@ public enum SetOperation implements StringIconOption {
             }
             return null;
         case MINUS:
-            if (c1 != null && !c1.equals(c2)) {
-                return c1;
+            if (c1 != null && c2 != null) {
+                //return c1 only if they are different
+                if (!c1.equals(c2)) {
+                    return c1;
+                }
+                return null;
+            }
+            //c2 is a duplicate check c1 against the previous value
+            if (c1 != null && c2 == null) {
+                if (!c1.equals(oldC2)) {
+                    return c1;
+                }
+                return null;
             }
             return null;
         case XOR:
-            if (c1 != null && !c1.equals(c2)) {
+            //return c1 only if it is different from the current and previous
+            //value since c2 could be null if it is a duplicate
+            //if c2 and oldC2 are set they both must differ
+            if (c1 != null && !c1.equals(c2) && !c1.equals(oldC2)) {
                 return c1;
-            } else if (c2 != null && !c2.equals(c1)) {
+            } else if (c2 != null && !c2.equals(c1) && !c2.equals(oldC1)) {
                 return c2;
             }
             return null;
@@ -262,6 +311,7 @@ public enum SetOperation implements StringIconOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Icon getIcon() {
         return m_icon;
     }
@@ -270,6 +320,7 @@ public enum SetOperation implements StringIconOption {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getText() {
         return getName();
     }

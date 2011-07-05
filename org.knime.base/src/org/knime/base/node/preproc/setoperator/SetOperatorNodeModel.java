@@ -51,11 +51,6 @@
 
 package org.knime.base.node.preproc.setoperator;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -71,8 +66,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 
 /**
@@ -107,13 +106,15 @@ public class SetOperatorNodeModel extends NodeModel {
     private final SettingsModelBoolean m_sortInMemory;
 
     private final SettingsModelBoolean m_skipMissing;
-    
+
     private static final String HILITE_MAPPING0 = "hilite_mapping0.xml.gz";
     private static final String HILITE_MAPPING1 = "hilite_mapping1.xml.gz";
 
-    private final HiLiteTranslator m_trans0 = new HiLiteTranslator();
-    private final HiLiteTranslator m_trans1 = new HiLiteTranslator();
-    private final HiLiteManager m_outHiLiteHandler = new HiLiteManager();
+    private final HiLiteHandler m_outHiLiteHandler = new HiLiteHandler();
+    private final HiLiteTranslator m_trans0 =
+        new HiLiteTranslator(m_outHiLiteHandler);
+    private final HiLiteTranslator m_trans1 =
+        new HiLiteTranslator(m_outHiLiteHandler);
 
     /**Constructor for class SetOperatorNodeModel.
      */
@@ -123,15 +124,13 @@ public class SetOperatorNodeModel extends NodeModel {
                 SetOperation.getDefault().getName());
         m_sortInMemory = new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
         m_skipMissing = new SettingsModelBoolean(CFG_SKIP_MISSING, true);
-        m_outHiLiteHandler.addToHiLiteHandler(m_trans0.getFromHiLiteHandler());
-        m_outHiLiteHandler.addToHiLiteHandler(m_trans1.getFromHiLiteHandler());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         if (inIndex == 0) {
             m_trans0.removeAllToHiliteHandlers();
@@ -141,13 +140,13 @@ public class SetOperatorNodeModel extends NodeModel {
             m_trans1.addToHiLiteHandler(hiLiteHdl);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        return m_outHiLiteHandler.getFromHiLiteHandler();
+        return m_outHiLiteHandler;
     }
 
     /**
@@ -325,6 +324,7 @@ public class SetOperatorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        getOutHiLiteHandler(0).fireClearHiLiteEvent();
         m_trans0.setMapper(null);
         m_trans1.setMapper(null);
     }

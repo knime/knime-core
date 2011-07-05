@@ -51,13 +51,6 @@
 
 package org.knime.base.node.preproc.setoperator;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -72,6 +65,22 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.ThreadPool;
+
+import org.knime.base.data.sort.SortedTable;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 
 /**
@@ -81,6 +90,8 @@ import org.knime.core.node.ExecutionContext;
  * @author Tobias Koetter, University of Konstanz
  */
 public class SetOperationTable {
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(SetOperationTable.class);
 
     private class CellIterator implements Iterator<RowKeyCellMap> {
 
@@ -123,6 +134,7 @@ public class SetOperationTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean hasNext() {
             return m_iterator.hasNext();
         }
@@ -130,6 +142,7 @@ public class SetOperationTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowKeyCellMap next() {
             final DataRow row = m_iterator.next();
             final DataCell cell;
@@ -144,6 +157,7 @@ public class SetOperationTable {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
@@ -183,6 +197,7 @@ public class SetOperationTable {
      * @param sortInMemory <code>true</code> if the sorting should be
      * performed in memory
      * @throws CanceledExecutionException if the operation was canceled
+     * @throws Exception if the sorting failed
      */
     public SetOperationTable(final ExecutionContext exec,
             final boolean useRowID1, final String col1,
@@ -190,7 +205,7 @@ public class SetOperationTable {
             final String col2, final BufferedDataTable table2,
             final SetOperation op, final boolean enableHilite,
             final boolean skipMissing, final boolean sortInMemory)
-    throws CanceledExecutionException {
+    throws CanceledExecutionException, Exception {
         if (exec == null) {
             throw new NullPointerException("exec must not be null");
         }
@@ -257,20 +272,49 @@ public class SetOperationTable {
         } else {
             comp = op.getComparator(col1Spec, col2Spec);
         }
-        //create own comparator
-        final SingleColRowComparator rowComparator =
+        exec.setMessage("Sorting input tables...");
+        final SingleColRowComparator rowComparator1 =
             new SingleColRowComparator(col1Idx, comp);
-        exec.setMessage("Sorting first table...");
-        ExecutionContext subExec = exec.createSubExecutionContext(0.3);
-        final SortedTable sortedTabel1 =
-            new SortedTable(table1, rowComparator, sortInMemory, subExec);
-        exec.setMessage("Sorting second table...");
-        subExec = exec.createSubExecutionContext(0.3);
-        rowComparator.setColumnIndex(col2Idx);
-        final SortedTable sortedTabel2 =
-            new SortedTable(table2, rowComparator, sortInMemory, subExec);
+        final ExecutionContext subExec1 = exec.createSubExecutionContext(0.4);
+        final SingleColRowComparator rowComparator2 =
+            new SingleColRowComparator(col2Idx, comp);
+        final ExecutionContext subExec2 = exec.createSubExecutionContext(0.4);
+        final SortedTable[] sortedTables = new SortedTable[2];
+        //initialize the thread pool
+        final ThreadPool pool =
+            KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool();
+          final Queue<Future<SortedTable>> futures =
+              new LinkedList<Future<SortedTable>>();
+        futures.add(pool.enqueue(createSortTableCallable(subExec1, table1,
+                rowComparator1, sortInMemory)));
+        exec.checkCanceled();
+        futures.add(pool.enqueue(createSortTableCallable(subExec2, table2,
+                rowComparator2, sortInMemory)));
+        exec.checkCanceled();
+        //loop through all added futures to retrieve the results
+        //in the defined order
+        int i = 0;
+        try {
+            while (!futures.isEmpty()) {
+                exec.checkCanceled();
+                //get AND remove the finished future from the queue
+                final Future<SortedTable> future = futures.poll();
+                sortedTables[i++] = future.get();
+            }
+        } catch (final InterruptedException e) {
+            throw new CanceledExecutionException("Sorting canceled");
+        } catch (final ExecutionException e) {
+            if (e.getCause() instanceof CanceledExecutionException) {
+                throw (CanceledExecutionException) e.getCause();
+            } else if (e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) e.getCause();
+            }
+            LOGGER.debug("Exception while sorting tables: "
+                    + e.getCause().getMessage());
+            throw new RuntimeException(e.getCause());
+        }
         exec.setMessage("Performing set operation");
-        subExec = exec.createSubExecutionContext(0.6);
+        final ExecutionContext subExec = exec.createSubExecutionContext(0.2);
         final DataTableSpec resultSpec =
             createResultTableSpec(op, col1Spec, col2Spec);
 
@@ -278,11 +322,23 @@ public class SetOperationTable {
                     || !col1Spec.getType().equals(col2Spec.getType());
         //create the set objects
         final CellIterator columnSet1 =
-            new CellIterator(sortedTabel1, useRowID1, col1Idx);
+            new CellIterator(sortedTables[0], useRowID1, col1Idx);
         final CellIterator columnSet2 =
-            new CellIterator(sortedTabel2, useRowID2, col2Idx);
+            new CellIterator(sortedTables[1], useRowID2, col2Idx);
         m_resultTable = createSetTable(subExec, resultSpec, differentType,
                 columnSet1, columnSet2, op, comp);
+    }
+
+    private Callable<SortedTable> createSortTableCallable(
+            final ExecutionContext exec, final BufferedDataTable table,
+            final SingleColRowComparator comparator,
+            final boolean sortInMemory) {
+        return new Callable<SortedTable>() {
+            @Override
+            public SortedTable call() throws Exception {
+                exec.checkCanceled();
+                return new SortedTable(table, comparator, sortInMemory, exec);
+        } };
     }
 
     private BufferedDataTable createSetTable(final ExecutionContext exec,
@@ -307,10 +363,14 @@ public class SetOperationTable {
         final double progressPerRow = 1.0 / rowCount;
         RowKeyCellMap cell1 = null;
         RowKeyCellMap cell2 = null;
+        RowKeyCellMap oldCell1 = null;
+        RowKeyCellMap oldCell2 = null;
         DataCell oldResult = null;
         while (iter1.hasNext() && iter2.hasNext()) {
+            //old values are already set when the cell1 is reset to null below
             cell1 = iter1.next();
             rowCounter++;
+            //old values are already set when the cell2 is reset to null below
             cell2 = iter2.next();
             rowCounter++;
             int compResult = comp.compare(cell1.getCell(), cell2.getCell());
@@ -318,7 +378,8 @@ public class SetOperationTable {
                 if (compResult < 0) {
                     //the first entry is less
                     oldResult = computeResult(op, dc, oldResult, cell1, null,
-                            differentType);
+                            oldCell1, oldCell2, differentType);
+                    oldCell1 = cell1;
                     cell1 = null;
                     if (iter1.hasNext()) {
                         cell1 = iter1.next();
@@ -333,7 +394,8 @@ public class SetOperationTable {
                 } else if (compResult > 0) {
                     //the second entry is less
                     oldResult = computeResult(op, dc, oldResult, null, cell2,
-                            differentType);
+                            oldCell1, oldCell2, differentType);
+                    oldCell2 = cell2;
                     cell2 = null;
                     if (iter2.hasNext()) {
                         cell2 = iter2.next();
@@ -347,11 +409,14 @@ public class SetOperationTable {
                     }
                 }
             }
+            //compResult != 0 if iter1 or iter2 has no next elements!
             if (compResult == 0) {
                 //they are equal process both
                 oldResult = computeResult(op, dc, oldResult, cell1, cell2,
-                        differentType);
+                        oldCell1, oldCell2, differentType);
+                oldCell1 = cell1;
                 cell1 = null;
+                oldCell2 = cell2;
                 cell2 = null;
                 reportProgress(exec, rowCount, rowCounter, progressPerRow);
             }
@@ -360,14 +425,15 @@ public class SetOperationTable {
         //elements of set1
         if (cell1 != null) {
             oldResult = computeResult(op, dc, oldResult, cell1, null,
-                    differentType);
+                    oldCell1, oldCell2, differentType);
         }
         //process all left elements
         while (iter1.hasNext()) {
+            oldCell1 = cell1;
             cell1 = iter1.next();
             rowCounter++;
             oldResult = computeResult(op, dc, oldResult, cell1, null,
-                    differentType);
+                    oldCell1, oldCell2, differentType);
             reportProgress(exec, rowCount, rowCounter,
                     progressPerRow);
         }
@@ -375,13 +441,14 @@ public class SetOperationTable {
         //elements of set2
         if (cell2 != null) {
             oldResult = computeResult(op, dc, oldResult, null, cell2,
-                    differentType);
+                    oldCell1, oldCell2, differentType);
         }
         while (iter2.hasNext()) {
+            oldCell2 = cell2;
             cell2 = iter2.next();
             rowCounter++;
             oldResult = computeResult(op, dc, oldResult, null, cell2,
-                    differentType);
+                    oldCell1, oldCell2, differentType);
             reportProgress(exec, rowCount, rowCounter,
                     progressPerRow);
         }
@@ -400,36 +467,49 @@ public class SetOperationTable {
 
     private DataCell computeResult(final SetOperation op,
             final BufferedDataContainer dc, final DataCell oldResult,
-            final RowKeyCellMap keyCell0, final RowKeyCellMap keyCell1,
+            final RowKeyCellMap keyCell1, final RowKeyCellMap keyCell2,
+            final RowKeyCellMap oldKeyCell1, final RowKeyCellMap oldKeyCell2,
             final boolean differntType) {
-        DataCell cell0;
-        if (keyCell0 != null) {
-            cell0 = keyCell0.getCell();
-        } else {
-            cell0 = null;
-        }
         DataCell cell1;
         if (keyCell1 != null) {
             cell1 = keyCell1.getCell();
         } else {
             cell1 = null;
         }
+        DataCell cell2;
+        if (keyCell2 != null) {
+            cell2 = keyCell2.getCell();
+        } else {
+            cell2 = null;
+        }
+        DataCell oldCell1;
+        if (oldKeyCell1 != null) {
+            oldCell1 = oldKeyCell1.getCell();
+        } else {
+            oldCell1 = null;
+        }
+        DataCell oldCell2;
+        if (oldKeyCell2 != null) {
+            oldCell2 = oldKeyCell2.getCell();
+        } else {
+            oldCell2 = null;
+        }
         final DataCell result =
-            op.compute(cell0, cell1, differntType);
+            op.compute(cell1, cell2, oldCell1, oldCell2, differntType);
         if (result != null) {
             if (result.equals(oldResult)) {
                 if (m_enableHilite) {
                     assert (m_rowId >= 0);
                     final RowKey currentKey = RowKey.createRowKey(m_rowId);
-                    if (keyCell0 != null) {
+                    if (keyCell1 != null) {
                         final Set<RowKey> map0 =
                             m_hiliteMapping0.get(currentKey);
-                        map0.add(keyCell0.getRowKey());
+                        map0.add(keyCell1.getRowKey());
                     }
-                    if (keyCell1 != null) {
+                    if (keyCell2 != null) {
                         final Set<RowKey> map1 =
                             m_hiliteMapping1.get(currentKey);
-                        map1.add(keyCell1.getRowKey());
+                        map1.add(keyCell2.getRowKey());
                     }
                 }
                 m_duplicateCounter++;
@@ -441,14 +521,14 @@ public class SetOperationTable {
                 final RowKey rowKey = RowKey.createRowKey(++m_rowId);
                 dc.addRowToTable(new DefaultRow(rowKey, result));
                 if (m_enableHilite) {
-                    if (keyCell0 != null) {
+                    if (keyCell1 != null) {
                         final HashSet<RowKey> map0 = new HashSet<RowKey>();
-                        map0.add(keyCell0.getRowKey());
+                        map0.add(keyCell1.getRowKey());
                         m_hiliteMapping0.put(rowKey, map0);
                     }
-                    if (keyCell1 != null) {
+                    if (keyCell2 != null) {
                         final HashSet<RowKey> map1 = new HashSet<RowKey>();
-                        map1.add(keyCell1.getRowKey());
+                        map1.add(keyCell2.getRowKey());
                         m_hiliteMapping1.put(rowKey, map1);
                     }
                 }

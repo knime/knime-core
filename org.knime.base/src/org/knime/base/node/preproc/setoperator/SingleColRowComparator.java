@@ -107,6 +107,7 @@ public class SingleColRowComparator implements Comparator<DataRow> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compare(final DataRow r1, final DataRow r2) {
         if (m_colIdx < 0) {
             final String key1 = r1.getKey().getString();

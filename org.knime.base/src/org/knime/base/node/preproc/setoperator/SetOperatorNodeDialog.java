@@ -87,6 +87,7 @@ public class SetOperatorNodeDialog extends DefaultNodeSettingsPane {
     /**Constructor for claprivaterNodeDialog.
      *
      */
+    @SuppressWarnings("unchecked")
     public SetOperatorNodeDialog() {
         m_setOp = new SettingsModelString(SetOperatorNodeModel.CFG_OP,
                 SetOperation.getDefault().getName());
