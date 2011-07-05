@@ -4,18 +4,19 @@
     <name>HiLite Collector</name>
     
     <shortDescription>
-        Node allows to apply annotations to the set of hilit rows.
+        Node allows to apply annotations to sets of hilit rows within a view.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        Node allows to apply annotations to the set of hilit rows.
+        Node allows to apply annotations to sets of hilit rows within the view
+        of the non-executed node.
         (1) Within the view, an annotation string can be entered which is then 
         appended to all hilit rows. (2) During execution of this node, all
         annotations are appended as extra columns, 'Anno #X', to the end of 
         the input table. (3) If the node is reset, all annotations are 
         internally removed; also all annotations added while the node is 
-        executed don't effect the output table. 
+        executed, don't affect the output table. 
         </intro>
         <option name="Append Annotation">
             Enter a new, non-empty annotation string which is then applied to 
