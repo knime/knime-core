@@ -57,8 +57,6 @@ import java.awt.Insets;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataTableSpec;
@@ -82,7 +80,6 @@ public class CrosstabNodeDialog extends NodeDialogPane {
     private ColumnSelectionComboxBox m_rowVarColumn;
     private ColumnSelectionComboxBox m_colVarColumn;
     private ColumnSelectionPanel m_weightColumn;
-    private SpinnerNumberModel m_maxCategories;
     private JCheckBox m_enableHiliting;
 
     /**
@@ -144,15 +141,6 @@ public class CrosstabNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy++;
-        c.weightx = 0;
-        p.add(new JLabel("Max. categories:"), c);
-        c.gridx++;
-        c.weightx = 1;
-        m_maxCategories = new SpinnerNumberModel(10000, 2,
-                Integer.MAX_VALUE, 1);
-        p.add(new JSpinner(m_maxCategories), c);
-
-        c.gridy++;
         c.gridwidth = 2;
         m_enableHiliting = new JCheckBox("Enable hiliting");
         p.add(m_enableHiliting, c);
@@ -178,7 +166,6 @@ public class CrosstabNodeDialog extends NodeDialogPane {
         s.setRowVarColumn(m_rowVarColumn.getSelectedColumn());
         s.setColVarColumn(m_colVarColumn.getSelectedColumn());
         s.setWeightColumn(m_weightColumn.getSelectedColumn());
-        s.setMaxCategories(m_maxCategories.getNumber().intValue());
         s.setEnableHiliting(m_enableHiliting.isSelected());
 
         s.saveSettings(settings);
@@ -196,7 +183,6 @@ public class CrosstabNodeDialog extends NodeDialogPane {
         m_rowVarColumn.update(specs[0], s.getRowVarColumn());
         m_colVarColumn.update(specs[0], s.getColVarColumn());
         m_weightColumn.update(specs[0], s.getWeightColumn());
-        m_maxCategories.setValue(new Integer(s.getMaxCategories()));
         m_enableHiliting.setSelected(s.getEnableHiliting());
     }
 

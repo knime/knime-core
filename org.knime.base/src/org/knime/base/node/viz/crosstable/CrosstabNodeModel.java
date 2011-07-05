@@ -449,7 +449,7 @@ public class CrosstabNodeModel extends NodeModel
     private final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols)
             throws CanceledExecutionException {
-        final int maxUniqueVals = m_settings.getMaxCategories();
+        final int maxUniqueVals = Integer.MAX_VALUE;
         final boolean sortInMemory = false;
         final boolean enableHilite = m_settings.getEnableHiliting();
         final boolean retainOrder = false;

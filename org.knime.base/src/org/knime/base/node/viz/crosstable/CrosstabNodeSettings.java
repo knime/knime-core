@@ -68,7 +68,6 @@ public class CrosstabNodeSettings {
     private static final String WEIGHT_COLUMN = "weightColumn";
     private static final String NAMING_VERSION = "namingVersion";
     private static final String ENALE_HILITING = "enableHiliting";
-    private static final String MAX_CATEGORIES = "maxCategories";
 
 
     private String m_rowVarColumn = null;
@@ -76,7 +75,6 @@ public class CrosstabNodeSettings {
     private String m_weightColumn = null;
     private String m_namingVersion = "1.0";
     private boolean m_enableHiliting = false;
-    private int m_maxCategories = 10000;
 
     /**
      * @return the rowVarColumn
@@ -135,20 +133,6 @@ public class CrosstabNodeSettings {
     }
 
     /**
-     * @return the maxCategories
-     */
-    int getMaxCategories() {
-        return m_maxCategories;
-    }
-
-    /**
-     * @param maxCategories the maxCategories to set
-     */
-    void setMaxCategories(final int maxCategories) {
-        m_maxCategories = maxCategories;
-    }
-
-    /**
      * @return the namingVersion
      */
     String getNamingVersion() {
@@ -179,7 +163,6 @@ public class CrosstabNodeSettings {
         m_colVarColumn = settings.getString(COL_VAR_COLUMN, null);
         m_weightColumn = settings.getString(WEIGHT_COLUMN, null);
         m_namingVersion = settings.getString(NAMING_VERSION, null);
-        m_maxCategories = settings.getInt(MAX_CATEGORIES, 10000);
         m_enableHiliting = settings.getBoolean(ENALE_HILITING, false);
     }
 
@@ -193,7 +176,6 @@ public class CrosstabNodeSettings {
         m_colVarColumn = settings.getString(COL_VAR_COLUMN);
         m_weightColumn = settings.getString(WEIGHT_COLUMN);
         m_namingVersion = settings.getString(NAMING_VERSION);
-        m_maxCategories = settings.getInt(MAX_CATEGORIES);
         m_enableHiliting = settings.getBoolean(ENALE_HILITING);
     }
 
@@ -205,7 +187,6 @@ public class CrosstabNodeSettings {
         settings.addString(COL_VAR_COLUMN, m_colVarColumn);
         settings.addString(WEIGHT_COLUMN, m_weightColumn);
         settings.addString(NAMING_VERSION, m_namingVersion);
-        settings.addInt(MAX_CATEGORIES, m_maxCategories);
         settings.addBoolean(ENALE_HILITING, m_enableHiliting);
     }
 

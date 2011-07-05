@@ -23,10 +23,6 @@
             Applies a numeric weight for each observation in the input. It is most
             likely used for cell count data.
         </option>
-        <option name="Max. categories">
-            The maximal number of categories of the row and column variable
-            that are are taken into account.
-        </option>
         <option name="Enable hiliting">
             If enabled, the hiliting of a cell in the crosstab will hilite
             all cells with same categories in attached views.
