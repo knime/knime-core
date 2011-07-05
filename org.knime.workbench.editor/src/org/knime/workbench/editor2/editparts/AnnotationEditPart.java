@@ -261,6 +261,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
                     FONT_STORE.getFont(waSr.getFontName(), waSr.getFontSize(),
                             waSr.getFontStyle());
             if (!FONT_STORE.isDefaultFont(f)) {
+
                 swtStyle.font = f;
             }
             if (waSr.getFgColor() >= 0) {
@@ -303,8 +304,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             }
             Font f = sr.font;
             if (f != null) {
-            waSr.setFontName(f.getFontData()[0].getName());
-            waSr.setFontSize((int)(f.getFontData()[0].getHeight() / zoomFactor));
+                waSr.setFontName(f.getFontData()[0].getName());
+                waSr.setFontSize((f.getFontData()[0].getHeight()));
                 waSr.setFontStyle(f.getFontData()[0].getStyle());
             }
             waSr.setStart(sr.start);
