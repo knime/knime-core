@@ -142,8 +142,8 @@ public final class GlobalClassCreator {
                     "org.knime.");
         }
 
+        lock.lock();
         try {
-            lock.lock();
             return Class.forName(translatedClassName);
         } catch (ClassNotFoundException ex) {
             if (translatedClassName.equals(className)) {

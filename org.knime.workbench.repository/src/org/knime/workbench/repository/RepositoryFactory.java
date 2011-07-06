@@ -130,11 +130,10 @@ public final class RepositoryFactory {
 
         // Try to load the node factory class...
         NodeFactory<? extends NodeModel> factory;
+        // this ensures that the class is loaded by the correct eclipse
+        // classloaders
+        GlobalClassCreator.lock.lock();
         try {
-
-            // this ensures that the class is loaded by the correct eclipse
-            // classloaders
-            GlobalClassCreator.lock.lock();
             factory =
                     (NodeFactory<? extends NodeModel>)element
                             .createExecutableExtension("factory-class");
