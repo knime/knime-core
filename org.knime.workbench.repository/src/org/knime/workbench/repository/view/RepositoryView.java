@@ -118,9 +118,6 @@ public class RepositoryView extends ViewPart implements
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
-    private static final boolean FAST_LOAD_DISABLED = Boolean.getBoolean(
-            KNIMEConstants.PROPERTY_DISABLE_FAST_LOADING);
-
     /**
      * The constructor.
      */
@@ -162,9 +159,10 @@ public class RepositoryView extends ViewPart implements
                         "org.knime.workbench.help.repository_view_context");
 
 
-        if (FAST_LOAD_DISABLED) {
-            readRepository(parent);
-        } else {
+        boolean fastLoad = Boolean.getBoolean(
+                KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
+
+        if (fastLoad) {
             final Job treeUpdater = new Job("Node Repository Loader") {
                 @Override
                 protected IStatus run(final IProgressMonitor monitor) {
@@ -174,6 +172,8 @@ public class RepositoryView extends ViewPart implements
             };
             treeUpdater.setSystem(true);
             treeUpdater.schedule();
+        } else {
+            readRepository(parent);
         }
     }
 

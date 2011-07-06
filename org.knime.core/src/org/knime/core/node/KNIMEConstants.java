@@ -133,14 +133,14 @@ public final class KNIMEConstants {
         "knime.disable.vmfilelock";
 
     /** Java property to enable/disable loading the node repository
-     * asynchronously. By default, the node repository loads after KNIME has
-     * been opened. If this flag is set, it will load the entire repository
-     * prior to showing the repository tree.
-     *
-     * <p>This flag only affects the KNIME desktop.
+     * asynchronously. By default, the node repository loads completely before
+     * the GUI is shown. If this flag is set, it will load the entire repository
+     * in the background while the GUI is already there is usable.
+     * <br />
+     * This flag only affects the KNIME desktop.
      * @since v2.4 */
-    public static final String PROPERTY_DISABLE_FAST_LOADING =
-        "knime.disable.fastload";
+    public static final String PROPERTY_ENABLE_FAST_LOADING =
+        "knime.enable.fastload";
 
     /**
      * The name of the system property whose value is - if set - used as knime
