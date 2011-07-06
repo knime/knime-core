@@ -62,6 +62,7 @@ import java.awt.event.ItemListener;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -499,24 +500,28 @@ public final class FilesHistoryPanel extends JPanel {
             new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent e) {
-                    String file = getSelectedFile();
-                    // we can only check local files, thus ignore everything else
+                    String fileS = getSelectedFile();
+                    // we can only check local files, ignore everything else
+                    Component editorComponent =
+                        m_textBox.getEditor().getEditorComponent();
                     try {
-                        URL u = new URL(file);
-                        if (!"file".equals(u.getProtocol())) {
-                            m_textBox.getEditor().getEditorComponent().setBackground(Color.WHITE);
+                        URL u = new URL(fileS);
+                        if ("file".equals(u.getProtocol())) {
+                            fileS = new File(u.toURI()).getAbsolutePath();
+                        } else {
+                            editorComponent.setBackground(Color.WHITE);
                             return;
                         }
                     } catch (MalformedURLException ex) {
+                        // ignore
+                    } catch (URISyntaxException uri) {
+                        // ignore
                     }
 
-                    if (file.startsWith("file:")) {
-                        file = file.substring("file:".length());
-                    }
-                    if (new File(file).exists()) {
-                        m_textBox.getEditor().getEditorComponent().setBackground(Color.WHITE);
+                    if (new File(fileS).exists()) {
+                        editorComponent.setBackground(Color.WHITE);
                     } else {
-                        m_textBox.getEditor().getEditorComponent().setBackground(Color.ORANGE);
+                        editorComponent.setBackground(Color.ORANGE);
                     }
                 }
             };
