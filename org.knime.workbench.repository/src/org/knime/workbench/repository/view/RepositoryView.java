@@ -161,39 +161,25 @@ public class RepositoryView extends ViewPart implements
                 .setHelp(m_viewer.getControl(),
                         "org.knime.workbench.help.repository_view_context");
 
-        Job treeUpdater = new Job("Node Repository Loader") {
-            @Override
-            protected IStatus run(final IProgressMonitor monitor) {
-                final Root root = readRepository();
-                Display.getDefault().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!(m_viewer.getInput() instanceof Root)) {
-                            m_viewer.setInput(root);
-                        } else {
-                            m_viewer.refresh(root);
-                        }
-                        parent.setCursor(null);
-                        m_viewer.getControl().setToolTipText(null);
-                    }
-                });
-                return Status.OK_STATUS;
-            }
-        };
-        treeUpdater.setSystem(true);
-        treeUpdater.schedule();
+
         if (FAST_LOAD_DISABLED) {
-            try {
-                treeUpdater.join();
-            } catch (InterruptedException ex) {
-                LOGGER.error("Interrupted", ex);
-            }
+            readRepository(parent);
+        } else {
+            final Job treeUpdater = new Job("Node Repository Loader") {
+                @Override
+                protected IStatus run(final IProgressMonitor monitor) {
+                    readRepository(parent);
+                    return Status.OK_STATUS;
+                }
+            };
+            treeUpdater.setSystem(true);
+            treeUpdater.schedule();
         }
     }
 
-    private Root readRepository() {
+    private void readRepository(final Composite parent) {
         m_count = 0;
-        Root root = RepositoryManager.INSTANCE.getRoot(this);
+        final Root root = RepositoryManager.INSTANCE.getRoot(this);
         // check if there were categories that could not be
         // processed properly
         // i.e. the after-relationship information was wrong
@@ -228,7 +214,19 @@ public class RepositoryView extends ViewPart implements
                 }
             });
         }
-        return root;
+
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (!(m_viewer.getInput() instanceof Root)) {
+                    m_viewer.setInput(root);
+                } else {
+                    m_viewer.refresh(root);
+                }
+                parent.setCursor(null);
+                m_viewer.getControl().setToolTipText(null);
+            }
+        });
     }
 
     private void hookDoubleClickAction() {

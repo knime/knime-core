@@ -52,6 +52,7 @@ package org.knime.core.eclipseUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.node.NodeLogger;
 
@@ -68,6 +69,17 @@ import org.knime.core.node.NodeLogger;
  */
 @Deprecated
 public final class GlobalClassCreator {
+    /* Sometimes it can happen, that classloading causes a deadlock, see
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=121737
+     * However, the official fix described there can cause other deadlock, if
+     * e.g. a plugin activator (which is invoked during classloading) tries to
+     * lock the display while the thread that currently has locked the display
+     * wants to load a class. Therefore we do not lock on a classloader level
+     * but only repair our specific problem with respect to node repository
+     * initialization by only acquiring a lock when a node factory is loaded.
+     */
+    public static final ReentrantLock lock = new ReentrantLock();
+
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(GlobalClassCreator.class);
@@ -131,6 +143,7 @@ public final class GlobalClassCreator {
         }
 
         try {
+            lock.lock();
             return Class.forName(translatedClassName);
         } catch (ClassNotFoundException ex) {
             if (translatedClassName.equals(className)) {
@@ -138,6 +151,8 @@ public final class GlobalClassCreator {
             } else {
                 return Class.forName(className);
             }
+        } finally {
+            lock.unlock();
         }
     }
 

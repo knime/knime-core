@@ -60,6 +60,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
@@ -67,6 +68,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
@@ -132,19 +134,20 @@ public final class RepositoryFactory {
 
             // this ensures that the class is loaded by the correct eclipse
             // classloaders
+            GlobalClassCreator.lock.lock();
             factory =
                     (NodeFactory<? extends NodeModel>)element
                             .createExecutableExtension("factory-class");
 
-            node.setFactory(
-                    (Class<NodeFactory<? extends NodeModel>>)
-                    factory.getClass());
         } catch (Throwable e) {
             throw new IllegalArgumentException(
                     "Can't load factory class for node: "
                             + element.getAttribute("factory-class"), e);
-
+        } finally {
+            GlobalClassCreator.lock.unlock();
         }
+        node.setFactory((Class<NodeFactory<? extends NodeModel>>)
+                factory.getClass());
 
         node.setName(factory.getNodeName());
         node.setType(
@@ -247,7 +250,7 @@ public final class RepositoryFactory {
                     /** {@inheritDoc} */
                     @Override
                     public String getDotKNIMEFileName() {
-                        return WorkflowPersistorVersion1xx.WORKFLOW_FILE;
+                        return WorkflowPersistor.WORKFLOW_FILE;
                     }
                 };
                 // don't lock workflow dir
