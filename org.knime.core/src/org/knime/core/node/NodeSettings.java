@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 
 import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigWO;
 
 
 /**
@@ -107,6 +108,14 @@ public final class NodeSettings extends Config
         return (NodeSettingsRO) Config.loadFromXML(tmp, in);
     }
 
+    /**
+     * Makes a deep copy of this Config and all sub-configs.
+     *
+     * @param dest the destination this Config object is copied to.
+     */
+    public void copyTo(final ConfigWO dest) {
+        super.copyTo(dest);
+    }
 
     /**
      * {@inheritDoc}
