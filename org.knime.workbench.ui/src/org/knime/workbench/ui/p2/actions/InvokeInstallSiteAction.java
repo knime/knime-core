@@ -53,8 +53,6 @@ package org.knime.workbench.ui.p2.actions;
 import org.eclipse.equinox.p2.operations.ProvisioningJob;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
 
 /**
@@ -83,14 +81,7 @@ public class InvokeInstallSiteAction extends AbstractP2Action {
                 provUI.getPolicy().setRepositoriesVisible(false);
                 provUI.getPolicy().setRestartPolicy(
                         ProvisioningJob.RESTART_NONE);
-                int retCode = provUI.openInstallWizard(null, null, job);
-                MessageBox box =
-                        new MessageBox(PlatformUI.getWorkbench().getDisplay().getActiveShell(),
-                                SWT.ICON_WARNING);
-                box.setText("Info");
-                box.setMessage("Return Code: " + retCode);
-                box.open();
-
+                provUI.openInstallWizard(null, null, job);
                 provUI.getPolicy().setRepositoriesVisible(true);
             }
         });
