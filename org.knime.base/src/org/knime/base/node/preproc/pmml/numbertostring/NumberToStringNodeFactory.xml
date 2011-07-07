@@ -9,7 +9,11 @@
 	
 	<fullDescription>
 		<intro>
-			Converts numbers in a column (or a set of columns) to strings. 
+			Converts numbers in a column (or a set of columns) to strings. <br />
+			If the 
+        	optional PMML inport is connected and contains preprocessing
+        	operations in the TransformationDictionary the conversion operations
+        	of this node are appended.
 		</intro>
 		<option name="Column Selection">Move the columns of interest into the &quot;Include&quot; list</option>
 		
@@ -18,8 +22,8 @@
 	
 	<ports>
 		<inPort index="0" name="Input">Arbitrary input data.</inPort>
-		<inPort index="1" name="PMML input">Optional PMML port object.</inPort>
+        <inPort index="1" name="PMML Document">Optional PMML document to add the preprocessing operations to.</inPort>
 		<outPort index="0" name="Transformed input">Input data with new StringTypes.</outPort>
-		<outPort index="1" name="Transformed PMML input">PMML port object that reflects the performed operations.</outPort>
+		<outPort index="1" name="Transformed PMML input">PMML port object that includes the performed operations.</outPort>
 	</ports>	
 </knimeNode>

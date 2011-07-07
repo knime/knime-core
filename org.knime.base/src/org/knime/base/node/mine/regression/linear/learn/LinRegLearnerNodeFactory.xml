@@ -15,11 +15,16 @@
 			available in the view. Calculating the error requires performing one extra scan on
 			the data. <br/>
 			Additionally, specify the rows that shall be available in the view. Specify
-			the first row number and the total count.
+			the first row number and the total count.<br />
+			If the optional PMML inport is connected and contains 
+    		preprocessing operations in the TransformationDictionary those are 
+    		added to the learned model.
 		</intro>
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input data">Table on which to perform regression.</inPort>
+        <inPort index="1" name="PMML Preprocessing">Optional PMML port object 
+         containing preprocessing operations.</inPort>
         <outPort index="0" name="Model for Predictor">Model to connect to a predictor node.</outPort>
 	</ports>
 	<views>

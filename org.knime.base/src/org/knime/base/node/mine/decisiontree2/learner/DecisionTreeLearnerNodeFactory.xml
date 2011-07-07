@@ -24,7 +24,10 @@
 			Most of the techniques used in this decision tree implementation
 			can be found in "C4.5 Programs for machine learning", by J.R. Quinlan
 			and in "SPRINT: A Scalable Parallel Classifier for Data Mining", by
-			J. Shafer, R. Agrawal, M. Mehta (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf">http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf</a>)
+			J. Shafer, R. Agrawal, M. Mehta (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf">http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.152&amp;rep=rep1&amp;type=pdf</a>)<br />
+			If the optional PMML inport is connected and contains 
+            preprocessing operations in the TransformationDictionary those are 
+            added to the learned model.
 		</intro>
 		<option name="Class column">To select the target attribute. 
 			Only nominal attributes are allowed</option>
@@ -83,6 +86,8 @@
 				The pre-classified data that should be used to induce the decision tree.
 				At least one attribute must be nominal.
 		</inPort>
+       <inPort index="1" name="PMML Preprocessing">Optional PMML port object 
+            containing preprocessing operations.</inPort>
 		<outPort index="0" name="Decision Tree Model">
 			The induced decision tree. The model can be used to classify
 			data with unknown target (class) attribute. To do so, connect the 

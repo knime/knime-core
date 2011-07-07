@@ -9,7 +9,10 @@
 			clusters (no dynamic number of clusters).
 			K-means performs a crisp clustering that assigns a data
 			vector to exactly one cluster. The algorithm terminates when the
-			cluster assignments do not change anymore.
+			cluster assignments do not change anymore.<br />
+			If the optional PMML inport is connected and contains 
+            preprocessing operations in the TransformationDictionary those are 
+            added to the learned model.
 			The node can be configured as follows:
 		</intro>
 		<option name="number of clusters">
@@ -24,6 +27,8 @@
     <ports>
         <inPort index="0" name="Clustering input">Input to clustering. All 
         numerical values and only these are considered for clustering.</inPort>
+         <inPort index="1" name="PMML Preprocessing">Optional PMML port object 
+       containing preprocessing operations.</inPort>
         <outPort index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</outPort>
         <outPort index="1" name="PMML Cluster Model">PMML cluster model</outPort>

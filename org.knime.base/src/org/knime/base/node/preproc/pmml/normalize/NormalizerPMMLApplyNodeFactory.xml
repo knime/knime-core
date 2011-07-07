@@ -18,8 +18,9 @@
 		</intro>
 	</fullDescription>
     <ports>
-        <inPort index="0" name="Model">Normalization parameters</inPort>
+        <inPort index="0" name="Model">PMML document containing normalization parameters</inPort>
         <inPort index="1" name="Table to normalize">Table requiring normalization of some or all columns.</inPort>
-        <outPort index="0" name="Normalized output">The input data normalized according to the normalization parameters.</outPort>
+        <inPort index="0" name="Model">Pass-through of the incoming PMML document</inPort>
+        <outPort index="1" name="Normalized output">The input data normalized according to the normalization parameters.</outPort>
 	</ports>
 </knimeNode>

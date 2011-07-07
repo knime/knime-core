@@ -10,6 +10,10 @@
             This node performs polynomial regression on the input data and computes the coefficients that minimize the
             squared error. The user must choose one column as target (dependent variable) and a number of independent variables. By
             default, polynomials with degree 2 are computed, which can be changed in the dialog.
+            <br />
+            If the optional PMML inport is connected and contains 
+    		preprocessing operations in the TransformationDictionary those are 
+    		added to the learned model.
         </intro>
         <tab name="Regression settings">
             <option name="Target column">The column that contains the dependent "target" variable.</option>
@@ -31,6 +35,7 @@
             The input samples, which of the columns are used as independent variables can be configured in the dialog.
              The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.
         </inPort>
+        <inPort index="1" name="PMML Preprocessing">Optional PMML port object containing preprocessing operations.</inPort>
         <outPort name="Data with training error" index="0">
             Training data classified with the learned model and the corresponding errors.
         </outPort>

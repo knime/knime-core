@@ -27,12 +27,9 @@
 	</fullDescription>
     <ports>
         <inPort index="0" name="Table to normalize">Table requiring normalization of some or all columns.</inPort>
-        <inPort index="1" name="PMML Document">PMML document to add the normalization operations to.</inPort>
+        <inPort index="1" name="PMML Document">Optional PMML document to add the normalization operations to.</inPort>
         <outPort index="0" name="Normalized table">Table with normalized columns.</outPort>
-        <outPort index="1" name="Normalize Model">Model containing normalization parameters, 
-	        which can be used in a "normalize apply" node to normalize test data the same way 
-	        as the training data has been normalized.</outPort>
-        <outPort index="2" name="PMML Model">PMML document containing normalization parameters, 
+        <outPort index="1" name="PMML Model">PMML document containing normalization parameters, 
             which can be used in a "PMML normalize apply" node to normalize test data the same way 
             as the training data has been normalized.</outPort>
 	</ports>

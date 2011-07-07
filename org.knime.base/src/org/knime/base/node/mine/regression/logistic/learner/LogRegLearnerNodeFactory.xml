@@ -18,6 +18,10 @@
             
             This particular implementation uses an iterative optimization procedure
             termed Fisher's scoring in order to compute the model. 
+            <br />
+            If the optional PMML inport is connected and contains 
+    		preprocessing operations in the TransformationDictionary those are 
+    		added to the learned model.
 		</intro>
         <option name="Target">
             To select the target column. Only columns with nominal data are allowed.
@@ -29,6 +33,7 @@
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input data">Table on which to perform regression. The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.</inPort>
+        <inPort index="1" name="PMML Preprocessing">Optional PMML port object containing preprocessing operations.</inPort>
         <outPort index="0" name="Model for Predictor">Model to connect to a predictor node.</outPort>
         <outPort index="1" name="Coefficients and Statistics">Coefficients and statistics of the logistic regression model.</outPort>
 	</ports>

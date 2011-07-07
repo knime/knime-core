@@ -14,7 +14,10 @@
 	backpropagation learning: theRPROP algorithm",Proceedings of the IEEE 
 	International Conference on Neural Networks (ICNN) (Vol. 16, pp. 586-591).
 	Piscataway, NJ: IEEE.
-	This node provides a view of the error plot. 
+	This node provides a view of the error plot. <br />
+	If the optional PMML inport is connected and contains 
+    preprocessing operations in the TransformationDictionary those are 
+    added to the learned model.
 	</intro>
 	<option name="Maximum number of iterations">
 	The number of learning iterations.
@@ -39,6 +42,8 @@
     </fullDescription>
     <ports>
 		<inPort index="0" name = "Training Data">Datatable with training data</inPort>
+        <inPort index="1" name="PMML Preprocessing">Optional PMML port object 
+            containing preprocessing operations.</inPort>
 		<outPort index="0" name = "Neural Network">RProp trained Neural Network</outPort>
 		</ports>
     <views>

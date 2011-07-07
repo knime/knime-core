@@ -15,7 +15,10 @@
 	    that the ranges are defined in descending order and that interval 
 	    borders are consistent. In addition, each column is either replaced with
 	    the binned, string-type column, or a new binned, string-type column 
-	    is appended.
+	    is appended.<br />
+	    If the optional PMML inport is connected and contains preprocessing
+        operations in the TransformationDictionary the conversion operations
+        of this node are appended.
 		</intro>
 		
 		<option name="Select Column: ">
@@ -41,7 +44,8 @@
 	
 	<ports>
 		<inPort index="0" name="Input Data">Data to define bins</inPort>
-		<inPort index="1" name="PMML Document">PMML document to add the binning operations to.</inPort>
+		<inPort index="1" name="PMML Document">Optional PMML document to add the 
+		      binning operations to.</inPort>
 		<outPort index="0" name="Binned Data">Data with bins defined</outPort>
 	    <outPort index="1" name="PMML Model">PMML document containing binning
 	       parameters.</outPort>
