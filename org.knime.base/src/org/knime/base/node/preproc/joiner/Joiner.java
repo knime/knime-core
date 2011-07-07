@@ -202,7 +202,7 @@ public final class Joiner {
                             + "both input tables but with different data type. "
                             + "Only the one in the left input table will show "
                             + "up in the output table. Please change the "
-                            + "Duplicate Column Handlung if both columns "
+                            + "Duplicate Column Handling if both columns "
                             + "should show up in the ouput table.");
                 }
             }
@@ -1101,7 +1101,7 @@ public final class Joiner {
             if (!rightIter.hasNext()) {
                 // right table has less rows
                 m_runtimeWarnings.add("Possible problem in configuration "
-                        + "found. The \"Duplicate Column Handlung\" is "
+                        + "found. The \"Duplicate Column Handling\" is "
                         + "configured to  filter duplicates, but the "
                         + "duplicate columns are not equal since the "
                         + "left table has more elements than the right "
@@ -1121,7 +1121,7 @@ public final class Joiner {
                             + "equal. "
                             + "Only the one in the left input table will show "
                             + "up in the output table. Please change the "
-                            + "Duplicate Column Handlung if both columns "
+                            + "Duplicate Column Handling if both columns "
                             + "should show up in the ouput table.";
                 }
             }
@@ -1130,7 +1130,7 @@ public final class Joiner {
         if (rightIter.hasNext()) {
             // right table has more rows
             m_runtimeWarnings.add("Possible problem in configuration found. "
-                    + "The \"Duplicate Column Handlung\" is configured to "
+                    + "The \"Duplicate Column Handling\" is configured to "
                     + "filter duplicates, but the duplicate columns are not "
                     + "equal since the right table has more elements than the "
                     + "left table.");
