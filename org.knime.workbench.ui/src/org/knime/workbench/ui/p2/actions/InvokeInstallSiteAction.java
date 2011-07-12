@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
-import org.eclipse.equinox.p2.operations.ProvisioningJob;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.ui.PlatformUI;
@@ -79,8 +78,6 @@ public class InvokeInstallSiteAction extends AbstractP2Action {
             @Override
             public void run() {
                 provUI.getPolicy().setRepositoriesVisible(false);
-                provUI.getPolicy().setRestartPolicy(
-                        ProvisioningJob.RESTART_NONE);
                 provUI.openInstallWizard(null, null, job);
                 provUI.getPolicy().setRepositoriesVisible(true);
             }
