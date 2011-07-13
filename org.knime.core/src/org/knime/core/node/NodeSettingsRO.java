@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,17 +44,18 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.07.2006 (gabriel): created
  */
 package org.knime.core.node;
 
 import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * Read-only interface for <code>NodeSettingsRO</code> objects.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface NodeSettingsRO extends ConfigRO {
@@ -65,7 +66,14 @@ public interface NodeSettingsRO extends ConfigRO {
      * @return A new <code>NodeSettingsRO</code> object.
      * @throws InvalidSettingsException If the object can't be accessed.
      */
-    NodeSettingsRO getNodeSettings(String key) 
+    NodeSettingsRO getNodeSettings(String key)
         throws InvalidSettingsException;
-    
+
+    /**
+     * Copies this <code>NodeSettings</code> instance into a write-only
+     * <code>ConfigWO</code>.
+     * @param dest the <code>ConfigWO</code> to write this instance to.
+     */
+    public void copyTo(final ConfigWO dest);
+
 }
