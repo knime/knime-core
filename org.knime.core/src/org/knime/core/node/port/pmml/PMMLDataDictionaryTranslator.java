@@ -77,12 +77,10 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
@@ -91,8 +89,6 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  *
  */
 public class PMMLDataDictionaryTranslator implements PMMLTranslator {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            PMMLDataDictionaryTranslator.class);
     private DataTableSpec m_spec = null;
     private final List<String> m_activeDerivedFields;
     private final List<String> m_dictFields;
@@ -298,20 +294,10 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
      * @return the PMML data type for the {@link DataColumnSpec}
      */
      public static OPTYPE.Enum getOptype(final DataType dataType) {
-         OPTYPE.Enum opType;
-        if (dataType.isCompatible(NominalValue.class)
-                || dataType.isCompatible(DateAndTimeValue.class)) {
-            opType = OPTYPE.CATEGORICAL;
-        } else if (dataType.isCompatible(DoubleValue.class)) {
-            opType = OPTYPE.CONTINUOUS;
-        } else {
-            throw new IllegalArgumentException("Type " + dataType
-                    + " is not supported"
-                    + " by PMML. Allowed types are only all "
-                    + "double-compatible and all nominal value "
-                    + "compatible types.");
+        if (dataType.isCompatible(DoubleValue.class)) {
+            return OPTYPE.CONTINUOUS;
         }
-        return opType;
+        return OPTYPE.CATEGORICAL;
     }
 
      /**
