@@ -35,6 +35,7 @@ import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.LinkedList;
 
 
 /**
@@ -90,8 +92,6 @@ public class TestDataNodeModel extends NodeModel {
         new GregorianCalendar(0, 1, 1, 24, 59, 59).getTime(),
         new GregorianCalendar(4000, 1, 1, 24, 59, 59).getTime()};
 
-    private static final int noOfCols = 17;
-
 
     /**Constructor for class TestDataNodeModel.
      */
@@ -121,31 +121,33 @@ public class TestDataNodeModel extends NodeModel {
         final int noOfListItems = noOfRows * 2;
         final int noOfSetItems = noOfRows;
         for (int rowIdx = 0; rowIdx < noOfRows; rowIdx++) {
-            final DataCell[] cells = new DataCell[noOfCols];
-            int i = 0;
-            cells[i++] = getStringVal(rowIdx);
-            cells[i++] = getStringListVal(rowIdx, noOfListItems);
-            cells[i++] = getStringSetVal(rowIdx, noOfSetItems);
+            final LinkedList<DataCell> cells = new LinkedList<DataCell>();
+            cells.add(getStringVal(rowIdx));
+            cells.add(getStringListVal(rowIdx, noOfListItems));
+            cells.add(getStringSetVal(rowIdx, noOfSetItems));
 
-            cells[i++] = getIntVal(rowIdx);
-            cells[i++] = getIntListVal(rowIdx, noOfListItems);
-            cells[i++] = getIntSetVal(rowIdx, noOfSetItems);
+            cells.add(getIntVal(rowIdx));
+            cells.add(getIntListVal(rowIdx, noOfListItems));
+            cells.add(getIntSetVal(rowIdx, noOfSetItems));
 
-            cells[i++] = getDoubleVal(rowIdx);
-            cells[i++] = getDoubleListVal(rowIdx, noOfListItems);
-            cells[i++] = getDoubleSetVal(rowIdx, noOfSetItems);
+            cells.add(getDoubleVal(rowIdx));
+            cells.add(getDoubleListVal(rowIdx, noOfListItems));
+            cells.add(getDoubleSetVal(rowIdx, noOfSetItems));
 
-            cells[i++] = getTimestampVal(rowIdx);
-            cells[i++] = getTimestampListVal(rowIdx, noOfListItems);
-            cells[i++] = getTimestampSetVal(rowIdx, noOfSetItems);
+            cells.add(getTimestampVal(rowIdx));
+            cells.add(getTimestampListVal(rowIdx, noOfListItems));
+            cells.add(getTimestampSetVal(rowIdx, noOfSetItems));
 
+            cells.add(getBooleanVal(rowIdx));
+            cells.add(getBooleanListVal(noOfListItems));
+            cells.add(getBooleanSetVal(noOfSetItems));
 
-            cells[i++] = getMissingVal(rowIdx);
-            cells[i++] = getMissingValListVal(rowIdx, noOfListItems);
-            cells[i++] = getMissingValSetVal(rowIdx, noOfSetItems);
+            cells.add(getMissingVal(rowIdx));
+            cells.add(getMissingValListVal(rowIdx, noOfListItems));
+            cells.add(getMissingValSetVal(rowIdx, noOfSetItems));
 
-            cells[i++] = getStringVal(rowIdx);
-            cells[i++] = getDoubleVal(rowIdx);
+            cells.add(getStringVal(rowIdx));
+            cells.add(getDoubleVal(rowIdx));
 
             final DefaultRow row =
                 new DefaultRow(RowKey.createRowKey(rowIdx), cells);
@@ -153,6 +155,36 @@ public class TestDataNodeModel extends NodeModel {
         }
         dc.close();
         return new BufferedDataTable[] {dc.getTable()};
+    }
+
+    private DataCell getBooleanListVal(final int noOf) {
+        return CollectionCellFactory.createListCell(
+                createBooleanCollection(noOf));
+    }
+
+    private DataCell getBooleanSetVal(final int noOf) {
+        return CollectionCellFactory.createSetCell(
+                createBooleanCollection(noOf));
+    }
+
+    private Collection<DataCell> createBooleanCollection(final int noOf) {
+        final Collection<DataCell> cells =
+            new ArrayList<DataCell>(noOf);
+        for (int i = 0; i < noOf; i++) {
+            cells.add(getBooleanVal(i));
+        }
+        return cells;
+    }
+
+    /**
+     * @param rowIdx
+     * @return
+     */
+    private DataCell getBooleanVal(final int rowIdx) {
+        if (rowIdx % 2 == 0) {
+            return BooleanCell.TRUE;
+        }
+        return BooleanCell.FALSE;
     }
 
     private DataCell getMissingVal(
@@ -291,57 +323,68 @@ public class TestDataNodeModel extends NodeModel {
     }
 
     private static DataTableSpec createSpec() {
-        final DataColumnSpec[] specs = new DataColumnSpec[noOfCols];
-        int i = 0;
+        final LinkedList<DataColumnSpec> specs =
+            new LinkedList<DataColumnSpec>();
         final DataColumnSpecCreator creator =
             new DataColumnSpecCreator("StringCol", StringCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("StringListCol");
         creator.setType(ListCell.getCollectionType(StringCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("StringSetCol");
         creator.setType(SetCell.getCollectionType(StringCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
 
         creator.setName("IntCol");
         creator.setType(IntCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("IntListCol");
         creator.setType(ListCell.getCollectionType(IntCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("IntSetCol");
         creator.setType(SetCell.getCollectionType(IntCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
 
         creator.setName("DoubleCol");
         creator.setType(DoubleCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("DoubleListCol");
         creator.setType(ListCell.getCollectionType(DoubleCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("DoubleSetCol");
         creator.setType(SetCell.getCollectionType(DoubleCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
 
         creator.setName("TimestampCol");
         creator.setType(DateAndTimeCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("TimestampListCol");
         creator.setType(ListCell.getCollectionType(DateAndTimeCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("TimestampSetCol");
         creator.setType(SetCell.getCollectionType(DateAndTimeCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
+
+
+        creator.setName("BooleanCol");
+        creator.setType(BooleanCell.TYPE);
+        specs.add(creator.createSpec());
+        creator.setName("BooleanListCol");
+        creator.setType(ListCell.getCollectionType(BooleanCell.TYPE));
+        specs.add(creator.createSpec());
+        creator.setName("BooleanSetCol");
+        creator.setType(SetCell.getCollectionType(BooleanCell.TYPE));
+        specs.add(creator.createSpec());
 
         creator.setName("MissingValStringCol");
         creator.setType(StringCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("MissingValStringListCol");
         creator.setType(ListCell.getCollectionType(StringCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("MissingValStringSetCol");
         creator.setType(SetCell.getCollectionType(StringCell.TYPE));
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("LongStringColumnNameLongStringColumnName"
                 + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
                 + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
@@ -349,7 +392,7 @@ public class TestDataNodeModel extends NodeModel {
                 + "LongStringColumnNameLongStringColumnNameLongStringColumnName"
                 + "LongStringColumnNameLongStringColumnName");
         creator.setType(StringCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
         creator.setName("LongDoubleColumnNameLongDoubleColumnName"
                 + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
                 + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
@@ -357,9 +400,9 @@ public class TestDataNodeModel extends NodeModel {
                 + "LongDoubleColumnNameLongDoubleColumnNameLongDoubleColumnName"
                 + "LongDoubleColumnNameLongDoubleColumnName");
         creator.setType(DoubleCell.TYPE);
-        specs[i++] = creator.createSpec();
+        specs.add(creator.createSpec());
 
-        return new DataTableSpec(specs);
+        return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
     }
 
     /**
