@@ -78,7 +78,9 @@ public class TestDataNodeModel extends NodeModel {
         Double.MAX_VALUE, Double.MIN_VALUE, Double.MIN_NORMAL,
         -Double.MAX_VALUE, -Double.MIN_VALUE, -Double.MIN_NORMAL};
     private static final Date[] dateVals = new Date[] {
-        new Date(System.currentTimeMillis()), new Date(System.nanoTime()),
+        new Date(System.currentTimeMillis()),
+        new Date(System.nanoTime()),
+        new Date(0),
         new GregorianCalendar(1600, 1, 1).getTime(),
         new GregorianCalendar(0, 1, 1).getTime(),
         new GregorianCalendar(4000, 1, 1).getTime(),
