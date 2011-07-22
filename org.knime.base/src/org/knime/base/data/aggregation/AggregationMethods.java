@@ -48,6 +48,7 @@
 
 package org.knime.base.data.aggregation;
 
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -56,9 +57,12 @@ import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
+import org.knime.base.data.aggregation.booleancell.FalseCountOperator;
+import org.knime.base.data.aggregation.booleancell.TrueCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementOperator;
 import org.knime.base.data.aggregation.collection.ElementCountOperator;
@@ -85,6 +89,7 @@ import org.knime.base.data.aggregation.general.SortedListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
+import org.knime.base.data.aggregation.numerical.GeometricMeanOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
@@ -201,6 +206,9 @@ public final class AggregationMethods {
                 new MeanOperator(GLOBAL_SETTINGS, EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
+            /**Geometric Mean.*/
+            addOperator(new GeometricMeanOperator(GLOBAL_SETTINGS,
+                    EXCL_MISSING));
             /**Median.*/
             addOperator(new MedianOperator(GLOBAL_SETTINGS, EXCL_MISSING));
             /**Sum.*/
@@ -214,6 +222,12 @@ public final class AggregationMethods {
             /**Standard deviation.*/
             addOperator(
                     new StdDeviationOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+
+//The boolean methods
+            /**True count operator.*/
+            addOperator(new TrueCountOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            /**False count operator.*/
+            addOperator(new FalseCountOperator(GLOBAL_SETTINGS, EXCL_MISSING));
 
 //The general methods that work with all DataCells
             /**Takes the first cell per group.*/
@@ -511,6 +525,12 @@ public final class AggregationMethods {
         }
         if (type == SetDataValue.class) {
             return "Set";
+        }
+        if (type == BooleanValue.class) {
+            return "Boolean";
+        }
+        if (type == BitVectorValue.class) {
+            return "Bit vector";
         }
         final String name = type.getName();
         final int i = name.lastIndexOf('.');
