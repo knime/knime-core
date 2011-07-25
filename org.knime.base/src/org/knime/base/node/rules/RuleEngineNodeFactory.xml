@@ -61,7 +61,7 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
         </pre>
 		</intro>
 		
-		<option name="Variables">Available columns, which can be used as variables. 
+		<option name="Columns">Available columns, which can be used as variables in a rule. 
 		  Select one to add it to the rule editor field.</option>
 		<option name="Operators">A list of valid operators. Select one to add it to the rule editor field.</option>
 		<option name="Defaul label">This label is used if no rule matches.</option>

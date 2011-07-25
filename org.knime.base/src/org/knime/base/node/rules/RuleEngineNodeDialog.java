@@ -219,7 +219,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         Box listBox = Box.createHorizontalBox();
         JScrollPane variableScroller = new JScrollPane(m_variableList);
         variableScroller.setBorder(BorderFactory
-                .createTitledBorder("Variables"));
+                .createTitledBorder("Columns"));
         JScrollPane operatorScroller = new JScrollPane(m_operatorList);
         operatorScroller.setBorder(BorderFactory
                 .createTitledBorder("Operators"));
