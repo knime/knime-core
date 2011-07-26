@@ -504,6 +504,11 @@ public final class FilesHistoryPanel extends JPanel {
                     // we can only check local files, ignore everything else
                     Component editorComponent =
                         m_textBox.getEditor().getEditorComponent();
+                    if (new File(getSelectedFile()).exists()) {
+                        editorComponent.setBackground(Color.WHITE);
+                        return;
+                    }
+
                     try {
                         URL url = new URL(getSelectedFile());
                         if ("file".equalsIgnoreCase(url.getProtocol())) {
