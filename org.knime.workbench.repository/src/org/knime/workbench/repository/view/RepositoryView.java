@@ -118,6 +118,8 @@ public class RepositoryView extends ViewPart implements
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
+    private static final Boolean NON_INSTANT_SEARCH = Boolean.getBoolean(
+            KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
     /**
      * The constructor.
      */
@@ -307,10 +309,9 @@ public class RepositoryView extends ViewPart implements
 
     private void fillLocalToolBar(final IToolBarManager manager) {
         // create the combo contribution item that can filter our view
-
         m_toolbarFilterCombo =
                 new FilterViewContributionItem(m_viewer,
-                        new RepositoryViewFilter());
+                        new RepositoryViewFilter(), !NON_INSTANT_SEARCH);
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
 

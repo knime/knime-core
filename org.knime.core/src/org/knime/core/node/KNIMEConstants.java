@@ -183,6 +183,11 @@ public final class KNIMEConstants {
     public static final String PROPERTY_MAX_LOGFILESIZE =
         "knime.logfile.maxsize";
 
+    /** Java property that allows to disable the live update in the node
+         repository search. */
+   public static final String PROPERTY_REPOSITORY_NON_INSTANT_SEARCH =
+       "knime.repository.non-instant-search";
+
 
 
     /** KNIME home directory. */
