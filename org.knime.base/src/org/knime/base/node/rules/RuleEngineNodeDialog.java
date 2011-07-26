@@ -413,9 +413,9 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          * Putting it all together
          */
         Box editorBox = Box.createVerticalBox();
-        editorBox.add(defaultLabelBox);
-        editorBox.add(Box.createVerticalStrut(20));
         editorBox.add(newColNameBox);
+        editorBox.add(Box.createVerticalStrut(20));
+        editorBox.add(defaultLabelBox);
         editorBox.add(Box.createVerticalStrut(20));
         editorBox.add(ruleBox);
         editorBox.add(Box.createVerticalStrut(20));
