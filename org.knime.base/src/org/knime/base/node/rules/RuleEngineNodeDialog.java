@@ -172,7 +172,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_variableList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(final ListSelectionEvent arg0) {
-                if (!arg0.getValueIsAdjusting()) {
+                if (!arg0.getValueIsAdjusting() && (m_lastUsedTextfield != null)) {
                     String existingText = m_lastUsedTextfield.getText();
                     if (existingText.equals(RULE_LABEL)) {
                         existingText = "";
@@ -181,8 +181,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         String newText =
                                 ((DataColumnSpec)m_variableList
                                         .getSelectedValue()).getName();
-                        m_lastUsedTextfield.setText(existingText + " $"
-                                + newText + "$");
+                        m_lastUsedTextfield.setText((existingText + " $"
+                                + newText + "$").trim());
                         m_lastUsedTextfield.requestFocusInWindow();
                         if (m_lastUsedTextfield == m_ruleLabelEditor) {
                             m_outcomeIsColumn.setSelected(true);
@@ -419,7 +419,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         editorBox.add(Box.createVerticalStrut(20));
         editorBox.add(ruleBox);
         editorBox.add(Box.createVerticalStrut(20));
-        m_error = new JLabel();
+        m_error = new JLabel(" ");
         m_error.setForeground(Color.RED);
         editorBox.add(m_error);
         editorBox.setBorder(BorderFactory.createEtchedBorder());
@@ -609,7 +609,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             if (offset <= m_ruleEditor.getText().length()) {
                 m_ruleEditor.requestFocusInWindow();
                 m_ruleEditor.setCaretPosition(offset);
-            } else {
+            } else if ((offset - m_ruleEditor.getText().length())
+                    <= m_ruleLabelEditor.getText().length()) {
                 m_ruleLabelEditor.requestFocusInWindow();
                 m_ruleLabelEditor.setCaretPosition(offset
                         - m_ruleEditor.getText().length() - 2);
