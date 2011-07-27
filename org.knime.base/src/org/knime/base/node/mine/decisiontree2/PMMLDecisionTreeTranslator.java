@@ -503,14 +503,14 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
                         new DecisionTreeNodeSplitPMML(id,
                                 getMajorityClass(pmmlNode),
                                 getClassCount(pmmlNode),
-                                getSplitAttribute(pmmlNode), pmmlPredicates,
+                                getChildrenSplitAttribute(pmmlNode), pmmlPredicates,
                                 children, knimeDefaultChildIndex);
             } else {
                 knimeNode =
                     new DecisionTreeNodeSplitPMML(id,
                             getMajorityClass(pmmlNode),
                             getClassCount(pmmlNode),
-                            getSplitAttribute(pmmlNode), pmmlPredicates,
+                            getChildrenSplitAttribute(pmmlNode), pmmlPredicates,
                             children);
             }
             return knimeNode;
@@ -727,14 +727,30 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
         String value = xmlSimplePredicate.getValue();
         return new PMMLSimplePredicate(field, operator, value);
     }
-
-    private String getSplitAttribute(final Node node) {
+    
+    /* Retrieve the common split attribute of all children. The tree 
+     * representation of KNIME is different than in PMML: KNIME stores the
+     * split attribute in its parent while PMML stores it as predicate with the
+     * node itself. Hence we have to look at the children to get the KNIME
+     * representation. */
+    private String getChildrenSplitAttribute(final Node node) {
         String splitAttribute = null;
-
-        if (node.getSimplePredicate() != null) {
-            splitAttribute = node.getSimplePredicate().getField();
-        } else if (null != node.getSimpleSetPredicate()) {
-            splitAttribute = node.getSimpleSetPredicate().getField();
+        for (Node child : node.getNodeArray()) {
+            String childSplit = null;
+            if (child.getSimplePredicate() != null) {
+                childSplit = child.getSimplePredicate().getField();
+            } else if (child.getSimpleSetPredicate() != null) {
+                childSplit = child.getSimpleSetPredicate().getField();
+            }
+            if (childSplit == null) {
+                continue;
+            }
+            if (splitAttribute != null && !splitAttribute.equals(childSplit)) {
+                // to stay compatible with previous implementation
+                return "";
+            } else {
+                splitAttribute = childSplit;
+            }
         }
 
         if (splitAttribute != null) {

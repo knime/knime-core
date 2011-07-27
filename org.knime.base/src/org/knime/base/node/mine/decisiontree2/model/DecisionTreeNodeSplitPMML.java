@@ -311,11 +311,12 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         DecisionTreeNode matchingChild = getMatchingChild(row, spec);
         if (matchingChild != null && matchingChild != this) {
             matchingChild.addCoveredPattern(row, spec, weight);
-        } else {
+        } else if (matchingChild == null){
+            /* It is an error if we have no matching child at all.*/
             LOGGER.debug("Decision Tree HiLiteAdder failed."
                     + " Could not find branch for value '" + cell.toString()
                     + "' for attribute '" + getSplitAttr() + "'."
-                    + "Ignoring pattern.");
+                    + " Ignoring pattern.");
         }
         Color col = spec.getRowColor(row).getColor();
         addColorToMap(col, weight);
@@ -331,14 +332,15 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         DecisionTreeNode matchingChild = getMatchingChild(row, spec);
         if (matchingChild != null && matchingChild != this) {
             matchingChild.addCoveredColor(row, spec, weight);
-            Color col = spec.getRowColor(row).getColor();
-            addColorToMap(col, weight);
-        } else {
+        } else if (matchingChild == null) {
+            /* It is an error if we have no matching child at all.*/
             LOGGER.debug("Decision Tree HiLiteAdder failed."
                     + " Could not find branch for value '" + cell.toString()
                     + "' for attribute '" + getSplitAttr().toString() + "'."
-                    + "Ignoring pattern.");
+                    + " Ignoring pattern.");
         }
+        Color col = spec.getRowColor(row).getColor();
+        addColorToMap(col, weight);
     }
 
     /**
