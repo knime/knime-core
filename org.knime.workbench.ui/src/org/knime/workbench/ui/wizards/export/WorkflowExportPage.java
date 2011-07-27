@@ -305,6 +305,7 @@ public class WorkflowExportPage extends WizardPage {
                     setParentTreeChecked(
                             m_treeViewer, element, isChecked);
                 }
+                dialogChanged();
                 getWizard().getContainer().updateButtons();
             }
 
@@ -533,8 +534,12 @@ public class WorkflowExportPage extends WizardPage {
      */
 
     private void dialogChanged() {
-        IContainer container = getSelectedContainer();
-        if (container == null || container instanceof IWorkspaceRoot) {
+        Collection<IContainer> workflows = getWorkflows();
+        final List<IResource> list = new ArrayList<IResource>();
+        for (IContainer c : workflows) {
+            WorkflowExportWizard.addResourcesFor(list, c, excludeData());
+        }
+        if (list.isEmpty()) {
             updateStatus("Select an element to export!");
             return;
         }
