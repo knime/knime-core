@@ -50,6 +50,7 @@ package org.knime.core.node.port.pmml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -721,6 +722,8 @@ public final class PMMLPortObject implements PortObject {
             }
         }
         dataDict.setDataFieldArray(dataFields.toArray(new DataField[0]));
+        // update the number of fields
+        dataDict.setNumberOfFields(BigInteger.valueOf(dataFields.size()));
 
         // -------------------------------------------------
         // update field names in the model if applicable
