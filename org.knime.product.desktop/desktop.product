@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.4.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.4.1.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/knime64.gif"/>

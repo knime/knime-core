@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
-Bundle-Version: 2.4.0.qualifier
+Bundle-Version: 2.4.1.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/pmmlbeans-1.0-jar-with-dependencies.jar,
  lib/saxon-he-9.2.0.5.jar,
