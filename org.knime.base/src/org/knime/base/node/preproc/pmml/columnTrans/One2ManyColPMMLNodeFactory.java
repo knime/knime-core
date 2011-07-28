@@ -46,21 +46,66 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.base.node.preproc.columnTrans;
+package org.knime.base.node.preproc.pmml.columnTrans;
 
-import org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel;
+import org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
- * This node converts one column to many columns, such that each possible value
- * becomes an extra column with the value 1 if the row contains this value in
- * the original column and 0 otherwise.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Dominik Morent, University of Konstanz
  */
-public class One2ManyColNodeModel extends One2ManyColPMMLNodeModel {
+public class One2ManyColPMMLNodeFactory extends NodeFactory {
+
     /**
+     *
      */
-    public One2ManyColNodeModel() {
-        super(false);
+    public One2ManyColPMMLNodeFactory() {
+        super();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeModel createNodeModel() {
+        return new One2ManyColPMMLNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new One2ManyColNodeDialog();
+    }
+
 }

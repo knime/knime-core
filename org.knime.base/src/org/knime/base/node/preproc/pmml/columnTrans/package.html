@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,24 +43,21 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- */
-package org.knime.base.node.preproc.columnTrans;
+====================================================================
+-->
+<body>
+	This package contains the PMML enabled version of the classes of the
+	Many2One and One2Many column transformation nodes. The One2Many node
+	creates for each distinct value of the selected column(s) a new column
+	with the value as name. The Many2One node creates a new column from
+	multiple columns with the name of the column which matches the include
+	criteria as value.
+	<p>
+<p>Both nodes use the {@link org.knime.core.data.container.ColumnRearranger}
 
-import org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel;
+class to append the result columns to the input table. The 
+<code>ColumnRearranger</code> is fed by the different factory classes which 
+implement the {@link org.knime.core.data.container.CellFactory} interface. 
+</p>
 
-/**
- * This node converts one column to many columns, such that each possible value
- * becomes an extra column with the value 1 if the row contains this value in
- * the original column and 0 otherwise.
- *
- * @author Fabian Dill, University of Konstanz
- */
-public class One2ManyColNodeModel extends One2ManyColPMMLNodeModel {
-    /**
-     */
-    public One2ManyColNodeModel() {
-        super(false);
-    }
-}
+</body>
