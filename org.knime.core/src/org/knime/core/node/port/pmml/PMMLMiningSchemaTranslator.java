@@ -52,8 +52,10 @@
 package org.knime.core.node.port.pmml;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlObject;
@@ -186,17 +188,26 @@ public class PMMLMiningSchemaTranslator {
             final XmlObject model) {
         MiningSchema miningSchema = MiningSchema.Factory.newInstance();
 
+        // avoid duplicate entries
+        Set<String> learningNames = new HashSet<String>(
+                portSpec.getLearningFields());
+        Set<String> targetNames = new HashSet<String>(
+                portSpec.getTargetFields());
+
         for (String colName : portSpec.getLearningFields()) {
-            MiningField miningField = miningSchema.addNewMiningField();
-            miningField.setName(colName);
-            miningField.setInvalidValueTreatment(
-                    INVALIDVALUETREATMENTMETHOD.AS_IS);
-            // don't write usageType = active (is default)
+            if (!targetNames.contains(colName)) {
+                MiningField miningField = miningSchema.addNewMiningField();
+                miningField.setName(colName);
+                miningField.setInvalidValueTreatment(
+                        INVALIDVALUETREATMENTMETHOD.AS_IS);
+                // don't write usageType = active (is default)
+            }
         }
 
         // add all fields referenced in local transformations
         for (String colName : portSpec.getPreprocessingFields()) {
-            if (!portSpec.getLearningFields().contains(colName)) {
+            if (!learningNames.contains(colName)
+                    && !targetNames.contains(colName)) {
                 MiningField miningField = miningSchema.addNewMiningField();
                 miningField.setName(colName);
                 miningField.setInvalidValueTreatment(
