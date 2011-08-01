@@ -107,7 +107,13 @@ final class ColumnRenameRegexNodeModel extends NodeModel {
             Matcher m = searchPattern.matcher(oldName);
             StringBuffer sb = new StringBuffer();
             while (m.find()) {
-                m.appendReplacement(sb, replace);
+                try {
+                    m.appendReplacement(sb, replace);
+                } catch (IndexOutOfBoundsException ex) {
+                    throw new InvalidSettingsException(
+                            "Error in replacement string: " + ex.getMessage(),
+                            ex);
+                }
             }
             m.appendTail(sb);
             final String newName = sb.toString();
