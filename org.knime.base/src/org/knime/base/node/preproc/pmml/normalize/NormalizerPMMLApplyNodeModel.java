@@ -91,7 +91,8 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
 
        PMMLNormalizeTranslator translator = new PMMLNormalizeTranslator();
        translator.initializeFrom(model.getDerivedFields());
-       AffineTransConfiguration config = translator.getAffineTransConfig();
+       AffineTransConfiguration config = getAffineTrans(
+                 translator.getAffineTransConfig());
        if (config.getNames().length == 0) {
            throw new IllegalArgumentException("No normalization configuration "
                    + "found.");
@@ -103,5 +104,17 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
        }
        return new PortObject[]{model, bdt};
    }
+
+
+   /**
+    * Return the configuration with possible additional transformations made.
+    * 
+    * @param affineTransConfig the original affine transformation configuration.
+    * @return the (possible modified) configuration.
+    */
+    protected AffineTransConfiguration getAffineTrans(
+                    final AffineTransConfiguration affineTransConfig) {
+              return affineTransConfig;
+    }
 
 }

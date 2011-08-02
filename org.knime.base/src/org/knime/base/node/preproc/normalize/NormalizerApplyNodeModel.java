@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
 import org.knime.base.data.normalize.Normalizer;
 import org.knime.base.data.normalize.NormalizerPortObject;
@@ -88,22 +89,22 @@ public class NormalizerApplyNodeModel extends NodeModel {
     }
 
     /**
-     * @param modelPortType
+     * @param modelPortType the port type.
      */
     protected NormalizerApplyNodeModel(final PortType modelPortType) {
         this(modelPortType, false);
     }
 
     /**
-     * @param modelPortType
+     * @param modelPortType the input port type.
      * @param passThrough if set to true, the incoming model is passed through
      *          as model outport
      */
     protected NormalizerApplyNodeModel(final PortType modelPortType,
             final boolean passThrough) {
         super(new PortType[]{modelPortType, BufferedDataTable.TYPE},
-                passThrough ?
-                        new PortType[]{modelPortType, BufferedDataTable.TYPE}
+                passThrough 
+                ? new PortType[]{modelPortType, BufferedDataTable.TYPE}
                         : new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -147,13 +148,25 @@ public class NormalizerApplyNodeModel extends NodeModel {
         NormalizerPortObject model = (NormalizerPortObject)inData[0];
         BufferedDataTable table = (BufferedDataTable)inData[1];
         AffineTransTable t = new AffineTransTable(
-                table, model.getConfiguration());
+                table, getAffineTrans(model.getConfiguration()));
         BufferedDataTable bdt = exec.createBufferedDataTable(t, exec);
         if (t.getErrorMessage() != null) {
             setWarningMessage(t.getErrorMessage());
         }
         return new BufferedDataTable[]{bdt};
     }
+    
+    /**
+     * Return the configuration with possible additional transformations made.
+     * 
+     * @param affineTransConfig the original affine transformation 
+     * configuration.
+     * @return the (possible modified) configuration.
+     */
+     protected AffineTransConfiguration getAffineTrans(
+                     final AffineTransConfiguration affineTransConfig) {
+               return affineTransConfig;
+     }
 
     /**
      * {@inheritDoc}
