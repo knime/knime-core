@@ -77,9 +77,9 @@ public class AtomicDouble {
     }
 
     /**
-     * Decrements this double by the given decrement.
+     * Increments this double by the given increment.
      *
-     * @param incrementValue the value to subtract from this double
+     * @param incrementValue the value to add to the double
      * @return the value after incrementing
      */
     public synchronized double incrementAndGet(final double incrementValue) {
