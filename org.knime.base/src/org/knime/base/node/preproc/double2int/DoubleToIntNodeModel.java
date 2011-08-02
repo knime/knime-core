@@ -56,7 +56,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
-import org.knime.base.node.preproc.colconvert.ColConvertNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -92,7 +91,7 @@ public class DoubleToIntNodeModel extends NodeModel {
   
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ColConvertNodeModel.class);
+            NodeLogger.getLogger(DoubleToIntNodeModel.class);
 
     /**
      * Key for the included columns in the NodeSettings.
