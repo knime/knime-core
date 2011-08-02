@@ -98,9 +98,10 @@ public class ExponentialMA extends MovingAverage {
     }
 
     /**
-     * @return the current mean.
+     * {@inheritDoc}
      */
-    protected double getMean() {
+    @Override
+   public double getMean() {
         return m_avg;
     }
 

@@ -120,9 +120,10 @@ public abstract class SlidingWindowMovingAverage extends MovingAverage {
     }
 
     /**
-     * @return the currently saved mean value
+     * {@inheritDoc}
      */
-    protected double getMean() {
+    @Override
+   public double getMean() {
         return m_avg;
     }
 

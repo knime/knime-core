@@ -85,13 +85,20 @@ public class TripleExponentialMA extends MovingAverage {
             if (!dc.isMissing()) {
                 dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
                 if (!dc.isMissing()) {
-                    double trema = 3 * m_ema.getMean() - 3 * m_emaema.getMean()
-                            + m_emaemaema.getMean();
-                    return new DoubleCell(trema);
+                    return new DoubleCell(getMean());
                 }
             }
         }
         return dc;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+   public double getMean() {
+        return 3 * m_ema.getMean() - 3 * m_emaema.getMean()
+                        + m_emaemaema.getMean();
     }
 
 }

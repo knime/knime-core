@@ -79,11 +79,18 @@ public class DoubleExpMA extends MovingAverage {
         if (!dc.isMissing()) {
             dc = m_emaema.getMeanandUpdate(m_ema.getMean());
             if (!dc.isMissing()) {
-                double dema = 2 * m_ema.getMean() - m_emaema.getMean();
-                return new DoubleCell(dema);
+               return new DoubleCell(getMean());
             }
         }
         return dc;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+   public double getMean() {
+        return  2 * m_ema.getMean() - m_emaema.getMean();
     }
 
 }

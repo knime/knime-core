@@ -82,14 +82,8 @@ public class WeightedMA extends MovingAverage {
         Double oldVal = m_window.addandget(newValue);
         if (oldVal == null) {
             return DataType.getMissingCell();
-        }
-        double avg = 0;
-        int counter = 0;
-        for (Double d : m_window.getList()) {
-            avg += d.doubleValue() * m_weights[counter];
-            counter++;
-        }
-        return new DoubleCell(avg);
+        }        
+        return new DoubleCell(getMean());
     }
 
     /**
@@ -155,6 +149,21 @@ public class WeightedMA extends MovingAverage {
             final int windowsize) {
         double sigma =  (windowsize - 1) / 4.0;
         return getGaussianWeightedInstance(windowsize, 0, sigma * sigma);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+   public double getMean() {
+
+        double avg = 0;
+        int counter = 0;
+        for (Double d : m_window.getList()) {
+            avg += d.doubleValue() * m_weights[counter];
+            counter++;
+        }
+        return avg;
     }
 
 }

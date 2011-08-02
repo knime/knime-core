@@ -82,5 +82,13 @@ public class CumulativeMA extends MovingAverage {
         m_counter++;
         return new DoubleCell(m_avg);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double getMean() {
+        return m_avg;
+    }
 
 }

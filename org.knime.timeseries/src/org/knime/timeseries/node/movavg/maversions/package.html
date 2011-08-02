@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,35 +43,9 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
- *
- */
-package org.knime.timeseries.node.movavg.maversions;
-
-import org.knime.core.data.DataCell;
-
-/**
- * Implements Moving Average on a time series.
- *
- * @author Iris Adae, University of Konstanz, Germany
- */
-public abstract class MovingAverage {
-
-    /** This method should take care of two task.
-     * First it should include the given value into the currently
-     * saved average. And return it.
-     *
-     * Additionally it should e.g. in the sliding window approach,
-     * remove no longer needed values.
-     *
-     * @param newValue the new value
-     * @return the current average as a DoubleCell
-     */
-    public abstract DataCell getMeanandUpdate(final double newValue);
-    
-    /**
-     * @return the mean of the method
-     */
-    public abstract double getMean();
-
-}
+====================================================================
+-->
+<body>
+  This package contains classes which are able to perform
+  different moving average implementations
+</body>

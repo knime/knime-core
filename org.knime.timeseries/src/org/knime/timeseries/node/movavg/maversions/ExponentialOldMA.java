@@ -158,4 +158,13 @@ public class ExponentialOldMA extends MovingAverage {
             m_expWeight = 2.0 / (m_winLength + 1);
 
         }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+       public double getMean() {
+            return m_avg;
+        }
     }
