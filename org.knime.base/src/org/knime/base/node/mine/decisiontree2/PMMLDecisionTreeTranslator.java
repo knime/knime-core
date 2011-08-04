@@ -727,14 +727,14 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
         String value = xmlSimplePredicate.getValue();
         return new PMMLSimplePredicate(field, operator, value);
     }
-    
-    /* Retrieve the common split attribute of all children. The tree 
+
+    /* Retrieve the common split attribute of all children. The tree
      * representation of KNIME is different than in PMML: KNIME stores the
      * split attribute in its parent while PMML stores it as predicate with the
      * node itself. Hence we have to look at the children to get the KNIME
      * representation. */
     private String getChildrenSplitAttribute(final Node node) {
-        String splitAttribute = null;
+        String splitAttribute = "";
         for (Node child : node.getNodeArray()) {
             String childSplit = null;
             if (child.getSimplePredicate() != null) {
