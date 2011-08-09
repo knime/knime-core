@@ -27,7 +27,6 @@ import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
@@ -104,27 +103,19 @@ public class DropNodeCommand extends AbstractKNIMECommand {
 
                 // This is embedded in a special JFace wrapper dialog
                 //
-                try {
-                    WrappedNodeDialog dlg =
-                            new WrappedNodeDialog(
-                                    Display.getCurrent().getActiveShell(), m_container);
-                    dlg.open();
-                } catch (NotConfigurableException ex) {
-                    MessageBox mb =
-                            new MessageBox(Display.getDefault().getActiveShell(),
-                                    SWT.ICON_WARNING | SWT.OK);
-                    mb.setText("Dialog cannot be opened");
-                    mb.setMessage("The dialog cannot be opened for the following"
-                            + " reason:\n" + ex.getMessage());
-                    mb.open();
-                } catch (Throwable t) {
-                    LOGGER.error(
-                            "The dialog pane for node '" + m_container.getNameWithID()
-                                    + "' has thrown a '" + t.getClass().getSimpleName()
-                                    + "'. That is most likely an implementation error.",
-                            t);
-                }
-
+                Display.getDefault().asyncExec(new Runnable() {
+                    public void run() {
+                        try {
+                            WrappedNodeDialog dlg =
+                                new WrappedNodeDialog(
+                                        Display.getCurrent().getActiveShell(),
+                                        m_container);
+                            dlg.open();
+                        } catch (Throwable t) {
+                            // they need to open it manually then
+                        }
+                    }
+                });
             }
 
         } catch (Throwable t) {
