@@ -28,12 +28,12 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, KNIME.com GmbH
  */
-public class OpenCredentialVariablesDialogAction 
+public class OpenCredentialVariablesDialogAction
         extends AbstractWorkflowAction {
-    
+
     /**
      * {@inheritDoc}
      */
@@ -44,17 +44,17 @@ public class OpenCredentialVariablesDialogAction
         final WorkflowManager wf = getWorkflow();
         // open the dialog
         final Display d = Display.getDefault();
-        // run in UI thread 
+        // run in UI thread
         d.asyncExec(new Runnable() {
             @Override
             public void run() {
                 CredentialsStore store = wf.getCredentialsStore();
-                CredentialVariablesDialog dialog = 
-                    new CredentialVariablesDialog(d.getActiveShell(), store, 
+                CredentialVariablesDialog dialog =
+                    new CredentialVariablesDialog(d.getActiveShell(), store,
                         wf.getName());
                 if (dialog.open() == Dialog.OK) {
-                    for (Credentials cred : store.getCredentials()) {
-                        store.remove(cred.getName());
+                    for (String name : store.listNames()) {
+                        store.remove(name);
                     }
                     List<Credentials> credentials = dialog.getCredentials();
                     for (Credentials cred : credentials) {
@@ -64,7 +64,7 @@ public class OpenCredentialVariablesDialogAction
             }
         });
     }
-    
+
     /**
      * {@inheritDoc}
      */
