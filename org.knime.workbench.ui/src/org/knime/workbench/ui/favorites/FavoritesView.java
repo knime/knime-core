@@ -115,13 +115,19 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
                 final Object category = root.getChildByID(
                         FavoriteNodesManager.FAV_CAT_ID, false);
 
-                Display.getDefault().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_viewer.setInput(root);
-                        m_viewer.expandToLevel(category, 1);
-                    }
-                });
+                if (monitor.isCanceled()) {
+                    return Status.CANCEL_STATUS;
+                } else {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!parent.isDisposed()) {
+                                m_viewer.setInput(root);
+                                m_viewer.expandToLevel(category, 1);
+                            }
+                        }
+                    });
+                }
                 return Status.OK_STATUS;
             }
         };
