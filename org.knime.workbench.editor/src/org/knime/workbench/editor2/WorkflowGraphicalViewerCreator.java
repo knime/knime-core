@@ -127,8 +127,13 @@ public class WorkflowGraphicalViewerCreator {
                 new WorkflowEditorFileDropTargetListener(viewer));
         viewer.addDropTargetListener(
                 new WorkflowEditorSelectionDropListener(viewer));
-        viewer.addDragSourceListener(
-                new WorkflowEditorTemplateDragSourceListener(viewer));
+
+        // DO NOT Add drag listener
+        /* Don't add any drag listener here. Processing of drag events seems
+         * to influence GEF events (resize, node move, create connection).
+         * See bug 2844 for details (linux only) */
+        // viewer.addDragSourceListener(
+        //        new WorkflowEditorTemplateDragSourceListener(viewer));
         MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);
