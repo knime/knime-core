@@ -51,6 +51,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
+import org.osgi.framework.Bundle;
 
 /**
  * The run method of this class is executed when KNIME is run headless, that is
@@ -72,8 +73,8 @@ public class KNIMEBatchApplication implements IApplication {
             System.setProperty("java.awt.headless", "true");
         }
         // load the ui plugin to read the preferences
-        // KNIMEUIPlugin.getDefault();
-        Platform.getBundle("org.knime.workbench.core").start();
+        Platform.getBundle("org.knime.workbench.core").start(
+                Bundle.START_TRANSIENT);
 
         Object args =
                 context.getArguments()
