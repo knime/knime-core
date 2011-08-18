@@ -19,7 +19,6 @@
 package org.knime.workbench.ui.navigator;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -55,8 +54,63 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @see KnimeResourcePatternFilter
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ *
+ * History: 2011-08-11 (ohl): Changing the key in the map.
+ * Turns out some places (e.g. IResource.getLocationURI) create URIs without
+ * trailing slash, others (e.g. File.toURI) with trailing slash. Removing the
+ * slash and re-creating the URI fails for network drives under Windows (these
+ * drives have two slashes at the beginning of their path causing a "file-URI
+ * has an authority" error).
+ *
  */
 public final class ProjectWorkflowMap {
+
+    private static class MapWFKey {
+        private final String m_key;
+        private final URI m_uri;
+        private MapWFKey(final URI workflow) {
+            m_uri = workflow;
+            m_key = addTrailingSlash(workflow.toString());
+        }
+        private String addTrailingSlash(final String path) {
+          if (path.endsWith("/")) {
+              return path;
+          } else {
+              return path + "/";
+          }
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj instanceof MapWFKey) {
+                return ((MapWFKey)obj).m_key.equals(m_key);
+            }
+            return false;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return m_key.hashCode();
+        }
+        /**
+         * @return the uri
+         */
+        public URI getURI() {
+            return m_uri;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return m_key;
+        }
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ProjectWorkflowMap.class);
@@ -76,23 +130,22 @@ public final class ProjectWorkflowMap {
      * {@link #PROJECTS}.
      *
      */
-    private static final Map<URI, Set<Object>>WORKFLOW_CLIENTS
-        = new HashMap<URI, Set<Object>>();
+    private static final Map<MapWFKey, Set<Object>>WORKFLOW_CLIENTS
+        = new HashMap<MapWFKey, Set<Object>>();
 
     /*
      * Map with name of workflow path and referring workflow manager
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
      * (This map contains only open workflows.)
      */
-    private static final Map<URI, NodeContainer> PROJECTS
-        = new LinkedHashMap<URI, NodeContainer>() {
+    private static final Map<MapWFKey, NodeContainer> PROJECTS
+        = new LinkedHashMap<MapWFKey, NodeContainer>() {
 
         @Override
-        public NodeContainer put(final URI key, final NodeContainer value) {
+        public NodeContainer put(final MapWFKey key, final NodeContainer value) {
             NodeContainer old = super.put(key, value);
             if (old != null) {
-                LOGGER.debug("Removing \"" + key
-                        + "\" from project map");
+                LOGGER.debug("Removing \"" + key + "\" from project map");
             }
             if (value != null) {
                 LOGGER.debug("Adding \"" + key
@@ -121,7 +174,10 @@ public final class ProjectWorkflowMap {
      */
     public static final void registerClientTo(final URI workflow,
             final Object client) {
-        URI wf = removeTrailingSlash(workflow);
+        if (workflow == null) {
+            return;
+        }
+        MapWFKey wf = new MapWFKey(workflow);
         Set<Object> callers = WORKFLOW_CLIENTS.get(wf);
         if (callers == null) {
             callers = new HashSet<Object>();
@@ -143,10 +199,10 @@ public final class ProjectWorkflowMap {
      */
     public static final void unregisterClientFrom(final URI workflow,
             final Object client) {
-        URI wf = removeTrailingSlash(workflow);
-        if (wf == null) {
+        if (workflow == null) {
             return;
         }
+        MapWFKey wf = new MapWFKey(workflow);
         if (!WORKFLOW_CLIENTS.containsKey(wf)) {
             return;
         }
@@ -267,9 +323,9 @@ public final class ProjectWorkflowMap {
     public static void replace(final URI newPath,
             final WorkflowManager nc, final URI oldPath) {
         if (oldPath != null) {
-            PROJECTS.remove(removeTrailingSlash(oldPath));
+            PROJECTS.remove(new MapWFKey(oldPath));
         }
-        putWorkflow(removeTrailingSlash(newPath), nc);
+        putWorkflow(newPath, nc);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
                 WorkflowEvent.Type.NODE_ADDED, nc.getID(),
                 null, nc));
@@ -284,7 +340,7 @@ public final class ProjectWorkflowMap {
      * {@link WorkflowManager} is stored in the map.
      */
     public static void remove(final URI path) {
-        URI p = removeTrailingSlash(path);
+        MapWFKey p = new MapWFKey(path);
         WorkflowManager manager = (WorkflowManager)PROJECTS.get(p);
         // workflow is only in client map if there is at least one client
         if (manager != null && !WORKFLOW_CLIENTS.containsKey(p)) {
@@ -318,7 +374,7 @@ public final class ProjectWorkflowMap {
      */
     public static void putWorkflow(final URI path,
             final WorkflowManager manager) {
-        URI p = removeTrailingSlash(path);
+        MapWFKey p = new MapWFKey(path);
         // in case the manager is replaced
         // -> unregister listeners from the old one
         NodeContainer oldOne = PROJECTS.get(p);
@@ -352,7 +408,7 @@ public final class ProjectWorkflowMap {
      * if the workflow manager is not registered with the passed URI
      */
     public static NodeContainer getWorkflow(final URI path) {
-        return PROJECTS.get(removeTrailingSlash(path));
+        return PROJECTS.get(new MapWFKey(path));
     }
 
     /**
@@ -365,9 +421,9 @@ public final class ProjectWorkflowMap {
      *         null, if the workflow is not registered (not opened).
      */
     public static final URI findProjectFor(final NodeID workflowID) {
-        for (Map.Entry<URI, NodeContainer> entry : PROJECTS.entrySet()) {
+        for (Map.Entry<MapWFKey, NodeContainer> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
-                return entry.getKey();
+                return entry.getKey().getURI();
             }
         }
         return null;
@@ -441,32 +497,4 @@ public final class ProjectWorkflowMap {
         NODE_PROP_LISTENERS.remove(l);
     }
 
-    /**
-     * Returns the argument it its path doesn't end with a slash - otherwise a
-     * new URI object with the path without trailing slash.
-     *
-     * @param uri to remove the trailing slash from.
-     * @return the argument it its path doesn't end with a slash - otherwise a
-     *         new URI object with the path without trailing slash.
-     */
-    public static URI removeTrailingSlash(final URI uri) {
-        if (uri == null) {
-            return null;
-        }
-        String path = uri.getPath();
-        if (path == null) {
-            return uri;
-        }
-        if (path.endsWith("/")) {
-            // remove trailing slashes }
-            path = path.substring(0, path.length() - 1);
-            try {
-                return new URI(uri.getScheme(), uri.getHost(), path,
-                        uri.getFragment());
-            } catch (URISyntaxException e) {
-                // if that doesn't work - return the original
-            }
-        }
-        return uri;
-    }
 }
