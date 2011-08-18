@@ -188,6 +188,9 @@ public final class KNIMEConstants {
    public static final String PROPERTY_REPOSITORY_NON_INSTANT_SEARCH =
        "knime.repository.non-instant-search";
 
+   /** Java property for the location of the license directory. */
+   public static final String PROPERTY_LICENSE_DIRECTORY =
+       "com.knime.licensedir";
 
 
     /** KNIME home directory. */
