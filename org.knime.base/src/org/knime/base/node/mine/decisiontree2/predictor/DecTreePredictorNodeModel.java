@@ -275,7 +275,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
             if (m_showDistribution.getBooleanValue()) {
                 for (int i = numInCells; i < newCells.length - 1; i++) {
                     String predClass = outSpec.getColumnSpec(i).getName();
-                    if (classDistrib != null) {
+                    if (classDistrib != null
+                            && classDistrib.get(predClass) != null) {
                         newCells[i] = new DoubleCell(
                                 classDistrib.get(predClass));
                     } else {
