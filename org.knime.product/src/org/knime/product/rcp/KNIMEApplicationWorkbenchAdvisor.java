@@ -47,16 +47,25 @@
  */
 package org.knime.product.rcp;
 
+import java.lang.reflect.Method;
+
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
 
 /**
@@ -65,6 +74,9 @@ import org.osgi.framework.Bundle;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(KNIMEApplicationWorkbenchAdvisor.class);
+
     /**
      * {@inheritDoc}
      */
@@ -107,9 +119,28 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     public void postStartup() {
         super.postStartup();
         // initialize org.eclipse.core.net so that the Authenticator
-        // for the Update Manager is set and it ask the user for a password
+        // for the Update Manager is set and it asks the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
+
+        boolean showTipsAndTricks = true;
+        try {
+            Class<?> c = Class.forName("com.knime.licenses.LicenseStore");
+            Method m = c.getMethod("validLicense", String.class);
+            if ((Boolean)m.invoke(null, "Professional")) {
+                IPreferenceStore pStore =
+                        KNIMEUIPlugin.getDefault().getPreferenceStore();
+                showTipsAndTricks = pStore.getBoolean(
+                        PreferenceConstants.P_TIPS_AND_TRICKS);
+            }
+        } catch (Exception ex) {
+            // likely no license classes found
+            LOGGER.info("Error while reading preferences", ex);
+        }
+
+        if (showTipsAndTricks) {
+            TipsAndTricksAction.openTipsAndTricks();
+        }
     }
 
     /**
@@ -129,5 +160,25 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
                 Platform.getLog(myself).log(error);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean preShutdown() {
+        // close Tips&Tricks window because it won't get restored automatically
+        // during the next start and may leave holes in the workbench
+        IWorkbenchPage page =
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                        .getActivePage();
+
+        for (IEditorReference eref : page.getEditorReferences()) {
+            if ("Tips and Tricks".equals(eref.getTitle())) {
+                page.closeEditor(eref.getEditor(false), false);
+            }
+        }
+
+        return super.preShutdown();
     }
 }

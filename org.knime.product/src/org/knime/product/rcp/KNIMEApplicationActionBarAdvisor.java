@@ -94,7 +94,7 @@ import org.knime.workbench.ui.preferences.ExportPreferencesAction;
 import org.knime.workbench.ui.preferences.ImportPreferencesAction;
 
 /**
- * This advisor is resposible for creating the workbench actions and fills them
+ * This advisor is responsible for creating the workbench actions and fills them
  * into the menu / cool bar of the workbench window.
  *
  * @author Florian Georg, University of Konstanz
@@ -119,6 +119,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_helpAction;
 
     private IWorkbenchAction m_helpSearchAction;
+
+    private IAction m_helpTipsAction;
 
     private IWorkbenchAction m_cutAction;
 
@@ -259,6 +261,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_helpSearchAction = ActionFactory.HELP_SEARCH.create(window);
         register(m_helpSearchAction);
 
+        m_helpTipsAction = new TipsAndTricksAction();
+        register(m_helpTipsAction);
+
         m_aboutAction = ActionFactory.ABOUT.create(window);
         register(m_aboutAction);
 
@@ -274,14 +279,20 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     }
 
     /**
-     * Fills the menu bar with the main menus for the windows. Some anchors were added below the last action of each division for convenience.
-     * These anchors are named after the action above them, e.g.: "file/ImportPreferences" is located below "Import Preferences..." but above the seperator.
+     * Fills the menu bar with the main menus for the windows. Some anchors were
+     * added below the last action of each division for convenience.
+     * These anchors are named after the action above them, e.g.:
+     * "file/ImportPreferences" is located below "Import Preferences..."
+     * but above the separator.
+     *
+     * {@inheritDoc}
      */
     @Override
     protected void fillMenuBar(final IMenuManager menuBar) {
         menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
 
-        final MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
+        final MenuManager fileMenu = new MenuManager("&File",
+                IWorkbenchActionConstants.M_FILE);
 
         MenuManager editMenu =
                 new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
@@ -348,6 +359,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // helpMenu.add(m_introAction);
         helpMenu.add(m_helpAction);
         helpMenu.add(m_helpSearchAction);
+        helpMenu.add(m_helpTipsAction);
         // menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
 
@@ -461,6 +473,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("restriction")
     @Override
     public void fillActionBars(final int flags) {
         super.fillActionBars(flags);
@@ -471,18 +484,23 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // remove open file menu action
         String actionSetId = "org.eclipse.ui.actionSet.openFiles";
         for (int i = 0; i < actionSets.length; i++) {
-            if (!actionSets[i].getId().equals(actionSetId))
+            if (!actionSets[i].getId().equals(actionSetId)) {
                 continue;
-            IExtension ext = actionSets[i].getConfigurationElement().getDeclaringExtension();
+            }
+            IExtension ext = actionSets[i].getConfigurationElement()
+                    .getDeclaringExtension();
             reg.removeExtension(ext, new Object[]{actionSets[i]});
         }
 
         // remove convert line delimiters menu action
-        actionSetId = "org.eclipse.ui.edit.text.actionSet.convertLineDelimitersTo";
+        actionSetId
+                = "org.eclipse.ui.edit.text.actionSet.convertLineDelimitersTo";
         for (int i = 0; i < actionSets.length; i++) {
-            if (!actionSets[i].getId().equals(actionSetId))
+            if (!actionSets[i].getId().equals(actionSetId)) {
                 continue;
-            IExtension ext = actionSets[i].getConfigurationElement().getDeclaringExtension();
+            }
+            IExtension ext = actionSets[i].getConfigurationElement()
+                    .getDeclaringExtension();
             reg.removeExtension(ext, new Object[]{actionSets[i]});
         }
     }

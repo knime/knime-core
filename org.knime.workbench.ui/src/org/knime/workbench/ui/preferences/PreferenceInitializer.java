@@ -72,6 +72,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
 
+        store.setDefault(PreferenceConstants.P_TIPS_AND_TRICKS, true);
+
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
 
         store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
