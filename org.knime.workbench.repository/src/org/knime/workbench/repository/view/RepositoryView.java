@@ -220,13 +220,15 @@ public class RepositoryView extends ViewPart implements
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                if (!(m_viewer.getInput() instanceof Root)) {
-                    m_viewer.setInput(root);
-                } else {
-                    m_viewer.refresh(root);
+                if (!m_viewer.getControl().isDisposed()) {
+                    if (!(m_viewer.getInput() instanceof Root)) {
+                        m_viewer.setInput(root);
+                    } else {
+                        m_viewer.refresh(root);
+                    }
+                    m_viewer.getControl().setToolTipText(null);
                 }
                 parent.setCursor(null);
-                m_viewer.getControl().setToolTipText(null);
             }
         });
     }
