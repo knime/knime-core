@@ -72,8 +72,12 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
+import org.eclipse.core.runtime.IProduct;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.internal.app.CommandLineArgs;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
+import org.knime.core.util.User;
 
 /**
  * The general logger used to write info, warnings, errors , debugging, assert
@@ -318,14 +322,19 @@ public final class NodeLogger {
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
         l.info("# os.arch=" + System.getProperty("os.arch"));
-        l
-                .info("# number of CPUs="
+        l.info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
                 ? "on" : "off"));
         l.info("# host=" + getHostname());
+        try {
+            l.info("# username=" + User.getUsername());
+        } catch (Exception ex) {
+            l.info("# username=<unknown>");
+        }
         l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024)
                 + "MB");
+        l.info("# application=" + getCurrentApplication());
         l.info("#############################################################");
     }
 
@@ -727,4 +736,23 @@ public final class NodeLogger {
         }
     }
 
+    @SuppressWarnings("restriction")
+    private static String getCurrentApplication() {
+        IProduct product = Platform.getProduct();
+        if (product != null) {
+            return product.getApplication();
+        } else {
+            String[] args = CommandLineArgs.getAllArgs();
+            for (int i = 0; i < args.length; i++) {
+                if ("-application".equals(args[i])) {
+                    if (args.length > (i + 1)) {
+                        return args[i + 1];
+                    } else {
+                        return "<unknown>";
+                    }
+                }
+            }
+            return "<unknown>";
+        }
+    }
 }
