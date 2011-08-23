@@ -71,7 +71,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
-import org.knime.core.node.KNIMEGUIConstants;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -120,8 +120,8 @@ public class OutPortView extends JFrame {
         super(portName + " - " + nodeNameWithID);
         // init frame
         super.setName(getTitle());
-        if (KNIMEGUIConstants.KNIME16X16 != null) {
-            super.setIconImage(KNIMEGUIConstants.KNIME16X16.getImage());
+        if (KNIMEConstants.KNIME16X16 != null) {
+            super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         super.setBackground(NodeView.COLOR_BACKGROUND);
         super.setSize(INIT_WIDTH, INIT_HEIGHT);

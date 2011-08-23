@@ -75,20 +75,20 @@ import javax.swing.WindowConstants;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Node view class that displays the view content in an
- * {@linkplain JFrame AWT-frame}. The part specific to the special purpose
- * node view must be implemented in the derived class and must be placed in
- * a {@linkplain JComponent panel}. This panel is registered in this base
- * class (method {@link #setComponent(Component)}and will be displayed in
+ * Node view class that displays the view content in an 
+ * {@linkplain JFrame AWT-frame}. The part specific to the special purpose 
+ * node view must be implemented in the derived class and must be placed in 
+ * a {@linkplain JComponent panel}. This panel is registered in this base 
+ * class (method {@link #setComponent(Component)}and will be displayed in 
  * the <code>JFrame</code> provided and handled by this class.
  *
  * @author Thomas Gabriel, University of Konstanz
  * @param <T> the implementation of the {@link NodeModel} this node view
  *          is based on
  */
-public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
+public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T> 
         implements NodeModelWarningListener {
-
+    
     /** Default background color. */
     public static final Color COLOR_BACKGROUND = Color.LIGHT_GRAY;
 
@@ -132,7 +132,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
             NodeView.super.closeView();
         }
     };
-
+    
     /** Warning label showing the current warning message of the node model. */
     private final JLabel m_warningLabel;
 
@@ -147,11 +147,11 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * will also be a potential listener.
      */
 
-    /** Create a new view for a given (non-null) model. Subclasses will
+    /** Create a new view for a given (non-null) model. Subclasses will 
      * initialize all view components in the their constructor and set it
      * by calling {@link #setComponent(Component)}.
-     *
-     * <p>This constructor creates the frame and the default menu bar.
+     * 
+     * <p>This constructor creates the frame and the default menu bar. 
      *
      * @param nodeModel The underlying node model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
@@ -161,8 +161,8 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         super(nodeModel);
 
         m_frame = new JFrame();
-        if (KNIMEGUIConstants.KNIME16X16 != null) {
-            m_frame.setIconImage(KNIMEGUIConstants.KNIME16X16.getImage());
+        if (KNIMEConstants.KNIME16X16 != null) {
+            m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         m_frame.setBackground(COLOR_BACKGROUND);
         // DO_NOTHING sends a windowClosing to window listeners
@@ -178,7 +178,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         JMenuItem item = new JCheckBoxMenuItem("Always on top", m_alwaysOnTop);
         item.setMnemonic('T');
         item.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(final ActionEvent event) {
 
                 boolean selected =
@@ -196,7 +195,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         item = new JMenuItem("Close");
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(final ActionEvent event) {
                 NodeView.super.closeView();
             }
@@ -213,7 +211,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         // set a dummy component to get the default size
         setShowNODATALabel(true);
         setComponent(m_noDataComp);
-
+        
         // add warning label
         m_warningLabel = new JLabel("", WARNING_ICON, SwingConstants.LEFT);
         Font font = m_warningLabel.getFont().deriveFont(Font.BOLD);
@@ -223,16 +221,16 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         m_warningLabel.setOpaque(true);
         cont.add(m_warningLabel, BorderLayout.NORTH);
     }
-
+    
     private static final Icon WARNING_ICON = loadIcon(
                 NodeView.class, "/icon/warning.png");
-
+    
     private static Icon loadIcon(
             final Class<?> className, final String path) {
         ImageIcon icon;
         try {
-            ClassLoader loader = className.getClassLoader();
-            String packagePath =
+            ClassLoader loader = className.getClassLoader(); 
+            String packagePath = 
                 className.getPackage().getName().replace('.', '/');
             String correctedPath = path;
             if (!path.startsWith("/")) {
@@ -246,7 +244,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
             icon = null;
         }
         return icon;
-    }
+    }  
 
     /**
      * Sets the property if the "no data" label is shown when the underlying
@@ -269,7 +267,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
             setComponent(m_comp);
         }
     }
-
+    
     /**
      * Invoked when the window is about to be closed. Unregister
      * <code>HiLiteListeners</code>. Dispose internal members. <br />
@@ -319,18 +317,18 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
             /** {@inheritDoc} */
             @Override
             public void run() {
-                m_frame.setLocationRelativeTo(null); // puts in screen center
+                m_frame.setLocationRelativeTo(null); // puts in screen center 
                 m_frame.setVisible(true);
                 m_frame.toFront();
             }
         };
         ViewUtils.runOrInvokeLaterInEDT(runner);
     }
-
-    /** Closes the view programmatically. Sub-classes should not call this
-     * method as view closing is task of the framework. This method is
-     * public for historical reasons and will be removed in upcoming versions.
-     * @deprecated Will be removed without replacement in future versions
+    
+    /** Closes the view programmatically. Sub-classes should not call this 
+     * method as view closing is task of the framework. This method is 
+     * public for historical reasons and will be removed in upcoming versions. 
+     * @deprecated Will be removed without replacement in future versions 
      * of KNIME. Sub-classes should not be required to programmatically close
      * views. */
     @Deprecated
@@ -361,7 +359,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         m_activeComp = null;
         m_comp = null;
         Runnable runner = new Runnable() {
-            @Override
             public void run() {
                 m_frame.setVisible(false);
                 m_frame.removeWindowListener(m_windowListener);
@@ -379,17 +376,17 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * eclipse (if available, i.e. when views are embedded in eclipse)
      *
      * @return The view's content pane.
-     * @deprecated Will be removed without replacement in future
+     * @deprecated Will be removed without replacement in future 
      *             versions of KNIME.
-     * @see #getComponent()
+     * @see #getComponent() 
      */
     @Deprecated
     public final Component openViewComponent() {
         return m_frame.getContentPane();
     }
 
-    /** Opens the new view. Subclasses should not be required to open views
-     * programmatically. Opening is done via the framework and dedicated user
+    /** Opens the new view. Subclasses should not be required to open views 
+     * programmatically. Opening is done via the framework and dedicated user 
      * actions.
      * @param viewTitle the tile for this view
      * @return a {@link JFrame} with an initialized {@link NodeView}
@@ -431,7 +428,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
 
     private void setTitle(final String title) {
         final Runnable runner = new Runnable() {
-            @Override
             public void run() {
                 m_frame.setTitle(title);
             }
@@ -537,7 +533,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
                 INIT_COMP_HEIGTH));
         return noData;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public void warningChanged(final String warning) {
