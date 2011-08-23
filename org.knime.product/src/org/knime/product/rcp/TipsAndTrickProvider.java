@@ -85,7 +85,7 @@ import org.xml.sax.XMLReader;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
-    private static final URL TIPS_AND_TRICKS_URL;
+    static final URL TIPS_AND_TRICKS_URL;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TipsAndTrickProvider.class);
@@ -113,6 +113,7 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
             conn.setConnectTimeout(500);
             conn.connect();
             extractOnlineTips(new BufferedInputStream(conn.getInputStream()));
+            conn.disconnect();
         } catch (IOException ex) {
             // timeout, unknown host, ...
             LOGGER.warn("Cannot connect to knime.org", ex);

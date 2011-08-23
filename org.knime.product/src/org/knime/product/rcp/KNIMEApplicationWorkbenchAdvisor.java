@@ -47,7 +47,9 @@
  */
 package org.knime.product.rcp;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
 
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -56,6 +58,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -120,8 +123,27 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // if the Update Site is password protected
         IProxyService.class.getName();
 
+        // try to open T&T in a separate thread because if DNS resolution
+        // does not work properly this blocks KNIME startup
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                tryOpenTipsAndTricks();
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void tryOpenTipsAndTricks() {
         boolean showTipsAndTricks = true;
         try {
+            HttpURLConnection conn =
+                    (HttpURLConnection)TipsAndTrickProvider.TIPS_AND_TRICKS_URL
+                            .openConnection();
+            conn.setConnectTimeout(500);
+            conn.connect();
+            conn.disconnect();
             Class<?> c = Class.forName("com.knime.licenses.LicenseStore");
             Method m = c.getMethod("validLicense", String.class);
             if ((Boolean)m.invoke(null, "Professional")) {
@@ -130,13 +152,23 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
                 showTipsAndTricks =
                         pStore.getBoolean(PreferenceConstants.P_TIPS_AND_TRICKS);
             }
+        } catch (IOException ex) {
+            // no internet connection
+            LOGGER.info("Cannot connect to knime.org, not showing tips&tricks",
+                    ex);
+            showTipsAndTricks = false;
         } catch (Exception ex) {
             // likely no license classes found
             LOGGER.info("Error while reading preferences", ex);
         }
 
         if (showTipsAndTricks) {
-            TipsAndTricksAction.openTipsAndTricks();
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    TipsAndTricksAction.openTipsAndTricks();
+                }
+            });
         }
     }
 
