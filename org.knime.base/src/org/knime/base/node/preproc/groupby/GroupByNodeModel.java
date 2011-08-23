@@ -433,6 +433,10 @@ public class GroupByNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_hilite.setMapper(null);
+        for (final ColumnAggregator colAggr : m_columnAggregators) {
+            colAggr.reset();
+        }
+        m_columnAggregators2Use = null;
     }
 
     /**
@@ -503,7 +507,7 @@ public class GroupByNodeModel extends NodeModel {
     protected final DataTableSpec createGroupBySpec(
             final DataTableSpec origSpec, final List<String> groupByCols)
             throws InvalidSettingsException {
-        // remove all invalid column aggregator
+        // remove all column aggregator
         m_columnAggregators2Use = new ArrayList<ColumnAggregator>(
                 m_columnAggregators.size());
         final ArrayList<ColumnAggregator> invalidColAggrs =
@@ -620,6 +624,10 @@ public class GroupByNodeModel extends NodeModel {
                 m_valueDelimiter.getStringValue(), table.getDataTableSpec(),
                 table.getRowCount());
 
+        //reset all aggregators in order to use enforce operator creation
+        for (final ColumnAggregator colAggr : m_columnAggregators2Use) {
+            colAggr.reset();
+        }
         final GroupByTable resultTable;
         if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
             resultTable = new MemoryGroupByTable(exec, table, groupByCols,
