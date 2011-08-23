@@ -48,11 +48,12 @@
  * History
  *   28.08.2005 (Florian Georg): created
  */
-package org.knime.workbench.help.intro;
+package org.knime.product.rcp;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -66,13 +67,13 @@ import org.knime.workbench.ui.wizards.project.NewProjectWizard;
 
 /**
  * This action is called when the user clicks "Open KNIME Workbench" in the
- * intro page. It creates a new project with the standard name "KNIME_project".
- * Since the workspace must be empty (otherwise the intro page won't show up)
- * this name can be securely used.
+ * intro page. It creates a new project with the standard name "KNIME_project"
+ * if no project exists in the workspace.
  *
  * @see NewProjectWizard
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
 public class NewProjectWizardIntroAction implements IIntroAction {
 
@@ -81,7 +82,6 @@ public class NewProjectWizardIntroAction implements IIntroAction {
      */
     @Override
     public void run(final IIntroSite site, final Properties params) {
-
         try {
             // close the intro page
             IIntroManager introManager =
@@ -90,22 +90,23 @@ public class NewProjectWizardIntroAction implements IIntroAction {
             if (introPart != null) {
                 introManager.closeIntro(introPart);
             }
-            PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
-                    new IRunnableWithProgress() {
-                        @Override
-                        public void run(final IProgressMonitor monitor)
-                                throws InvocationTargetException,
-                                InterruptedException {
-                            try {
-                                // call static method on NewProjectWizard
-                                NewProjectWizard.doFinish(
-                                        new Path("KNIME_project"),
-                                        monitor);
-                            } catch (CoreException ce) {
-                                throw new RuntimeException(ce);
+            if (ResourcesPlugin.getWorkspace().getRoot().getProjects().length == 0) {
+                PlatformUI.getWorkbench().getProgressService()
+                        .busyCursorWhile(new IRunnableWithProgress() {
+                            @Override
+                            public void run(final IProgressMonitor monitor)
+                                    throws InvocationTargetException,
+                                    InterruptedException {
+                                try {
+                                    // call static method on NewProjectWizard
+                                    NewProjectWizard.doFinish(new Path(
+                                            "KNIME_project"), monitor);
+                                } catch (CoreException ce) {
+                                    throw new RuntimeException(ce);
+                                }
                             }
-                        }
-                    });
+                        });
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

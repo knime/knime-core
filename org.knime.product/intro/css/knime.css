@@ -1,29 +1,25 @@
 body {
-	background: #fff url(img/KNIME_logo_white.png);
-	background-repeat: no-repeat;
-	background-position: top left;
+	background: #fff;
 	color: #333;
-	font-family: Arial, sans-serif;
+	font-family: Arial,Helvetica,sans-serif;
 	font-size: 12px;
+	min-width: 900px;
 }
 
-#page-links {
-	padding-top: 200px;
-	padding-left: 5px;
-	}
+h2 {
+	font-family: Georgia,"Times New Roman",Times,serif;
+	font-weight: bold;
+	margin-top: -0.0em;
+}
 
-h1 {
-	font-style: normal;
-	}
-	
-a {
+/* Styles for the links section */
+#links a {
 	color: #666;
 	display: block;
-	margin-bottom: 50px;
 	text-decoration: none;
-	width: 650px;
+	width: 45%;
 	padding: 5px;
-	}
+}
 
 
 a .link-label {
@@ -34,12 +30,17 @@ a .link-label {
 	
 a .text {
 	padding-left: 75px;
+	display: block;
 	}
 	
-#install {
-	background: url(img/install.png) no-repeat 5px center;
-    height: 64px;
+#links {
+	margin-bottom: 50px;
+}	
 
+#install {
+	margin-left: 50%;
+	background: url(img/install.png) no-repeat 5px center;
+    height: 64px;    
 	}
 #install:hover {
     background: #eee url(img/install_hover.png) no-repeat 5px center;
@@ -47,6 +48,7 @@ a .text {
     }
 
 #launch {
+	float: left;
 	background: url(img/launch.png) no-repeat 5px center;
     height: 64px;
 	}
@@ -54,3 +56,31 @@ a .text {
     background: #eee url(img/launch_hover.png) no-repeat 5px center;
     height: 64px;
     }
+
+/* Styles for the tips-and-tricks section */
+
+p {
+    margin: 0 0 1em;
+    line-height: 1.3em;
+    text-align: justify;
+}
+
+#tips-and-tricks a {
+	color: #F4AB27;
+	text-decoration: none;
+}
+
+.contentWrapper {
+    max-width: 50%;	
+}
+
+#noConnection {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 650px;
+    background-color: #FFEEEE;
+    font-size: 150%;
+    font-weight: bold;
+    padding: 0.5em;
+    text-align: justify;
+}

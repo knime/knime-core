@@ -53,9 +53,12 @@ package org.knime.workbench.ui.p2.actions;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.action.Action;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
 
 /**
@@ -76,6 +79,17 @@ public abstract class AbstractP2Action extends Action {
     @Override
     public void run() {
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
+        if (provUI.getRepositoryTracker() == null) {
+            MessageBox mbox =
+                    new MessageBox(ProvUI.getDefaultParentShell(),
+                            SWT.ICON_WARNING | SWT.OK);
+            mbox.setText("Action impossible");
+            mbox.setMessage("It seems you are running KNIME from an SDK. "
+                    + "Installing extension is not possible in this case.");
+            mbox.open();
+            return;
+        }
+
         Job.getJobManager().cancel(LoadMetadataRepositoryJob.LOAD_FAMILY);
         final LoadMetadataRepositoryJob loadJob =
                 new LoadMetadataRepositoryJob(provUI);
@@ -96,6 +110,13 @@ public abstract class AbstractP2Action extends Action {
         loadJob.schedule();
     }
 
+    /**
+     * This is called when a wizard (install, update, ...) should be opened.
+     * Subclasses must override this method and open the desired wizard.
+     *
+     * @param job the repository job
+     * @param provUI the provisioning UI instance
+     */
     protected abstract void openWizard(final LoadMetadataRepositoryJob job,
             ProvisioningUI provUI);
 }

@@ -78,9 +78,10 @@
    <extension
          point="org.eclipse.ui.intro">
       <intro
-            icon="icons/gif/knime16.gif"
             class="org.eclipse.ui.intro.config.CustomizableIntroPart"
-            id="org.knime.product.intro">
+            icon="icons/gif/knime16.gif"
+            id="org.knime.product.intro"
+            label="Welcome to KNIME">
       </intro>
       <introProductBinding
             introId="org.knime.product.intro"
@@ -105,7 +106,7 @@
    <extension
          point="org.eclipse.ui.intro.configExtension">
       <action
-            replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.NewProjectWizardIntroAction"
+            replaces="runAction?pluginId=org.knime.product&amp;class=org.knime.product.rcp.NewProjectWizardIntroAction"
             name="createProjectFromIntro">
       </action>
       <action

@@ -27,6 +27,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.net,
  org.eclipse.ui.console,
  org.eclipse.ui.browser,
- com.knime.licenses;bundle-version="1.0.0";resolution:=optional
+ com.knime.licenses;bundle-version="1.0.0";resolution:=optional,
+ org.eclipse.ui.forms;bundle-version="3.5.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Localization: plugin
+Bundle-ClassPath: knime-product.jar,
+ lib/tagsoup-1.2.1.jar

@@ -50,19 +50,12 @@
  */
 package org.knime.product.rcp;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
-import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.knime.core.node.NodeLogger;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 /**
  * Simple action that opens a browser window with the tips and tricks page.
@@ -70,9 +63,6 @@ import org.osgi.framework.FrameworkUtil;
  * @author Thorsten Meinl, University of Konstanz
  */
 class TipsAndTricksAction extends Action {
-    private static final String TIPS_AND_TRICKS_URL =
-            "http://tech.knime.org/tips-and-tricks";
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
                     .toString() + ".TipsAndTricks");
@@ -101,31 +91,12 @@ class TipsAndTricksAction extends Action {
      */
     static void openTipsAndTricks() {
         try {
-            IWebBrowser browser =
-                    PlatformUI
-                            .getWorkbench()
-                            .getBrowserSupport()
-                            .createBrowser(IWorkbenchBrowserSupport.AS_EDITOR,
-                                    "TipsAndTricks", "Tips and Tricks", null);
-
-            URL url = new URL(TIPS_AND_TRICKS_URL);
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-            conn.setConnectTimeout(500);
-            try {
-                conn.connect();
-                conn.disconnect();
-            } catch (IOException ex) {
-                // timeout, unknown host, ...
-                LOGGER.warn("Cannot connect to knime.org", ex);
-
-                Path p = new Path("/intro/NoInternet.html");
-                Bundle bundle =
-                        FrameworkUtil.getBundle(TipsAndTricksAction.class);
-                URL noInternetUrl = FileLocator.findEntries(bundle, p)[0];
-                url = FileLocator.toFileURL(noInternetUrl);
-            }
-            browser.openURL(url);
-        } catch (Exception ex) {
+            IWorkbenchWindow w =
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+            IWorkbenchPage page = w.getActivePage();
+            page.showView("org.eclipse.ui.internal.introview");
+            page.toggleZoom(page.getActivePartReference());
+        } catch (PartInitException ex) {
             LOGGER.error("Cannot open Tips&Tricks view", ex);
         }
     }

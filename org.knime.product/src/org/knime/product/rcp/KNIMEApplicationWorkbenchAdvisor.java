@@ -56,9 +56,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.IEditorReference;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -130,8 +127,8 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             if ((Boolean)m.invoke(null, "Professional")) {
                 IPreferenceStore pStore =
                         KNIMEUIPlugin.getDefault().getPreferenceStore();
-                showTipsAndTricks = pStore.getBoolean(
-                        PreferenceConstants.P_TIPS_AND_TRICKS);
+                showTipsAndTricks =
+                        pStore.getBoolean(PreferenceConstants.P_TIPS_AND_TRICKS);
             }
         } catch (Exception ex) {
             // likely no license classes found
@@ -160,25 +157,5 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
                 Platform.getLog(myself).log(error);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean preShutdown() {
-        // close Tips&Tricks window because it won't get restored automatically
-        // during the next start and may leave holes in the workbench
-        IWorkbenchPage page =
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                        .getActivePage();
-
-        for (IEditorReference eref : page.getEditorReferences()) {
-            if ("Tips and Tricks".equals(eref.getTitle())) {
-                page.closeEditor(eref.getEditor(false), false);
-            }
-        }
-
-        return super.preShutdown();
     }
 }
