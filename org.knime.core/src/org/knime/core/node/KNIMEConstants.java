@@ -54,8 +54,6 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.Locale;
 
-import javax.swing.ImageIcon;
-
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
@@ -250,26 +248,10 @@ public final class KNIMEConstants {
         WELCOME_MESSAGE = s;
     }
 
-    /** Path to the <i>knime.png</i> icon. */
-    private static final String KNIME_ICON_PATH =
-            KNIMEConstants.class.getPackage().getName().replace('.', '/')
-                    + "/knime.png";
-
-    /** Icon 16 times 16 pixel. */
-    public static final ImageIcon KNIME16X16;
-
     /** Load icon. */
     static {
         File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
         knimeHomeDir = knimeHome;
-        ImageIcon icon;
-        try {
-            ClassLoader loader = KNIMEConstants.class.getClassLoader();
-            icon = new ImageIcon(loader.getResource(KNIME_ICON_PATH));
-        } catch (Exception e) {
-            icon = null;
-        }
-        KNIME16X16 = icon;
         // we prefer to have all gui-related locals being set to us-standard
         try {
             Locale.setDefault(Locale.US);

@@ -118,9 +118,9 @@ public final class NodeDialog {
         m_node = node;
         // keep node dialog pane and init this dialog
         m_dialogPane = pane;
-        
+
         m_dialog = initDialog("Dialog - " + node.getDisplayLabel());
-        
+
         // init OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
@@ -129,6 +129,7 @@ public final class NodeDialog {
         m_ok.setPreferredSize(new Dimension(INIT_BTN_WIDTH, INIT_BTN_HEIGHT));
         // add action listener
         m_ok.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onOK(e);
             }
@@ -141,6 +142,7 @@ public final class NodeDialog {
         apply.setPreferredSize(new Dimension(INIT_BTN_WIDTH, INIT_BTN_HEIGHT));
         // add action listener
         apply.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 onApply(event);
             }
@@ -153,6 +155,7 @@ public final class NodeDialog {
         cancel.setPreferredSize(new Dimension(INIT_BTN_WIDTH, INIT_BTN_HEIGHT));
         // add action listener
         cancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 onCancel(event);
             }
@@ -168,6 +171,7 @@ public final class NodeDialog {
         btnLoad.setMnemonic(KeyEvent.VK_L);
         // add action listener
         btnLoad.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 try {
                     if (jfc.showOpenDialog(m_dialog)
@@ -201,6 +205,7 @@ public final class NodeDialog {
         btnSave.setMnemonic(KeyEvent.VK_S);
         // add action listener
         btnSave.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 try {
                     if (jfc.showSaveDialog(m_dialog)
@@ -246,8 +251,8 @@ public final class NodeDialog {
      */
     private JDialog initDialog(final String title) {
         JFrame dummy = new JFrame();
-        if (KNIMEConstants.KNIME16X16 != null) {
-            dummy.setIconImage(KNIMEConstants.KNIME16X16.getImage());
+        if (KNIMEGUIConstants.KNIME16X16 != null) {
+            dummy.setIconImage(KNIMEGUIConstants.KNIME16X16.getImage());
         }
         // init underlying dialog
         JDialog dialog = new JDialog(dummy);
@@ -266,6 +271,7 @@ public final class NodeDialog {
             @Override
             public void windowOpened(final WindowEvent we) {
                 SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         // invoke open operation
                         onOpen(we);
