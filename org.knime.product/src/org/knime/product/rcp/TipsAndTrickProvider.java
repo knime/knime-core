@@ -63,7 +63,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.ccil.cowan.tagsoup.Parser;
 import org.eclipse.swt.widgets.Composite;
@@ -95,13 +97,12 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
     static {
         URL url = null;
         try {
-            url = new URL("http://knime.org/tips-and-tricks");
+            url = new URL("http://www.knime.org/tips-and-tricks");
         } catch (MalformedURLException ex) {
             // does not happen
         }
         TIPS_AND_TRICKS_URL = url;
     }
-
 
     /**
      *
@@ -109,7 +110,7 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
     public TipsAndTrickProvider() {
         try {
             HttpURLConnection conn =
-                (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
+                    (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
             conn.setConnectTimeout(500);
             conn.connect();
             extractOnlineTips(new BufferedInputStream(conn.getInputStream()));
@@ -153,6 +154,15 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
             parent.appendChild(doc.importNode(m_tipsAndTricks, true));
         } else {
             parent.appendChild(getOfflineMessage(doc));
+        }
+
+        Transformer transformer;
+        try {
+            transformer = TransformerFactory.newInstance().newTransformer();
+            StreamResult result = new StreamResult(System.out);
+            transformer.transform(new DOMSource(parent), result);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -201,6 +211,13 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
             if (!href.startsWith("http")) {
                 a.setAttribute("href", linkBase + "/" + href);
             }
+        }
+
+        // remove inline styles
+        nl = m_tipsAndTricks.getElementsByTagName("style");
+        for (int i = 0; i < nl.getLength(); i++) {
+            Element style = (Element)nl.item(i);
+            style.getParentNode().removeChild(style);
         }
     }
 
