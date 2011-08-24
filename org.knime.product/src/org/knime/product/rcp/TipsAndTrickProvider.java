@@ -95,7 +95,7 @@ public class TipsAndTrickProvider implements IIntroXHTMLContentProvider {
     static {
         URL url = null;
         try {
-            url = new URL("http://tech.knime.org/tips-and-tricks");
+            url = new URL("http://knime.org/tips-and-tricks");
         } catch (MalformedURLException ex) {
             // does not happen
         }
