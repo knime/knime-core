@@ -59,6 +59,7 @@ public class ThreadPoolTest extends TestCase {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void run() {
             m_running.incrementAndGet();
             System.out.println("[ " + m_name + " ] starting from pool "
@@ -120,7 +121,7 @@ public class ThreadPoolTest extends TestCase {
                     + " running threads");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
-            } else if (Math.random() > 0.98) {
+            } else if ((root.getMaxThreads() > 1) && (Math.random() > 0.98)) {
                 root.setMaxThreads(root.getMaxThreads() - 1);
             }
         }
@@ -142,6 +143,7 @@ public class ThreadPoolTest extends TestCase {
         final int loops = 200;
 
         final Callable<?> submitter = new Callable<Void>() {
+            @Override
             public Void call() throws Exception {
                 for (int i = 1; i <= loops; i++) {
                     try {
@@ -164,6 +166,7 @@ public class ThreadPoolTest extends TestCase {
         };
 
         Runnable main = new Runnable() {
+            @Override
             public void run() {
                 try {
                     root.runInvisible(submitter);
@@ -229,6 +232,7 @@ public class ThreadPoolTest extends TestCase {
         final int loops = 200;
 
         final Callable<?> submitter = new Callable<Void>() {
+            @Override
             public Void call() throws Exception {
                 for (int i = 1; i <= loops; i++) {
                     if (Math.random() > 0.5) {
@@ -254,6 +258,7 @@ public class ThreadPoolTest extends TestCase {
         };
 
         Runnable main = new Runnable() {
+            @Override
             public void run() {
                 System.out.println("Running invisible");
                 try {
@@ -318,7 +323,7 @@ public class ThreadPoolTest extends TestCase {
                     + " queued jobs");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
-            } else if (Math.random() > 0.98) {
+            } else if ((root.getMaxThreads() > 1) && (Math.random() > 0.98)) {
                 root.setMaxThreads(root.getMaxThreads() - 1);
             }
         }
