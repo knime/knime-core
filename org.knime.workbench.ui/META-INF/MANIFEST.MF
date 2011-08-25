@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench UI
 Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
-Bundle-Version: 2.4.1.qualifier
+Bundle-Version: 2.4.2.qualifier
 Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: com.swtdesigner,
