@@ -29,8 +29,17 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-Xmx512m -XX:MaxPermSize=192m -server -Dsun.java2d.d3d=false</vmArgs>
-      <vmArgsMac>-XstartOnFirstThread -Xdock:icon=../Resources/knime.icns -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
+      <vmArgs>-Xmx512m
+-XX:MaxPermSize=192m
+-server
+-Dsun.java2d.d3d=false
+-Dosgi.classloader.lock=classname
+-XX:+UnlockDiagnosticVMOptions
+-XX:+UnsyncloadClass 
+-Dknime.enable.fastload=true</vmArgs>
+      <vmArgsMac>-XstartOnFirstThread
+-Xdock:icon=../Resources/knime.icns
+-Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
    <windowImages i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif" i128="/org.knime.product/icons/gif/knime128.gif"/>
