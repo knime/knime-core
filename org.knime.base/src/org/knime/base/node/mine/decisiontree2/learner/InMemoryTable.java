@@ -84,37 +84,37 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * The value mapper for nominal attribute values. The index positions for
      * numeric values are left <code>null</code>.
      */
-    private final ValueMapper<DataCell>[] m_nominalAttributeValueMapper;
+    private ValueMapper<DataCell>[] m_nominalAttributeValueMapper;
 
     /**
      * Keeps the attribute value - class frequencies as historgrams. Updated if
      * a new row is added. First dimension are the attributes
      */
-    private final NominalValueHistogram[] m_nominalValueClassFrequencyHisto;
+    private NominalValueHistogram[] m_nominalValueClassFrequencyHisto;
 
     /**
      * For performance reasons this array holds the indices of the nominal
      * attributes. Thus, it is faster to access only the nominal attributes.
      */
-    private final int[] m_nominalAttributeIndices;
+    private int[] m_nominalAttributeIndices;
 
     /**
      * Remembers for each attribute if it should be considered during learning.
      * (E.g. after splitting a nominal attribute at each value, further splits
      * on this attribute are not possible in deeper levels)
      */
-    private final boolean[] m_considerAttribute;
+    private boolean[] m_considerAttribute;
 
     /**
      * The value mapper for the class attribute values. They are mapped to an
      * int value.
      */
-    private final ValueMapper<DataCell> m_classValueMapper;
+    private ValueMapper<DataCell> m_classValueMapper;
 
     /**
      * The mapper for the attribute indices.
      */
-    private final ValueMapper<String> m_attributeNameMapper;
+    private ValueMapper<String> m_attributeNameMapper;
 
     /**
      * Keeps the class frequencies. Updated if a new row is added.
@@ -125,7 +125,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * Used to determine if this data is pure enought according to its class
      * value distribution.
      */
-    private final double m_minNumberRowsPerNode;
+    private double m_minNumberRowsPerNode;
 
     /**
      * Holds the sum of all weights of the rows.
@@ -292,7 +292,6 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * {@inheritDoc}
      */
-    @Override
     public Iterator<DataRowWeighted> iterator() {
         if (m_rows == null) {
             throw new RuntimeException("Data rows have been removed.");
@@ -307,7 +306,6 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
         /**
          * {@inheritDoc}
          */
-        @Override
         public boolean hasNext() {
             return m_next < m_rows.length;
         }
@@ -315,7 +313,6 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
         /**
          * {@inheritDoc}
          */
-        @Override
         public DataRowWeighted next() {
             return m_rows[m_next++];
         }
@@ -323,7 +320,6 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
         /**
          * {@inheritDoc}
          */
-        @Override
         public void remove() {
             throw new UnsupportedOperationException("Remove is not supported.");
         }
@@ -422,7 +418,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      */
     public boolean isPureEnough() {
         if (getMajorityClassCount() == m_sumOfWeights
-                || m_sumOfWeights < 2 * m_minNumberRowsPerNode) {
+                || m_sumOfWeights <= 2 * m_minNumberRowsPerNode) {
             return true;
         }
         return false;
