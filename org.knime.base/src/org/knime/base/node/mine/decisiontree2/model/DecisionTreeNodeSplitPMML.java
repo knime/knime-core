@@ -309,18 +309,18 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
             final DataTableSpec spec, final double weight) throws Exception {
         // first add pattern to the branch that matches the cell's value
         DecisionTreeNode matchingChild = getMatchingChild(row, spec);
-        if (matchingChild != null && matchingChild != this) {
-            matchingChild.addCoveredPattern(row, spec, weight);
-        } else if (matchingChild == null){
+        if (matchingChild == null) {
             /* It is an error if we have no matching child at all.*/
             LOGGER.debug("Decision Tree HiLiteAdder failed."
-                    + " Could not find branch for value '" + cell.toString()
-                    + "' for attribute '" + getSplitAttr() + "'."
+                    + " Could not find branch for row '" + row + "'."
                     + " Ignoring pattern.");
+        } else {
+            if (matchingChild != this) {
+                matchingChild.addCoveredPattern(row, spec, weight);
+            }
+            Color col = spec.getRowColor(row).getColor();
+            addColorToMap(col, weight);
         }
-        Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col, weight);
-        return;
     }
 
     /**
@@ -330,17 +330,18 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     public void addCoveredColor(final DataCell cell, final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
         DecisionTreeNode matchingChild = getMatchingChild(row, spec);
-        if (matchingChild != null && matchingChild != this) {
-            matchingChild.addCoveredColor(row, spec, weight);
-        } else if (matchingChild == null) {
+        if (matchingChild == null) {
             /* It is an error if we have no matching child at all.*/
             LOGGER.debug("Decision Tree HiLiteAdder failed."
-                    + " Could not find branch for value '" + cell.toString()
-                    + "' for attribute '" + getSplitAttr().toString() + "'."
+                    + " Could not find branch for row '" + row + "'."
                     + " Ignoring pattern.");
+        } else {
+            if (matchingChild != this) {
+                matchingChild.addCoveredColor(row, spec, weight);
+            }
+            Color col = spec.getRowColor(row).getColor();
+            addColorToMap(col, weight);
         }
-        Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col, weight);
     }
 
     /**
