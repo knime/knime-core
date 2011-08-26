@@ -72,7 +72,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -280,7 +279,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
                         newCells[i] = new DoubleCell(
                                 classDistrib.get(predClass));
                     } else {
-                        newCells[i] = DataType.getMissingCell();
+                        newCells[i] = new DoubleCell(0.0);
                     }
                 }
             }
