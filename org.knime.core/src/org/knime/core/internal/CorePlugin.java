@@ -142,6 +142,23 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
      * resolved.
      */
     public static File resolveURItoLocalFile(final URI uri) throws IOException {
+        if (uri == null) {
+            throw new IOException("Can't resolve null URI to file");
+        }
+        // try resolving file-URIs without helper
+        String scheme = uri.getScheme();
+        if (scheme == null) {
+            throw new IOException("Can't resolve URI \"" + uri
+                    + "\": it does not have a scheme");
+        }
+        if (scheme.equalsIgnoreCase("file")) {
+            try {
+                return new File(uri);
+            } catch (IllegalArgumentException e) {
+                throw new IOException("Can't resolve file URI \"" + uri
+                        + "\" to file", e);
+            }
+        }
         if (instance == null) {
             throw new IOException("Core bundle is not active, "
                     + "can't resolve URI \"" + uri + "\"");
