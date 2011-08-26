@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.knime.product;singleton:=true
 Bundle-Version: 2.4.2.qualifier
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Localization: plugin
 Export-Package: org.knime.product,
  org.knime.product.headless,
  org.knime.product.rcp
@@ -27,4 +28,3 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.net,
  org.eclipse.ui.console
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Bundle-Localization: plugin
