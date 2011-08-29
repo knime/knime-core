@@ -31,7 +31,7 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.view.ContentObject;
 
 /**
@@ -82,11 +82,12 @@ public class WorkflowEditorSelectionDropListener extends
         if (!super.isEnabled(event)) {
             return false;
         }
-        ExplorerFileStore fileStore = getDragResources(event).getObject();
-        boolean enabled = !(ExplorerFileStore.isMetaNode(fileStore)
-                || ExplorerFileStore.isWorkflow(fileStore)
-                || ExplorerFileStore.isWorkflowTemplate(fileStore)
-                || ExplorerFileStore.isWorkflowGroup(fileStore));
+        AbstractExplorerFileStore fileStore
+                = getDragResources(event).getObject();
+        boolean enabled = !(AbstractExplorerFileStore.isMetaNode(fileStore)
+                || AbstractExplorerFileStore.isWorkflow(fileStore)
+                || AbstractExplorerFileStore.isWorkflowTemplate(fileStore)
+                || AbstractExplorerFileStore.isWorkflowGroup(fileStore));
         if (enabled) {
             event.feedback = DND.FEEDBACK_SELECT;
             event.operations = DND.DROP_DEFAULT;

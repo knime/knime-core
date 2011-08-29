@@ -71,7 +71,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
-import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 
 
 /**
@@ -91,7 +91,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     private WorkflowManager m_parentWFM;
 
-    private ExplorerFileStore m_templateKNIMEFolder;
+    private LocalExplorerFileStore m_templateKNIMEFolder;
 
     private Throwable m_throwable = null;
 
@@ -107,7 +107,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
      *        should be loaded
      */
     public LoadMetaNodeTemplateRunnable(final WorkflowManager wfm,
-            final ExplorerFileStore templateKNIMEFolder) {
+            final LocalExplorerFileStore templateKNIMEFolder) {
         m_parentWFM = wfm;
         m_templateKNIMEFolder = templateKNIMEFolder;
     }

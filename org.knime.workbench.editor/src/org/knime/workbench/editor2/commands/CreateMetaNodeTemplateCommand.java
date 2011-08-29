@@ -62,7 +62,8 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
-import org.knime.workbench.explorer.filesystem.ExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 
 /**
  * GEF command for adding a MetaNode from a file location to the workflow.
@@ -74,7 +75,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateMetaNodeTemplateCommand.class);
 
-    private final ExplorerFileStore m_templateKNIMEFolder;
+    private final LocalExplorerFileStore m_templateKNIMEFolder;
 
     private final Point m_location;
 
@@ -89,7 +90,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      */
     public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
-            final ExplorerFileStore templateFolder,
+            final LocalExplorerFileStore templateFolder,
             final Point location) {
         super(manager);
         m_templateKNIMEFolder = templateFolder;
@@ -106,7 +107,8 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
         if (m_location == null || m_templateKNIMEFolder == null) {
             return false;
         }
-        return ExplorerFileStore.isWorkflowTemplate(m_templateKNIMEFolder);
+        return AbstractExplorerFileStore.isWorkflowTemplate(
+                m_templateKNIMEFolder);
     }
 
     /** {@inheritDoc} */
