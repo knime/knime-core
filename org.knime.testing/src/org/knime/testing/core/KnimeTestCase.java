@@ -41,7 +41,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -249,17 +248,26 @@ public class KnimeTestCase extends TestCase {
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
+                logger.error("Workflow is running longer than " + TIMEOUT
+                        + " seconds, dumping status, followed by cancel:");
                 String status =
                     m_manager.printNodeSummary(m_manager.getID(), 0);
+                logger.error("------- Status before Cancel (Start) ----------");
                 dumpToLogError(status);
-                String error = m_manager.toString();
-                // TODO: do we get a cancelExecution() for all nodes?!?
-                for (NodeContainer nc : m_manager.getNodeContainers()) {
-                    m_manager.cancelExecution(nc);
+                logger.error("------- Status before Cancel (End) ------------");
+                logger.error("Now calling cancel on workflow parent...");
+                try {
+                    m_manager.getParent().cancelExecution(m_manager);
+                } catch (Exception e) {
+                    logger.error("Failed to cancel workflow, giving up", e);
+                    return;
                 }
                 logger.error("Workflow canceled after " + TIMEOUT
-                        + " seconds, status follows:: ");
-                logger.error(error);
+                        + " seconds, status after cancel follows: ");
+                status = m_manager.printNodeSummary(m_manager.getID(), 0);
+                logger.error("------- Status after Cancel (Start) ----------");
+                dumpToLogError(status);
+                logger.error("------- Status after Cancel (End) ------------");
             }
         };
         try {
