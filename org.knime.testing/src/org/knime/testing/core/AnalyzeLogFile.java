@@ -58,7 +58,7 @@ public class AnalyzeLogFile {
         EXCEPTION,
         /** test has errors and exceptions */
         ERREXCEPT
-    };
+    }
 
     // this pattern in the log file indicates a starting test log
     private final static String TEST_START_CODE = "<Start> Test='";
@@ -187,7 +187,7 @@ public class AnalyzeLogFile {
                         + ".txt"));
 
         int posTests = m_numOfTestsRun - m_numOfFailingTests;
-        int posRate = (int)Math.round((posTests * 100.0) / m_numOfTestsRun);
+        int posRate = (int)Math.floor((posTests * 100.0) / m_numOfTestsRun);
 
         summary.write("Regression run on " + m_startTime + CRLF);
         summary.write("Tests run: " + m_numOfTestsRun + ", failing: "
