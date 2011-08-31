@@ -206,14 +206,12 @@ public class KnimeTestRegistry {
     }
 
     private class DirectoryFilter implements FileFilter {
-
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean accept(final File pathname) {
             return pathname.isDirectory();
         }
-
     }
-
 }

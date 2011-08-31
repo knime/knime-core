@@ -29,6 +29,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import junit.framework.Test;
 
@@ -39,6 +43,7 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.FileUtil;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
@@ -49,11 +54,15 @@ import org.knime.workbench.repository.RepositoryManager;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TestflowRunnerApplication implements IApplication {
+    private Class<?> m_wfDownloadClass;
+
     private boolean m_analyzeLogFile = false;
 
     private String m_testNamePattern;
 
     private String m_rootDir;
+
+    private String m_serverUri;
 
     private String m_xmlResult;
 
@@ -76,6 +85,13 @@ public class TestflowRunnerApplication implements IApplication {
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
 
+        try {
+            m_wfDownloadClass =
+                    Class.forName("com.knime.testing.server.WorkflowDownloadApplication");
+        } catch (ClassNotFoundException ex) {
+            // no server extension available
+        }
+
         // this is to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
 
@@ -86,9 +102,15 @@ public class TestflowRunnerApplication implements IApplication {
                         .get(IApplicationContext.APPLICATION_ARGS);
 
         if (!extractCommandLineArgs(args) || (m_testNamePattern == null)
-                || (m_rootDir == null) || (m_xmlResult == null)) {
+                || ((m_rootDir == null) && (m_serverUri == null))
+                || (m_xmlResult == null)) {
             printUsage();
             return EXIT_OK;
+        }
+
+
+        if (m_serverUri != null) {
+            downloadWorkflows();
         }
 
         KnimeTestRegistry registry =
@@ -275,6 +297,27 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
+            // "-server" specifies a workflow group on a server
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")
+                    && (m_wfDownloadClass != null)) {
+                if (m_serverUri != null) {
+                    System.err.println("You can't specify multiple -server "
+                            + "options at the command line");
+                    return false;
+                }
+
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null)
+                        || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <url> for option -server.");
+                    printUsage();
+                    return false;
+                }
+                m_serverUri = stringArgs[i++];
+                continue;
+            }
+
             // "-xmlResult" specifies the result file
             if ((stringArgs[i] != null) && stringArgs[i].equals("-xmlResult")) {
                 if (m_xmlResult != null) {
@@ -311,6 +354,12 @@ public class TestflowRunnerApplication implements IApplication {
                 + "only test matching <reg_exp> will be run.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
+        if (m_wfDownloadClass != null) {
+            System.err.println("    -server <uri>: optional, a KNIME server "
+                    + "from which workflows should be downloaded first.");
+            System.err.println("                   Example: "
+                    + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
+        }
         System.err.println("    -analyze <dir_name>: optional, "
                 + "analyzes the log file after the run.");
         System.err.println("                         The result files will "
@@ -323,5 +372,17 @@ public class TestflowRunnerApplication implements IApplication {
 
     @Override
     public void stop() {
+    }
+
+    private void downloadWorkflows() throws URISyntaxException, IOException,
+            SecurityException, NoSuchMethodException, IllegalArgumentException,
+            IllegalAccessException, InvocationTargetException {
+        assert m_wfDownloadClass != null;
+        File tempDir = FileUtil.createTempDir("KNIME Testflow");
+        Method downloadMethod =
+                m_wfDownloadClass.getMethod("downloadWorkflow", URI.class,
+                        File.class);
+        downloadMethod.invoke(null, new URI(m_serverUri), tempDir);
+        m_rootDir = tempDir.getCanonicalPath();
     }
 }

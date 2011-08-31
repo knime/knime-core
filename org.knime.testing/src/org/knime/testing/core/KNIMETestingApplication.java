@@ -30,6 +30,10 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +53,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EncryptionKeySupplier;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
@@ -57,6 +62,7 @@ import org.knime.workbench.repository.RepositoryManager;
  *
  */
 public class KNIMETestingApplication implements IApplication {
+    private Class<?> m_wfDownloadClass;
 
     private boolean m_analyzeLogFile = false;
 
@@ -65,6 +71,8 @@ public class KNIMETestingApplication implements IApplication {
     private String m_testNamePattern = null;
 
     private String m_rootDir = null;
+
+    private String m_serverUri = null;
 
     // if this is not null, tests are running - and can be stopped in here.
     private TestResult m_results = null;
@@ -94,6 +102,13 @@ public class KNIMETestingApplication implements IApplication {
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
 
+        try {
+            m_wfDownloadClass =
+                    Class.forName("com.knime.testing.server.WorkflowDownloadApplication");
+        } catch (ClassNotFoundException ex) {
+            // no server extension available
+        }
+
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
 
@@ -110,14 +125,15 @@ public class KNIMETestingApplication implements IApplication {
             return EXIT_OK;
         }
 
-        if ((m_testNamePattern == null) || (m_rootDir == null)) {
+        if ((m_testNamePattern == null)
+                || ((m_rootDir == null) && (m_serverUri == null))) {
             // if no (or not enough) command line arguments were specified:
             final AtomicBoolean okayBoolean = new AtomicBoolean(false);
             SwingUtilities.invokeAndWait(new Runnable() {
                 @Override
                 public void run() {
                     okayBoolean.set(getParametersFromUser());
-                };
+                }
             });
             if (!okayBoolean.get()) {
                 // it's not really okay -
@@ -130,6 +146,10 @@ public class KNIMETestingApplication implements IApplication {
             m_saveLocation = getRuntimeWorkspace();
         }
 
+        if (m_serverUri != null) {
+            downloadWorkflows();
+        }
+
         // Go!
         runRegressionTests(m_testNamePattern);
 
@@ -138,6 +158,19 @@ public class KNIMETestingApplication implements IApplication {
         }
 
         return EXIT_OK;
+    }
+
+
+    private void downloadWorkflows() throws URISyntaxException, IOException,
+            SecurityException, NoSuchMethodException, IllegalArgumentException,
+            IllegalAccessException, InvocationTargetException {
+        assert m_wfDownloadClass != null;
+        File tempDir = FileUtil.createTempDir("KNIME Testflow");
+        Method downloadMethod =
+                m_wfDownloadClass.getMethod("downloadWorkflow", URI.class,
+                        File.class);
+        downloadMethod.invoke(null, new URI(m_serverUri), tempDir);
+        m_rootDir = tempDir.getCanonicalPath();
     }
 
     private boolean getParametersFromUser() {
@@ -278,7 +311,6 @@ public class KNIMETestingApplication implements IApplication {
 
     }
 
-    @SuppressWarnings("unchecked")
     private void printTestResult() {
 
         System.out.println("=============================================");
@@ -315,9 +347,7 @@ public class KNIMETestingApplication implements IApplication {
                 System.out.print("   , Msg: " + fail.exceptionMessage());
                 System.out.println();
             }
-
         }
-
     }
 
     private boolean analyzeLogFile() {
@@ -455,6 +485,27 @@ public class KNIMETestingApplication implements IApplication {
                 continue;
             }
 
+            // "-server" specifies a workflow group on a server
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")
+                    && (m_wfDownloadClass != null)) {
+                if (m_serverUri != null) {
+                    System.err.println("You can't specify multiple -server "
+                            + "options at the command line");
+                    return false;
+                }
+
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null)
+                        || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <url> for option -server.");
+                    printUsage();
+                    return false;
+                }
+                m_serverUri = stringArgs[i++];
+                continue;
+            }
+
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
             printUsage();
             return false;
@@ -485,6 +536,12 @@ public class KNIMETestingApplication implements IApplication {
                 + "<dir_name> is omitted the Java temp dir is used.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
+        if (m_wfDownloadClass != null) {
+            System.err.println("    -server <uri>: optional, a KNIME server "
+                    + "from which workflows should be downloaded first.");
+            System.err.println("                   Example: "
+                    + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
+        }
         System.err.println("IF -pattern OR -root IS OMITTED A DIALOG OPENS"
                 + " REQUESTING USER INPUT.");
 

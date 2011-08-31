@@ -58,7 +58,7 @@ public class AnalyzeLogFile {
         EXCEPTION,
         /** test has errors and exceptions */
         ERREXCEPT
-    };
+    }
 
     // this pattern in the log file indicates a starting test log
     private final static String TEST_START_CODE = "<Start> Test='";
