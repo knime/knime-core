@@ -204,13 +204,6 @@ public class TableView extends JScrollPane {
                 }
             }
         });
-        getContentModel().addPropertyChangeListener(
-                TableContentModel.PROPERTY_DATA, new PropertyChangeListener() {
-           @Override
-        public void propertyChange(final PropertyChangeEvent evt) {
-
-           }
-        });
     } // TableView(TableContentView)
 
     /**
