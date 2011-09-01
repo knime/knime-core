@@ -87,7 +87,7 @@ import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
  *
  * @author Heiko Hofer
  */
-public class SortedTableTest {
+public class TableSorterTest {
     private ExecutionContext m_exec;
 
     /**
